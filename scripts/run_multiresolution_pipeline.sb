@@ -17,8 +17,8 @@
 #   For each resolution (5kb, 10kb, 25kb):
 #     1. prep_loops.R      - Merge BEDPE files → consensus positions
 #     2. extract_counts.R  - Extract Hi-C from 6 .hic files
-#     3. qc-val.R         - QC validation with replicate-aware analysis
-#     4. edgeR.R          - Differential analysis with QL GLM (n=3 per group)
+#     3. aggregate.R       - Aggregate 5x5 matrices → count matrix
+#     4. edgeR.R           - Differential analysis with QL GLM (n=3 per group)
 #
 # Expected runtime: ~6 hours (2 hours × 3 resolutions)
 # Expected output: Separate analyses for each resolution
@@ -118,25 +118,24 @@ for RES in "${RESOLUTIONS[@]}"; do
   echo ""
 
   # =============================================================================
-  # STEP 3: QC VALIDATION
+  # STEP 3: AGGREGATE MATRICES
   # =============================================================================
 
   echo "========================================="
-  echo "STEP 3: QC Validation (replicate-aware)"
+  echo "STEP 3: Aggregating 5x5 matrices"
   echo "========================================="
-  echo "Script: scripts/qc-val.R"
+  echo "Script: scripts/aggregate.R"
   echo "Resolution: ${RES} bp"
   echo ""
 
-  Rscript scripts/qc-val.R ${RES}
+  Rscript scripts/aggregate.R ${RES}
 
   if [ $? -eq 0 ]; then
     echo ""
-    echo "✅ QC validation completed for ${RES_KB}kb"
+    echo "✅ Matrix aggregation completed for ${RES_KB}kb"
   else
     echo ""
-    echo "❌ QC validation failed for ${RES_KB}kb with exit code $?"
-    echo "Check outputs/res_${RES_KB}kb/qc_report/ for details"
+    echo "❌ Matrix aggregation failed for ${RES_KB}kb with exit code $?"
     echo "Stopping pipeline at resolution ${RES_KB}kb"
     exit 1
   fi
@@ -175,6 +174,30 @@ for RES in "${RESOLUTIONS[@]}"; do
 done
 
 # ==============================================================================
+# STEP 5: COMPARE RESOLUTIONS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 5: Comparing results across resolutions"
+echo "========================================="
+echo "Script: scripts/compare_resolutions.R"
+echo ""
+
+Rscript scripts/compare_resolutions.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Resolution comparison completed"
+else
+    echo ""
+    echo "❌ Resolution comparison failed with exit code $?"
+    echo "Note: Individual resolution analyses are still complete"
+fi
+
+echo ""
+
+# ==============================================================================
 # PIPELINE COMPLETE
 # ==============================================================================
 
@@ -187,14 +210,13 @@ echo ""
 echo "Output directories:"
 for RES in "${RESOLUTIONS[@]}"; do
   RES_KB=$((RES / 1000))
-  echo "  - outputs/res_${RES_KB}kb/                     (loops & counts)"
-  echo "  - outputs/res_${RES_KB}kb/qc_report/           (QC metrics)"
+  echo "  - outputs/res_${RES_KB}kb/                     (loops, counts, matrices)"
   echo "  - outputs/edgeR_results_res_${RES_KB}kb/       (differential results)"
 done
 echo ""
 echo "Key files to review per resolution:"
-echo "  1. outputs/res_{RES}kb/qc_report/qc_report_summary.rds"
-echo "     → QC metrics"
+echo "  1. outputs/res_{RES}kb/06_counts_matrix.rds"
+echo "     → Count matrices"
 echo ""
 echo "  2. outputs/edgeR_results_res_{RES}kb/plots/mds_plot.pdf"
 echo "     → Sample relationships"
@@ -216,6 +238,10 @@ echo "  - 5kb:  Most loops, short-range interactions"
 echo "  - 10kb: Intermediate coverage"
 echo "  - 25kb: Long-range loops, inter-TAD interactions"
 echo ""
-echo "Next step: Compare results across resolutions"
-echo "  Rscript scripts/compare_resolutions.R"
-echo "========================================="
+echo "Resolution comparison outputs:"
+echo "  - outputs/resolution_comparison/summary_statistics_by_resolution.tsv"
+echo "  - outputs/resolution_comparison/loop_overlap_matrix.tsv"
+echo "  - outputs/resolution_comparison/differential_loops_by_resolution.pdf"
+echo "  - outputs/resolution_comparison/foldchange_correlation_*.pdf"
+echo "  - outputs/resolution_comparison/venn_diagram_differential_loops.pdf"
+echo "========================================"

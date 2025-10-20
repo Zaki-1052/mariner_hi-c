@@ -16,10 +16,10 @@
 # Pipeline:
 #   1. prep_loops.R      - Merge 6 BEDPE files → consensus positions
 #   2. extract_counts.R  - Extract Hi-C from 6 .hic files
-#   3. qc-val.R         - QC validation with replicate-aware analysis
-#   4. edgeR.R          - Differential analysis with QL GLM (n=3 per group)
+#   3. aggregate.R       - Aggregate 5x5 matrices → count matrix
+#   4. edgeR.R           - Differential analysis with QL GLM (n=3 per group)
 #
-# Expected runtime: ~15 minutes
+# Expected runtime: ~20 minutes
 # Expected output: Hundreds to thousands of differential loops
 # ==============================================================================
 
@@ -57,6 +57,7 @@ echo "========================================="
 echo "STEP 1: Preparing loops (6 replicates)"
 echo "========================================="
 echo "Script: scripts/prep_loops.R"
+echo "Resolution: 5000 bp (5 kb)"
 echo ""
 
 Rscript scripts/prep_loops.R 5000
@@ -79,10 +80,11 @@ echo ""
 echo "========================================="
 echo "STEP 2: Extracting Hi-C counts (6 files)"
 echo "========================================="
-echo "Script: scripts/extract_counts.R" 5000
+echo "Script: scripts/extract_counts.R"
+echo "Resolution: 5000 bp (5 kb)"
 echo ""
 
-Rscript scripts/extract_counts.R
+Rscript scripts/extract_counts.R 5000
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -96,24 +98,24 @@ fi
 echo ""
 
 # ==============================================================================
-# STEP 3: QC VALIDATION
+# STEP 3: AGGREGATE MATRICES
 # ==============================================================================
 
 echo "========================================="
-echo "STEP 3: QC Validation (replicate-aware)"
+echo "STEP 3: Aggregating 5x5 matrices"
 echo "========================================="
-echo "Script: scripts/qc-val.R"
+echo "Script: scripts/aggregate.R"
+echo "Resolution: 5000 bp (5 kb)"
 echo ""
 
-Rscript scripts/qc-val.R 5000
+Rscript scripts/aggregate.R 5000
 
 if [ $? -eq 0 ]; then
     echo ""
-    echo "✅ QC validation completed"
+    echo "✅ Matrix aggregation completed"
 else
     echo ""
-    echo "❌ QC validation failed with exit code $?"
-    echo "Check outputs/qc_report/ for details"
+    echo "❌ Matrix aggregation failed with exit code $?"
     exit 1
 fi
 
@@ -127,6 +129,7 @@ echo "========================================="
 echo "STEP 4: edgeR differential analysis"
 echo "========================================="
 echo "Script: scripts/edgeR.R"
+echo "Resolution: 5000 bp (5 kb)"
 echo "Method: Quasi-likelihood GLM"
 echo ""
 
@@ -153,27 +156,26 @@ echo "========================================="
 echo "End time: $(date)"
 echo ""
 echo "Output directories:"
-echo "  - outputs/full/                   (intermediate files)"
-echo "  - outputs/qc_report/              (QC plots & metrics)"
-echo "  - outputs/edgeR_results/          (differential results)"
+echo "  - outputs/res_5kb/                    (loops, counts, matrices)"
+echo "  - outputs/edgeR_results_res_5kb/      (differential results)"
 echo ""
 echo "Key files to review:"
-echo "  1. outputs/qc_report/qc_report_summary.rds"
-echo "     → QC metrics"
+echo "  1. outputs/res_5kb/06_counts_matrix.rds"
+echo "     → Count matrix (22,108 loops × 6 replicates)"
 echo ""
-echo "  2. outputs/edgeR_results/plots/mds_plot.pdf"
+echo "  2. outputs/edgeR_results_res_5kb/plots/mds_plot.pdf"
 echo "     → Sample relationships"
 echo ""
-echo "  3. outputs/edgeR_results/plots/bcv_plot.pdf"
+echo "  3. outputs/edgeR_results_res_5kb/plots/bcv_plot.pdf"
 echo "     → Dispersion estimates"
 echo ""
-echo "  4. outputs/edgeR_results/plots/ma_plot_primary.pdf"
+echo "  4. outputs/edgeR_results_res_5kb/plots/ma_plot_primary.pdf"
 echo "     → Differential loops visualization"
 echo ""
-echo "  5. outputs/edgeR_results/primary_analysis/all_results_primary.tsv"
+echo "  5. outputs/edgeR_results_res_5kb/primary_analysis/all_results_primary.tsv"
 echo "     → Full results table"
 echo ""
-echo "  6. outputs/edgeR_results/primary_analysis/summary_statistics.txt"
+echo "  6. outputs/edgeR_results_res_5kb/primary_analysis/summary_statistics.txt"
 echo "     → Analysis summary"
 echo ""
 echo "Improvement over previous:"
