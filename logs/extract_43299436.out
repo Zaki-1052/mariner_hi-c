@@ -1,0 +1,70 @@
+=========================================
+Mariner Hi-C Extraction - Test Run
+=========================================
+Job ID: 43299436
+Node: exp-1-06
+Start time: Mon Oct 13 14:49:37 PDT 2025
+=========================================
+
+Activating conda environment...
+/expanse/lustre/projects/csd940/zalibhai/mariner
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+
+=================================
+Step 5: Hi-C Contact Extraction
+=================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading buffered loops...
+  Loaded 150 loops with 5x5 pixel regions
+
+Verifying .hic files...
+  ctrl: 6.8 GB - OK
+  mut: 6.3 GB - OK
+
+Checking .hic file properties...
+
+ctrl file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05, 50000, 25000, 10000, 5000, 1000 
+  Chromosomes: All, chr1, chr10, chr11, chr12 ...
+  Chromosome prefix: chr
+  Normalizations: VC_SQRT, INTER_SCALE, VC, NONE, SCALE, GW_SCALE 
+
+mut file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05, 50000, 25000, 10000, 5000, 1000 
+  Chromosomes: All, chr1, chr10, chr11, chr12 ...
+  Chromosome prefix: chr
+  Normalizations: VC_SQRT, INTER_SCALE, VC, NONE, SCALE, GW_SCALE 
+Warning messages:
+1: KR normalization not available in ctrl, will use VC 
+2: KR normalization not available in mut, will use VC 
+
+Created HDF5 temp directory: /expanse/lustre/projects/csd940/zalibhai/mariner/temp_hdf5
+
+Validating loop positions...
+  Chromosomes in loops: 1
+  Example chromosomes: chr8
+
+=== Starting extraction ===
+Processing 150 loops x 2 files x 25 pixels = 7500 total extractions
+
+Attempt 1 with KR normalization...
+  ERROR in attempt 1: unused arguments (outDir = "/expanse/lustre/projects/csd940/zalibhai/mariner/temp_hdf5", BPPARAM = new("SerialParam", .xData = <environment>))
+Error in value[[3L]](cond) : 
+  Extraction failed: unused arguments (outDir = "/expanse/lustre/projects/csd940/zalibhai/mariner/temp_hdf5", BPPARAM = new("SerialParam", .xData = <environment>))
+Calls: tryCatch -> tryCatchList -> tryCatchOne -> <Anonymous>
+Execution halted
+
+=========================================
+Extraction failed with exit code 0
+End time: Mon Oct 13 14:49:54 PDT 2025
+Check error messages above for details
+=========================================

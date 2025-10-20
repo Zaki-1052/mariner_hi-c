@@ -1,0 +1,161 @@
+methods                 package:utils                  R Documentation
+
+_L_i_s_t _M_e_t_h_o_d_s _f_o_r _S_3 _G_e_n_e_r_i_c _F_u_n_c_t_i_o_n_s _o_r _C_l_a_s_s_e_s
+
+_D_e_s_c_r_i_p_t_i_o_n:
+
+     List all available methods for a S3 and S4 generic function, or
+     all methods for an S3 or S4 class.
+
+_U_s_a_g_e:
+
+        methods(generic.function, class, all.names = FALSE, dropPath = FALSE)
+     .S3methods(generic.function, class, envir = parent.frame(),
+                                         all.names = FALSE, dropPath = FALSE)
+     
+     ## S3 method for class 'MethodsFunction'
+     format(x, byclass = attr(x, "byclass"), ...)
+     ## S3 method for class 'MethodsFunction'
+     print(x, byclass = attr(x, "byclass"), ...)
+     
+_A_r_g_u_m_e_n_t_s:
+
+generic.function: a generic function, or a character string naming a
+          generic function.
+
+   class: a symbol or character string naming a class: only used if
+          ‘generic.function’ is not supplied.
+
+   envir: the environment in which to look for the definition of the
+          generic function, when the generic function is passed as a
+          character string.
+
+all.names: a ‘logical’ indicating if all object names are returned.
+          When ‘FALSE’ as by default, names beginning with a ‘.’ are
+          omitted.
+
+dropPath: a ‘logical’ indicating if the ‘search()’ path, apart from
+          ‘.GlobalEnv’ and ‘package:base’ (i.e., ‘baseenv()’), should
+          be skipped when searching for method definitions.  The
+          default ‘FALSE’ is back compatible and typically desired for
+          ‘print()’ing, with or without asterisk; ‘dropPath=TRUE’ has
+          been hard coded in R 4.3.0 and is faster for non-small
+          ‘search()’ paths.
+
+       x: typically the result of ‘methods(..)’, an R object of S3
+          class ‘"MethodsFunction"’, see ‘Value’ below.
+
+ byclass: an optional ‘logical’ allowing to override the ‘"byclass"’
+          attribute determining how the result is printed, see
+          ‘Details’.
+
+     ...: potentially further arguments passed to and from methods;
+          unused currently.
+
+_D_e_t_a_i_l_s:
+
+     ‘methods()’ finds S3 and S4 methods associated with either the
+     ‘generic.function’ or ‘class’ argument.  Methods found are those
+     provided by all loaded namespaces via registration, see
+     ‘UseMethod’; normally, this includes all packages on the current
+     ‘search()’ path.  ‘.S3methods()’ finds only S3 methods,
+     ‘.S4methods()’ finds only S4 methods.
+
+     When invoked with the ‘generic.function’ argument, the ‘"byclass"’
+     attribute (see Details) is ‘FALSE’, and the ‘print’ method by
+     default displays the signatures (full names) of S3 and S4 methods.
+     S3 methods are printed by pasting the generic function and class
+     together, separated by a ‘.’, as ‘generic.class’.  The S3 method
+     name is followed by an asterisk ‘*’ if the method definition is
+     not exported from the package namespace in which the method is
+     defined.  S4 method signatures are printed as
+     ‘generic,class-method’; S4 allows for multiple dispatch, so there
+     may be several classes in the signature ‘generic,A,B-method’.
+
+     When invoked with the ‘class’ argument, ‘"byclass"’ is ‘TRUE’, and
+     the ‘print’ method by default displays the names of the generic
+     functions associated with the class, ‘generic’.
+
+     The source code for all functions is available.  For S3 functions
+     exported from the namespace, enter the method at the command line
+     as ‘generic.class’.  For S3 functions not exported from the
+     namespace, see ‘getAnywhere’ or ‘getS3method’.  For S4 methods,
+     see ‘getMethod’.
+
+     Help is available for each method, in addition to each generic.
+     For interactive help, use the documentation shortcut ‘?’ with the
+     name of the generic and tab completion, ‘?"generic<tab>"’ to
+     select the method for which help is desired.
+
+     The S3 functions listed are those which _are named like methods_
+     and may not actually be methods (known exceptions are discarded in
+     the code).
+
+_V_a_l_u_e:
+
+     An object of class ‘"MethodsFunction"’, a character vector of
+     method names with ‘"byclass"’ and ‘"info"’ attributes.  The
+     ‘"byclass"’ attribute is a ‘logical’ indicating if the results
+     were obtained with argument ‘class’ defined.  The ‘"info"’
+     attribute is a data frame with columns:
+
+     generic ‘character’ vector of the names of the generic.
+
+     visible logical(), is the method “visible” to the user?  When
+          true, it typically is exported from the namespace of the
+          package in which it is defined, and the package is
+          ‘attach()’ed to the ‘search()’ path.
+
+     isS4 logical(), true when the method is an S4 method.
+
+     from a ‘factor’, the location or package name where the method was
+          found.
+
+_N_o_t_e:
+
+     The original ‘methods’ function was written by Martin Maechler.
+
+_R_e_f_e_r_e_n_c_e_s:
+
+     Chambers, J. M. (1992) _Classes and methods: object-oriented
+     programming in S._ Appendix A of _Statistical Models in S_ eds J.
+     M. Chambers and T. J. Hastie, Wadsworth & Brooks/Cole.
+
+_S_e_e _A_l_s_o:
+
+     ‘S3Methods’, ‘class’, ‘getS3method’.
+
+     For S4, ‘getMethod’, ‘showMethods’, Introduction or
+     ‘Methods_Details’.
+
+_E_x_a_m_p_l_e_s:
+
+     methods(class = "MethodsFunction") # format and print
+     
+     require(stats)
+     
+     methods(summary)
+     methods(class = "aov")    # S3 class
+     ## The same, with more details and more difficult to read:
+     print(methods(class = "aov"), byclass=FALSE)
+     methods("[[")             # uses C-internal dispatching
+     methods("$")
+     methods("$<-")            # replacement function
+     methods("+")              # binary operator
+     methods("Math")           # group generic
+     require(graphics)
+     methods(axis)             # looks like a generic, but is not
+     
+     mf <- methods(format)     # quite a few; ... the last few :
+     tail(cbind(meth = format(mf)))
+     
+     if(require(Matrix, quietly = TRUE)) {
+     print(methods(class = "Matrix"))  # S4 class
+     m <- methods(dim)         # S3 and S4 methods
+     print(m)
+     print(attr(m, "info"))    # more extensive information
+     
+     ## --> help(showMethods) for related examples
+     }
+     
+

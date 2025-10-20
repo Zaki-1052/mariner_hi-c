@@ -1,0 +1,127 @@
+=========================================
+Mariner Hi-C Extraction - Test Run
+=========================================
+Job ID: 43302077
+Node: exp-2-54
+Start time: Mon Oct 13 16:23:38 PDT 2025
+=========================================
+
+Activating conda environment...
+/expanse/lustre/projects/csd940/zalibhai/mariner
+/cm/local/apps/slurm/var/spool/job43302077/slurm_script: line 27: activate: No such file or directory
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+
+=================================
+Step 5: Hi-C Contact Extraction
+=================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading buffered loops...
+  Loaded 150 loops with 5x5 pixel regions
+
+Verifying .hic files...
+  ctrl: 6.8 GB - OK
+  mut: 6.3 GB - OK
+
+Checking .hic file properties...
+
+ctrl file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, NONE, INTER_SCALE, GW_SCALE, SCALE, VC 
+
+mut file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, NONE, INTER_SCALE, GW_SCALE, SCALE, VC 
+
+Using normalization: VC
+
+Validating loop positions...
+  Chromosomes in loops: 1
+  Example chromosomes: chr8
+  Maximum anchor width: 25001 bp
+  Minimum required blockSize: 50002 bp
+
+=== Starting extraction ===
+Processing 150 loops x 2 files x 25 pixels = 7500 total extractions
+
+Extraction completed in 27.7 seconds
+
+=== Validation of Extracted Data ===
+Dimensions: 5 x 5 x 150 x 2
+
+NA values: 0 (0.00%)
+
+Value distribution (excluding NAs):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   8.646  15.331  19.139  25.488 175.421 
+
+Sparsity: 0.6% zeros
+
+Per-sample statistics:
+  Sample 1 (ctrl): median=15.67, mean=19.63, max=170
+  Sample 2 (mut): median=14.98, mean=18.65, max=175
+
+=== Example Extracted Matrices ===
+Showing first 3 loops for control sample:
+
+Loop 1:
+       3.24     7.19    33.05    23.25    11.04 
+       3.94     9.55    24.97    30.16     6.60 
+       3.73    10.94    15.91    33.33     7.71 
+       3.34    15.06    12.11    18.85    10.29 
+       0.00    17.18    16.83    15.96     5.12 
+  Sum: 339, Max: 33, Non-zero: 24/25
+
+Loop 2:
+       4.15     7.43    26.05    29.95     7.24 
+       4.86    11.71    27.88    30.66    10.00 
+       3.28    16.64    36.89    33.14    13.79 
+       6.00    18.83    20.28    28.78    14.95 
+       1.70    13.31    26.30    24.67     7.39 
+  Sum: 426, Max: 37, Non-zero: 25/25
+
+Loop 3:
+       2.37    10.62    34.58    29.73    13.18 
+       4.63    18.31    46.23    45.35    12.36 
+      10.41    42.08    50.58    46.47    18.33 
+       6.52    32.91    32.73    31.82     9.78 
+       3.23    25.59    40.84    31.49     7.19 
+  Sum: 607, Max: 51, Non-zero: 25/25
+
+Warning messages:
+1: In matrix(example_matrix, nrow = 5, ncol = 5) :
+  data length differs from size of matrix: [750 != 5 x 5]
+2: In matrix(example_matrix, nrow = 5, ncol = 5) :
+  data length differs from size of matrix: [750 != 5 x 5]
+3: In matrix(example_matrix, nrow = 5, ncol = 5) :
+  data length differs from size of matrix: [750 != 5 x 5]
+
+=== Resource Usage ===
+Object size in memory: 0.1 MB
+HDF5 file: /expanse/lustre/projects/csd940/zalibhai/mariner/temp_hdf5/extracted_matrices.h5
+HDF5 file size: 0.2 MB
+
+Saving to outputs/test/05_extracted.rds...
+Error in saveRDS(pixels, output_file) : 
+  This InteractionArray object contains out-of-memory data so cannot be
+  serialized reliably. Please use saveHDF5SummarizedExperiment() from the
+  HDF5Array package instead. Alternatively you can call base::saveRDS()
+  on it but only if you know what you are doing.
+  See '?containsOutOfMemoryData' in the BiocGenerics package for more
+  information.
+Calls: saveRDS -> saveRDS
+Execution halted
+
+=========================================
+Extraction failed with exit code 0
+End time: Mon Oct 13 16:24:15 PDT 2025
+Check error messages above for details
+=========================================

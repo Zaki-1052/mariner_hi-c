@@ -1,0 +1,446 @@
+=========================================
+Mariner qc - Test Run
+=========================================
+Job ID: 43522753
+Node: exp-1-42
+Start time: Sun Oct 19 23:30:55 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.1     ✔ stringr   1.5.2
+✔ ggplot2   4.0.0     ✔ tibble    3.3.0
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.1.0     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:lubridate’:
+
+    intersect, setdiff, union
+
+The following objects are masked from ‘package:dplyr’:
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following objects are masked from ‘package:lubridate’:
+
+    second, second<-
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, rename
+
+The following object is masked from ‘package:tidyr’:
+
+    expand
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+
+Attaching package: ‘IRanges’
+
+The following object is masked from ‘package:lubridate’:
+
+    %within%
+
+The following objects are masked from ‘package:dplyr’:
+
+    collapse, desc, slice
+
+The following object is masked from ‘package:purrr’:
+
+    reduce
+
+Loading required package: GenomeInfoDb
+Loading required package: SummarizedExperiment
+Loading required package: MatrixGenerics
+Loading required package: matrixStats
+
+Attaching package: ‘matrixStats’
+
+The following object is masked from ‘package:dplyr’:
+
+    count
+
+
+Attaching package: ‘MatrixGenerics’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+    colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+    colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+    colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+    colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+    colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+    colWeightedMeans, colWeightedMedians, colWeightedSds,
+    colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+    rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+    rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+    rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+    rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+    rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+    rowWeightedSds, rowWeightedVars
+
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+
+Attaching package: ‘Biobase’
+
+The following object is masked from ‘package:MatrixGenerics’:
+
+    rowMedians
+
+The following objects are masked from ‘package:matrixStats’:
+
+    anyMissing, rowMedians
+
+Warning message:
+package ‘matrixStats’ was built under R version 4.4.3 
+Loading required package: SparseArray
+Loading required package: Matrix
+
+Attaching package: ‘Matrix’
+
+The following object is masked from ‘package:S4Vectors’:
+
+    expand
+
+The following objects are masked from ‘package:tidyr’:
+
+    expand, pack, unpack
+
+Loading required package: S4Arrays
+Loading required package: abind
+
+Attaching package: ‘S4Arrays’
+
+The following object is masked from ‘package:abind’:
+
+    abind
+
+The following object is masked from ‘package:base’:
+
+    rowsum
+
+Loading required package: DelayedArray
+
+Attaching package: ‘DelayedArray’
+
+The following object is masked from ‘package:purrr’:
+
+    simplify
+
+The following objects are masked from ‘package:base’:
+
+    apply, scale, sweep
+
+Loading required package: rhdf5
+
+Attaching package: ‘HDF5Array’
+
+The following object is masked from ‘package:rhdf5’:
+
+    h5ls
+
+Warning messages:
+1: package ‘Matrix’ was built under R version 4.4.3 
+2: package ‘S4Arrays’ was built under R version 4.4.3 
+3: package ‘abind’ was built under R version 4.4.3 
+Loading required package: limma
+
+Attaching package: ‘limma’
+
+The following object is masked from ‘package:BiocGenerics’:
+
+    plotMA
+
+Loading required package: viridisLite
+
+Attaching package: ‘scales’
+
+The following object is masked from ‘package:viridis’:
+
+    viridis_pal
+
+The following object is masked from ‘package:purrr’:
+
+    discard
+
+The following object is masked from ‘package:readr’:
+
+    col_factor
+
+=============================================================================
+MARINER PIPELINE QC VALIDATION
+=============================================================================
+
+SECTION 1: Data Loading & Integrity Validation
+------------------------------------------------
+Loading pipeline outputs...
+✓ All data files loaded successfully
+
+Basic Dimensions:
+  Initial loops (ctrl): 17568
+  Initial loops (mut):  17550
+  Merged loops:         22108
+  Binned loops:         22108
+  Buffered regions:     22108
+  Count matrix:         22108 loops × 2 samples
+
+Data Integrity Checks:
+  NA values: 0 (0.00%)
+  Zero values: 0 (0.00%)
+  ✓ No negative values detected
+
+SECTION 2: Sample-Level Quality Assessment
+-------------------------------------------
+Count Statistics by Sample:
+     Sample       Min       Q1   Median     Mean       Q3       Max       SD
+ctrl   ctrl 0.2133108 244.1515 412.8859 488.0395 655.5541  3322.947 322.7406
+mut     mut 0.2228383 232.7125 397.2045 469.4029 629.7261 21740.077 343.4999
+
+Library Sizes (Total Counts):
+    ctrl      mut 
+10789577 10377560 
+  Size ratio (mut/ctrl): 0.962
+
+  ✓ Library sizes are comparable
+Sample Correlation Analysis:
+  Pearson correlation: 0.9015
+  ✓ High correlation - good technical quality
+  Spearman correlation: 0.9790
+
+null device 
+          1 
+null device 
+          1 
+Warning message:
+Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead. 
+null device 
+          1 
+Sample-level QC plots saved to: outputs/qc_report 
+
+SECTION 3: Loop-Level Quality Assessment
+-----------------------------------------
+MA Statistics:
+  Average expression (A): 8.58 ± 1.02
+  Log2 fold change (M):   -0.066 ± 0.220
+  |M| > 1 (2-fold change): 46 loops (0.2%)
+  |M| > 2 (4-fold change): 2 loops (0.0%)
+
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Small change (|M| ≤ 1)' in 'mbcsToSbcs': <= substituted for ≤ (U+2264)
+null device 
+          1 
+Loop Variability Analysis:
+  Coefficient of Variation: 0.083 ± 0.075
+  High variability loops (CV > 1): 1 (0.0%)
+null device 
+          1 
+Loop-level QC plots saved
+
+SECTION 4: Spatial & Distance Analysis
+---------------------------------------
+Loop Distribution by Chromosome:
+# A tibble: 10 × 6
+   chr   n_loops mean_ctrl mean_mut mean_total mean_fc
+   <chr>   <int>     <dbl>    <dbl>      <dbl>   <dbl>
+ 1 chr2     1689      539.     527.      1066. -0.0489
+ 2 chr1     1598      462.     452.       914. -0.0344
+ 3 chr11    1484      711.     671.      1382. -0.0903
+ 4 chr5     1437      483.     468.       951. -0.0499
+ 5 chr4     1378      511.     493.      1003. -0.0651
+ 6 chr7     1340      478.     447.       925. -0.0942
+ 7 chr9     1319      593.     562.      1155. -0.0753
+ 8 chr6     1249      474.     451.       925. -0.0857
+ 9 chr10    1181      486.     466.       952. -0.0719
+10 chr3     1176      411.     398.       808. -0.0554
+
+Genomic Distance Statistics (intrachromosomal loops):
+  Loops with distance: 22108 / 22108 (100.0%)
+  Min distance:  35,000
+  Median distance: 170,000
+  Mean distance: 351,467
+  Max distance:  97,995,000
+
+null device 
+          1 
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+null device 
+          1 
+Spatial analysis plots saved
+
+SECTION 5: Matrix-Level Buffer Validation
+------------------------------------------
+Inspecting 5x5 extraction matrices...
+  Array dimensions: 5 x 5 x 22108 x 2
+  (rows x cols x loops x samples)
+
+Analyzing all loop matrices (this may take a moment)...
+  Processed 5000 / 22108 loops
+  Processed 10000 / 22108 loops
+  Processed 15000 / 22108 loops
+  Processed 20000 / 22108 loops
+
+Matrix-Level Summary:
+  Control peaks centered: 11331 / 22108 (51.3%)
+  Mutant peaks centered:  11034 / 22108 (49.9%)
+  Positional shifts detected: 11924 / 22108 (53.9%)
+  Mean center enrichment (ctrl): 0.074 ± 0.023
+  Mean center enrichment (mut):  0.075 ± 0.024
+
+null device 
+          1 
+Matrix inspection plots saved
+
+SECTION 6: Aggregation Strategy Comparison
+-------------------------------------------
+Comparing different aggregation methods...
+
+Available aggregation strategies:
+  - sum
+  - weighted
+
+Correlation between aggregation strategies (Control):
+           sum weighted
+sum      1.000    0.997
+weighted 0.997    1.000
+
+Correlation between aggregation strategies (Mutant):
+           sum weighted
+sum      1.000    0.997
+weighted 0.997    1.000
+
+Strategy comparison statistics:
+  Control sum range:      0.2 - 3322.9
+  Control weighted range: 0.0 - 158.6
+  Mutant sum range:       0.2 - 21740.1
+  Mutant weighted range:  0.0 - 954.4
+
+✓ Main count matrix uses 'sum' aggregation
+
+Strategy Interpretation:
+  - 'sum': Simple sum of all 25 pixels in 5×5 buffer
+           → Best for detecting ANY signal in buffer region
+           → Robust to positional shifts
+           → May include more background noise
+
+  - 'weighted': Distance-weighted sum (center pixels weighted higher)
+           → Gives more importance to center pixel
+           → Balance between precision and shift-tolerance
+           → Values typically lower than sum
+
+✓ High correlation between strategies (>0.95)
+  → Choice of aggregation method has minimal impact on results
+  → Both strategies capture similar biological signal
+
+Strategy comparison plots saved
+
+SECTION 7: Final QC Assessment & Recommendations
+=================================================
+
+QC ASSESSMENT:
+==============
+✓ PASS (with warnings)
+
+Data quality is acceptable, but note the following:
+  ⚠ Less than 50% of loops have centered peaks
+  ⚠ Low center enrichment (<0.2) suggests diffuse signal
+
+SUMMARY STATISTICS:
+===================
+Dataset:             22108 loops × 2 samples
+Sample correlation:  0.901 (Pearson)
+Library size ratio:  1.04 (mut/ctrl)
+Mean log2 FC:        -0.066 ± 0.220
+Loops with |M|>1:    46 (0.2%)
+Positional shifts:   11924 (53.9%)
+Center enrichment:   0.074 (ctrl), 0.075 (mut)
+
+RECOMMENDATIONS:
+================
+1. ✓ Proceed with edgeR differential analysis
+2. ✓ Data quality supports biological interpretation
+3. ⚠ 53.9% of loops show positional shifts - buffer approach validated
+
+NEXT STEPS:
+-----------
+→ Run edgeR differential analysis script
+→ Compare results with Hiccups differential calls
+→ Validate top hits with biological context
+
+=============================================================================
+QC REPORT COMPLETE
+=============================================================================
+All outputs saved to: outputs/qc_report
+
+Generated files:
+  01_sample_correlation.pdf       - Sample similarity heatmap
+  02_sample_scatter.pdf           - Sample-to-sample scatter plot
+  03_count_distributions.pdf      - Distribution comparisons
+  04_ma_plot.pdf                  - MA plot (fold change analysis)
+  05_variable_loops_heatmap.pdf   - Top variable loops
+  06_chromosome_distribution.pdf  - Loops per chromosome
+  07_distance_decay.pdf           - Distance vs signal strength
+  08_example_matrices.pdf         - Individual 5×5 matrix examples
+  09_strategy_comparison.pdf      - Aggregation method comparison
+  qc_report_summary.rds           - Complete QC metrics (R object)
+
+✓ Ready for differential analysis!
+=============================================================================
+
+✅ Extraction completed successfully
+End time: Mon Oct 20 00:24:45 PDT 2025
+=========================================

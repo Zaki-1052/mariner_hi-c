@@ -1,0 +1,45 @@
+#!/bin/bash
+#SBATCH --job-name=mariner_extract
+#SBATCH --output=logs/extract_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/mariner/logs
+
+echo "========================================="
+echo "Mariner Hi-C Extraction - Test Run"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Fix: Use proper conda activation
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+echo "Starting extraction script..."
+cd /expanse/lustre/projects/csd940/zalibhai/mariner
+Rscript scripts/extract_counts.R 2>&1
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Extraction completed successfully"
+else
+    echo ""
+    echo "❌ Extraction failed with exit code $?"
+fi
+
+echo "End time: $(date)"
+echo "========================================="

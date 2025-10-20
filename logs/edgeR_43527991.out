@@ -1,0 +1,80 @@
+=========================================
+Mariner edgeR - Test Run
+=========================================
+Job ID: 43527991
+Node: exp-2-22
+Start time: Mon Oct 20 04:05:57 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+================================================================================
+edgeR Differential Loop Analysis
+Pipeline: Mariner extraction → edgeR differential analysis
+Critical constraint: No biological replicates (n=1 per condition)
+================================================================================
+
+STEP 1: Loading configuration
+--------------------------------------------------------------------------------
+✓ Configuration loaded
+Created directory: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/tables 
+Created directory: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/plots 
+Created directory: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/reports 
+Created directory: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/logs 
+
+Primary analysis parameters:
+  BCV: 0.4 
+  Dispersion: 0.16 
+  FDR threshold: 0.05 
+  Sensitivity BCV range: 0.2, 0.3, 0.4, 0.5 
+
+STEP 2: Loading and validating input data
+--------------------------------------------------------------------------------
+Loading count matrix from: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/full/06_counts_matrix.rds 
+Loading coordinates from: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/full/03_binned.rds 
+
+✓ Input validation passed
+  Dimensions: 22108 loops × 2 samples
+  Sample names: ctrl, mut 
+  Count range: [ 0.2133108 ,  21740.08 ]
+
+STEP 3: Extracting genomic coordinates
+--------------------------------------------------------------------------------
+Loading required package: mariner
+✓ Coordinates extracted for 22108 loops
+  Example coordinate: chr8:60630000-60635000_chr8:61485000-61490000 
+
+STEP 4: Creating DGEList object
+--------------------------------------------------------------------------------
+✓ DGEList created
+  Library sizes:
+     group lib.size norm.factors
+ctrl  ctrl 10789577            1
+mut    mut 10377560            1
+
+✓ Checkpoint saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/tables/07_checkpoint_initial_dge.rds 
+
+STEP 5: Filtering low-count loops
+--------------------------------------------------------------------------------
+Filtering results:
+  Initial loops: 22108 
+  Loops retained: 22103 
+  Filter rate: 0.0% 
+
+================================================================================
+ERROR: Analysis failed
+================================================================================
+Error message: argument is of length zero 
+Traceback:
+No traceback available 
+NULL
+
+❌ Extraction failed with exit code 0
+End time: Mon Oct 20 04:06:10 PDT 2025
+=========================================

@@ -1,0 +1,60 @@
+=========================================
+Mariner Hi-C Extraction - Test Run
+=========================================
+Job ID: 43302635
+Node: exp-2-54
+Start time: Mon Oct 13 16:43:22 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+
+=================================
+Step 5: Hi-C Contact Extraction
+=================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading buffered loops...
+  Loaded 150 loops with 5x5 pixel regions
+
+Verifying .hic files...
+  ctrl: 6.8 GB - OK
+  mut: 6.3 GB - OK
+
+Checking .hic file properties...
+
+ctrl file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: INTER_SCALE, VC_SQRT, NONE, SCALE, VC, GW_SCALE 
+
+mut file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: INTER_SCALE, VC_SQRT, NONE, SCALE, VC, GW_SCALE 
+
+Using normalization: VC
+
+Validating loop positions...
+  Chromosomes in loops: 1
+  Example chromosomes: chr8
+  Maximum anchor width: 25001 bp
+  Minimum required blockSize: 50002 bp
+
+=== Starting extraction ===
+Processing 150 loops x 2 files x 25 pixels = 7500 total extractions
+file '/expanse/lustre/projects/csd940/zalibhai/mariner/temp_hdf5/extracted_matrices.h5' already exists.
+Can not create dataset. Object with name 'counts' already exists.
+Error in H5Dcreate(loc$H5Identifier, dataset, tid, sid, dcpl = dcpl) : 
+  HDF5. Dataset. Unable to initialize object.
+Calls: pullHicMatrices ... .local -> .pullArray -> h5createDataset -> H5Dcreate
+Execution halted
+
+❌ Extraction failed with exit code 0
+End time: Mon Oct 13 16:43:33 PDT 2025
+=========================================

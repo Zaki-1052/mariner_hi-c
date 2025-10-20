@@ -1,0 +1,100 @@
+=========================================
+Mariner edgeR - Test Run
+=========================================
+Job ID: 43529394
+Node: exp-1-14
+Start time: Mon Oct 20 06:10:39 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+
+========================================
+edgeR Differential Loop Analysis
+========================================
+
+Loading required libraries...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘tibble’ was built under R version 4.4.3 
+Loading configuration...
+Creating output directories...
+
+Setup complete
+   - Config loaded from: config/edgeR_config.yaml
+   - Output directory:  outputs/edgeR_results 
+   - Random seed:  42 
+
+Loading input data...
+   - Loading count matrix... (22108 loops × 2 samples)
+   - Loading loop coordinates... (22108 genomic positions)
+   - Loading QC summary... (shift data for 0 loops)
+
+Validating data integrity...
+   ✓ Data integrity checks passed
+
+Creating genomic annotations...
+   ✓ Created annotation for 22108 loops
+   - Columns: loop_id, chr1, start1, end1, chr2, start2, end2, coord_string 
+   - Shifted loops:0(NA%)
+
+Creating DGEList object...
+   ✓ DGEList created
+   - Samples: ctrl, mut 
+   - Library sizes: ctrl = 10789577 , mut = 10377560 
+   - Ratio (ctrl/mut): 1.04 
+
+Filtering low-count loops...
+   - Filtering with min.count = 5 
+   - Before filtering: 22108 loops
+   - Loops passing filter: 22104 
+   - Loops filtered out:4(0%)
+   After filtering: 22104 loops retained
+   - New library sizes: ctrl = 10789575 , mut = 10377558 
+
+Performing TMM normalization...
+   ✓ Normalization complete
+   - Method: TMM 
+   - Normalization factors: ctrl = 1.006 , mut = 0.994 
+   - Effective library sizes: ctrl = 10854740 , mut = 10315258 
+
+Running differential analysis with multiple dispersions...
+   (No biological replicates: using fixed BCV values)
+
+   Analysis with BCV = 0.1 ( lower bound)
+      - Dispersion = 0.01 
+      ✓ Significant loops (FDR < 0.05): 40 
+        - Up in mutant: 31 
+        - Down in mutant: 9 
+        - Strong (|logFC| > 1): 33 
+        - Moderate (|logFC| > 0.5): 7 
+
+   Analysis with BCV = 0.15 ( primary bound)
+      - Dispersion = 0.0225 
+      ✓ Significant loops (FDR < 0.05): 2 
+        - Up in mutant: 1 
+        - Down in mutant: 1 
+        - Strong (|logFC| > 1): 2 
+        - Moderate (|logFC| > 0.5): 0 
+
+   Analysis with BCV = 0.2 ( upper bound)
+      - Dispersion = 0.04 
+      ✓ Significant loops (FDR < 0.05): 1 
+        - Up in mutant: 1 
+        - Down in mutant: 0 
+        - Strong (|logFC| > 1): 1 
+        - Moderate (|logFC| > 0.5): 0 
+
+   Differential analysis complete
+      Primary results use BCV = 0.15 
+
+Analyzing shifted loop enrichment...
+
+❌ Extraction failed with exit code 0
+End time: Mon Oct 20 06:11:01 PDT 2025
+=========================================

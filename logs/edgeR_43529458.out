@@ -1,0 +1,163 @@
+=========================================
+Mariner edgeR - Test Run
+=========================================
+Job ID: 43529458
+Node: exp-1-14
+Start time: Mon Oct 20 06:19:30 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+
+========================================
+edgeR Differential Loop Analysis
+========================================
+
+Loading required libraries...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘tibble’ was built under R version 4.4.3 
+Loading configuration...
+Creating output directories...
+
+Setup complete
+   - Config loaded from: config/edgeR_config.yaml
+   - Output directory:  outputs/edgeR_results 
+   - Random seed:  42 
+
+Loading input data...
+   - Loading count matrix... (22108 loops × 2 samples)
+   - Loading loop coordinates... (22108 genomic positions)
+   - Loading QC summary... 
+
+[DEBUG] Exploring QC summary structure...
+   - Class: list 
+   - Is it a list? TRUE 
+   - Top-level names: dimensions, integrity, sample_stats, library_sizes, correlation, ma_stats, variability, chr_distribution, distance_stats, matrix_stats, aggregation_strategy, strategy_correlation 
+   - Names containing 'shift':  
+   âš  WARNING: 'shift_analysis' not found in top level
+
+   - Full structure preview:
+List of 12
+ $ dimensions          :List of 5
+  ..$ input_ctrl : int 17568
+  ..$ input_mut  : int 17550
+  ..$ merged     : int 22108
+  ..$ final_loops: int 22108
+  ..$ samples    : int 2
+ $ integrity           :List of 5
+  ..$ na_count       : int 0
+  ..$ na_percentage  : num 0
+  ..$ zero_count     : int 0
+  ..$ zero_percentage: num 0
+  ..$ negative_values: int 0
+ $ sample_stats        :'data.frame':	2 obs. of  8 variables:
+  ..$ Sample: chr [1:2] "ctrl" "mut"
+  ..$ Min   : num [1:2] 0.213 0.223
+  ..$ Q1    : num [1:2] 244 233
+  ..$ Median: num [1:2] 413 397
+  ..$ Mean  : num [1:2] 488 469
+  ..$ Q3    : num [1:2] 656 630
+  ..$ Max   : num [1:2] 3323 21740
+  ..$ SD    : num [1:2] 323 343
+ $ library_sizes       : Named num [1:2] 10789577 10377560
+  ..- attr(*, "names")= chr [1:2] "ctrl" "mut"
+ $ correlation         : num 0.901
+ $ ma_stats            :List of 6
+  ..$ mean_A  : num 8.58
+  ..$ sd_A    : num 1.02
+  ..$ mean_M  : num -0.0664
+  ..$ sd_M    : num 0.22
+  ..$ twofold : int 46
+  ..$ fourfold: int 2
+ $ variability         :List of 2
+  ..$ mean_cv       : num 0.0832
+  ..$ high_var_count: int 1
+ $ chr_distribution    : tibble [21 × 6] (S3: tbl_df/tbl/data.frame)
+ $ distance_stats      :List of 3
+  ..$ intrachromosomal_pct: num 100
+  ..$ median_distance     : num 170000
+  ..$ mean_distance       : num 351467
+ $ matrix_stats        :List of 5
+  ..$ centered_ctrl_pct          : num 51.3
+  ..$ centered_mut_pct           : num 49.9
+  ..$ shifts_pct                 : num 53.9
+  ..$ mean_center_enrichment_ctrl: num 0.0743
+  ..$ mean_center_enrichment_mut : num 0.0748
+ $ aggregation_strategy: chr "sum"
+ $ strategy_correlation:List of 2
+  ..$ ctrl: num 0.997
+  ..$ mut : num 0.997
+
+[DEBUG] End of QC summary exploration
+
+(shift data for 0 loops)
+
+Validating data integrity...
+   ✓ Data integrity checks passed
+
+Creating genomic annotations...
+   ✓ Created annotation for 22108 loops
+   - Columns: loop_id, chr1, start1, end1, chr2, start2, end2, coord_string 
+   - Shifted loops:0(NA%)
+
+Creating DGEList object...
+   ✓ DGEList created
+   - Samples: ctrl, mut 
+   - Library sizes: ctrl = 10789577 , mut = 10377560 
+   - Ratio (ctrl/mut): 1.04 
+
+Filtering low-count loops...
+   - Filtering with min.count = 5 
+   - Before filtering: 22108 loops
+   - Loops passing filter: 22104 
+   - Loops filtered out:4(0%)
+   After filtering: 22104 loops retained
+   - New library sizes: ctrl = 10789575 , mut = 10377558 
+
+Performing TMM normalization...
+   ✓ Normalization complete
+   - Method: TMM 
+   - Normalization factors: ctrl = 1.006 , mut = 0.994 
+   - Effective library sizes: ctrl = 10854740 , mut = 10315258 
+
+Running differential analysis with multiple dispersions...
+   (No biological replicates: using fixed BCV values)
+
+   Analysis with BCV = 0.1 ( lower bound)
+      - Dispersion = 0.01 
+      ✓ Significant loops (FDR < 0.05): 40 
+        - Up in mutant: 31 
+        - Down in mutant: 9 
+        - Strong (|logFC| > 1): 33 
+        - Moderate (|logFC| > 0.5): 7 
+
+   Analysis with BCV = 0.15 ( primary bound)
+      - Dispersion = 0.0225 
+      ✓ Significant loops (FDR < 0.05): 2 
+        - Up in mutant: 1 
+        - Down in mutant: 1 
+        - Strong (|logFC| > 1): 2 
+        - Moderate (|logFC| > 0.5): 0 
+
+   Analysis with BCV = 0.2 ( upper bound)
+      - Dispersion = 0.04 
+      ✓ Significant loops (FDR < 0.05): 1 
+        - Up in mutant: 1 
+        - Down in mutant: 0 
+        - Strong (|logFC| > 1): 1 
+        - Moderate (|logFC| > 0.5): 0 
+
+   Differential analysis complete
+      Primary results use BCV = 0.15 
+
+Analyzing shifted loop enrichment...
+
+❌ Extraction failed with exit code 0
+End time: Mon Oct 20 06:19:52 PDT 2025
+=========================================

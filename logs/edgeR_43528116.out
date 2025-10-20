@@ -1,0 +1,201 @@
+=========================================
+Mariner edgeR - Test Run
+=========================================
+Job ID: 43528116
+Node: exp-2-22
+Start time: Mon Oct 20 04:16:57 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+
+=================================================================
+edgeR Differential Loop Analysis - No Replicate Design
+=================================================================
+
+Start time: 2025-10-20 04:17:05 
+R version: R version 4.4.2 (2024-10-31) 
+
+Loading configuration from: config/edgeR_params.yaml 
+✓ Configuration loaded successfully
+
+Validating input files...
+✓ Count matrix found: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/full/06_counts_matrix.rds 
+✓ Coordinates found: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/full/03_binned.rds 
+✓ Input files validated
+
+Creating output directory structure...
+  Created: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/checkpoints 
+✓ Output directories ready
+
+Loading count matrix...
+✓ Count matrix loaded successfully
+  Dimensions: 22108 loops × 2 samples
+  Column names: ctrl, mut 
+  Value range: [ 0.2133108 , 21740.08 ]
+  Total counts: 10789577.0515787, 10377559.530433 
+
+Extracting genomic coordinates from binned GInteractions...
+Loading required package: mariner
+✓ Coordinates extracted successfully
+  Number of loops: 22108 
+  Chromosomes (anchor1): chr8, chr14, chr9, chr11, chr13, chr12, chr15, chr16, chr17, chrY, chr1, chr18, chr19, chr2, chrX, chr3, chr4, chr5, chr6, chr7, chr10 
+
+Constructing DGEList object...
+✓ DGEList created successfully
+  Samples: ctrl, mut 
+  Groups: ctrl, mut 
+  Library sizes: 10789577.0515787, 10377559.530433 
+  Library size ratio (ctrl/mut): 1.04 
+
+  Checkpoint saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/checkpoints/01_raw_dgelist.rds 
+Filtering low-count loops...
+  Loops before filtering: 22108 
+  Loops passing filter: 22103 
+  Filter rate: 0.02 %
+✓ Filtering complete
+  Final loop count: 22103 
+
+  Checkpoint saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/checkpoints/02_filtered_dgelist.rds 
+Calculating normalization factors (TMM)...
+✓ Normalization complete
+  Normalization factors: 1.006, 0.994 
+  Effective library sizes: 10854746, 10315235 
+  Norm factors within expected range ✓
+
+  Checkpoint saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/checkpoints/03_normalized_dgelist.rds 
+=================================================================
+PRIMARY ANALYSIS: BCV =  0.4 
+=================================================================
+
+Running differential analysis with fixed dispersion...
+  BCV: 0.4 
+  Dispersion: 0.16 
+  Justification: BCV = 0.4 chosen based on:
+- Typical mammalian Hi-C biological variability
+- Conservative estimate for mouse samples
+- Published Hi-C variance studies
+- Matches edgeR recommendations for human data without replicates
+ 
+
+Design matrix:
+  Intercept mut_vs_ctrl
+1         1           0
+2         1           1
+attr(,"assign")
+[1] 0 1
+attr(,"contrasts")
+attr(,"contrasts")$`y$samples$group`
+[1] "contr.treatment"
+
+
+Fitting GLM with fixed dispersion...
+✓ GLM fitting complete
+
+Performing likelihood ratio test (coefficient 2: mut_vs_ctrl)...
+✓ LRT complete
+
+Results Summary:
+  Total loops tested: 22103 
+  Significant (FDR <  0.05 ): 0 
+  Stringent (FDR <  0.01 ): 0 
+  Up in mutant: 0 
+  Down in mutant: 0 
+  |logFC| > 1: 0 
+  |logFC| > 2: 0 
+
+  Checkpoint saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/checkpoints/04_primary_results_BCV0.4.rds 
+=================================================================
+SENSITIVITY ANALYSIS: Testing Multiple BCV Values
+=================================================================
+
+Testing BCV values: 0.2, 0.3, 0.4, 0.5 
+
+Running in parallel with 8 cores...
+  BCV = 0.2 ( low )
+  BCV = 0.3 ( moderate )
+  BCV = 0.4 ( primary )
+  BCV = 0.5 ( high )
+
+Sensitivity Analysis Summary:
+BCV          Label    Sig (FDR<0.05)  Sig (FDR<0.01) 
+------------------------------------------------------- 
+0.20         low      1               1              
+0.30         moderate 1               1              
+0.40         primary  0               0              
+0.50         high     0               0              
+
+Overlap analysis (FDR < 0.05):
+  Core significant loops (all BCVs agree): 0 
+  Any significant (at least one BCV): 1 
+
+  Checkpoint saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/checkpoints/05_sensitivity_analysis.rds 
+Writing results tables...
+  Full results: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/tables/mariner_edgeR_results_full_BCV0.4.tsv 
+✓ Results tables written
+
+Generating MA plot...
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/plots/mariner_edgeR_MA_plot_BCV0.4.pdf 
+
+Generating volcano plot...
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/plots/mariner_edgeR_volcano_plot_BCV0.4.pdf 
+
+Generating sensitivity analysis plot...
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/plots/mariner_edgeR_sensitivity_analysis.pdf 
+
+=================================================================
+ANALYSIS SUMMARY
+=================================================================
+
+Analysis Parameters:
+  Primary BCV: 0.4 
+  Dispersion: 0.16 
+  Design: ~group 
+  Test type: LRT 
+  Multiple testing: BH 
+
+Dataset:
+  Total loops analyzed: 22103 
+  Samples: ctrl vs mut 
+
+Primary Results (BCV = 0.4):
+  Significant (FDR < 0.05): 0 
+  Stringent (FDR < 0.01): 0 
+  Up-regulated in mutant: 0 
+  Down-regulated in mutant: 0 
+  Median |logFC| (significant): NA 
+  Max |logFC|: 3.801 
+
+Effect Size Distribution (FDR < 0.05):
+
+Sensitivity Analysis:
+  BCV 0.20 (low): 1 significant (FDR<0.05)
+  BCV 0.30 (moderate): 1 significant (FDR<0.05)
+  BCV 0.40 (primary): 0 significant (FDR<0.05)
+  BCV 0.50 (high): 0 significant (FDR<0.05)
+
+  Core differential loops (all BCVs agree): 0 
+
+Output Files:
+  Tables: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/tables 
+  Plots: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/plots 
+  Checkpoints: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential/checkpoints 
+
+=================================================================
+Analysis Complete:  2025-10-20 04:17:14 
+=================================================================
+
+All analyses completed successfully!
+Warning message:
+Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead. 
+
+✅ Extraction completed successfully
+End time: Mon Oct 20 04:17:14 PDT 2025
+=========================================

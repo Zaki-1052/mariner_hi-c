@@ -1,0 +1,313 @@
+# config/edgeR_params.yaml
+# Configuration for edgeR differential chromatin loop analysis
+# Pipeline: mariner Hi-C loop analysis → edgeR differential testing
+# Constraint: No biological replicates (n=1 per condition)
+
+# =============================================================================
+# File Paths
+# =============================================================================
+paths:
+  # Input files
+  count_matrix: "/expanse/lustre/projects/csd940/zalibhai/mariner/outputs/full/06_counts_matrix.rds"
+  binned_coords: "/expanse/lustre/projects/csd940/zalibhai/mariner/outputs/full/03_binned.rds"
+  
+  # Output directories
+  output_base: "/expanse/lustre/projects/csd940/zalibhai/mariner/outputs/differential"
+  tables_dir: "tables"
+  plots_dir: "plots"
+  reports_dir: "reports"
+  logs_dir: "logs"
+  
+  # Intermediate checkpoints
+  checkpoint_dir: "checkpoints"
+
+# =============================================================================
+# Experimental Design
+# =============================================================================
+experimental_design:
+  sample_names: ["ctrl", "mut"]
+  group_levels: ["ctrl", "mut"]  # Factor levels (ctrl is reference)
+  comparison: "mut_vs_ctrl"  # Direction of comparison
+  
+# =============================================================================
+# Dispersion Parameters (CRITICAL for no-replicate analysis)
+# =============================================================================
+dispersion:
+  # Primary analysis parameters
+  method: "fixed"  # No replicates → fixed dispersion
+  primary_bcv: 0.4  # Conservative for mammalian Hi-C data
+  
+  # Biological justification
+  justification: |
+    BCV = 0.4 chosen based on:
+    - Typical mammalian Hi-C biological variability
+    - Conservative estimate for mouse samples
+    - Published Hi-C variance studies
+    - Matches edgeR recommendations for human data without replicates
+  
+  # Sensitivity analysis range
+  sensitivity_bcvs: [0.2, 0.3, 0.4, 0.5]
+  sensitivity_labels: ["low", "moderate", "primary", "high"]
+  
+  # Note: dispersion = BCV^2
+  # BCV 0.4 → dispersion 0.16
+  # BCV 0.2 → dispersion 0.04
+  # BCV 0.5 → dispersion 0.25
+
+# =============================================================================
+# Filtering Parameters
+# =============================================================================
+filtering:
+  # Use edgeR's built-in filtering function
+  use_filterByExpr: true
+  
+  # filterByExpr parameters (can override defaults if needed)
+  min_count: 10          # Minimum count in smallest group size samples
+  min_total_count: 15    # Minimum total count across all samples
+  large_n: 10            # Large sample size threshold
+  min_prop: 0.7          # Minimum proportion for large sample sizes
+  
+  # Fallback manual filtering (if filterByExpr too stringent)
+  manual_fallback:
+    enabled: true
+    min_cpm: 1           # Minimum CPM threshold
+    min_samples: 1       # Minimum number of samples
+  
+  # Monitoring thresholds
+  max_filter_rate: 0.5   # Warning if >50% loops filtered
+  min_loops_retained: 1000  # Error if <1000 loops remain
+
+# =============================================================================
+# Normalization Parameters
+# =============================================================================
+normalization:
+  method: "TMM"  # Trimmed Mean of M-values (default, recommended)
+  
+  # TMM-specific parameters
+  logratioTrim: 0.3     # Amount of trim for log-ratios
+  sumTrim: 0.05         # Amount of trim for absolute values
+  doWeighting: true     # Apply asymptotic binomial precision weights
+  
+  # Quality checks
+  norm_factor_range: [0.5, 2.0]  # Expected range for normalization factors
+  warn_outside_range: true
+
+# =============================================================================
+# Statistical Testing Parameters
+# =============================================================================
+testing:
+  # Model framework
+  model_type: "GLM"     # Generalized Linear Model
+  test_type: "LRT"      # Likelihood Ratio Test (appropriate for no replicates)
+  
+  # Design matrix specification
+  design_formula: "~group"  # Simple two-group comparison
+  test_coefficient: 2       # Test coefficient 2 (mut vs ctrl)
+  
+  # GLM fitting parameters
+  prior_count: 0.125    # Prior count for shrinkage (helps stabilize logFC)
+  
+  # Multiple testing correction
+  adjust_method: "BH"   # Benjamini-Hochberg FDR
+
+# =============================================================================
+# Significance Thresholds
+# =============================================================================
+thresholds:
+  # FDR cutoffs
+  fdr_primary: 0.05      # Primary significance threshold
+  fdr_stringent: 0.01    # Stringent threshold for high-confidence calls
+  fdr_relaxed: 0.10      # Exploratory threshold
+  
+  # Effect size cutoffs
+  logfc_moderate: 1.0    # |logFC| > 1 (2-fold change)
+  logfc_strong: 2.0      # |logFC| > 2 (4-fold change)
+  
+  # Combined criteria (for highlighting)
+  highlight_fdr: 0.01
+  highlight_logfc: 1.5
+
+# =============================================================================
+# Results Processing
+# =============================================================================
+results:
+  # Columns to include in output tables
+  include_columns:
+    - "loop_id"
+    - "chr1"
+    - "start1"
+    - "end1"
+    - "chr2"
+    - "start2"
+    - "end2"
+    - "coordinate"
+    - "baseMean"
+    - "logFC"
+    - "logCPM"
+    - "LR"           # Likelihood ratio statistic
+    - "PValue"
+    - "FDR"
+  
+  # Derived columns to add
+  add_derived:
+    - "significance_category"  # NS/Sig/Stringent
+    - "direction"              # up_in_mut/down_in_mut/unchanged
+    - "fold_change"            # 2^logFC (actual fold change)
+    - "abs_logFC"              # Absolute log fold change
+  
+  # Sorting preference
+  sort_by: "FDR"
+  sort_order: "ascending"
+  
+  # Top features to report
+  n_top: 100
+
+# =============================================================================
+# Visualization Parameters
+# =============================================================================
+visualization:
+  # MA plot
+  ma_plot:
+    point_size: 1.5
+    alpha: 0.6
+    sig_color: "#E74C3C"      # Red for significant
+    nonsig_color: "#95A5A6"   # Gray for non-significant
+    label_top_n: 10           # Label top N differential loops
+  
+  # Volcano plot
+  volcano_plot:
+    point_size: 1.5
+    alpha: 0.6
+    logfc_threshold: 1.0
+    fdr_threshold: 0.05
+    colors:
+      up: "#E74C3C"           # Red
+      down: "#3498DB"         # Blue
+      ns: "#95A5A6"           # Gray
+  
+  # Dispersion sensitivity plot
+  sensitivity_plot:
+    show_overlap: true
+    colors: ["#E8F5E9", "#66BB6A", "#2E7D32", "#1B5E20"]
+  
+  # General plotting parameters
+  figure_width: 10
+  figure_height: 8
+  dpi: 300
+  font_size: 12
+
+# =============================================================================
+# Quality Control Checks
+# =============================================================================
+quality_control:
+  # Data integrity
+  check_na_values: true
+  check_negative_values: true
+  check_zero_variance: true
+  
+  # Statistical assumptions
+  check_pvalue_distribution: true
+  check_dispersion_fit: true
+  
+  # Library size balance
+  max_lib_size_ratio: 2.0  # Warn if ratio > 2.0
+  
+  # Expected results
+  min_significant_loops: 10    # Warn if fewer
+  max_significant_loops: 10000 # Warn if more (potential issue)
+
+# =============================================================================
+# Computational Parameters
+# =============================================================================
+computation:
+  # Parallel processing (for sensitivity analysis)
+  n_cores: 8            # Match SLURM cpus-per-task
+  use_parallel: true    # Enable for sensitivity analysis
+  
+  # Memory management
+  max_memory_gb: 30     # Keep under SLURM allocation (32GB)
+  checkpoint_frequency: "major_steps"  # When to save intermediate results
+  
+  # Random seed for reproducibility
+  seed: 42
+
+# =============================================================================
+# Reporting Parameters
+# =============================================================================
+reporting:
+  # Report generation
+  generate_html: true
+  generate_pdf: false   # Set true if LaTeX available
+  
+  # Report contents
+  include_methods: true
+  include_diagnostics: true
+  include_session_info: true
+  
+  # Verbosity
+  progress_messages: true
+  detailed_warnings: true
+  
+  # Log file
+  log_analysis_parameters: true
+  timestamp_format: "%Y-%m-%d %H:%M:%S"
+
+# =============================================================================
+# Validation Rules
+# =============================================================================
+validation:
+  # Critical checks that halt analysis
+  critical:
+    - "input_files_exist"
+    - "count_matrix_dimensions"
+    - "no_na_in_counts"
+    - "coordinate_count_match"
+  
+  # Warning checks that continue analysis
+  warnings:
+    - "high_filter_rate"
+    - "extreme_norm_factors"
+    - "low_significance_count"
+  
+  # Expected value ranges
+  expected:
+    total_loops: [20000, 25000]
+    loops_after_filter: [15000, 22000]
+    norm_factors: [0.7, 1.3]
+    significant_loops_primary_bcv: [100, 5000]
+
+# =============================================================================
+# Output File Naming
+# =============================================================================
+output_naming:
+  # Prefix for all outputs
+  prefix: "mariner_edgeR"
+  
+  # Include timestamp in filenames
+  use_timestamp: true
+  
+  # Naming templates
+  results_table: "{prefix}_results_BCV{bcv}_FDR{fdr}.tsv"
+  filtered_dge: "{prefix}_filtered_dge.rds"
+  normalized_dge: "{prefix}_normalized_dge.rds"
+  results_full: "{prefix}_results_full_BCV{bcv}.rds"
+  ma_plot: "{prefix}_MA_plot_BCV{bcv}.pdf"
+  volcano_plot: "{prefix}_volcano_plot_BCV{bcv}.pdf"
+  sensitivity_plot: "{prefix}_sensitivity_analysis.pdf"
+  report: "{prefix}_analysis_report.html"
+
+# =============================================================================
+# Metadata
+# =============================================================================
+metadata:
+  analysis_name: "BAP1 Mutant vs Control Chromatin Loop Differential Analysis"
+  project: "mariner Hi-C Loop Analysis"
+  analyst: "Zaki"
+  date_created: "2025-01-XX"  # Will be auto-filled
+  pipeline_version: "1.0"
+  edgeR_version: "4.0+"  # Will be auto-detected
+  description: |
+    Differential analysis of chromatin loops between BAP1 mutant and control
+    mouse samples using edgeR GLM framework with fixed dispersion.
+    No biological replicates (n=1 per condition).
+    Uses mariner-extracted 5x5 buffered counts aggregated per loop.

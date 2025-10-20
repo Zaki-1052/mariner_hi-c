@@ -1,0 +1,83 @@
+=========================================
+Mariner Hi-C Extraction - Test Run
+=========================================
+Job ID: 43302554
+Node: exp-2-54
+Start time: Mon Oct 13 16:39:52 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+
+=================================
+Step 5: Hi-C Contact Extraction
+=================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading buffered loops...
+  Loaded 150 loops with 5x5 pixel regions
+
+Verifying .hic files...
+  ctrl: 6.8 GB - OK
+  mut: 6.3 GB - OK
+
+Checking .hic file properties...
+
+ctrl file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: NONE, INTER_SCALE, GW_SCALE, VC_SQRT, VC, SCALE 
+
+mut file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: NONE, INTER_SCALE, GW_SCALE, VC_SQRT, VC, SCALE 
+
+Using normalization: VC
+
+Validating loop positions...
+  Chromosomes in loops: 1
+  Example chromosomes: chr8
+  Maximum anchor width: 25001 bp
+  Minimum required blockSize: 50002 bp
+
+=== Starting extraction ===
+Processing 150 loops x 2 files x 25 pixels = 7500 total extractions
+
+Extraction completed in 28.8 seconds
+
+=== Validation of Extracted Data ===
+Dimensions: 5 x 5 x 150 x 2
+  = 5x5 pixels x 150 loops x 2 files
+
+NA values: 0 (0.00%)
+
+Value distribution (excluding NAs):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   8.646  15.331  19.139  25.488 175.421 
+
+Sparsity: 0.6% zeros
+
+Per-sample statistics:
+  ctrl: median=15.67, mean=19.63, max=170
+  mut: median=14.98, mean=18.65, max=175
+
+Sample correlation:
+  Correlation (ctrl vs mut): 0.918
+
+=== Example Extracted Matrices ===
+Showing first 3 loops for control sample:
+
+Loop 1:
+Error in formatted[row, ] : incorrect number of dimensions
+Calls: cat -> paste -> standardGeneric -> eval -> eval -> eval
+Execution halted
+
+❌ Extraction failed with exit code 0
+End time: Mon Oct 13 16:40:32 PDT 2025
+=========================================

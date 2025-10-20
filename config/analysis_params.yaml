@@ -1,0 +1,376 @@
+# config/analysis_params.yaml
+# Configuration for edgeR differential loop analysis of Hi-C data
+# Pipeline: Mariner extraction → edgeR differential → Hiccups comparison
+# Critical constraint: No biological replicates (n=1 per condition)
+
+################################################################################
+# PROJECT METADATA
+################################################################################
+project:
+  name: "BAP1_mutant_differential_loops"
+  description: "Differential chromatin loop analysis between BAP1 mutant and control mouse samples"
+  organism: "Mus musculus"
+  resolution: "5kb"
+  date_created: "2025-01-XX"  # Update with actual date
+  analyst: "Zaki"
+
+################################################################################
+# FILE PATHS
+################################################################################
+paths:
+  # Input files (from mariner pipeline)
+  base_dir: "/expanse/lustre/projects/csd940/zalibhai/mariner"
+  input_dir: "${base_dir}/outputs/full"
+  counts_matrix: "${input_dir}/06_counts_matrix.rds"
+  binned_interactions: "${input_dir}/03_binned.rds"
+  qc_dir: "${base_dir}/outputs/qc_report"
+  
+  # Hiccups differential results for comparison
+  hiccups_base: "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/merged/diffhiccups_results/resorted_ctrl_vs_resorted_mut"
+  hiccups_ctrl_enriched: "${hiccups_base}/file1/postprocessed_pixels_5000.bedpe"
+  hiccups_mut_enriched: "${hiccups_base}/file2/postprocessed_pixels_5000.bedpe"
+  
+  # Output directories
+  output_base: "${base_dir}/outputs/differential"
+  output_tables: "${output_base}/tables"
+  output_plots: "${output_base}/plots"
+  output_reports: "${output_base}/reports"
+  comparison_dir: "${base_dir}/outputs/comparison"
+  logs_dir: "${base_dir}/outputs/logs"
+
+################################################################################
+# SAMPLE INFORMATION
+################################################################################
+samples:
+  names: ["ctrl", "mut"]
+  conditions: ["control", "mutant"]
+  description:
+    ctrl: "BAP1 wild-type control"
+    mut: "BAP1 mutant"
+  
+  # Known library characteristics (from QC)
+  library_info:
+    ctrl_total_counts: 10789577
+    mut_total_counts: 10377560
+    ratio: 1.040  # ctrl/mut
+    pearson_correlation: 0.9015
+    spearman_correlation: 0.9790
+
+################################################################################
+# EDGER ANALYSIS PARAMETERS
+################################################################################
+edger:
+  
+  # Filtering parameters
+  filtering:
+    method: "filterByExpr"  # Use edgeR's built-in adaptive filtering
+    use_default: true       # Use filterByExpr defaults first
+    
+    # Manual override parameters (if defaults too strict)
+    fallback:
+      min_count: 10              # Minimum count in smallest group
+      min_total_count: 20        # Minimum total across samples
+      min_prop: 0.7              # Proportion of samples that should pass
+    
+    # Documentation thresholds
+    max_filter_rate: 0.5     # Alert if >50% loops filtered
+    
+  # Normalization
+  normalization:
+    method: "TMM"              # Trimmed Mean of M-values
+    validate_range: [0.5, 2.0] # Expected norm.factors range
+    
+  # Dispersion parameters (CRITICAL for no-replicate design)
+  dispersion:
+    primary_analysis:
+      method: "fixed"          # Must use fixed for n=1
+      bcv: 0.4                 # Conservative for mammalian Hi-C
+      dispersion: 0.16         # bcv^2 = 0.4^2 = 0.16
+      justification: "Based on published mammalian Hi-C variance studies and conservative estimation for differential analysis without replicates"
+    
+    # Sensitivity analysis parameters
+    sensitivity_analysis:
+      enabled: true
+      bcv_values: [0.2, 0.3, 0.4, 0.5]
+      dispersion_values: [0.04, 0.09, 0.16, 0.25]  # bcv^2
+      track_metrics:
+        - "n_significant_loops"
+        - "median_logFC"
+        - "core_differential_set"  # Loops sig across all BCVs
+    
+  # Statistical testing
+  testing:
+    framework: "GLM"           # Generalized Linear Model
+    test_type: "LRT"           # Likelihood Ratio Test (better for no replicates)
+    design_formula: "~group"   # Simple two-group comparison
+    coefficient_to_test: 2     # Test mutant vs control (second coef)
+    
+    # Significance thresholds
+    fdr_threshold: 0.05        # Primary significance cutoff
+    fdr_strict: 0.01           # Stringent subset
+    logfc_threshold: 1.0       # For biological significance (|logFC| > 1 = 2-fold)
+    
+  # Output control
+  output:
+    save_full_results: true    # Save all loops, not just significant
+    include_cpm: true          # Include log2CPM values
+    include_coordinates: true  # Merge with genomic positions
+    
+  # Prior count for logFC shrinkage
+  prior_count: 0.125           # Default edgeR value
+
+################################################################################
+# QUALITY CONTROL THRESHOLDS
+################################################################################
+qc:
+  # Pre-analysis validation
+  pre_checks:
+    verify_no_na: true
+    verify_no_negatives: true
+    verify_column_names: ["ctrl", "mut"]
+    expected_loop_count: 22108
+  
+  # Post-filtering validation
+  post_filter_checks:
+    min_loops_retained: 1000   # Alert if fewer loops pass filter
+    warn_if_extreme_filter: 0.5 # Warn if >50% filtered
+  
+  # Post-differential validation
+  result_checks:
+    check_pvalue_distribution: true  # Should be roughly uniform under null
+    check_logfc_symmetry: true       # Up vs down should be balanced
+    check_extreme_logfc: 5.0         # Flag loops with |logFC| > 5
+    
+  # Distribution expectations
+  expected_ranges:
+    baseMean: [1, 5000]        # Rough expected range
+    logFC: [-3, 3]             # Most should be within ±3
+    logCPM: [0, 12]            # Log2 counts per million
+
+################################################################################
+# HICCUPS COMPARISON PARAMETERS
+################################################################################
+comparison:
+  
+  # Coordinate matching strategy
+  matching:
+    primary_method: "exact"         # Try exact coordinate match first
+    fuzzy_distance: 10000           # 10kb window for fuzzy matching
+    use_nearest_neighbor: true      # Find nearest for unmatched
+    
+  # Analysis components
+  analyses:
+    - "overlap_analysis"            # Venn diagram data
+    - "directional_concordance"     # Agreement on up/down
+    - "effect_size_correlation"     # Compare fold changes
+    - "shift_enrichment"            # Are shifted loops method-specific?
+  
+  # Concordance categories
+  categories:
+    - "shared_differential"         # Both methods agree
+    - "mariner_specific"            # Only mariner significant
+    - "hiccups_specific"            # Only hiccups significant
+    - "directional_agreement"       # Both sig, same direction
+    - "directional_disagreement"    # Both sig, opposite directions
+  
+  # Shift analysis integration
+  shift_analysis:
+    enabled: true
+    shift_data_source: "${qc_dir}/qc_report_summary.rds"
+    test_enrichment: true           # Test if shifts enriched in discordant calls
+
+################################################################################
+# VISUALIZATION PARAMETERS
+################################################################################
+visualization:
+  
+  # Plot dimensions
+  dimensions:
+    single_plot: [8, 6]        # width, height in inches
+    multi_panel: [12, 8]
+    comparison_plot: [10, 10]
+  
+  # Color schemes
+  colors:
+    significance:
+      not_sig: "#CCCCCC"       # Gray
+      fdr_05: "#E69F00"        # Orange
+      fdr_01: "#D55E00"        # Red-orange
+      high_fc: "#CC79A7"       # Pink (|logFC| > 1)
+    
+    direction:
+      up_in_mut: "#0072B2"     # Blue
+      down_in_mut: "#009E73"   # Green
+      unchanged: "#CCCCCC"     # Gray
+    
+    method_comparison:
+      both: "#56B4E9"          # Light blue
+      mariner_only: "#E69F00"  # Orange
+      hiccups_only: "#009E73"  # Green
+  
+  # Plot-specific parameters
+  plots:
+    ma_plot:
+      alpha: 0.6
+      point_size: 0.5
+      label_top_n: 10          # Label top differential loops
+      
+    volcano_plot:
+      alpha: 0.6
+      point_size: 0.5
+      fdr_line: 0.05
+      fc_lines: [-1, 1]        # Log2FC thresholds
+      
+    dispersion_sensitivity:
+      show_overlap: true       # Show core set overlap
+      
+    comparison_scatter:
+      add_regression: true
+      show_correlation: true
+
+################################################################################
+# REPORTING PARAMETERS
+################################################################################
+reporting:
+  
+  # Report formats
+  formats:
+    - "html"                   # Interactive HTML report
+    - "pdf"                    # Static PDF for archival
+    
+  # Report sections
+  sections:
+    - "executive_summary"
+    - "analysis_parameters"
+    - "filtering_summary"
+    - "normalization_results"
+    - "differential_results"
+    - "sensitivity_analysis"
+    - "comparison_with_hiccups"
+    - "quality_control_metrics"
+    - "biological_interpretation"
+  
+  # Summary statistics to include
+  summary_stats:
+    - "total_loops_analyzed"
+    - "loops_passing_filter"
+    - "significant_loops_fdr05"
+    - "significant_loops_fdr01"
+    - "median_logfc_significant"
+    - "up_regulated_count"
+    - "down_regulated_count"
+    - "high_fc_loops"          # |logFC| > 1
+    - "hiccups_overlap_rate"
+    - "directional_concordance_rate"
+
+################################################################################
+# COMPUTATIONAL PARAMETERS
+################################################################################
+computational:
+  
+  # Memory management
+  memory:
+    max_object_size_gb: 2      # Alert if objects exceed this
+    use_data_table: true       # Use data.table for large operations
+    
+  # Parallel processing
+  parallel:
+    enabled: true
+    n_cores: 4                 # For sensitivity analysis
+    
+  # Checkpointing
+  checkpoints:
+    enabled: true
+    save_intermediate: true
+    checkpoint_files:
+      - "filtered_dge"
+      - "normalized_dge"
+      - "results_full"
+      - "comparison_data"
+
+################################################################################
+# VALIDATION CRITERIA
+################################################################################
+validation:
+  
+  # Internal consistency checks
+  consistency:
+    - "logfc_sign_matches_counts"
+    - "fdr_lte_pvalue"
+    - "total_counts_preserved"
+  
+  # Biological sanity checks
+  biological:
+    - "roughly_symmetric_distribution"  # ~50/50 up/down
+    - "strongest_signals_plausible"
+    - "known_unchanged_regions_stable"
+  
+  # Method comparison validation
+  method_comparison:
+    - "high_concordance_strong_signals"  # >70% for |logFC| > 2
+    - "effect_size_positive_correlation"
+    - "method_specific_enriched_edge_cases"
+
+################################################################################
+# ERROR HANDLING
+################################################################################
+error_handling:
+  
+  # Critical validations that stop execution
+  critical_checks:
+    - "input_files_exist"
+    - "expected_dimensions"
+    - "no_all_zero_samples"
+    - "coordinates_recoverable"
+  
+  # Warnings that continue with documentation
+  warning_checks:
+    - "high_filter_rate"
+    - "extreme_norm_factors"
+    - "unexpected_pvalue_distribution"
+  
+  # Logging
+  logging:
+    level: "INFO"              # DEBUG, INFO, WARNING, ERROR
+    log_file: "${logs_dir}/edgeR_analysis_${timestamp}.log"
+    include_timestamp: true
+    include_session_info: true
+
+################################################################################
+# REPRODUCIBILITY
+################################################################################
+reproducibility:
+  random_seed: 42
+  save_session_info: true
+  save_package_versions: true
+  save_complete_parameters: true
+  
+  # Key package versions (for documentation)
+  expected_packages:
+    edgeR: ">=4.0.0"
+    limma: ">=3.58.0"
+    GenomicRanges: ">=1.54.0"
+    InteractionSet: ">=1.30.0"
+
+################################################################################
+# NOTES AND DOCUMENTATION
+################################################################################
+notes:
+  critical_decisions: |
+    1. BCV=0.4 chosen as conservative estimate for mammalian Hi-C without replicates
+    2. GLM+LRT preferred over QL+QLF for no-replicate scenario
+    3. Sensitivity analysis across BCV range to assess robustness
+    4. filterByExpr used for adaptive, unbiased filtering
+    5. Coordinate mapping maintained throughout for biological interpretation
+  
+  known_limitations: |
+    1. No biological replication limits statistical power
+    2. Results highly sensitive to chosen BCV parameter
+    3. Cannot distinguish biological variability from technical noise
+    4. Comparison with Hiccups complicated by different loop sets
+  
+  future_improvements: |
+    1. Add biological replicates if additional samples become available
+    2. Integrate with pathway/GSEA analysis of differential loops
+    3. Validate top hits with orthogonal methods (e.g., 4C, ChIA-PET)
+    4. Compare with additional Hi-C differential tools
