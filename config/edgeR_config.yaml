@@ -27,23 +27,23 @@ paths:
 
 ## Sample Information
 samples:
-  names: ["ctrl", "mut"]
+  names: ["ctrl_M1", "ctrl_M2", "ctrl_M3", "mut_M1", "mut_M2", "mut_M3"]
+  groups: ["ctrl", "ctrl", "ctrl", "mut", "mut", "mut"]
   group_labels: ["Control", "Mutant"]
-  description: "BAP1 mutant vs control Hi-C merged replicates"
+  description: "BAP1 mutant vs control Hi-C with biological replicates (n=3 per condition)"
 
 ## Statistical Parameters
 statistics:
-  # Dispersion settings (no replicates, using fixed BCV)
-  primary_bcv: 0.15      # Primary analysis (mouse controlled experiment)
-  sensitivity_bcv:
-    lower: 0.10          # Lower bound (near model organism expectation)
-    upper: 0.20          # Upper bound (conservative estimate)
-  
+  # Dispersion estimation (data-driven from replicates)
+  # No fixed BCV - will be estimated using estimateDisp()
+  # Expected BCV for controlled Hi-C: 0.1-0.3
+  estimate_method: "robust"  # Use robust estimation for dispersions
+
   # Filtering thresholds
   filtering:
-    min_count: 5         # Minimum count threshold (lowered from default 10)
-    min_total_count: 10  # Minimum total across samples (lowered from 15)
-    min_prop: 0.7        # Minimum proportion for large groups
+    min_count: 5         # Minimum count threshold
+    min_total_count: 15  # Minimum total across samples (can be stricter with replicates)
+    min_prop: 0.5        # At least half the samples in smallest group (2/3 for n=3)
   
   # Significance thresholds
   fdr_primary: 0.05      # Primary FDR cutoff
@@ -72,15 +72,34 @@ comparison:
     - "hiccups_specific"      # Only Hiccups significant
     - "non_differential"      # Neither method significant
 
+## Replicate Quality Control
+replicate_qc:
+  min_within_group_correlation: 0.90  # Flag if within-group correlation < 0.90
+  max_outlier_distance: 2.5           # MDS distance threshold for outliers
+  lib_size_fold_threshold: 2.0        # Flag if replicate differs >2-fold from median
+
 ## Visualization Settings
 visualization:
-  # Plot parameters
+  # Sample QC plots
+  mds_plot:
+    dimensions: [[1,2], [2,3]]  # Multiple MDS views
+    color_by_group: true
+    label_samples: true
+
+  bcv_plot:
+    show_trend: true
+    show_common: true
+
+  ql_dispersion_plot:
+    show_shrinkage: true
+
+  # Differential results plots
   ma_plot:
     point_size: 0.8
     alpha: 0.6
     fdr_threshold: 0.05
     fc_lines: [-1, 1]    # ±2-fold change reference lines
-  
+
   volcano_plot:
     point_size: 0.8
     alpha: 0.6
@@ -105,10 +124,14 @@ visualization:
 ## Quality Control
 qc:
   # Thresholds for warnings
-  min_library_size: 1e6
-  max_bcv: 1.0           # Warn if dispersions exceed 1
-  min_filtered_loops: 10000  # Expect at least this many after filtering
-  
+  min_library_size: 5e6        # Per-replicate minimum (lower than merged)
+  max_bcv: 0.5                 # Warn if common BCV exceeds 0.5 (high for controlled)
+  min_filtered_loops: 10000    # Expect at least this many after filtering
+  min_residual_df: 3           # Minimum residual df (should be 4 for 6 samples, 2 groups)
+
+  # Replicate quality
+  min_within_correlation: 0.90 # Flag low within-group correlation
+
   # Shifted loop analysis
   track_positional_shifts: true
   shift_enrichment_test: true
@@ -171,12 +194,18 @@ validation:
 
 ## Metadata
 metadata:
-  pipeline_version: "1.0.0"
+  pipeline_version: "2.0.0"
   edgeR_version: "4.x"
   analysis_date: "2025-10-20"
   analyst: "Zaki"
   project: "BAP1_mutant_Hi-C_differential_loops"
   description: |
-    Differential chromatin loop analysis using Mariner buffer aggregation approach
-    with edgeR statistical testing. Designed for merged replicate data (n=1 per condition)
-    with comparison to Hiccups differential results for validation.
+    Replicate-aware differential chromatin loop analysis using Mariner buffer aggregation
+    with edgeR quasi-likelihood GLM testing. Uses biological replicates (n=3 per condition)
+    for proper variance estimation and improved statistical power.
+  improvements_over_v1:
+    - "Biological replicates enable data-driven dispersion estimation"
+    - "Quasi-likelihood F-tests with proper error rate control"
+    - "MDS and BCV plots for quality control"
+    - "Robust estimation to handle outliers"
+    - "Expected >100× improvement in differential loop detection"

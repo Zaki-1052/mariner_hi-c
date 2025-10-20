@@ -150,14 +150,31 @@ qc_report$sample_stats <- sample_stats
 lib_sizes <- colSums(counts_matrix, na.rm = TRUE)
 cat("Library Sizes (Total Counts):\n")
 print(lib_sizes)
-cat(sprintf("  Size ratio (mut/ctrl): %.3f\n", lib_sizes[2]/lib_sizes[1]))
+
+# For replicates, compare within-group and between-group
+n_samples <- ncol(counts_matrix)
+if (n_samples == 6) {
+  # Replicate-aware analysis
+  ctrl_libs <- lib_sizes[1:3]
+  mut_libs <- lib_sizes[4:6]
+  cat(sprintf("\n  Control group:\n"))
+  cat(sprintf("    Mean: %.0f, SD: %.0f, CV: %.2f\n",
+              mean(ctrl_libs), sd(ctrl_libs), sd(ctrl_libs)/mean(ctrl_libs)))
+  cat(sprintf("  Mutant group:\n"))
+  cat(sprintf("    Mean: %.0f, SD: %.0f, CV: %.2f\n",
+              mean(mut_libs), sd(mut_libs), sd(mut_libs)/mean(mut_libs)))
+  cat(sprintf("  Ratio (mut/ctrl medians): %.3f\n", median(mut_libs)/median(ctrl_libs)))
+} else {
+  # Original 2-sample analysis
+  cat(sprintf("  Size ratio (mut/ctrl): %.3f\n", lib_sizes[2]/lib_sizes[1]))
+}
 cat("\n")
 
 # Check if library sizes are comparable (should be within 2-fold)
 lib_ratio <- max(lib_sizes) / min(lib_sizes)
 if (lib_ratio > 2.0) {
   cat("  ✗ WARNING: Large library size difference (>2-fold)\n")
-  qc_report$warnings <- c(qc_report$warnings, 
+  qc_report$warnings <- c(qc_report$warnings,
                           sprintf("Library size ratio: %.2f", lib_ratio))
 } else {
   cat("  ✓ Library sizes are comparable\n")
@@ -168,25 +185,74 @@ qc_report$library_sizes <- lib_sizes
 # Sample correlation
 cat("Sample Correlation Analysis:\n")
 cor_matrix <- cor(counts_matrix, use = "complete.obs", method = "pearson")
-cor_value <- cor_matrix[1, 2]
-cat(sprintf("  Pearson correlation: %.4f\n", cor_value))
 
-# Interpret correlation
-if (cor_value > 0.95) {
-  cat("  ⚠ Very high correlation - may indicate limited biological difference\n")
-} else if (cor_value > 0.85) {
-  cat("  ✓ High correlation - good technical quality\n")
-} else if (cor_value > 0.70) {
-  cat("  ⚠ Moderate correlation - check for batch effects\n")
+if (n_samples == 6) {
+  # Replicate-aware correlation analysis
+  cat("\nFull correlation matrix:\n")
+  print(round(cor_matrix, 3))
+
+  # Within-group correlations
+  cat("\nWithin-group correlations:\n")
+  ctrl_cors <- cor_matrix[1:3, 1:3][upper.tri(cor_matrix[1:3, 1:3])]
+  mut_cors <- cor_matrix[4:6, 4:6][upper.tri(cor_matrix[4:6, 4:6])]
+  cat(sprintf("  Control replicates: %.3f ± %.3f (range: %.3f-%.3f)\n",
+              mean(ctrl_cors), sd(ctrl_cors), min(ctrl_cors), max(ctrl_cors)))
+  cat(sprintf("  Mutant replicates:  %.3f ± %.3f (range: %.3f-%.3f)\n",
+              mean(mut_cors), sd(mut_cors), min(mut_cors), max(mut_cors)))
+
+  # Between-group correlations
+  between_cors <- as.vector(cor_matrix[1:3, 4:6])
+  cat(sprintf("  Between groups:     %.3f ± %.3f (range: %.3f-%.3f)\n",
+              mean(between_cors), sd(between_cors), min(between_cors), max(between_cors)))
+
+  # Quality assessment
+  cat("\nQuality Assessment:\n")
+  if (mean(ctrl_cors) > 0.95 && mean(mut_cors) > 0.95) {
+    cat("  ✓ Excellent within-group reproducibility (>0.95)\n")
+  } else if (mean(ctrl_cors) > 0.90 && mean(mut_cors) > 0.90) {
+    cat("  ✓ Good within-group reproducibility (>0.90)\n")
+  } else {
+    cat("  ⚠ Lower than expected within-group correlation\n")
+  }
+
+  if ((mean(ctrl_cors) - mean(between_cors)) > 0.05 ||
+      (mean(mut_cors) - mean(between_cors)) > 0.05) {
+    cat("  ✓ Clear biological signal (within > between)\n")
+  } else {
+    cat("  ⚠ Weak biological differences\n")
+  }
+
+  qc_report$correlation <- list(
+    within_ctrl = mean(ctrl_cors),
+    within_mut = mean(mut_cors),
+    between = mean(between_cors)
+  )
+  cor_value <- mean(between_cors)  # For downstream compatibility
+
 } else {
-  cat("  ✗ Low correlation - possible quality issues\n")
-}
+  # Original 2-sample analysis
+  cor_value <- cor_matrix[1, 2]
+  cat(sprintf("  Pearson correlation: %.4f\n", cor_value))
 
-qc_report$correlation <- cor_value
+  # Interpret correlation
+  if (cor_value > 0.95) {
+    cat("  ⚠ Very high correlation - may indicate limited biological difference\n")
+  } else if (cor_value > 0.85) {
+    cat("  ✓ High correlation - good technical quality\n")
+  } else if (cor_value > 0.70) {
+    cat("  ⚠ Moderate correlation - check for batch effects\n")
+  } else {
+    cat("  ✗ Low correlation - possible quality issues\n")
+  }
+
+  qc_report$correlation <- cor_value
+}
 
 # Spearman correlation (rank-based, robust to outliers)
 spearman_cor <- cor(counts_matrix, use = "complete.obs", method = "spearman")
-cat(sprintf("  Spearman correlation: %.4f\n", spearman_cor[1,2]))
+if (n_samples == 2) {
+  cat(sprintf("  Spearman correlation: %.4f\n", spearman_cor[1,2]))
+}
 cat("\n")
 
 # Visualization: Correlation heatmap
@@ -306,8 +372,16 @@ cat("SECTION 3: Loop-Level Quality Assessment\n")
 cat("-----------------------------------------\n")
 
 # Calculate MA values (M = log fold change, A = average expression)
-A <- 0.5 * (log2(counts_matrix[,1] + 1) + log2(counts_matrix[,2] + 1))
-M <- log2(counts_matrix[,2] + 1) - log2(counts_matrix[,1] + 1)
+# For replicates, use group averages
+if (n_samples == 6) {
+  ctrl_avg <- rowMeans(counts_matrix[, 1:3])
+  mut_avg <- rowMeans(counts_matrix[, 4:6])
+  A <- 0.5 * (log2(ctrl_avg + 1) + log2(mut_avg + 1))
+  M <- log2(mut_avg + 1) - log2(ctrl_avg + 1)
+} else {
+  A <- 0.5 * (log2(counts_matrix[,1] + 1) + log2(counts_matrix[,2] + 1))
+  M <- log2(counts_matrix[,2] + 1) - log2(counts_matrix[,1] + 1)
+}
 
 cat("MA Statistics:\n")
 cat(sprintf("  Average expression (A): %.2f ± %.2f\n", mean(A, na.rm = TRUE), sd(A, na.rm = TRUE)))
@@ -415,17 +489,31 @@ cat("SECTION 4: Spatial & Distance Analysis\n")
 cat("---------------------------------------\n")
 
 # Extract genomic coordinates from merged loops
-loop_coords <- data.frame(
-  chr = as.character(seqnames(anchors(merged, type = "first"))),
-  start1 = start(anchors(merged, type = "first")),
-  end1 = end(anchors(merged, type = "first")),
-  start2 = start(anchors(merged, type = "second")),
-  end2 = end(anchors(merged, type = "second")),
-  ctrl_count = counts_matrix[, 1],
-  mut_count = counts_matrix[, 2],
-  total_count = rowSums(counts_matrix),
-  log2FC = M
-)
+if (n_samples == 6) {
+  loop_coords <- data.frame(
+    chr = as.character(seqnames(anchors(merged, type = "first"))),
+    start1 = start(anchors(merged, type = "first")),
+    end1 = end(anchors(merged, type = "first")),
+    start2 = start(anchors(merged, type = "second")),
+    end2 = end(anchors(merged, type = "second")),
+    ctrl_count = rowMeans(counts_matrix[, 1:3]),
+    mut_count = rowMeans(counts_matrix[, 4:6]),
+    total_count = rowSums(counts_matrix),
+    log2FC = M
+  )
+} else {
+  loop_coords <- data.frame(
+    chr = as.character(seqnames(anchors(merged, type = "first"))),
+    start1 = start(anchors(merged, type = "first")),
+    end1 = end(anchors(merged, type = "first")),
+    start2 = start(anchors(merged, type = "second")),
+    end2 = end(anchors(merged, type = "second")),
+    ctrl_count = counts_matrix[, 1],
+    mut_count = counts_matrix[, 2],
+    total_count = rowSums(counts_matrix),
+    log2FC = M
+  )
+}
 
 # Calculate genomic distance (for intrachromosomal loops)
 loop_coords$distance <- ifelse(
@@ -568,30 +656,36 @@ cat(sprintf("  Array dimensions: %d x %d x %d x %d\n",
 cat("  (rows x cols x loops x samples)\n\n")
 
 # Function to analyze a single loop's matrices
-analyze_loop_matrix <- function(loop_id, count_array) {
-  
-  # Extract 5x5 matrices for both samples
-  ctrl_mat <- as.matrix(count_array[, , loop_id, 1])
-  mut_mat <- as.matrix(count_array[, , loop_id, 2])
-  
+analyze_loop_matrix <- function(loop_id, count_array, n_samples) {
+
+  if (n_samples == 6) {
+    # For replicates, average across samples within each group
+    ctrl_mat <- apply(count_array[, , loop_id, 1:3], c(1,2), mean, na.rm = TRUE)
+    mut_mat <- apply(count_array[, , loop_id, 4:6], c(1,2), mean, na.rm = TRUE)
+  } else {
+    # Original 2-sample analysis
+    ctrl_mat <- as.matrix(count_array[, , loop_id, 1])
+    mut_mat <- as.matrix(count_array[, , loop_id, 2])
+  }
+
   # Calculate statistics
   ctrl_sum <- sum(ctrl_mat, na.rm = TRUE)
   mut_sum <- sum(mut_mat, na.rm = TRUE)
   ctrl_center <- ctrl_mat[3, 3]
   mut_center <- mut_mat[3, 3]
-  
+
   # Detect if peak is in center (expected) or shifted
   ctrl_peak_pos <- which(ctrl_mat == max(ctrl_mat, na.rm = TRUE), arr.ind = TRUE)[1, ]
   mut_peak_pos <- which(mut_mat == max(mut_mat, na.rm = TRUE), arr.ind = TRUE)[1, ]
-  
+
   ctrl_centered <- all(ctrl_peak_pos == c(3, 3))
   mut_centered <- all(mut_peak_pos == c(3, 3))
   shift_detected <- !identical(ctrl_peak_pos, mut_peak_pos)
-  
+
   # Calculate center enrichment (center pixel / total)
   ctrl_center_enrichment <- ctrl_center / ctrl_sum
   mut_center_enrichment <- mut_center / mut_sum
-  
+
   return(list(
     ctrl_sum = ctrl_sum,
     mut_sum = mut_sum,
@@ -612,7 +706,7 @@ cat("Analyzing all loop matrices (this may take a moment)...\n")
 n_loops <- array_dims[3]
 matrix_stats <- lapply(1:n_loops, function(i) {
   if (i %% 5000 == 0) cat(sprintf("  Processed %d / %d loops\n", i, n_loops))
-  analyze_loop_matrix(i, count_array)
+  analyze_loop_matrix(i, count_array, n_samples)
 })
 
 # Summarize matrix-level QC
@@ -724,9 +818,15 @@ par(mfrow = c(3, 4), mar = c(2, 2, 3, 2))
 
 for (i in 1:6) {
   loop_id <- top_signal_idx[i]
-  
-  ctrl_mat <- as.matrix(count_array[, , loop_id, 1])
-  mut_mat <- as.matrix(count_array[, , loop_id, 2])
+
+  # Extract matrices (average across replicates if n=6)
+  if (n_samples == 6) {
+    ctrl_mat <- apply(count_array[, , loop_id, 1:3], c(1,2), mean, na.rm = TRUE)
+    mut_mat <- apply(count_array[, , loop_id, 4:6], c(1,2), mean, na.rm = TRUE)
+  } else {
+    ctrl_mat <- as.matrix(count_array[, , loop_id, 1])
+    mut_mat <- as.matrix(count_array[, , loop_id, 2])
+  }
   
   # Plot control matrix
   image(1:5, 1:5, ctrl_mat,

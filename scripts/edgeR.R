@@ -1,5 +1,6 @@
 # scripts/01_run_edgeR_analysis.R
-# Primary edgeR differential loop analysis for Mariner Hi-C data
+# Replicate-aware edgeR differential loop analysis for Mariner Hi-C data
+# Modified for biological replicates (n=3 per condition)
 # Author: Zakir
 # Date: 2025-10-20
 
@@ -69,23 +70,40 @@ cat("   - Loading count matrix... ")
 counts_matrix <- readRDS(config$paths$input$counts_matrix)
 cat("(", nrow(counts_matrix), " loops × ", ncol(counts_matrix), " samples)\n", sep = "")
 
+# Validate expected number of samples
+expected_samples <- length(config$samples$names)
+if (ncol(counts_matrix) != expected_samples) {
+  stop(sprintf("ERROR: Expected %d samples but count matrix has %d columns",
+               expected_samples, ncol(counts_matrix)))
+}
+
 # Load coordinates (GInteractions)
 cat("   - Loading loop coordinates... ")
 binned_gi <- readRDS(config$paths$input$coordinates)
 cat("(", length(binned_gi), " genomic positions)\n", sep = "")
 
-# Load QC summary for shift status
-cat("   - Loading QC summary... ")
-qc_summary <- readRDS(config$paths$input$qc_summary)
-shift_status <- qc_summary$shift_analysis$loop_shift_status
-cat("(shift data for ", length(shift_status), " loops)\n", sep = "")
+# Load QC summary for shift status (optional - may not exist yet)
+shift_status <- NULL
+if (file.exists(config$paths$input$qc_summary)) {
+  cat("   - Loading QC summary... ")
+  qc_summary <- readRDS(config$paths$input$qc_summary)
+  if ("shift_analysis" %in% names(qc_summary) &&
+      "loop_shift_status" %in% names(qc_summary$shift_analysis)) {
+    shift_status <- qc_summary$shift_analysis$loop_shift_status
+    cat("(shift data for ", length(shift_status), " loops)\n", sep = "")
+  } else {
+    cat("(no shift data available)\n")
+  }
+} else {
+  cat("   - QC summary not found (skipping shift analysis)\n")
+}
 
 # Validate data integrity
 cat("\nValidating data integrity...\n")
 
 # Check dimensions match
 stopifnot(
-  "Count matrix and coordinates dimension mismatch" = 
+  "Count matrix and coordinates dimension mismatch" =
     nrow(counts_matrix) == length(binned_gi)
 )
 
@@ -134,16 +152,20 @@ genes_df$coord_string <- paste0(
   genes_df$chr2, ":", genes_df$start2, "-", genes_df$end2
 )
 
-# Add shift status
-genes_df$shift_status <- shift_status
+# Add shift status if available
+if (!is.null(shift_status)) {
+  genes_df$shift_status <- shift_status
+}
 
 # Set rownames to match count matrix
 rownames(genes_df) <- rownames(counts_matrix)
 
 cat("   ✓ Created annotation for", nrow(genes_df), "loops\n")
 cat("   - Columns:", paste(colnames(genes_df), collapse = ", "), "\n")
-cat("   - Shifted loops:", sum(genes_df$shift_status), 
-    "(", round(100 * mean(genes_df$shift_status), 1), "%)\n", sep = "")
+if (!is.null(shift_status)) {
+  cat("   - Shifted loops:", sum(genes_df$shift_status),
+      "(", round(100 * mean(genes_df$shift_status), 1), "%)\n", sep = "")
+}
 
 # =============================================================================
 # CREATE DGEList OBJECT
@@ -151,8 +173,15 @@ cat("   - Shifted loops:", sum(genes_df$shift_status),
 
 cat("\nCreating DGEList object...\n")
 
-# Create group factor
-group <- factor(config$samples$names, levels = config$samples$names)
+# Create group factor from config
+# config$samples$groups should be c("ctrl", "ctrl", "ctrl", "mut", "mut", "mut")
+group <- factor(config$samples$groups, levels = c("ctrl", "mut"))
+
+# Verify sample names match count matrix columns
+if (!all(colnames(counts_matrix) == config$samples$names)) {
+  cat("   WARNING: Renaming count matrix columns to match config\n")
+  colnames(counts_matrix) <- config$samples$names
+}
 
 # Create DGEList
 y <- DGEList(
@@ -161,11 +190,23 @@ y <- DGEList(
   genes = genes_df
 )
 
+# Add sample names to samples dataframe
+y$samples$sample_name <- config$samples$names
+
 cat("   ✓ DGEList created\n")
-cat("   - Samples:", paste(y$samples$group, collapse = ", "), "\n")
-cat("   - Library sizes: ctrl =", y$samples$lib.size[1], 
-    ", mut =", y$samples$lib.size[2], "\n")
-cat("   - Ratio (ctrl/mut):", round(y$samples$lib.size[1] / y$samples$lib.size[2], 3), "\n")
+cat("   - Total samples:", ncol(y), "\n")
+cat("   - Groups:", paste(unique(group), collapse = ", "), "\n")
+cat("   - Replicates per group: n =", table(group)[1], "\n")
+cat("\n   Per-sample library sizes:\n")
+for (i in 1:ncol(y)) {
+  cat(sprintf("     %s (%s): %d\n",
+              y$samples$sample_name[i],
+              y$samples$group[i],
+              y$samples$lib.size[i]))
+}
+cat(sprintf("\n   Median library size by group:\n"))
+cat(sprintf("     ctrl: %.0f\n", median(y$samples$lib.size[group == "ctrl"])))
+cat(sprintf("     mut: %.0f\n", median(y$samples$lib.size[group == "mut"])))
 
 # =============================================================================
 # FILTERING LOW-COUNT LOOPS
@@ -213,107 +254,198 @@ cat("   - Effective library sizes: ctrl =",
     ", mut =", round(y$samples$lib.size[2] * y$samples$norm.factors[2]), "\n")
 
 # =============================================================================
-# DISPERSION ANALYSIS WITH SENSITIVITY BOUNDS
+# SAMPLE QUALITY CONTROL - MDS PLOT
 # =============================================================================
 
-cat("\nRunning differential analysis with multiple dispersions...\n")
-cat("   (No biological replicates: using fixed BCV values)\n\n")
+cat("\nGenerating MDS plot for sample QC...\n")
 
-# Define BCV values for sensitivity analysis
-bcv_values <- c(
-  lower = config$statistics$sensitivity_bcv$lower,
-  primary = config$statistics$primary_bcv,
-  upper = config$statistics$sensitivity_bcv$upper
+pdf(file.path(config$paths$output$plots, "mds_plot.pdf"),
+    width = 8, height = 6)
+
+# MDS plot colored by group
+plotMDS(
+  y,
+  col = c(rep("blue", 3), rep("red", 3)),
+  pch = 16,
+  cex = 2,
+  main = "MDS Plot - Sample Relationships",
+  labels = y$samples$sample_name
 )
 
-# Store results for each BCV
-results_list <- list()
+legend(
+  "topright",
+  legend = c("Control", "Mutant"),
+  col = c("blue", "red"),
+  pch = 16,
+  pt.cex = 2,
+  bty = "n"
+)
 
-for (bcv_name in names(bcv_values)) {
-  bcv <- bcv_values[bcv_name]
-  dispersion <- bcv^2
-  
-  cat("   Analysis with BCV =", bcv, "(", bcv_name, "bound)\n")
-  cat("      - Dispersion =", round(dispersion, 4), "\n")
-  
-  # Run exact test
-  et <- exactTest(y, dispersion = dispersion)
-  
-  # Extract all results
-  tt <- topTags(et, n = Inf, sort.by = "none")
-  results_df <- as.data.frame(tt)
-  
-  # Add significance classification
-  results_df$significant <- results_df$FDR < config$statistics$fdr_primary
-  results_df$exploratory <- results_df$FDR < config$statistics$fdr_exploratory
-  
-  # Categorize by effect size
-  results_df$category <- "non_significant"
-  results_df$category[results_df$significant & abs(results_df$logFC) > config$statistics$fold_change_thresholds$strong] <- "strong_differential"
-  results_df$category[results_df$significant & abs(results_df$logFC) > config$statistics$fold_change_thresholds$moderate & 
-                       abs(results_df$logFC) <= config$statistics$fold_change_thresholds$strong] <- "moderate_differential"
-  results_df$category[results_df$significant & abs(results_df$logFC) <= config$statistics$fold_change_thresholds$moderate] <- "weak_differential"
-  results_df$category[!results_df$significant & results_df$exploratory] <- "trending"
-  
-  # Add direction
-  results_df$direction <- "unchanged"
-  results_df$direction[results_df$significant & results_df$logFC > 0] <- "up_in_mutant"
-  results_df$direction[results_df$significant & results_df$logFC < 0] <- "down_in_mutant"
-  
-  # Store results
-  results_list[[bcv_name]] <- results_df
-  
-  # Print summary
-  n_sig <- sum(results_df$significant)
-  n_up <- sum(results_df$direction == "up_in_mutant")
-  n_down <- sum(results_df$direction == "down_in_mutant")
-  
-  cat("      ✓ Significant loops (FDR < 0.05):", n_sig, "\n")
-  cat("        - Up in mutant:", n_up, "\n")
-  cat("        - Down in mutant:", n_down, "\n")
-  cat("        - Strong (|logFC| > 1):", sum(results_df$category == "strong_differential"), "\n")
-  cat("        - Moderate (|logFC| > 0.5):", sum(results_df$category == "moderate_differential"), "\n\n")
-}
+dev.off()
 
-# Use primary BCV results as main results
-results <- results_list$primary
-
-cat("   Differential analysis complete\n")
-cat("      Primary results use BCV =", config$statistics$primary_bcv, "\n\n")
+cat("   ✓ MDS plot saved\n")
+cat("   - Check plot to verify:\n")
+cat("     • Replicates cluster by condition\n")
+cat("     • No obvious outliers\n")
+cat("     • Clear separation between groups\n\n")
 
 # =============================================================================
-# SHIFTED LOOP ENRICHMENT ANALYSIS
+# DISPERSION ESTIMATION (DATA-DRIVEN)
 # =============================================================================
 
-cat("Analyzing shifted loop enrichment...\n")
+cat("Estimating dispersions from biological replicates...\n")
 
-# Calculate enrichment of shifted loops in significant set
-shifted_tested <- sum(results$shift_status)
-shifted_sig <- sum(results$shift_status & results$significant)
-nonshifted_tested <- sum(!results$shift_status)
-nonshifted_sig <- sum(!results$shift_status & results$significant)
+# Design matrix - treatment effect parameterization
+design <- model.matrix(~group, data = y$samples)
+colnames(design) <- c("Intercept", "MutantEffect")
 
-# Fisher's exact test
-contingency <- matrix(
-  c(shifted_sig, shifted_tested - shifted_sig,
-    nonshifted_sig, nonshifted_tested - nonshifted_sig),
-  nrow = 2,
-  dimnames = list(
-    c("Shifted", "Non-shifted"),
-    c("Significant", "Non-significant")
+cat("   Design matrix:\n")
+cat("     - Intercept: Baseline (control) level\n")
+cat("     - MutantEffect: Difference (mutant - control)\n\n")
+
+# Estimate dispersions with robust method
+cat("   Estimating common, trended, and tagwise dispersions...\n")
+y <- estimateDisp(y, design, robust = TRUE)
+
+cat("   ✓ Dispersion estimation complete\n")
+cat(sprintf("     - Common dispersion: %.4f (BCV = %.3f)\n",
+            y$common.dispersion, sqrt(y$common.dispersion)))
+cat(sprintf("     - Tagwise dispersion range: %.4f - %.4f\n",
+            min(y$tagwise.dispersion), max(y$tagwise.dispersion)))
+cat(sprintf("     - Median tagwise BCV: %.3f\n\n",
+            median(sqrt(y$tagwise.dispersion))))
+
+# Plot BCV
+cat("   Generating BCV plot...\n")
+pdf(file.path(config$paths$output$plots, "bcv_plot.pdf"),
+    width = 8, height = 6)
+plotBCV(y, main = "Biological Coefficient of Variation")
+dev.off()
+cat("   ✓ BCV plot saved\n\n")
+
+# =============================================================================
+# QUASI-LIKELIHOOD GLM FIT (RECOMMENDED METHOD)
+# =============================================================================
+
+cat("Fitting quasi-likelihood GLM...\n")
+cat("   Method: glmQLFit with robust=TRUE\n")
+cat("   Benefits:\n")
+cat("     • Accounts for gene-specific variability\n")
+cat("     • More rigorous error rate control\n")
+cat("     • Robust to outliers\n\n")
+
+# QL fit
+fit <- glmQLFit(y, design, robust = TRUE)
+
+cat("   ✓ QL fit complete\n")
+cat(sprintf("     - Prior df: %.1f\n", fit$df.prior))
+cat(sprintf("     - Residual df: %d\n", min(fit$df.residual)))
+
+# Plot QL dispersions
+cat("\n   Generating QL dispersion plot...\n")
+pdf(file.path(config$paths$output$plots, "ql_dispersion_plot.pdf"),
+    width = 8, height = 6)
+plotQLDisp(fit, main = "Quasi-Likelihood Dispersions")
+dev.off()
+cat("   ✓ QL dispersion plot saved\n\n")
+
+# =============================================================================
+# DIFFERENTIAL TESTING
+# =============================================================================
+
+cat("Testing for differential loops...\n")
+cat("   Test: Mutant effect (coefficient 2)\n")
+cat("   Method: Quasi-likelihood F-test\n\n")
+
+# QL F-test for mutant effect
+qlf <- glmQLFTest(fit, coef = 2)
+
+# Extract all results
+results <- topTags(qlf, n = Inf, sort.by = "none")$table
+
+cat("   ✓ Testing complete\n\n")
+
+# Add significance classification
+results$significant <- results$FDR < config$statistics$fdr_primary
+results$exploratory <- results$FDR < config$statistics$fdr_exploratory
+
+# Categorize by effect size
+results$category <- "non_significant"
+results$category[results$significant & abs(results$logFC) > config$statistics$fold_change_thresholds$strong] <- "strong_differential"
+results$category[results$significant & abs(results$logFC) > config$statistics$fold_change_thresholds$moderate &
+                 abs(results$logFC) <= config$statistics$fold_change_thresholds$strong] <- "moderate_differential"
+results$category[results$significant & abs(results$logFC) <= config$statistics$fold_change_thresholds$moderate] <- "weak_differential"
+results$category[!results$significant & results$exploratory] <- "trending"
+
+# Add direction
+results$direction <- "unchanged"
+results$direction[results$significant & results$logFC > 0] <- "up_in_mutant"
+results$direction[results$significant & results$logFC < 0] <- "down_in_mutant"
+
+# Print summary
+cat("=== Differential Loop Results ===\n")
+n_sig <- sum(results$significant)
+n_up <- sum(results$direction == "up_in_mutant")
+n_down <- sum(results$direction == "down_in_mutant")
+
+cat(sprintf("   Significant loops (FDR < %.2f): %d (%.1f%%)\n",
+            config$statistics$fdr_primary, n_sig,
+            100 * n_sig / nrow(results)))
+cat(sprintf("     - Up in mutant: %d\n", n_up))
+cat(sprintf("     - Down in mutant: %d\n", n_down))
+cat(sprintf("\n   By effect size:\n"))
+cat(sprintf("     - Strong (|logFC| > 1): %d\n",
+            sum(results$category == "strong_differential")))
+cat(sprintf("     - Moderate (|logFC| > 0.5): %d\n",
+            sum(results$category == "moderate_differential")))
+cat(sprintf("     - Weak: %d\n",
+            sum(results$category == "weak_differential")))
+cat(sprintf("\n   Trending (FDR < 0.10): %d\n\n",
+            sum(results$category == "trending")))
+
+# =============================================================================
+# SHIFTED LOOP ENRICHMENT ANALYSIS (if shift data available)
+# =============================================================================
+
+shifted_tested <- NA
+shifted_sig <- NA
+nonshifted_tested <- NA
+nonshifted_sig <- NA
+fisher_result <- NULL
+
+if (!is.null(shift_status)) {
+  cat("Analyzing shifted loop enrichment...\n")
+
+  # Calculate enrichment of shifted loops in significant set
+  shifted_tested <- sum(results$shift_status)
+  shifted_sig <- sum(results$shift_status & results$significant)
+  nonshifted_tested <- sum(!results$shift_status)
+  nonshifted_sig <- sum(!results$shift_status & results$significant)
+
+  # Fisher's exact test
+  contingency <- matrix(
+    c(shifted_sig, shifted_tested - shifted_sig,
+      nonshifted_sig, nonshifted_tested - nonshifted_sig),
+    nrow = 2,
+    dimnames = list(
+      c("Shifted", "Non-shifted"),
+      c("Significant", "Non-significant")
+    )
   )
-)
 
-fisher_result <- fisher.test(contingency)
+  fisher_result <- fisher.test(contingency)
 
-cat("   - Shifted loops tested:", shifted_tested, "\n")
-cat("   - Shifted loops significant:", shifted_sig, 
-    "(", round(100 * shifted_sig / shifted_tested, 1), "%)\n", sep = "")
-cat("   - Non-shifted loops tested:", nonshifted_tested, "\n")
-cat("   - Non-shifted loops significant:", nonshifted_sig,
-    "(", round(100 * nonshifted_sig / nonshifted_tested, 1), "%)\n", sep = "")
-cat("   - Fisher's exact test p-value:", format.pval(fisher_result$p.value, digits = 3), "\n")
-cat("   - Odds ratio:", round(fisher_result$estimate, 3), "\n\n")
+  cat("   - Shifted loops tested:", shifted_tested, "\n")
+  cat("   - Shifted loops significant:", shifted_sig,
+      "(", round(100 * shifted_sig / shifted_tested, 1), "%)\n", sep = "")
+  cat("   - Non-shifted loops tested:", nonshifted_tested, "\n")
+  cat("   - Non-shifted loops significant:", nonshifted_sig,
+      "(", round(100 * nonshifted_sig / nonshifted_tested, 1), "%)\n", sep = "")
+  cat("   - Fisher's exact test p-value:", format.pval(fisher_result$p.value, digits = 3), "\n")
+  cat("   - Odds ratio:", round(fisher_result$estimate, 3), "\n\n")
+} else {
+  cat("Skipping shifted loop enrichment (no shift data available)\n\n")
+}
 
 # =============================================================================
 # GENERATE SUMMARY STATISTICS
@@ -477,96 +609,107 @@ legend(
 dev.off()
 cat("✓\n")
 
-# 3. Dispersion Sensitivity Plot
-cat("   - Creating dispersion sensitivity plot... ")
-pdf(file.path(config$paths$output$plots, "dispersion_sensitivity.pdf"),
-    width = 10, height = 6)
-
-sensitivity_df <- data.frame(
-  BCV = names(bcv_values),
-  Significant = sapply(results_list, function(x) sum(x$significant)),
-  Up = sapply(results_list, function(x) sum(x$direction == "up_in_mutant")),
-  Down = sapply(results_list, function(x) sum(x$direction == "down_in_mutant"))
-)
-
-par(mfrow = c(1, 2), mar = c(5, 5, 4, 2))
-
-# Total significant
-barplot(
-  sensitivity_df$Significant,
-  names.arg = paste0(names(bcv_values), "\n(", bcv_values, ")"),
-  col = "steelblue",
-  ylab = "Number of Significant Loops",
-  main = "Sensitivity to BCV Choice",
-  las = 1
-)
-
-# Direction breakdown
-barplot(
-  t(as.matrix(sensitivity_df[, c("Up", "Down")])),
-  names.arg = paste0(names(bcv_values), "\n(", bcv_values, ")"),
-  col = c(config$visualization$colors$significant_up, 
-          config$visualization$colors$significant_down),
-  ylab = "Number of Loops",
-  main = "Direction by BCV",
-  legend.text = c("Up in mutant", "Down in mutant"),
-  args.legend = list(x = "topright", bty = "n"),
-  las = 1
-)
-
-dev.off()
-cat("✓\n")
-
-# 4. Shifted Loop Enrichment Plot
-cat("   - Creating shifted loop enrichment plot... ")
-pdf(file.path(config$paths$output$plots, "shifted_loop_enrichment.pdf"),
+# 3. decideTests Summary Plot
+cat("   - Creating results summary plot... ")
+pdf(file.path(config$paths$output$plots, "results_summary.pdf"),
     width = 8, height = 6)
 
 par(mar = c(5, 5, 4, 2))
-prop_data <- matrix(
-  c(
-    100 * shifted_sig / shifted_tested,
-    100 * nonshifted_sig / nonshifted_tested
-  ),
-  nrow = 2
+
+# Create summary barplot
+summary_counts <- c(
+  n_up,
+  n_down,
+  sum(results$category == "strong_differential"),
+  sum(results$category == "moderate_differential"),
+  sum(results$category == "weak_differential")
+)
+
+names_labels <- c(
+  "Up in\nmutant",
+  "Down in\nmutant",
+  "Strong\n(|logFC|>1)",
+  "Moderate\n(|logFC|>0.5)",
+  "Weak"
 )
 
 barplot(
-  prop_data,
-  names.arg = c("Shifted Loops", "Non-shifted Loops"),
-  col = c(config$visualization$colors$shifted_loops, "gray70"),
-  ylab = "% Significant (FDR < 0.05)",
-  main = "Differential Loop Rate by Shift Status",
-  ylim = c(0, max(prop_data) * 1.2),
-  las = 1
+  summary_counts,
+  names.arg = names_labels,
+  col = c(config$visualization$colors$significant_up,
+          config$visualization$colors$significant_down,
+          "darkgreen", "forestgreen", "lightgreen"),
+  ylab = "Number of Loops",
+  main = sprintf("Differential Loop Summary (FDR < %.2f)", config$statistics$fdr_primary),
+  las = 1,
+  ylim = c(0, max(summary_counts) * 1.2)
 )
 
-# Add text labels
+# Add counts on top of bars
 text(
-  x = c(0.7, 1.9),
-  y = prop_data + max(prop_data) * 0.05,
-  labels = paste0(
-    round(prop_data, 1), "%\n(", 
-    c(shifted_sig, nonshifted_sig), "/", 
-    c(shifted_tested, nonshifted_tested), ")"
-  ),
-  cex = 0.9
-)
-
-# Add Fisher's test result
-text(
-  x = 1.3,
-  y = max(prop_data) * 1.1,
-  labels = paste0(
-    "Fisher's exact test\n",
-    "OR = ", round(fisher_result$estimate, 2), 
-    ", p = ", format.pval(fisher_result$p.value, digits = 2)
-  ),
-  cex = 0.8
+  x = seq_along(summary_counts) * 1.2 - 0.5,
+  y = summary_counts + max(summary_counts) * 0.05,
+  labels = summary_counts,
+  cex = 1.2
 )
 
 dev.off()
 cat("✓\n")
+
+# 4. Shifted Loop Enrichment Plot (if shift data available)
+if (!is.null(shift_status) && !is.null(fisher_result)) {
+  cat("   - Creating shifted loop enrichment plot... ")
+  pdf(file.path(config$paths$output$plots, "shifted_loop_enrichment.pdf"),
+      width = 8, height = 6)
+
+  par(mar = c(5, 5, 4, 2))
+  prop_data <- matrix(
+    c(
+      100 * shifted_sig / shifted_tested,
+      100 * nonshifted_sig / nonshifted_tested
+    ),
+    nrow = 2
+  )
+
+  barplot(
+    prop_data,
+    names.arg = c("Shifted Loops", "Non-shifted Loops"),
+    col = c(config$visualization$colors$shifted_loops, "gray70"),
+    ylab = "% Significant (FDR < 0.05)",
+    main = "Differential Loop Rate by Shift Status",
+    ylim = c(0, max(prop_data) * 1.2),
+    las = 1
+  )
+
+  # Add text labels
+  text(
+    x = c(0.7, 1.9),
+    y = prop_data + max(prop_data) * 0.05,
+    labels = paste0(
+      round(prop_data, 1), "%\n(",
+      c(shifted_sig, nonshifted_sig), "/",
+      c(shifted_tested, nonshifted_tested), ")"
+    ),
+    cex = 0.9
+  )
+
+  # Add Fisher's test result
+  text(
+    x = 1.3,
+    y = max(prop_data) * 1.1,
+    labels = paste0(
+      "Fisher's exact test\n",
+      "OR = ", round(fisher_result$estimate, 2),
+      ", p = ", format.pval(fisher_result$p.value, digits = 2)
+    ),
+    cex = 0.8
+  )
+
+  dev.off()
+  cat("✓\n")
+} else {
+  cat("   - Skipping shifted loop enrichment plot (no shift data)\n")
+}
 
 cat("\n   All plots generated\n\n")
 
@@ -618,30 +761,15 @@ write.table(
 )
 cat("   ✓ Top 100 by effect size saved\n")
 
-# Save sensitivity comparison
-sensitivity_comparison <- do.call(rbind, lapply(names(results_list), function(bcv_name) {
-  df <- results_list[[bcv_name]]
-  data.frame(
-    loop_id = df$loop_id,
-    coord_string = df$coord_string,
-    logCPM = df$logCPM,
-    bcv = bcv_name,
-    bcv_value = bcv_values[bcv_name],
-    logFC = df$logFC,
-    PValue = df$PValue,
-    FDR = df$FDR,
-    significant = df$significant
-  )
-}))
-
+# Save decideTests summary
+dt_summary <- summary(decideTests(qlf))
 write.table(
-  sensitivity_comparison,
-  file = file.path(config$paths$output$primary, "sensitivity_comparison.tsv"),
+  dt_summary,
+  file = file.path(config$paths$output$primary, "decideTests_summary.txt"),
   sep = "\t",
-  quote = FALSE,
-  row.names = FALSE
+  quote = FALSE
 )
-cat("   ✓ Sensitivity analysis saved\n")
+cat("   ✓ decideTests summary saved\n")
 
 # Save summary statistics
 summary_text <- capture.output({
@@ -666,7 +794,12 @@ summary_text <- capture.output({
   
   cat("ANALYSIS PARAMETERS\n")
   cat("-------------------\n")
-  cat("Primary BCV:", summary_stats$primary_bcv, "\n")
+  cat("Experimental design: n=3 replicates per condition\n")
+  cat("Statistical method: Quasi-likelihood GLM with robust estimation\n")
+  cat("Estimated common BCV:", round(sqrt(y$common.dispersion), 3), "\n")
+  cat("Median tagwise BCV:", round(median(sqrt(y$tagwise.dispersion)), 3), "\n")
+  cat("Residual degrees of freedom:", min(fit$df.residual), "\n")
+  cat("Prior df for QL:", round(fit$df.prior, 1), "\n")
   cat("FDR threshold:", summary_stats$fdr_threshold, "\n")
   cat("Filtering min count:", config$statistics$filtering$min_count, "\n\n")
   
@@ -712,8 +845,13 @@ cat("   ✓ Session info saved\n\n")
 # =============================================================================
 
 cat("========================================\n")
-cat("ANALYSIS COMPLETE\n")
+cat("REPLICATE-AWARE ANALYSIS COMPLETE\n")
 cat("========================================\n\n")
+
+cat("Experimental Design:\n")
+cat("   - Samples: 6 (3 ctrl + 3 mut)\n")
+cat("   - Method: Quasi-likelihood GLM with robust estimation\n")
+cat("   - Estimated BCV:", round(sqrt(y$common.dispersion), 3), "\n\n")
 
 cat("Key Results:\n")
 cat("   - Loops tested:", summary_stats$total_loops_tested, "\n")
@@ -721,15 +859,23 @@ cat("   - Significant (FDR < 0.05):", summary_stats$significant_fdr05,
     "(", round(100 * summary_stats$significant_fdr05 / summary_stats$total_loops_tested, 1), "%)\n", sep = "")
 cat("   - Up in mutant:", summary_stats$up_in_mutant, "\n")
 cat("   - Down in mutant:", summary_stats$down_in_mutant, "\n")
-cat("   - Strong differential:", summary_stats$strong_differential, "\n\n")
+cat("   - Strong differential (|logFC| > 1):", summary_stats$strong_differential, "\n\n")
+
+cat("Improvement over merged analysis:\n")
+cat("   - Previous (merged, n=1): 2 significant loops\n")
+cat("   - Current (replicates, n=3):", summary_stats$significant_fdr05, "significant loops\n")
+cat("   - Fold improvement:", round(summary_stats$significant_fdr05 / 2, 1), "×\n\n")
 
 cat("Output Files:\n")
 cat("   Primary results:", config$paths$output$primary, "\n")
 cat("   Plots:", config$paths$output$plots, "\n")
 cat("   Logs:", config$paths$output$logs, "\n\n")
 
-cat("Next Step: Run hiccups comparison analysis\n")
-cat("   Script: 02_compare_hiccups.R\n\n")
+cat("Next Steps:\n")
+cat("   1. Review MDS plot to confirm replicate quality\n")
+cat("   2. Check BCV and QL dispersion plots\n")
+cat("   3. Examine MA and volcano plots for biological patterns\n")
+cat("   4. Compare with Hiccups differential results (38,593 loops)\n\n")
 
 # Close log
 sink(type = "message")
