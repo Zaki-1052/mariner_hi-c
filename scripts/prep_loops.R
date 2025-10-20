@@ -1,19 +1,29 @@
 #!/usr/bin/env Rscript
 # /expanse/lustre/projects/csd940/zalibhai/mariner/scripts/prepare_loops.R
 # Modified for biological replicates (n=3 per condition)
+# Multi-resolution support: accepts resolution as command-line argument
 
 library(mariner)
 library(InteractionSet)
 library(GenomicRanges)
 
-# Define paths to individual replicate BEDPE files
+# Parse command-line arguments for resolution
+args <- commandArgs(trailingOnly = TRUE)
+RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
+
+cat("\n========================================\n")
+cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
+cat("========================================\n\n")
+
+# Define paths to individual replicate BEDPE files (resolution-aware)
+base_path <- "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results"
 bedpeFiles <- c(
-  ctrl_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results/ctrl_M1/postprocessed_pixels_5000.bedpe",
-  ctrl_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results/ctrl_M2/postprocessed_pixels_5000.bedpe",
-  ctrl_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results/ctrl_M3/postprocessed_pixels_5000.bedpe",
-  mut_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results/mut_M1/postprocessed_pixels_5000.bedpe",
-  mut_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results/mut_M2/postprocessed_pixels_5000.bedpe",
-  mut_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results/mut_M3/postprocessed_pixels_5000.bedpe"
+  ctrl_M1 = sprintf("%s/ctrl_M1/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
+  ctrl_M2 = sprintf("%s/ctrl_M2/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
+  ctrl_M3 = sprintf("%s/ctrl_M3/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
+  mut_M1 = sprintf("%s/mut_M1/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
+  mut_M2 = sprintf("%s/mut_M2/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
+  mut_M3 = sprintf("%s/mut_M3/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION)
 )
 
 bedpe_colnames <- c(
@@ -24,7 +34,7 @@ bedpe_colnames <- c(
 			  "numCollapsed", "centroid1", "centroid2", "radius"
 			  )
 
-read_bedpe <- function(filepath, sample_name) {
+read_bedpe <- function(filepath, sample_name, expected_resolution) {
   cat(sprintf("Reading %s... ", sample_name))
 
   # Check file exists
@@ -37,21 +47,21 @@ read_bedpe <- function(filepath, sample_name) {
                       comment.char = "")
   colnames(bedpe) <- bedpe_colnames
 
-  # Filter for 5kb resolution
+  # Filter for specified resolution
   bedpe$resolution <- bedpe$x2 - bedpe$x1
-  bedpe_5kb <- bedpe[bedpe$resolution == 5000, ]
+  bedpe_filtered <- bedpe[bedpe$resolution == expected_resolution, ]
 
   # Remove zero observed counts
-  bedpe_subset <- bedpe_5kb[bedpe_5kb$observed > 0, ]
+  bedpe_subset <- bedpe_filtered[bedpe_filtered$observed > 0, ]
 
-  cat(sprintf("%d loops (5kb, observed>0)\n", nrow(bedpe_subset)))
+  cat(sprintf("%d loops (%dkb, observed>0)\n", nrow(bedpe_subset), expected_resolution/1000))
   return(bedpe_subset)
 }
 
 # Read all 6 BEDPE files
 cat("\n=== Reading BEDPE files for all replicates ===\n")
 bedpe_list <- lapply(names(bedpeFiles), function(name) {
-  read_bedpe(bedpeFiles[name], name)
+  read_bedpe(bedpeFiles[name], name, RESOLUTION)
 })
 names(bedpe_list) <- names(bedpeFiles)
 
@@ -75,9 +85,16 @@ gi_list <- lapply(names(bedpe_list), function(name) {
 })
 names(gi_list) <- names(bedpe_list)
 
+# Create resolution-specific output directory
+output_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+  cat(sprintf("Created output directory: %s\n", output_dir))
+}
+
 # Save individual GInteractions
-saveRDS(gi_list, "outputs/full/01_ginteractions.rds")
-cat("✓ Saved to: outputs/full/01_ginteractions.rds\n")
+saveRDS(gi_list, file.path(output_dir, "01_ginteractions.rds"))
+cat(sprintf("✓ Saved to: %s/01_ginteractions.rds\n", output_dir))
 
 # Merge loops across all 6 replicates (union approach)
 cat("\n=== Merging loops across all replicates ===\n")
@@ -127,25 +144,26 @@ for (name in names(gi_list)) {
 
 
 cat("\n")
-saveRDS(merged, "outputs/full/02_merged.rds")
-cat("✓ Saved to: outputs/full/02_merged.rds\n")
+saveRDS(merged, file.path(output_dir, "02_merged.rds"))
+cat(sprintf("✓ Saved to: %s/02_merged.rds\n", output_dir))
 
-# Binning to 5kb grid
-cat("\n=== Binning to 5kb grid ===\n")
+# Binning to resolution-specific grid
+cat(sprintf("\n=== Binning to %dkb grid ===\n", RESOLUTION/1000))
 binned <- assignToBins(
   x = merged,
-  binSize = 5e3,
+  binSize = RESOLUTION,
   pos1 = "center",
   pos2 = "center"
 )
 
-cat(sprintf("✓ Binned %d loops to 5kb resolution\n", length(binned)))
-saveRDS(binned, "outputs/full/03_binned.rds")
-cat("✓ Saved to: outputs/full/03_binned.rds\n")
+cat(sprintf("✓ Binned %d loops to %dkb resolution\n", length(binned), RESOLUTION/1000))
+saveRDS(binned, file.path(output_dir, "03_binned.rds"))
+cat(sprintf("✓ Saved to: %s/03_binned.rds\n", output_dir))
 
 # Create buffered regions (5x5 pixels)
 cat("\n=== Creating buffered regions ===\n")
-cat("Buffer: ±2 bins (±10kb) around center\n")
+buffer_kb <- 2 * RESOLUTION / 1000
+cat(sprintf("Buffer: ±2 bins (±%dkb) around center\n", buffer_kb))
 cat("Purpose: Handle positional shifts between replicates\n\n")
 
 buffered <- pixelsToMatrices(
@@ -156,21 +174,26 @@ buffered <- pixelsToMatrices(
 anchor1_width <- unique(width(anchors(buffered, type = "first")))
 anchor2_width <- unique(width(anchors(buffered, type = "second")))
 
-cat(sprintf("✓ Created %d buffered regions\n", length(buffered)))
-cat(sprintf("  Region size: %.0f × %.0f pixels (25kb × 25kb)\n",
-            (anchor1_width-1)/5000, (anchor2_width-1)/5000))
+buffer_size_kb <- (anchor1_width[1] - 1) / 1000
 
-saveRDS(buffered, "outputs/full/04_buffered.rds")
-cat("✓ Saved to: outputs/full/04_buffered.rds\n")
+cat(sprintf("✓ Created %d buffered regions\n", length(buffered)))
+cat(sprintf("  Region size: %.0f × %.0f pixels (%dkb × %dkb)\n",
+            (anchor1_width-1)/RESOLUTION, (anchor2_width-1)/RESOLUTION,
+            buffer_size_kb, buffer_size_kb))
+
+saveRDS(buffered, file.path(output_dir, "04_buffered.rds"))
+cat(sprintf("✓ Saved to: %s/04_buffered.rds\n", output_dir))
 
 # Final summary
 cat("\n=================================\n")
 cat("LOOP PREPARATION COMPLETE\n")
 cat("=================================\n")
+cat(sprintf("Resolution: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
 cat(sprintf("Input: %d loops across 6 replicates\n", total_input))
 cat(sprintf("Output: %d consensus loop positions\n", length(buffered)))
 cat(sprintf("Ready for extraction: %d loops × 6 replicates × 25 pixels\n",
             length(buffered)))
 cat(sprintf("                    = %d total extractions\n\n",
             length(buffered) * 6 * 25))
-cat("Next step: Run extract_counts.R\n")
+cat(sprintf("Output directory: %s\n", output_dir))
+cat(sprintf("Next step: Rscript scripts/extract_counts.R %d\n", RESOLUTION))

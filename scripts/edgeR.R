@@ -1,6 +1,7 @@
 # scripts/01_run_edgeR_analysis.R
 # Replicate-aware edgeR differential loop analysis for Mariner Hi-C data
 # Modified for biological replicates (n=3 per condition)
+# Multi-resolution support: accepts resolution as command-line argument
 # Author: Zakir
 # Date: 2025-10-20
 
@@ -8,8 +9,13 @@
 # SETUP AND CONFIGURATION
 # =============================================================================
 
+# Parse command-line arguments for resolution
+args <- commandArgs(trailingOnly = TRUE)
+RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
+
 cat("\n========================================\n")
 cat("edgeR Differential Loop Analysis\n")
+cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
 cat("========================================\n\n")
 
 # Load required libraries
@@ -27,6 +33,20 @@ suppressPackageStartupMessages({
 # Load configuration
 cat("Loading configuration...\n")
 config <- yaml::read_yaml("config/edgeR_config.yaml")
+
+# Override config paths to use resolution-specific directories
+input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+config$paths$input$counts_matrix <- file.path(input_dir, "06_counts_matrix.rds")
+config$paths$input$coordinates <- file.path(input_dir, "03_binned.rds")
+config$paths$input$merged_loops <- file.path(input_dir, "02_merged.rds")
+config$paths$input$qc_summary <- file.path(input_dir, "qc_report/qc_report_summary.rds")
+
+# Update output paths to be resolution-specific
+config$paths$output$base <- file.path("outputs", sprintf("edgeR_results_res_%dkb", RESOLUTION/1000))
+config$paths$output$primary <- file.path(config$paths$output$base, "primary_analysis")
+config$paths$output$comparison <- file.path(config$paths$output$base, "hiccups_comparison")
+config$paths$output$plots <- file.path(config$paths$output$base, "plots")
+config$paths$output$logs <- file.path(config$paths$output$base, "logs")
 
 # Set working directory to base
 setwd(config$paths$base_dir)

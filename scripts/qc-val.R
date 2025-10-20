@@ -1,5 +1,6 @@
 # /expanse/lustre/projects/csd940/zalibhai/mariner/scripts/comprehensive_qc.R
 # Comprehensive Quality Control and Validation of Mariner Pipeline Outputs
+# Multi-resolution support: accepts resolution as command-line argument
 # Purpose: Systematic validation of Hi-C loop extraction and aggregation
 # Author: Generated for mariner pipeline validation
 # Date: October 2025
@@ -7,6 +8,10 @@
 # =============================================================================
 # SETUP & CONFIGURATION
 # =============================================================================
+
+# Parse command-line arguments for resolution
+args <- commandArgs(trailingOnly = TRUE)
+RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
 
 library(tidyverse)
 library(mariner)
@@ -21,8 +26,9 @@ library(scales)
 # Set working directory
 setwd("/expanse/lustre/projects/csd940/zalibhai/mariner")
 
-# Create QC output directory
-qc_dir <- "outputs/qc_report"
+# Create resolution-specific QC output directory
+input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+qc_dir <- file.path(input_dir, "qc_report")
 dir.create(qc_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Initialize QC report list
@@ -30,6 +36,7 @@ qc_report <- list()
 
 cat("=============================================================================\n")
 cat("MARINER PIPELINE QC VALIDATION\n")
+cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
 cat("=============================================================================\n\n")
 
 # =============================================================================
@@ -43,23 +50,23 @@ cat("------------------------------------------------\n")
 cat("Loading pipeline outputs...\n")
 
 tryCatch({
-  gi_list <- readRDS("outputs/full/01_ginteractions.rds")
-  merged <- readRDS("outputs/full/02_merged.rds")
-  binned <- readRDS("outputs/full/03_binned.rds")
-  buffered <- readRDS("outputs/full/04_buffered.rds")
-  metadata <- readRDS("outputs/full/05_metadata.rds")
-  counts_matrix <- readRDS("outputs/full/06_counts_matrix.rds")
-  edger_obj <- readRDS("outputs/full/06_edgeR_input.rds")
-  
+  gi_list <- readRDS(file.path(input_dir, "01_ginteractions.rds"))
+  merged <- readRDS(file.path(input_dir, "02_merged.rds"))
+  binned <- readRDS(file.path(input_dir, "03_binned.rds"))
+  buffered <- readRDS(file.path(input_dir, "04_buffered.rds"))
+  metadata <- readRDS(file.path(input_dir, "05_metadata.rds"))
+  counts_matrix <- readRDS(file.path(input_dir, "06_counts_matrix.rds"))
+  edger_obj <- readRDS(file.path(input_dir, "06_edgeR_input.rds"))
+
   # Try to load HDF5-backed extracted data
   pixels <- loadHDF5SummarizedExperiment(
-    dir = "outputs/full",
+    dir = input_dir,
     prefix = "05_extracted"
   )
-  
+
   # Try to load aggregation strategies comparison
   all_strategies <- tryCatch(
-    readRDS("outputs/full/06_all_strategies.rds"),
+    readRDS(file.path(input_dir, "06_all_strategies.rds")),
     error = function(e) NULL
   )
   

@@ -59,7 +59,7 @@ echo "========================================="
 echo "Script: scripts/prep_loops.R"
 echo ""
 
-Rscript scripts/prep_loops.R
+Rscript scripts/prep_loops.R 5000
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -79,7 +79,7 @@ echo ""
 echo "========================================="
 echo "STEP 2: Extracting Hi-C counts (6 files)"
 echo "========================================="
-echo "Script: scripts/extract_counts.R"
+echo "Script: scripts/extract_counts.R" 5000
 echo ""
 
 Rscript scripts/extract_counts.R
@@ -105,7 +105,7 @@ echo "========================================="
 echo "Script: scripts/qc-val.R"
 echo ""
 
-Rscript scripts/qc-val.R
+Rscript scripts/qc-val.R 5000
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -130,7 +130,7 @@ echo "Script: scripts/edgeR.R"
 echo "Method: Quasi-likelihood GLM"
 echo ""
 
-Rscript scripts/edgeR.R
+Rscript scripts/edgeR.R 5000
 
 if [ $? -eq 0 ]; then
     echo ""

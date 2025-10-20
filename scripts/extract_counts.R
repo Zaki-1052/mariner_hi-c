@@ -1,12 +1,18 @@
 #!/usr/bin/env Rscript
 # /expanse/lustre/projects/csd940/zalibhai/mariner/scripts/05_extract_counts.R
 # Purpose: Extract Hi-C contact matrices at buffered loop positions
+# Multi-resolution support: accepts resolution as command-line argument
 # Input: 04_buffered.rds (GInteractions with 5x5 pixel regions)
 # Output: 05_extracted.h5 (HDF5-backed InteractionArray)
 
-cat("\n=================================\n")
+# Parse command-line arguments for resolution
+args <- commandArgs(trailingOnly = TRUE)
+RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
+
+cat("\n========================================\n")
 cat("Step 5: Hi-C Contact Extraction\n")
-cat("=================================\n\n")
+cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
+cat("========================================\n\n")
 
 # Load required libraries
 suppressPackageStartupMessages({
@@ -21,9 +27,10 @@ suppressPackageStartupMessages({
 base_dir <- "/expanse/lustre/projects/csd940/zalibhai/mariner"
 setwd(base_dir)
 
-# Load buffered loops
-cat("Loading buffered loops...\n")
-buffered <- readRDS("outputs/full/04_buffered.rds")
+# Load buffered loops from resolution-specific directory
+input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+cat(sprintf("Loading buffered loops from %s...\n", input_dir))
+buffered <- readRDS(file.path(input_dir, "04_buffered.rds"))
 cat(sprintf("  Loaded %d loops with 5x5 pixel regions\n", length(buffered)))
 
 # Define .hic files for all 6 replicates
@@ -53,8 +60,8 @@ for (name in names(hicFiles)) {
   cat(sprintf("\n%s file:\n", name))
   resolutions <- readHicBpResolutions(hicFiles[name])
   cat("  Resolutions (bp):", paste(head(resolutions, 5), collapse=", "), "...\n")
-  if (!5000 %in% resolutions) {
-    stop(sprintf("ERROR: 5kb resolution not available in %s", name))
+  if (!RESOLUTION %in% resolutions) {
+    stop(sprintf("ERROR: %dkb resolution not available in %s", RESOLUTION/1000, name))
   }
   norms <- readHicNormTypes(hicFiles[name])
   cat("  Normalizations:", paste(norms, collapse=", "), "\n")
@@ -64,8 +71,8 @@ for (name in names(hicFiles)) {
 norm_to_use <- "VC"
 cat(sprintf("\nUsing normalization: %s\n", norm_to_use))
 
-# Set up HDF5 file path
-hdf5_dir <- file.path(base_dir, "temp_hdf5")
+# Set up HDF5 file path (resolution-specific)
+hdf5_dir <- file.path(base_dir, input_dir, "temp_hdf5")
 if (!dir.exists(hdf5_dir)) {
   dir.create(hdf5_dir, recursive = TRUE)
 }
@@ -95,7 +102,7 @@ start_time <- Sys.time()
 pixels <- pullHicMatrices(
   x = buffered,
   files = hicFiles,
-  binSize = 5e3,
+  binSize = RESOLUTION,
   h5File = h5_file_path,
   norm = norm_to_use,
   matrix = "observed",
@@ -279,7 +286,7 @@ for (i in 1:min(3, dims[3])) {
 
 # Save using HDF5Array method
 cat("\n=== Saving Extracted Data ===\n")
-output_dir <- "outputs/full"
+output_dir <- input_dir  # Use resolution-specific directory
 output_prefix <- "05_extracted"
 
 # Save as HDF5
@@ -298,6 +305,7 @@ cat(sprintf("  Saved to: %s/\n", file.path(output_dir, output_prefix)))
 
 # Also save metadata for easy loading
 metadata <- list(
+  resolution = RESOLUTION,
   n_loops = dims[3],
   n_replicates = dims[4],
   replicate_names = names(hicFiles),
@@ -312,12 +320,13 @@ metadata <- list(
   between_correlation = correlation_data$between_mean
 )
 saveRDS(metadata, file.path(output_dir, "05_metadata.rds"))
-cat("  Metadata saved to: outputs/full/05_metadata.rds\n")
+cat(sprintf("  Metadata saved to: %s/05_metadata.rds\n", output_dir))
 
 # Final summary
 cat("\n=================================\n")
 cat("EXTRACTION COMPLETE\n")
 cat("=================================\n")
+cat(sprintf("Resolution: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
 cat(sprintf("Processed: %d loops × %d replicates\n", dims[3], dims[4]))
 cat(sprintf("Samples: %s\n", paste(names(hicFiles), collapse = ", ")))
 cat("\nQuality Metrics:\n")
@@ -327,7 +336,8 @@ cat(sprintf("  Between-condition correlation: %.3f\n", correlation_data$between_
 cat(sprintf("  Normalization: %s\n", norm_to_use))
 cat(sprintf("  Extraction time: %.1f seconds\n", extraction_time))
 cat(sprintf("\nOutput: %s/\n", file.path(output_dir, output_prefix)))
-cat(sprintf("Ready for aggregation: %d loops × %d replicates\n", dims[3], dims[4]))
-cat("\nNext: Run aggregation script (06_aggregate.R)\n")
+cat(sprintf("Ready for QC and differential analysis\n"))
+cat(sprintf("Next step: Rscript scripts/qc-val.R %d\n", RESOLUTION))
 cat("\nTo load in next script:\n")
-cat("  pixels <- loadHDF5SummarizedExperiment(dir='outputs/full', prefix='05_extracted')\n")
+cat(sprintf("  pixels <- loadHDF5SummarizedExperiment(dir='%s', prefix='%s')\n",
+            output_dir, output_prefix))
