@@ -219,7 +219,7 @@ cat("   - Groups:", paste(unique(group), collapse = ", "), "\n")
 cat("   - Replicates per group: n =", table(group)[1], "\n")
 cat("\n   Per-sample library sizes:\n")
 for (i in 1:ncol(y)) {
-  cat(sprintf("     %s (%s): %d\n",
+  cat(sprintf("     %s (%s): %.0f\n",
               y$samples$sample_name[i],
               y$samples$group[i],
               y$samples$lib.size[i]))
@@ -358,7 +358,7 @@ cat("     • Robust to outliers\n\n")
 fit <- glmQLFit(y, design, robust = TRUE)
 
 cat("   ✓ QL fit complete\n")
-cat(sprintf("     - Prior df: %.1f\n", fit$df.prior))
+#cat(sprintf("     - Prior df: %.1f\n", fit$df.prior))
 cat(sprintf("     - Residual df: %d\n", min(fit$df.residual)))
 
 # Plot QL dispersions
@@ -902,3 +902,4 @@ sink(type = "message")
 close(log_con)
 
 cat("Analysis log saved to:", log_file, "\n")
+

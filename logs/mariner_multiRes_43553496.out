@@ -1,0 +1,260 @@
+=========================================
+Mariner Multi-Resolution Pipeline
+=========================================
+Job ID: 43553496
+Node: exp-1-13
+CPUs: 8
+Memory: 64GB
+Start time: Mon Oct 20 17:17:42 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+PROCESSING RESOLUTION: 10000 bp (10 kb)
+=========================================
+Start time: Mon Oct 20 17:17:44 PDT 2025
+
+=========================================
+STEP 1: Preparing loops (6 replicates)
+=========================================
+Script: scripts/prep_loops.R
+Resolution: 10000 bp
+
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Loading required package: SummarizedExperiment
+Loading required package: MatrixGenerics
+Loading required package: matrixStats
+
+Attaching package: ‘MatrixGenerics’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+    colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+    colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+    colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+    colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+    colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+    colWeightedMeans, colWeightedMedians, colWeightedSds,
+    colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+    rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+    rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+    rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+    rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+    rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+    rowWeightedSds, rowWeightedVars
+
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+
+Attaching package: ‘Biobase’
+
+The following object is masked from ‘package:MatrixGenerics’:
+
+    rowMedians
+
+The following objects are masked from ‘package:matrixStats’:
+
+    anyMissing, rowMedians
+
+Warning message:
+package ‘matrixStats’ was built under R version 4.4.3 
+
+========================================
+RESOLUTION: 10000 bp (10 kb)
+========================================
+
+
+=== Reading BEDPE files for all replicates ===
+Reading ctrl_M1... 12474 loops (10kb, observed>0)
+Reading ctrl_M2... 11578 loops (10kb, observed>0)
+Reading ctrl_M3... 13721 loops (10kb, observed>0)
+Reading mut_M1... 11848 loops (10kb, observed>0)
+Reading mut_M2... 12984 loops (10kb, observed>0)
+Reading mut_M3... 12547 loops (10kb, observed>0)
+
+Per-replicate loop counts:
+  ctrl_M1: 12474 loops
+  ctrl_M2: 11578 loops
+  ctrl_M3: 13721 loops
+  mut_M1: 11848 loops
+  mut_M2: 12984 loops
+  mut_M3: 12547 loops
+
+Total loops across all replicates: 75152
+
+=== Converting to GInteractions ===
+Converting ctrl_M1... 12474 interactions
+Converting ctrl_M2... 11578 interactions
+Converting ctrl_M3... 13721 interactions
+Converting mut_M1... 11848 interactions
+Converting mut_M2... 12984 interactions
+Converting mut_M3... 12547 interactions
+Created output directory: outputs/res_10kb
+✓ Saved to: outputs/res_10kb/01_ginteractions.rds
+
+=== Merging loops across all replicates ===
+Strategy: Union (include loops from ANY replicate)
+Radius: 10 kb
+Selection: Maximum observed count
+
+✓ Merged 22639 consensus loops from 75152 input loops
+  Reduction: 69.9%
+
+Cluster size distribution:
+  1 replicate: 7446 loops (32.9%)
+  2 replicates: 2952 loops (13.0%)
+  3 replicates: 2091 loops (9.2%)
+  4 replicates: 1745 loops (7.7%)
+  5 replicates: 1942 loops (8.6%)
+  6 replicates: 6416 loops (28.3%)
+  7 replicates: 37 loops (0.2%)
+  8 replicates: 7 loops (0.0%)
+  9 replicates: 2 loops (0.0%)
+  10 replicates: 1 loops (0.0%)
+
+Per-replicate contribution to consensus:
+  ctrl_M1: 0/22639 loops (0.0%)
+  ctrl_M2: 0/22639 loops (0.0%)
+  ctrl_M3: 0/22639 loops (0.0%)
+  mut_M1: 0/22639 loops (0.0%)
+  mut_M2: 0/22639 loops (0.0%)
+  mut_M3: 0/22639 loops (0.0%)
+
+✓ Saved to: outputs/res_10kb/02_merged.rds
+
+=== Binning to 10kb grid ===
+✓ Binned 22639 loops to 10kb resolution
+✓ Saved to: outputs/res_10kb/03_binned.rds
+
+=== Creating buffered regions ===
+Buffer: ±2 bins (±20kb) around center
+Purpose: Handle positional shifts between replicates
+
+✓ Created 22639 buffered regions
+  Region size: 5 × 5 pixels (50kb × 50kb)
+✓ Saved to: outputs/res_10kb/04_buffered.rds
+
+=================================
+LOOP PREPARATION COMPLETE
+=================================
+Resolution: 10000 bp (10 kb)
+Input: 75152 loops across 6 replicates
+Output: 22639 consensus loop positions
+Ready for extraction: 22639 loops × 6 replicates × 25 pixels
+                    = 3395850 total extractions
+
+Output directory: outputs/res_10kb
+Next step: Rscript scripts/extract_counts.R 10000
+
+✅ Loop preparation completed for 10kb
+
+=========================================
+STEP 2: Extracting Hi-C counts (6 files)
+=========================================
+Script: scripts/extract_counts.R
+Resolution: 10000 bp
+
+
+========================================
+Step 5: Hi-C Contact Extraction
+RESOLUTION: 10000 bp (10 kb)
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading buffered loops from outputs/res_10kb...
+  Loaded 22639 loops with 5x5 pixel regions
+
+Verifying .hic files...
+  ctrl_M1: 2.4 GB - OK
+  ctrl_M2: 3.3 GB - OK
+  ctrl_M3: 3.1 GB - OK
+  mut_M1: 2.8 GB - OK
+  mut_M2: 2.9 GB - OK
+  mut_M3: 2.6 GB - OK
+
+Checking .hic file properties...
+
+ctrl_M1 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: NONE, SCALE, GW_SCALE, VC, INTER_SCALE, VC_SQRT 
+
+ctrl_M2 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: NONE, SCALE, GW_SCALE, VC, INTER_SCALE, VC_SQRT 
+
+ctrl_M3 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: NONE, SCALE, GW_SCALE, VC, INTER_SCALE, VC_SQRT 
+
+mut_M1 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: NONE, SCALE, GW_SCALE, VC, INTER_SCALE, VC_SQRT 
+
+mut_M2 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: NONE, SCALE, GW_SCALE, VC, INTER_SCALE, VC_SQRT 
+
+mut_M3 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: NONE, SCALE, GW_SCALE, VC, INTER_SCALE, VC_SQRT 
+
+Using normalization: VC
+
+Validating loop positions...
+  Chromosomes in loops: 21
+  Example chromosomes: chr1, chr2, chr3, chr4, chr5
+  Maximum anchor width: 50001 bp
+  Minimum required blockSize: 100002 bp
+
+=== Starting extraction ===
+Processing 22639 loops × 6 replicates × 25 pixels
+  = 3395850 total extractions
+
+slurmstepd: error: *** JOB 43553496 ON exp-1-13 CANCELLED AT 2025-10-20T17:28:07 ***

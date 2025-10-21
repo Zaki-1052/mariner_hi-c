@@ -1,0 +1,358 @@
+=========================================
+Mariner Multi-Resolution Pipeline
+=========================================
+Job ID: 43553221
+Node: exp-1-44
+CPUs: 8
+Memory: 64GB
+Start time: Mon Oct 20 17:08:33 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+PROCESSING RESOLUTION: 5000 bp (5 kb)
+=========================================
+Start time: Mon Oct 20 17:08:36 PDT 2025
+
+=========================================
+STEP 1: Preparing loops (6 replicates)
+=========================================
+Script: scripts/prep_loops.R
+Resolution: 5000 bp
+
+
+✅ Loop preparation completed for 5kb
+
+=========================================
+STEP 2: Extracting Hi-C counts (6 files)
+=========================================
+Script: scripts/extract_counts.R
+Resolution: 5000 bp
+
+
+✅ Count extraction completed for 5kb
+
+=========================================
+STEP 3: Aggregating 5x5 matrices
+=========================================
+Script: scripts/aggregate.R
+Resolution: 5000 bp
+
+
+✅ Matrix aggregation completed for 5kb
+
+=========================================
+STEP 4: edgeR differential analysis
+=========================================
+Script: scripts/edgeR.R
+Resolution: 5000 bp
+Method: Quasi-likelihood GLM
+
+
+========================================
+edgeR Differential Loop Analysis
+RESOLUTION: 5000 bp (5 kb)
+========================================
+
+Loading required libraries...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘tibble’ was built under R version 4.4.3 
+Loading configuration...
+
+DEBUG: Path construction for resolution 5000 
+  - RESOLUTION: 5000 
+  - RESOLUTION/1000: 5 
+  - class(RESOLUTION/1000): numeric 
+  - input_dir: outputs/res_5kb 
+  - counts_matrix path: outputs/res_5kb/06_counts_matrix.rds 
+  - coordinates path: outputs/res_5kb/03_binned.rds 
+  - merged_loops path: outputs/res_5kb/02_merged.rds 
+  - qc_summary path: outputs/res_5kb/qc_report/qc_report_summary.rds 
+Creating output directories...
+
+Setup complete
+   - Config loaded from: config/edgeR_config.yaml
+   - Output directory:  outputs/edgeR_results_res_5kb 
+   - Random seed:  42 
+
+Loading input data...
+   - Loading count matrix... 
+   DEBUG: Checking count matrix file...
+     - Path: outputs/res_5kb/06_counts_matrix.rds 
+     - file.exists(): TRUE 
+     - File size (bytes): 608535 
+     - File size (MB): 0.58 
+     - Readable: TRUE 
+   DEBUG: Attempting to read RDS file...
+   DEBUG: Successfully loaded RDS file
+(17983 loops × 6 samples)
+   - Loading loop coordinates... (17983 genomic positions)
+   - QC summary not found (skipping shift analysis)
+
+Validating data integrity...
+   ✓ Data integrity checks passed
+
+Creating genomic annotations...
+   ✓ Created annotation for 17983 loops
+   - Columns: loop_id, chr1, start1, end1, chr2, start2, end2, coord_string 
+
+Creating DGEList object...
+   ✓ DGEList created
+   - Total samples: 6 
+   - Groups: ctrl, mut 
+   - Replicates per group: n = 3 
+
+   Per-sample library sizes:
+     ctrl_M1 (ctrl): 2864059
+     ctrl_M2 (ctrl): 3820723
+     ctrl_M3 (ctrl): 3720899
+     mut_M1 (mut): 3508585
+     mut_M2 (mut): 3439868
+     mut_M3 (mut): 3029051
+
+   Median library size by group:
+     ctrl: 3720899
+     mut: 3439868
+
+Filtering low-count loops...
+   - Filtering with min.count = 5 
+   - Before filtering: 17983 loops
+   - Loops passing filter: 17982 
+   - Loops filtered out:1(0%)
+   After filtering: 17982 loops retained
+   - New library sizes: ctrl = 2864059 , mut = 3820723 
+
+Performing TMM normalization...
+   ✓ Normalization complete
+   - Method: TMM 
+   - Normalization factors: ctrl = 1.0021 , mut = 1.0063 
+   - Effective library sizes: ctrl = 2870101 , mut = 3844875 
+
+Generating MDS plot for sample QC...
+null device 
+          1 
+   ✓ MDS plot saved
+   - Check plot to verify:
+     • Replicates cluster by condition
+     • No obvious outliers
+     • Clear separation between groups
+
+Estimating dispersions from biological replicates...
+   Design matrix:
+     - Intercept: Baseline (control) level
+     - MutantEffect: Difference (mutant - control)
+
+   Estimating common, trended, and tagwise dispersions...
+   ✓ Dispersion estimation complete
+     - Common dispersion: 0.0014 (BCV = 0.038)
+     - Tagwise dispersion range: 0.0001 - 0.6203
+     - Median tagwise BCV: 0.019
+
+   Generating BCV plot...
+null device 
+          1 
+   ✓ BCV plot saved
+
+Fitting quasi-likelihood GLM...
+   Method: glmQLFit with robust=TRUE
+   Benefits:
+     • Accounts for gene-specific variability
+     • More rigorous error rate control
+     • Robust to outliers
+
+   ✓ QL fit complete
+     - Residual df: 4
+
+   Generating QL dispersion plot...
+null device 
+          1 
+   ✓ QL dispersion plot saved
+
+Testing for differential loops...
+   Test: Mutant effect (coefficient 2)
+   Method: Quasi-likelihood F-test
+
+   ✓ Testing complete
+
+=== Differential Loop Results ===
+   Significant loops (FDR < 0.05): 1766 (9.8%)
+     - Up in mutant: 1127
+     - Down in mutant: 639
+
+   By effect size:
+     - Strong (|logFC| > 1): 19
+     - Moderate (|logFC| > 0.5): 398
+     - Weak: 1349
+
+   Trending (FDR < 0.10): 939
+
+Skipping shifted loop enrichment (no shift data available)
+
+Computing summary statistics...
+   ✓ Summary statistics computed
+
+Generating visualizations...
+   - Creating MA plot... null device 
+          1 
+✓
+   - Creating volcano plot... null device 
+          1 
+✓
+   - Creating results summary plot... null device 
+          1 
+✓
+   - Skipping shifted loop enrichment plot (no shift data)
+
+   All plots generated
+
+Saving results...
+   ✓ DGEList object saved
+   ✓ Primary results saved (TSV)
+   ✓ Primary results saved (RDS)
+   ✓ Significant loops saved (1766 loops)
+   ✓ Top 100 by effect size saved
+   ✓ decideTests summary saved
+   ✓ Summary statistics saved
+   ✓ Session info saved
+
+========================================
+REPLICATE-AWARE ANALYSIS COMPLETE
+========================================
+
+Experimental Design:
+   - Samples: 6 (3 ctrl + 3 mut)
+   - Method: Quasi-likelihood GLM with robust estimation
+   - Estimated BCV: 0.038 
+
+Key Results:
+   - Loops tested: 17982 
+   - Significant (FDR < 0.05):1766(9.8%)
+   - Up in mutant: 1127 
+   - Down in mutant: 639 
+   - Strong differential (|logFC| > 1): 19 
+
+Improvement over merged analysis:
+   - Previous (merged, n=1): 2 significant loops
+   - Current (replicates, n=3): 1766 significant loops
+   - Fold improvement: 883 ×
+
+Output Files:
+   Primary results: outputs/edgeR_results_res_5kb/primary_analysis 
+   Plots: outputs/edgeR_results_res_5kb/plots 
+   Logs: outputs/edgeR_results_res_5kb/logs 
+
+Next Steps:
+   1. Review MDS plot to confirm replicate quality
+   2. Check BCV and QL dispersion plots
+   3. Examine MA and volcano plots for biological patterns
+   4. Compare with Hiccups differential results (38,593 loops)
+
+Analysis log saved to: outputs/edgeR_results_res_5kb/logs/analysis_log.txt 
+
+✅ Differential analysis completed for 5kb
+
+✓ COMPLETED RESOLUTION: 5kb
+End time: Mon Oct 20 17:08:59 PDT 2025
+
+
+=========================================
+PROCESSING RESOLUTION: 10000 bp (10 kb)
+=========================================
+Start time: Mon Oct 20 17:08:59 PDT 2025
+
+=========================================
+STEP 1: Preparing loops (6 replicates)
+=========================================
+Script: scripts/prep_loops.R
+Resolution: 10000 bp
+
+
+✅ Loop preparation completed for 10kb
+
+=========================================
+STEP 2: Extracting Hi-C counts (6 files)
+=========================================
+Script: scripts/extract_counts.R
+Resolution: 10000 bp
+
+
+✅ Count extraction completed for 10kb
+
+=========================================
+STEP 3: Aggregating 5x5 matrices
+=========================================
+Script: scripts/aggregate.R
+Resolution: 10000 bp
+
+
+✅ Matrix aggregation completed for 10kb
+
+=========================================
+STEP 4: edgeR differential analysis
+=========================================
+Script: scripts/edgeR.R
+Resolution: 10000 bp
+Method: Quasi-likelihood GLM
+
+
+========================================
+edgeR Differential Loop Analysis
+RESOLUTION: 10000 bp (10 kb)
+========================================
+
+Loading required libraries...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘tibble’ was built under R version 4.4.3 
+Loading configuration...
+
+DEBUG: Path construction for resolution 10000 
+  - RESOLUTION: 10000 
+  - RESOLUTION/1000: 10 
+  - class(RESOLUTION/1000): numeric 
+  - input_dir: outputs/res_10kb 
+  - counts_matrix path: outputs/res_10kb/06_counts_matrix.rds 
+  - coordinates path: outputs/res_10kb/03_binned.rds 
+  - merged_loops path: outputs/res_10kb/02_merged.rds 
+  - qc_summary path: outputs/res_10kb/qc_report/qc_report_summary.rds 
+Creating output directories...
+
+Setup complete
+   - Config loaded from: config/edgeR_config.yaml
+   - Output directory:  outputs/edgeR_results_res_10kb 
+   - Random seed:  42 
+
+Loading input data...
+   - Loading count matrix... 
+   DEBUG: Checking count matrix file...
+     - Path: outputs/res_10kb/06_counts_matrix.rds 
+     - file.exists(): FALSE 
+
+   ERROR: Count matrix file does not exist!
+     - Expected path: outputs/res_10kb/06_counts_matrix.rds 
+     - Current working directory: /expanse/lustre/projects/csd940/zalibhai/mariner 
+     - Listing parent directory...
+     - Parent directory does not exist: outputs/res_10kb 
+     - Checking if outputs directory exists...
+     - dir.exists('outputs'): TRUE 
+     - Contents of outputs/:
+       * diffs
+       * edgeR_results
+       * edgeR_results_res_10kb
+       * edgeR_results_res_5kb
+       * full
+       * qc_report
+       * res_5kb
+       * test
+
+❌ Differential analysis failed for 10kb with exit code 0
+Stopping pipeline at resolution 10kb
