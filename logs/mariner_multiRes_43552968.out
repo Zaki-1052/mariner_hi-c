@@ -1,0 +1,59 @@
+=========================================
+Mariner Multi-Resolution Pipeline
+=========================================
+Job ID: 43552968
+Node: exp-2-07
+CPUs: 8
+Memory: 64GB
+Start time: Mon Oct 20 16:34:59 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+PROCESSING RESOLUTION: 5000 bp (5 kb)
+=========================================
+Start time: Mon Oct 20 16:35:02 PDT 2025
+
+=========================================
+STEP 1: Preparing loops (6 replicates)
+=========================================
+Script: scripts/prep_loops.R
+Resolution: 5000 bp
+
+
+✅ Loop preparation completed for 5kb
+
+=========================================
+STEP 2: Extracting Hi-C counts (6 files)
+=========================================
+Script: scripts/extract_counts.R
+Resolution: 5000 bp
+
+
+✅ Count extraction completed for 5kb
+
+=========================================
+STEP 3: Aggregating 5x5 matrices
+=========================================
+Script: scripts/aggregate.R
+Resolution: 5000 bp
+
+
+✅ Matrix aggregation completed for 5kb
+
+=========================================
+STEP 4: edgeR differential analysis
+=========================================
+Script: scripts/edgeR.R
+Resolution: 5000 bp
+Method: Quasi-likelihood GLM
+
+Error: unexpected ')' in "RESOLUTION/1000)"
+Execution halted
+
+❌ Differential analysis failed for 5kb with exit code 0
+Stopping pipeline at resolution 5kb
