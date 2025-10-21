@@ -73,9 +73,18 @@ cat(sprintf("\nUsing normalization: %s\n", norm_to_use))
 
 # Set up HDF5 file path (resolution-specific)
 hdf5_dir <- file.path(base_dir, input_dir, "temp_hdf5")
-if (!dir.exists(hdf5_dir)) {
-  dir.create(hdf5_dir, recursive = TRUE)
+
+# Clean up existing temp HDF5 directory to prevent dataset conflicts
+if (dir.exists(hdf5_dir)) {
+  cat("\nCleaning up existing temp HDF5 directory...\n")
+  unlink(hdf5_dir, recursive = TRUE)
+  cat("  ✓ Removed old temp files\n")
 }
+
+# Create fresh directory
+dir.create(hdf5_dir, recursive = TRUE)
+cat(sprintf("  ✓ Created fresh temp directory: %s\n", hdf5_dir))
+
 h5_file_path <- file.path(hdf5_dir, "extracted_matrices.h5")
 
 # Pre-extraction validation
