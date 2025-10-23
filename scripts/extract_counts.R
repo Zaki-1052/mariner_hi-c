@@ -76,9 +76,15 @@ hdf5_dir <- file.path(base_dir, input_dir, "temp_hdf5")
 
 # Clean up existing temp HDF5 directory to prevent dataset conflicts
 if (dir.exists(hdf5_dir)) {
+<<<<<<< HEAD
   cat("\nCleaning up existing temp HDF5 directory...\n")
   unlink(hdf5_dir, recursive = TRUE)
   cat("  ✓ Removed old temp files\n")
+=======
+	  cat("\nCleaning up existing temp HDF5 directory...\n")
+  unlink(hdf5_dir, recursive = TRUE)
+    cat("  ✓ Removed old temp files\n")
+>>>>>>> 6942244 (run pipeline)
 }
 
 # Create fresh directory

@@ -128,9 +128,9 @@ match_loops <- function(coords1, coords2, tolerance_kb = 10) {
     chr1 = as.character(seqnames(anchors(coords1, "first"))),
     start1 = start(anchors(coords1, "first")),
     end1 = end(anchors(coords1, "first")),
-    chr2 = as.character(seqnames(anchors(coords2, "second"))),
-    start2 = start(anchors(coords2, "second")),
-    end2 = end(anchors(coords2, "second")),
+    chr2 = as.character(seqnames(anchors(coords1, "second"))),
+    start2 = start(anchors(coords1, "second")),
+    end2 = end(anchors(coords1, "second")),
     index1 = 1:length(coords1)
   )
 

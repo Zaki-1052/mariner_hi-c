@@ -1,0 +1,58 @@
+=========================================
+Mariner res - Test Run
+=========================================
+Job ID: 43624694
+Node: exp-1-39
+Start time: Thu Oct 23 13:14:26 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+
+========================================
+Multi-Resolution Comparison Analysis
+========================================
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘matrixStats’ was built under R version 4.4.3 
+4: package ‘futile.logger’ was built under R version 4.4.3 
+SECTION 1: Loading Results
+---------------------------
+Loading 5kb results... ✓ 17982 loops
+Loading 10kb results... ✓ 22632 loops
+Loading 25kb results... ✓ 20398 loops
+
+✓ Loaded results from 3 resolutions
+
+SECTION 2: Basic Statistics
+----------------------------
+
+  resolution_kb total_loops significant_fdr05 pct_significant up_in_mutant
+1             5       17982              1766        9.820932         1127
+2            10       22632              3981       17.590138         2240
+3            25       20398              4774       23.404255         2512
+  down_in_mutant median_logFC_all median_logFC_sig
+1            639       0.10114651        0.3879354
+2           1741       0.08629882        0.2731180
+3           2262       0.08290208        0.2279407
+
+✓ Summary statistics saved
+
+SECTION 3: Loop Overlap Analysis
+---------------------------------
+
+Matching loops across resolutions (10kb tolerance)...
+Loading required package: mariner
+Error in data.frame(chr1 = as.character(seqnames(anchors(coords1, "first"))),  : 
+  arguments imply differing number of rows: 17983, 22639
+Calls: match_loops -> data.frame
+Execution halted
+
+❌ Extraction failed with exit code 0
+End time: Thu Oct 23 13:14:46 PDT 2025
+=========================================
