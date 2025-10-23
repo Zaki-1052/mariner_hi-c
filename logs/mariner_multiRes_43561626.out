@@ -1,0 +1,2438 @@
+=========================================
+Mariner Multi-Resolution Pipeline
+=========================================
+Job ID: 43561626
+Node: exp-3-33
+CPUs: 16
+Memory: 64GB
+Start time: Tue Oct 21 02:02:21 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+PROCESSING RESOLUTION: 5000 bp (5 kb)
+=========================================
+Start time: Tue Oct 21 02:02:24 PDT 2025
+
+=========================================
+STEP 1: Preparing loops (6 replicates)
+=========================================
+Script: scripts/prep_loops.R
+Resolution: 5000 bp
+
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Loading required package: SummarizedExperiment
+Loading required package: MatrixGenerics
+Loading required package: matrixStats
+
+Attaching package: ‘MatrixGenerics’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+    colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+    colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+    colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+    colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+    colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+    colWeightedMeans, colWeightedMedians, colWeightedSds,
+    colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+    rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+    rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+    rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+    rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+    rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+    rowWeightedSds, rowWeightedVars
+
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+
+Attaching package: ‘Biobase’
+
+The following object is masked from ‘package:MatrixGenerics’:
+
+    rowMedians
+
+The following objects are masked from ‘package:matrixStats’:
+
+    anyMissing, rowMedians
+
+Warning message:
+package ‘matrixStats’ was built under R version 4.4.3 
+
+========================================
+RESOLUTION: 5000 bp (5 kb)
+========================================
+
+
+=== Reading BEDPE files for all replicates ===
+Reading ctrl_M1... 9433 loops (5kb, observed>0)
+Reading ctrl_M2... 8530 loops (5kb, observed>0)
+Reading ctrl_M3... 11040 loops (5kb, observed>0)
+Reading mut_M1... 8741 loops (5kb, observed>0)
+Reading mut_M2... 9814 loops (5kb, observed>0)
+Reading mut_M3... 9563 loops (5kb, observed>0)
+
+Per-replicate loop counts:
+  ctrl_M1: 9433 loops
+  ctrl_M2: 8530 loops
+  ctrl_M3: 11040 loops
+  mut_M1: 8741 loops
+  mut_M2: 9814 loops
+  mut_M3: 9563 loops
+
+Total loops across all replicates: 57121
+
+=== Converting to GInteractions ===
+Converting ctrl_M1... 9433 interactions
+Converting ctrl_M2... 8530 interactions
+Converting ctrl_M3... 11040 interactions
+Converting mut_M1... 8741 interactions
+Converting mut_M2... 9814 interactions
+Converting mut_M3... 9563 interactions
+✓ Saved to: outputs/res_5kb/01_ginteractions.rds
+
+=== Merging loops across all replicates ===
+Strategy: Union (include loops from ANY replicate)
+Radius: 10 kb
+Selection: Maximum observed count
+
+✓ Merged 17983 consensus loops from 57121 input loops
+  Reduction: 68.5%
+
+Cluster size distribution:
+  1 replicate: 6254 loops (34.8%)
+  2 replicates: 2470 loops (13.7%)
+  3 replicates: 1748 loops (9.7%)
+  4 replicates: 1431 loops (8.0%)
+  5 replicates: 1528 loops (8.5%)
+  6 replicates: 4545 loops (25.3%)
+  7 replicates: 7 loops (0.0%)
+
+Per-replicate contribution to consensus:
+  ctrl_M1: 0/17983 loops (0.0%)
+  ctrl_M2: 0/17983 loops (0.0%)
+  ctrl_M3: 0/17983 loops (0.0%)
+  mut_M1: 0/17983 loops (0.0%)
+  mut_M2: 0/17983 loops (0.0%)
+  mut_M3: 0/17983 loops (0.0%)
+
+✓ Saved to: outputs/res_5kb/02_merged.rds
+
+=== Binning to 5kb grid ===
+✓ Binned 17983 loops to 5kb resolution
+✓ Saved to: outputs/res_5kb/03_binned.rds
+
+=== Creating buffered regions ===
+Buffer: ±2 bins (±10kb) around center
+Purpose: Handle positional shifts between replicates
+
+✓ Created 17983 buffered regions
+  Region size: 5 × 5 pixels (25kb × 25kb)
+✓ Saved to: outputs/res_5kb/04_buffered.rds
+
+=================================
+LOOP PREPARATION COMPLETE
+=================================
+Resolution: 5000 bp (5 kb)
+Input: 57121 loops across 6 replicates
+Output: 17983 consensus loop positions
+Ready for extraction: 17983 loops × 6 replicates × 25 pixels
+                    = 2697450 total extractions
+
+Output directory: outputs/res_5kb
+Next step: Rscript scripts/extract_counts.R 5000
+
+✅ Loop preparation completed for 5kb
+
+=========================================
+STEP 2: Extracting Hi-C counts (6 files)
+=========================================
+Script: scripts/extract_counts.R
+Resolution: 5000 bp
+
+
+========================================
+Step 5: Hi-C Contact Extraction
+RESOLUTION: 5000 bp (5 kb)
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading buffered loops from outputs/res_5kb...
+  Loaded 17983 loops with 5x5 pixel regions
+
+Verifying .hic files...
+  ctrl_M1: 2.4 GB - OK
+  ctrl_M2: 3.3 GB - OK
+  ctrl_M3: 3.1 GB - OK
+  mut_M1: 2.8 GB - OK
+  mut_M2: 2.9 GB - OK
+  mut_M3: 2.6 GB - OK
+
+Checking .hic file properties...
+
+ctrl_M1 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+ctrl_M2 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+ctrl_M3 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M1 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M2 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M3 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+Using normalization: VC
+
+Cleaning up existing temp HDF5 directory...
+  ✓ Removed old temp files
+  ✓ Created fresh temp directory: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/res_5kb/temp_hdf5
+
+Validating loop positions...
+  Chromosomes in loops: 21
+  Example chromosomes: chr1, chr2, chr3, chr4, chr5
+  Maximum anchor width: 25001 bp
+  Minimum required blockSize: 50002 bp
+
+=== Starting extraction ===
+Processing 17983 loops × 6 replicates × 25 pixels
+  = 2697450 total extractions
+
+
+✓ Extraction completed in 3106.9 seconds
+
+=== Validation of Extracted Data ===
+Dimensions: 5 x 5 x 17983 x 6
+  = 5x5 pixels x 17983 loops x 6 files
+
+NA values: 0 (0.00%)
+
+Value distribution (excluding NAs):
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+   0.000    3.481    6.149    7.556   10.004 5197.531 
+
+Sparsity: 2.0% zeros
+
+Per-sample statistics:
+  ctrl_M1: median=5.13, mean=6.37, max=272, total=2864059
+  ctrl_M2: median=7.06, mean=8.50, max=760, total=3820723
+  ctrl_M3: median=6.80, mean=8.28, max=380, total=3720899
+  mut_M1: median=6.34, mean=7.80, max=1936, total=3508585
+  mut_M2: median=6.25, mean=7.65, max=5198, total=3439868
+  mut_M3: median=5.52, mean=6.74, max=325, total=3029051
+
+Library size ratios:
+  Median ctrl: 3720899
+  Median mut: 3439868
+  Ratio (ctrl/mut): 1.082
+
+=== Correlation Analysis ===
+
+Full correlation matrix:
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.780   0.806  0.662  0.480  0.770
+ctrl_M2   0.780   1.000   0.810  0.662  0.483  0.791
+ctrl_M3   0.806   0.810   1.000  0.686  0.506  0.800
+mut_M1    0.662   0.662   0.686  1.000  0.417  0.676
+mut_M2    0.480   0.483   0.506  0.417  1.000  0.487
+mut_M3    0.770   0.791   0.800  0.676  0.487  1.000
+
+Within-condition correlations:
+  Control replicates:
+    ctrl_M1 vs ctrl_M2: 0.780
+    ctrl_M1 vs ctrl_M3: 0.806
+    ctrl_M2 vs ctrl_M3: 0.810
+  Mean within-ctrl correlation: 0.799
+
+  Mutant replicates:
+    mut_M1 vs mut_M2: 0.417
+    mut_M1 vs mut_M3: 0.676
+    mut_M2 vs mut_M3: 0.487
+  Mean within-mut correlation: 0.527
+
+Between-condition correlations:
+  Mean ctrl vs mut correlation: 0.649
+  Range: 0.480 - 0.800
+
+Quality Assessment:
+  ⚠ WARNING: Lower than expected within-condition correlation (<0.90)
+    This may indicate technical issues or high biological variability
+  ✓ Clear biological signal (within > between correlations)
+
+=== Example Extracted Matrices ===
+Showing first 3 loops for control sample:
+
+Loop 1:
+       8.27     5.86     7.46     4.57     6.55 
+      10.03    10.70    10.81    12.21    10.56 
+       9.81     8.44    17.79    12.06    11.80 
+      12.23    10.05    16.69    13.92    11.23 
+       8.60    12.03    10.60    11.54     7.24 
+  Sum: 261, Max: 18, Non-zero: 25/25
+
+Loop 2:
+       4.53     4.32     8.29     5.28     1.63 
+       3.49     4.57     7.24     8.84     3.35 
+       2.33     3.81    15.97     6.21     6.70 
+       4.85     5.29     8.28     7.76     4.65 
+       1.65     5.40     7.38     4.40     0.53 
+  Sum: 137, Max: 16, Non-zero: 25/25
+
+Loop 3:
+      11.53     8.02     6.93     9.69    11.44 
+       3.80     5.73    11.42    10.73    10.08 
+       9.79     7.67    12.93    11.04    12.17 
+      14.09     9.51    11.17    11.13    12.98 
+      14.38    22.75    20.78    16.47    10.76 
+  Sum: 287, Max: 23, Non-zero: 25/25
+
+
+=== Saving Extracted Data ===
+Saving as HDF5 (required for out-of-memory objects)...
+Start writing assay 1/3 to HDF5 file:
+  outputs/res_5kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 1/3 to HDF5 file:
+  outputs/res_5kb/05_extractedassays.h5
+
+Start writing assay 2/3 to HDF5 file:
+  outputs/res_5kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 2/3 to HDF5 file:
+  outputs/res_5kb/05_extractedassays.h5
+
+Start writing assay 3/3 to HDF5 file:
+  outputs/res_5kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 3/3 to HDF5 file:
+  outputs/res_5kb/05_extractedassays.h5
+
+Serialize InteractionArray object to RDS file:
+  outputs/res_5kb/05_extractedse.rds
+  Saved to: outputs/res_5kb/05_extracted/
+  Metadata saved to: outputs/res_5kb/05_metadata.rds
+
+=================================
+EXTRACTION COMPLETE
+=================================
+Resolution: 5000 bp (5 kb)
+Processed: 17983 loops × 6 replicates
+Samples: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+
+Quality Metrics:
+  Within-ctrl correlation: 0.799
+  Within-mut correlation: 0.527
+  Between-condition correlation: 0.649
+  Normalization: VC
+  Extraction time: 3106.9 seconds
+
+Output: outputs/res_5kb/05_extracted/
+Ready for QC and differential analysis
+Next step: Rscript scripts/qc-val.R 5000
+
+To load in next script:
+  pixels <- loadHDF5SummarizedExperiment(dir='outputs/res_5kb', prefix='05_extracted')
+
+✅ Count extraction completed for 5kb
+
+=========================================
+STEP 3: Aggregating 5x5 matrices
+=========================================
+Script: scripts/aggregate.R
+Resolution: 5000 bp
+
+
+========================================
+Step 6: Matrix Aggregation
+RESOLUTION: 5000 bp (5 kb)
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading extracted Hi-C matrices...
+  Loaded: 17983 loops x 6 samples
+  Matrix dimensions per loop: 5x5 pixels
+  Files: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+
+Array dimensions: 5 x 5 x 17983 x 6
+
+=== Strategy 1: Simple Sum Aggregation ===
+Rationale: Captures total Hi-C signal regardless of position within 5x5 window
+Aggregating... 50 100 150 200 250 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1050 1100 1150 1200 1250 1300 1350 1400 1450 1500 1550 1600 1650 1700 1750 1800 1850 1900 1950 2000 2050 2100 2150 2200 2250 2300 2350 2400 2450 2500 2550 2600 2650 2700 2750 2800 2850 2900 2950 3000 3050 3100 3150 3200 3250 3300 3350 3400 3450 3500 3550 3600 3650 3700 3750 3800 3850 3900 3950 4000 4050 4100 4150 4200 4250 4300 4350 4400 4450 4500 4550 4600 4650 4700 4750 4800 4850 4900 4950 5000 5050 5100 5150 5200 5250 5300 5350 5400 5450 5500 5550 5600 5650 5700 5750 5800 5850 5900 5950 6000 6050 6100 6150 6200 6250 6300 6350 6400 6450 6500 6550 6600 6650 6700 6750 6800 6850 6900 6950 7000 7050 7100 7150 7200 7250 7300 7350 7400 7450 7500 7550 7600 7650 7700 7750 7800 7850 7900 7950 8000 8050 8100 8150 8200 8250 8300 8350 8400 8450 8500 8550 8600 8650 8700 8750 8800 8850 8900 8950 9000 9050 9100 9150 9200 9250 9300 9350 9400 9450 9500 9550 9600 9650 9700 9750 9800 9850 9900 9950 10000 10050 10100 10150 10200 10250 10300 10350 10400 10450 10500 10550 10600 10650 10700 10750 10800 10850 10900 10950 11000 11050 11100 11150 11200 11250 11300 11350 11400 11450 11500 11550 11600 11650 11700 11750 11800 11850 11900 11950 12000 12050 12100 12150 12200 12250 12300 12350 12400 12450 12500 12550 12600 12650 12700 12750 12800 12850 12900 12950 13000 13050 13100 13150 13200 13250 13300 13350 13400 13450 13500 13550 13600 13650 13700 13750 13800 13850 13900 13950 14000 14050 14100 14150 14200 14250 14300 14350 14400 14450 14500 14550 14600 14650 14700 14750 14800 14850 14900 14950 15000 15050 15100 15150 15200 15250 15300 15350 15400 15450 15500 15550 15600 15650 15700 15750 15800 15850 15900 15950 16000 16050 16100 16150 16200 16250 16300 16350 16400 16450 16500 16550 16600 16650 16700 16750 16800 16850 16900 16950 17000 17050 17100 17150 17200 17250 17300 17350 17400 17450 17500 17550 17600 17650 17700 17750 17800 17850 17900 17950 Done
+  Aggregated to: 17983 loops x 6 samples
+
+Sum aggregation statistics:
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+   0.079  106.871  166.715  188.912  248.509 5777.309 
+
+=== Strategy 2: Center-Weighted Aggregation ===
+Rationale: Higher weight to center pixels, lower to edges
+Weight matrix (normalized to sum=1):
+  0.022 0.033 0.043 0.033 0.022
+  0.033 0.043 0.054 0.043 0.033
+  0.043 0.054 0.087 0.054 0.043
+  0.033 0.043 0.054 0.043 0.033
+  0.022 0.033 0.043 0.033 0.022
+
+Applying weighted aggregation... 50 100 150 200 250 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1050 1100 1150 1200 1250 1300 1350 1400 1450 1500 1550 1600 1650 1700 1750 1800 1850 1900 1950 2000 2050 2100 2150 2200 2250 2300 2350 2400 2450 2500 2550 2600 2650 2700 2750 2800 2850 2900 2950 3000 3050 3100 3150 3200 3250 3300 3350 3400 3450 3500 3550 3600 3650 3700 3750 3800 3850 3900 3950 4000 4050 4100 4150 4200 4250 4300 4350 4400 4450 4500 4550 4600 4650 4700 4750 4800 4850 4900 4950 5000 5050 5100 5150 5200 5250 5300 5350 5400 5450 5500 5550 5600 5650 5700 5750 5800 5850 5900 5950 6000 6050 6100 6150 6200 6250 6300 6350 6400 6450 6500 6550 6600 6650 6700 6750 6800 6850 6900 6950 7000 7050 7100 7150 7200 7250 7300 7350 7400 7450 7500 7550 7600 7650 7700 7750 7800 7850 7900 7950 8000 8050 8100 8150 8200 8250 8300 8350 8400 8450 8500 8550 8600 8650 8700 8750 8800 8850 8900 8950 9000 9050 9100 9150 9200 9250 9300 9350 9400 9450 9500 9550 9600 9650 9700 9750 9800 9850 9900 9950 10000 10050 10100 10150 10200 10250 10300 10350 10400 10450 10500 10550 10600 10650 10700 10750 10800 10850 10900 10950 11000 11050 11100 11150 11200 11250 11300 11350 11400 11450 11500 11550 11600 11650 11700 11750 11800 11850 11900 11950 12000 12050 12100 12150 12200 12250 12300 12350 12400 12450 12500 12550 12600 12650 12700 12750 12800 12850 12900 12950 13000 13050 13100 13150 13200 13250 13300 13350 13400 13450 13500 13550 13600 13650 13700 13750 13800 13850 13900 13950 14000 14050 14100 14150 14200 14250 14300 14350 14400 14450 14500 14550 14600 14650 14700 14750 14800 14850 14900 14950 15000 15050 15100 15150 15200 15250 15300 15350 15400 15450 15500 15550 15600 15650 15700 15750 15800 15850 15900 15950 16000 16050 16100 16150 16200 16250 16300 16350 16400 16450 16500 16550 16600 16650 16700 16750 16800 16850 16900 16950 17000 17050 17100 17150 17200 17250 17300 17350 17400 17450 17500 17550 17600 17650 17700 17750 17800 17850 17900 17950 Done
+
+Weighted aggregation statistics:
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+  0.00378   4.62807   7.16372   8.11210  10.59424 252.71619 
+
+=================================
+Strategy Comparison
+=================================
+
+Replicate correlation analysis:
+
+Full correlation matrix (sum strategy):
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.979   0.981  0.946  0.910  0.957
+ctrl_M2   0.979   1.000   0.982  0.951  0.915  0.963
+ctrl_M3   0.981   0.982   1.000  0.954  0.917  0.964
+mut_M1    0.946   0.951   0.954  1.000  0.921  0.969
+mut_M2    0.910   0.915   0.917  0.921  1.000  0.927
+mut_M3    0.957   0.963   0.964  0.969  0.927  1.000
+
+Within-condition correlations:
+  Control replicates:
+    ctrl_M1 vs ctrl_M2: 0.979
+    ctrl_M1 vs ctrl_M3: 0.981
+    ctrl_M2 vs ctrl_M3: 0.982
+  Mean within-ctrl correlation: 0.981
+
+  Mutant replicates:
+    mut_M1 vs mut_M2: 0.921
+    mut_M1 vs mut_M3: 0.969
+    mut_M2 vs mut_M3: 0.927
+  Mean within-mut correlation: 0.939
+
+Between-condition correlations:
+  Mean ctrl vs mut correlation: 0.942
+  Range: 0.910 - 0.964
+
+Quality Assessment:
+  ✓ Good within-condition reproducibility (>0.90)
+  ⚠ WARNING: Within-condition correlations not much higher than between
+    This may indicate weak biological differences
+
+Correlation between sum and weighted strategies: 0.995
+
+=================================
+Biological Validation
+=================================
+
+Loops with |log2FC| > 2: 1 (0.0%)
+
+Count distribution by replicate:
+
+  ctrl_M1:
+    Non-zero: 17983 / 17983 (100.0%)
+    Range: 0.1 - 765.9
+    Median: 140.3, Mean: 159.3
+
+  ctrl_M2:
+    Non-zero: 17983 / 17983 (100.0%)
+    Range: 0.1 - 1794.8
+    Median: 189.3, Mean: 212.5
+
+  ctrl_M3:
+    Non-zero: 17983 / 17983 (100.0%)
+    Range: 0.2 - 896.9
+    Median: 183.7, Mean: 206.9
+
+  mut_M1:
+    Non-zero: 17983 / 17983 (100.0%)
+    Range: 0.2 - 2700.6
+    Median: 171.5, Mean: 195.1
+
+  mut_M2:
+    Non-zero: 17983 / 17983 (100.0%)
+    Range: 0.1 - 5777.3
+    Median: 170.6, Mean: 191.3
+
+  mut_M3:
+    Non-zero: 17983 / 17983 (100.0%)
+    Range: 0.1 - 1617.9
+    Median: 149.9, Mean: 168.4
+
+
+Signal strength by group:
+  Control (all replicates): median = 169.7, mean = 192.9
+  Mutant (all replicates):  median = 163.7, mean = 184.9
+
+Mean difference (mut - ctrl): -7.9
+  ✓ No major systematic bias
+
+=================================
+Saving Results
+=================================
+
+  Count matrix saved: outputs/res_5kb/06_counts_matrix.tsv
+  RDS object saved: outputs/res_5kb/06_counts_matrix.rds
+  All strategies saved: outputs/res_5kb/06_all_strategies.rds
+
+=== Preparing edgeR Input ===
+  edgeR DGEList saved: outputs/res_5kb/06_edgeR_input.rds
+
+EdgeR object preview:
+  Samples: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+  Groups: ctrl, mut
+  Replicates per group: n = 3
+  Library sizes:
+    ctrl_M1: 2,864,059
+    ctrl_M2: 3,820,723
+    ctrl_M3: 3,720,899
+    mut_M1: 3,508,585
+    mut_M2: 3,439,868
+    mut_M3: 3,029,051
+
+Filtering preview:
+  Loops passing filterByExpr: 17981 / 17983 (100.0%)
+  Filtered library sizes would be:
+    ctrl_M1: 2,864,057
+    ctrl_M2: 3,820,714
+    ctrl_M3: 3,720,896
+    mut_M1: 3,508,579
+    mut_M2: 3,439,861
+    mut_M3: 3,029,045
+
+Example loop coordinates:
+  loop_id chr1    start1      end1 chr2    start2      end2 distance
+1  loop_1 chr8 110885001 110890000 chr8 110930001 110935000    45000
+2  loop_2 chr8 110165001 110170000 chr8 110475001 110480000   310000
+3  loop_3 chr8 126025001 126030000 chr8 126060001 126065000    35000
+
+=================================
+Step 6: Aggregation Complete
+=================================
+
+Pipeline Summary:
+  Resolution: 5000 bp (5 kb)
+  Input: 17983 loops with 5x5 pixel buffers
+  Output: 17983 x 6 count matrix
+  Primary method: Sum aggregation
+  Within-ctrl correlation: 0.981
+  Within-mut correlation: 0.939
+  Between-group correlation: 0.942
+  Loops for analysis: 17981 (after filtering)
+
+Output files:
+  1. outputs/res_5kb/06_counts_matrix.tsv - Tab-separated counts
+  2. outputs/res_5kb/06_counts_matrix.rds - R object
+  3. outputs/res_5kb/06_edgeR_input.rds - Ready for differential analysis
+  4. outputs/res_5kb/06_all_strategies.rds - All aggregation methods
+
+==================================================
+NEXT STEPS:
+1. Review replicate correlations and quality metrics
+2. Proceed with edgeR differential analysis using biological replicates
+3. Expected: Much higher statistical power than n=1 analysis
+
+To start edgeR analysis:
+  Rscript scripts/edgeR.R 5000
+  # Uses quasi-likelihood GLM with n=3 replicates per group
+
+✅ Matrix aggregation completed for 5kb
+
+=========================================
+STEP 4: edgeR differential analysis
+=========================================
+Script: scripts/edgeR.R
+Resolution: 5000 bp
+Method: Quasi-likelihood GLM
+
+
+========================================
+edgeR Differential Loop Analysis
+RESOLUTION: 5000 bp (5 kb)
+========================================
+
+Loading required libraries...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘tibble’ was built under R version 4.4.3 
+Loading configuration...
+Creating output directories...
+
+Setup complete
+   - Config loaded from: config/edgeR_config.yaml
+   - Output directory:  outputs/edgeR_results_res_5kb 
+   - Random seed:  42 
+
+Loading input data...
+   - Loading count matrix... (17983 loops × 6 samples)
+   - Loading loop coordinates... (17983 genomic positions)
+   - QC summary not found (skipping shift analysis)
+
+Validating data integrity...
+   ✓ Data integrity checks passed
+
+Creating genomic annotations...
+   ✓ Created annotation for 17983 loops
+   - Columns: loop_id, chr1, start1, end1, chr2, start2, end2, coord_string 
+
+Creating DGEList object...
+   ✓ DGEList created
+   - Total samples: 6 
+   - Groups: ctrl, mut 
+   - Replicates per group: n = 3 
+
+   Per-sample library sizes:
+     ctrl_M1 (ctrl): 2864059
+     ctrl_M2 (ctrl): 3820723
+     ctrl_M3 (ctrl): 3720899
+     mut_M1 (mut): 3508585
+     mut_M2 (mut): 3439868
+     mut_M3 (mut): 3029051
+
+   Median library size by group:
+     ctrl: 3720899
+     mut: 3439868
+
+Filtering low-count loops...
+   - Filtering with min.count = 5 
+   - Before filtering: 17983 loops
+   - Loops passing filter: 17982 
+   - Loops filtered out:1(0%)
+   After filtering: 17982 loops retained
+   - New library sizes: ctrl = 2864059 , mut = 3820723 
+
+Performing TMM normalization...
+   ✓ Normalization complete
+   - Method: TMM 
+   - Normalization factors: ctrl = 1.0021 , mut = 1.0063 
+   - Effective library sizes: ctrl = 2870101 , mut = 3844875 
+
+Generating MDS plot for sample QC...
+null device 
+          1 
+   ✓ MDS plot saved
+   - Check plot to verify:
+     • Replicates cluster by condition
+     • No obvious outliers
+     • Clear separation between groups
+
+Estimating dispersions from biological replicates...
+   Design matrix:
+     - Intercept: Baseline (control) level
+     - MutantEffect: Difference (mutant - control)
+
+   Estimating common, trended, and tagwise dispersions...
+   ✓ Dispersion estimation complete
+     - Common dispersion: 0.0014 (BCV = 0.038)
+     - Tagwise dispersion range: 0.0001 - 0.6203
+     - Median tagwise BCV: 0.019
+
+   Generating BCV plot...
+null device 
+          1 
+   ✓ BCV plot saved
+
+Fitting quasi-likelihood GLM...
+   Method: glmQLFit with robust=TRUE
+   Benefits:
+     • Accounts for gene-specific variability
+     • More rigorous error rate control
+     • Robust to outliers
+
+   ✓ QL fit complete
+     - Residual df: 4
+
+   Generating QL dispersion plot...
+null device 
+          1 
+   ✓ QL dispersion plot saved
+
+Testing for differential loops...
+   Test: Mutant effect (coefficient 2)
+   Method: Quasi-likelihood F-test
+
+   ✓ Testing complete
+
+=== Differential Loop Results ===
+   Significant loops (FDR < 0.05): 1766 (9.8%)
+     - Up in mutant: 1127
+     - Down in mutant: 639
+
+   By effect size:
+     - Strong (|logFC| > 1): 19
+     - Moderate (|logFC| > 0.5): 398
+     - Weak: 1349
+
+   Trending (FDR < 0.10): 939
+
+Skipping shifted loop enrichment (no shift data available)
+
+Computing summary statistics...
+   ✓ Summary statistics computed
+
+Generating visualizations...
+   - Creating MA plot... null device 
+          1 
+✓
+   - Creating volcano plot... null device 
+          1 
+✓
+   - Creating results summary plot... null device 
+          1 
+✓
+   - Skipping shifted loop enrichment plot (no shift data)
+
+   All plots generated
+
+Saving results...
+   ✓ DGEList object saved
+   ✓ Primary results saved (TSV)
+   ✓ Primary results saved (RDS)
+   ✓ Significant loops saved (1766 loops)
+   ✓ Top 100 by effect size saved
+   ✓ decideTests summary saved
+   ✓ Summary statistics saved
+   ✓ Session info saved
+
+========================================
+REPLICATE-AWARE ANALYSIS COMPLETE
+========================================
+
+Experimental Design:
+   - Samples: 6 (3 ctrl + 3 mut)
+   - Method: Quasi-likelihood GLM with robust estimation
+   - Estimated BCV: 0.038 
+
+Key Results:
+   - Loops tested: 17982 
+   - Significant (FDR < 0.05):1766(9.8%)
+   - Up in mutant: 1127 
+   - Down in mutant: 639 
+   - Strong differential (|logFC| > 1): 19 
+
+Improvement over merged analysis:
+   - Previous (merged, n=1): 2 significant loops
+   - Current (replicates, n=3): 1766 significant loops
+   - Fold improvement: 883 ×
+
+Output Files:
+   Primary results: outputs/edgeR_results_res_5kb/primary_analysis 
+   Plots: outputs/edgeR_results_res_5kb/plots 
+   Logs: outputs/edgeR_results_res_5kb/logs 
+
+Next Steps:
+   1. Review MDS plot to confirm replicate quality
+   2. Check BCV and QL dispersion plots
+   3. Examine MA and volcano plots for biological patterns
+   4. Compare with Hiccups differential results (38,593 loops)
+
+Analysis log saved to: outputs/edgeR_results_res_5kb/logs/analysis_log.txt 
+
+✅ Differential analysis completed for 5kb
+
+✓ COMPLETED RESOLUTION: 5kb
+End time: Tue Oct 21 07:45:56 PDT 2025
+
+
+=========================================
+PROCESSING RESOLUTION: 10000 bp (10 kb)
+=========================================
+Start time: Tue Oct 21 07:45:56 PDT 2025
+
+=========================================
+STEP 1: Preparing loops (6 replicates)
+=========================================
+Script: scripts/prep_loops.R
+Resolution: 10000 bp
+
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Loading required package: SummarizedExperiment
+Loading required package: MatrixGenerics
+Loading required package: matrixStats
+
+Attaching package: ‘MatrixGenerics’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+    colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+    colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+    colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+    colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+    colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+    colWeightedMeans, colWeightedMedians, colWeightedSds,
+    colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+    rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+    rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+    rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+    rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+    rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+    rowWeightedSds, rowWeightedVars
+
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+
+Attaching package: ‘Biobase’
+
+The following object is masked from ‘package:MatrixGenerics’:
+
+    rowMedians
+
+The following objects are masked from ‘package:matrixStats’:
+
+    anyMissing, rowMedians
+
+Warning message:
+package ‘matrixStats’ was built under R version 4.4.3 
+
+========================================
+RESOLUTION: 10000 bp (10 kb)
+========================================
+
+
+=== Reading BEDPE files for all replicates ===
+Reading ctrl_M1... 12474 loops (10kb, observed>0)
+Reading ctrl_M2... 11578 loops (10kb, observed>0)
+Reading ctrl_M3... 13721 loops (10kb, observed>0)
+Reading mut_M1... 11848 loops (10kb, observed>0)
+Reading mut_M2... 12984 loops (10kb, observed>0)
+Reading mut_M3... 12547 loops (10kb, observed>0)
+
+Per-replicate loop counts:
+  ctrl_M1: 12474 loops
+  ctrl_M2: 11578 loops
+  ctrl_M3: 13721 loops
+  mut_M1: 11848 loops
+  mut_M2: 12984 loops
+  mut_M3: 12547 loops
+
+Total loops across all replicates: 75152
+
+=== Converting to GInteractions ===
+Converting ctrl_M1... 12474 interactions
+Converting ctrl_M2... 11578 interactions
+Converting ctrl_M3... 13721 interactions
+Converting mut_M1... 11848 interactions
+Converting mut_M2... 12984 interactions
+Converting mut_M3... 12547 interactions
+✓ Saved to: outputs/res_10kb/01_ginteractions.rds
+
+=== Merging loops across all replicates ===
+Strategy: Union (include loops from ANY replicate)
+Radius: 10 kb
+Selection: Maximum observed count
+
+✓ Merged 22639 consensus loops from 75152 input loops
+  Reduction: 69.9%
+
+Cluster size distribution:
+  1 replicate: 7446 loops (32.9%)
+  2 replicates: 2952 loops (13.0%)
+  3 replicates: 2091 loops (9.2%)
+  4 replicates: 1745 loops (7.7%)
+  5 replicates: 1942 loops (8.6%)
+  6 replicates: 6416 loops (28.3%)
+  7 replicates: 37 loops (0.2%)
+  8 replicates: 7 loops (0.0%)
+  9 replicates: 2 loops (0.0%)
+  10 replicates: 1 loops (0.0%)
+
+Per-replicate contribution to consensus:
+  ctrl_M1: 0/22639 loops (0.0%)
+  ctrl_M2: 0/22639 loops (0.0%)
+  ctrl_M3: 0/22639 loops (0.0%)
+  mut_M1: 0/22639 loops (0.0%)
+  mut_M2: 0/22639 loops (0.0%)
+  mut_M3: 0/22639 loops (0.0%)
+
+✓ Saved to: outputs/res_10kb/02_merged.rds
+
+=== Binning to 10kb grid ===
+✓ Binned 22639 loops to 10kb resolution
+✓ Saved to: outputs/res_10kb/03_binned.rds
+
+=== Creating buffered regions ===
+Buffer: ±2 bins (±20kb) around center
+Purpose: Handle positional shifts between replicates
+
+✓ Created 22639 buffered regions
+  Region size: 5 × 5 pixels (50kb × 50kb)
+✓ Saved to: outputs/res_10kb/04_buffered.rds
+
+=================================
+LOOP PREPARATION COMPLETE
+=================================
+Resolution: 10000 bp (10 kb)
+Input: 75152 loops across 6 replicates
+Output: 22639 consensus loop positions
+Ready for extraction: 22639 loops × 6 replicates × 25 pixels
+                    = 3395850 total extractions
+
+Output directory: outputs/res_10kb
+Next step: Rscript scripts/extract_counts.R 10000
+
+✅ Loop preparation completed for 10kb
+
+=========================================
+STEP 2: Extracting Hi-C counts (6 files)
+=========================================
+Script: scripts/extract_counts.R
+Resolution: 10000 bp
+
+
+========================================
+Step 5: Hi-C Contact Extraction
+RESOLUTION: 10000 bp (10 kb)
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading buffered loops from outputs/res_10kb...
+  Loaded 22639 loops with 5x5 pixel regions
+
+Verifying .hic files...
+  ctrl_M1: 2.4 GB - OK
+  ctrl_M2: 3.3 GB - OK
+  ctrl_M3: 3.1 GB - OK
+  mut_M1: 2.8 GB - OK
+  mut_M2: 2.9 GB - OK
+  mut_M3: 2.6 GB - OK
+
+Checking .hic file properties...
+
+ctrl_M1 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+ctrl_M2 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+ctrl_M3 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M1 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M2 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M3 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+Using normalization: VC
+
+Cleaning up existing temp HDF5 directory...
+  ✓ Removed old temp files
+  ✓ Created fresh temp directory: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/res_10kb/temp_hdf5
+
+Validating loop positions...
+  Chromosomes in loops: 21
+  Example chromosomes: chr1, chr2, chr3, chr4, chr5
+  Maximum anchor width: 50001 bp
+  Minimum required blockSize: 100002 bp
+
+=== Starting extraction ===
+Processing 22639 loops × 6 replicates × 25 pixels
+  = 3395850 total extractions
+
+
+✓ Extraction completed in 4735.3 seconds
+
+=== Validation of Extracted Data ===
+Dimensions: 5 x 5 x 22639 x 6
+  = 5x5 pixels x 22639 loops x 6 files
+
+NA values: 0 (0.00%)
+
+Value distribution (excluding NAs):
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+   0.000    7.765   14.163   18.998   24.244 1634.742 
+
+Sparsity: 0.6% zeros
+
+Per-sample statistics:
+  ctrl_M1: median=11.73, mean=15.83, max=484, total=8960532
+  ctrl_M2: median=16.47, mean=21.64, max=1398, total=12246591
+  ctrl_M3: median=15.66, mean=20.83, max=815, total=11789206
+  mut_M1: median=14.64, mean=19.65, max=397, total=11122420
+  mut_M2: median=14.37, mean=19.13, max=646, total=10827185
+  mut_M3: median=12.69, mean=16.91, max=1635, total=9567889
+
+Library size ratios:
+  Median ctrl: 11789206
+  Median mut: 10827185
+  Ratio (ctrl/mut): 1.089
+
+=== Correlation Analysis ===
+
+Full correlation matrix:
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.943   0.950  0.939  0.944  0.926
+ctrl_M2   0.943   1.000   0.951  0.938  0.944  0.928
+ctrl_M3   0.950   0.951   1.000  0.947  0.951  0.934
+mut_M1    0.939   0.938   0.947  1.000  0.950  0.936
+mut_M2    0.944   0.944   0.951  0.950  1.000  0.939
+mut_M3    0.926   0.928   0.934  0.936  0.939  1.000
+
+Within-condition correlations:
+  Control replicates:
+    ctrl_M1 vs ctrl_M2: 0.943
+    ctrl_M1 vs ctrl_M3: 0.950
+    ctrl_M2 vs ctrl_M3: 0.951
+  Mean within-ctrl correlation: 0.948
+
+  Mutant replicates:
+    mut_M1 vs mut_M2: 0.950
+    mut_M1 vs mut_M3: 0.936
+    mut_M2 vs mut_M3: 0.939
+  Mean within-mut correlation: 0.942
+
+Between-condition correlations:
+  Mean ctrl vs mut correlation: 0.939
+  Range: 0.926 - 0.951
+
+Quality Assessment:
+  ✓ Good within-condition reproducibility (>0.90)
+  ⚠ WARNING: Within-condition correlations not much higher than between
+    This may indicate weak biological differences
+
+=== Example Extracted Matrices ===
+Showing first 3 loops for control sample:
+
+Loop 1:
+      26.33    25.90    20.76    18.63    20.85 
+      29.66    24.75    20.30    24.30    22.49 
+      41.15    40.01    55.77    42.46    57.23 
+      76.83    43.92    56.31    37.74    45.48 
+     165.85    54.10    41.13    38.96    34.75 
+  Sum: 1066, Max: 166, Non-zero: 25/25
+
+Loop 2:
+      21.04    17.25    18.30    10.40    13.25 
+      22.91    16.51    23.79    20.76    13.71 
+      21.67    26.06    39.00    31.84    16.37 
+      52.84    40.10    39.44    29.40    21.08 
+     163.90    70.24    46.82    30.22    20.81 
+  Sum: 828, Max: 164, Non-zero: 25/25
+
+Loop 3:
+      19.81    13.09    11.16    16.18     9.33 
+      16.69    20.09    12.36    14.65    14.41 
+      32.36    26.88    36.85    23.50    32.66 
+      61.45    48.72    39.26    33.47    25.73 
+     117.64    65.77    33.70    39.44    21.31 
+  Sum: 787, Max: 118, Non-zero: 25/25
+
+
+=== Saving Extracted Data ===
+Saving as HDF5 (required for out-of-memory objects)...
+Start writing assay 1/3 to HDF5 file:
+  outputs/res_10kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 1/3 to HDF5 file:
+  outputs/res_10kb/05_extractedassays.h5
+
+Start writing assay 2/3 to HDF5 file:
+  outputs/res_10kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 2/3 to HDF5 file:
+  outputs/res_10kb/05_extractedassays.h5
+
+Start writing assay 3/3 to HDF5 file:
+  outputs/res_10kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 3/3 to HDF5 file:
+  outputs/res_10kb/05_extractedassays.h5
+
+Serialize InteractionArray object to RDS file:
+  outputs/res_10kb/05_extractedse.rds
+  Saved to: outputs/res_10kb/05_extracted/
+  Metadata saved to: outputs/res_10kb/05_metadata.rds
+
+=================================
+EXTRACTION COMPLETE
+=================================
+Resolution: 10000 bp (10 kb)
+Processed: 22639 loops × 6 replicates
+Samples: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+
+Quality Metrics:
+  Within-ctrl correlation: 0.948
+  Within-mut correlation: 0.942
+  Between-condition correlation: 0.939
+  Normalization: VC
+  Extraction time: 4735.3 seconds
+
+Output: outputs/res_10kb/05_extracted/
+Ready for QC and differential analysis
+Next step: Rscript scripts/qc-val.R 10000
+
+To load in next script:
+  pixels <- loadHDF5SummarizedExperiment(dir='outputs/res_10kb', prefix='05_extracted')
+
+✅ Count extraction completed for 10kb
+
+=========================================
+STEP 3: Aggregating 5x5 matrices
+=========================================
+Script: scripts/aggregate.R
+Resolution: 10000 bp
+
+
+========================================
+Step 6: Matrix Aggregation
+RESOLUTION: 10000 bp (10 kb)
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading extracted Hi-C matrices...
+  Loaded: 22639 loops x 6 samples
+  Matrix dimensions per loop: 5x5 pixels
+  Files: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+
+Array dimensions: 5 x 5 x 22639 x 6
+
+=== Strategy 1: Simple Sum Aggregation ===
+Rationale: Captures total Hi-C signal regardless of position within 5x5 window
+Aggregating... 50 100 150 200 250 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1050 1100 1150 1200 1250 1300 1350 1400 1450 1500 1550 1600 1650 1700 1750 1800 1850 1900 1950 2000 2050 2100 2150 2200 2250 2300 2350 2400 2450 2500 2550 2600 2650 2700 2750 2800 2850 2900 2950 3000 3050 3100 3150 3200 3250 3300 3350 3400 3450 3500 3550 3600 3650 3700 3750 3800 3850 3900 3950 4000 4050 4100 4150 4200 4250 4300 4350 4400 4450 4500 4550 4600 4650 4700 4750 4800 4850 4900 4950 5000 5050 5100 5150 5200 5250 5300 5350 5400 5450 5500 5550 5600 5650 5700 5750 5800 5850 5900 5950 6000 6050 6100 6150 6200 6250 6300 6350 6400 6450 6500 6550 6600 6650 6700 6750 6800 6850 6900 6950 7000 7050 7100 7150 7200 7250 7300 7350 7400 7450 7500 7550 7600 7650 7700 7750 7800 7850 7900 7950 8000 8050 8100 8150 8200 8250 8300 8350 8400 8450 8500 8550 8600 8650 8700 8750 8800 8850 8900 8950 9000 9050 9100 9150 9200 9250 9300 9350 9400 9450 9500 9550 9600 9650 9700 9750 9800 9850 9900 9950 10000 10050 10100 10150 10200 10250 10300 10350 10400 10450 10500 10550 10600 10650 10700 10750 10800 10850 10900 10950 11000 11050 11100 11150 11200 11250 11300 11350 11400 11450 11500 11550 11600 11650 11700 11750 11800 11850 11900 11950 12000 12050 12100 12150 12200 12250 12300 12350 12400 12450 12500 12550 12600 12650 12700 12750 12800 12850 12900 12950 13000 13050 13100 13150 13200 13250 13300 13350 13400 13450 13500 13550 13600 13650 13700 13750 13800 13850 13900 13950 14000 14050 14100 14150 14200 14250 14300 14350 14400 14450 14500 14550 14600 14650 14700 14750 14800 14850 14900 14950 15000 15050 15100 15150 15200 15250 15300 15350 15400 15450 15500 15550 15600 15650 15700 15750 15800 15850 15900 15950 16000 16050 16100 16150 16200 16250 16300 16350 16400 16450 16500 16550 16600 16650 16700 16750 16800 16850 16900 16950 17000 17050 17100 17150 17200 17250 17300 17350 17400 17450 17500 17550 17600 17650 17700 17750 17800 17850 17900 17950 18000 18050 18100 18150 18200 18250 18300 18350 18400 18450 18500 18550 18600 18650 18700 18750 18800 18850 18900 18950 19000 19050 19100 19150 19200 19250 19300 19350 19400 19450 19500 19550 19600 19650 19700 19750 19800 19850 19900 19950 20000 20050 20100 20150 20200 20250 20300 20350 20400 20450 20500 20550 20600 20650 20700 20750 20800 20850 20900 20950 21000 21050 21100 21150 21200 21250 21300 21350 21400 21450 21500 21550 21600 21650 21700 21750 21800 21850 21900 21950 22000 22050 22100 22150 22200 22250 22300 22350 22400 22450 22500 22550 22600 Done
+  Aggregated to: 22639 loops x 6 samples
+
+Sum aggregation statistics:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    0.0   228.4   391.5   474.9   639.5  3334.9 
+
+=== Strategy 2: Center-Weighted Aggregation ===
+Rationale: Higher weight to center pixels, lower to edges
+Weight matrix (normalized to sum=1):
+  0.022 0.033 0.043 0.033 0.022
+  0.033 0.043 0.054 0.043 0.033
+  0.043 0.054 0.087 0.054 0.043
+  0.033 0.043 0.054 0.043 0.033
+  0.022 0.033 0.043 0.033 0.022
+
+Applying weighted aggregation... 50 100 150 200 250 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1050 1100 1150 1200 1250 1300 1350 1400 1450 1500 1550 1600 1650 1700 1750 1800 1850 1900 1950 2000 2050 2100 2150 2200 2250 2300 2350 2400 2450 2500 2550 2600 2650 2700 2750 2800 2850 2900 2950 3000 3050 3100 3150 3200 3250 3300 3350 3400 3450 3500 3550 3600 3650 3700 3750 3800 3850 3900 3950 4000 4050 4100 4150 4200 4250 4300 4350 4400 4450 4500 4550 4600 4650 4700 4750 4800 4850 4900 4950 5000 5050 5100 5150 5200 5250 5300 5350 5400 5450 5500 5550 5600 5650 5700 5750 5800 5850 5900 5950 6000 6050 6100 6150 6200 6250 6300 6350 6400 6450 6500 6550 6600 6650 6700 6750 6800 6850 6900 6950 7000 7050 7100 7150 7200 7250 7300 7350 7400 7450 7500 7550 7600 7650 7700 7750 7800 7850 7900 7950 8000 8050 8100 8150 8200 8250 8300 8350 8400 8450 8500 8550 8600 8650 8700 8750 8800 8850 8900 8950 9000 9050 9100 9150 9200 9250 9300 9350 9400 9450 9500 9550 9600 9650 9700 9750 9800 9850 9900 9950 10000 10050 10100 10150 10200 10250 10300 10350 10400 10450 10500 10550 10600 10650 10700 10750 10800 10850 10900 10950 11000 11050 11100 11150 11200 11250 11300 11350 11400 11450 11500 11550 11600 11650 11700 11750 11800 11850 11900 11950 12000 12050 12100 12150 12200 12250 12300 12350 12400 12450 12500 12550 12600 12650 12700 12750 12800 12850 12900 12950 13000 13050 13100 13150 13200 13250 13300 13350 13400 13450 13500 13550 13600 13650 13700 13750 13800 13850 13900 13950 14000 14050 14100 14150 14200 14250 14300 14350 14400 14450 14500 14550 14600 14650 14700 14750 14800 14850 14900 14950 15000 15050 15100 15150 15200 15250 15300 15350 15400 15450 15500 15550 15600 15650 15700 15750 15800 15850 15900 15950 16000 16050 16100 16150 16200 16250 16300 16350 16400 16450 16500 16550 16600 16650 16700 16750 16800 16850 16900 16950 17000 17050 17100 17150 17200 17250 17300 17350 17400 17450 17500 17550 17600 17650 17700 17750 17800 17850 17900 17950 18000 18050 18100 18150 18200 18250 18300 18350 18400 18450 18500 18550 18600 18650 18700 18750 18800 18850 18900 18950 19000 19050 19100 19150 19200 19250 19300 19350 19400 19450 19500 19550 19600 19650 19700 19750 19800 19850 19900 19950 20000 20050 20100 20150 20200 20250 20300 20350 20400 20450 20500 20550 20600 20650 20700 20750 20800 20850 20900 20950 21000 21050 21100 21150 21200 21250 21300 21350 21400 21450 21500 21550 21600 21650 21700 21750 21800 21850 21900 21950 22000 22050 22100 22150 22200 22250 22300 22350 22400 22450 22500 22550 22600 Done
+
+Weighted aggregation statistics:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   9.911  16.868  20.105  27.224 128.857 
+
+=================================
+Strategy Comparison
+=================================
+
+Replicate correlation analysis:
+
+Full correlation matrix (sum strategy):
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.993   0.994  0.982  0.988  0.982
+ctrl_M2   0.993   1.000   0.993  0.980  0.988  0.983
+ctrl_M3   0.994   0.993   1.000  0.984  0.989  0.984
+mut_M1    0.982   0.980   0.984  1.000  0.991  0.988
+mut_M2    0.988   0.988   0.989  0.991  1.000  0.992
+mut_M3    0.982   0.983   0.984  0.988  0.992  1.000
+
+Within-condition correlations:
+  Control replicates:
+    ctrl_M1 vs ctrl_M2: 0.993
+    ctrl_M1 vs ctrl_M3: 0.994
+    ctrl_M2 vs ctrl_M3: 0.993
+  Mean within-ctrl correlation: 0.993
+
+  Mutant replicates:
+    mut_M1 vs mut_M2: 0.991
+    mut_M1 vs mut_M3: 0.988
+    mut_M2 vs mut_M3: 0.992
+  Mean within-mut correlation: 0.991
+
+Between-condition correlations:
+  Mean ctrl vs mut correlation: 0.984
+  Range: 0.980 - 0.989
+
+Quality Assessment:
+  ✓ Excellent within-condition reproducibility (>0.95)
+  ⚠ WARNING: Within-condition correlations not much higher than between
+    This may indicate weak biological differences
+
+Correlation between sum and weighted strategies: 0.994
+
+=================================
+Biological Validation
+=================================
+
+Loops with |log2FC| > 2: 0 (0.0%)
+
+Count distribution by replicate:
+
+  ctrl_M1:
+    Non-zero: 22639 / 22639 (100.0%)
+    Range: 0.2 - 2447.5
+    Median: 326.2, Mean: 395.8
+
+  ctrl_M2:
+    Non-zero: 22639 / 22639 (100.0%)
+    Range: 0.3 - 3076.4
+    Median: 451.4, Mean: 541.0
+
+  ctrl_M3:
+    Non-zero: 22639 / 22639 (100.0%)
+    Range: 0.2 - 2746.3
+    Median: 431.9, Mean: 520.7
+
+  mut_M1:
+    Non-zero: 22639 / 22639 (100.0%)
+    Range: 0.3 - 2681.1
+    Median: 406.5, Mean: 491.3
+
+  mut_M2:
+    Non-zero: 22639 / 22639 (100.0%)
+    Range: 0.2 - 3156.2
+    Median: 398.8, Mean: 478.3
+
+  mut_M3:
+    Non-zero: 22638 / 22639 (100.0%)
+    Range: 0.2 - 3334.9
+    Median: 354.0, Mean: 422.6
+
+
+Signal strength by group:
+  Control (all replicates): median = 398.6, mean = 485.8
+  Mutant (all replicates):  median = 384.9, mean = 464.1
+
+Mean difference (mut - ctrl): -21.8
+  ✓ No major systematic bias
+
+=================================
+Saving Results
+=================================
+
+  Count matrix saved: outputs/res_10kb/06_counts_matrix.tsv
+  RDS object saved: outputs/res_10kb/06_counts_matrix.rds
+  All strategies saved: outputs/res_10kb/06_all_strategies.rds
+
+=== Preparing edgeR Input ===
+  edgeR DGEList saved: outputs/res_10kb/06_edgeR_input.rds
+
+EdgeR object preview:
+  Samples: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+  Groups: ctrl, mut
+  Replicates per group: n = 3
+  Library sizes:
+    ctrl_M1: 8,960,532
+    ctrl_M2: 12,246,591
+    ctrl_M3: 11,789,206
+    mut_M1: 11,122,420
+    mut_M2: 10,827,185
+    mut_M3: 9,567,889
+
+Filtering preview:
+  Loops passing filterByExpr: 22630 / 22639 (100.0%)
+  Filtered library sizes would be:
+    ctrl_M1: 8,960,521
+    ctrl_M2: 12,246,570
+    ctrl_M3: 11,789,187
+    mut_M1: 11,122,401
+    mut_M2: 10,827,169
+    mut_M3: 9,567,874
+
+Example loop coordinates:
+  loop_id chr1    start1      end1 chr2    start2      end2 distance
+1  loop_1 chr8 110880001 110890000 chr8 110930001 110940000    50000
+2  loop_2 chr8  87290001  87300000 chr8  87340001  87350000    50000
+3  loop_3 chr8 126660001 126670000 chr8 126710001 126720000    50000
+
+=================================
+Step 6: Aggregation Complete
+=================================
+
+Pipeline Summary:
+  Resolution: 10000 bp (10 kb)
+  Input: 22639 loops with 5x5 pixel buffers
+  Output: 22639 x 6 count matrix
+  Primary method: Sum aggregation
+  Within-ctrl correlation: 0.993
+  Within-mut correlation: 0.991
+  Between-group correlation: 0.984
+  Loops for analysis: 22630 (after filtering)
+
+Output files:
+  1. outputs/res_10kb/06_counts_matrix.tsv - Tab-separated counts
+  2. outputs/res_10kb/06_counts_matrix.rds - R object
+  3. outputs/res_10kb/06_edgeR_input.rds - Ready for differential analysis
+  4. outputs/res_10kb/06_all_strategies.rds - All aggregation methods
+
+==================================================
+NEXT STEPS:
+1. Review replicate correlations and quality metrics
+2. Proceed with edgeR differential analysis using biological replicates
+3. Expected: Much higher statistical power than n=1 analysis
+
+To start edgeR analysis:
+  Rscript scripts/edgeR.R 10000
+  # Uses quasi-likelihood GLM with n=3 replicates per group
+
+✅ Matrix aggregation completed for 10kb
+
+=========================================
+STEP 4: edgeR differential analysis
+=========================================
+Script: scripts/edgeR.R
+Resolution: 10000 bp
+Method: Quasi-likelihood GLM
+
+
+========================================
+edgeR Differential Loop Analysis
+RESOLUTION: 10000 bp (10 kb)
+========================================
+
+Loading required libraries...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘tibble’ was built under R version 4.4.3 
+Loading configuration...
+Creating output directories...
+
+Setup complete
+   - Config loaded from: config/edgeR_config.yaml
+   - Output directory:  outputs/edgeR_results_res_10kb 
+   - Random seed:  42 
+
+Loading input data...
+   - Loading count matrix... (22639 loops × 6 samples)
+   - Loading loop coordinates... (22639 genomic positions)
+   - QC summary not found (skipping shift analysis)
+
+Validating data integrity...
+   ✓ Data integrity checks passed
+
+Creating genomic annotations...
+   ✓ Created annotation for 22639 loops
+   - Columns: loop_id, chr1, start1, end1, chr2, start2, end2, coord_string 
+
+Creating DGEList object...
+   ✓ DGEList created
+   - Total samples: 6 
+   - Groups: ctrl, mut 
+   - Replicates per group: n = 3 
+
+   Per-sample library sizes:
+     ctrl_M1 (ctrl): 8960532
+     ctrl_M2 (ctrl): 12246591
+     ctrl_M3 (ctrl): 11789206
+     mut_M1 (mut): 11122420
+     mut_M2 (mut): 10827185
+     mut_M3 (mut): 9567889
+
+   Median library size by group:
+     ctrl: 11789206
+     mut: 10827185
+
+Filtering low-count loops...
+   - Filtering with min.count = 5 
+   - Before filtering: 22639 loops
+   - Loops passing filter: 22632 
+   - Loops filtered out:7(0%)
+   After filtering: 22632 loops retained
+   - New library sizes: ctrl = 8960529 , mut = 12246588 
+
+Performing TMM normalization...
+   ✓ Normalization complete
+   - Method: TMM 
+   - Normalization factors: ctrl = 0.9996 , mut = 1.0054 
+   - Effective library sizes: ctrl = 8956738 , mut = 12313088 
+
+Generating MDS plot for sample QC...
+null device 
+          1 
+   ✓ MDS plot saved
+   - Check plot to verify:
+     • Replicates cluster by condition
+     • No obvious outliers
+     • Clear separation between groups
+
+Estimating dispersions from biological replicates...
+   Design matrix:
+     - Intercept: Baseline (control) level
+     - MutantEffect: Difference (mutant - control)
+
+   Estimating common, trended, and tagwise dispersions...
+   ✓ Dispersion estimation complete
+     - Common dispersion: 0.0010 (BCV = 0.032)
+     - Tagwise dispersion range: 0.0001 - 2.5657
+     - Median tagwise BCV: 0.029
+
+   Generating BCV plot...
+null device 
+          1 
+   ✓ BCV plot saved
+
+Fitting quasi-likelihood GLM...
+   Method: glmQLFit with robust=TRUE
+   Benefits:
+     • Accounts for gene-specific variability
+     • More rigorous error rate control
+     • Robust to outliers
+
+   ✓ QL fit complete
+     - Residual df: 4
+
+   Generating QL dispersion plot...
+null device 
+          1 
+   ✓ QL dispersion plot saved
+
+Testing for differential loops...
+   Test: Mutant effect (coefficient 2)
+   Method: Quasi-likelihood F-test
+
+   ✓ Testing complete
+
+=== Differential Loop Results ===
+   Significant loops (FDR < 0.05): 3981 (17.6%)
+     - Up in mutant: 2240
+     - Down in mutant: 1741
+
+   By effect size:
+     - Strong (|logFC| > 1): 13
+     - Moderate (|logFC| > 0.5): 321
+     - Weak: 3647
+
+   Trending (FDR < 0.10): 1531
+
+Skipping shifted loop enrichment (no shift data available)
+
+Computing summary statistics...
+   ✓ Summary statistics computed
+
+Generating visualizations...
+   - Creating MA plot... null device 
+          1 
+✓
+   - Creating volcano plot... null device 
+          1 
+✓
+   - Creating results summary plot... null device 
+          1 
+✓
+   - Skipping shifted loop enrichment plot (no shift data)
+
+   All plots generated
+
+Saving results...
+   ✓ DGEList object saved
+   ✓ Primary results saved (TSV)
+   ✓ Primary results saved (RDS)
+   ✓ Significant loops saved (3981 loops)
+   ✓ Top 100 by effect size saved
+   ✓ decideTests summary saved
+   ✓ Summary statistics saved
+   ✓ Session info saved
+
+========================================
+REPLICATE-AWARE ANALYSIS COMPLETE
+========================================
+
+Experimental Design:
+   - Samples: 6 (3 ctrl + 3 mut)
+   - Method: Quasi-likelihood GLM with robust estimation
+   - Estimated BCV: 0.032 
+
+Key Results:
+   - Loops tested: 22632 
+   - Significant (FDR < 0.05):3981(17.6%)
+   - Up in mutant: 2240 
+   - Down in mutant: 1741 
+   - Strong differential (|logFC| > 1): 13 
+
+Improvement over merged analysis:
+   - Previous (merged, n=1): 2 significant loops
+   - Current (replicates, n=3): 3981 significant loops
+   - Fold improvement: 1990.5 ×
+
+Output Files:
+   Primary results: outputs/edgeR_results_res_10kb/primary_analysis 
+   Plots: outputs/edgeR_results_res_10kb/plots 
+   Logs: outputs/edgeR_results_res_10kb/logs 
+
+Next Steps:
+   1. Review MDS plot to confirm replicate quality
+   2. Check BCV and QL dispersion plots
+   3. Examine MA and volcano plots for biological patterns
+   4. Compare with Hiccups differential results (38,593 loops)
+
+Analysis log saved to: outputs/edgeR_results_res_10kb/logs/analysis_log.txt 
+
+✅ Differential analysis completed for 10kb
+
+✓ COMPLETED RESOLUTION: 10kb
+End time: Tue Oct 21 15:42:03 PDT 2025
+
+
+=========================================
+PROCESSING RESOLUTION: 25000 bp (25 kb)
+=========================================
+Start time: Tue Oct 21 15:42:03 PDT 2025
+
+=========================================
+STEP 1: Preparing loops (6 replicates)
+=========================================
+Script: scripts/prep_loops.R
+Resolution: 25000 bp
+
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Loading required package: SummarizedExperiment
+Loading required package: MatrixGenerics
+Loading required package: matrixStats
+
+Attaching package: ‘MatrixGenerics’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+    colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+    colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+    colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+    colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+    colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+    colWeightedMeans, colWeightedMedians, colWeightedSds,
+    colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+    rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+    rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+    rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+    rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+    rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+    rowWeightedSds, rowWeightedVars
+
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+
+Attaching package: ‘Biobase’
+
+The following object is masked from ‘package:MatrixGenerics’:
+
+    rowMedians
+
+The following objects are masked from ‘package:matrixStats’:
+
+    anyMissing, rowMedians
+
+Warning message:
+package ‘matrixStats’ was built under R version 4.4.3 
+
+========================================
+RESOLUTION: 25000 bp (25 kb)
+========================================
+
+
+=== Reading BEDPE files for all replicates ===
+Reading ctrl_M1... 9931 loops (25kb, observed>0)
+Reading ctrl_M2... 9642 loops (25kb, observed>0)
+Reading ctrl_M3... 10568 loops (25kb, observed>0)
+Reading mut_M1... 9588 loops (25kb, observed>0)
+Reading mut_M2... 9923 loops (25kb, observed>0)
+Reading mut_M3... 10125 loops (25kb, observed>0)
+
+Per-replicate loop counts:
+  ctrl_M1: 9931 loops
+  ctrl_M2: 9642 loops
+  ctrl_M3: 10568 loops
+  mut_M1: 9588 loops
+  mut_M2: 9923 loops
+  mut_M3: 10125 loops
+
+Total loops across all replicates: 59777
+
+=== Converting to GInteractions ===
+Converting ctrl_M1... 9931 interactions
+Converting ctrl_M2... 9642 interactions
+Converting ctrl_M3... 10568 interactions
+Converting mut_M1... 9588 interactions
+Converting mut_M2... 9923 interactions
+Converting mut_M3... 10125 interactions
+Created output directory: outputs/res_25kb
+✓ Saved to: outputs/res_25kb/01_ginteractions.rds
+
+=== Merging loops across all replicates ===
+Strategy: Union (include loops from ANY replicate)
+Radius: 10 kb
+Selection: Maximum observed count
+
+✓ Merged 20421 consensus loops from 59777 input loops
+  Reduction: 65.8%
+
+Cluster size distribution:
+  1 replicate: 7999 loops (39.2%)
+  2 replicates: 3062 loops (15.0%)
+  3 replicates: 1981 loops (9.7%)
+  4 replicates: 1562 loops (7.6%)
+  5 replicates: 1439 loops (7.0%)
+  6 replicates: 4378 loops (21.4%)
+
+Per-replicate contribution to consensus:
+  ctrl_M1: 0/20421 loops (0.0%)
+  ctrl_M2: 0/20421 loops (0.0%)
+  ctrl_M3: 0/20421 loops (0.0%)
+  mut_M1: 0/20421 loops (0.0%)
+  mut_M2: 0/20421 loops (0.0%)
+  mut_M3: 0/20421 loops (0.0%)
+
+✓ Saved to: outputs/res_25kb/02_merged.rds
+
+=== Binning to 25kb grid ===
+✓ Binned 20421 loops to 25kb resolution
+✓ Saved to: outputs/res_25kb/03_binned.rds
+
+=== Creating buffered regions ===
+Buffer: ±2 bins (±50kb) around center
+Purpose: Handle positional shifts between replicates
+
+✓ Created 20421 buffered regions
+  Region size: 5 × 5 pixels (125kb × 125kb)
+✓ Saved to: outputs/res_25kb/04_buffered.rds
+
+=================================
+LOOP PREPARATION COMPLETE
+=================================
+Resolution: 25000 bp (25 kb)
+Input: 59777 loops across 6 replicates
+Output: 20421 consensus loop positions
+Ready for extraction: 20421 loops × 6 replicates × 25 pixels
+                    = 3063150 total extractions
+
+Output directory: outputs/res_25kb
+Next step: Rscript scripts/extract_counts.R 25000
+
+✅ Loop preparation completed for 25kb
+
+=========================================
+STEP 2: Extracting Hi-C counts (6 files)
+=========================================
+Script: scripts/extract_counts.R
+Resolution: 25000 bp
+
+
+========================================
+Step 5: Hi-C Contact Extraction
+RESOLUTION: 25000 bp (25 kb)
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading buffered loops from outputs/res_25kb...
+  Loaded 20421 loops with 5x5 pixel regions
+
+Verifying .hic files...
+  ctrl_M1: 2.4 GB - OK
+  ctrl_M2: 3.3 GB - OK
+  ctrl_M3: 3.1 GB - OK
+  mut_M1: 2.8 GB - OK
+  mut_M2: 2.9 GB - OK
+  mut_M3: 2.6 GB - OK
+
+Checking .hic file properties...
+
+ctrl_M1 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+ctrl_M2 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+ctrl_M3 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M1 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M2 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+mut_M3 file:
+  Resolutions (bp): 2500000, 1e+06, 5e+05, 250000, 1e+05 ...
+  Normalizations: VC_SQRT, GW_SCALE, NONE, INTER_SCALE, SCALE, VC 
+
+Using normalization: VC
+  ✓ Created fresh temp directory: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/res_25kb/temp_hdf5
+
+Validating loop positions...
+  Chromosomes in loops: 21
+  Example chromosomes: chr1, chr2, chr3, chr4, chr5
+  Maximum anchor width: 125001 bp
+  Minimum required blockSize: 250002 bp
+
+=== Starting extraction ===
+Processing 20421 loops × 6 replicates × 25 pixels
+  = 3063150 total extractions
+
+
+✓ Extraction completed in 7273.2 seconds
+
+=== Validation of Extracted Data ===
+Dimensions: 5 x 5 x 20421 x 6
+  = 5x5 pixels x 20421 loops x 6 files
+
+NA values: 0 (0.00%)
+
+Value distribution (excluding NAs):
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+     0.00     17.14     33.89     53.69     63.81 106064.70 
+
+Sparsity: 0.4% zeros
+
+Per-sample statistics:
+  ctrl_M1: median=27.79, mean=44.44, max=3083, total=22688977
+  ctrl_M2: median=40.08, mean=61.64, max=1762, total=31467858
+  ctrl_M3: median=37.47, mean=58.84, max=5100, total=30039510
+  mut_M1: median=34.66, mean=55.30, max=106065, total=28233846
+  mut_M2: median=34.30, mean=54.05, max=1969, total=27595562
+  mut_M3: median=30.40, mean=47.86, max=4132, total=24435642
+
+Library size ratios:
+  Median ctrl: 30039510
+  Median mut: 27595562
+  Ratio (ctrl/mut): 1.089
+
+=== Correlation Analysis ===
+
+Full correlation matrix:
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.980   0.987  0.467  0.983  0.968
+ctrl_M2   0.980   1.000   0.985  0.455  0.985  0.971
+ctrl_M3   0.987   0.985   1.000  0.465  0.983  0.969
+mut_M1    0.467   0.455   0.465  1.000  0.472  0.452
+mut_M2    0.983   0.985   0.983  0.472  1.000  0.977
+mut_M3    0.968   0.971   0.969  0.452  0.977  1.000
+
+Within-condition correlations:
+  Control replicates:
+    ctrl_M1 vs ctrl_M2: 0.980
+    ctrl_M1 vs ctrl_M3: 0.987
+    ctrl_M2 vs ctrl_M3: 0.985
+  Mean within-ctrl correlation: 0.984
+
+  Mutant replicates:
+    mut_M1 vs mut_M2: 0.472
+    mut_M1 vs mut_M3: 0.452
+    mut_M2 vs mut_M3: 0.977
+  Mean within-mut correlation: 0.634
+
+Between-condition correlations:
+  Mean ctrl vs mut correlation: 0.805
+  Range: 0.455 - 0.985
+
+Quality Assessment:
+  ⚠ WARNING: Lower than expected within-condition correlation (<0.90)
+    This may indicate technical issues or high biological variability
+  ✓ Clear biological signal (within > between correlations)
+
+=== Example Extracted Matrices ===
+Showing first 3 loops for control sample:
+
+Loop 1:
+      30.92    30.68    30.24    60.87    51.49 
+      43.87    42.61    38.81    93.68    58.23 
+     141.86   144.22   185.33   185.15    96.84 
+     343.54   200.55   228.40   163.30    69.94 
+     628.85   339.67   204.61   133.53    68.55 
+  Sum: 3616, Max: 629, Non-zero: 25/25
+
+Loop 2:
+      46.73    47.65    55.23    52.76    30.13 
+      72.33    89.99   115.91    71.36    45.02 
+     128.94   206.18   253.77   112.58    64.24 
+     209.77   257.17   221.34    88.77    63.86 
+     224.35   170.87   123.02    76.09    67.07 
+  Sum: 2895, Max: 257, Non-zero: 25/25
+
+Loop 3:
+      53.50    63.11    61.29    69.32    60.27 
+      89.29   106.29   174.92   165.53   102.34 
+     129.01   143.88   245.16   196.19   124.46 
+     403.73   230.08   212.16   137.23    74.15 
+     674.06   414.80   214.94   108.14    63.17 
+  Sum: 4317, Max: 674, Non-zero: 25/25
+
+
+=== Saving Extracted Data ===
+Saving as HDF5 (required for out-of-memory objects)...
+Start writing assay 1/3 to HDF5 file:
+  outputs/res_25kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 1/3 to HDF5 file:
+  outputs/res_25kb/05_extractedassays.h5
+
+Start writing assay 2/3 to HDF5 file:
+  outputs/res_25kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 2/3 to HDF5 file:
+  outputs/res_25kb/05_extractedassays.h5
+
+Start writing assay 3/3 to HDF5 file:
+  outputs/res_25kb/05_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 3/3 to HDF5 file:
+  outputs/res_25kb/05_extractedassays.h5
+
+Serialize InteractionArray object to RDS file:
+  outputs/res_25kb/05_extractedse.rds
+  Saved to: outputs/res_25kb/05_extracted/
+  Metadata saved to: outputs/res_25kb/05_metadata.rds
+
+=================================
+EXTRACTION COMPLETE
+=================================
+Resolution: 25000 bp (25 kb)
+Processed: 20421 loops × 6 replicates
+Samples: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+
+Quality Metrics:
+  Within-ctrl correlation: 0.984
+  Within-mut correlation: 0.634
+  Between-condition correlation: 0.805
+  Normalization: VC
+  Extraction time: 7273.2 seconds
+
+Output: outputs/res_25kb/05_extracted/
+Ready for QC and differential analysis
+Next step: Rscript scripts/qc-val.R 25000
+
+To load in next script:
+  pixels <- loadHDF5SummarizedExperiment(dir='outputs/res_25kb', prefix='05_extracted')
+
+✅ Count extraction completed for 25kb
+
+=========================================
+STEP 3: Aggregating 5x5 matrices
+=========================================
+Script: scripts/aggregate.R
+Resolution: 25000 bp
+
+
+========================================
+Step 6: Matrix Aggregation
+RESOLUTION: 25000 bp (25 kb)
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading extracted Hi-C matrices...
+  Loaded: 20421 loops x 6 samples
+  Matrix dimensions per loop: 5x5 pixels
+  Files: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+
+Array dimensions: 5 x 5 x 20421 x 6
+
+=== Strategy 1: Simple Sum Aggregation ===
+Rationale: Captures total Hi-C signal regardless of position within 5x5 window
+Aggregating... 50 100 150 200 250 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1050 1100 1150 1200 1250 1300 1350 1400 1450 1500 1550 1600 1650 1700 1750 1800 1850 1900 1950 2000 2050 2100 2150 2200 2250 2300 2350 2400 2450 2500 2550 2600 2650 2700 2750 2800 2850 2900 2950 3000 3050 3100 3150 3200 3250 3300 3350 3400 3450 3500 3550 3600 3650 3700 3750 3800 3850 3900 3950 4000 4050 4100 4150 4200 4250 4300 4350 4400 4450 4500 4550 4600 4650 4700 4750 4800 4850 4900 4950 5000 5050 5100 5150 5200 5250 5300 5350 5400 5450 5500 5550 5600 5650 5700 5750 5800 5850 5900 5950 6000 6050 6100 6150 6200 6250 6300 6350 6400 6450 6500 6550 6600 6650 6700 6750 6800 6850 6900 6950 7000 7050 7100 7150 7200 7250 7300 7350 7400 7450 7500 7550 7600 7650 7700 7750 7800 7850 7900 7950 8000 8050 8100 8150 8200 8250 8300 8350 8400 8450 8500 8550 8600 8650 8700 8750 8800 8850 8900 8950 9000 9050 9100 9150 9200 9250 9300 9350 9400 9450 9500 9550 9600 9650 9700 9750 9800 9850 9900 9950 10000 10050 10100 10150 10200 10250 10300 10350 10400 10450 10500 10550 10600 10650 10700 10750 10800 10850 10900 10950 11000 11050 11100 11150 11200 11250 11300 11350 11400 11450 11500 11550 11600 11650 11700 11750 11800 11850 11900 11950 12000 12050 12100 12150 12200 12250 12300 12350 12400 12450 12500 12550 12600 12650 12700 12750 12800 12850 12900 12950 13000 13050 13100 13150 13200 13250 13300 13350 13400 13450 13500 13550 13600 13650 13700 13750 13800 13850 13900 13950 14000 14050 14100 14150 14200 14250 14300 14350 14400 14450 14500 14550 14600 14650 14700 14750 14800 14850 14900 14950 15000 15050 15100 15150 15200 15250 15300 15350 15400 15450 15500 15550 15600 15650 15700 15750 15800 15850 15900 15950 16000 16050 16100 16150 16200 16250 16300 16350 16400 16450 16500 16550 16600 16650 16700 16750 16800 16850 16900 16950 17000 17050 17100 17150 17200 17250 17300 17350 17400 17450 17500 17550 17600 17650 17700 17750 17800 17850 17900 17950 18000 18050 18100 18150 18200 18250 18300 18350 18400 18450 18500 18550 18600 18650 18700 18750 18800 18850 18900 18950 19000 19050 19100 19150 19200 19250 19300 19350 19400 19450 19500 19550 19600 19650 19700 19750 19800 19850 19900 19950 20000 20050 20100 20150 20200 20250 20300 20350 20400 Done
+  Aggregated to: 20421 loops x 6 samples
+
+Sum aggregation statistics:
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+     0.56    504.41    950.57   1342.26   1766.91 109194.70 
+
+=== Strategy 2: Center-Weighted Aggregation ===
+Rationale: Higher weight to center pixels, lower to edges
+Weight matrix (normalized to sum=1):
+  0.022 0.033 0.043 0.033 0.022
+  0.033 0.043 0.054 0.043 0.033
+  0.043 0.054 0.087 0.054 0.043
+  0.033 0.043 0.054 0.043 0.033
+  0.022 0.033 0.043 0.033 0.022
+
+Applying weighted aggregation... 50 100 150 200 250 300 350 400 450 500 550 600 650 700 750 800 850 900 950 1000 1050 1100 1150 1200 1250 1300 1350 1400 1450 1500 1550 1600 1650 1700 1750 1800 1850 1900 1950 2000 2050 2100 2150 2200 2250 2300 2350 2400 2450 2500 2550 2600 2650 2700 2750 2800 2850 2900 2950 3000 3050 3100 3150 3200 3250 3300 3350 3400 3450 3500 3550 3600 3650 3700 3750 3800 3850 3900 3950 4000 4050 4100 4150 4200 4250 4300 4350 4400 4450 4500 4550 4600 4650 4700 4750 4800 4850 4900 4950 5000 5050 5100 5150 5200 5250 5300 5350 5400 5450 5500 5550 5600 5650 5700 5750 5800 5850 5900 5950 6000 6050 6100 6150 6200 6250 6300 6350 6400 6450 6500 6550 6600 6650 6700 6750 6800 6850 6900 6950 7000 7050 7100 7150 7200 7250 7300 7350 7400 7450 7500 7550 7600 7650 7700 7750 7800 7850 7900 7950 8000 8050 8100 8150 8200 8250 8300 8350 8400 8450 8500 8550 8600 8650 8700 8750 8800 8850 8900 8950 9000 9050 9100 9150 9200 9250 9300 9350 9400 9450 9500 9550 9600 9650 9700 9750 9800 9850 9900 9950 10000 10050 10100 10150 10200 10250 10300 10350 10400 10450 10500 10550 10600 10650 10700 10750 10800 10850 10900 10950 11000 11050 11100 11150 11200 11250 11300 11350 11400 11450 11500 11550 11600 11650 11700 11750 11800 11850 11900 11950 12000 12050 12100 12150 12200 12250 12300 12350 12400 12450 12500 12550 12600 12650 12700 12750 12800 12850 12900 12950 13000 13050 13100 13150 13200 13250 13300 13350 13400 13450 13500 13550 13600 13650 13700 13750 13800 13850 13900 13950 14000 14050 14100 14150 14200 14250 14300 14350 14400 14450 14500 14550 14600 14650 14700 14750 14800 14850 14900 14950 15000 15050 15100 15150 15200 15250 15300 15350 15400 15450 15500 15550 15600 15650 15700 15750 15800 15850 15900 15950 16000 16050 16100 16150 16200 16250 16300 16350 16400 16450 16500 16550 16600 16650 16700 16750 16800 16850 16900 16950 17000 17050 17100 17150 17200 17250 17300 17350 17400 17450 17500 17550 17600 17650 17700 17750 17800 17850 17900 17950 18000 18050 18100 18150 18200 18250 18300 18350 18400 18450 18500 18550 18600 18650 18700 18750 18800 18850 18900 18950 19000 19050 19100 19150 19200 19250 19300 19350 19400 19450 19500 19550 19600 19650 19700 19750 19800 19850 19900 19950 20000 20050 20100 20150 20200 20250 20300 20350 20400 Done
+
+Weighted aggregation statistics:
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+   0.0121   21.7459   41.0110   56.3081   76.1913 2466.6787 
+
+=================================
+Strategy Comparison
+=================================
+
+Replicate correlation analysis:
+
+Full correlation matrix (sum strategy):
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.996   0.997  0.855  0.994  0.989
+ctrl_M2   0.996   1.000   0.997  0.849  0.994  0.990
+ctrl_M3   0.997   0.997   1.000  0.855  0.994  0.990
+mut_M1    0.855   0.849   0.855  1.000  0.861  0.852
+mut_M2    0.994   0.994   0.994  0.861  1.000  0.996
+mut_M3    0.989   0.990   0.990  0.852  0.996  1.000
+
+Within-condition correlations:
+  Control replicates:
+    ctrl_M1 vs ctrl_M2: 0.996
+    ctrl_M1 vs ctrl_M3: 0.997
+    ctrl_M2 vs ctrl_M3: 0.997
+  Mean within-ctrl correlation: 0.997
+
+  Mutant replicates:
+    mut_M1 vs mut_M2: 0.861
+    mut_M1 vs mut_M3: 0.852
+    mut_M2 vs mut_M3: 0.996
+  Mean within-mut correlation: 0.903
+
+Between-condition correlations:
+  Mean ctrl vs mut correlation: 0.946
+  Range: 0.849 - 0.994
+
+Quality Assessment:
+  ✓ Good within-condition reproducibility (>0.90)
+  ✓ Clear biological signal (within > between correlations)
+
+Correlation between sum and weighted strategies: 0.990
+
+=================================
+Biological Validation
+=================================
+
+Loops with |log2FC| > 2: 1 (0.0%)
+
+Count distribution by replicate:
+
+  ctrl_M1:
+    Non-zero: 20421 / 20421 (100.0%)
+    Range: 0.7 - 9427.8
+    Median: 782.1, Mean: 1111.1
+
+  ctrl_M2:
+    Non-zero: 20421 / 20421 (100.0%)
+    Range: 1.0 - 10563.6
+    Median: 1117.9, Mean: 1541.0
+
+  ctrl_M3:
+    Non-zero: 20421 / 20421 (100.0%)
+    Range: 0.9 - 11274.3
+    Median: 1049.8, Mean: 1471.0
+
+  mut_M1:
+    Non-zero: 20421 / 20421 (100.0%)
+    Range: 0.8 - 109194.7
+    Median: 973.9, Mean: 1382.6
+
+  mut_M2:
+    Non-zero: 20421 / 20421 (100.0%)
+    Range: 0.8 - 10634.4
+    Median: 961.5, Mean: 1351.3
+
+  mut_M3:
+    Non-zero: 20421 / 20421 (100.0%)
+    Range: 0.6 - 10251.4
+    Median: 857.7, Mean: 1196.6
+
+
+Signal strength by group:
+  Control (all replicates): median = 970.9, mean = 1374.3
+  Mutant (all replicates):  median = 929.6, mean = 1310.2
+
+Mean difference (mut - ctrl): -64.2
+  ✓ No major systematic bias
+
+=================================
+Saving Results
+=================================
+
+  Count matrix saved: outputs/res_25kb/06_counts_matrix.tsv
+  RDS object saved: outputs/res_25kb/06_counts_matrix.rds
+  All strategies saved: outputs/res_25kb/06_all_strategies.rds
+
+=== Preparing edgeR Input ===
+  edgeR DGEList saved: outputs/res_25kb/06_edgeR_input.rds
+
+EdgeR object preview:
+  Samples: ctrl_M1, ctrl_M2, ctrl_M3, mut_M1, mut_M2, mut_M3
+  Groups: ctrl, mut
+  Replicates per group: n = 3
+  Library sizes:
+    ctrl_M1: 22,688,977
+    ctrl_M2: 31,467,858
+    ctrl_M3: 30,039,510
+    mut_M1: 28,233,846
+    mut_M2: 27,595,562
+    mut_M3: 24,435,642
+
+Filtering preview:
+  Loops passing filterByExpr: 20397 / 20421 (99.9%)
+  Filtered library sizes would be:
+    ctrl_M1: 22,688,922
+    ctrl_M2: 31,467,793
+    ctrl_M3: 30,039,443
+    mut_M1: 28,233,756
+    mut_M2: 27,595,504
+    mut_M3: 24,435,595
+
+Example loop coordinates:
+  loop_id chr1    start1      end1 chr2    start2      end2 distance
+1  loop_1 chr8  93800001  93825000 chr8  93900001  93925000   100000
+2  loop_2 chr8 111675001 111700000 chr8 111825001 111850000   150000
+3  loop_3 chr8 126275001 126300000 chr8 126375001 126400000   100000
+
+=================================
+Step 6: Aggregation Complete
+=================================
+
+Pipeline Summary:
+  Resolution: 25000 bp (25 kb)
+  Input: 20421 loops with 5x5 pixel buffers
+  Output: 20421 x 6 count matrix
+  Primary method: Sum aggregation
+  Within-ctrl correlation: 0.997
+  Within-mut correlation: 0.903
+  Between-group correlation: 0.946
+  Loops for analysis: 20397 (after filtering)
+
+Output files:
+  1. outputs/res_25kb/06_counts_matrix.tsv - Tab-separated counts
+  2. outputs/res_25kb/06_counts_matrix.rds - R object
+  3. outputs/res_25kb/06_edgeR_input.rds - Ready for differential analysis
+  4. outputs/res_25kb/06_all_strategies.rds - All aggregation methods
+
+==================================================
+NEXT STEPS:
+1. Review replicate correlations and quality metrics
+2. Proceed with edgeR differential analysis using biological replicates
+3. Expected: Much higher statistical power than n=1 analysis
+
+To start edgeR analysis:
+  Rscript scripts/edgeR.R 25000
+  # Uses quasi-likelihood GLM with n=3 replicates per group
+
+✅ Matrix aggregation completed for 25kb
+
+=========================================
+STEP 4: edgeR differential analysis
+=========================================
+Script: scripts/edgeR.R
+Resolution: 25000 bp
+Method: Quasi-likelihood GLM
+
+
+========================================
+edgeR Differential Loop Analysis
+RESOLUTION: 25000 bp (25 kb)
+========================================
+
+Loading required libraries...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘tibble’ was built under R version 4.4.3 
+Loading configuration...
+Creating output directories...
+
+Setup complete
+   - Config loaded from: config/edgeR_config.yaml
+   - Output directory:  outputs/edgeR_results_res_25kb 
+   - Random seed:  42 
+
+Loading input data...
+   - Loading count matrix... (20421 loops × 6 samples)
+   - Loading loop coordinates... (20421 genomic positions)
+   - QC summary not found (skipping shift analysis)
+
+Validating data integrity...
+   ✓ Data integrity checks passed
+
+Creating genomic annotations...
+   ✓ Created annotation for 20421 loops
+   - Columns: loop_id, chr1, start1, end1, chr2, start2, end2, coord_string 
+
+Creating DGEList object...
+   ✓ DGEList created
+   - Total samples: 6 
+   - Groups: ctrl, mut 
+   - Replicates per group: n = 3 
+
+   Per-sample library sizes:
+     ctrl_M1 (ctrl): 22688977
+     ctrl_M2 (ctrl): 31467858
+     ctrl_M3 (ctrl): 30039510
+     mut_M1 (mut): 28233846
+     mut_M2 (mut): 27595562
+     mut_M3 (mut): 24435642
+
+   Median library size by group:
+     ctrl: 30039510
+     mut: 27595562
+
+Filtering low-count loops...
+   - Filtering with min.count = 5 
+   - Before filtering: 20421 loops
+   - Loops passing filter: 20398 
+   - Loops filtered out:23(0.1%)
+   After filtering: 20398 loops retained
+   - New library sizes: ctrl = 22688929 , mut = 31467802 
+
+Performing TMM normalization...
+   ✓ Normalization complete
+   - Method: TMM 
+   - Normalization factors: ctrl = 0.9967 , mut = 1.015 
+   - Effective library sizes: ctrl = 22614361 , mut = 31940379 
+
+Generating MDS plot for sample QC...
+null device 
+          1 
+   ✓ MDS plot saved
+   - Check plot to verify:
+     • Replicates cluster by condition
+     • No obvious outliers
+     • Clear separation between groups
+
+Estimating dispersions from biological replicates...
+   Design matrix:
+     - Intercept: Baseline (control) level
+     - MutantEffect: Difference (mutant - control)
+
+   Estimating common, trended, and tagwise dispersions...
+   ✓ Dispersion estimation complete
+     - Common dispersion: 0.0017 (BCV = 0.042)
+     - Tagwise dispersion range: 0.0008 - 1.3870
+     - Median tagwise BCV: 0.036
+
+   Generating BCV plot...
+null device 
+          1 
+   ✓ BCV plot saved
+
+Fitting quasi-likelihood GLM...
+   Method: glmQLFit with robust=TRUE
+   Benefits:
+     • Accounts for gene-specific variability
+     • More rigorous error rate control
+     • Robust to outliers
+
+   ✓ QL fit complete
+     - Residual df: 4
+
+   Generating QL dispersion plot...
+null device 
+          1 
+   ✓ QL dispersion plot saved
+
+Testing for differential loops...
+   Test: Mutant effect (coefficient 2)
+   Method: Quasi-likelihood F-test
+
+   ✓ Testing complete
+
+=== Differential Loop Results ===
+   Significant loops (FDR < 0.05): 4774 (23.4%)
+     - Up in mutant: 2512
+     - Down in mutant: 2262
+
+   By effect size:
+     - Strong (|logFC| > 1): 14
+     - Moderate (|logFC| > 0.5): 215
+     - Weak: 4545
+
+   Trending (FDR < 0.10): 1450
+
+Skipping shifted loop enrichment (no shift data available)
+
+Computing summary statistics...
+   ✓ Summary statistics computed
+
+Generating visualizations...
+   - Creating MA plot... null device 
+          1 
+✓
+   - Creating volcano plot... null device 
+          1 
+✓
+   - Creating results summary plot... null device 
+          1 
+✓
+   - Skipping shifted loop enrichment plot (no shift data)
+
+   All plots generated
+
+Saving results...
+   ✓ DGEList object saved
+   ✓ Primary results saved (TSV)
+   ✓ Primary results saved (RDS)
+   ✓ Significant loops saved (4774 loops)
+   ✓ Top 100 by effect size saved
+   ✓ decideTests summary saved
+   ✓ Summary statistics saved
+   ✓ Session info saved
+
+========================================
+REPLICATE-AWARE ANALYSIS COMPLETE
+========================================
+
+Experimental Design:
+   - Samples: 6 (3 ctrl + 3 mut)
+   - Method: Quasi-likelihood GLM with robust estimation
+   - Estimated BCV: 0.042 
+
+Key Results:
+   - Loops tested: 20398 
+   - Significant (FDR < 0.05):4774(23.4%)
+   - Up in mutant: 2512 
+   - Down in mutant: 2262 
+   - Strong differential (|logFC| > 1): 14 
+
+Improvement over merged analysis:
+   - Previous (merged, n=1): 2 significant loops
+   - Current (replicates, n=3): 4774 significant loops
+   - Fold improvement: 2387 ×
+
+Output Files:
+   Primary results: outputs/edgeR_results_res_25kb/primary_analysis 
+   Plots: outputs/edgeR_results_res_25kb/plots 
+   Logs: outputs/edgeR_results_res_25kb/logs 
+
+Next Steps:
+   1. Review MDS plot to confirm replicate quality
+   2. Check BCV and QL dispersion plots
+   3. Examine MA and volcano plots for biological patterns
+   4. Compare with Hiccups differential results (38,593 loops)
+
+Analysis log saved to: outputs/edgeR_results_res_25kb/logs/analysis_log.txt 
+
+✅ Differential analysis completed for 25kb
+
+✓ COMPLETED RESOLUTION: 25kb
+End time: Tue Oct 21 23:48:21 PDT 2025
+
+
+=========================================
+STEP 5: Comparing results across resolutions
+=========================================
+Script: scripts/compare_resolutions.R
+
+
+========================================
+Multi-Resolution Comparison Analysis
+========================================
+
+Error in library(VennDiagram) : there is no package called ‘VennDiagram’
+Calls: suppressPackageStartupMessages -> withCallingHandlers -> library
+In addition: Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘matrixStats’ was built under R version 4.4.3 
+Execution halted
+
+❌ Resolution comparison failed with exit code 0
+Note: Individual resolution analyses are still complete
+
+
+=========================================
+ALL RESOLUTIONS COMPLETE
+=========================================
+End time: Tue Oct 21 23:48:29 PDT 2025
+
+Output directories:
+  - outputs/res_5kb/                     (loops, counts, matrices)
+  - outputs/edgeR_results_res_5kb/       (differential results)
+  - outputs/res_10kb/                     (loops, counts, matrices)
+  - outputs/edgeR_results_res_10kb/       (differential results)
+  - outputs/res_25kb/                     (loops, counts, matrices)
+  - outputs/edgeR_results_res_25kb/       (differential results)
+
+Key files to review per resolution:
+  1. outputs/res_{RES}kb/06_counts_matrix.rds
+     → Count matrices
+
+  2. outputs/edgeR_results_res_{RES}kb/plots/mds_plot.pdf
+     → Sample relationships
+
+  3. outputs/edgeR_results_res_{RES}kb/plots/bcv_plot.pdf
+     → Dispersion estimates
+
+  4. outputs/edgeR_results_res_{RES}kb/plots/ma_plot_primary.pdf
+     → Differential loops visualization
+
+  5. outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv
+     → Full results table
+
+  6. outputs/edgeR_results_res_{RES}kb/primary_analysis/summary_statistics.txt
+     → Analysis summary
+
+Expected outcomes by resolution:
+  - 5kb:  Most loops, short-range interactions
+  - 10kb: Intermediate coverage
+  - 25kb: Long-range loops, inter-TAD interactions
+
+Resolution comparison outputs:
+  - outputs/resolution_comparison/summary_statistics_by_resolution.tsv
+  - outputs/resolution_comparison/loop_overlap_matrix.tsv
+  - outputs/resolution_comparison/differential_loops_by_resolution.pdf
+  - outputs/resolution_comparison/foldchange_correlation_*.pdf
+  - outputs/resolution_comparison/venn_diagram_differential_loops.pdf
+========================================

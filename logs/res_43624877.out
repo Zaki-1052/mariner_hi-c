@@ -1,0 +1,127 @@
+=========================================
+Mariner res - Test Run
+=========================================
+Job ID: 43624877
+Node: exp-1-02
+Start time: Thu Oct 23 13:39:51 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting extraction script...
+
+========================================
+Multi-Resolution Comparison Analysis
+========================================
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘matrixStats’ was built under R version 4.4.3 
+4: package ‘futile.logger’ was built under R version 4.4.3 
+SECTION 1: Loading Results
+---------------------------
+Loading 5kb results... ✓ 17982 loops
+Loading 10kb results... ✓ 22632 loops
+Loading 25kb results... ✓ 20398 loops
+
+✓ Loaded results from 3 resolutions
+
+SECTION 2: Basic Statistics
+----------------------------
+
+  resolution_kb total_loops significant_fdr05 pct_significant up_in_mutant
+1             5       17982              1766        9.820932         1127
+2            10       22632              3981       17.590138         2240
+3            25       20398              4774       23.404255         2512
+  down_in_mutant median_logFC_all median_logFC_sig
+1            639       0.10114651        0.3879354
+2           1741       0.08629882        0.2731180
+3           2262       0.08290208        0.2279407
+
+✓ Summary statistics saved
+
+SECTION 3: Loop Overlap Analysis
+---------------------------------
+
+Matching loops across resolutions (10kb tolerance)...
+Loading required package: mariner
+
+Loop overlap matrix:
+       5kb  10kb  25kb
+5kb  17982 14075  3540
+10kb 14024 22632  6697
+25kb  3442  6545 20398
+
+✓ Overlap analysis complete
+
+SECTION 4: Differential Concordance
+------------------------------------
+
+Analyzing concordance of differential calls...
+
+5kb vs 10kb:
+  Matched loops: 14075
+  Both significant: 315 (2.2%)
+  Concordant direction: 187 (59.4% of both-sig)
+  Fold-change correlation: 0.063
+
+5kb vs 25kb:
+  Matched loops: 3540
+  Both significant: 111 (3.1%)
+  Concordant direction: 56 (50.5% of both-sig)
+  Fold-change correlation: -0.003
+
+10kb vs 25kb:
+  Matched loops: 6697
+  Both significant: 309 (4.6%)
+  Concordant direction: 158 (51.1% of both-sig)
+  Fold-change correlation: 0.031
+
+✓ Concordance analysis complete
+
+SECTION 5: Generating Visualizations
+-------------------------------------
+
+Creating differential loop count plot... null device 
+          1 
+✓
+Creating fold-change correlation plots... ✓
+Creating Venn diagram... ✓
+
+✓ All visualizations generated
+
+========================================
+MULTI-RESOLUTION ANALYSIS COMPLETE
+========================================
+
+Output directory: outputs/resolution_comparison/
+
+Files generated:
+  1. summary_statistics_by_resolution.tsv
+     → Loop counts and significance rates
+
+  2. loop_overlap_matrix.tsv
+     → Overlap counts between resolutions
+
+  3. differential_loops_by_resolution.pdf
+     → Bar plot of differential loop counts
+
+  4. foldchange_correlation_*.pdf
+     → Scatter plots of fold-change concordance
+
+  5. venn_diagram_differential_loops.pdf
+     → Venn diagram of shared differential loops
+
+Key findings:
+  5kb: 1766 differential loops (9.8%)
+  10kb: 3981 differential loops (17.6%)
+  25kb: 4774 differential loops (23.4%)
+
+========================================
+
+✅ Extraction completed successfully
+End time: Thu Oct 23 13:43:08 PDT 2025
+=========================================
