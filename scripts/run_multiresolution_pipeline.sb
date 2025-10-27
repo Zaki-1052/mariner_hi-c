@@ -18,10 +18,16 @@
 #     1. prep_loops.R      - Merge BEDPE files → consensus positions
 #     2. extract_counts.R  - Extract Hi-C from 6 .hic files
 #     3. aggregate.R       - Aggregate 5x5 matrices → count matrix
-#     4. edgeR.R           - Differential analysis with QL GLM (n=3 per group)
+#     4. qc-val.R          - Quality control validation and shift detection
+#     5. edgeR.R           - Differential analysis with QL GLM (n=3 per group)
+#
+#   Post-processing (all resolutions):
+#     6. compare_resolutions.R    - Cross-resolution comparison
+#     7. generate_final_results.py - Filter to stringent thresholds
+#     8. convert_final_bedpe.sh    - Convert to BEDPE for Juicebox
 #
 # Expected runtime: ~6 hours (2 hours × 3 resolutions)
-# Expected output: Separate analyses for each resolution
+# Expected output: Separate analyses for each resolution + merged BEDPE files
 # ==============================================================================
 
 # Create logs directory
@@ -143,11 +149,36 @@ for RES in "${RESOLUTIONS[@]}"; do
   echo ""
 
   # =============================================================================
-  # STEP 4: DIFFERENTIAL ANALYSIS
+  # STEP 4: QUALITY CONTROL VALIDATION
   # =============================================================================
 
   echo "========================================="
-  echo "STEP 4: edgeR differential analysis"
+  echo "STEP 4: Quality control validation"
+  echo "========================================="
+  echo "Script: scripts/qc-val.R"
+  echo "Resolution: ${RES} bp"
+  echo ""
+
+  Rscript scripts/qc-val.R ${RES}
+
+  if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ QC validation completed for ${RES_KB}kb"
+  else
+    echo ""
+    echo "❌ QC validation failed for ${RES_KB}kb with exit code $?"
+    echo "Stopping pipeline at resolution ${RES_KB}kb"
+    exit 1
+  fi
+
+  echo ""
+
+  # =============================================================================
+  # STEP 5: DIFFERENTIAL ANALYSIS
+  # =============================================================================
+
+  echo "========================================="
+  echo "STEP 5: edgeR differential analysis"
   echo "========================================="
   echo "Script: scripts/edgeR.R"
   echo "Resolution: ${RES} bp"
@@ -174,12 +205,12 @@ for RES in "${RESOLUTIONS[@]}"; do
 done
 
 # ==============================================================================
-# STEP 5: COMPARE RESOLUTIONS
+# STEP 6: COMPARE RESOLUTIONS
 # ==============================================================================
 
 echo ""
 echo "========================================="
-echo "STEP 5: Comparing results across resolutions"
+echo "STEP 6: Comparing results across resolutions"
 echo "========================================="
 echo "Script: scripts/compare_resolutions.R"
 echo ""
@@ -193,6 +224,55 @@ else
     echo ""
     echo "❌ Resolution comparison failed with exit code $?"
     echo "Note: Individual resolution analyses are still complete"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 7: GENERATE FINAL RESULTS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 7: Generating final results (stringent filters)"
+echo "========================================="
+echo "Script: scripts/generate_final_results.py"
+echo "Filters: |logFC| > 0.3, FDR < 0.03"
+echo ""
+
+python3 scripts/generate_final_results.py
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Final results generated for all resolutions"
+else
+    echo ""
+    echo "❌ Final results generation failed with exit code $?"
+    echo "Note: Primary edgeR results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 8: CONVERT TO BEDPE FORMAT
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 8: Converting to BEDPE format for Juicebox"
+echo "========================================="
+echo "Script: scripts/convert_final_bedpe.sh"
+echo ""
+
+bash scripts/convert_final_bedpe.sh
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ BEDPE conversion completed"
+else
+    echo ""
+    echo "❌ BEDPE conversion failed with exit code $?"
+    echo "Note: TSV results are still available"
 fi
 
 echo ""
@@ -218,20 +298,36 @@ echo "Key files to review per resolution:"
 echo "  1. outputs/res_{RES}kb/06_counts_matrix.rds"
 echo "     → Count matrices"
 echo ""
-echo "  2. outputs/edgeR_results_res_{RES}kb/plots/mds_plot.pdf"
+echo "  2. outputs/res_{RES}kb/qc_report/"
+echo "     → Quality control validation reports and plots"
+echo ""
+echo "  3. outputs/edgeR_results_res_{RES}kb/plots/mds_plot.pdf"
 echo "     → Sample relationships"
 echo ""
-echo "  3. outputs/edgeR_results_res_{RES}kb/plots/bcv_plot.pdf"
+echo "  4. outputs/edgeR_results_res_{RES}kb/plots/bcv_plot.pdf"
 echo "     → Dispersion estimates"
 echo ""
-echo "  4. outputs/edgeR_results_res_{RES}kb/plots/ma_plot_primary.pdf"
+echo "  5. outputs/edgeR_results_res_{RES}kb/plots/ma_plot_primary.pdf"
 echo "     → Differential loops visualization"
 echo ""
-echo "  5. outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv"
+echo "  6. outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv"
 echo "     → Full results table"
 echo ""
-echo "  6. outputs/edgeR_results_res_{RES}kb/primary_analysis/summary_statistics.txt"
+echo "  7. outputs/edgeR_results_res_{RES}kb/primary_analysis/final_results.tsv"
+echo "     → Differential loops (|logFC| > 0.3, FDR < 0.03)"
+echo ""
+echo "  8. outputs/edgeR_results_res_{RES}kb/primary_analysis/summary_statistics.txt"
 echo "     → Analysis summary"
+echo ""
+echo "BEDPE files for Juicebox visualization:"
+echo "  - outputs/bedpe_final/5kb_final.bedpe"
+echo "  - outputs/bedpe_final/10kb_final.bedpe"
+echo "  - outputs/bedpe_final/25kb_final.bedpe"
+echo "  - outputs/bedpe_final/merged_final.bedpe (union of all resolutions)"
+echo "  - outputs/bedpe_final/5kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/10kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/25kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/merged_all_loops.bedpe (union of all resolutions)"
 echo ""
 echo "Expected outcomes by resolution:"
 echo "  - 5kb:  Most loops, short-range interactions"

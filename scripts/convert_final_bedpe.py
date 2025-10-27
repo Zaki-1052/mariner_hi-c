@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
 # scripts/convert_final_bedpe.py
 """
-Convert final_results.tsv files (|logFC| > 0.3, FDR < 0.03) to BEDPE format.
+Convert edgeR results to BEDPE format for Juicebox visualization.
 
-Creates resolution-specific BEDPE files plus a merged union across all resolutions.
+Processes two file types:
+1. final_results.tsv (|logFC| > 0.3, FDR < 0.03) - differential loops only
+2. all_results_primary.tsv - all tested loops
+
+Creates resolution-specific BEDPE files plus merged unions across all resolutions.
 
 Usage:
     python scripts/convert_final_bedpe.py
 
 Outputs:
-    - outputs/bedpe_final/5kb_final.bedpe
-    - outputs/bedpe_final/10kb_final.bedpe
-    - outputs/bedpe_final/25kb_final.bedpe
-    - outputs/bedpe_final/merged_all_resolutions.bedpe
+    outputs/bedpe_final/
+    - 5kb_final.bedpe, 10kb_final.bedpe, 25kb_final.bedpe
+    - merged_final_resolutions.bedpe
+    - 5kb_all_loops.bedpe, 10kb_all_loops.bedpe, 25kb_all_loops.bedpe
+    - merged_all_loops.bedpe
 """
 
 import pandas as pd
@@ -20,9 +25,15 @@ import sys
 from pathlib import Path
 
 
-def load_final_results(resolution_kb):
-    """Load final_results.tsv for a specific resolution."""
-    filepath = f"outputs/edgeR_results_res_{resolution_kb}kb/primary_analysis/final_results.tsv"
+def load_results_file(resolution_kb, file_type):
+    """
+    Load TSV results file for a specific resolution.
+
+    Args:
+        resolution_kb: Resolution in kb (5, 10, or 25)
+        file_type: Either 'final_results' or 'all_results_primary'
+    """
+    filepath = f"outputs/edgeR_results_res_{resolution_kb}kb/primary_analysis/{file_type}.tsv"
 
     if not Path(filepath).exists():
         print(f"  WARNING: File not found: {filepath}")
@@ -132,59 +143,100 @@ def merge_resolutions(res_data):
     return merged
 
 
-def main():
-    """Main execution function."""
-    print("="*50)
-    print("Final Results BEDPE Conversion")
-    print("="*50)
-    print("\nInput: final_results.tsv (|logFC| > 0.3, FDR < 0.03)")
-    print("Output: Resolution-specific + merged BEDPE files\n")
+def process_file_type(file_type, file_description, output_suffix, resolutions, output_dir):
+    """
+    Process a specific file type (final_results or all_results_primary).
 
-    output_dir = "outputs/bedpe_final"
-    resolutions = [5, 10, 25]  # kb
+    Args:
+        file_type: TSV filename (e.g., 'final_results' or 'all_results_primary')
+        file_description: Human-readable description
+        output_suffix: Suffix for output files (e.g., 'final' or 'all_loops')
+        resolutions: List of resolutions in kb
+        output_dir: Output directory path
+    """
+    print("\n" + "="*70)
+    print(f"Processing: {file_description}")
+    print("="*70)
 
     # Load data from all resolutions
-    print("Loading final_results.tsv files...")
-    print("-" * 50)
+    print(f"\nLoading {file_type}.tsv files...")
+    print("-" * 70)
     res_data = {}
     for res_kb in resolutions:
         print(f"\n{res_kb}kb resolution:")
-        res_data[res_kb] = load_final_results(res_kb)
+        res_data[res_kb] = load_results_file(res_kb, file_type)
 
     # Check if any data loaded
     if all(df is None for df in res_data.values()):
-        print("\nERROR: No final_results.tsv files found!")
-        print("Make sure you've run the edgeR analysis first.")
-        sys.exit(1)
+        print(f"\nWARNING: No {file_type}.tsv files found!")
+        print("Skipping this file type...")
+        return
 
-    print("\n" + "="*50)
-    print("Converting to BEDPE format")
-    print("="*50)
+    print("\n" + "="*70)
+    print(f"Converting {file_description} to BEDPE format")
+    print("="*70)
 
     # Convert each resolution to BEDPE
     for res_kb in resolutions:
         if res_data[res_kb] is not None:
             print(f"\n{res_kb}kb resolution:")
             bedpe = convert_to_bedpe(res_data[res_kb], res_kb)
-            output_path = f"{output_dir}/{res_kb}kb_final.bedpe"
-            write_bedpe(bedpe, output_path, f"{res_kb}kb final results")
+            output_path = f"{output_dir}/{res_kb}kb_{output_suffix}.bedpe"
+            write_bedpe(bedpe, output_path, f"{res_kb}kb {file_description}")
 
     # Merge all resolutions
     merged = merge_resolutions(res_data)
 
     if merged is not None:
         bedpe_merged = convert_to_bedpe(merged)
-        output_path = f"{output_dir}/merged_all_resolutions.bedpe"
-        write_bedpe(bedpe_merged, output_path, "Merged union (all resolutions)")
+        output_path = f"{output_dir}/merged_{output_suffix}.bedpe"
+        write_bedpe(bedpe_merged, output_path, f"Merged {file_description} (all resolutions)")
 
-    print("\n" + "="*50)
+
+def main():
+    """Main execution function."""
+    print("="*70)
+    print("edgeR Results BEDPE Conversion")
+    print("="*70)
+    print("\nConverts edgeR TSV results to BEDPE format for Juicebox visualization")
+    print("\nFile types processed:")
+    print("  1. final_results.tsv - Differential loops (|logFC| > 0.3, FDR < 0.03)")
+    print("  2. all_results_primary.tsv - All tested loops")
+    print("\nOutput: Resolution-specific + merged union BEDPE files\n")
+
+    output_dir = "outputs/bedpe_final"
+    resolutions = [5, 10, 25]  # kb
+
+    # Process final_results.tsv (differential loops only)
+    process_file_type(
+        file_type='final_results',
+        file_description='differential loops (|logFC| > 0.3, FDR < 0.03)',
+        output_suffix='final',
+        resolutions=resolutions,
+        output_dir=output_dir
+    )
+
+    # Process all_results_primary.tsv (all tested loops)
+    process_file_type(
+        file_type='all_results_primary',
+        file_description='all tested loops',
+        output_suffix='all_loops',
+        resolutions=resolutions,
+        output_dir=output_dir
+    )
+
+    print("\n" + "="*70)
     print("Conversion Complete!")
-    print("="*50)
+    print("="*70)
     print(f"\nOutput directory: {output_dir}/")
     print("\nGenerated files:")
     bedpe_files = sorted(Path(output_dir).glob("*.bedpe"))
-    for f in bedpe_files:
-        print(f"  - {f.name}")
+    if bedpe_files:
+        for f in bedpe_files:
+            size_kb = f.stat().st_size / 1024
+            print(f"  - {f.name:<35} ({size_kb:>8.1f} KB)")
+    else:
+        print("  (No BEDPE files generated)")
 
     print("\nTo visualize in Juicebox:")
     print("  1. Open .hic file in Juicebox")
