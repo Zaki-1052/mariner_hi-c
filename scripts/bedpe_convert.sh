@@ -95,7 +95,7 @@ for RES in "${RESOLUTIONS[@]}"; do
         python3 "$SCRIPT" \
             "$ALL_FILE" \
             "${BEDPE_DIR}/${RES}_all_differential.bedpe" \
-            --fdr-cutoff 0.03 \
+            --fdr-cutoff 0.05 \
             --exclude-unchanged
         ((total_conversions++))
 
@@ -104,7 +104,7 @@ for RES in "${RESOLUTIONS[@]}"; do
         python3 "$SCRIPT" \
             "$ALL_FILE" \
             "${BEDPE_DIR}/${RES}_up.bedpe" \
-            --fdr-cutoff 0.03 \
+            --fdr-cutoff 0.05 \
             --direction up_in_mutant
         ((total_conversions++))
 
@@ -113,7 +113,7 @@ for RES in "${RESOLUTIONS[@]}"; do
         python3 "$SCRIPT" \
             "$ALL_FILE" \
             "${BEDPE_DIR}/${RES}_down.bedpe" \
-            --fdr-cutoff 0.03 \
+            --fdr-cutoff 0.05 \
             --direction down_in_mutant
         ((total_conversions++))
 
