@@ -781,6 +781,17 @@ write.table(
 )
 cat("   ✓ Top 100 by effect size saved\n")
 
+# Save final results with stringent thresholds (|logFC| > 0.3, FDR < 0.03)
+final_results <- results[abs(results$logFC) > 0.3 & results$FDR < 0.03, ]
+write.table(
+  final_results,
+  file = file.path(config$paths$output$primary, "final_results.tsv"),
+  sep = "\t",
+  quote = FALSE,
+  row.names = FALSE
+)
+cat("   ✓ Final results saved (|logFC| > 0.3, FDR < 0.03): ", nrow(final_results), " loops\n", sep = "")
+
 # Save decideTests summary
 dt_summary <- summary(decideTests(qlf))
 write.table(
