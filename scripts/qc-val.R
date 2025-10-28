@@ -667,8 +667,13 @@ analyze_loop_matrix <- function(loop_id, count_array, n_samples) {
 
   if (n_samples == 6) {
     # For replicates, average across samples within each group
-    ctrl_mat <- apply(count_array[, , loop_id, 1:3], c(1,2), mean, na.rm = TRUE)
-    mut_mat <- apply(count_array[, , loop_id, 4:6], c(1,2), mean, na.rm = TRUE)
+    # Materialize the HDF5-backed array slice first, then apply
+    ctrl_slice <- as.array(count_array[, , loop_id, 1:3])  # 5x5x3 array
+    mut_slice <- as.array(count_array[, , loop_id, 4:6])   # 5x5x3 array
+
+    # Now apply mean across the 3rd dimension (samples)
+    ctrl_mat <- apply(ctrl_slice, c(1, 2), mean, na.rm = TRUE)
+    mut_mat <- apply(mut_slice, c(1, 2), mean, na.rm = TRUE)
   } else {
     # Original 2-sample analysis
     ctrl_mat <- as.matrix(count_array[, , loop_id, 1])
@@ -828,8 +833,12 @@ for (i in 1:6) {
 
   # Extract matrices (average across replicates if n=6)
   if (n_samples == 6) {
-    ctrl_mat <- apply(count_array[, , loop_id, 1:3], c(1,2), mean, na.rm = TRUE)
-    mut_mat <- apply(count_array[, , loop_id, 4:6], c(1,2), mean, na.rm = TRUE)
+    # Materialize HDF5 slice first
+    ctrl_slice <- as.array(count_array[, , loop_id, 1:3])
+    mut_slice <- as.array(count_array[, , loop_id, 4:6])
+
+    ctrl_mat <- apply(ctrl_slice, c(1, 2), mean, na.rm = TRUE)
+    mut_mat <- apply(mut_slice, c(1, 2), mean, na.rm = TRUE)
   } else {
     ctrl_mat <- as.matrix(count_array[, , loop_id, 1])
     mut_mat <- as.matrix(count_array[, , loop_id, 2])
