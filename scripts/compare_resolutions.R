@@ -39,6 +39,7 @@ cat("---------------------------\n")
 resolutions <- c(5000, 10000, 25000)
 results_list <- list()
 coords_list <- list()
+final_results_list <- list()
 
 for (res in resolutions) {
   res_kb <- res / 1000
@@ -47,6 +48,7 @@ for (res in resolutions) {
   # Load differential results
   results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.rds", res_kb)
   coords_file <- sprintf("outputs/res_%dkb/03_binned.rds", res_kb)
+  final_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/final_results.tsv", res_kb)
 
   if (!file.exists(results_file) || !file.exists(coords_file)) {
     cat(sprintf("✗ Missing files for %dkb\n", res_kb))
@@ -56,14 +58,27 @@ for (res in resolutions) {
   results_list[[as.character(res)]] <- readRDS(results_file)
   coords_list[[as.character(res)]] <- readRDS(coords_file)
 
-  cat(sprintf("✓ %d loops\n", nrow(results_list[[as.character(res)]])))
+  # Load final results (stringent thresholds: |logFC| > 0.3, FDR < 0.03)
+  if (file.exists(final_file)) {
+    final_results_list[[as.character(res)]] <- read.table(final_file, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+    cat(sprintf("✓ %d loops (+ %d final)\n",
+                nrow(results_list[[as.character(res)]]),
+                nrow(final_results_list[[as.character(res)]])))
+  } else {
+    cat(sprintf("✓ %d loops (final results not found)\n", nrow(results_list[[as.character(res)]])))
+  }
 }
 
 if (length(results_list) == 0) {
   stop("ERROR: No resolution results found. Run multi-resolution pipeline first.")
 }
 
-cat(sprintf("\n✓ Loaded results from %d resolutions\n\n", length(results_list)))
+cat(sprintf("\n✓ Loaded results from %d resolutions\n", length(results_list)))
+if (length(final_results_list) > 0) {
+  cat(sprintf("✓ Loaded final results (stringent) from %d resolutions\n\n", length(final_results_list)))
+} else {
+  cat("  Note: No final_results.tsv files found. Run generate_final_results.py to create them.\n\n")
+}
 
 # =============================================================================
 # SECTION 2: BASIC STATISTICS PER RESOLUTION
@@ -81,6 +96,11 @@ summary_stats <- data.frame(
   down_in_mutant = numeric(),
   median_logFC_all = numeric(),
   median_logFC_sig = numeric(),
+  final_loops = numeric(),
+  final_up = numeric(),
+  final_down = numeric(),
+  pct_final = numeric(),
+  median_logFC_final = numeric(),
   stringsAsFactors = FALSE
 )
 
@@ -92,6 +112,20 @@ for (res in names(results_list)) {
   n_up <- sum(df$significant & df$logFC > 0, na.rm = TRUE)
   n_down <- sum(df$significant & df$logFC < 0, na.rm = TRUE)
 
+  # Calculate final results stats (stringent thresholds)
+  if (res %in% names(final_results_list)) {
+    final_df <- final_results_list[[res]]
+    n_final <- nrow(final_df)
+    n_final_up <- sum(final_df$logFC > 0, na.rm = TRUE)
+    n_final_down <- sum(final_df$logFC < 0, na.rm = TRUE)
+    median_fc_final <- median(abs(final_df$logFC), na.rm = TRUE)
+  } else {
+    n_final <- NA
+    n_final_up <- NA
+    n_final_down <- NA
+    median_fc_final <- NA
+  }
+
   summary_stats <- rbind(summary_stats, data.frame(
     resolution_kb = res_kb,
     total_loops = nrow(df),
@@ -100,11 +134,24 @@ for (res in names(results_list)) {
     up_in_mutant = n_up,
     down_in_mutant = n_down,
     median_logFC_all = median(abs(df$logFC), na.rm = TRUE),
-    median_logFC_sig = median(abs(df$logFC[df$significant]), na.rm = TRUE)
+    median_logFC_sig = median(abs(df$logFC[df$significant]), na.rm = TRUE),
+    final_loops = n_final,
+    final_up = n_final_up,
+    final_down = n_final_down,
+    pct_final = if (!is.na(n_final)) 100 * n_final / nrow(df) else NA,
+    median_logFC_final = median_fc_final
   ))
 }
 
-print(summary_stats)
+cat("Standard thresholds (FDR < 0.05):\n")
+print(summary_stats[, c("resolution_kb", "total_loops", "significant_fdr05", "pct_significant",
+                        "up_in_mutant", "down_in_mutant")])
+
+if (any(!is.na(summary_stats$final_loops))) {
+  cat("\nStringent thresholds (|logFC| > 0.3, FDR < 0.03):\n")
+  print(summary_stats[, c("resolution_kb", "final_loops", "pct_final",
+                          "final_up", "final_down", "median_logFC_final")])
+}
 
 # Save summary
 write.table(summary_stats,
@@ -302,32 +349,120 @@ cat("✓ Concordance analysis complete\n\n")
 cat("SECTION 5: Generating Visualizations\n")
 cat("-------------------------------------\n\n")
 
-# 1. Bar plot of differential loop counts by resolution
+# 1. Bar plot of differential loop counts by resolution (standard vs stringent)
 cat("Creating differential loop count plot... ")
-pdf(file.path(output_dir, "differential_loops_by_resolution.pdf"), width = 8, height = 6)
+pdf(file.path(output_dir, "differential_loops_by_resolution.pdf"), width = 10, height = 6)
 
-summary_long <- summary_stats %>%
+# Prepare data for standard thresholds
+summary_standard <- summary_stats %>%
+  select(resolution_kb, up_in_mutant, down_in_mutant) %>%
   pivot_longer(cols = c(up_in_mutant, down_in_mutant),
                names_to = "direction", values_to = "count") %>%
-  mutate(direction = ifelse(direction == "up_in_mutant", "Up in Mutant", "Down in Mutant"))
-
-ggplot(summary_long, aes(x = factor(resolution_kb), y = count, fill = direction)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  scale_fill_manual(values = c("Up in Mutant" = "#d73027", "Down in Mutant" = "#4575b4")) +
-  labs(
-    title = "Differential Loops by Resolution",
-    x = "Resolution (kb)",
-    y = "Number of Significant Loops (FDR < 0.05)",
-    fill = "Direction"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-    legend.position = "right"
+  mutate(
+    direction = ifelse(direction == "up_in_mutant", "Up", "Down"),
+    threshold = "Standard (FDR < 0.05)"
   )
+
+# Prepare data for stringent thresholds (if available)
+if (any(!is.na(summary_stats$final_loops))) {
+  summary_final <- summary_stats %>%
+    select(resolution_kb, final_up, final_down) %>%
+    filter(!is.na(final_up)) %>%
+    pivot_longer(cols = c(final_up, final_down),
+                 names_to = "direction", values_to = "count") %>%
+    mutate(
+      direction = ifelse(direction == "final_up", "Up", "Down"),
+      threshold = "Stringent (|logFC| > 0.3, FDR < 0.03)"
+    )
+
+  # Combine
+  plot_data <- rbind(summary_standard, summary_final)
+
+  ggplot(plot_data, aes(x = factor(resolution_kb), y = count, fill = interaction(direction, threshold))) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+    scale_fill_manual(
+      name = "Threshold & Direction",
+      values = c(
+        "Up.Standard (FDR < 0.05)" = "#d73027",
+        "Down.Standard (FDR < 0.05)" = "#4575b4",
+        "Up.Stringent (|logFC| > 0.3, FDR < 0.03)" = "#a50026",
+        "Down.Stringent (|logFC| > 0.3, FDR < 0.03)" = "#313695"
+      ),
+      labels = c(
+        "Up (Standard)",
+        "Down (Standard)",
+        "Up (Stringent)",
+        "Down (Stringent)"
+      )
+    ) +
+    labs(
+      title = "Differential Loops by Resolution and Threshold",
+      x = "Resolution (kb)",
+      y = "Number of Differential Loops"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+      legend.position = "right"
+    )
+} else {
+  # Only standard thresholds available
+  ggplot(summary_standard, aes(x = factor(resolution_kb), y = count, fill = direction)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    scale_fill_manual(values = c("Up" = "#d73027", "Down" = "#4575b4")) +
+    labs(
+      title = "Differential Loops by Resolution (Standard Thresholds)",
+      x = "Resolution (kb)",
+      y = "Number of Significant Loops (FDR < 0.05)",
+      fill = "Direction"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+      legend.position = "right"
+    )
+}
 
 dev.off()
 cat("✓\n")
+
+# 1b. Filtering cascade plot (if final results available)
+if (any(!is.na(summary_stats$final_loops))) {
+  cat("Creating filtering cascade plot... ")
+  pdf(file.path(output_dir, "filtering_cascade_by_resolution.pdf"), width = 10, height = 6)
+
+  cascade_data <- summary_stats %>%
+    filter(!is.na(final_loops)) %>%
+    select(resolution_kb, total_loops, significant_fdr05, final_loops) %>%
+    pivot_longer(cols = c(total_loops, significant_fdr05, final_loops),
+                 names_to = "stage", values_to = "count") %>%
+    mutate(
+      stage = factor(stage,
+                    levels = c("total_loops", "significant_fdr05", "final_loops"),
+                    labels = c("Total Tested", "Significant\n(FDR < 0.05)", "Final\n(|logFC| > 0.3, FDR < 0.03)"))
+    )
+
+  ggplot(cascade_data, aes(x = stage, y = count, fill = factor(resolution_kb), group = factor(resolution_kb))) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+    geom_line(aes(color = factor(resolution_kb)), position = position_dodge(width = 0.9), size = 1) +
+    geom_point(aes(color = factor(resolution_kb)), position = position_dodge(width = 0.9), size = 3) +
+    scale_fill_brewer(palette = "Set1", name = "Resolution") +
+    scale_color_brewer(palette = "Set1", name = "Resolution") +
+    labs(
+      title = "Filtering Cascade: From Total Loops to Final Results",
+      x = "Analysis Stage",
+      y = "Number of Loops"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+      legend.position = "right",
+      axis.text.x = element_text(size = 10)
+    )
+
+  dev.off()
+  cat("✓\n")
+}
 
 # 2. Fold-change correlation scatter plots
 if ("5000" %in% names(results_list) && "10000" %in% names(results_list)) {
@@ -441,22 +576,46 @@ cat("Output directory: outputs/resolution_comparison/\n\n")
 
 cat("Files generated:\n")
 cat("  1. summary_statistics_by_resolution.tsv\n")
-cat("     → Loop counts and significance rates\n\n")
+cat("     → Loop counts and significance rates (standard + stringent)\n\n")
 cat("  2. loop_overlap_matrix.tsv\n")
 cat("     → Overlap counts between resolutions\n\n")
 cat("  3. differential_loops_by_resolution.pdf\n")
-cat("     → Bar plot of differential loop counts\n\n")
-cat("  4. foldchange_correlation_*.pdf\n")
-cat("     → Scatter plots of fold-change concordance\n\n")
-cat("  5. venn_diagram_differential_loops.pdf\n")
-cat("     → Venn diagram of shared differential loops\n\n")
+cat("     → Bar plot comparing standard vs stringent thresholds\n\n")
+if (any(!is.na(summary_stats$final_loops))) {
+  cat("  4. filtering_cascade_by_resolution.pdf\n")
+  cat("     → Filtering progression from total to final results\n\n")
+  cat("  5. foldchange_correlation_*.pdf\n")
+  cat("     → Scatter plots of fold-change concordance\n\n")
+  cat("  6. venn_diagram_differential_loops.pdf\n")
+  cat("     → Venn diagram of shared differential loops\n\n")
+} else {
+  cat("  4. foldchange_correlation_*.pdf\n")
+  cat("     → Scatter plots of fold-change concordance\n\n")
+  cat("  5. venn_diagram_differential_loops.pdf\n")
+  cat("     → Venn diagram of shared differential loops\n\n")
+}
 
 cat("Key findings:\n")
+cat("\nStandard thresholds (FDR < 0.05):\n")
 for (i in 1:nrow(summary_stats)) {
   res_kb <- summary_stats$resolution_kb[i]
   n_sig <- summary_stats$significant_fdr05[i]
   pct <- summary_stats$pct_significant[i]
   cat(sprintf("  %dkb: %d differential loops (%.1f%%)\n", res_kb, n_sig, pct))
+}
+
+if (any(!is.na(summary_stats$final_loops))) {
+  cat("\nStringent thresholds (|logFC| > 0.3, FDR < 0.03):\n")
+  for (i in 1:nrow(summary_stats)) {
+    res_kb <- summary_stats$resolution_kb[i]
+    if (!is.na(summary_stats$final_loops[i])) {
+      n_final <- summary_stats$final_loops[i]
+      pct_final <- summary_stats$pct_final[i]
+      pct_of_sig <- 100 * n_final / summary_stats$significant_fdr05[i]
+      cat(sprintf("  %dkb: %d loops (%.1f%% of total, %.1f%% of standard significant)\n",
+                  res_kb, n_final, pct_final, pct_of_sig))
+    }
+  }
 }
 
 cat("\n========================================\n")
