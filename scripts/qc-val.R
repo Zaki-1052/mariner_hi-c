@@ -904,31 +904,45 @@ if (!is.null(all_strategies) &&
   cat("\n")
   
   # Create data frames for correlation analysis
-  # Each strategy as separate columns
-  ctrl_strategies <- data.frame(
-    sum = sum_counts[, "ctrl"],
-    weighted = weighted_counts[, "ctrl"]
-  )
-  
-  mut_strategies <- data.frame(
-    sum = sum_counts[, "mut"],
-    weighted = weighted_counts[, "mut"]
-  )
-  
+  # Handle replicate-aware (n=6) vs original (n=2) design
+  if (n_samples == 6) {
+    # For replicates, average within groups first
+    ctrl_strategies <- data.frame(
+      sum = rowMeans(sum_counts[, 1:3], na.rm = TRUE),
+      weighted = rowMeans(weighted_counts[, 1:3], na.rm = TRUE)
+    )
+
+    mut_strategies <- data.frame(
+      sum = rowMeans(sum_counts[, 4:6], na.rm = TRUE),
+      weighted = rowMeans(weighted_counts[, 4:6], na.rm = TRUE)
+    )
+  } else {
+    # Original 2-sample design
+    ctrl_strategies <- data.frame(
+      sum = sum_counts[, 1],
+      weighted = weighted_counts[, 1]
+    )
+
+    mut_strategies <- data.frame(
+      sum = sum_counts[, 2],
+      weighted = weighted_counts[, 2]
+    )
+  }
+
   # Compare correlations between strategies
   cat("Correlation between aggregation strategies (Control):\n")
   cor_strategies_ctrl <- cor(ctrl_strategies, use = "complete.obs")
   print(round(cor_strategies_ctrl, 3))
   cat("\n")
-  
+
   cat("Correlation between aggregation strategies (Mutant):\n")
   cor_strategies_mut <- cor(mut_strategies, use = "complete.obs")
   print(round(cor_strategies_mut, 3))
   cat("\n")
-  
+
   # Compare actual values
   cat("Strategy comparison statistics:\n")
-  cat(sprintf("  Control sum range:      %.1f - %.1f\n", 
+  cat(sprintf("  Control sum range:      %.1f - %.1f\n",
               min(ctrl_strategies$sum, na.rm=TRUE),
               max(ctrl_strategies$sum, na.rm=TRUE)))
   cat(sprintf("  Control weighted range: %.1f - %.1f\n",
