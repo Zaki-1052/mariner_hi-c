@@ -683,12 +683,9 @@ if (!is.null(shift_status) && !is.null(fisher_result)) {
       width = 8, height = 6)
 
   par(mar = c(5, 5, 4, 2))
-  prop_data <- matrix(
-    c(
-      100 * shifted_sig / shifted_tested,
-      100 * nonshifted_sig / nonshifted_tested
-    ),
-    nrow = 2
+  prop_data <- c(
+    100 * shifted_sig / shifted_tested,
+    100 * nonshifted_sig / nonshifted_tested
   )
 
   barplot(
