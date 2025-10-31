@@ -134,6 +134,60 @@ fi
 echo ""
 
 # ==============================================================================
+# STEP 9: DOWNSTREAM ANALYSIS (MERGED LOOPS & CHARACTERIZATION)
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 9: Downstream Analysis (Merged Loops & Characterization)"
+echo "========================================="
+echo "Script: scripts/downstream_analysis.R"
+echo "Input: final_results.tsv from all resolutions"
+echo "Output: Non-redundant loop set with gene annotations"
+echo ""
+
+Rscript scripts/downstream_analysis.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Downstream analysis completed"
+    echo "   Output: outputs/merged_loops/"
+else
+    echo ""
+    echo "❌ Downstream analysis failed with exit code $?"
+    echo "Note: Individual resolution results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 10: VISUALIZATION ANALYSIS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 10: Visualization Analysis"
+echo "========================================="
+echo "Script: scripts/visualizations.R"
+echo "Input: characterized_loops.tsv + all_results_primary.tsv"
+echo "Output: Volcano plots, enrichment analyses, loop classifications"
+echo ""
+
+Rscript scripts/visualizations.R --skip-apa
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Visualization analysis completed"
+    echo "   Output: outputs/visualizations/"
+else
+    echo ""
+    echo "❌ Visualization analysis failed with exit code $?"
+    echo "Note: Downstream analysis results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
 # PIPELINE COMPLETE
 # ==============================================================================
 
@@ -196,4 +250,17 @@ echo "  - outputs/resolution_comparison/loop_overlap_matrix.tsv"
 echo "  - outputs/resolution_comparison/differential_loops_by_resolution.pdf"
 echo "  - outputs/resolution_comparison/foldchange_correlation_*.pdf"
 echo "  - outputs/resolution_comparison/venn_diagram_differential_loops.pdf"
+echo ""
+echo "Merged loops (downstream analysis):"
+echo "  - outputs/merged_loops/non_redundant_loops.tsv (main merged list)"
+echo "  - outputs/merged_loops/characterized_loops.tsv (with gene annotations)"
+echo "  - outputs/merged_loops/non_redundant_loops.bedpe (for visualization)"
+echo "  - outputs/merged_loops/overlap_report.tsv (merge details)"
+echo "  - outputs/merged_loops/plots/ (characterization plots)"
+echo ""
+echo "Visualizations:"
+echo "  - outputs/visualizations/volcano/ (volcano plots for all resolutions)"
+echo "  - outputs/visualizations/features/ (genomic feature distribution)"
+echo "  - outputs/visualizations/enrichment/ (GO/KEGG enrichment analyses)"
+echo "  - outputs/visualizations/loop_classification/ (type classification, length)"
 echo "========================================"

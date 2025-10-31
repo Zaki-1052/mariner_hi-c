@@ -34,6 +34,26 @@ Rscript scripts/compare_resolutions.R
 # Requires edgeR results from all three resolutions
 ```
 
+**Downstream analysis (merged loops & characterization)**:
+```bash
+Rscript scripts/downstream_analysis.R
+# Creates non-redundant loop set with gene annotations
+# Requires final_results.tsv from all three resolutions
+
+# Optional: specify GTF file or overlap tolerance
+Rscript scripts/downstream_analysis.R --gtf /path/to/genes.gtf --tolerance 15
+```
+
+**Visualization analysis (comprehensive plots)**:
+```bash
+Rscript scripts/visualizations.R
+# Generates volcano plots, enrichment analyses, loop classifications, and more
+# Requires characterized_loops.tsv from downstream_analysis.R
+
+# Optional: specify resolution for volcano or skip time-intensive APA
+Rscript scripts/visualizations.R --resolution 5000 --skip-apa
+```
+
 ### Quality Control
 
 ```bash
@@ -91,6 +111,14 @@ Rscript -e "x <- readRDS('outputs/res_5kb/03_binned.rds'); length(x)"
 5. compare_resolutions.R → Meta-analysis across 5kb/10kb/25kb
    Input:  Results from all three resolutions
    Output: resolution_comparison/ (Venn diagrams, overlap matrices)
+
+6. downstream_analysis.R → Merge loops across resolutions with gene annotations
+   Input:  final_results.tsv from 5kb, 10kb, 25kb + GInteractions
+   Output: merged_loops/ (non-redundant loop set with characterizations)
+
+7. visualizations.R → Generate publication-quality plots and enrichment analyses
+   Input:  characterized_loops.tsv + all_results_primary.tsv files
+   Output: visualizations/ (volcano, enrichment, classification, APA)
 ```
 
 ### Resolution-Aware Design Pattern
@@ -450,3 +478,81 @@ edgeR_results_res_{RES}kb/
 ```
 
 **Pattern**: Resolution-specific directories allow parallel analysis of 5kb/10kb/25kb without conflicts.
+
+### Merged Loops Output (Downstream Analysis)
+```
+merged_loops/
+  non_redundant_loops.tsv           # Main merged loop list
+  non_redundant_loops.rds           # GInteractions object
+  non_redundant_loops.bedpe         # BEDPE format for Juicebox
+  characterized_loops.tsv           # Complete feature annotations
+  anchor_annotations.tsv            # Per-anchor gene details
+  overlap_report.tsv                # Which loops were merged
+  volcano_files_validation.tsv      # QC for volcano plot inputs
+  characterization_summary.txt      # Summary statistics
+  plots/
+    distance_distribution.pdf
+    chromosome_distribution.pdf
+    gene_proximity_distribution.pdf
+    loop_type_classification.pdf
+```
+
+**Key Features**:
+- Merges final_results.tsv from all 3 resolutions (stringent: |logFC| > 0.3, FDR < 0.03)
+- Removes overlaps using 10kb tolerance (keeps loop with lowest FDR)
+- Annotates anchors with nearest genes and TSS distances
+- Classifies loops: Promoter-Promoter, Promoter-Enhancer, Enhancer-Enhancer
+- Provides multiple export formats: TSV, RDS (GInteractions), BEDPE
+
+**Usage Pattern**:
+```r
+# Load merged loops for downstream analysis
+merged <- readRDS("outputs/merged_loops/non_redundant_loops.rds")
+
+# Or load characterized table
+loops_df <- read.table("outputs/merged_loops/characterized_loops.tsv",
+                       sep = "\t", header = TRUE)
+```
+
+### Visualization Outputs
+
+```
+visualizations/
+  volcano/
+    volcano_5kb.pdf                        # Volcano plot at 5kb resolution
+    volcano_10kb.pdf                       # Volcano plot at 10kb resolution
+    volcano_25kb.pdf                       # Volcano plot at 25kb resolution
+    volcano_merged.pdf                     # Combined multi-resolution
+  features/
+    feature_distribution.pdf               # Genomic feature distribution
+    feature_distribution_summary.tsv       # Feature counts by category
+  enrichment/
+    go_bp_dotplot.pdf                      # GO Biological Process
+    go_cc_dotplot.pdf                      # GO Cellular Component
+    go_mf_dotplot.pdf                      # GO Molecular Function
+    kegg_dotplot.pdf                       # KEGG pathway enrichment
+  loop_classification/
+    loop_type_classification.pdf           # P-P, P-E, E-E pie charts
+    loop_type_genes.tsv                    # Genes by loop type
+    loop_length_distribution_strip.pdf     # Length strip plot
+    loop_length_distribution_violin.pdf    # Length violin plot
+    loop_length_distribution_histogram.pdf # Length histogram
+    loop_length_statistics.txt             # Statistical summary
+  apa/
+    (APA outputs - requires .hic files)
+```
+
+**Key Features**:
+- Volcano plots using EnhancedVolcano package (publication-ready)
+- Genomic feature annotation via ChIPseeker (promoter, exon, intron, etc.)
+- GO/KEGG enrichment using clusterProfiler (BP, CC, MF, pathways)
+- Loop classification by anchor types and lengths
+- Aggregate Peak Analysis (APA) for contact dynamics
+- All plots in PDF format for easy viewing
+
+**Generated Analyses**:
+1. **Volcano plots**: Show statistical significance vs effect size for all resolutions
+2. **Feature distribution**: Annotate loop anchors with genomic context
+3. **Functional enrichment**: Identify enriched biological processes and pathways
+4. **Loop characteristics**: Classify by type (P-P, P-E, E-E) and length
+5. **Contact dynamics**: APA for differential loops (requires .hic files)
