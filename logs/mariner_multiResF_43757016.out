@@ -1,0 +1,204 @@
+======================================
+Final Results BEDPE Conversion
+======================================
+Started: Thu Oct 30 19:02:01 PDT 2025
+
+======================================================================
+edgeR Results BEDPE Conversion
+======================================================================
+
+Converts edgeR TSV results to BEDPE format for Juicebox visualization
+
+File types processed:
+  1. final_results.tsv - Differential loops (|logFC| > 0.3, FDR < 0.03)
+  2. all_results_primary.tsv - All tested loops
+
+Output: Resolution-specific + merged union BEDPE files
+
+
+======================================================================
+Processing: differential loops (|logFC| > 0.3, FDR < 0.03)
+======================================================================
+
+Loading final_results.tsv files...
+----------------------------------------------------------------------
+
+5kb resolution:
+  Loaded 1120 loops from 5kb resolution
+
+10kb resolution:
+  Loaded 1532 loops from 10kb resolution
+
+25kb resolution:
+  Loaded 1189 loops from 25kb resolution
+
+======================================================================
+Converting differential loops (|logFC| > 0.3, FDR < 0.03) to BEDPE format
+======================================================================
+
+5kb resolution:
+  Output columns (5kb): chr1, start1, end1, chr2, start2, end2, coord_string, shift_status, logFC, logCPM, F, PValue, FDR, significant, exploratory, category, direction, plot_color, resolution_kb
+
+✓ 5kb differential loops (|logFC| > 0.3, FDR < 0.03)
+  File: outputs/bedpe_final/5kb_final.bedpe
+  Loops: 1120
+  Size: 268.0 KB
+  logFC range: [-1.084, 1.604]
+  Up-regulated: 779 (69.6%)
+  Down-regulated: 341 (30.4%)
+  FDR range: [0.000007, 0.029963]
+
+10kb resolution:
+  Output columns (10kb): chr1, start1, end1, chr2, start2, end2, coord_string, logFC, logCPM, F, PValue, FDR, significant, exploratory, category, direction, plot_color, resolution_kb
+
+✓ 10kb differential loops (|logFC| > 0.3, FDR < 0.03)
+  File: outputs/bedpe_final/10kb_final.bedpe
+  Loops: 1532
+  Size: 360.2 KB
+  logFC range: [-1.251, 1.287]
+  Up-regulated: 953 (62.2%)
+  Down-regulated: 579 (37.8%)
+  FDR range: [0.000000, 0.029760]
+
+25kb resolution:
+  Output columns (25kb): chr1, start1, end1, chr2, start2, end2, coord_string, logFC, logCPM, F, PValue, FDR, significant, exploratory, category, direction, plot_color, resolution_kb
+
+✓ 25kb differential loops (|logFC| > 0.3, FDR < 0.03)
+  File: outputs/bedpe_final/25kb_final.bedpe
+  Loops: 1189
+  Size: 279.5 KB
+  logFC range: [-1.267, 1.067]
+  Up-regulated: 660 (55.5%)
+  Down-regulated: 529 (44.5%)
+  FDR range: [0.000002, 0.029898]
+
+==================================================
+Merging resolutions into union
+==================================================
+  Adding 1120 loops from 5kb
+  Adding 1532 loops from 10kb
+  Adding 1189 loops from 25kb
+
+  Total loops in union: 3841
+  Resolutions included: 5, 10, 25
+
+  Breakdown by resolution:
+    5kb: 1120 loops (29.2%)
+    10kb: 1532 loops (39.9%)
+    25kb: 1189 loops (31.0%)
+
+✓ Merged differential loops (|logFC| > 0.3, FDR < 0.03) (all resolutions)
+  File: outputs/bedpe_final/merged_final.bedpe
+  Loops: 3841
+  Size: 912.7 KB
+  logFC range: [-1.267, 1.604]
+  Up-regulated: 2392 (62.3%)
+  Down-regulated: 1449 (37.7%)
+  FDR range: [0.000000, 0.029963]
+
+======================================================================
+Processing: all tested loops
+======================================================================
+
+Loading all_results_primary.tsv files...
+----------------------------------------------------------------------
+
+5kb resolution:
+  Loaded 17982 loops from 5kb resolution
+
+10kb resolution:
+  Loaded 22632 loops from 10kb resolution
+
+25kb resolution:
+  Loaded 20398 loops from 25kb resolution
+
+======================================================================
+Converting all tested loops to BEDPE format
+======================================================================
+
+5kb resolution:
+  Output columns (5kb): chr1, start1, end1, chr2, start2, end2, coord_string, shift_status, logFC, logCPM, F, PValue, FDR, significant, exploratory, category, direction, plot_color, resolution_kb
+
+✓ 5kb all tested loops
+  File: outputs/bedpe_final/5kb_all_loops.bedpe
+  Loops: 17982
+  Size: 4195.7 KB
+  logFC range: [-1.894, 2.254]
+  Up-regulated: 8846 (49.2%)
+  Down-regulated: 9136 (50.8%)
+  FDR range: [0.000007, 0.999925]
+
+10kb resolution:
+  Output columns (10kb): chr1, start1, end1, chr2, start2, end2, coord_string, logFC, logCPM, F, PValue, FDR, significant, exploratory, category, direction, plot_color, resolution_kb
+
+✓ 10kb all tested loops
+  File: outputs/bedpe_final/10kb_all_loops.bedpe
+  Loops: 22632
+  Size: 5186.6 KB
+  logFC range: [-1.251, 1.287]
+  Up-regulated: 10976 (48.5%)
+  Down-regulated: 11656 (51.5%)
+  FDR range: [0.000000, 0.999902]
+
+25kb resolution:
+  Output columns (25kb): chr1, start1, end1, chr2, start2, end2, coord_string, logFC, logCPM, F, PValue, FDR, significant, exploratory, category, direction, plot_color, resolution_kb
+
+✓ 25kb all tested loops
+  File: outputs/bedpe_final/25kb_all_loops.bedpe
+  Loops: 20398
+  Size: 4676.8 KB
+  logFC range: [-1.267, 3.321]
+  Up-regulated: 10044 (49.2%)
+  Down-regulated: 10354 (50.8%)
+  FDR range: [0.000002, 0.999799]
+
+==================================================
+Merging resolutions into union
+==================================================
+  Adding 17982 loops from 5kb
+  Adding 22632 loops from 10kb
+  Adding 20398 loops from 25kb
+
+  Total loops in union: 61012
+  Resolutions included: 5, 10, 25
+
+  Breakdown by resolution:
+    5kb: 17982 loops (29.5%)
+    10kb: 22632 loops (37.1%)
+    25kb: 20398 loops (33.4%)
+
+✓ Merged all tested loops (all resolutions)
+  File: outputs/bedpe_final/merged_all_loops.bedpe
+  Loops: 61012
+  Size: 14142.9 KB
+  logFC range: [-1.894, 3.321]
+  Up-regulated: 29866 (49.0%)
+  Down-regulated: 31146 (51.0%)
+  FDR range: [0.000000, 0.999925]
+
+======================================================================
+Conversion Complete!
+======================================================================
+
+Output directory: outputs/bedpe_final/
+
+Generated files:
+  - 10kb_all_loops.bedpe                (  5186.6 KB)
+  - 10kb_final.bedpe                    (   360.2 KB)
+  - 25kb_all_loops.bedpe                (  4676.8 KB)
+  - 25kb_final.bedpe                    (   279.5 KB)
+  - 5kb_all_loops.bedpe                 (  4195.7 KB)
+  - 5kb_final.bedpe                     (   268.0 KB)
+  - merged_all_loops.bedpe              ( 14142.9 KB)
+  - merged_final.bedpe                  (   912.7 KB)
+
+To visualize in Juicebox:
+  1. Open .hic file in Juicebox
+  2. Annotations > Load Basic Annotations
+  3. Select BEDPE file
+  4. Hover over loops to see statistics
+
+
+======================================
+Completed: Thu Oct 30 19:02:10 PDT 2025
+======================================

@@ -81,6 +81,59 @@ if (length(final_results_list) > 0) {
 }
 
 # =============================================================================
+# Create coordinate lists for final/stringent results
+# =============================================================================
+
+final_coords_list <- list()
+
+if (length(final_results_list) > 0) {
+  cat("Creating filtered coordinate lists for final results...\n")
+
+  for (res in names(final_results_list)) {
+    if (res %in% names(coords_list) && res %in% names(results_list)) {
+      final_df <- final_results_list[[res]]
+      coords <- coords_list[[res]]
+
+      # Create coordinate strings for matching
+      coords_df <- data.frame(
+        chr1 = as.character(seqnames(anchors(coords, "first"))),
+        start1 = start(anchors(coords, "first")),
+        end1 = end(anchors(coords, "first")),
+        chr2 = as.character(seqnames(anchors(coords, "second"))),
+        start2 = start(anchors(coords, "second")),
+        end2 = end(anchors(coords, "second"))
+      )
+
+      # Match final results to coords by coordinates
+      matches <- numeric(nrow(final_df))
+      for (i in 1:nrow(final_df)) {
+        idx <- which(
+          coords_df$chr1 == final_df$chr1[i] &
+          coords_df$start1 == final_df$start1[i] &
+          coords_df$end1 == final_df$end1[i] &
+          coords_df$chr2 == final_df$chr2[i] &
+          coords_df$start2 == final_df$start2[i] &
+          coords_df$end2 == final_df$end2[i]
+        )
+        if (length(idx) > 0) {
+          matches[i] <- idx[1]
+        }
+      }
+
+      # Filter out non-matches
+      matches <- matches[matches > 0]
+
+      if (length(matches) > 0) {
+        final_coords_list[[res]] <- coords[matches]
+        cat(sprintf("  %s: %d final loops matched to coordinates\n",
+                    paste0(as.numeric(res)/1000, "kb"), length(matches)))
+      }
+    }
+  }
+  cat("\n")
+}
+
+# =============================================================================
 # SECTION 2: BASIC STATISTICS PER RESOLUTION
 # =============================================================================
 
@@ -238,7 +291,7 @@ for (i in 1:length(resolutions)) {
   }
 }
 
-cat("\nLoop overlap matrix:\n")
+cat("\nLoop overlap matrix (all loops):\n")
 print(overlap_matrix)
 
 # Save overlap matrix
@@ -246,7 +299,42 @@ write.table(overlap_matrix,
             file.path(output_dir, "loop_overlap_matrix.tsv"),
             sep = "\t", quote = FALSE)
 
-cat("\n✓ Overlap analysis complete\n\n")
+cat("\n✓ Overlap analysis complete (all loops)\n\n")
+
+# Overlap analysis for FINAL RESULTS (stringent thresholds)
+if (length(final_coords_list) > 0) {
+  cat("Matching final loops across resolutions (10kb tolerance)...\n")
+
+  # Get available resolutions in final_coords_list
+  final_resolutions <- as.numeric(names(final_coords_list))
+  final_overlap_matrix <- matrix(0, nrow = length(final_resolutions), ncol = length(final_resolutions))
+  rownames(final_overlap_matrix) <- paste0(final_resolutions/1000, "kb")
+  colnames(final_overlap_matrix) <- paste0(final_resolutions/1000, "kb")
+
+  for (i in 1:length(final_resolutions)) {
+    for (j in 1:length(final_resolutions)) {
+      res_i <- as.character(final_resolutions[i])
+      res_j <- as.character(final_resolutions[j])
+
+      if (i == j) {
+        final_overlap_matrix[i, j] <- length(final_coords_list[[res_i]])
+      } else if (res_i %in% names(final_coords_list) && res_j %in% names(final_coords_list)) {
+        matches <- match_loops(final_coords_list[[res_i]], final_coords_list[[res_j]], tolerance_kb = 10)
+        final_overlap_matrix[i, j] <- nrow(matches)
+      }
+    }
+  }
+
+  cat("\nLoop overlap matrix (final/stringent results only):\n")
+  print(final_overlap_matrix)
+
+  # Save final overlap matrix
+  write.table(final_overlap_matrix,
+              file.path(output_dir, "loop_overlap_matrix_final.tsv"),
+              sep = "\t", quote = FALSE)
+
+  cat("\n✓ Overlap analysis complete (final results)\n\n")
+}
 
 # =============================================================================
 # SECTION 4: DIFFERENTIAL CONCORDANCE ANALYSIS
@@ -562,6 +650,53 @@ if (length(results_list) == 3) {
   cat("✓\n")
 }
 
+# 4. Venn diagram for FINAL RESULTS (stringent thresholds)
+if (length(final_coords_list) >= 3 && "5000" %in% names(final_coords_list) &&
+    "10000" %in% names(final_coords_list) && "25000" %in% names(final_coords_list)) {
+  cat("Creating Venn diagram for final results... ")
+
+  # Get indices of final loops at each resolution
+  final_5kb_indices <- 1:length(final_coords_list[["5000"]])
+  final_10kb_indices <- 1:length(final_coords_list[["10000"]])
+  final_25kb_indices <- 1:length(final_coords_list[["25000"]])
+
+  # Map to matched loops (using 5kb as reference)
+  matches_5_10_final <- match_loops(final_coords_list[["5000"]], final_coords_list[["10000"]], tolerance_kb = 10)
+  matches_5_25_final <- match_loops(final_coords_list[["5000"]], final_coords_list[["25000"]], tolerance_kb = 10)
+
+  # Create sets based on 5kb as reference
+  set_5kb_final <- final_5kb_indices
+  set_10kb_final <- matches_5_10_final$index1
+  set_25kb_final <- matches_5_25_final$index1
+
+  venn_list_final <- list(
+    "5kb" = set_5kb_final,
+    "10kb" = set_10kb_final,
+    "25kb" = set_25kb_final
+  )
+
+  pdf(file.path(output_dir, "venn_diagram_final_loops.pdf"), width = 8, height = 8)
+
+  venn.plot.final <- venn.diagram(
+    x = venn_list_final,
+    filename = NULL,
+    category.names = c("5kb", "10kb", "25kb"),
+    col = "transparent",
+    fill = c("#d73027", "#4575b4", "#1b7837"),
+    alpha = 0.5,
+    cex = 1.5,
+    cat.cex = 1.5,
+    cat.fontface = "bold",
+    main = "Final Loops Across Resolutions\n(|logFC| > 0.3, FDR < 0.03)",
+    main.cex = 1.5
+  )
+
+  grid.draw(venn.plot.final)
+
+  dev.off()
+  cat("✓\n")
+}
+
 cat("\n✓ All visualizations generated\n\n")
 
 # =============================================================================
@@ -578,16 +713,22 @@ cat("Files generated:\n")
 cat("  1. summary_statistics_by_resolution.tsv\n")
 cat("     → Loop counts and significance rates (standard + stringent)\n\n")
 cat("  2. loop_overlap_matrix.tsv\n")
-cat("     → Overlap counts between resolutions\n\n")
-cat("  3. differential_loops_by_resolution.pdf\n")
+cat("     → Overlap counts between resolutions (all loops)\n\n")
+if (any(!is.na(summary_stats$final_loops))) {
+  cat("  3. loop_overlap_matrix_final.tsv\n")
+  cat("     → Overlap counts between resolutions (final/stringent loops only)\n\n")
+}
+cat("  ", if (any(!is.na(summary_stats$final_loops))) "4" else "3", ". differential_loops_by_resolution.pdf\n", sep = "")
 cat("     → Bar plot comparing standard vs stringent thresholds\n\n")
 if (any(!is.na(summary_stats$final_loops))) {
-  cat("  4. filtering_cascade_by_resolution.pdf\n")
+  cat("  5. filtering_cascade_by_resolution.pdf\n")
   cat("     → Filtering progression from total to final results\n\n")
-  cat("  5. foldchange_correlation_*.pdf\n")
+  cat("  6. foldchange_correlation_*.pdf\n")
   cat("     → Scatter plots of fold-change concordance\n\n")
-  cat("  6. venn_diagram_differential_loops.pdf\n")
-  cat("     → Venn diagram of shared differential loops\n\n")
+  cat("  7. venn_diagram_differential_loops.pdf\n")
+  cat("     → Venn diagram of shared differential loops (standard FDR < 0.05)\n\n")
+  cat("  8. venn_diagram_final_loops.pdf\n")
+  cat("     → Venn diagram of shared final loops (|logFC| > 0.3, FDR < 0.03)\n\n")
 } else {
   cat("  4. foldchange_correlation_*.pdf\n")
   cat("     → Scatter plots of fold-change concordance\n\n")
