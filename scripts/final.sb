@@ -1,0 +1,199 @@
+#!/bin/bash
+#SBATCH --job-name=mariner_multiRes
+#SBATCH --output=logs/z-mariner_multiRes.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=18:00:00
+#SBATCH --account=csd940
+
+# ==============================================================================
+# Mariner Multi-Resolution Differential Loop Analysis Pipeline
+# ==============================================================================
+#
+# Pipeline:
+#   For each resolution (5kb, 10kb, 25kb):
+#     1. prep_loops.R      - Merge BEDPE files → consensus positions
+#     2. extract_counts.R  - Extract Hi-C from 6 .hic files
+#     3. aggregate.R       - Aggregate 5x5 matrices → count matrix
+#     4. qc-val.R          - Quality control validation and shift detection
+#     5. edgeR.R           - Differential analysis with QL GLM (n=3 per group)
+#
+#   Post-processing (all resolutions):
+#     6. compare_resolutions.R    - Cross-resolution comparison
+#     7. generate_final_results.py - Filter to stringent thresholds
+#     8. convert_final_bedpe.sh    - Convert to BEDPE for Juicebox
+#
+# Expected runtime: ~6 hours (2 hours × 3 resolutions)
+# Expected output: Separate analyses for each resolution + merged BEDPE files
+# ==============================================================================
+
+# Create logs directory
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/mariner/logs
+
+echo "========================================="
+echo "Mariner Multi-Resolution Pipeline"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Memory: 64GB"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Change to working directory
+cd /expanse/lustre/projects/csd940/zalibhai/mariner
+
+# ==============================================================================
+# MULTI-RESOLUTION ANALYSIS
+# ==============================================================================
+
+# ==============================================================================
+# STEP 6: COMPARE RESOLUTIONS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 6: Comparing results across resolutions"
+echo "========================================="
+echo "Script: scripts/compare_resolutions.R"
+echo ""
+
+Rscript scripts/compare_resolutions.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Resolution comparison completed"
+else
+    echo ""
+    echo "❌ Resolution comparison failed with exit code $?"
+    echo "Note: Individual resolution analyses are still complete"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 7: GENERATE FINAL RESULTS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 7: Generating final results (stringent filters)"
+echo "========================================="
+echo "Script: scripts/generate_final_results.py"
+echo "Filters: |logFC| > 0.3, FDR < 0.03"
+echo ""
+
+python3 scripts/generate_final_results.py
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Final results generated for all resolutions"
+else
+    echo ""
+    echo "❌ Final results generation failed with exit code $?"
+    echo "Note: Primary edgeR results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 8: CONVERT TO BEDPE FORMAT
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 8: Converting to BEDPE format for Juicebox"
+echo "========================================="
+echo "Script: scripts/convert_final_bedpe.sh"
+echo ""
+
+bash scripts/convert_final_bedpe.sh
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ BEDPE conversion completed"
+else
+    echo ""
+    echo "❌ BEDPE conversion failed with exit code $?"
+    echo "Note: TSV results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# PIPELINE COMPLETE
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "ALL RESOLUTIONS COMPLETE"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Output directories:"
+for RES in "${RESOLUTIONS[@]}"; do
+  RES_KB=$((RES / 1000))
+  echo "  - outputs/res_${RES_KB}kb/                     (loops, counts, matrices)"
+  echo "  - outputs/edgeR_results_res_${RES_KB}kb/       (differential results)"
+done
+echo ""
+echo "Key files to review per resolution:"
+echo "  1. outputs/res_{RES}kb/06_counts_matrix.rds"
+echo "     → Count matrices"
+echo ""
+echo "  2. outputs/res_{RES}kb/qc_report/"
+echo "     → Quality control validation reports and plots"
+echo ""
+echo "  3. outputs/edgeR_results_res_{RES}kb/plots/mds_plot.pdf"
+echo "     → Sample relationships"
+echo ""
+echo "  4. outputs/edgeR_results_res_{RES}kb/plots/bcv_plot.pdf"
+echo "     → Dispersion estimates"
+echo ""
+echo "  5. outputs/edgeR_results_res_{RES}kb/plots/ma_plot_primary.pdf"
+echo "     → Differential loops visualization"
+echo ""
+echo "  6. outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv"
+echo "     → Full results table"
+echo ""
+echo "  7. outputs/edgeR_results_res_{RES}kb/primary_analysis/final_results.tsv"
+echo "     → Differential loops (|logFC| > 0.3, FDR < 0.03)"
+echo ""
+echo "  8. outputs/edgeR_results_res_{RES}kb/primary_analysis/summary_statistics.txt"
+echo "     → Analysis summary"
+echo ""
+echo "BEDPE files for Juicebox visualization:"
+echo "  - outputs/bedpe_final/5kb_final.bedpe"
+echo "  - outputs/bedpe_final/10kb_final.bedpe"
+echo "  - outputs/bedpe_final/25kb_final.bedpe"
+echo "  - outputs/bedpe_final/merged_final.bedpe (union of all resolutions)"
+echo "  - outputs/bedpe_final/5kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/10kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/25kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/merged_all_loops.bedpe (union of all resolutions)"
+echo ""
+echo "Expected outcomes by resolution:"
+echo "  - 5kb:  Most loops, short-range interactions"
+echo "  - 10kb: Intermediate coverage"
+echo "  - 25kb: Long-range loops, inter-TAD interactions"
+echo ""
+echo "Resolution comparison outputs:"
+echo "  - outputs/resolution_comparison/summary_statistics_by_resolution.tsv"
+echo "  - outputs/resolution_comparison/loop_overlap_matrix.tsv"
+echo "  - outputs/resolution_comparison/differential_loops_by_resolution.pdf"
+echo "  - outputs/resolution_comparison/foldchange_correlation_*.pdf"
+echo "  - outputs/resolution_comparison/venn_diagram_differential_loops.pdf"
+echo "========================================"

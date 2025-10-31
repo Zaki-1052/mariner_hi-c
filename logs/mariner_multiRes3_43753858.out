@@ -1,0 +1,297 @@
+=========================================
+Mariner Multi-Resolution Pipeline
+=========================================
+Job ID: 43753858
+Node: exp-3-34
+CPUs: 8
+Memory: 64GB
+Start time: Thu Oct 30 13:29:05 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+STEP 6: Comparing results across resolutions
+=========================================
+Script: scripts/compare_resolutions.R
+
+
+========================================
+Multi-Resolution Comparison Analysis
+========================================
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘matrixStats’ was built under R version 4.4.3 
+4: package ‘futile.logger’ was built under R version 4.4.3 
+SECTION 1: Loading Results
+---------------------------
+Loading 5kb results... ✓ 17982 loops (+ 1120 final)
+Loading 10kb results... ✓ 22632 loops (+ 1532 final)
+Loading 25kb results... ✓ 20398 loops (+ 1189 final)
+
+✓ Loaded results from 3 resolutions
+✓ Loaded final results (stringent) from 3 resolutions
+
+SECTION 2: Basic Statistics
+----------------------------
+
+Standard thresholds (FDR < 0.05):
+  resolution_kb total_loops significant_fdr05 pct_significant up_in_mutant
+1             5       17982              1766        9.820932         1127
+2            10       22632              3981       17.590138         2240
+3            25       20398              4774       23.404255         2512
+  down_in_mutant
+1            639
+2           1741
+3           2262
+
+Stringent thresholds (|logFC| > 0.3, FDR < 0.03):
+  resolution_kb final_loops pct_final final_up final_down median_logFC_final
+1             5        1120  6.228451      779        341          0.4449989
+2            10        1532  6.769176      953        579          0.3998335
+3            25        1189  5.829003      660        529          0.3733227
+
+✓ Summary statistics saved
+
+SECTION 3: Loop Overlap Analysis
+---------------------------------
+
+Matching loops across resolutions (10kb tolerance)...
+Loading required package: mariner
+
+Loop overlap matrix:
+       5kb  10kb  25kb
+5kb  17982 14075  3540
+10kb 14024 22632  6697
+25kb  3442  6545 20398
+
+✓ Overlap analysis complete
+
+SECTION 4: Differential Concordance
+------------------------------------
+
+Analyzing concordance of differential calls...
+
+5kb vs 10kb:
+  Matched loops: 14075
+  Both significant: 315 (2.2%)
+  Concordant direction: 187 (59.4% of both-sig)
+  Fold-change correlation: 0.063
+
+5kb vs 25kb:
+  Matched loops: 3540
+  Both significant: 111 (3.1%)
+  Concordant direction: 56 (50.5% of both-sig)
+  Fold-change correlation: -0.003
+
+10kb vs 25kb:
+  Matched loops: 6697
+  Both significant: 309 (4.6%)
+  Concordant direction: 158 (51.1% of both-sig)
+  Fold-change correlation: 0.031
+
+✓ Concordance analysis complete
+
+SECTION 5: Generating Visualizations
+-------------------------------------
+
+Creating differential loop count plot... null device 
+          1 
+✓
+Creating filtering cascade plot... ✓
+Warning message:
+Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead. 
+Creating fold-change correlation plots... ✓
+Creating Venn diagram... ✓
+
+✓ All visualizations generated
+
+========================================
+MULTI-RESOLUTION ANALYSIS COMPLETE
+========================================
+
+Output directory: outputs/resolution_comparison/
+
+Files generated:
+  1. summary_statistics_by_resolution.tsv
+     → Loop counts and significance rates (standard + stringent)
+
+  2. loop_overlap_matrix.tsv
+     → Overlap counts between resolutions
+
+  3. differential_loops_by_resolution.pdf
+     → Bar plot comparing standard vs stringent thresholds
+
+  4. filtering_cascade_by_resolution.pdf
+     → Filtering progression from total to final results
+
+  5. foldchange_correlation_*.pdf
+     → Scatter plots of fold-change concordance
+
+  6. venn_diagram_differential_loops.pdf
+     → Venn diagram of shared differential loops
+
+Key findings:
+
+Standard thresholds (FDR < 0.05):
+  5kb: 1766 differential loops (9.8%)
+  10kb: 3981 differential loops (17.6%)
+  25kb: 4774 differential loops (23.4%)
+
+Stringent thresholds (|logFC| > 0.3, FDR < 0.03):
+  5kb: 1120 loops (6.2% of total, 63.4% of standard significant)
+  10kb: 1532 loops (6.8% of total, 38.5% of standard significant)
+  25kb: 1189 loops (5.8% of total, 24.9% of standard significant)
+
+========================================
+
+✅ Resolution comparison completed
+
+
+=========================================
+STEP 7: Generating final results (stringent filters)
+=========================================
+Script: scripts/generate_final_results.py
+Filters: |logFC| > 0.3, FDR < 0.03
+
+======================================================================
+Generate Final Results from edgeR Output
+======================================================================
+
+Filters: |logFC| > 0.3 AND FDR < 0.03
+Input:   all_results_primary.tsv (per resolution)
+Output:  final_results.tsv (per resolution)
+
+======================================================================
+Resolution: 5kb
+======================================================================
+  Loading: all_results_primary.tsv
+    Total loops: 17982
+  Applying filters: |logFC| > 0.3, FDR < 0.03
+    Loops passing filters: 1120 (6.2%)
+    Direction: 779 up, 341 down
+    logFC range: [-1.084, 1.604]
+    FDR range: [0.000007, 0.029963]
+  Writing: final_results.tsv
+    File size: 277.3 KB
+  ✓ Successfully generated final_results.tsv for 5kb
+
+======================================================================
+Resolution: 10kb
+======================================================================
+  Loading: all_results_primary.tsv
+    Total loops: 22632
+  Applying filters: |logFC| > 0.3, FDR < 0.03
+    Loops passing filters: 1532 (6.8%)
+    Direction: 953 up, 579 down
+    logFC range: [-1.251, 1.287]
+    FDR range: [0.000000, 0.029760]
+  Writing: final_results.tsv
+    File size: 371.6 KB
+  ✓ Successfully generated final_results.tsv for 10kb
+
+======================================================================
+Resolution: 25kb
+======================================================================
+  Loading: all_results_primary.tsv
+    Total loops: 20398
+  Applying filters: |logFC| > 0.3, FDR < 0.03
+    Loops passing filters: 1189 (5.8%)
+    Direction: 660 up, 529 down
+    logFC range: [-1.267, 1.067]
+    FDR range: [0.000002, 0.029898]
+  Writing: final_results.tsv
+    File size: 288.1 KB
+  ✓ Successfully generated final_results.tsv for 25kb
+
+======================================================================
+Summary
+======================================================================
+Resolutions processed successfully: 3/3
+
+✓ All resolutions processed successfully!
+
+Generated files:
+  - outputs/edgeR_results_res_5kb/primary_analysis/final_results.tsv (277.3 KB)
+  - outputs/edgeR_results_res_10kb/primary_analysis/final_results.tsv (371.6 KB)
+  - outputs/edgeR_results_res_25kb/primary_analysis/final_results.tsv (288.1 KB)
+
+Next steps:
+  1. Convert to BEDPE: bash scripts/convert_final_bedpe.sh
+  2. Visualize in Juicebox
+
+
+✅ Final results generated for all resolutions
+
+
+=========================================
+STEP 8: Converting to BEDPE format for Juicebox
+=========================================
+Script: scripts/convert_final_bedpe.sh
+
+scripts/convert_final_bedpe.sh: scripts/convert_final_bedpe.sh: Cannot send after transport endpoint shutdown
+
+❌ BEDPE conversion failed with exit code 0
+Note: TSV results are still available
+
+
+=========================================
+ALL RESOLUTIONS COMPLETE
+=========================================
+End time: Thu Oct 30 14:52:06 PDT 2025
+
+Output directories:
+
+Key files to review per resolution:
+  1. outputs/res_{RES}kb/06_counts_matrix.rds
+     → Count matrices
+
+  2. outputs/res_{RES}kb/qc_report/
+     → Quality control validation reports and plots
+
+  3. outputs/edgeR_results_res_{RES}kb/plots/mds_plot.pdf
+     → Sample relationships
+
+  4. outputs/edgeR_results_res_{RES}kb/plots/bcv_plot.pdf
+     → Dispersion estimates
+
+  5. outputs/edgeR_results_res_{RES}kb/plots/ma_plot_primary.pdf
+     → Differential loops visualization
+
+  6. outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv
+     → Full results table
+
+  7. outputs/edgeR_results_res_{RES}kb/primary_analysis/final_results.tsv
+     → Differential loops (|logFC| > 0.3, FDR < 0.03)
+
+  8. outputs/edgeR_results_res_{RES}kb/primary_analysis/summary_statistics.txt
+     → Analysis summary
+
+BEDPE files for Juicebox visualization:
+  - outputs/bedpe_final/5kb_final.bedpe
+  - outputs/bedpe_final/10kb_final.bedpe
+  - outputs/bedpe_final/25kb_final.bedpe
+  - outputs/bedpe_final/merged_final.bedpe (union of all resolutions)
+  - outputs/bedpe_final/5kb_all_loops.bedpe
+  - outputs/bedpe_final/10kb_all_loops.bedpe
+  - outputs/bedpe_final/25kb_all_loops.bedpe
+  - outputs/bedpe_final/merged_all_loops.bedpe (union of all resolutions)
+
+Expected outcomes by resolution:
+  - 5kb:  Most loops, short-range interactions
+  - 10kb: Intermediate coverage
+  - 25kb: Long-range loops, inter-TAD interactions
+
+Resolution comparison outputs:
+  - outputs/resolution_comparison/summary_statistics_by_resolution.tsv
+  - outputs/resolution_comparison/loop_overlap_matrix.tsv
+  - outputs/resolution_comparison/differential_loops_by_resolution.pdf
+  - outputs/resolution_comparison/foldchange_correlation_*.pdf
+  - outputs/resolution_comparison/venn_diagram_differential_loops.pdf
+========================================
