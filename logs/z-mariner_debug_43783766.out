@@ -1,0 +1,266 @@
+=========================================
+Mariner Multi-Resolution Pipeline
+=========================================
+Job ID: 43783766
+Node: exp-7-47
+CPUs: 8
+Memory: 64GB
+Start time: Fri Oct 31 19:12:39 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+STEP 9: Downstream Analysis (Merged Loops & Characterization)
+=========================================
+Script: scripts/downstream_analysis.R
+Input: final_results.tsv from all resolutions
+Output: Non-redundant loop set with gene annotations
+
+
+========================================
+Downstream Analysis: Merged Loops
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘tibble’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+Configuration:
+  Overlap tolerance: 10 kb
+  GTF file: Using TxDb.Mmusculus.UCSC.mm10.knownGene
+
+Output directory: outputs/merged_loops
+
+
+========================================
+SECTION 1: Loading Final Results
+
+========================================
+Loading 5kb results...
+  Final results: 1120 loops
+  Coordinates: 17983 interactions
+  Matched: 1120 loops
+
+Loading 10kb results...
+  Final results: 1532 loops
+  Coordinates: 22639 interactions
+  Matched: 1532 loops
+
+Loading 25kb results...
+  Final results: 1189 loops
+  Coordinates: 20421 interactions
+  Matched: 1189 loops
+
+✓ Loaded final results from 3 resolutions
+  Total loops before merging: 3841
+
+
+========================================
+SECTION 2: Merging Loops (Overlap Removal)
+
+========================================
+Overlap tolerance: 10 kb
+Priority: Lowest FDR (most significant)
+
+Total loops to process: 3841
+  5kb: 1120 loops
+  10kb: 1532 loops
+  25kb: 1189 loops
+
+Detecting overlaps...
+  Pre-extracting coordinates...
+    Extracted coordinates for 3841 loops (0.0s)
+  Grouping by chromosome pairs...
+    Found 20 unique chromosome pairs
+    Starting pairwise comparisons...
+    Processed 100/3841 loops (30050 comparisons, 0.0s elapsed, ~1.0s remaining)    Processed 200/3841 loops (50100 comparisons, 0.0s elapsed, ~0.5s remaining)    Processed 300/3841 loops (60150 comparisons, 0.0s elapsed, ~0.3s remaining)    Processed 400/3841 loops (68824 comparisons, 0.0s elapsed, ~0.2s remaining)    Processed 500/3841 loops (76474 comparisons, 0.0s elapsed, ~0.2s remaining)    Processed 600/3841 loops (86826 comparisons, 0.0s elapsed, ~0.2s remaining)    Processed 700/3841 loops (91876 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 800/3841 loops (101875 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 900/3841 loops (110857 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 1000/3841 loops (119407 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 1100/3841 loops (128389 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 1200/3841 loops (133419 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 1300/3841 loops (146269 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 1400/3841 loops (152479 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 1500/3841 loops (161329 comparisons, 0.0s elapsed, ~0.1s remaining)    Processed 1600/3841 loops (166096 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 1700/3841 loops (171494 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 1800/3841 loops (174449 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 1900/3841 loops (201939 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2000/3841 loops (222189 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2100/3841 loops (232439 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2200/3841 loops (241055 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2300/3841 loops (249105 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2400/3841 loops (265233 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2500/3841 loops (279483 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2600/3841 loops (285308 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2700/3841 loops (302058 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2800/3841 loops (308808 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 2900/3841 loops (330322 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3000/3841 loops (347272 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3100/3841 loops (354222 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3200/3841 loops (371012 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3300/3841 loops (382762 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3400/3841 loops (390368 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3500/3841 loops (400418 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3600/3841 loops (411885 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3700/3841 loops (425235 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3800/3841 loops (429497 comparisons, 0.0s elapsed, ~0.0s remaining)    Processed 3841/3841 loops (430317 comparisons, 0.0s total)      
+
+Finding overlap clusters...
+  Found 2910 clusters
+    Singleton clusters (no overlaps): 2123
+    Multi-loop clusters (will merge): 787
+    Total loops to merge: 1718
+
+Selecting representative loops (lowest FDR)...
+  Selected 2910 representative loops
+  Removed 931 overlapping loops
+
+✓ Non-redundant loop set: 2910 loops
+  From 5kb: 509 loops
+  From 10kb: 1335 loops
+  From 25kb: 1066 loops
+
+✓ Overlap report saved: outputs/merged_loops/overlap_report.tsv
+
+
+========================================
+SECTION 3: Validating All Loops Files
+
+========================================
+5kb: ✓ Valid (17982 loops)
+10kb: ✓ Valid (22632 loops)
+25kb: ✓ Valid (20398 loops)
+
+✓ Validation complete
+  Files saved in: outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv
+
+
+========================================
+SECTION 4: Loop Anchor Characterizations
+
+========================================
+4A. Computing basic genomic features...
+  Computed features for 2910 loops
+  Distance range: 35000 bp - 98700000 bp
+  All loops are intrachromosomal: Yes
+
+4B. Annotating with gene information...
+  Loading TxDb.Mmusculus.UCSC.mm10.knownGene
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Loaded 24528 genes
+  Finding nearest genes for anchor1...
+  Finding nearest genes for anchor2...
+
+  Gene annotation complete
+  Loops with genes near both anchors: 2910 (100.0%)
+
+  Loop type classification:
+    Promoter-Promoter: 259 (8.9%)
+    Promoter-Enhancer: 968 (33.3%)
+    Enhancer-Enhancer: 1683 (57.8%)
+
+4C. Generating characterization summaries and plots...
+  ✓ Summary saved
+  ✓ Distance distribution plot saved
+  ✓ Chromosome distribution plot saved
+Warning messages:
+1: In scale_x_log10() : log-10 transformation introduced infinite values.
+2: Removed 1280 rows containing non-finite outside the scale range (`stat_bin()`). 
+  ✓ Gene proximity distribution plot saved
+  ✓ Loop type classification plot saved
+
+
+========================================
+SECTION 5: Exporting Results
+
+========================================
+5A. Exporting TSV files...
+  ✓ characterized_loops.tsv (2910 loops)
+Error: unable to find an inherited method for function ‘select’ for signature ‘x = "data.frame"’
+Execution halted
+
+❌ Downstream analysis failed with exit code 0
+Note: Individual resolution results are still available
+
+
+=========================================
+STEP 10: Visualization Analysis
+=========================================
+Script: scripts/visualizations.R
+Input: characterized_loops.tsv + all_results_primary.tsv
+Output: Volcano plots, enrichment analyses, loop classifications
+
+
+========================================
+Visualization Analysis: Differential Loops
+========================================
+
+Configuration:
+  Volcano plot resolution: 5 kb
+  Skip APA: Yes
+
+Loading required packages...
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘tibble’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+✓ Packages loaded
+
+Output directory: outputs/visualizations
+
+
+========================================
+Loading Input Data
+Error in "=" * 70 : non-numeric argument to binary operator
+Calls: cat
+Execution halted
+
+❌ Visualization analysis failed with exit code 0
+Note: Downstream analysis results are still available
+
+
+=========================================
+ALL RESOLUTIONS COMPLETE
+=========================================
+End time: Fri Oct 31 19:13:15 PDT 2025
+
+Output directories:
+
+Key files to review per resolution:
+  1. outputs/res_{RES}kb/06_counts_matrix.rds
+     → Count matrices
+
+  2. outputs/res_{RES}kb/qc_report/
+     → Quality control validation reports and plots
+
+  3. outputs/edgeR_results_res_{RES}kb/plots/mds_plot.pdf
+     → Sample relationships
+
+  4. outputs/edgeR_results_res_{RES}kb/plots/bcv_plot.pdf
+     → Dispersion estimates
+
+  5. outputs/edgeR_results_res_{RES}kb/plots/ma_plot_primary.pdf
+     → Differential loops visualization
+
+  6. outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv
+     → Full results table
+
+  7. outputs/edgeR_results_res_{RES}kb/primary_analysis/final_results.tsv
+     → Differential loops (|logFC| > 0.3, FDR < 0.03)
+
+  8. outputs/edgeR_results_res_{RES}kb/primary_analysis/summary_statistics.txt
+     → Analysis summary
+
+BEDPE files for Juicebox visualization:
+  - outputs/bedpe_final/5kb_final.bedpe
+  - outputs/bedpe_final/10kb_final.bedpe
+  - outputs/bedpe_final/25kb_final.bedpe
+  - outputs/bedpe_final/merged_final.bedpe (union of all resolutions)
+  - outputs/bedpe_final/5kb_all_loops.bedpe
+  - outputs/bedpe_final/10kb_all_loops.bedpe
+  - outputs/bedpe_final/25kb_all_loops.bedpe
+  - outputs/bedpe_final/merged_all_loops.bedpe (union of all resolutions)
+
+Expected outcomes by resolution:
+  - 5kb:  Most loops, short-range interactions
+  - 10kb: Intermediate coverage
+  - 25kb: Long-range loops, inter-TAD interactions
+
+Resolution comparison outputs:
+  - outputs/resolution_comparison/summary_statistics_by_resolution.tsv
+  - outputs/resolution_comparison/loop_overlap_matrix.tsv
+  - outputs/resolution_comparison/differential_loops_by_resolution.pdf
+  - outputs/resolution_comparison/foldchange_correlation_*.pdf
+  - outputs/resolution_comparison/venn_diagram_differential_loops.pdf
+
+Merged loops (downstream analysis):
+  - outputs/merged_loops/non_redundant_loops.tsv (main merged list)
+  - outputs/merged_loops/characterized_loops.tsv (with gene annotations)
+  - outputs/merged_loops/non_redundant_loops.bedpe (for visualization)
+  - outputs/merged_loops/overlap_report.tsv (merge details)
+  - outputs/merged_loops/plots/ (characterization plots)
+
+Visualizations:
+  - outputs/visualizations/volcano/ (volcano plots for all resolutions)
+  - outputs/visualizations/features/ (genomic feature distribution)
+  - outputs/visualizations/enrichment/ (GO/KEGG enrichment analyses)
+  - outputs/visualizations/loop_classification/ (type classification, length)
+========================================
