@@ -1,45 +1,49 @@
 #!/bin/bash
-#SBATCH --job-name=mariner_multiRes
-#SBATCH --output=logs/mariner_multiRes3_%j.out
+#SBATCH --job-name=mariner_complete
+#SBATCH --output=logs/mariner_complete_%j.out
 #SBATCH --partition=shared
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
-#SBATCH --time=18:00:00
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=24:00:00
 #SBATCH --account=csd940
 
 # ==============================================================================
-# Mariner Multi-Resolution Differential Loop Analysis Pipeline
+# Mariner Complete Pipeline - Single Command Execution
 # ==============================================================================
 #
-# Pipeline:
+# Complete pipeline from raw loops to publication-ready results:
+#
 #   For each resolution (5kb, 10kb, 25kb):
 #     1. prep_loops.R      - Merge BEDPE files → consensus positions
 #     2. extract_counts.R  - Extract Hi-C from 6 .hic files
 #     3. aggregate.R       - Aggregate 5x5 matrices → count matrix
-#     4. qc-val.R          - Quality control validation and shift detection
+#     4. qc-val.R          - Quality control validation
 #     5. edgeR.R           - Differential analysis with QL GLM (n=3 per group)
 #
-#   Post-processing (all resolutions):
-#     6. compare_resolutions.R    - Cross-resolution comparison
+#   Multi-resolution post-processing:
+#     6. compare_resolutions.R     - Cross-resolution comparison
 #     7. generate_final_results.py - Filter to stringent thresholds
 #     8. convert_final_bedpe.sh    - Convert to BEDPE for Juicebox
+#     9. downstream_analysis.R     - Merge loops + gene annotations
+#    10. visualizations.R          - Publication plots + enrichment
+#    11. apa_analysis.R            - Aggregate Peak Analysis (all resolutions)
 #
-# Expected runtime: ~6 hours (2 hours × 3 resolutions)
-# Expected output: Separate analyses for each resolution + merged BEDPE files
+# Expected runtime: ~24 hours (includes APA which is time-intensive)
+# Expected output: Complete analysis with all visualizations and APA heatmaps
 # ==============================================================================
 
 # Create logs directory
 mkdir -p /expanse/lustre/projects/csd940/zalibhai/mariner/logs
 
 echo "========================================="
-echo "Mariner Multi-Resolution Pipeline"
+echo "Mariner Complete Pipeline"
 echo "========================================="
 echo "Job ID: $SLURM_JOB_ID"
 echo "Node: $HOSTNAME"
 echo "CPUs: $SLURM_CPUS_PER_TASK"
-echo "Memory: 64GB"
+echo "Memory: 128GB"
 echo "Start time: $(date)"
 echo "========================================="
 echo ""
@@ -278,12 +282,95 @@ fi
 echo ""
 
 # ==============================================================================
+# STEP 9: DOWNSTREAM ANALYSIS (MERGED LOOPS & CHARACTERIZATION)
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 9: Downstream Analysis"
+echo "========================================="
+echo "Script: scripts/downstream_analysis.R"
+echo "Input: final_results.tsv from all resolutions"
+echo "Output: Non-redundant loop set with gene annotations"
+echo ""
+
+Rscript scripts/downstream_analysis.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Downstream analysis completed"
+    echo "   Output: outputs/merged_loops/"
+else
+    echo ""
+    echo "❌ Downstream analysis failed with exit code $?"
+    echo "Note: Individual resolution results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 10: VISUALIZATION ANALYSIS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 10: Visualization Analysis"
+echo "========================================="
+echo "Script: scripts/visualizations.R"
+echo "Input: characterized_loops.tsv + all_results_primary.tsv"
+echo "Output: Volcano plots, enrichment analyses, loop classifications"
+echo ""
+
+Rscript scripts/visualizations.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Visualization analysis completed"
+    echo "   Output: outputs/visualizations/"
+else
+    echo ""
+    echo "❌ Visualization analysis failed with exit code $?"
+    echo "Note: Downstream analysis results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 11: AGGREGATE PEAK ANALYSIS (APA)
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 11: Aggregate Peak Analysis (APA)"
+echo "========================================="
+echo "Script: scripts/apa_analysis.R"
+echo "Input: Merged loops + resolution-specific loops + .hic files"
+echo "Output: APA heatmaps, enrichment scores, statistical tests"
+echo "Note: This step is time-intensive (~2 hours)"
+echo ""
+
+Rscript scripts/apa_analysis.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ APA analysis completed"
+    echo "   Output: outputs/apa_results/"
+else
+    echo ""
+    echo "❌ APA analysis failed with exit code $?"
+    echo "Note: This is expected if .hic files are not accessible"
+    echo "   All other analyses are complete"
+fi
+
+echo ""
+
+# ==============================================================================
 # PIPELINE COMPLETE
 # ==============================================================================
 
 echo ""
 echo "========================================="
-echo "ALL RESOLUTIONS COMPLETE"
+echo "COMPLETE PIPELINE FINISHED"
 echo "========================================="
 echo "End time: $(date)"
 echo ""
@@ -340,4 +427,32 @@ echo "  - outputs/resolution_comparison/loop_overlap_matrix.tsv"
 echo "  - outputs/resolution_comparison/differential_loops_by_resolution.pdf"
 echo "  - outputs/resolution_comparison/foldchange_correlation_*.pdf"
 echo "  - outputs/resolution_comparison/venn_diagram_differential_loops.pdf"
+echo ""
+echo "Merged loops (downstream analysis):"
+echo "  - outputs/merged_loops/non_redundant_loops.tsv"
+echo "  - outputs/merged_loops/characterized_loops.tsv (with gene annotations)"
+echo "  - outputs/merged_loops/non_redundant_loops.bedpe"
+echo "  - outputs/merged_loops/overlap_report.tsv"
+echo "  - outputs/merged_loops/plots/"
+echo ""
+echo "Visualizations:"
+echo "  - outputs/visualizations/volcano/ (all resolutions)"
+echo "  - outputs/visualizations/features/ (genomic feature distribution)"
+echo "  - outputs/visualizations/enrichment/ (GO/KEGG analyses)"
+echo "  - outputs/visualizations/loop_classification/ (P-P, P-E, E-E types)"
+echo ""
+echo "APA results (Aggregate Peak Analysis):"
+echo "  - outputs/apa_results/res_5kb/"
+echo "  - outputs/apa_results/res_10kb/"
+echo "  - outputs/apa_results/res_25kb/"
+echo "  Each contains: merged_loops/ and resolution_specific/ subdirectories"
+echo "  Per loop set: heatmaps, enrichment scores, statistical tests"
+echo ""
+echo "========================================"
+echo "Next steps:"
+echo "  1. Review QC reports in outputs/res_{RES}kb/qc_report/"
+echo "  2. Check MDS plots for sample relationships"
+echo "  3. Examine volcano plots in outputs/visualizations/volcano/"
+echo "  4. Review APA heatmaps in outputs/apa_results/"
+echo "  5. Load BEDPE files into Juicebox for interactive visualization"
 echo "========================================"
