@@ -1,5 +1,7 @@
 # Differential Loop Analysis - Methods and Visualizations Index
 
+These are all TODOs and will NOT reflect the actual implementation.
+
 ## Analysis Pipeline Overview
 
 **Normalization:** Faster normalization method from multiHiCompare
