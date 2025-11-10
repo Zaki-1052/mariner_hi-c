@@ -925,71 +925,34 @@ cat("✓ Section 5 complete: Loop length distribution analyzed\n\n")
 # =============================================================================
 # SECTION 6: AGGREGATE PEAK ANALYSIS (APA)
 # =============================================================================
+# APA analysis has been moved to a standalone script for comprehensive
+# processing across all resolutions and loop sets.
+#
+# To run APA analysis:
+#   Rscript scripts/apa_analysis.R
+#
+# Options:
+#   --resolution RESOLUTION  Specific resolution (5000, 10000, 25000)
+#   --loops LOOPS           Loop set ("merged", "resolution_specific")
+#
+# Examples:
+#   # Run all resolutions and loop sets (default)
+#   Rscript scripts/apa_analysis.R
+#
+#   # Run only 5kb resolution with merged loops
+#   Rscript scripts/apa_analysis.R --resolution 5000 --loops merged
+#
+# Outputs: outputs/apa_results/
+#
+# Note: APA analysis requires .hic files and takes ~20-30 minutes per resolution
 
 if (!skip_apa) {
   cat("\n========================================\n")
   cat("SECTION 6: Aggregate Peak Analysis (APA)\n")
-  cat("\n========================================\n")
-
-  cat("⚠ APA analysis requires Hi-C files and may take 20-30 minutes\n\n")
-
-  cat("Loading .hic files...\n")
-
-  # Define .hic files
-  hicFiles <- c(
-    ctrl_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/ctrl_M1.hic",
-    ctrl_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/ctrl_M2.hic",
-    ctrl_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/ctrl_M3.hic",
-    mut_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/mut_M1.hic",
-    mut_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/mut_M2.hic",
-    mut_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/mut_M3.hic"
-  )
-
-  # Check files exist
-  files_exist <- all(sapply(hicFiles, file.exists))
-
-  if (!files_exist) {
-    cat("  ⚠ Warning: Some .hic files not found. Skipping APA analysis.\n")
-    cat("     (This is expected if running locally without HPC access)\n\n")
-  } else {
-    cat("  ✓ All .hic files found\n\n")
-
-    # Prepare loop sets
-    if (!is.null(loops_gi)) {
-      # Get significant loops only
-      sig_loops_gi <- loops_gi[mcols(loops_gi)$significant == TRUE]
-
-      # Separate by direction
-      up_loops_gi <- sig_loops_gi[mcols(sig_loops_gi)$logFC > 0]
-      down_loops_gi <- sig_loops_gi[mcols(sig_loops_gi)$logFC < 0]
-
-      cat(sprintf("  Up-regulated loops for APA: %d\n", length(up_loops_gi)))
-      cat(sprintf("  Down-regulated loops for APA: %d\n\n", length(down_loops_gi)))
-
-      # Run APA for up-regulated loops
-      if (length(up_loops_gi) > 10) {
-        cat("Running APA for up-regulated loops...\n")
-
-        # This is a placeholder - actual APA implementation would use:
-        # apa_up <- calcApa(hicFiles, up_loops_gi, resolution = 5000, buffer = 10)
-        # For now, we'll note that this requires more setup
-
-        cat("  ⚠ APA calculation requires additional setup with mariner::calcApa()\n")
-        cat("     See mariner documentation for full implementation\n\n")
-      }
-
-      # Run APA for down-regulated loops
-      if (length(down_loops_gi) > 10) {
-        cat("Running APA for down-regulated loops...\n")
-        cat("  ⚠ APA calculation requires additional setup with mariner::calcApa()\n\n")
-      }
-    } else {
-      cat("  ⚠ GInteractions object not loaded. Cannot perform APA.\n\n")
-    }
-
-    cat("✓ Section 6 complete: APA analysis noted\n")
-    cat("  (Full APA implementation requires mariner::calcApa() setup)\n\n")
-  }
+  cat("========================================\n\n")
+  cat("ℹ APA analysis is available as a standalone script\n")
+  cat("  Run: Rscript scripts/apa_analysis.R\n")
+  cat("  See script header for options and examples\n\n")
 } else {
   cat("Skipping APA analysis (--skip-apa flag set)\n\n")
 }
@@ -1038,5 +1001,3 @@ if (!skip_apa) {
 
 cat("\n========================================\n")
 cat("\n")
-
-
