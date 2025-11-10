@@ -141,53 +141,128 @@ cat("\n========================================\n")
 cat("SECTION 1: Volcano Plots\n")
 cat("\n========================================\n")
 
-# Function to create volcano plot for a given resolution
-create_volcano_plot <- function(resolution_kb, output_path) {
-  cat(sprintf("Creating volcano plot for %dkb resolution...\n", resolution_kb))
+# Function to create publication-quality volcano plot matching screenshot styling
+create_publication_volcano <- function(results_file, output_path, title_suffix = "") {
+  cat(sprintf("Creating enhanced volcano plot: %s\n", basename(output_path)))
 
-  # Load all results
-  results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv",
-                          resolution_kb)
-
+  # Validate input file
   if (!file.exists(results_file)) {
     cat(sprintf("  ✗ Results file not found: %s\n", results_file))
     return(NULL)
   }
 
+  # Load data
   df <- read.table(results_file, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
   cat(sprintf("  Loaded %d loops\n", nrow(df)))
 
-  # Count significant loops
+  # Calculate counts for annotations
+  # Significant = FDR < 0.05 AND |logFC| > 0.3 (matches plot_color "red"/"blue")
+  n_total <- nrow(df)
   n_up <- sum(df$significant & df$logFC > 0, na.rm = TRUE)
   n_down <- sum(df$significant & df$logFC < 0, na.rm = TRUE)
 
   cat(sprintf("  Significant: %d up, %d down\n", n_up, n_down))
 
-  # Create volcano plot
-  p <- EnhancedVolcano(df,
-                       lab = df$loop_id,
-                       x = 'logFC',
-                       y = 'FDR',
-                       title = sprintf('Differential Chromatin Loops (%dkb)', resolution_kb),
-                       subtitle = sprintf('%d total | %d up | %d down', nrow(df), n_up, n_down),
-                       pCutoff = 0.05,
-                       FCcutoff = 0.3,
-                       pointSize = 2.0,
-                       labSize = 3.0,
-                       col = c('grey30', 'grey60', '#d73027', '#4575b4'),
-                       colAlpha = 0.5,
-                       legendPosition = 'right',
-                       legendLabSize = 10,
-                       legendIconSize = 4.0,
-                       drawConnectors = TRUE,
-                       widthConnectors = 0.5,
-                       max.overlaps = 20)
+  # Get data ranges for annotation positioning
+  logfc_range <- range(df$logFC, na.rm = TRUE)
+  fdr_range <- range(df$FDR[df$FDR > 0], na.rm = TRUE)
+  neg_log10_fdr_max <- -log10(min(fdr_range))
+
+  # Create EnhancedVolcano with publication settings
+  p <- EnhancedVolcano(
+    df,
+    lab = NA,  # Hide individual labels for cleaner look
+    x = 'logFC',
+    y = 'FDR',
+    title = paste0('WT vs KO ', title_suffix, ' Differential Loops'),
+    subtitle = 'EnhancedVolcano',
+    pCutoff = 0.05,
+    FCcutoff = 0.3,
+    pointSize = 2.5,
+    labSize = 0,  # No point labels
+    col = c('black', 'grey', 'red', 'darkred'),  # NS, FC-only, p-only, both
+    colAlpha = 0.6,
+    legendPosition = 'top',
+    legendLabSize = 11,
+    legendIconSize = 4.0,
+    legendLabels = c('NS', bquote(Log[2]~FC), 'p-value', bquote(p-value~and~log[2]~FC)),
+    drawConnectors = FALSE,  # Cleaner look
+    gridlines.major = TRUE,
+    gridlines.minor = FALSE,
+    border = 'full',
+    borderWidth = 0.8,
+    borderColour = 'black',
+    xlab = 'LogFC Pixel Enrichment',
+    ylab = 'FDR',
+    xlim = c(logfc_range[1] - 0.2, logfc_range[2] + 0.2),
+    caption = NULL  # Remove default caption
+  )
+
+  # Add custom text annotations
+  p <- p +
+    # Up-regulated count (top left, blue)
+    annotate(
+      "text",
+      x = logfc_range[1] + 0.3,
+      y = neg_log10_fdr_max * 0.98,
+      label = as.character(n_up),
+      color = "#3366CC",
+      size = 6,
+      fontface = "bold",
+      hjust = 0
+    ) +
+    # Down-regulated count (top right, blue)
+    annotate(
+      "text",
+      x = logfc_range[2] - 0.3,
+      y = neg_log10_fdr_max * 0.98,
+      label = as.character(n_down),
+      color = "#3366CC",
+      size = 6,
+      fontface = "bold",
+      hjust = 1
+    ) +
+    # Total variables (bottom right, black)
+    annotate(
+      "text",
+      x = logfc_range[2] - 0.1,
+      y = 0.15,
+      label = sprintf("total = %d variables", n_total),
+      color = "black",
+      size = 3.5,
+      hjust = 1
+    ) +
+    # Enhanced theme
+    theme(
+      plot.title = element_text(size = 16, face = "bold", hjust = 0, margin = margin(b = 2)),
+      plot.subtitle = element_text(size = 11, hjust = 0, margin = margin(b = 10)),
+      panel.grid.major = element_line(color = "grey90", linewidth = 0.5),
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "white", color = NA),
+      axis.title.x = element_text(size = 12, face = "bold", margin = margin(t = 10)),
+      axis.title.y = element_text(size = 12, face = "bold", margin = margin(r = 10)),
+      axis.text = element_text(size = 10),
+      legend.position = "top",
+      legend.justification = "center",
+      legend.box = "horizontal",
+      legend.text = element_text(size = 11),
+      legend.title = element_blank(),
+      plot.margin = margin(15, 15, 15, 15)
+    )
 
   # Save plot
-  ggsave(output_path, p, width = 10, height = 8)
+  ggsave(output_path, p, width = 10, height = 8, dpi = 300)
   cat(sprintf("  ✓ Saved: %s\n\n", output_path))
 
   return(p)
+}
+
+# Legacy function for backward compatibility
+create_volcano_plot <- function(resolution_kb, output_path) {
+  results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv",
+                          resolution_kb)
+  title_suffix <- sprintf("%dkb", resolution_kb)
+  return(create_publication_volcano(results_file, output_path, title_suffix))
 }
 
 # Generate volcano plots for each resolution
@@ -196,217 +271,59 @@ for (res_kb in c(5, 10, 25)) {
   create_volcano_plot(res_kb, output_file)
 }
 
-# Create merged volcano plot (optional)
+# Create merged multi-resolution volcano plot
 cat("Creating merged multi-resolution volcano plot...\n")
 
-all_resolutions <- list()
-for (res_kb in c(5, 10, 25)) {
-  results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv",
-                          res_kb)
-  if (file.exists(results_file)) {
-    df <- read.table(results_file, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-    df$resolution <- sprintf("%dkb", res_kb)
-    all_resolutions[[as.character(res_kb)]] <- df
+# Check if merged_all_results exists (created by downstream_analysis.R)
+merged_all_results_file <- "outputs/merged_loops/merged_all_results.tsv"
+if (file.exists(merged_all_results_file)) {
+  # Use the properly merged non-redundant dataset
+  output_file <- file.path(output_dir, "volcano", "volcano_merged_multiresolution.pdf")
+  create_publication_volcano(merged_all_results_file, output_file, "Multi-Resolution")
+} else {
+  # Fallback: create simple merged dataset
+  cat("  Note: merged_all_results.tsv not found. Creating simple merged dataset...\n")
+
+  all_resolutions <- list()
+  for (res_kb in c(5, 10, 25)) {
+    results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv",
+                            res_kb)
+    if (file.exists(results_file)) {
+      df <- read.table(results_file, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+      df$resolution <- sprintf("%dkb", res_kb)
+      all_resolutions[[as.character(res_kb)]] <- df
+    }
   }
-}
 
-if (length(all_resolutions) > 0) {
-  merged_df <- bind_rows(all_resolutions)
+  if (length(all_resolutions) > 0) {
+    merged_df <- bind_rows(all_resolutions)
 
-  # Assign unique IDs
-  merged_df$unique_id <- paste(merged_df$loop_id, merged_df$resolution, sep = "_")
+    # Save temporary file for function to read
+    temp_file <- tempfile(fileext = ".tsv")
+    write.table(merged_df, temp_file, sep = "\t", quote = FALSE, row.names = FALSE)
 
-  n_total <- nrow(merged_df)
-  n_up <- sum(merged_df$significant & merged_df$logFC > 0, na.rm = TRUE)
-  n_down <- sum(merged_df$significant & merged_df$logFC < 0, na.rm = TRUE)
+    output_file <- file.path(output_dir, "volcano", "volcano_merged_multiresolution.pdf")
+    create_publication_volcano(temp_file, output_file, "Multi-Resolution")
 
-  p_merged <- EnhancedVolcano(merged_df,
-                              lab = merged_df$unique_id,
-                              x = 'logFC',
-                              y = 'FDR',
-                              title = 'Differential Chromatin Loops (Multi-Resolution)',
-                              subtitle = sprintf('%d total | %d up | %d down', n_total, n_up, n_down),
-                              pCutoff = 0.05,
-                              FCcutoff = 0.3,
-                              pointSize = 1.5,
-                              labSize = 2.5,
-                              col = c('grey30', 'grey60', '#d73027', '#4575b4'),
-                              colAlpha = 0.4,
-                              legendPosition = 'right',
-                              max.overlaps = 15)
-
-  ggsave(file.path(output_dir, "volcano", "volcano_merged.pdf"), p_merged, width = 12, height = 8)
-  cat("  ✓ Saved: volcano_merged.pdf\n\n")
+    # Clean up
+    unlink(temp_file)
+  } else {
+    cat("  ⚠ No resolution files found for merged volcano plot\n\n")
+  }
 }
 
 # Create volcano plot for merged non-redundant loops
 cat("Creating volcano plot for merged non-redundant loops...\n")
 
-if (nrow(loops_df) > 0) {
-  # Prepare data - use characterized loops which are already non-redundant
-  merged_loops_volcano <- loops_df
-
-  # Add unique ID combining loop coordinates
-  merged_loops_volcano$unique_id <- paste0(
-    merged_loops_volcano$anchor1_chr, ":",
-    merged_loops_volcano$anchor1_start, "-",
-    merged_loops_volcano$anchor1_end, "_",
-    merged_loops_volcano$anchor2_chr, ":",
-    merged_loops_volcano$anchor2_start, "-",
-    merged_loops_volcano$anchor2_end
-  )
-
-  # Count significant loops
-  n_total <- nrow(merged_loops_volcano)
-  n_up <- sum(merged_loops_volcano$logFC > 0, na.rm = TRUE)
-  n_down <- sum(merged_loops_volcano$logFC < 0, na.rm = TRUE)
-
-  cat(sprintf("  Total non-redundant loops: %d\n", n_total))
-  cat(sprintf("  Up-regulated: %d\n", n_up))
-  cat(sprintf("  Down-regulated: %d\n\n", n_down))
-
-  # Create volcano plot
-  p_merged_nr <- EnhancedVolcano(merged_loops_volcano,
-                                 lab = merged_loops_volcano$unique_id,
-                                 x = 'logFC',
-                                 y = 'FDR',
-                                 title = 'Differential Chromatin Loops (Non-Redundant Merged)',
-                                 subtitle = sprintf('%d total | %d up | %d down', n_total, n_up, n_down),
-                                 pCutoff = 0.05,
-                                 FCcutoff = 0.3,
-                                 pointSize = 2.0,
-                                 labSize = 3.0,
-                                 col = c('grey30', 'grey60', '#d73027', '#4575b4'),
-                                 colAlpha = 0.5,
-                                 legendPosition = 'right',
-                                 legendLabSize = 10,
-                                 legendIconSize = 4.0,
-                                 drawConnectors = TRUE,
-                                 widthConnectors = 0.5,
-                                 max.overlaps = 20)
-
-  # Save plot
-  ggsave(file.path(output_dir, "volcano", "volcano_merged_nonredundant.pdf"),
-         p_merged_nr, width = 12, height = 10)
-  cat("  ✓ Saved: volcano_merged_nonredundant.pdf\n\n")
+characterized_file <- "outputs/merged_loops/characterized_loops.tsv"
+if (file.exists(characterized_file)) {
+  output_file <- file.path(output_dir, "volcano", "volcano_nonredundant.pdf")
+  create_publication_volcano(characterized_file, output_file, "Non-Redundant")
 } else {
-  cat("  ⚠ No loops in characterized_loops.tsv. Skipping merged volcano plot.\n\n")
+  cat("  ⚠ characterized_loops.tsv not found. Skipping non-redundant volcano plot.\n\n")
 }
 
-# Create volcano plot for merged all_results (complete dataset, non-redundant)
-cat("Creating volcano plot for merged all_results (complete dataset)...\n")
-
-merged_all_results_file <- "outputs/merged_loops/merged_all_results.tsv"
-if (file.exists(merged_all_results_file)) {
-  # Load merged all_results
-  merged_all_df <- read.table(merged_all_results_file, sep = "\t", header = TRUE,
-                              stringsAsFactors = FALSE)
-
-  cat(sprintf("  Loaded %d non-redundant loops (all significance levels)\n", nrow(merged_all_df)))
-  cat(sprintf("  Multi-resolution loops: %d (%.1f%%)\n",
-              sum(merged_all_df$is_multi_resolution),
-              100 * mean(merged_all_df$is_multi_resolution)))
-
-  # Prepare data for custom volcano plot
-  merged_all_df$neg_log10_fdr <- -log10(merged_all_df$FDR)
-
-  # Create significance categories with shape mapping
-  merged_all_df$sig_category <- "Non-significant"
-  merged_all_df$sig_category[merged_all_df$significant & merged_all_df$logFC > 0] <- "Up-regulated"
-  merged_all_df$sig_category[merged_all_df$significant & merged_all_df$logFC < 0] <- "Down-regulated"
-  merged_all_df$sig_category <- factor(merged_all_df$sig_category,
-                                       levels = c("Non-significant", "Up-regulated", "Down-regulated"))
-
-  # Create resolution factor for coloring
-  merged_all_df$res_label <- sprintf("%dkb", merged_all_df$resolution_kb)
-  merged_all_df$res_label <- factor(merged_all_df$res_label,
-                                    levels = c("5kb", "10kb", "25kb"))
-
-  # Count for subtitle
-  n_total <- nrow(merged_all_df)
-  n_up <- sum(merged_all_df$sig_category == "Up-regulated", na.rm = TRUE)
-  n_down <- sum(merged_all_df$sig_category == "Down-regulated", na.rm = TRUE)
-  n_multi <- sum(merged_all_df$is_multi_resolution)
-
-  cat(sprintf("  Significant: %d up, %d down\n", n_up, n_down))
-  cat(sprintf("  Resolution distribution:\n"))
-  cat(sprintf("    5kb: %d loops\n", sum(merged_all_df$resolution == 5000)))
-  cat(sprintf("    10kb: %d loops\n", sum(merged_all_df$resolution == 10000)))
-  cat(sprintf("    25kb: %d loops\n\n", sum(merged_all_df$resolution == 25000)))
-
-  # Create custom volcano plot with ggplot2
-  # Color by resolution, shape by significance, size by n_resolutions_detected
-
-  # Define colors for resolutions
-  res_colors <- c("5kb" = "#4575b4", "10kb" = "#91bfdb", "25kb" = "#fee090")
-
-  # Define shapes for significance
-  sig_shapes <- c("Non-significant" = 16, "Up-regulated" = 17, "Down-regulated" = 25)
-
-  # Create base plot
-  p_all_results <- ggplot(merged_all_df, aes(x = logFC, y = neg_log10_fdr)) +
-    # Add horizontal line at FDR = 0.05
-    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "gray40", linewidth = 0.5) +
-    # Add vertical lines at logFC = ±0.3
-    geom_vline(xintercept = c(-0.3, 0.3), linetype = "dashed", color = "gray40", linewidth = 0.5) +
-    # Add points with color by resolution and shape by significance
-    geom_point(aes(color = res_label, shape = sig_category,
-                   size = n_resolutions_detected),
-               alpha = 0.6) +
-    # Color scale
-    scale_color_manual(values = res_colors, name = "Resolution") +
-    # Shape scale
-    scale_shape_manual(values = sig_shapes, name = "Significance") +
-    # Size scale
-    scale_size_continuous(range = c(1, 4), name = "# Resolutions",
-                          breaks = c(1, 2, 3)) +
-    # Labels
-    labs(
-      title = "Differential Chromatin Loops - Merged All Results (Non-Redundant)",
-      subtitle = sprintf("%d total | %d up | %d down | %d multi-resolution",
-                         n_total, n_up, n_down, n_multi),
-      x = "log2 Fold Change (mutant vs control)",
-      y = expression(-log[10]~FDR)
-    ) +
-    # Theme
-    theme_minimal(base_size = 12) +
-    theme(
-      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-      plot.subtitle = element_text(hjust = 0.5, size = 11),
-      legend.position = "right",
-      legend.box = "vertical",
-      panel.grid.minor = element_blank(),
-      panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
-    ) +
-    # Guides to organize legends
-    guides(
-      color = guide_legend(order = 1, override.aes = list(size = 3)),
-      shape = guide_legend(order = 2, override.aes = list(size = 3)),
-      size = guide_legend(order = 3)
-    )
-
-  # Save plot
-  ggsave(file.path(output_dir, "volcano", "volcano_merged_all_results.pdf"),
-         p_all_results, width = 12, height = 10)
-  cat("  ✓ Saved: volcano_merged_all_results.pdf\n\n")
-
-  # Also create a summary table
-  resolution_summary <- merged_all_df %>%
-    group_by(res_label, sig_category) %>%
-    summarise(count = n(), .groups = "drop") %>%
-    pivot_wider(names_from = sig_category, values_from = count, values_fill = 0)
-
-  write.table(resolution_summary,
-              file.path(output_dir, "volcano", "merged_all_results_summary.tsv"),
-              sep = "\t", quote = FALSE, row.names = FALSE)
-  cat("  ✓ Saved: merged_all_results_summary.tsv\n\n")
-
-} else {
-  cat(sprintf("  ⚠ File not found: %s\n", merged_all_results_file))
-  cat("  Run downstream_analysis.R first to generate merged_all_results.tsv\n\n")
-}
-
-cat("✓ Section 1 complete: Volcano plots generated\n\n")
+cat("✓ Section 1 complete: Enhanced volcano plots generated\n\n")
 
 # =============================================================================
 # SECTION 2: FEATURE DISTRIBUTION ANALYSIS
