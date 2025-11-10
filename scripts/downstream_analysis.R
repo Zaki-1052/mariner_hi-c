@@ -30,10 +30,14 @@ suppressPackageStartupMessages({
 		  library(mariner)
 		  	    library(InteractionSet)
 		  	    library(GenomicRanges)
+		  	    library(rtracklayer)  # For ChIP-seq bed file import
 			    	      library(tidyverse)
 			    	      library(ggplot2)
 				      	        library(patchwork)
 })
+
+# Source the ChIP-seq-based annotation script
+source("scripts/annotate_loop_anchors.R")
 
 # Parse command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -977,34 +981,34 @@ for (i in 1:nrow(merged_loops_df)) {
 	        }
 }
 
-# Classify anchors by proximity to TSS
-# Promoter: within 2kb of TSS
-merged_loops_df$anchor1_is_promoter <- !is.na(merged_loops_df$anchor1_distance_to_tss) &
-		                                        merged_loops_df$anchor1_distance_to_tss <= 2000
-											merged_loops_df$anchor2_is_promoter <- !is.na(merged_loops_df$anchor2_distance_to_tss) &
-																		                                        merged_loops_df$anchor2_distance_to_tss <= 2000
+# --- PROPER ChIP-seq-BASED CLASSIFICATION ---
+# Use the new annotation function with actual H3K27ac and H3K4me1 ChIP-seq data
+cat("\n  Applying ChIP-seq-based anchor classification...\n")
 
-																																# Classify loop type
-																																merged_loops_df$loop_type <- case_when(
-																																				       														         merged_loops_df$anchor1_is_promoter & merged_loops_df$anchor2_is_promoter ~ "Promoter-Promoter",
-																																																			 															   merged_loops_df$anchor1_is_promoter | merged_loops_df$anchor2_is_promoter ~ "Promoter-Enhancer",
-																																																			 															   TRUE ~ "Enhancer-Enhancer"
-																																																																		   															   )
+merged_loops_df <- annotate_loops_dataframe(
+  loops_df = merged_loops_df,
+  k27ac_path = "220310index25H3K27acLatePeakRegions.bed",
+  k4me1_path = "K4me1_aligned_reads_peaks.broadPeak-filtered.bed",
+  tss_threshold = 2000
+)
 
-										cat(sprintf("\n  Gene annotation complete\n"))
-																				cat(sprintf("  Loops with genes near both anchors: %d (%.1f%%)\n",
-																					    											                sum(!is.na(merged_loops_df$anchor1_nearest_gene) & !is.na(merged_loops_df$anchor2_nearest_gene)),
-																																															            100 * mean(!is.na(merged_loops_df$anchor1_nearest_gene) & !is.na(merged_loops_df$anchor2_nearest_gene))))
-																				cat(sprintf("\n  Loop type classification:\n"))
-																														cat(sprintf("    Promoter-Promoter: %d (%.1f%%)\n",
-																															    											                sum(merged_loops_df$loop_type == "Promoter-Promoter"),
-																																																									            100 * mean(merged_loops_df$loop_type == "Promoter-Promoter")))
-																														cat(sprintf("    Promoter-Enhancer: %d (%.1f%%)\n",
-																															    											                sum(merged_loops_df$loop_type == "Promoter-Enhancer"),
-																																																									            100 * mean(merged_loops_df$loop_type == "Promoter-Enhancer")))
-																																								cat(sprintf("    Enhancer-Enhancer: %d (%.1f%%)\n\n",
-																																									    											                sum(merged_loops_df$loop_type == "Enhancer-Enhancer"),
-																																																																			            100 * mean(merged_loops_df$loop_type == "Enhancer-Enhancer")))
+cat(sprintf("\n  Gene annotation complete\n"))
+cat(sprintf("  Loops with genes near both anchors: %d (%.1f%%)\n",
+            sum(!is.na(merged_loops_df$anchor1_nearest_gene) & !is.na(merged_loops_df$anchor2_nearest_gene)),
+            100 * mean(!is.na(merged_loops_df$anchor1_nearest_gene) & !is.na(merged_loops_df$anchor2_nearest_gene))))
+
+# Print loop type classification (all categories, sorted by count)
+cat(sprintf("\n  Loop type classification (ChIP-seq-based):\n"))
+loop_type_table <- table(merged_loops_df$loop_type)
+loop_type_table <- loop_type_table[order(loop_type_table, decreasing = TRUE)]
+
+for (i in seq_along(loop_type_table)) {
+  type_name <- names(loop_type_table)[i]
+  count <- loop_type_table[i]
+  pct <- 100 * count / nrow(merged_loops_df)
+  cat(sprintf("    %-35s: %5d (%.1f%%)\n", type_name, count, pct))
+}
+cat("\n")
 
 																																								# --- 4C. Characterization Summaries ---
 
@@ -1046,16 +1050,22 @@ merged_loops_df$anchor1_is_promoter <- !is.na(merged_loops_df$anchor1_distance_t
 																																																																	      													              100 * mean(!is.na(merged_loops_df$anchor2_distance_to_tss) &
 																																																																																	       																                      merged_loops_df$anchor2_distance_to_tss < 50000)),
 																																																				  												    "",
-																																																																    												      "Loop Type Classification:",
-																																																																    												      sprintf("  Promoter-Promoter: %d (%.1f%%)",
-																																																																														  													                sum(merged_loops_df$loop_type == "Promoter-Promoter"),
-																																																																																																												          100 * mean(merged_loops_df$loop_type == "Promoter-Promoter")),
-																																																				  												    sprintf("  Promoter-Enhancer: %d (%.1f%%)",
-																																																																	      													              sum(merged_loops_df$loop_type == "Promoter-Enhancer"),
-																																																																															      														                100 * mean(merged_loops_df$loop_type == "Promoter-Enhancer")),
-																																																				  												    sprintf("  Enhancer-Enhancer: %d (%.1f%%)",
-																																																																	      													              sum(merged_loops_df$loop_type == "Enhancer-Enhancer"),
-																																																																															      														                100 * mean(merged_loops_df$loop_type == "Enhancer-Enhancer")),
+																																																																    												      "Loop Type Classification (ChIP-seq-based):"
+																																																																    												    )
+
+# Dynamically add loop type statistics (sorted by count)
+loop_type_summary <- table(merged_loops_df$loop_type)
+loop_type_summary <- loop_type_summary[order(loop_type_summary, decreasing = TRUE)]
+
+for (i in seq_along(loop_type_summary)) {
+  type_name <- names(loop_type_summary)[i]
+  count <- loop_type_summary[i]
+  pct <- 100 * count / nrow(merged_loops_df)
+  summary_text <- c(summary_text,
+                    sprintf("  %-35s: %5d (%.1f%%)", type_name, count, pct))
+}
+
+summary_text <- c(summary_text,
 																																																				  												    "",
 																																																																    												      "Differential Loops:",
 																																																																    												      sprintf("  Up in mutant: %d (%.1f%%)",

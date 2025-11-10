@@ -55,6 +55,7 @@ suppressPackageStartupMessages({
 		  library(ggplot2)
 		  	    library(patchwork)
 		  	    library(pheatmap)
+		  	    library(RColorBrewer)  # For color palettes with 10+ categories
 			    	      library(EnhancedVolcano)
 
 			    	      # Genomic annotation
@@ -713,13 +714,24 @@ loop_type_summary <- loop_type_summary %>%
 						       		         ) %>%
   ungroup()
 
-# Create pie charts
+# Create custom color palette for up to 10 loop types
+# Using RColorBrewer Set3 + Paired for better distinction
+n_loop_types <- length(unique(loops_df$loop_type))
+if (n_loop_types <= 12) {
+  loop_colors <- RColorBrewer::brewer.pal(max(3, n_loop_types), "Set3")
+} else {
+  # Combine Set3 (12) + Paired (12) if needed
+  loop_colors <- c(RColorBrewer::brewer.pal(12, "Set3"),
+                   RColorBrewer::brewer.pal(12, "Paired"))[1:n_loop_types]
+}
+
+# Create pie charts with improved labeling for 10 categories
 p_up_pie <- loop_type_summary %>%
 		  filter(direction_label == "Up") %>%
 		  	    ggplot(aes(x = "", y = percentage, fill = loop_type)) +
 			    	      geom_bar(stat = "identity", width = 1, color = "white") +
 				      	        coord_polar("y", start = 0) +
-								  scale_fill_brewer(palette = "Set3") +
+								  scale_fill_manual(values = loop_colors) +
 								  		    labs(
 											   			     title = "Up-regulated Loops",
 														     			         subtitle = sprintf("n = %d", sum(up_idx)),
@@ -728,17 +740,20 @@ p_up_pie <- loop_type_summary %>%
   theme_void() +
       theme(
 	    	      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-		      	          plot.subtitle = element_text(hjust = 0.5, size = 10)
+		      	          plot.subtitle = element_text(hjust = 0.5, size = 10),
+		      	          legend.text = element_text(size = 8),  # Smaller legend for more categories
+		      	          legend.key.size = unit(0.4, "cm")
 		      	        ) +
-  geom_text(aes(label = sprintf("%s\n%.1f%%", loop_type, percentage)),
-	    	                position = position_stack(vjust = 0.5))
+  # Only show percentage labels for slices > 5% to reduce clutter
+  geom_text(aes(label = ifelse(percentage > 5, sprintf("%.1f%%", percentage), "")),
+	    	                position = position_stack(vjust = 0.5), size = 3)
 
     p_down_pie <- loop_type_summary %>%
 	    	    filter(direction_label == "Down") %>%
 		    	      ggplot(aes(x = "", y = percentage, fill = loop_type)) +
 			      	        geom_bar(stat = "identity", width = 1, color = "white") +
 							  coord_polar("y", start = 0) +
-							  		    scale_fill_brewer(palette = "Set3") +
+							  		    scale_fill_manual(values = loop_colors) +
 									    		      labs(
 												       			       title = "Down-regulated Loops",
 															       			           subtitle = sprintf("n = %d", sum(down_idx)),
@@ -747,10 +762,13 @@ p_up_pie <- loop_type_summary %>%
   theme_void() +
       theme(
 	    	      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-		      	          plot.subtitle = element_text(hjust = 0.5, size = 10)
+		      	          plot.subtitle = element_text(hjust = 0.5, size = 10),
+		      	          legend.text = element_text(size = 8),  # Smaller legend for more categories
+		      	          legend.key.size = unit(0.4, "cm")
 		      	        ) +
-  geom_text(aes(label = sprintf("%s\n%.1f%%", loop_type, percentage)),
-	    	                position = position_stack(vjust = 0.5))
+  # Only show percentage labels for slices > 5% to reduce clutter
+  geom_text(aes(label = ifelse(percentage > 5, sprintf("%.1f%%", percentage), "")),
+	    	                position = position_stack(vjust = 0.5), size = 3)
 
     # Combine plots
     p_combined <- p_up_pie | p_down_pie
