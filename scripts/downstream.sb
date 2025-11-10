@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=mariner_final
-#SBATCH --output=logs/z-mariner_debug_%j.out
+#SBATCH --output=logs/z-mariner_downstream_%j.out
 #SBATCH --partition=shared
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -59,79 +59,6 @@ cd /expanse/lustre/projects/csd940/zalibhai/mariner
 # ==============================================================================
 # MULTI-RESOLUTION ANALYSIS
 # ==============================================================================
-
-# ==============================================================================
-# STEP 6: COMPARE RESOLUTIONS
-# ==============================================================================
-
-echo ""
-echo "========================================="
-echo "STEP 6: Comparing results across resolutions"
-echo "========================================="
-echo "Script: scripts/compare_resolutions.R"
-echo ""
-
-Rscript scripts/compare_resolutions.R
-
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "✅ Resolution comparison completed"
-else
-    echo ""
-    echo "❌ Resolution comparison failed with exit code $?"
-    echo "Note: Individual resolution analyses are still complete"
-fi
-
-echo ""
-
-# ==============================================================================
-# STEP 7: GENERATE FINAL RESULTS
-# ==============================================================================
-
-echo ""
-echo "========================================="
-echo "STEP 7: Generating final results (stringent filters)"
-echo "========================================="
-echo "Script: scripts/generate_final_results.py"
-echo "Filters: |logFC| > 0.3, FDR < 0.03"
-echo ""
-
-python3 scripts/generate_final_results.py
-
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "✅ Final results generated for all resolutions"
-else
-    echo ""
-    echo "❌ Final results generation failed with exit code $?"
-    echo "Note: Primary edgeR results are still available"
-fi
-
-echo ""
-
-# ==============================================================================
-# STEP 8: CONVERT TO BEDPE FORMAT
-# ==============================================================================
-
-echo ""
-echo "========================================="
-echo "STEP 8: Converting to BEDPE format for Juicebox"
-echo "========================================="
-echo "Script: scripts/convert_final_bedpe.sh"
-echo ""
-
-bash scripts/convert_final_bedpe.sh
-
-if [ $? -eq 0 ]; then
-    echo ""
-    echo "✅ BEDPE conversion completed"
-else
-    echo ""
-    echo "❌ BEDPE conversion failed with exit code $?"
-    echo "Note: TSV results are still available"
-fi
-
-echo ""
 
 # ==============================================================================
 # STEP 9: DOWNSTREAM ANALYSIS (MERGED LOOPS & CHARACTERIZATION)

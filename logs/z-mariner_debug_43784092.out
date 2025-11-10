@@ -1,0 +1,244 @@
+=========================================
+Mariner Multi-Resolution Pipeline
+=========================================
+Job ID: 43784092
+Node: exp-2-35
+CPUs: 8
+Memory: 64GB
+Start time: Fri Oct 31 19:22:01 PDT 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+STEP 9: Downstream Analysis (Merged Loops & Characterization)
+=========================================
+Script: scripts/downstream_analysis.R
+Input: final_results.tsv from all resolutions
+Output: Non-redundant loop set with gene annotations
+
+
+========================================
+Visualization Analysis: Differential Loops
+========================================
+
+Configuration:
+  Volcano plot resolution: 5 kb
+  Skip APA: No
+
+Loading required packages...
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘tibble’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+✓ Packages loaded
+
+Output directory: outputs/visualizations
+
+
+========================================
+Loading Input Data
+
+========================================
+✓ Loaded characterized loops: 2910 loops
+  Up-regulated: 1723
+  Down-regulated: 1187
+
+Warning message:
+GInteractions file not found. Some analyses may be limited. 
+
+========================================
+SECTION 1: Volcano Plots
+
+========================================
+Creating volcano plot for 5kb resolution...
+  Loaded 17982 loops
+  Significant: 1127 up, 639 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_5kb.pdf
+
+Creating volcano plot for 10kb resolution...
+  Loaded 22632 loops
+  Significant: 2240 up, 1741 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_10kb.pdf
+
+Creating volcano plot for 25kb resolution...
+  Loaded 20398 loops
+  Significant: 2512 up, 2262 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_25kb.pdf
+
+Warning messages:
+1: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the EnhancedVolcano package.
+  Please report the issue to the authors. 
+2: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.
+ℹ The deprecated feature was likely used in the EnhancedVolcano package.
+  Please report the issue to the authors. 
+3: ggrepel: 1353 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+4: ggrepel: 1613 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+5: ggrepel: 1219 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+Creating merged multi-resolution volcano plot...
+  ✓ Saved: volcano_merged.pdf
+
+Creating volcano plot for merged non-redundant loops...
+  Total non-redundant loops: 2910
+  Up-regulated: 1723
+  Down-regulated: 1187
+
+  ✓ Saved: volcano_merged_nonredundant.pdf
+
+Warning message:
+ggrepel: 2895 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+✓ Section 1 complete: Volcano plots generated
+
+
+========================================
+SECTION 2: Feature Distribution Analysis
+
+========================================
+Annotating loop anchors with genomic features...
+  Annotating anchor1...
+>> preparing features information...		 2025-10-31 07:22:36 PM 
+>> identifying nearest features...		 2025-10-31 07:22:36 PM 
+>> calculating distance from peak to TSS...	 2025-10-31 07:22:37 PM 
+>> assigning genomic annotation...		 2025-10-31 07:22:37 PM 
+>> adding gene annotation...			 2025-10-31 07:22:56 PM 
+'select()' returned 1:many mapping between keys and columns
+>> assigning chromosome lengths			 2025-10-31 07:22:56 PM 
+>> done...					 2025-10-31 07:22:56 PM 
+  Annotating anchor2...
+>> preparing features information...		 2025-10-31 07:22:56 PM 
+>> identifying nearest features...		 2025-10-31 07:22:56 PM 
+>> calculating distance from peak to TSS...	 2025-10-31 07:22:57 PM 
+>> assigning genomic annotation...		 2025-10-31 07:22:57 PM 
+>> adding gene annotation...			 2025-10-31 07:22:59 PM 
+'select()' returned 1:many mapping between keys and columns
+>> assigning chromosome lengths			 2025-10-31 07:22:59 PM 
+>> done...					 2025-10-31 07:22:59 PM 
+  ✓ Feature distribution summary saved
+  Creating feature distribution plot...
+Warning message:
+In geom_bar(stat = "identity", color = "black", size = 0.3) :
+  Ignoring unknown parameters: `size`
+  ✓ Saved: feature_distribution.pdf
+
+✓ Section 2 complete: Feature distribution analyzed
+
+
+========================================
+SECTION 3: GO/KEGG Enrichment Analysis
+
+========================================
+Extracting genes from loop anchors...
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+Error in h(simpleError(msg, call)) : 
+  error in evaluating the argument 'x' in selecting a method for function 'unique': no applicable method for 'select' applied to an object of class "c('OrgDb', 'AnnotationDb', 'envRefClass', '.environment', 'refClass', 'environment', 'refObject', 'AssayData')"
+Calls: unique ... get_nearby_genes -> select -> .handleSimpleError -> h
+Execution halted
+
+❌ Downstream analysis failed with exit code 0
+Note: Individual resolution results are still available
+
+
+=========================================
+STEP 10: Visualization Analysis
+=========================================
+Script: scripts/visualizations.R
+Input: characterized_loops.tsv + all_results_primary.tsv
+Output: Volcano plots, enrichment analyses, loop classifications
+
+
+========================================
+Visualization Analysis: Differential Loops
+========================================
+
+Configuration:
+  Volcano plot resolution: 5 kb
+  Skip APA: Yes
+
+Loading required packages...
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘tibble’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+✓ Packages loaded
+
+Output directory: outputs/visualizations
+
+
+========================================
+Loading Input Data
+
+========================================
+✓ Loaded characterized loops: 2910 loops
+  Up-regulated: 1723
+  Down-regulated: 1187
+
+Warning message:
+GInteractions file not found. Some analyses may be limited. 
+
+========================================
+SECTION 1: Volcano Plots
+
+========================================
+Creating volcano plot for 5kb resolution...
+  Loaded 17982 loops
+  Significant: 1127 up, 639 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_5kb.pdf
+
+Creating volcano plot for 10kb resolution...
+  Loaded 22632 loops
+  Significant: 2240 up, 1741 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_10kb.pdf
+
+Creating volcano plot for 25kb resolution...
+  Loaded 20398 loops
+  Significant: 2512 up, 2262 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_25kb.pdf
+
+Warning messages:
+1: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the EnhancedVolcano package.
+  Please report the issue to the authors. 
+2: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.
+ℹ The deprecated feature was likely used in the EnhancedVolcano package.
+  Please report the issue to the authors. 
+3: ggrepel: 1353 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+4: ggrepel: 1613 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+5: ggrepel: 1219 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+Creating merged multi-resolution volcano plot...
+  ✓ Saved: volcano_merged.pdf
+
+Creating volcano plot for merged non-redundant loops...
+  Total non-redundant loops: 2910
+  Up-regulated: 1723
+  Down-regulated: 1187
+
+  ✓ Saved: volcano_merged_nonredundant.pdf
+
+Warning message:
+ggrepel: 2895 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+✓ Section 1 complete: Volcano plots generated
+
+
+========================================
+SECTION 2: Feature Distribution Analysis
+
+========================================
+Annotating loop anchors with genomic features...
+  Annotating anchor1...
+>> preparing features information...		 2025-10-31 07:23:29 PM 
+>> identifying nearest features...		 2025-10-31 07:23:30 PM 
+>> calculating distance from peak to TSS...	 2025-10-31 07:23:30 PM 
+>> assigning genomic annotation...		 2025-10-31 07:23:30 PM 
+slurmstepd: error: *** JOB 43784092 ON exp-2-35 CANCELLED AT 2025-10-31T19:23:31 ***
