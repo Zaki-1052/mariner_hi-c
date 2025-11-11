@@ -35,12 +35,12 @@ cat(sprintf("  Loaded %d loops with 5x5 pixel regions\n", length(buffered)))
 
 # Define .hic files for all 6 replicates
 hicFiles <- c(
-  ctrl_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/ctrl_M1.hic",
-  ctrl_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/ctrl_M2.hic",
-  ctrl_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/ctrl_M3.hic",
-  mut_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/mut_M1.hic",
-  mut_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/mut_M2.hic",
-  mut_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/mut_M3.hic"
+  ctrl_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M1/juicer/ctrl_M1.hic",
+  ctrl_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M2/juicer/ctrl_M2.hic",
+  ctrl_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M3/juicer/ctrl_M3.hic",
+  mut_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M1/juicer/mut_M1.hic",
+  mut_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M2/juicer/mut_M2.hic",
+  mut_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M3/juicer/mut_M3.hic"
 )
 
 # Verify files exist
