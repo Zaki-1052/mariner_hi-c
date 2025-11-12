@@ -36,6 +36,19 @@ echo "Start time: $(date)"
 echo "========================================="
 echo ""
 
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Change to working directory
+cd /expanse/lustre/projects/csd940/zalibhai/mariner
+
+
 # ==============================================================================
 # STEP 9: DOWNSTREAM ANALYSIS (MERGED LOOPS & CHARACTERIZATION)
 # ==============================================================================
@@ -164,3 +177,4 @@ echo "  3. Check loop classifications in outputs/visualizations/loop_classificat
 echo "  4. Review APA heatmaps in outputs/apa_results/"
 echo "  5. Load characterized_loops.tsv for biological interpretation"
 echo "========================================"
+echo "End time: $(date)"
