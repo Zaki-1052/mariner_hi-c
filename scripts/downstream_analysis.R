@@ -177,6 +177,15 @@ for (res in resolutions) {
 
   # Load data
   final_df <- read.table(final_file, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+  # Convert Python boolean strings to R logical types
+  if ("significant" %in% colnames(final_df)) {
+    final_df$significant <- as.logical(final_df$significant)
+  }
+  if ("exploratory" %in% colnames(final_df)) {
+    final_df$exploratory <- as.logical(final_df$exploratory)
+  }
+
   coords <- readRDS(coords_file)
 
   cat(sprintf("  Final results: %d loops\n", nrow(final_df)))
