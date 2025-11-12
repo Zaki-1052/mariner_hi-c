@@ -1,0 +1,166 @@
+#!/bin/bash
+#SBATCH --job-name=mariner_downstream
+#SBATCH --output=logs/mariner_downstream_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+
+# ==============================================================================
+# Mariner Downstream Analysis Pipeline
+# ==============================================================================
+#
+# Runs final post-processing steps after per-resolution edgeR analysis:
+#     9. downstream_analysis.R - Merge loops + gene annotations
+#    10. visualizations.R      - Publication plots + enrichment
+#    11. apa_analysis.R        - Aggregate Peak Analysis (all resolutions)
+#
+# Prerequisites: Steps 1-8 must be completed for all resolutions
+# Expected runtime: ~2-4 hours (APA is time-intensive)
+# ==============================================================================
+
+# Create logs directory
+mkdir -p logs
+
+echo "========================================="
+echo "Mariner Downstream Analysis Pipeline"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Memory: 128GB"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# ==============================================================================
+# STEP 9: DOWNSTREAM ANALYSIS (MERGED LOOPS & CHARACTERIZATION)
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 9: Downstream Analysis"
+echo "========================================="
+echo "Script: scripts/downstream_analysis.R"
+echo "Input: final_results.tsv from all resolutions"
+echo "Output: Non-redundant loop set with gene annotations"
+echo ""
+
+Rscript scripts/downstream_analysis.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Downstream analysis completed"
+    echo "   Output: outputs/merged_loops/"
+else
+    echo ""
+    echo "❌ Downstream analysis failed with exit code $?"
+    echo "Note: Individual resolution results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 10: VISUALIZATION ANALYSIS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 10: Visualization Analysis"
+echo "========================================="
+echo "Script: scripts/visualizations.R"
+echo "Input: characterized_loops.tsv + all_results_primary.tsv"
+echo "Output: Volcano plots, enrichment analyses, loop classifications"
+echo ""
+
+Rscript scripts/visualizations.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Visualization analysis completed"
+    echo "   Output: outputs/visualizations/"
+else
+    echo ""
+    echo "❌ Visualization analysis failed with exit code $?"
+    echo "Note: Downstream analysis results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 11: AGGREGATE PEAK ANALYSIS (APA)
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 11: Aggregate Peak Analysis (APA)"
+echo "========================================="
+echo "Script: scripts/apa_analysis.R"
+echo "Input: Merged loops + resolution-specific loops + .hic files"
+echo "Output: APA heatmaps, enrichment scores, statistical tests"
+echo "Note: This step is time-intensive (~2 hours)"
+echo ""
+
+Rscript scripts/apa_analysis.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ APA analysis completed"
+    echo "   Output: outputs/apa_results/"
+else
+    echo ""
+    echo "❌ APA analysis failed with exit code $?"
+    echo "Note: This is expected if .hic files are not accessible"
+    echo "   All other analyses are complete"
+fi
+
+echo ""
+
+# ==============================================================================
+# DOWNSTREAM ANALYSIS COMPLETE
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "DOWNSTREAM ANALYSIS FINISHED"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Output directories:"
+echo "  - outputs/merged_loops/         (non-redundant loops with annotations)"
+echo "  - outputs/visualizations/       (volcano plots, enrichment, classifications)"
+echo "  - outputs/apa_results/          (aggregate peak analysis heatmaps)"
+echo ""
+echo "Key files to review:"
+echo ""
+echo "Merged loops (downstream analysis):"
+echo "  - outputs/merged_loops/non_redundant_loops.tsv"
+echo "  - outputs/merged_loops/characterized_loops.tsv (with gene annotations)"
+echo "  - outputs/merged_loops/non_redundant_loops.bedpe"
+echo "  - outputs/merged_loops/overlap_report.tsv"
+echo "  - outputs/merged_loops/plots/"
+echo ""
+echo "Visualizations:"
+echo "  - outputs/visualizations/volcano/ (all resolutions)"
+echo "  - outputs/visualizations/features/ (genomic feature distribution)"
+echo "  - outputs/visualizations/enrichment/ (GO/KEGG analyses)"
+echo "  - outputs/visualizations/loop_classification/ (P-P, P-E, E-E types)"
+echo ""
+echo "APA results (Aggregate Peak Analysis):"
+echo "  - outputs/apa_results/res_5kb/"
+echo "  - outputs/apa_results/res_10kb/"
+echo "  - outputs/apa_results/res_25kb/"
+echo "  Each contains: merged_loops/ and resolution_specific/ subdirectories"
+echo "  Per loop set: heatmaps, enrichment scores, statistical tests"
+echo ""
+echo "========================================"
+echo "Next steps:"
+echo "  1. Examine volcano plots in outputs/visualizations/volcano/"
+echo "  2. Review enrichment analyses in outputs/visualizations/enrichment/"
+echo "  3. Check loop classifications in outputs/visualizations/loop_classification/"
+echo "  4. Review APA heatmaps in outputs/apa_results/"
+echo "  5. Load characterized_loops.tsv for biological interpretation"
+echo "========================================"
