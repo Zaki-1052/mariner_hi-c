@@ -78,17 +78,20 @@ suppressPackageStartupMessages({
 
   # Data wrangling
   library(tidyverse)
+  library(yaml)
 })
 
 cat("✓ Packages loaded\n\n")
 
-# Set working directory
-if (dir.exists("/expanse/lustre/projects/csd940/zalibhai/mariner")) {
-  setwd("/expanse/lustre/projects/csd940/zalibhai/mariner")
-} else if (basename(getwd()) == "mariner-final") {
-  # Already in project directory
+# Load paths configuration and set working directory
+config <- yaml::read_yaml("config/paths_config.yaml")
+base_dir <- config$project$base_dir
+if (dir.exists(base_dir)) {
+  setwd(base_dir)
+  cat(sprintf("  Working directory: %s\n", base_dir))
 } else {
-  warning("Working directory may not be correct. Current: ", getwd())
+  warning("Configured base directory does not exist: ", base_dir)
+  cat(sprintf("  Using current directory: %s\n", getwd()))
 }
 
 # Create output directories

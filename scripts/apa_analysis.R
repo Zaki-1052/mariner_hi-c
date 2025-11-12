@@ -34,7 +34,12 @@ suppressPackageStartupMessages({
   library(viridis)
   library(dplyr)
   library(tidyr)
+  library(yaml)
 })
+
+# Load paths configuration
+cat("\nLoading paths configuration...\n")
+config <- yaml::read_yaml("config/paths_config.yaml")
 
 # Parse command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -59,14 +64,14 @@ RESOLUTIONS <- if (!is.null(TARGET_RESOLUTION)) {
   c(5000, 10000, 25000)
 }
 
-# .hic file paths (match extract_counts.R pattern)
+# .hic file paths from config (match extract_counts.R pattern)
 HIC_FILES <- c(
-  ctrl_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M1/juicer/ctrl_M1.hic",
-  ctrl_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M2/juicer/ctrl_M2.hic",
-  ctrl_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M3/juicer/ctrl_M3.hic",
-  mut_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M1/juicer/mut_M1.hic",
-  mut_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M2/juicer/mut_M2.hic",
-  mut_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M3/juicer/mut_M3.hic"
+  ctrl_M1 = config$hic_files$ctrl_M1,
+  ctrl_M2 = config$hic_files$ctrl_M2,
+  ctrl_M3 = config$hic_files$ctrl_M3,
+  mut_M1 = config$hic_files$mut_M1,
+  mut_M2 = config$hic_files$mut_M2,
+  mut_M3 = config$hic_files$mut_M3
 )
 
 # Sample groups for statistical comparison
