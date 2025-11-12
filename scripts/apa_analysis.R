@@ -167,7 +167,7 @@ extract_apa_matrices <- function(loops, hic_files, resolution, buffer, norm = "K
   # Extract matrices using mariner
   tryCatch({
     pixels <- pullHicMatrices(
-      bedpe = loops,
+      x = loops,
       files = hic_files,
       binSize = resolution,
       h5File = hdf5_file,
@@ -741,6 +741,19 @@ main <- function() {
       } else {
         loops_gi <- readRDS(merged_file)
 
+        # Bin merged loops to current resolution and buffer for matrix extraction
+        buffer <- get_buffer_size(resolution)
+        loops_gi <- assignToBins(
+          x = loops_gi,
+          binSize = resolution,
+          pos1 = "center",
+          pos2 = "center"
+        )
+        loops_gi <- pixelsToMatrices(
+          x = loops_gi,
+          buffer = buffer
+        )
+
         # Separate by direction
         up_loops <- loops_gi[mcols(loops_gi)$logFC > 0]
         down_loops <- loops_gi[mcols(loops_gi)$logFC < 0]
@@ -773,7 +786,7 @@ main <- function() {
 
       buffered_file <- file.path("outputs", sprintf("res_%dkb", res_kb), "04_buffered.rds")
       results_file <- file.path("outputs", sprintf("edgeR_results_res_%dkb", res_kb),
-                                "primary_analysis", "significant_loops_fdr05.tsv")
+                                "primary_analysis", "all_results_primary.tsv")
 
       if (!file.exists(buffered_file) || !file.exists(results_file)) {
         cat(sprintf("  ⚠ Required files not found:\n"))
