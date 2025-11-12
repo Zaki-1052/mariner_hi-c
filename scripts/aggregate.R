@@ -22,10 +22,12 @@ suppressPackageStartupMessages({
   library(DelayedArray)
   library(Matrix)
   library(edgeR)  # Load here since we'll use it at the end
+  library(yaml)
 })
 
-# Set up paths
-base_dir <- "/expanse/lustre/projects/csd940/zalibhai/mariner"
+# Load paths configuration and set working directory
+config <- yaml::read_yaml("config/paths_config.yaml")
+base_dir <- config$project$base_dir
 setwd(base_dir)
 
 # Resolution-specific directories

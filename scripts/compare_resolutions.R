@@ -20,10 +20,12 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(pheatmap)
   library(patchwork)
+  library(yaml)
 })
 
-# Set working directory
-setwd("/expanse/lustre/projects/csd940/zalibhai/mariner")
+# Load paths configuration and set working directory
+config <- yaml::read_yaml("config/paths_config.yaml")
+setwd(config$project$base_dir)
 
 # Create output directory
 output_dir <- "outputs/resolution_comparison"

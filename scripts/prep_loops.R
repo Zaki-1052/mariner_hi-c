@@ -6,6 +6,7 @@
 library(mariner)
 library(InteractionSet)
 library(GenomicRanges)
+library(yaml)
 
 # Parse command-line arguments for resolution
 args <- commandArgs(trailingOnly = TRUE)
@@ -15,16 +16,21 @@ cat("\n========================================\n")
 cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
 cat("========================================\n\n")
 
+# Load paths configuration
+cat("Loading paths configuration...\n")
+config <- yaml::read_yaml("config/paths_config.yaml")
+
 # Define paths to individual replicate BEDPE files (resolution-aware)
-base_path <- "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results"
-bedpeFiles <- c(
-  ctrl_M1 = sprintf("%s/ctrl_M1/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
-  ctrl_M2 = sprintf("%s/ctrl_M2/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
-  ctrl_M3 = sprintf("%s/ctrl_M3/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
-  mut_M1 = sprintf("%s/mut_M1/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
-  mut_M2 = sprintf("%s/mut_M2/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION),
-  mut_M3 = sprintf("%s/mut_M3/postprocessed_pixels_%d.bedpe", base_path, RESOLUTION)
+base_path <- config$hiccups_loops$base_path
+sample_names <- config$hiccups_loops$samples
+
+bedpeFiles <- setNames(
+  sprintf("%s/%s/postprocessed_pixels_%d.bedpe", base_path, sample_names, RESOLUTION),
+  sample_names
 )
+
+cat(sprintf("  BEDPE base path: %s\n", base_path))
+cat(sprintf("  Samples: %s\n\n", paste(sample_names, collapse = ", ")))
 
 bedpe_colnames <- c(
 		      "chr1", "x1", "x2", "chr2", "y1", "y2",

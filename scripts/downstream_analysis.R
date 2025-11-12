@@ -34,7 +34,12 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(ggplot2)
   library(patchwork)
+  library(yaml)
 })
+
+# Load paths configuration
+cat("Loading paths configuration...\n")
+config <- yaml::read_yaml("config/paths_config.yaml")
 
 # Source the ChIP-seq-based annotation script
 source("scripts/annotate_loop_anchors.R")
@@ -63,13 +68,14 @@ if (!is.null(gtf_file)) {
 }
 cat("\n")
 
-# Set working directory (adjust if needed)
-if (dir.exists("/expanse/lustre/projects/csd940/zalibhai/mariner")) {
-  setwd("/expanse/lustre/projects/csd940/zalibhai/mariner")
-} else if (basename(getwd()) == "mariner-final") {
-  # Already in project directory
+# Set working directory from config
+base_dir <- config$project$base_dir
+if (dir.exists(base_dir)) {
+  setwd(base_dir)
+  cat(sprintf("  Working directory: %s\n", base_dir))
 } else {
-  warning("Working directory may not be correct. Current: ", getwd())
+  warning("Configured base directory does not exist: ", base_dir)
+  cat(sprintf("  Using current directory: %s\n", getwd()))
 }
 
 # Create output directory
@@ -985,10 +991,17 @@ for (i in 1:nrow(merged_loops_df)) {
 # Use the new annotation function with actual H3K27ac and H3K4me1 ChIP-seq data
 cat("\n  Applying ChIP-seq-based anchor classification...\n")
 
+# Get ChIP-seq file paths from config
+h3k27ac_path <- config$chipseq_peaks$h3k27ac
+h3k4me1_path <- config$chipseq_peaks$h3k4me1
+
+cat(sprintf("    H3K27ac peaks: %s\n", h3k27ac_path))
+cat(sprintf("    H3K4me1 peaks: %s\n", h3k4me1_path))
+
 merged_loops_df <- annotate_loops_dataframe(
   loops_df = merged_loops_df,
-  k27ac_path = "220310index25H3K27acLatePeakRegions.bed",
-  k4me1_path = "K4me1_aligned_reads_peaks.broadPeak-filtered.bed",
+  k27ac_path = h3k27ac_path,
+  k4me1_path = h3k4me1_path,
   tss_threshold = 2000
 )
 
