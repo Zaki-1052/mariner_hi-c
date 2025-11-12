@@ -1,0 +1,108 @@
+# config/paths_config.yaml
+# Configuration for external data file paths in Mariner Hi-C pipeline
+#
+# This file contains all external/absolute paths to data files.
+# Update these paths when working with new datasets.
+
+## Project Directory
+project:
+  # Base working directory for the project
+  base_dir: "/expanse/lustre/projects/csd940/zalibhai/mariner"
+
+## Input Data Paths
+
+# HiCCUPS Loop Call Files (.bedpe)
+hiccups_loops:
+  # Base directory containing HiCCUPS results
+  base_path: "/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results"
+
+  # Sample directories (relative to base_path)
+  # Files follow pattern: {base_path}/{sample}/postprocessed_pixels_{resolution}.bedpe
+  samples:
+    - ctrl_M1
+    - ctrl_M2
+    - ctrl_M3
+    - mut_M1
+    - mut_M2
+    - mut_M3
+
+# Hi-C Contact Matrix Files (.hic)
+hic_files:
+  # Base directory containing .hic files
+  base_path: "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq"
+
+  # Full paths for each sample (for direct reference)
+  # Files follow pattern: {base_path}/trimmed_{sample}/juicer/{sample}.hic
+  ctrl_M1: "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M1/juicer/ctrl_M1.hic"
+  ctrl_M2: "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M2/juicer/ctrl_M2.hic"
+  ctrl_M3: "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M3/juicer/ctrl_M3.hic"
+  mut_M1: "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M1/juicer/mut_M1.hic"
+  mut_M2: "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M2/juicer/mut_M2.hic"
+  mut_M3: "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M3/juicer/mut_M3.hic"
+
+# ChIP-seq Peak Files (.bed/.broadPeak)
+chipseq_peaks:
+  # H3K27ac ChIP-seq peaks (active enhancers/promoters)
+  h3k27ac: "220310index25H3K27acLatePeakRegions.bed"
+
+  # H3K4me1 ChIP-seq peaks (poised enhancers)
+  h3k4me1: "K4me1_aligned_reads_peaks.broadPeak-filtered.bed"
+
+## Sample Metadata
+
+samples:
+  # Sample names (must match directory names and file prefixes)
+  names: ["ctrl_M1", "ctrl_M2", "ctrl_M3", "mut_M1", "mut_M2", "mut_M3"]
+
+  # Experimental groups
+  groups: ["ctrl", "ctrl", "ctrl", "mut", "mut", "mut"]
+
+  # Sample descriptions
+  descriptions:
+    ctrl_M1: "Control replicate 1 (wildtype)"
+    ctrl_M2: "Control replicate 2 (wildtype)"
+    ctrl_M3: "Control replicate 3 (wildtype)"
+    mut_M1: "BAP1-KO replicate 1 (mutant)"
+    mut_M2: "BAP1-KO replicate 2 (mutant)"
+    mut_M3: "BAP1-KO replicate 3 (mutant)"
+
+## Resolutions
+
+resolutions:
+  # Analysis resolutions (in base pairs)
+  values: [5000, 10000, 25000]
+  # Equivalent in kb
+  kb: [5, 10, 25]
+
+## Usage Instructions
+
+# To update paths for new data:
+#
+# 1. Update hiccups_loops.base_path to point to your HiCCUPS results directory
+#    - Directory should contain subdirectories for each sample (ctrl_M1, ctrl_M2, etc.)
+#    - Each subdirectory should contain postprocessed_pixels_{resolution}.bedpe files
+#
+# 2. Update hic_files paths to point to your .hic matrix files
+#    - Option A: Update base_path if files follow the same pattern
+#    - Option B: Update individual paths for each sample
+#
+# 3. Update chipseq_peaks paths to your ChIP-seq peak files
+#    - These are used for anchor classification (promoter/enhancer)
+#    - Files should be in BED format compatible with rtracklayer::import.bed()
+#
+# 4. Update sample names if different (must match file naming conventions)
+#
+# 5. Update project.base_dir if working directory changes
+
+## Metadata
+
+metadata:
+  config_version: "1.0.0"
+  last_updated: "2025-11-12"
+  dataset: "BAP1_mutant_deepseq"
+  organism: "Mus musculus (mm10)"
+  experiment_type: "Hi-C"
+  description: |
+    Deep sequencing Hi-C data comparing BAP1-KO mutant vs wildtype control
+    in mouse cells. Includes 6 biological replicates (3 per condition) for
+    replicate-aware differential analysis.

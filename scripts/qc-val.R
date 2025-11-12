@@ -22,9 +22,11 @@ library(pheatmap)
 library(viridis)
 library(patchwork)
 library(scales)
+library(yaml)
 
-# Set working directory
-setwd("/expanse/lustre/projects/csd940/zalibhai/mariner")
+# Load paths configuration and set working directory
+config <- yaml::read_yaml("config/paths_config.yaml")
+setwd(config$project$base_dir)
 
 # Create resolution-specific QC output directory
 input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)

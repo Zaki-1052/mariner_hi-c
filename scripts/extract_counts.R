@@ -21,27 +21,37 @@ suppressPackageStartupMessages({
   library(strawr)
   library(DelayedArray)
   library(HDF5Array)
+  library(yaml)
 })
 
+# Load paths configuration
+cat("\nLoading paths configuration...\n")
+config <- yaml::read_yaml("config/paths_config.yaml")
+
 # Set up paths
-base_dir <- "/expanse/lustre/projects/csd940/zalibhai/mariner"
+base_dir <- config$project$base_dir
 setwd(base_dir)
+cat(sprintf("  Working directory: %s\n", base_dir))
 
 # Load buffered loops from resolution-specific directory
 input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
-cat(sprintf("Loading buffered loops from %s...\n", input_dir))
+cat(sprintf("  Loading buffered loops from %s...\n", input_dir))
 buffered <- readRDS(file.path(input_dir, "04_buffered.rds"))
-cat(sprintf("  Loaded %d loops with 5x5 pixel regions\n", length(buffered)))
+cat(sprintf("  Loaded %d loops with 5x5 pixel regions\n\n", length(buffered)))
 
-# Define .hic files for all 6 replicates
+# Define .hic files for all 6 replicates from config
+cat("Loading .hic file paths from config...\n")
+sample_names <- config$samples$names
 hicFiles <- c(
-  ctrl_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M1/juicer/ctrl_M1.hic",
-  ctrl_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M2/juicer/ctrl_M2.hic",
-  ctrl_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_ctrl_M3/juicer/ctrl_M3.hic",
-  mut_M1 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M1/juicer/mut_M1.hic",
-  mut_M2 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M2/juicer/mut_M2.hic",
-  mut_M3 = "/expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/trimmed_mut_M3/juicer/mut_M3.hic"
+  ctrl_M1 = config$hic_files$ctrl_M1,
+  ctrl_M2 = config$hic_files$ctrl_M2,
+  ctrl_M3 = config$hic_files$ctrl_M3,
+  mut_M1 = config$hic_files$mut_M1,
+  mut_M2 = config$hic_files$mut_M2,
+  mut_M3 = config$hic_files$mut_M3
 )
+
+cat(sprintf("  Samples: %s\n", paste(sample_names, collapse = ", ")))
 
 # Verify files exist
 cat("\nVerifying .hic files...\n")
