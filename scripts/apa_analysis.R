@@ -785,17 +785,17 @@ main <- function() {
 
       cat("\n## Processing RESOLUTION-SPECIFIC loops ##\n")
 
-      buffered_file <- file.path("outputs", sprintf("res_%dkb", res_kb), "04_buffered.rds")
+      binned_file <- file.path("outputs", sprintf("res_%dkb", res_kb), "03_binned.rds")
       results_file <- file.path("outputs", sprintf("edgeR_results_res_%dkb", res_kb),
                                 "primary_analysis", "all_results_primary.tsv")
 
-      if (!file.exists(buffered_file) || !file.exists(results_file)) {
+      if (!file.exists(binned_file) || !file.exists(results_file)) {
         cat(sprintf("  ⚠ Required files not found:\n"))
-        cat(sprintf("    Buffered: %s\n", buffered_file))
+        cat(sprintf("    Binned: %s\n", binned_file))
         cat(sprintf("    Results: %s\n", results_file))
       } else {
-        # Load buffered GInteractions
-        loops_gi <- readRDS(buffered_file)
+        # Load binned (unbuffered) GInteractions - coordinates match edgeR results
+        loops_gi <- readRDS(binned_file)
 
         # Load results to get significance and logFC
         results_df <- read.table(results_file, sep = "\t", header = TRUE)
