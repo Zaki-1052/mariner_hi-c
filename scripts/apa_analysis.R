@@ -215,7 +215,8 @@ aggregate_apa_matrices <- function(pixels, method = "mean") {
     agg_matrices <- array(NA, dim = c(n_bins, n_bins, n_samples))
 
     for (j in 1:n_samples) {
-      sample_matrices <- count_array[, , , j, drop = FALSE]
+      # Convert DelayedArray slice to regular array for apply() with vector MARGIN
+      sample_matrices <- as.array(count_array[, , , j, drop = FALSE])
 
       if (method == "mean") {
         agg_matrices[, , j] <- apply(sample_matrices, c(1, 2), mean, na.rm = TRUE)
@@ -799,40 +800,69 @@ main <- function() {
         # Load results to get significance and logFC
         results_df <- read.table(results_file, sep = "\t", header = TRUE)
 
-        # Match loops with results
-        # Assuming order is preserved; otherwise match by coordinates
-        if (length(loops_gi) == nrow(results_df)) {
-          mcols(loops_gi)$logFC <- results_df$logFC
-          mcols(loops_gi)$FDR <- results_df$FDR
-          mcols(loops_gi)$significant <- results_df$FDR < 0.05
+        # Match loops with results using coordinate-based matching
+        # This handles cases where edgeR filtering removes some loops
 
-          # Filter to significant only
-          sig_loops <- loops_gi[mcols(loops_gi)$significant]
+        # Create coordinate IDs for results
+        results_df$coord_id <- paste(
+          results_df$chr1, results_df$start1, results_df$end1,
+          results_df$chr2, results_df$start2, results_df$end2,
+          sep = "_"
+        )
 
-          # Separate by direction
-          up_loops <- sig_loops[mcols(sig_loops)$logFC > 0]
-          down_loops <- sig_loops[mcols(sig_loops)$logFC < 0]
+        # Create coordinate IDs for GInteractions
+        gi_coords <- paste(
+          as.character(seqnames(anchors(loops_gi, "first"))),
+          start(anchors(loops_gi, "first")),
+          end(anchors(loops_gi, "first")),
+          as.character(seqnames(anchors(loops_gi, "second"))),
+          start(anchors(loops_gi, "second")),
+          end(anchors(loops_gi, "second")),
+          sep = "_"
+        )
 
-          cat(sprintf("  Significant loops: %d (up: %d, down: %d)\n",
-                      length(sig_loops), length(up_loops), length(down_loops)))
+        # Match results to GI coordinates
+        match_idx <- match(results_df$coord_id, gi_coords)
 
-          # Process up-regulated
-          total_analyses <- total_analyses + 1
-          if (run_apa_for_loop_set(resolution, up_loops, "resolution_specific", "up",
-                                     HIC_FILES, norm_method)) {
-            success_count <- success_count + 1
-          }
+        if (any(is.na(match_idx))) {
+          cat(sprintf("  ⚠ Warning: %d results could not be matched to GI\n",
+                      sum(is.na(match_idx))))
+          # Remove unmatched results
+          results_df <- results_df[!is.na(match_idx), ]
+          match_idx <- match_idx[!is.na(match_idx)]
+        }
 
-          # Process down-regulated
-          total_analyses <- total_analyses + 1
-          if (run_apa_for_loop_set(resolution, down_loops, "resolution_specific", "down",
-                                     HIC_FILES, norm_method)) {
-            success_count <- success_count + 1
-          }
+        # Subset GI to matched loops and add metadata
+        loops_gi_matched <- loops_gi[match_idx]
+        mcols(loops_gi_matched)$logFC <- results_df$logFC
+        mcols(loops_gi_matched)$FDR <- results_df$FDR
+        mcols(loops_gi_matched)$significant <- results_df$FDR < 0.05
 
-        } else {
-          cat(sprintf("  ✗ Loop count mismatch: GInteractions=%d, Results=%d\n",
-                      length(loops_gi), nrow(results_df)))
+        cat(sprintf("  Matched %d loops from GI (%d) to results (%d)\n",
+                    length(loops_gi_matched), length(loops_gi), nrow(results_df)))
+
+        # Filter to significant only
+        sig_loops <- loops_gi_matched[mcols(loops_gi_matched)$significant]
+
+        # Separate by direction
+        up_loops <- sig_loops[mcols(sig_loops)$logFC > 0]
+        down_loops <- sig_loops[mcols(sig_loops)$logFC < 0]
+
+        cat(sprintf("  Significant loops: %d (up: %d, down: %d)\n",
+                    length(sig_loops), length(up_loops), length(down_loops)))
+
+        # Process up-regulated
+        total_analyses <- total_analyses + 1
+        if (run_apa_for_loop_set(resolution, up_loops, "resolution_specific", "up",
+                                   HIC_FILES, norm_method)) {
+          success_count <- success_count + 1
+        }
+
+        # Process down-regulated
+        total_analyses <- total_analyses + 1
+        if (run_apa_for_loop_set(resolution, down_loops, "resolution_specific", "down",
+                                   HIC_FILES, norm_method)) {
+          success_count <- success_count + 1
         }
       }
     }
