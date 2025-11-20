@@ -1000,11 +1000,11 @@ for (i in 1:nrow(merged_loops_df)) {
 # Use the new annotation function with actual H3K27ac and H3K4me1 ChIP-seq data
 cat("\n  Applying ChIP-seq-based anchor classification...\n")
 
-# Get ChIP-seq file paths from config
-h3k27ac_path <- config$chipseq_peaks$h3k27ac
+# Get ChIP-seq file paths from config (P12 early timepoint)
+h3k27ac_path <- config$chipseq_peaks$h3k27ac_p12
 h3k4me1_path <- config$chipseq_peaks$h3k4me1
 
-cat(sprintf("    H3K27ac peaks: %s\n", h3k27ac_path))
+cat(sprintf("    H3K27ac peaks (P12): %s\n", h3k27ac_path))
 cat(sprintf("    H3K4me1 peaks: %s\n", h3k4me1_path))
 
 merged_loops_df <- annotate_loops_dataframe(

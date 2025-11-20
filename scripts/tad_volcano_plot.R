@@ -26,8 +26,8 @@
 #
 # Arguments:
 #   INPUT_FILE              Path to TAD differential expression file (required)
-#   --fdr THRESHOLD         FDR p-value cutoff (default: 0.05)
-#   --fc THRESHOLD          Fold-change difference cutoff (default: 0.3)
+#   --fdr THRESHOLD         FDR p-value cutoff (default: 0.15, lenient for TAD data)
+#   --fc THRESHOLD          Difference cutoff (default: 0.15, moderate effect size)
 #   --output DIR            Output directory (default: outputs/tad_analysis/)
 #   --title TEXT            Custom plot title (default: auto-generated)
 #   --width WIDTH           Plot width in inches (default: 10)
@@ -62,8 +62,8 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Default parameters
 input_file <- NULL
-fdr_threshold <- 0.05
-fc_threshold <- 0.3
+fdr_threshold <- 0.15  # More lenient for TAD data (typical range: 0.1-0.4)
+fc_threshold <- 0.15   # Moderate effect size for inclusion ratio differences
 output_dir <- "outputs/tad_analysis"
 custom_title <- NULL
 plot_width <- 10
@@ -73,8 +73,8 @@ plot_height <- 8
 if (length(args) == 0) {
   cat("ERROR: No input file specified\n\n")
   cat("Usage: Rscript scripts/tad_volcano_plot.R INPUT_FILE [OPTIONS]\n")
-  cat("  --fdr THRESHOLD         FDR cutoff (default: 0.05)\n")
-  cat("  --fc THRESHOLD          Fold-change cutoff (default: 0.3)\n")
+  cat("  --fdr THRESHOLD         FDR cutoff (default: 0.15)\n")
+  cat("  --fc THRESHOLD          Difference cutoff (default: 0.15)\n")
   cat("  --output DIR            Output directory (default: outputs/tad_analysis/)\n")
   cat("  --title TEXT            Custom title\n")
   cat("  --width WIDTH           Plot width (default: 10)\n")
@@ -276,6 +276,10 @@ neg_log10_fdr_max <- -log10(min(fdr_range))
 
 cat("Creating EnhancedVolcano plot...\n")
 
+# Calculate appropriate y-axis limits based on actual data
+y_max <- -log10(min(tad_df$adj_pvalue))
+y_lim <- c(0, max(1.5, y_max * 1.15))  # At least 1.5, or 15% above max
+
 # Create EnhancedVolcano with publication settings matching pipeline style
 p <- EnhancedVolcano(
   tad_df,
@@ -303,6 +307,7 @@ p <- EnhancedVolcano(
   xlab = bquote(bold('Ctrl vs Mut Difference')),
   ylab = bquote(bold('-log'[10]*'(Adjusted p-value)')),
   xlim = c(diff_range[1] - 0.2, diff_range[2] + 0.2),
+  ylim = y_lim,  # Use calculated y-axis limits
   caption = NULL
 )
 
