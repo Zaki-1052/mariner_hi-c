@@ -66,19 +66,19 @@ generate_consensus() {
 
     # Multi-intersect
     echo "  Finding overlapping regions (≥${REPLICATE_THRESHOLD} replicates)..."
-    bedtools multiIntersect \
+    bedtools multiinter \
         -i "${rep1}.sorted" "${rep2}.sorted" "${rep3}.sorted" "${rep4}.sorted" \
         | awk -v thresh="${REPLICATE_THRESHOLD}" '$4 >= thresh' \
         | cut -f1-3 \
-        > "${TEMP_DIR}/${mark}_multiIntersect.bed"
+        > "${TEMP_DIR}/${mark}_multiinter.bed"
 
-    local multi_count=$(wc -l < "${TEMP_DIR}/${mark}_multiIntersect.bed")
+    local multi_count=$(wc -l < "${TEMP_DIR}/${mark}_multiinter.bed")
     echo "    Found ${multi_count} overlapping regions"
 
     # Merge adjacent peaks
     echo "  Merging adjacent/overlapping peaks..."
     bedtools merge \
-        -i "${TEMP_DIR}/${mark}_multiIntersect.bed" \
+        -i "${TEMP_DIR}/${mark}_multiinter.bed" \
         -d "${MERGE_DISTANCE}" \
         > "${TEMP_DIR}/${mark}_merged.bed"
 
