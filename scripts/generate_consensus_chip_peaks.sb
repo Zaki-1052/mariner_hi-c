@@ -1,0 +1,201 @@
+#!/bin/bash
+#SBATCH --job-name=consensus_peaks
+#SBATCH --output=logs/consensus_peaks_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+echo "========================================="
+echo "ChIP-seq Consensus Peak Generation"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment (if bedtools is in conda)
+source ~/.bashrc
+conda activate mariner_env
+
+# Configuration
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner"
+INPUT_DIR="${BASE_DIR}/early_peaks"
+OUTPUT_DIR="${BASE_DIR}/outputs"
+REPLICATE_THRESHOLD=2  # Minimum replicates for consensus (2/4)
+MERGE_DISTANCE=10      # Base pairs for merging adjacent peaks
+
+# Create temporary directory
+TEMP_DIR="${OUTPUT_DIR}/temp_consensus"
+mkdir -p "${TEMP_DIR}"
+
+echo "Configuration:"
+echo "  Base directory: ${BASE_DIR}"
+echo "  Input directory: ${INPUT_DIR}"
+echo "  Output directory: ${OUTPUT_DIR}"
+echo "  Replicate threshold: ${REPLICATE_THRESHOLD}/4"
+echo "  Merge distance: ${MERGE_DISTANCE} bp"
+echo ""
+
+# Check bedtools availability
+echo "Environment check:"
+which bedtools
+bedtools --version
+echo ""
+
+# Function to generate consensus peaks
+generate_consensus() {
+    local mark=$1
+    local rep1=$2
+    local rep2=$3
+    local rep3=$4
+    local rep4=$5
+    local output_name=$6
+
+    echo "Processing ${mark}..."
+
+    # Sort input files
+    echo "  Sorting input files..."
+    for file in "${rep1}" "${rep2}" "${rep3}" "${rep4}"; do
+        sort -k1,1 -k2,2n "${file}" > "${file}.sorted"
+    done
+
+    # Multi-intersect
+    echo "  Finding overlapping regions (≥${REPLICATE_THRESHOLD} replicates)..."
+    bedtools multiIntersect \
+        -i "${rep1}.sorted" "${rep2}.sorted" "${rep3}.sorted" "${rep4}.sorted" \
+        | awk -v thresh="${REPLICATE_THRESHOLD}" '$4 >= thresh' \
+        | cut -f1-3 \
+        > "${TEMP_DIR}/${mark}_multiIntersect.bed"
+
+    local multi_count=$(wc -l < "${TEMP_DIR}/${mark}_multiIntersect.bed")
+    echo "    Found ${multi_count} overlapping regions"
+
+    # Merge adjacent peaks
+    echo "  Merging adjacent/overlapping peaks..."
+    bedtools merge \
+        -i "${TEMP_DIR}/${mark}_multiIntersect.bed" \
+        -d "${MERGE_DISTANCE}" \
+        > "${TEMP_DIR}/${mark}_merged.bed"
+
+    local merged_count=$(wc -l < "${TEMP_DIR}/${mark}_merged.bed")
+    echo "    ${merged_count} peaks after merging"
+
+    # Annotate with scores (max across replicates)
+    echo "  Annotating with peak scores..."
+    bedtools map -a "${TEMP_DIR}/${mark}_merged.bed" -b "${rep1}.sorted" -c 4 -o max \
+        | bedtools map -a stdin -b "${rep2}.sorted" -c 4 -o max \
+        | bedtools map -a stdin -b "${rep3}.sorted" -c 4 -o max \
+        | bedtools map -a stdin -b "${rep4}.sorted" -c 4 -o max \
+        | awk 'BEGIN{OFS="\t"} {
+            max_score=$4;
+            for(i=5; i<=NF; i++) {
+                if($i != "." && $i > max_score) max_score = $i;
+            }
+            print $1, $2, $3, max_score, 0
+        }' \
+        > "${OUTPUT_DIR}/${output_name}"
+
+    local final_count=$(wc -l < "${OUTPUT_DIR}/${output_name}")
+    echo "  ✓ Final consensus: ${final_count} peaks"
+    echo "  ✓ Output: ${OUTPUT_DIR}/${output_name}"
+    echo ""
+
+    # Clean up sorted files
+    rm -f "${rep1}.sorted" "${rep2}.sorted" "${rep3}.sorted" "${rep4}.sorted"
+}
+
+# Generate H3K27ac consensus
+generate_consensus \
+    "H3K27ac" \
+    "${INPUT_DIR}/230815index11P12ctrl1H3K27ac_S15_L004_aligned_reads_treat.stringent.sort_subtracted.bed" \
+    "${INPUT_DIR}/230815index13P12ctrl2H3K27ac_S17_L004_aligned_reads_treat.stringent.sort_subtracted.bed" \
+    "${INPUT_DIR}/_241206_index_29_Bap1_P12_ctrl_1_H3K27ac_S29_L004_aligned_reads_treat.stringent.sort_subtracted.bed" \
+    "${INPUT_DIR}/_241206_index_31_Bap1_P12_ctrl_2_H3K27ac_S31_L004_aligned_reads_treat.stringent.sort_subtracted.bed" \
+    "P12_ctrl_H3K27ac_early_peaks.bed"
+
+# Generate H3K27me3 consensus
+generate_consensus \
+    "H3K27me3" \
+    "${INPUT_DIR}/230815index16P12ctrl1H3K27me3_S19_L004_aligned_reads_treat.stringent.sort_subtracted.bed" \
+    "${INPUT_DIR}/230815index18P12ctrl2H3K27me3_S21_L004_aligned_reads_treat.stringent.sort_subtracted.bed" \
+    "${INPUT_DIR}/_241206_index_33_Bap1_P12_ctrl_1_H3K27me3_S33_L004_aligned_reads_treat.stringent.sort_subtracted.bed" \
+    "${INPUT_DIR}/_241206_index_35_Bap1_P12_ctrl_2_H3K27me3_S35_L004_aligned_reads_treat.stringent.sort_subtracted.bed" \
+    "P12_ctrl_H3K27me3_early_peaks.bed"
+
+if [ $? -eq 0 ]; then
+    echo "======================================"
+    echo "QC: Peak Counts Summary"
+    echo "======================================"
+    echo ""
+    echo "H3K27ac:"
+    echo "  Replicate 1 (230815): $(wc -l < ${INPUT_DIR}/230815index11P12ctrl1H3K27ac_S15_L004_aligned_reads_treat.stringent.sort_subtracted.bed)"
+    echo "  Replicate 2 (230815): $(wc -l < ${INPUT_DIR}/230815index13P12ctrl2H3K27ac_S17_L004_aligned_reads_treat.stringent.sort_subtracted.bed)"
+    echo "  Replicate 1 (241206): $(wc -l < ${INPUT_DIR}/_241206_index_29_Bap1_P12_ctrl_1_H3K27ac_S29_L004_aligned_reads_treat.stringent.sort_subtracted.bed)"
+    echo "  Replicate 2 (241206): $(wc -l < ${INPUT_DIR}/_241206_index_31_Bap1_P12_ctrl_2_H3K27ac_S31_L004_aligned_reads_treat.stringent.sort_subtracted.bed)"
+    echo "  → Consensus: $(wc -l < ${OUTPUT_DIR}/P12_ctrl_H3K27ac_early_peaks.bed)"
+    echo ""
+    echo "H3K27me3:"
+    echo "  Replicate 1 (230815): $(wc -l < ${INPUT_DIR}/230815index16P12ctrl1H3K27me3_S19_L004_aligned_reads_treat.stringent.sort_subtracted.bed)"
+    echo "  Replicate 2 (230815): $(wc -l < ${INPUT_DIR}/230815index18P12ctrl2H3K27me3_S21_L004_aligned_reads_treat.stringent.sort_subtracted.bed)"
+    echo "  Replicate 1 (241206): $(wc -l < ${INPUT_DIR}/_241206_index_33_Bap1_P12_ctrl_1_H3K27me3_S33_L004_aligned_reads_treat.stringent.sort_subtracted.bed)"
+    echo "  Replicate 2 (241206): $(wc -l < ${INPUT_DIR}/_241206_index_35_Bap1_P12_ctrl_2_H3K27me3_S35_L004_aligned_reads_treat.stringent.sort_subtracted.bed)"
+    echo "  → Consensus: $(wc -l < ${OUTPUT_DIR}/P12_ctrl_H3K27me3_early_peaks.bed)"
+    echo ""
+    echo "Reference (Late timepoint):"
+    echo "  H3K27ac: $(wc -l < ${OUTPUT_DIR}/220310index25H3K27acLatePeakRegions.bed)"
+    echo "  H3K4me1: $(wc -l < ${OUTPUT_DIR}/K4me1_aligned_reads_peaks.broadPeak-filtered.bed)"
+    echo ""
+
+    echo "======================================"
+    echo "QC: Peak Size Distributions"
+    echo "======================================"
+    echo ""
+    echo "H3K27ac Consensus:"
+    awk '{print $3-$2}' "${OUTPUT_DIR}/P12_ctrl_H3K27ac_early_peaks.bed" | sort -n | awk '
+        {sizes[NR]=$1; sum+=$1}
+        END {
+            print "  Count:", NR
+            print "  Mean:", int(sum/NR), "bp"
+            print "  Median:", sizes[int(NR/2)], "bp"
+            print "  Min:", sizes[1], "bp"
+            print "  Max:", sizes[NR], "bp"
+        }'
+    echo ""
+    echo "H3K27me3 Consensus:"
+    awk '{print $3-$2}' "${OUTPUT_DIR}/P12_ctrl_H3K27me3_early_peaks.bed" | sort -n | awk '
+        {sizes[NR]=$1; sum+=$1}
+        END {
+            print "  Count:", NR
+            print "  Mean:", int(sum/NR), "bp"
+            print "  Median:", sizes[int(NR/2)], "bp"
+            print "  Min:", sizes[1], "bp"
+            print "  Max:", sizes[NR], "bp"
+        }'
+    echo ""
+
+    echo "======================================"
+    echo "✓ Consensus peak generation complete!"
+    echo "======================================"
+    echo ""
+    echo "Output files:"
+    echo "  - ${OUTPUT_DIR}/P12_ctrl_H3K27ac_early_peaks.bed"
+    echo "  - ${OUTPUT_DIR}/P12_ctrl_H3K27me3_early_peaks.bed"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Review QC metrics above"
+    echo "  2. Check peak size distributions for over-stretching"
+    echo "  3. Update config/paths_config.yaml with new file paths"
+    echo "  4. Run downstream analysis with early timepoint peaks"
+else
+    echo ""
+    echo "❌ Consensus peak generation failed with exit code $?"
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="
