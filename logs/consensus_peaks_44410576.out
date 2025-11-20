@@ -1,0 +1,95 @@
+=========================================
+ChIP-seq Consensus Peak Generation
+=========================================
+Job ID: 44410576
+Node: exp-1-09
+Start time: Thu Nov 20 13:59:39 PST 2025
+=========================================
+
+Configuration:
+  Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner
+  Input directory: /expanse/lustre/projects/csd940/zalibhai/mariner/early_peaks
+  Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs
+  Replicate threshold: 2/4
+  Merge distance: 10 bp
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/bedtools
+bedtools v2.31.1
+
+Processing H3K27ac...
+  Sorting input files...
+  Finding overlapping regions (≥2 replicates)...
+    Found 97718 overlapping regions
+  Merging adjacent/overlapping peaks...
+    28042 peaks after merging
+  Annotating with peak scores...
+  ✓ Final consensus: 28042 peaks
+  ✓ Output: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/P12_ctrl_H3K27ac_early_peaks.bed
+
+Processing H3K27me3...
+  Sorting input files...
+  Finding overlapping regions (≥2 replicates)...
+    Found 79343 overlapping regions
+  Merging adjacent/overlapping peaks...
+    23491 peaks after merging
+  Annotating with peak scores...
+  ✓ Final consensus: 23491 peaks
+  ✓ Output: /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/P12_ctrl_H3K27me3_early_peaks.bed
+
+======================================
+QC: Peak Counts Summary
+======================================
+
+H3K27ac:
+  Replicate 1 (230815): 28343
+  Replicate 2 (230815): 34084
+  Replicate 1 (241206): 18989
+  Replicate 2 (241206): 19155
+  → Consensus: 28042
+
+H3K27me3:
+  Replicate 1 (230815): 31402
+  Replicate 2 (230815): 27421
+  Replicate 1 (241206): 14511
+  Replicate 2 (241206): 11401
+  → Consensus: 23491
+
+Reference (Late timepoint):
+  H3K27ac: 18687
+  H3K4me1: 113781
+
+======================================
+QC: Peak Size Distributions
+======================================
+
+H3K27ac Consensus:
+  Count: 28042
+  Mean: 2207 bp
+  Median: 1856 bp
+  Min: 1 bp
+  Max: 30944 bp
+
+H3K27me3 Consensus:
+  Count: 23491
+  Mean: 2197 bp
+  Median: 1560 bp
+  Min: 2 bp
+  Max: 92735 bp
+
+======================================
+✓ Consensus peak generation complete!
+======================================
+
+Output files:
+  - /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/P12_ctrl_H3K27ac_early_peaks.bed
+  - /expanse/lustre/projects/csd940/zalibhai/mariner/outputs/P12_ctrl_H3K27me3_early_peaks.bed
+
+Next steps:
+  1. Review QC metrics above
+  2. Check peak size distributions for over-stretching
+  3. Update config/paths_config.yaml with new file paths
+  4. Run downstream analysis with early timepoint peaks
+
+End time: Thu Nov 20 13:59:52 PST 2025
+=========================================
