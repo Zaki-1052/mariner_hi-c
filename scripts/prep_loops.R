@@ -20,6 +20,17 @@ cat("========================================\n\n")
 cat("Loading paths configuration...\n")
 config <- yaml::read_yaml("config/paths_config.yaml")
 
+# Get chromosome filtering options
+exclude_chroms <- if (!is.null(config$filtering$exclude_chromosomes)) {
+  config$filtering$exclude_chromosomes
+} else {
+  c()  # Empty vector if not specified
+}
+
+if (length(exclude_chroms) > 0) {
+  cat(sprintf("  Excluding chromosomes: %s\n", paste(exclude_chroms, collapse = ", ")))
+}
+
 # Define paths to individual replicate BEDPE files (resolution-aware)
 base_path <- config$hiccups_loops$base_path
 sample_names <- config$hiccups_loops$samples
@@ -40,7 +51,7 @@ bedpe_colnames <- c(
 			  "numCollapsed", "centroid1", "centroid2", "radius"
 			  )
 
-read_bedpe <- function(filepath, sample_name, expected_resolution) {
+read_bedpe <- function(filepath, sample_name, expected_resolution, exclude_chromosomes = c()) {
   cat(sprintf("Reading %s... ", sample_name))
 
   # Check file exists
@@ -60,14 +71,26 @@ read_bedpe <- function(filepath, sample_name, expected_resolution) {
   # Remove zero observed counts
   bedpe_subset <- bedpe_filtered[bedpe_filtered$observed > 0, ]
 
-  cat(sprintf("%d loops (%dkb, observed>0)\n", nrow(bedpe_subset), expected_resolution/1000))
+  # Filter out excluded chromosomes
+  if (length(exclude_chromosomes) > 0) {
+    n_before <- nrow(bedpe_subset)
+    bedpe_subset <- bedpe_subset[!(bedpe_subset$chr1 %in% exclude_chromosomes |
+                                    bedpe_subset$chr2 %in% exclude_chromosomes), ]
+    n_after <- nrow(bedpe_subset)
+    n_filtered <- n_before - n_after
+    cat(sprintf("%d loops (%dkb, observed>0, -%d chrX)\n",
+                n_after, expected_resolution/1000, n_filtered))
+  } else {
+    cat(sprintf("%d loops (%dkb, observed>0)\n", nrow(bedpe_subset), expected_resolution/1000))
+  }
+
   return(bedpe_subset)
 }
 
 # Read all 6 BEDPE files
 cat("\n=== Reading BEDPE files for all replicates ===\n")
 bedpe_list <- lapply(names(bedpeFiles), function(name) {
-  read_bedpe(bedpeFiles[name], name, RESOLUTION)
+  read_bedpe(bedpeFiles[name], name, RESOLUTION, exclude_chroms)
 })
 names(bedpe_list) <- names(bedpeFiles)
 
