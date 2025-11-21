@@ -1,0 +1,864 @@
+=========================================
+Mariner Downstream Analysis Pipeline
+=========================================
+Job ID: 44426238
+Node: exp-5-21
+CPUs: 16
+Memory: 128GB
+Start time: Fri Nov 21 13:47:42 PST 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+STEP 9: Downstream Analysis
+=========================================
+Script: scripts/downstream_analysis.R
+Input: final_results.tsv from all resolutions
+Output: Non-redundant loop set with gene annotations
+
+
+========================================
+Downstream Analysis: Merged Loops
+========================================
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘rtracklayer’ was built under R version 4.4.3 
+3: package ‘tibble’ was built under R version 4.4.3 
+4: package ‘dplyr’ was built under R version 4.4.3 
+5: package ‘yaml’ was built under R version 4.4.3 
+Loading paths configuration...
+Configuration:
+  Overlap tolerance: 10 kb
+  GTF file: Using TxDb.Mmusculus.UCSC.mm10.knownGene
+
+  Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner
+Output directory: outputs/merged_loops
+
+
+========================================
+SECTION 1: Loading Final Results
+
+========================================
+Loading 5kb results...
+  Final results: 6 loops
+  Coordinates: 16350 interactions
+  Matched: 6 loops
+
+Loading 10kb results...
+  Final results: 44 loops
+  Coordinates: 22129 interactions
+  Matched: 44 loops
+
+Loading 25kb results...
+  Final results: 129 loops
+  Coordinates: 20997 interactions
+  Matched: 129 loops
+
+✓ Loaded final results from 3 resolutions
+  Total loops before merging: 179
+
+
+========================================
+SECTION 1B: Merging All Results (Complete Dataset)
+
+========================================
+Loading all_results_primary.tsv from all resolutions...
+(This includes ALL loops regardless of significance)
+
+Loading 5kb all_results...
+  All results: 16350 loops
+  Coordinates: 16350 interactions
+  Matched: 16350 loops
+
+Loading 10kb all_results...
+  All results: 22122 loops
+  Coordinates: 22129 interactions
+  Matched: 22122 loops
+
+Loading 25kb all_results...
+  All results: 20991 loops
+  Coordinates: 20997 interactions
+  Matched: 20991 loops
+
+✓ Loaded all_results from 3 resolutions
+  Total loops before merging: 59463
+
+Merging all_results with overlap removal...
+Overlap tolerance: 10 kb
+Priority: Lowest FDR (most significant)
+
+Total loops to process: 59463
+  5kb: 16350 loops
+  10kb: 22122 loops
+  25kb: 20991 loops
+
+Detecting overlaps...
+  Pre-extracting coordinates...
+    Extracted coordinates for 59463 loops (0.0s)
+  Grouping by chromosome pairs...
+    Found 19 unique chromosome pairs
+    Starting pairwise comparisons...
+    Processed 100/59463 loops (441150 comparisons, 0.0s elapsed, ~20.6s remaining)    Processed 200/59463 loops (872300 comparisons, 0.0s elapsed, ~12.8s remaining)    Processed 300/59463 loops (1293450 comparisons, 0.1s elapsed, ~10.1s remaining)    Processed 400/59463 loops (1704600 comparisons, 0.1s elapsed, ~8.8s remaining)    Processed 500/59463 loops (2105750 comparisons, 0.1s elapsed, ~7.9s remaining)    Processed 600/59463 loops (2496900 comparisons, 0.1s elapsed, ~7.3s remaining)    Processed 700/59463 loops (2878050 comparisons, 0.1s elapsed, ~7.1s remaining)    Processed 800/59463 loops (3249200 comparisons, 0.1s elapsed, ~6.9s remaining)    Processed 900/59463 loops (3610350 comparisons, 0.1s elapsed, ~6.7s remaining)    Processed 1000/59463 loops (3961500 comparisons, 0.1s elapsed, ~6.5s remaining)    Processed 1100/59463 loops (4302650 comparisons, 0.1s elapsed, ~6.4s remaining)    Processed 1200/59463 loops (4633800 comparisons, 0.1s elapsed, ~6.3s remaining)    Processed 1300/59463 loops (4954950 comparisons, 0.1s elapsed, ~6.1s remaining)    Processed 1400/59463 loops (5266100 comparisons, 0.1s elapsed, ~6.0s remaining)    Processed 1500/59463 loops (5567250 comparisons, 0.2s elapsed, ~5.9s remaining)    Processed 1600/59463 loops (5858400 comparisons, 0.2s elapsed, ~5.8s remaining)    Processed 1700/59463 loops (6139550 comparisons, 0.2s elapsed, ~5.7s remaining)    Processed 1800/59463 loops (6410700 comparisons, 0.2s elapsed, ~5.6s remaining)    Processed 1900/59463 loops (6671850 comparisons, 0.2s elapsed, ~5.5s remaining)    Processed 2000/59463 loops (6923000 comparisons, 0.2s elapsed, ~5.4s remaining)    Processed 2100/59463 loops (7164150 comparisons, 0.2s elapsed, ~5.3s remaining)    Processed 2200/59463 loops (7395300 comparisons, 0.2s elapsed, ~5.2s remaining)    Processed 2300/59463 loops (7616450 comparisons, 0.2s elapsed, ~5.1s remaining)    Processed 2400/59463 loops (7827600 comparisons, 0.2s elapsed, ~5.0s remaining)    Processed 2500/59463 loops (8028750 comparisons, 0.2s elapsed, ~4.9s remaining)    Processed 2600/59463 loops (8219900 comparisons, 0.2s elapsed, ~4.8s remaining)    Processed 2700/59463 loops (8401050 comparisons, 0.2s elapsed, ~4.7s remaining)    Processed 2800/59463 loops (8572200 comparisons, 0.2s elapsed, ~4.6s remaining)    Processed 2900/59463 loops (8733350 comparisons, 0.2s elapsed, ~4.6s remaining)    Processed 3000/59463 loops (8884500 comparisons, 0.2s elapsed, ~4.5s remaining)    Processed 3100/59463 loops (9025650 comparisons, 0.2s elapsed, ~4.4s remaining)    Processed 3200/59463 loops (9156800 comparisons, 0.2s elapsed, ~4.3s remaining)    Processed 3300/59463 loops (9277950 comparisons, 0.2s elapsed, ~4.2s remaining)    Processed 3400/59463 loops (9389100 comparisons, 0.3s elapsed, ~4.1s remaining)    Processed 3500/59463 loops (9490250 comparisons, 0.3s elapsed, ~4.1s remaining)    Processed 3600/59463 loops (9581400 comparisons, 0.3s elapsed, ~4.0s remaining)    Processed 3700/59463 loops (9662550 comparisons, 0.3s elapsed, ~3.9s remaining)    Processed 3800/59463 loops (9733700 comparisons, 0.3s elapsed, ~3.8s remaining)    Processed 3900/59463 loops (9794850 comparisons, 0.3s elapsed, ~3.7s remaining)    Processed 4000/59463 loops (9846000 comparisons, 0.3s elapsed, ~3.7s remaining)    Processed 4100/59463 loops (9887150 comparisons, 0.3s elapsed, ~3.6s remaining)    Processed 4200/59463 loops (9918300 comparisons, 0.3s elapsed, ~3.5s remaining)    Processed 4300/59463 loops (9939450 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 4400/59463 loops (9950600 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 4500/59463 loops (10076466 comparisons, 0.3s elapsed, ~3.3s remaining)    Processed 4600/59463 loops (10395816 comparisons, 0.3s elapsed, ~3.3s remaining)    Processed 4700/59463 loops (10705166 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 4800/59463 loops (11004516 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 4900/59463 loops (11293866 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 5000/59463 loops (11573216 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 5100/59463 loops (11842566 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 5200/59463 loops (12101916 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 5300/59463 loops (12351266 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 5400/59463 loops (12590616 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 5500/59463 loops (12819966 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 5600/59463 loops (13039316 comparisons, 0.3s elapsed, ~3.4s remaining)    Processed 5700/59463 loops (13248666 comparisons, 0.4s elapsed, ~3.3s remaining)    Processed 5800/59463 loops (13448016 comparisons, 0.4s elapsed, ~3.3s remaining)    Processed 5900/59463 loops (13637366 comparisons, 0.4s elapsed, ~3.3s remaining)    Processed 6000/59463 loops (13816716 comparisons, 0.4s elapsed, ~3.3s remaining)    Processed 6100/59463 loops (13986066 comparisons, 0.4s elapsed, ~3.3s remaining)    Processed 6200/59463 loops (14145416 comparisons, 0.4s elapsed, ~3.3s remaining)    Processed 6300/59463 loops (14294766 comparisons, 0.4s elapsed, ~3.2s remaining)    Processed 6400/59463 loops (14434116 comparisons, 0.4s elapsed, ~3.2s remaining)    Processed 6500/59463 loops (14563466 comparisons, 0.4s elapsed, ~3.2s remaining)    Processed 6600/59463 loops (14682816 comparisons, 0.4s elapsed, ~3.1s remaining)    Processed 6700/59463 loops (14792166 comparisons, 0.4s elapsed, ~3.1s remaining)    Processed 6800/59463 loops (14891516 comparisons, 0.4s elapsed, ~3.1s remaining)    Processed 6900/59463 loops (14980866 comparisons, 0.4s elapsed, ~3.1s remaining)    Processed 7000/59463 loops (15060216 comparisons, 0.4s elapsed, ~3.0s remaining)    Processed 7100/59463 loops (15129566 comparisons, 0.4s elapsed, ~3.0s remaining)    Processed 7200/59463 loops (15188916 comparisons, 0.4s elapsed, ~3.0s remaining)    Processed 7300/59463 loops (15238266 comparisons, 0.4s elapsed, ~2.9s remaining)    Processed 7400/59463 loops (15277616 comparisons, 0.4s elapsed, ~2.9s remaining)    Processed 7500/59463 loops (15306966 comparisons, 0.4s elapsed, ~2.8s remaining)    Processed 7600/59463 loops (15326316 comparisons, 0.4s elapsed, ~2.8s remaining)    Processed 7700/59463 loops (15335666 comparisons, 0.4s elapsed, ~2.8s remaining)    Processed 7800/59463 loops (15552576 comparisons, 0.4s elapsed, ~2.8s remaining)    Processed 7900/59463 loops (15930426 comparisons, 0.4s elapsed, ~2.8s remaining)    Processed 8000/59463 loops (16298276 comparisons, 0.4s elapsed, ~2.8s remaining)    Processed 8100/59463 loops (16656126 comparisons, 0.4s elapsed, ~2.8s remaining)    Processed 8200/59463 loops (17003976 comparisons, 0.5s elapsed, ~2.8s remaining)    Processed 8300/59463 loops (17341826 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 8400/59463 loops (17669676 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 8500/59463 loops (17987526 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 8600/59463 loops (18295376 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 8700/59463 loops (18593226 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 8800/59463 loops (18881076 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 8900/59463 loops (19158926 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 9000/59463 loops (19426776 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 9100/59463 loops (19684626 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 9200/59463 loops (19932476 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 9300/59463 loops (20170326 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 9400/59463 loops (20398176 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 9500/59463 loops (20616026 comparisons, 0.5s elapsed, ~2.9s remaining)    Processed 9600/59463 loops (20823876 comparisons, 0.6s elapsed, ~2.9s remaining)    Processed 9700/59463 loops (21021726 comparisons, 0.6s elapsed, ~2.9s remaining)    Processed 9800/59463 loops (21209576 comparisons, 0.6s elapsed, ~2.9s remaining)    Processed 9900/59463 loops (21387426 comparisons, 0.6s elapsed, ~2.8s remaining)    Processed 10000/59463 loops (21555276 comparisons, 0.6s elapsed, ~2.8s remaining)    Processed 10100/59463 loops (21713126 comparisons, 0.6s elapsed, ~2.8s remaining)    Processed 10200/59463 loops (21860976 comparisons, 0.6s elapsed, ~2.8s remaining)    Processed 10300/59463 loops (21998826 comparisons, 0.6s elapsed, ~2.8s remaining)    Processed 10400/59463 loops (22126676 comparisons, 0.6s elapsed, ~2.8s remaining)    Processed 10500/59463 loops (22244526 comparisons, 0.6s elapsed, ~2.8s remaining)    Processed 10600/59463 loops (22352376 comparisons, 0.6s elapsed, ~2.7s remaining)    Processed 10700/59463 loops (22450226 comparisons, 0.6s elapsed, ~2.7s remaining)    Processed 10800/59463 loops (22538076 comparisons, 0.6s elapsed, ~2.7s remaining)    Processed 10900/59463 loops (22615926 comparisons, 0.6s elapsed, ~2.7s remaining)    Processed 11000/59463 loops (22683776 comparisons, 0.6s elapsed, ~2.7s remaining)    Processed 11100/59463 loops (22741626 comparisons, 0.6s elapsed, ~2.6s remaining)    Processed 11200/59463 loops (22789476 comparisons, 0.6s elapsed, ~2.6s remaining)    Processed 11300/59463 loops (22827326 comparisons, 0.6s elapsed, ~2.6s remaining)    Processed 11400/59463 loops (22855176 comparisons, 0.6s elapsed, ~2.6s remaining)    Processed 11500/59463 loops (22873026 comparisons, 0.6s elapsed, ~2.5s remaining)    Processed 11600/59463 loops (22880876 comparisons, 0.6s elapsed, ~2.5s remaining)    Processed 11700/59463 loops (23058853 comparisons, 0.6s elapsed, ~2.5s remaining)    Processed 11800/59463 loops (23300403 comparisons, 0.6s elapsed, ~2.5s remaining)    Processed 11900/59463 loops (23531953 comparisons, 0.6s elapsed, ~2.5s remaining)    Processed 12000/59463 loops (23753503 comparisons, 0.6s elapsed, ~2.5s remaining)    Processed 12100/59463 loops (23965053 comparisons, 0.6s elapsed, ~2.5s remaining)    Processed 12200/59463 loops (24166603 comparisons, 0.6s elapsed, ~2.5s remaining)    Processed 12300/59463 loops (24358153 comparisons, 0.7s elapsed, ~2.5s remaining)    Processed 12400/59463 loops (24539703 comparisons, 0.7s elapsed, ~2.5s remaining)    Processed 12500/59463 loops (24711253 comparisons, 0.7s elapsed, ~2.5s remaining)    Processed 12600/59463 loops (24872803 comparisons, 0.7s elapsed, ~2.5s remaining)    Processed 12700/59463 loops (25024353 comparisons, 0.7s elapsed, ~2.5s remaining)    Processed 12800/59463 loops (25165903 comparisons, 0.7s elapsed, ~2.5s remaining)    Processed 12900/59463 loops (25297453 comparisons, 0.7s elapsed, ~2.4s remaining)    Processed 13000/59463 loops (25419003 comparisons, 0.7s elapsed, ~2.4s remaining)    Processed 13100/59463 loops (25530553 comparisons, 0.7s elapsed, ~2.4s remaining)    Processed 13200/59463 loops (25632103 comparisons, 0.7s elapsed, ~2.4s remaining)    Processed 13300/59463 loops (25723653 comparisons, 0.7s elapsed, ~2.4s remaining)    Processed 13400/59463 loops (25805203 comparisons, 0.7s elapsed, ~2.4s remaining)    Processed 13500/59463 loops (25876753 comparisons, 0.7s elapsed, ~2.4s remaining)    Processed 13600/59463 loops (25938303 comparisons, 0.7s elapsed, ~2.3s remaining)    Processed 13700/59463 loops (25989853 comparisons, 0.7s elapsed, ~2.3s remaining)    Processed 13800/59463 loops (26031403 comparisons, 0.7s elapsed, ~2.3s remaining)    Processed 13900/59463 loops (26062953 comparisons, 0.7s elapsed, ~2.3s remaining)    Processed 14000/59463 loops (26084503 comparisons, 0.7s elapsed, ~2.3s remaining)    Processed 14100/59463 loops (26096053 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 14200/59463 loops (26198175 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 14300/59463 loops (26485525 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 14400/59463 loops (26762875 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 14500/59463 loops (27030225 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 14600/59463 loops (27287575 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 14700/59463 loops (27534925 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 14800/59463 loops (27772275 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 14900/59463 loops (27999625 comparisons, 0.7s elapsed, ~2.2s remaining)    Processed 15000/59463 loops (28216975 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15100/59463 loops (28424325 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15200/59463 loops (28621675 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15300/59463 loops (28809025 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15400/59463 loops (28986375 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15500/59463 loops (29153725 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15600/59463 loops (29311075 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15700/59463 loops (29458425 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15800/59463 loops (29595775 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 15900/59463 loops (29723125 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 16000/59463 loops (29840475 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 16100/59463 loops (29947825 comparisons, 0.8s elapsed, ~2.2s remaining)    Processed 16200/59463 loops (30045175 comparisons, 0.8s elapsed, ~2.1s remaining)    Processed 16300/59463 loops (30132525 comparisons, 0.8s elapsed, ~2.1s remaining)    Processed 16400/59463 loops (30209875 comparisons, 0.8s elapsed, ~2.1s remaining)    Processed 16500/59463 loops (30277225 comparisons, 0.8s elapsed, ~2.1s remaining)    Processed 16600/59463 loops (30334575 comparisons, 0.8s elapsed, ~2.1s remaining)    Processed 16700/59463 loops (30381925 comparisons, 0.8s elapsed, ~2.1s remaining)    Processed 16800/59463 loops (30419275 comparisons, 0.8s elapsed, ~2.1s remaining)    Processed 16900/59463 loops (30446625 comparisons, 0.8s elapsed, ~2.1s remaining)    Processed 17000/59463 loops (30463975 comparisons, 0.8s elapsed, ~2.0s remaining)    Processed 17100/59463 loops (30471325 comparisons, 0.8s elapsed, ~2.0s remaining)    Processed 17200/59463 loops (30656319 comparisons, 0.8s elapsed, ~2.0s remaining)    Processed 17300/59463 loops (30890569 comparisons, 0.8s elapsed, ~2.0s remaining)    Processed 17400/59463 loops (31114819 comparisons, 0.8s elapsed, ~2.0s remaining)    Processed 17500/59463 loops (31329069 comparisons, 0.8s elapsed, ~2.0s remaining)    Processed 17600/59463 loops (31533319 comparisons, 0.8s elapsed, ~2.0s remaining)    Processed 17700/59463 loops (31727569 comparisons, 0.8s elapsed, ~2.0s remaining)    Processed 17800/59463 loops (31911819 comparisons, 0.9s elapsed, ~2.0s remaining)    Processed 17900/59463 loops (32086069 comparisons, 0.9s elapsed, ~2.0s remaining)    Processed 18000/59463 loops (32250319 comparisons, 0.9s elapsed, ~2.0s remaining)    Processed 18100/59463 loops (32404569 comparisons, 0.9s elapsed, ~2.0s remaining)    Processed 18200/59463 loops (32548819 comparisons, 0.9s elapsed, ~2.0s remaining)    Processed 18300/59463 loops (32683069 comparisons, 0.9s elapsed, ~2.0s remaining)    Processed 18400/59463 loops (32807319 comparisons, 0.9s elapsed, ~2.0s remaining)    Processed 18500/59463 loops (32921569 comparisons, 0.9s elapsed, ~2.0s remaining)    Processed 18600/59463 loops (33025819 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 18700/59463 loops (33120069 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 18800/59463 loops (33204319 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 18900/59463 loops (33278569 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 19000/59463 loops (33342819 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 19100/59463 loops (33397069 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 19200/59463 loops (33441319 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 19300/59463 loops (33475569 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 19400/59463 loops (33499819 comparisons, 0.9s elapsed, ~1.9s remaining)    Processed 19500/59463 loops (33514069 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 19600/59463 loops (33536414 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 19700/59463 loops (33789164 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 19800/59463 loops (34031914 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 19900/59463 loops (34264664 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 20000/59463 loops (34487414 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 20100/59463 loops (34700164 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 20200/59463 loops (34902914 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 20300/59463 loops (35095664 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 20400/59463 loops (35278414 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 20500/59463 loops (35451164 comparisons, 0.9s elapsed, ~1.8s remaining)    Processed 20600/59463 loops (35613914 comparisons, 1.0s elapsed, ~1.8s remaining)    Processed 20700/59463 loops (35766664 comparisons, 1.0s elapsed, ~1.8s remaining)    Processed 20800/59463 loops (35909414 comparisons, 1.0s elapsed, ~1.8s remaining)    Processed 20900/59463 loops (36042164 comparisons, 1.0s elapsed, ~1.8s remaining)    Processed 21000/59463 loops (36164914 comparisons, 1.0s elapsed, ~1.8s remaining)    Processed 21100/59463 loops (36277664 comparisons, 1.0s elapsed, ~1.8s remaining)    Processed 21200/59463 loops (36380414 comparisons, 1.0s elapsed, ~1.8s remaining)    Processed 21300/59463 loops (36473164 comparisons, 1.0s elapsed, ~1.8s remaining)    Processed 21400/59463 loops (36555914 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 21500/59463 loops (36628664 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 21600/59463 loops (36691414 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 21700/59463 loops (36744164 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 21800/59463 loops (36786914 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 21900/59463 loops (36819664 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 22000/59463 loops (36842414 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 22100/59463 loops (36855164 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 22200/59463 loops (36905236 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 22300/59463 loops (37113086 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 22400/59463 loops (37310936 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 22500/59463 loops (37498786 comparisons, 1.0s elapsed, ~1.7s remaining)    Processed 22600/59463 loops (37676636 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 22700/59463 loops (37844486 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 22800/59463 loops (38002336 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 22900/59463 loops (38150186 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23000/59463 loops (38288036 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23100/59463 loops (38415886 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23200/59463 loops (38533736 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23300/59463 loops (38641586 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23400/59463 loops (38739436 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23500/59463 loops (38827286 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23600/59463 loops (38905136 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23700/59463 loops (38972986 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23800/59463 loops (39030836 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 23900/59463 loops (39078686 comparisons, 1.0s elapsed, ~1.6s remaining)    Processed 24000/59463 loops (39116536 comparisons, 1.1s elapsed, ~1.6s remaining)    Processed 24100/59463 loops (39144386 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 24200/59463 loops (39162236 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 24300/59463 loops (39170086 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 24400/59463 loops (39324278 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 24500/59463 loops (39532328 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 24600/59463 loops (39730378 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 24700/59463 loops (39918428 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 24800/59463 loops (40096478 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 24900/59463 loops (40264528 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25000/59463 loops (40422578 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25100/59463 loops (40570628 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25200/59463 loops (40708678 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25300/59463 loops (40836728 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25400/59463 loops (40954778 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25500/59463 loops (41062828 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25600/59463 loops (41160878 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25700/59463 loops (41248928 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25800/59463 loops (41326978 comparisons, 1.1s elapsed, ~1.5s remaining)    Processed 25900/59463 loops (41395028 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26000/59463 loops (41453078 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26100/59463 loops (41501128 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26200/59463 loops (41539178 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26300/59463 loops (41567228 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26400/59463 loops (41585278 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26500/59463 loops (41593328 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26600/59463 loops (41751734 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26700/59463 loops (41972184 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26800/59463 loops (42182634 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 26900/59463 loops (42383084 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 27000/59463 loops (42573534 comparisons, 1.1s elapsed, ~1.4s remaining)    Processed 27100/59463 loops (42753984 comparisons, 1.2s elapsed, ~1.4s remaining)    Processed 27200/59463 loops (42924434 comparisons, 1.2s elapsed, ~1.4s remaining)    Processed 27300/59463 loops (43084884 comparisons, 1.2s elapsed, ~1.4s remaining)    Processed 27400/59463 loops (43235334 comparisons, 1.2s elapsed, ~1.4s remaining)    Processed 27500/59463 loops (43375784 comparisons, 1.2s elapsed, ~1.4s remaining)    Processed 27600/59463 loops (43506234 comparisons, 1.2s elapsed, ~1.4s remaining)    Processed 27700/59463 loops (43626684 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 27800/59463 loops (43737134 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 27900/59463 loops (43837584 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28000/59463 loops (43928034 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28100/59463 loops (44008484 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28200/59463 loops (44078934 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28300/59463 loops (44139384 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28400/59463 loops (44189834 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28500/59463 loops (44230284 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28600/59463 loops (44260734 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28700/59463 loops (44281184 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28800/59463 loops (44291634 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 28900/59463 loops (44364894 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 29000/59463 loops (44517144 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 29100/59463 loops (44659394 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 29200/59463 loops (44791644 comparisons, 1.2s elapsed, ~1.3s remaining)    Processed 29300/59463 loops (44913894 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 29400/59463 loops (45026144 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 29500/59463 loops (45128394 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 29600/59463 loops (45220644 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 29700/59463 loops (45302894 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 29800/59463 loops (45375144 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 29900/59463 loops (45437394 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 30000/59463 loops (45489644 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 30100/59463 loops (45531894 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 30200/59463 loops (45564144 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 30300/59463 loops (45586394 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 30400/59463 loops (45598644 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 30500/59463 loops (45737217 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 30600/59463 loops (46234367 comparisons, 1.2s elapsed, ~1.2s remaining)    Processed 30700/59463 loops (46721517 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 30800/59463 loops (47198667 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 30900/59463 loops (47665817 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 31000/59463 loops (48122967 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 31100/59463 loops (48570117 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 31200/59463 loops (49007267 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 31300/59463 loops (49434417 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 31400/59463 loops (49851567 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 31500/59463 loops (50258717 comparisons, 1.3s elapsed, ~1.2s remaining)    Processed 31600/59463 loops (50655867 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 31700/59463 loops (51043017 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 31800/59463 loops (51420167 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 31900/59463 loops (51787317 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 32000/59463 loops (52144467 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 32100/59463 loops (52491617 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 32200/59463 loops (52828767 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 32300/59463 loops (53155917 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 32400/59463 loops (53473067 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 32500/59463 loops (53780217 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 32600/59463 loops (54077367 comparisons, 1.4s elapsed, ~1.2s remaining)    Processed 32700/59463 loops (54364517 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 32800/59463 loops (54641667 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 32900/59463 loops (54908817 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33000/59463 loops (55165967 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33100/59463 loops (55413117 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33200/59463 loops (55650267 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33300/59463 loops (55877417 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33400/59463 loops (56094567 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33500/59463 loops (56301717 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33600/59463 loops (56498867 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33700/59463 loops (56686017 comparisons, 1.5s elapsed, ~1.2s remaining)    Processed 33800/59463 loops (56863167 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 33900/59463 loops (57030317 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34000/59463 loops (57187467 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34100/59463 loops (57334617 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34200/59463 loops (57471767 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34300/59463 loops (57598917 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34400/59463 loops (57716067 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34500/59463 loops (57823217 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34600/59463 loops (57920367 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34700/59463 loops (58007517 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34800/59463 loops (58084667 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 34900/59463 loops (58151817 comparisons, 1.5s elapsed, ~1.1s remaining)    Processed 35000/59463 loops (58208967 comparisons, 1.6s elapsed, ~1.1s remaining)    Processed 35100/59463 loops (58256117 comparisons, 1.6s elapsed, ~1.1s remaining)    Processed 35200/59463 loops (58293267 comparisons, 1.6s elapsed, ~1.1s remaining)    Processed 35300/59463 loops (58320417 comparisons, 1.6s elapsed, ~1.1s remaining)    Processed 35400/59463 loops (58337567 comparisons, 1.6s elapsed, ~1.1s remaining)    Processed 35500/59463 loops (58344717 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 35600/59463 loops (58624695 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 35700/59463 loops (58974445 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 35800/59463 loops (59314195 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 35900/59463 loops (59643945 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36000/59463 loops (59963695 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36100/59463 loops (60273445 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36200/59463 loops (60573195 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36300/59463 loops (60862945 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36400/59463 loops (61142695 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36500/59463 loops (61412445 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36600/59463 loops (61672195 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36700/59463 loops (61921945 comparisons, 1.6s elapsed, ~1.0s remaining)    Processed 36800/59463 loops (62161695 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 36900/59463 loops (62391445 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37000/59463 loops (62611195 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37100/59463 loops (62820945 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37200/59463 loops (63020695 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37300/59463 loops (63210445 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37400/59463 loops (63390195 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37500/59463 loops (63559945 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37600/59463 loops (63719695 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37700/59463 loops (63869445 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37800/59463 loops (64009195 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 37900/59463 loops (64138945 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 38000/59463 loops (64258695 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 38100/59463 loops (64368445 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 38200/59463 loops (64468195 comparisons, 1.7s elapsed, ~1.0s remaining)    Processed 38300/59463 loops (64557945 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 38400/59463 loops (64637695 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 38500/59463 loops (64707445 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 38600/59463 loops (64767195 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 38700/59463 loops (64816945 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 38800/59463 loops (64856695 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 38900/59463 loops (64886445 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 39000/59463 loops (64906195 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 39100/59463 loops (64915945 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 39200/59463 loops (65105443 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 39300/59463 loops (65460093 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 39400/59463 loops (65804743 comparisons, 1.7s elapsed, ~0.9s remaining)    Processed 39500/59463 loops (66139393 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 39600/59463 loops (66464043 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 39700/59463 loops (66778693 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 39800/59463 loops (67083343 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 39900/59463 loops (67377993 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 40000/59463 loops (67662643 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 40100/59463 loops (67937293 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 40200/59463 loops (68201943 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 40300/59463 loops (68456593 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 40400/59463 loops (68701243 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 40500/59463 loops (68935893 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 40600/59463 loops (69160543 comparisons, 1.8s elapsed, ~0.9s remaining)    Processed 40700/59463 loops (69375193 comparisons, 1.8s elapsed, ~0.8s remaining)    Processed 40800/59463 loops (69579843 comparisons, 1.8s elapsed, ~0.8s remaining)    Processed 40900/59463 loops (69774493 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41000/59463 loops (69959143 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41100/59463 loops (70133793 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41200/59463 loops (70298443 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41300/59463 loops (70453093 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41400/59463 loops (70597743 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41500/59463 loops (70732393 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41600/59463 loops (70857043 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41700/59463 loops (70971693 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41800/59463 loops (71076343 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 41900/59463 loops (71170993 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 42000/59463 loops (71255643 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 42100/59463 loops (71330293 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 42200/59463 loops (71394943 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 42300/59463 loops (71449593 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 42400/59463 loops (71494243 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 42500/59463 loops (71528893 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 42600/59463 loops (71553543 comparisons, 1.9s elapsed, ~0.8s remaining)    Processed 42700/59463 loops (71568193 comparisons, 1.9s elapsed, ~0.7s remaining)    Processed 42800/59463 loops (71583328 comparisons, 1.9s elapsed, ~0.7s remaining)    Processed 42900/59463 loops (71927478 comparisons, 1.9s elapsed, ~0.7s remaining)    Processed 43000/59463 loops (72261628 comparisons, 1.9s elapsed, ~0.7s remaining)    Processed 43100/59463 loops (72585778 comparisons, 1.9s elapsed, ~0.7s remaining)    Processed 43200/59463 loops (72899928 comparisons, 1.9s elapsed, ~0.7s remaining)    Processed 43300/59463 loops (73204078 comparisons, 1.9s elapsed, ~0.7s remaining)    Processed 43400/59463 loops (73498228 comparisons, 1.9s elapsed, ~0.7s remaining)    Processed 43500/59463 loops (73782378 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 43600/59463 loops (74056528 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 43700/59463 loops (74320678 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 43800/59463 loops (74574828 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 43900/59463 loops (74818978 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44000/59463 loops (75053128 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44100/59463 loops (75277278 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44200/59463 loops (75491428 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44300/59463 loops (75695578 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44400/59463 loops (75889728 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44500/59463 loops (76073878 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44600/59463 loops (76248028 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44700/59463 loops (76412178 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44800/59463 loops (76566328 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 44900/59463 loops (76710478 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 45000/59463 loops (76844628 comparisons, 2.0s elapsed, ~0.7s remaining)    Processed 45100/59463 loops (76968778 comparisons, 2.0s elapsed, ~0.6s remaining)    Processed 45200/59463 loops (77082928 comparisons, 2.0s elapsed, ~0.6s remaining)    Processed 45300/59463 loops (77187078 comparisons, 2.0s elapsed, ~0.6s remaining)    Processed 45400/59463 loops (77281228 comparisons, 2.0s elapsed, ~0.6s remaining)    Processed 45500/59463 loops (77365378 comparisons, 2.0s elapsed, ~0.6s remaining)    Processed 45600/59463 loops (77439528 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 45700/59463 loops (77503678 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 45800/59463 loops (77557828 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 45900/59463 loops (77601978 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46000/59463 loops (77636128 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46100/59463 loops (77660278 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46200/59463 loops (77674428 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46300/59463 loops (77706682 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46400/59463 loops (78052132 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46500/59463 loops (78387582 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46600/59463 loops (78713032 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46700/59463 loops (79028482 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46800/59463 loops (79333932 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 46900/59463 loops (79629382 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 47000/59463 loops (79914832 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 47100/59463 loops (80190282 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 47200/59463 loops (80455732 comparisons, 2.1s elapsed, ~0.6s remaining)    Processed 47300/59463 loops (80711182 comparisons, 2.1s elapsed, ~0.5s remaining)    Processed 47400/59463 loops (80956632 comparisons, 2.1s elapsed, ~0.5s remaining)    Processed 47500/59463 loops (81192082 comparisons, 2.1s elapsed, ~0.5s remaining)    Processed 47600/59463 loops (81417532 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 47700/59463 loops (81632982 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 47800/59463 loops (81838432 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 47900/59463 loops (82033882 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48000/59463 loops (82219332 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48100/59463 loops (82394782 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48200/59463 loops (82560232 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48300/59463 loops (82715682 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48400/59463 loops (82861132 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48500/59463 loops (82996582 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48600/59463 loops (83122032 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48700/59463 loops (83237482 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48800/59463 loops (83342932 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 48900/59463 loops (83438382 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 49000/59463 loops (83523832 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 49100/59463 loops (83599282 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 49200/59463 loops (83664732 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 49300/59463 loops (83720182 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 49400/59463 loops (83765632 comparisons, 2.2s elapsed, ~0.5s remaining)    Processed 49500/59463 loops (83801082 comparisons, 2.2s elapsed, ~0.4s remaining)    Processed 49600/59463 loops (83826532 comparisons, 2.2s elapsed, ~0.4s remaining)    Processed 49700/59463 loops (83841982 comparisons, 2.2s elapsed, ~0.4s remaining)    Processed 49800/59463 loops (83847432 comparisons, 2.2s elapsed, ~0.4s remaining)    Processed 49900/59463 loops (84169207 comparisons, 2.2s elapsed, ~0.4s remaining)    Processed 50000/59463 loops (84498157 comparisons, 2.2s elapsed, ~0.4s remaining)    Processed 50100/59463 loops (84817107 comparisons, 2.2s elapsed, ~0.4s remaining)    Processed 50200/59463 loops (85126057 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 50300/59463 loops (85425007 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 50400/59463 loops (85713957 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 50500/59463 loops (85992907 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 50600/59463 loops (86261857 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 50700/59463 loops (86520807 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 50800/59463 loops (86769757 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 50900/59463 loops (87008707 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51000/59463 loops (87237657 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51100/59463 loops (87456607 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51200/59463 loops (87665557 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51300/59463 loops (87864507 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51400/59463 loops (88053457 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51500/59463 loops (88232407 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51600/59463 loops (88401357 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51700/59463 loops (88560307 comparisons, 2.3s elapsed, ~0.4s remaining)    Processed 51800/59463 loops (88709257 comparisons, 2.3s elapsed, ~0.3s remaining)    Processed 51900/59463 loops (88848207 comparisons, 2.3s elapsed, ~0.3s remaining)    Processed 52000/59463 loops (88977157 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52100/59463 loops (89096107 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52200/59463 loops (89205057 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52300/59463 loops (89304007 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52400/59463 loops (89392957 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52500/59463 loops (89471907 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52600/59463 loops (89540857 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52700/59463 loops (89599807 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52800/59463 loops (89648757 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 52900/59463 loops (89687707 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53000/59463 loops (89716657 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53100/59463 loops (89735607 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53200/59463 loops (89744557 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53300/59463 loops (89917507 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53400/59463 loops (90196457 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53500/59463 loops (90465407 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53600/59463 loops (90724357 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53700/59463 loops (90973307 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53800/59463 loops (91212257 comparisons, 2.4s elapsed, ~0.3s remaining)    Processed 53900/59463 loops (91441207 comparisons, 2.4s elapsed, ~0.2s remaining)    Processed 54000/59463 loops (91660157 comparisons, 2.4s elapsed, ~0.2s remaining)    Processed 54100/59463 loops (91869107 comparisons, 2.4s elapsed, ~0.2s remaining)    Processed 54200/59463 loops (92068057 comparisons, 2.4s elapsed, ~0.2s remaining)    Processed 54300/59463 loops (92257007 comparisons, 2.4s elapsed, ~0.2s remaining)    Processed 54400/59463 loops (92435957 comparisons, 2.4s elapsed, ~0.2s remaining)    Processed 54500/59463 loops (92604907 comparisons, 2.4s elapsed, ~0.2s remaining)    Processed 54600/59463 loops (92763857 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 54700/59463 loops (92912807 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 54800/59463 loops (93051757 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 54900/59463 loops (93180707 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55000/59463 loops (93299657 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55100/59463 loops (93408607 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55200/59463 loops (93507557 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55300/59463 loops (93596507 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55400/59463 loops (93675457 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55500/59463 loops (93744407 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55600/59463 loops (93803357 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55700/59463 loops (93852307 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55800/59463 loops (93891257 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 55900/59463 loops (93920207 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 56000/59463 loops (93939157 comparisons, 2.5s elapsed, ~0.2s remaining)    Processed 56100/59463 loops (93948107 comparisons, 2.5s elapsed, ~0.1s remaining)    Processed 56200/59463 loops (94146437 comparisons, 2.5s elapsed, ~0.1s remaining)    Processed 56300/59463 loops (94467687 comparisons, 2.5s elapsed, ~0.1s remaining)    Processed 56400/59463 loops (94778937 comparisons, 2.5s elapsed, ~0.1s remaining)    Processed 56500/59463 loops (95080187 comparisons, 2.5s elapsed, ~0.1s remaining)    Processed 56600/59463 loops (95371437 comparisons, 2.5s elapsed, ~0.1s remaining)    Processed 56700/59463 loops (95652687 comparisons, 2.5s elapsed, ~0.1s remaining)    Processed 56800/59463 loops (95923937 comparisons, 2.5s elapsed, ~0.1s remaining)    Processed 56900/59463 loops (96185187 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57000/59463 loops (96436437 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57100/59463 loops (96677687 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57200/59463 loops (96908937 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57300/59463 loops (97130187 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57400/59463 loops (97341437 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57500/59463 loops (97542687 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57600/59463 loops (97733937 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57700/59463 loops (97915187 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57800/59463 loops (98086437 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 57900/59463 loops (98247687 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 58000/59463 loops (98398937 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 58100/59463 loops (98540187 comparisons, 2.6s elapsed, ~0.1s remaining)    Processed 58200/59463 loops (98671437 comparisons, 2.7s elapsed, ~0.1s remaining)    Processed 58300/59463 loops (98792687 comparisons, 2.7s elapsed, ~0.1s remaining)    Processed 58400/59463 loops (98903937 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 58500/59463 loops (99005187 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 58600/59463 loops (99096437 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 58700/59463 loops (99177687 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 58800/59463 loops (99248937 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 58900/59463 loops (99310187 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 59000/59463 loops (99361437 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 59100/59463 loops (99402687 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 59200/59463 loops (99433937 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 59300/59463 loops (99455187 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 59400/59463 loops (99466437 comparisons, 2.7s elapsed, ~0.0s remaining)    Processed 59463/59463 loops (99468390 comparisons, 2.7s total)      
+
+Finding overlap clusters...
+  Found 39124 clusters
+    Singleton clusters (no overlaps): 24452
+    Multi-loop clusters (will merge): 14672
+    Total loops to merge: 35011
+
+Selecting representative loops and tracking metadata...
+  Selected 39124 representative loops
+  Removed 20339 overlapping loops
+
+✓ Non-redundant all_results set: 39124 loops
+  From 5kb: 8174 loops
+  From 10kb: 13760 loops
+  From 25kb: 17190 loops
+  Multi-resolution loops: 14535 (37.2%)
+
+✓ Merged all_results saved: outputs/merged_loops/merged_all_results.tsv
+✓ Overlap report saved: outputs/merged_loops/merged_all_results_overlap_report.tsv
+
+✓ RDS object saved: outputs/merged_loops/merged_all_results.rds
+
+
+========================================
+SECTION 2: Merging Loops (Overlap Removal)
+
+========================================
+Overlap tolerance: 10 kb
+Priority: Lowest FDR (most significant)
+
+Total loops to process: 179
+  5kb: 6 loops
+  10kb: 44 loops
+  25kb: 129 loops
+
+Detecting overlaps...
+  Pre-extracting coordinates...
+    Extracted coordinates for 179 loops (0.0s)
+  Grouping by chromosome pairs...
+    Found 18 unique chromosome pairs
+    Starting pairwise comparisons...
+    Processed 100/179 loops (433 comparisons, 0.1s elapsed, ~0.0s remaining)    Processed 179/179 loops (2369 comparisons, 0.1s total)      
+
+Finding overlap clusters...
+  Found 165 clusters
+    Singleton clusters (no overlaps): 153
+    Multi-loop clusters (will merge): 12
+    Total loops to merge: 26
+
+Selecting representative loops (lowest FDR)...
+  Selected 165 representative loops
+  Removed 14 overlapping loops
+
+✓ Non-redundant loop set: 165 loops
+  From 5kb: 4 loops
+  From 10kb: 32 loops
+  From 25kb: 129 loops
+
+✓ Overlap report saved: outputs/merged_loops/overlap_report.tsv
+
+
+========================================
+SECTION 3: Validating All Loops Files
+
+========================================
+5kb: ✓ Valid (16350 loops)
+10kb: ✓ Valid (22122 loops)
+25kb: ✓ Valid (20991 loops)
+
+✓ Validation complete
+  Files saved in: outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv
+
+
+========================================
+SECTION 4: Loop Anchor Characterizations
+
+========================================
+4A. Computing basic genomic features...
+  Computed features for 165 loops
+  Distance range: 50000 bp - 109925000 bp
+  All loops are intrachromosomal: Yes
+
+4B. Annotating with gene information...
+  Loading TxDb.Mmusculus.UCSC.mm10.knownGene
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Loaded 24528 genes
+  Finding nearest genes for anchor1...
+  Finding nearest genes for anchor2...
+
+  Applying ChIP-seq-based anchor classification...
+    H3K27ac peaks (P12): P12_ctrl_H3K27ac_early_peaks.bed
+    H3K4me1 peaks: K4me1_aligned_reads_peaks.broadPeak-filtered.bed
+
+Annotating loops data.frame with ChIP-seq data...
+  Loading H3K27ac peaks from: P12_ctrl_H3K27ac_early_peaks.bed
+    Loaded 28042 H3K27ac peaks
+  Loading H3K4me1 peaks from: K4me1_aligned_reads_peaks.broadPeak-filtered.bed
+    Loaded 113781 H3K4me1 peaks
+✓ Annotation complete
+
+
+  Gene annotation complete
+  Loops with genes near both anchors: 165 (100.0%)
+
+  Loop type classification (ChIP-seq-based):
+    Other-Other                        :    83 (50.3%)
+    Poised_Enhancer-Other              :    39 (23.6%)
+    Poised_Enhancer-Poised_Enhancer    :    11 (6.7%)
+    Promoter-Other                     :    10 (6.1%)
+    Active_Enhancer-Other              :     6 (3.6%)
+    Promoter-Active_Enhancer           :     6 (3.6%)
+    Active_Enhancer-Poised_Enhancer    :     4 (2.4%)
+    Active_Enhancer-Active_Enhancer    :     2 (1.2%)
+    Promoter-Poised_Enhancer           :     2 (1.2%)
+    Promoter-Promoter                  :     2 (1.2%)
+
+4C. Generating characterization summaries and plots...
+  ✓ Summary saved
+  ✓ Distance distribution plot saved
+  ✓ Chromosome distribution plot saved
+Warning messages:
+1: In scale_x_log10() : log-10 transformation introduced infinite values.
+2: Removed 133 rows containing non-finite outside the scale range (`stat_bin()`). 
+  ✓ Gene proximity distribution plot saved
+  ✓ Loop type classification plot saved
+
+
+========================================
+SECTION 5: Exporting Results
+
+========================================
+5A. Exporting TSV files...
+  ✓ characterized_loops.tsv (165 loops)
+  ✓ non_redundant_loops.tsv (165 loops)
+  ✓ anchor_annotations.tsv (330 anchors)
+
+5B. Exporting RDS files...
+  ✓ non_redundant_loops.rds (GInteractions object)
+
+5C. Exporting BEDPE files...
+  ✓ non_redundant_loops.bedpe (for Juicebox/IGV)
+
+
+========================================
+DOWNSTREAM ANALYSIS COMPLETE
+
+========================================
+Output directory: outputs/merged_loops/
+
+Files generated:
+
+Main results:
+  1. non_redundant_loops.tsv
+     → Merged loop list with basic info (%d loops)
+ 165
+  2. characterized_loops.tsv
+     → Complete characterization with all features (%d loops)
+ 165
+  3. anchor_annotations.tsv
+     → Per-anchor gene annotations (%d anchors)
+ 330
+  4. overlap_report.tsv
+     → Details of merged overlapping loops (12 clusters)
+
+  5. non_redundant_loops.rds
+     → GInteractions object for R analysis
+
+  6. non_redundant_loops.bedpe
+     → BEDPE format for genome browser visualization
+
+Quality control:
+  7. volcano_files_validation.tsv
+     → Validation of all_results files for volcano plots
+
+  8. characterization_summary.txt
+     → Summary statistics report
+
+Plots (outputs/merged_loops/plots/):
+  9. distance_distribution.pdf
+  10. chromosome_distribution.pdf
+  11. gene_proximity_distribution.pdf
+  12. loop_type_classification.pdf
+
+Summary statistics:
+  Input loops: 179 (from 3 resolutions)
+  Non-redundant loops: 165
+  Loops removed (overlaps): 14
+  Promoter-involved loops: 165 (100.0%)
+
+
+========================================
+
+
+✅ Downstream analysis completed
+   Output: outputs/merged_loops/
+
+
+=========================================
+STEP 10: Visualization Analysis
+=========================================
+Script: scripts/visualizations.R
+Input: characterized_loops.tsv + all_results_primary.tsv
+Output: Volcano plots, enrichment analyses, loop classifications
+
+
+========================================
+Visualization Analysis: Differential Loops
+========================================
+
+Configuration:
+  Volcano plot resolution: 5 kb
+  Skip APA: No
+
+Loading required packages...
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘tibble’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘yaml’ was built under R version 4.4.3 
+✓ Packages loaded
+
+  Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner
+Output directory: outputs/visualizations
+
+
+========================================
+Loading Input Data
+
+========================================
+✓ Loaded characterized loops: 165 loops
+  Up-regulated: 73
+  Down-regulated: 92
+
+✓ Loaded GInteractions object: 165 interactions
+
+
+========================================
+SECTION 1: Volcano Plots
+
+========================================
+Creating enhanced volcano plot: volcano_5kb.pdf
+  Loaded 16350 loops
+  Significant: 5 up, 1 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_5kb.pdf
+
+Creating enhanced volcano plot: volcano_10kb.pdf
+  Loaded 22122 loops
+  Significant: 53 up, 34 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_10kb.pdf
+
+Creating enhanced volcano plot: volcano_25kb.pdf
+  Loaded 20991 loops
+  Significant: 146 up, 149 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_25kb.pdf
+
+Warning messages:
+1: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the EnhancedVolcano package.
+  Please report the issue to the authors. 
+2: The `size` argument of `element_rect()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.
+ℹ The deprecated feature was likely used in the EnhancedVolcano package.
+  Please report the issue to the authors. 
+Creating merged multi-resolution volcano plot...
+Creating enhanced volcano plot: volcano_merged_multiresolution.pdf
+  Loaded 39124 loops
+  Significant: 195 up, 166 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_merged_multiresolution.pdf
+
+Creating volcano plot for merged non-redundant loops...
+Creating enhanced volcano plot: volcano_nonredundant.pdf
+  Loaded 165 loops
+  Significant: 73 up, 92 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_nonredundant.pdf
+
+✓ Section 1 complete: Enhanced volcano plots generated
+
+
+========================================
+SECTION 2: Feature Distribution Analysis
+
+========================================
+Annotating loop anchors with genomic features...
+  Annotating anchor1...
+>> preparing features information...		 2025-11-21 01:54:39 PM 
+>> identifying nearest features...		 2025-11-21 01:54:41 PM 
+>> calculating distance from peak to TSS...	 2025-11-21 01:54:41 PM 
+>> assigning genomic annotation...		 2025-11-21 01:54:41 PM 
+>> adding gene annotation...			 2025-11-21 01:55:01 PM 
+'select()' returned 1:1 mapping between keys and columns
+>> assigning chromosome lengths			 2025-11-21 01:55:02 PM 
+>> done...					 2025-11-21 01:55:02 PM 
+  Annotating anchor2...
+>> preparing features information...		 2025-11-21 01:55:02 PM 
+>> identifying nearest features...		 2025-11-21 01:55:02 PM 
+>> calculating distance from peak to TSS...	 2025-11-21 01:55:02 PM 
+>> assigning genomic annotation...		 2025-11-21 01:55:02 PM 
+>> adding gene annotation...			 2025-11-21 01:55:04 PM 
+'select()' returned 1:1 mapping between keys and columns
+>> assigning chromosome lengths			 2025-11-21 01:55:04 PM 
+>> done...					 2025-11-21 01:55:04 PM 
+  ✓ Feature distribution summary saved
+  Creating feature distribution plot...
+Warning message:
+In geom_bar(stat = "identity", color = "black", size = 0.3) :
+  Ignoring unknown parameters: `size`
+  ✓ Saved: feature_distribution.pdf
+
+✓ Section 2 complete: Feature distribution analyzed
+
+
+========================================
+SECTION 3: GO/KEGG Enrichment Analysis
+
+========================================
+Extracting genes from loop anchors...
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Up-regulated loops: 100 genes
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Down-regulated loops: 133 genes
+
+Running enrichment analyses...
+  GO Biological Process...
+    ✓ Saved: go_bp_dotplot.pdf
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+  GO Cellular Component...
+Warning message:
+In compareCluster(geneCluster = gene_list, fun = "enrichGO", OrgDb = org.Mm.eg.db,  :
+  No enrichment found in any of gene cluster, please check your input...
+    ⚠ No significant GO CC terms found
+  GO Molecular Function...
+    ✓ Saved: go_mf_dotplot.pdf
+  KEGG pathways...
+    ✓ Saved: kegg_dotplot.pdf
+
+✓ Section 3 complete: Enrichment analysis done
+
+
+========================================
+SECTION 4: Loop Type Classification
+
+========================================
+Creating loop type classification plots...
+  ✓ Saved: loop_type_classification.pdf
+  ✓ Saved: loop_type_genes.tsv
+
+✓ Section 4 complete: Loop type classification done
+
+
+========================================
+SECTION 5: Loop Length Distribution
+
+========================================
+Analyzing loop length distributions...
+  Wilcoxon test p-value: 1.220e-07
+  Median length (Up): 700.0 kb
+  Median length (Down): 3875.0 kb
+
+  ✓ Saved: loop_length_distribution_strip.pdf
+  ✓ Saved: loop_length_distribution_violin.pdf
+  ✓ Saved: loop_length_distribution_histogram.pdf
+  ✓ Saved: loop_length_statistics.txt
+
+✓ Section 5 complete: Loop length distribution analyzed
+
+
+========================================
+SECTION 6: Aggregate Peak Analysis (APA)
+========================================
+
+ℹ APA analysis is available as a standalone script
+  Run: Rscript scripts/apa_analysis.R
+  See script header for options and examples
+
+
+========================================
+VISUALIZATION ANALYSIS COMPLETE
+
+========================================
+Output directory: outputs/visualizations/
+
+Generated files:
+
+Volcano plots (outputs/visualizations/volcano/):
+  - volcano_5kb.pdf
+  - volcano_10kb.pdf
+  - volcano_25kb.pdf
+  - volcano_merged.pdf (all resolutions combined)
+  - volcano_merged_nonredundant.pdf (final non-redundant loop set)
+
+Feature distribution (outputs/visualizations/features/):
+  - feature_distribution.pdf
+  - feature_distribution_summary.tsv
+
+Enrichment analysis (outputs/visualizations/enrichment/):
+  - go_bp_dotplot.pdf
+  - go_cc_dotplot.pdf
+  - go_mf_dotplot.pdf
+  - kegg_dotplot.pdf
+
+Loop classification (outputs/visualizations/loop_classification/):
+  - loop_type_classification.pdf
+  - loop_type_genes.tsv
+  - loop_length_distribution_strip.pdf
+  - loop_length_distribution_violin.pdf
+  - loop_length_distribution_histogram.pdf
+  - loop_length_statistics.txt
+
+APA analysis (outputs/visualizations/apa/):
+  - Notes for full APA implementation
+
+
+========================================
+
+
+✅ Visualization analysis completed
+   Output: outputs/visualizations/
+
+
+=========================================
+STEP 11: Aggregate Peak Analysis (APA)
+=========================================
+Script: scripts/apa_analysis.R
+Input: Merged loops + resolution-specific loops + .hic files
+Output: APA heatmaps, enrichment scores, statistical tests
+Note: This step is time-intensive (~2 hours)
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+5: package ‘dplyr’ was built under R version 4.4.3 
+6: package ‘yaml’ was built under R version 4.4.3 
+
+Loading paths configuration...
+
+========================================
+Aggregate Peak Analysis (APA) Pipeline
+========================================
+
+Resolutions to process: 5 kb, 10 kb, 25 kb
+Loop sets: both
+Output directory: outputs/apa_results
+
+  ✓ All .hic files found
+  ✓ Using normalization: VC
+
+
+========================================
+Resolution: 5kb
+========================================
+
+## Processing MERGED loops ##
+  Total merged loops: 165 (up: 73, down: 92)
+
+--- Processing: merged_loops up-regulated loops at 5kb ---
+  Loop count: 73
+  Extracting matrices: 73 loops × 6 samples
+  Buffer: 10 bins (105kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_5kb/apa_matrices.h5
+  Aggregating: 73 loops × 6 samples → 21×21 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 73 loops
+  ⚠ Flagged 6 outlier enrichment scores (>3 SD)
+  ✓ Enrichment calculation complete
+    Mean enrichment: 3.46 (range: 0.00 - 19.41)
+  ✓ Saved: outputs/apa_results/res_5kb/merged_loops/up_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = 3.13e-03
+  ✓ All outputs saved to: outputs/apa_results/res_5kb/merged_loops/up_loops
+
+--- Processing: merged_loops down-regulated loops at 5kb ---
+  Loop count: 92
+  Extracting matrices: 92 loops × 6 samples
+  Buffer: 10 bins (105kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_5kb/apa_matrices.h5
+  Aggregating: 92 loops × 6 samples → 21×21 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 92 loops
+  ⚠ Flagged 8 outlier enrichment scores (>3 SD)
+  ✓ Enrichment calculation complete
+    Mean enrichment: 4.04 (range: 0.00 - 54.84)
+  ✓ Saved: outputs/apa_results/res_5kb/merged_loops/down_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = 1.68e-01
+  ✓ All outputs saved to: outputs/apa_results/res_5kb/merged_loops/down_loops
+
+## Processing RESOLUTION-SPECIFIC loops ##
+  Matched 16350 loops from GI (16350) to results (16350)
+  Significant loops: 6 (up: 5, down: 1)
+
+--- Processing: resolution_specific up-regulated loops at 5kb ---
+  ⚠ Skipping: Only 5 loops (minimum 10 required)
+
+--- Processing: resolution_specific down-regulated loops at 5kb ---
+  ⚠ Skipping: Only 1 loops (minimum 10 required)
+
+========================================
+Resolution: 10kb
+========================================
+
+## Processing MERGED loops ##
+  Total merged loops: 165 (up: 73, down: 92)
+
+--- Processing: merged_loops up-regulated loops at 10kb ---
+  Loop count: 73
+  Extracting matrices: 73 loops × 6 samples
+  Buffer: 5 bins (110kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_10kb/apa_matrices.h5
+  Aggregating: 73 loops × 6 samples → 11×11 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 73 loops
+  ⚠ Flagged 8 outlier enrichment scores (>3 SD)
+  ✓ Enrichment calculation complete
+    Mean enrichment: 3.77 (range: 0.00 - 32.75)
+  ✓ Saved: outputs/apa_results/res_10kb/merged_loops/up_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = 2.11e-03
+  ✓ All outputs saved to: outputs/apa_results/res_10kb/merged_loops/up_loops
+
+--- Processing: merged_loops down-regulated loops at 10kb ---
+  Loop count: 92
+  Extracting matrices: 92 loops × 6 samples
+  Buffer: 5 bins (110kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_10kb/apa_matrices.h5
+  Aggregating: 92 loops × 6 samples → 11×11 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 92 loops
+  ⚠ Flagged 10 outlier enrichment scores (>3 SD)
+  ✓ Enrichment calculation complete
+    Mean enrichment: 4.54 (range: 0.00 - 32.38)
+  ✓ Saved: outputs/apa_results/res_10kb/merged_loops/down_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = 2.24e-04
+  ✓ All outputs saved to: outputs/apa_results/res_10kb/merged_loops/down_loops
+
+## Processing RESOLUTION-SPECIFIC loops ##
+  Matched 22122 loops from GI (22129) to results (22122)
+  Significant loops: 87 (up: 53, down: 34)
+
+--- Processing: resolution_specific up-regulated loops at 10kb ---
+  Loop count: 53
+  Extracting matrices: 53 loops × 6 samples
+  Buffer: 5 bins (110kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_10kb/apa_matrices.h5
+  Aggregating: 53 loops × 6 samples → 1×1 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 53 loops
+  ✓ Enrichment calculation complete
+    Mean enrichment: 1.00 (range: 1.00 - 1.00)
+  ✓ Saved: outputs/apa_results/res_10kb/resolution_specific/up_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = NaN
+  ✓ All outputs saved to: outputs/apa_results/res_10kb/resolution_specific/up_loops
+
+--- Processing: resolution_specific down-regulated loops at 10kb ---
+  Loop count: 34
+  Extracting matrices: 34 loops × 6 samples
+  Buffer: 5 bins (110kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_10kb/apa_matrices.h5
+  Aggregating: 34 loops × 6 samples → 1×1 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 34 loops
+  ✓ Enrichment calculation complete
+    Mean enrichment: 1.00 (range: 1.00 - 1.00)
+  ✓ Saved: outputs/apa_results/res_10kb/resolution_specific/down_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = NaN
+  ✓ All outputs saved to: outputs/apa_results/res_10kb/resolution_specific/down_loops
+
+========================================
+Resolution: 25kb
+========================================
+
+## Processing MERGED loops ##
+  Total merged loops: 165 (up: 73, down: 92)
+
+--- Processing: merged_loops up-regulated loops at 25kb ---
+  Loop count: 73
+  Extracting matrices: 73 loops × 6 samples
+  Buffer: 2 bins (125kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_25kb/apa_matrices.h5
+  Aggregating: 73 loops × 6 samples → 5×5 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 73 loops
+  ⚠ Flagged 4 outlier enrichment scores (>3 SD)
+  ✓ Enrichment calculation complete
+    Mean enrichment: 2.58 (range: 0.00 - 9.17)
+  ✓ Saved: outputs/apa_results/res_25kb/merged_loops/up_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = 1.32e-05
+  ✓ All outputs saved to: outputs/apa_results/res_25kb/merged_loops/up_loops
+
+--- Processing: merged_loops down-regulated loops at 25kb ---
+  Loop count: 92
+  Extracting matrices: 92 loops × 6 samples
+  Buffer: 2 bins (125kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_25kb/apa_matrices.h5
+  Aggregating: 92 loops × 6 samples → 5×5 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 92 loops
+  ⚠ Flagged 11 outlier enrichment scores (>3 SD)
+  ✓ Enrichment calculation complete
+    Mean enrichment: 4.36 (range: 0.00 - 51.56)
+  ✓ Saved: outputs/apa_results/res_25kb/merged_loops/down_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = 4.83e-05
+  ✓ All outputs saved to: outputs/apa_results/res_25kb/merged_loops/down_loops
+
+## Processing RESOLUTION-SPECIFIC loops ##
+  Matched 20991 loops from GI (20997) to results (20991)
+  Significant loops: 295 (up: 146, down: 149)
+
+--- Processing: resolution_specific up-regulated loops at 25kb ---
+  Loop count: 146
+  Extracting matrices: 146 loops × 6 samples
+  Buffer: 2 bins (125kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_25kb/apa_matrices.h5
+  Aggregating: 146 loops × 6 samples → 1×1 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 146 loops
+  ✓ Enrichment calculation complete
+    Mean enrichment: 1.00 (range: 1.00 - 1.00)
+  ✓ Saved: outputs/apa_results/res_25kb/resolution_specific/up_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = NaN
+  ✓ All outputs saved to: outputs/apa_results/res_25kb/resolution_specific/up_loops
+
+--- Processing: resolution_specific down-regulated loops at 25kb ---
+  Loop count: 149
+  Extracting matrices: 149 loops × 6 samples
+  Buffer: 2 bins (125kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_25kb/apa_matrices.h5
+  Aggregating: 149 loops × 6 samples → 1×1 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 149 loops
+  ✓ Enrichment calculation complete
+    Mean enrichment: 1.00 (range: 1.00 - 1.00)
+  ✓ Saved: outputs/apa_results/res_25kb/resolution_specific/down_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  ✓ Statistical test: p = NaN
+  ✓ All outputs saved to: outputs/apa_results/res_25kb/resolution_specific/down_loops
+
+========================================
+APA Analysis Complete
+========================================
+Successful analyses: 10 / 12
+Results directory: outputs/apa_results
+
+✓ Summary saved: outputs/apa_results/summary_report.txt
+
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = 3.13e-03, Cliff's Δ = 0.174' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = 1.68e-01, Cliff's Δ = -0.086' in 'mbcsToSbcs': for Δ (U+0394)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = 2.11e-03, Cliff's Δ = 0.172' in 'mbcsToSbcs': for Δ (U+0394)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = 2.24e-04, Cliff's Δ = -0.195' in 'mbcsToSbcs': for Δ (U+0394)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = NaN, Cliff's Δ = 0.000' in 'mbcsToSbcs': for Δ (U+0394)
+6: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = NaN, Cliff's Δ = 0.000' in 'mbcsToSbcs': for Δ (U+0394)
+7: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = 1.32e-05, Cliff's Δ = 0.242' in 'mbcsToSbcs': for Δ (U+0394)
+8: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = 4.83e-05, Cliff's Δ = -0.200' in 'mbcsToSbcs': for Δ (U+0394)
+9: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = NaN, Cliff's Δ = 0.000' in 'mbcsToSbcs': for Δ (U+0394)
+10: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = NaN, Cliff's Δ = 0.000' in 'mbcsToSbcs': for Δ (U+0394)
+
+✅ APA analysis completed
+   Output: outputs/apa_results/
+
+
+=========================================
+DOWNSTREAM ANALYSIS FINISHED
+=========================================
+End time: Fri Nov 21 14:30:33 PST 2025
+
+Output directories:
+  - outputs/merged_loops/         (non-redundant loops with annotations)
+  - outputs/visualizations/       (volcano plots, enrichment, classifications)
+  - outputs/apa_results/          (aggregate peak analysis heatmaps)
+
+Key files to review:
+
+Merged loops (downstream analysis):
+  - outputs/merged_loops/non_redundant_loops.tsv
+  - outputs/merged_loops/characterized_loops.tsv (with gene annotations)
+  - outputs/merged_loops/non_redundant_loops.bedpe
+  - outputs/merged_loops/overlap_report.tsv
+  - outputs/merged_loops/plots/
+
+Visualizations:
+  - outputs/visualizations/volcano/ (all resolutions)
+  - outputs/visualizations/features/ (genomic feature distribution)
+  - outputs/visualizations/enrichment/ (GO/KEGG analyses)
+  - outputs/visualizations/loop_classification/ (P-P, P-E, E-E types)
+
+APA results (Aggregate Peak Analysis):
+  - outputs/apa_results/res_5kb/
+  - outputs/apa_results/res_10kb/
+  - outputs/apa_results/res_25kb/
+  Each contains: merged_loops/ and resolution_specific/ subdirectories
+  Per loop set: heatmaps, enrichment scores, statistical tests
+
+========================================
+Next steps:
+  1. Examine volcano plots in outputs/visualizations/volcano/
+  2. Review enrichment analyses in outputs/visualizations/enrichment/
+  3. Check loop classifications in outputs/visualizations/loop_classification/
+  4. Review APA heatmaps in outputs/apa_results/
+  5. Load characterized_loops.tsv for biological interpretation
+========================================
+End time: Fri Nov 21 14:30:33 PST 2025
