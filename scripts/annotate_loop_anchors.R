@@ -44,7 +44,7 @@ suppressPackageStartupMessages({
 #'
 #' @param bed_path Path to H3K27ac bed file
 #' @return GRanges object with H3K27ac peaks
-load_h3k27ac_peaks <- function(bed_path = "220310index25H3K27acLatePeakRegions.bed") {
+load_h3k27ac_peaks <- function(bed_path = "P12_ctrl_H3K27ac_early_peaks.bed") {
   if (!file.exists(bed_path)) {
     stop(sprintf("H3K27ac bed file not found: %s", bed_path))
   }
@@ -188,7 +188,7 @@ classify_loop_type <- function(anchor1_type, anchor2_type) {
 #' @param existing_tss_distances Optional - pre-computed TSS distances (data.frame)
 #' @return List with annotated GInteractions and summary statistics
 annotate_loop_anchors <- function(gi, txdb,
-                                   k27ac_path = "220310index25H3K27acLatePeakRegions.bed",
+                                   k27ac_path = "P12_ctrl_H3K27ac_early_peaks.bed",
                                    k4me1_path = "K4me1_aligned_reads_peaks.broadPeak-filtered.bed",
                                    tss_threshold = 2000,
                                    existing_tss_distances = NULL) {
@@ -377,7 +377,7 @@ annotate_loop_anchors <- function(gi, txdb,
 #' @param tss_threshold Promoter distance threshold in bp
 #' @return data.frame with added annotation columns
 annotate_loops_dataframe <- function(loops_df,
-                                     k27ac_path = "220310index25H3K27acLatePeakRegions.bed",
+                                     k27ac_path = "P12_ctrl_H3K27ac_early_peaks.bed",
                                      k4me1_path = "K4me1_aligned_reads_peaks.broadPeak-filtered.bed",
                                      tss_threshold = 2000) {
 
