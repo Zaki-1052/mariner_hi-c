@@ -1,0 +1,271 @@
+=========================================
+Mariner Feature Distribution Re-run
+=========================================
+Job ID: 44629250
+Node: exp-4-37
+CPUs: 16
+Memory: 128GB
+Start time: Mon Nov 24 13:58:43 PST 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+
+=========================================
+Re-generating Feature Distribution
+=========================================
+Script: scripts/visualizations.R
+Input: characterized_loops.tsv
+Output: Updated feature distribution with Exon/Intron categories
+
+
+========================================
+Visualization Analysis: Differential Loops
+========================================
+
+Configuration:
+  Volcano plot resolution: 5 kb
+  Skip APA: Yes
+
+Loading required packages...
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘tibble’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘yaml’ was built under R version 4.4.3 
+✓ Packages loaded
+
+  Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner
+Output directory: outputs/visualizations
+
+
+========================================
+Loading Input Data
+
+========================================
+✓ Loaded characterized loops: 165 loops
+  Up-regulated: 73
+  Down-regulated: 92
+
+Loading required package: mariner
+✓ Loaded GInteractions object: 165 interactions
+
+
+========================================
+SECTION 1: Volcano Plots
+
+========================================
+Creating enhanced volcano plot: volcano_5kb.pdf
+  Loaded 16350 loops
+  Significant: 5 up, 1 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_5kb.pdf
+
+Creating enhanced volcano plot: volcano_10kb.pdf
+  Loaded 22122 loops
+  Significant: 53 up, 34 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_10kb.pdf
+
+Creating enhanced volcano plot: volcano_25kb.pdf
+  Loaded 20991 loops
+  Significant: 146 up, 149 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_25kb.pdf
+
+Warning messages:
+1: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the EnhancedVolcano package.
+  Please report the issue to the authors. 
+2: The `size` argument of `element_rect()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.
+ℹ The deprecated feature was likely used in the EnhancedVolcano package.
+  Please report the issue to the authors. 
+Creating merged multi-resolution volcano plot...
+Creating enhanced volcano plot: volcano_merged_multiresolution.pdf
+  Loaded 39124 loops
+  Significant: 195 up, 166 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_merged_multiresolution.pdf
+
+Creating volcano plot for merged non-redundant loops...
+Creating enhanced volcano plot: volcano_nonredundant.pdf
+  Loaded 165 loops
+  Significant: 73 up, 92 down
+  ✓ Saved: outputs/visualizations/volcano/volcano_nonredundant.pdf
+
+✓ Section 1 complete: Enhanced volcano plots generated
+
+
+========================================
+SECTION 2: Feature Distribution Analysis
+
+========================================
+Annotating loop anchors with genomic features...
+  Annotating anchor1...
+>> preparing features information...		 2025-11-24 01:59:38 PM 
+>> identifying nearest features...		 2025-11-24 01:59:50 PM 
+>> calculating distance from peak to TSS...	 2025-11-24 01:59:50 PM 
+>> assigning genomic annotation...		 2025-11-24 01:59:50 PM 
+>> adding gene annotation...			 2025-11-24 02:00:18 PM 
+'select()' returned 1:1 mapping between keys and columns
+>> assigning chromosome lengths			 2025-11-24 02:00:19 PM 
+>> done...					 2025-11-24 02:00:19 PM 
+  Annotating anchor2...
+>> preparing features information...		 2025-11-24 02:00:19 PM 
+>> identifying nearest features...		 2025-11-24 02:00:19 PM 
+>> calculating distance from peak to TSS...	 2025-11-24 02:00:19 PM 
+>> assigning genomic annotation...		 2025-11-24 02:00:19 PM 
+>> adding gene annotation...			 2025-11-24 02:00:21 PM 
+'select()' returned 1:1 mapping between keys and columns
+>> assigning chromosome lengths			 2025-11-24 02:00:21 PM 
+>> done...					 2025-11-24 02:00:21 PM 
+  ✓ Feature distribution summary saved
+  Creating feature distribution plot...
+Warning message:
+In geom_bar(stat = "identity", color = "black", size = 0.3) :
+  Ignoring unknown parameters: `size`
+  ✓ Saved: feature_distribution.pdf
+
+✓ Section 2 complete: Feature distribution analyzed
+
+
+========================================
+SECTION 3: GO/KEGG Enrichment Analysis
+
+========================================
+Extracting genes from loop anchors...
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Up-regulated loops: 100 genes
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Down-regulated loops: 133 genes
+
+Running enrichment analyses...
+  GO Biological Process...
+    ✓ Saved: go_bp_dotplot.pdf
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+  GO Cellular Component...
+Warning message:
+In compareCluster(geneCluster = gene_list, fun = "enrichGO", OrgDb = org.Mm.eg.db,  :
+  No enrichment found in any of gene cluster, please check your input...
+    ⚠ No significant GO CC terms found
+  GO Molecular Function...
+    ✓ Saved: go_mf_dotplot.pdf
+  KEGG pathways...
+    ✓ Saved: kegg_dotplot.pdf
+
+✓ Section 3 complete: Enrichment analysis done
+
+
+========================================
+SECTION 4: Loop Type Classification
+
+========================================
+Creating loop type classification plots...
+  ✓ Saved: loop_type_classification.pdf
+  ✓ Saved: loop_type_genes.tsv
+
+✓ Section 4 complete: Loop type classification done
+
+
+========================================
+SECTION 5: Loop Length Distribution
+
+========================================
+Analyzing loop length distributions...
+  Wilcoxon test p-value: 1.220e-07
+  Median length (Up): 700.0 kb
+  Median length (Down): 3875.0 kb
+
+  ✓ Saved: loop_length_distribution_strip.pdf
+  ✓ Saved: loop_length_distribution_violin.pdf
+  ✓ Saved: loop_length_distribution_histogram.pdf
+  ✓ Saved: loop_length_statistics.txt
+
+✓ Section 5 complete: Loop length distribution analyzed
+
+Skipping APA analysis (--skip-apa flag set)
+
+
+========================================
+VISUALIZATION ANALYSIS COMPLETE
+
+========================================
+Output directory: outputs/visualizations/
+
+Generated files:
+
+Volcano plots (outputs/visualizations/volcano/):
+  - volcano_5kb.pdf
+  - volcano_10kb.pdf
+  - volcano_25kb.pdf
+  - volcano_merged.pdf (all resolutions combined)
+  - volcano_merged_nonredundant.pdf (final non-redundant loop set)
+
+Feature distribution (outputs/visualizations/features/):
+  - feature_distribution.pdf
+  - feature_distribution_summary.tsv
+
+Enrichment analysis (outputs/visualizations/enrichment/):
+  - go_bp_dotplot.pdf
+  - go_cc_dotplot.pdf
+  - go_mf_dotplot.pdf
+  - kegg_dotplot.pdf
+
+Loop classification (outputs/visualizations/loop_classification/):
+  - loop_type_classification.pdf
+  - loop_type_genes.tsv
+  - loop_length_distribution_strip.pdf
+  - loop_length_distribution_violin.pdf
+  - loop_length_distribution_histogram.pdf
+  - loop_length_statistics.txt
+
+
+========================================
+
+
+✅ Feature distribution completed
+   Output: outputs/visualizations/
+
+
+=========================================
+FEATURE DISTRIBUTION RE-RUN FINISHED
+=========================================
+End time: Mon Nov 24 14:01:37 PST 2025
+
+Output files:
+  - outputs/visualizations/features/feature_distribution.pdf
+  - outputs/visualizations/features/feature_distribution_summary.tsv
+
+Note: All other visualization files (volcano plots, enrichment, etc.)
+      have also been regenerated.
+
+=========================================
+Next steps:
+  1. Review updated feature distribution plot
+  2. Check feature_distribution_summary.tsv for Exon/Intron counts
+=========================================
+End time: Mon Nov 24 14:01:37 PST 2025
