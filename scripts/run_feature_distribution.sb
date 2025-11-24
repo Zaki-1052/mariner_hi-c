@@ -1,0 +1,98 @@
+#!/bin/bash
+#SBATCH --job-name=mariner_feature_dist
+#SBATCH --output=logs/mariner_feature_dist_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=2:00:00
+#SBATCH --account=csd940
+
+# ==============================================================================
+# Mariner Feature Distribution Re-run
+# ==============================================================================
+#
+# Re-generates feature distribution plots with updated genomic annotations
+# including exonic and intronic regions.
+#
+# Prerequisites: downstream_analysis.R must be completed
+# Expected runtime: ~5-10 minutes
+# ==============================================================================
+
+# Create logs directory
+mkdir -p logs
+
+echo "========================================="
+echo "Mariner Feature Distribution Re-run"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Memory: 128GB"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Change to working directory
+cd /expanse/lustre/projects/csd940/zalibhai/mariner
+
+
+# ==============================================================================
+# FEATURE DISTRIBUTION VISUALIZATION
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "Re-generating Feature Distribution"
+echo "========================================="
+echo "Script: scripts/visualizations.R"
+echo "Input: characterized_loops.tsv"
+echo "Output: Updated feature distribution with Exon/Intron categories"
+echo ""
+
+Rscript scripts/visualizations.R --skip-apa
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Feature distribution completed"
+    echo "   Output: outputs/visualizations/"
+else
+    echo ""
+    echo "❌ Feature distribution failed with exit code $?"
+fi
+
+echo ""
+
+# ==============================================================================
+# FEATURE DISTRIBUTION RE-RUN COMPLETE
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "FEATURE DISTRIBUTION RE-RUN FINISHED"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Output files:"
+echo "  - outputs/visualizations/features/feature_distribution.pdf"
+echo "  - outputs/visualizations/features/feature_distribution_summary.tsv"
+echo ""
+echo "Note: All other visualization files (volcano plots, enrichment, etc.)"
+echo "      have also been regenerated."
+echo ""
+echo "========================================="
+echo "Next steps:"
+echo "  1. Review updated feature distribution plot"
+echo "  2. Check feature_distribution_summary.tsv for Exon/Intron counts"
+echo "========================================="
+echo "End time: $(date)"
