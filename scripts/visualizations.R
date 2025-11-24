@@ -430,8 +430,10 @@ feature_colors <- c(
   "3' UTR" = "#4daf4a",
   "1st Exon" = "#984ea3",
   "Other Exon" = "#ff7f00",
+  "Exon" = "#e78ac3",
   "1st Intron" = "#ffff33",
   "Other Intron" = "#a65628",
+  "Intron" = "#66c2a5",
   "Downstream" = "#f781bf",
   "Distal Intergenic" = "#999999"
 )
