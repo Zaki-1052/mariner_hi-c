@@ -462,6 +462,84 @@ BiocManager::install("HDF5Array", force = TRUE)
 - Verify biological replicates (not technical replicates)
 - May indicate weak biological effect
 
+## TAD and Compartment Analysis Scripts
+
+Standalone scripts for analyzing TAD and compartment (PC1) differential data from HOMER's `getDiffExpression.pl`.
+
+### TAD Volcano Plot (`scripts/tad_volcano_plot.R`)
+
+Generates volcano plots for TAD inclusion ratio differential analysis.
+
+**Input:** Tab-delimited file from `getDiffExpression.pl` with TAD scores
+**Default input:** `tad_analysis/Bap1.diff.tad.txt`
+
+```bash
+# Basic usage (generates both relaxed and standard threshold plots)
+Rscript scripts/tad_volcano_plot.R
+
+# Custom input file
+Rscript scripts/tad_volcano_plot.R tad_analysis/Bap1.diff.tad.txt
+
+# Custom output directory
+Rscript scripts/tad_volcano_plot.R --output outputs/custom_tad/
+
+# With custom title
+Rscript scripts/tad_volcano_plot.R --title "BAP1 TAD Analysis"
+```
+
+**Thresholds generated:**
+- Relaxed: FDR < 0.15, |Difference| > 0.15 (exploratory)
+- Standard: FDR < 0.05, |Difference| > 0.30 (publication)
+
+**Output files (`outputs/tad_analysis/`):**
+- `tad_volcano_relaxed.pdf` - Volcano plot with relaxed thresholds
+- `tad_volcano_standard.pdf` - Volcano plot with standard thresholds
+- `tad_significant_relaxed.tsv` - Significant TADs (relaxed)
+- `tad_significant_standard.tsv` - Significant TADs (standard)
+- `tad_volcano_summary.txt` - Summary statistics
+- `tad_all_annotated.tsv` - Full dataset
+
+### Compartment Volcano Plot (`scripts/compartment_volcano_plot.R`)
+
+Generates volcano plots for PC1/compartment differential analysis.
+
+**Input:** Tab-delimited file from `getDiffExpression.pl` with PC1 values
+**Default input:** `tad_analysis/diffcompartments.txt`
+
+```bash
+# Basic usage (generates both threshold versions)
+Rscript scripts/compartment_volcano_plot.R
+
+# Custom input file
+Rscript scripts/compartment_volcano_plot.R tad_analysis/diffcompartments.txt
+
+# Custom output directory
+Rscript scripts/compartment_volcano_plot.R --output outputs/custom_compartment/
+
+# With gene labeling on plot
+Rscript scripts/compartment_volcano_plot.R --label-genes --n-labels 20
+```
+
+**Biological interpretation:**
+- Positive Difference = shift toward A compartment (more active) in mutant
+- Negative Difference = shift toward B compartment (more inactive) in mutant
+
+**Output files (`outputs/compartment_analysis/`):**
+- `compartment_volcano_relaxed.pdf` - Volcano plot with relaxed thresholds
+- `compartment_volcano_standard.pdf` - Volcano plot with standard thresholds
+- `compartment_significant_relaxed.tsv` - Significant regions (relaxed)
+- `compartment_significant_standard.tsv` - Significant regions (standard)
+- `compartment_volcano_summary.txt` - Summary with gene annotations
+- `compartment_all_annotated.tsv` - Full dataset
+
+### TAD Analysis Data Files
+
+Located in `tad_analysis/`:
+- `Bap1.diff.tad.txt` - TAD differential expression from HOMER
+- `diffcompartments.txt` - Compartment (PC1) differential expression
+- `BAP1.tad.scores.txt` - Raw TAD scores
+- `all_PC1.txt` - Raw PC1 values
+
 ## Additional Documentation
 
 Detailed documentation for each major script in `/docs`:

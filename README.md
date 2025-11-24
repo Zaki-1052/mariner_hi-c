@@ -879,6 +879,107 @@ Each script has comprehensive documentation in `/docs`:
 - [edgeR.md](docs/edgeR.md) - Differential analysis methodology
 - [compare_resolutions.md](docs/compare_resolutions.md) - Multi-resolution comparison
 
+---
+
+## TAD and Compartment Analysis
+
+Standalone scripts for analyzing TAD and chromatin compartment (PC1) differential data from HOMER's `getDiffExpression.pl`. These analyses complement the loop analysis by examining higher-order chromatin organization.
+
+### TAD Volcano Plot
+
+Generates publication-quality volcano plots for TAD inclusion ratio differential analysis.
+
+**Script:** `scripts/tad_volcano_plot.R`
+
+**Input:** Tab-delimited file from `getDiffExpression.pl` with TAD scores
+**Default input:** `tad_analysis/Bap1.diff.tad.txt`
+
+```bash
+# Basic usage (generates both relaxed and standard threshold plots)
+Rscript scripts/tad_volcano_plot.R
+
+# Custom input file
+Rscript scripts/tad_volcano_plot.R tad_analysis/Bap1.diff.tad.txt
+
+# Custom output directory
+Rscript scripts/tad_volcano_plot.R --output outputs/custom_tad/
+
+# With custom title
+Rscript scripts/tad_volcano_plot.R --title "BAP1 TAD Analysis"
+
+# Custom plot dimensions
+Rscript scripts/tad_volcano_plot.R --width 12 --height 10
+```
+
+**Thresholds generated (automatically produces both):**
+
+| Version | FDR Cutoff | Difference Cutoff | Purpose |
+|---------|------------|-------------------|---------|
+| Relaxed | < 0.15 | \|Diff\| > 0.15 | Exploratory analysis |
+| Standard | < 0.05 | \|Diff\| > 0.30 | Publication quality |
+
+**Output files (`outputs/tad_analysis/`):**
+- `tad_volcano_relaxed.pdf` - Volcano plot with relaxed thresholds
+- `tad_volcano_standard.pdf` - Volcano plot with standard thresholds
+- `tad_significant_relaxed.tsv` - Significant TADs (relaxed criteria)
+- `tad_significant_standard.tsv` - Significant TADs (standard criteria)
+- `tad_volcano_summary.txt` - Summary statistics for both thresholds
+- `tad_all_annotated.tsv` - Full dataset with annotations
+
+### Compartment (PC1) Volcano Plot
+
+Generates volcano plots for chromatin compartment switching analysis based on PC1 values.
+
+**Script:** `scripts/compartment_volcano_plot.R`
+
+**Input:** Tab-delimited file from `getDiffExpression.pl` with PC1 values + gene annotations
+**Default input:** `tad_analysis/diffcompartments.txt`
+
+```bash
+# Basic usage (generates both threshold versions)
+Rscript scripts/compartment_volcano_plot.R
+
+# Custom input file
+Rscript scripts/compartment_volcano_plot.R tad_analysis/diffcompartments.txt
+
+# Custom output directory
+Rscript scripts/compartment_volcano_plot.R --output outputs/custom_compartment/
+
+# With gene labeling on plot (labels top significant genes)
+Rscript scripts/compartment_volcano_plot.R --label-genes --n-labels 20
+
+# Custom plot dimensions
+Rscript scripts/compartment_volcano_plot.R --width 14 --height 12
+```
+
+**Biological interpretation:**
+
+| Difference | Compartment Shift | Biological Meaning |
+|------------|-------------------|-------------------|
+| Positive | B → A | More active chromatin in mutant |
+| Negative | A → B | More inactive chromatin in mutant |
+
+**Output files (`outputs/compartment_analysis/`):**
+- `compartment_volcano_relaxed.pdf` - Volcano plot with relaxed thresholds
+- `compartment_volcano_standard.pdf` - Volcano plot with standard thresholds
+- `compartment_significant_relaxed.tsv` - Significant regions (relaxed)
+- `compartment_significant_standard.tsv` - Significant regions (standard)
+- `compartment_volcano_summary.txt` - Summary with gene annotations
+- `compartment_all_annotated.tsv` - Full dataset with all annotations
+
+### TAD Analysis Data Files
+
+Located in `tad_analysis/`:
+
+| File | Description |
+|------|-------------|
+| `Bap1.diff.tad.txt` | TAD differential expression from HOMER getDiffExpression.pl |
+| `diffcompartments.txt` | Compartment (PC1) differential expression with gene annotations |
+| `BAP1.tad.scores.txt` | Raw TAD inclusion ratio scores |
+| `all_PC1.txt` | Raw PC1 values per sample |
+
+---
+
 ### Additional Scripts
 
 Scripts without dedicated docs (helper/utility):
@@ -886,6 +987,8 @@ Scripts without dedicated docs (helper/utility):
 - `generate_final_results.py` - Stringent filtering
 - `convert_final_bedpe.sh` - BEDPE format conversion
 - `install_R_packages.R` - Dependency installation
+- `tad_volcano_plot.R` - TAD differential volcano plots
+- `compartment_volcano_plot.R` - Compartment (PC1) differential volcano plots
 
 ### Getting Help
 
