@@ -385,6 +385,87 @@ write.table(promoter_genes,
 
 cat(sprintf("  Saved %d promoter-annotated loops to features/promoter_annotated_loops.tsv\n", nrow(promoter_genes)))
 
+# === Get ALL overlapping genes per anchor (not just nearest) ===
+cat("  Extracting all overlapping genes per anchor...\n")
+
+# Get all genes from TxDb
+all_genes_gr <- genes(txdb)
+
+# Function to get all overlapping genes for a GRanges object
+get_all_overlapping_genes <- function(anchor_gr, genes_gr, org_db) {
+  # Find direct overlaps (no gap)
+  overlaps <- findOverlaps(anchor_gr, genes_gr, maxgap = 0)
+
+  # Build dataframe with anchor index and gene info
+  result <- data.frame(
+    anchor_idx = queryHits(overlaps),
+    entrez_id = names(genes_gr)[subjectHits(overlaps)],
+    stringsAsFactors = FALSE
+  )
+
+  # Map Entrez IDs to gene symbols
+  if (nrow(result) > 0) {
+    symbol_map <- AnnotationDbi::select(org_db,
+                                         keys = unique(result$entrez_id),
+                                         columns = "SYMBOL",
+                                         keytype = "ENTREZID")
+    result$symbol <- symbol_map$SYMBOL[match(result$entrez_id, symbol_map$ENTREZID)]
+  } else {
+    result$symbol <- character(0)
+  }
+
+  return(result)
+}
+
+# Get overlapping genes for both anchors
+anchor1_all_genes_df <- get_all_overlapping_genes(anchor1_gr, all_genes_gr, org.Mm.eg.db)
+anchor2_all_genes_df <- get_all_overlapping_genes(anchor2_gr, all_genes_gr, org.Mm.eg.db)
+
+# Collapse to comma-separated gene lists per anchor
+collapse_genes <- function(gene_df, n_anchors) {
+  # Create empty vector for all anchors
+  gene_lists <- rep(NA_character_, n_anchors)
+
+  if (nrow(gene_df) > 0) {
+    collapsed <- aggregate(symbol ~ anchor_idx, data = gene_df,
+                           FUN = function(x) paste(unique(na.omit(x)), collapse = ","))
+    gene_lists[collapsed$anchor_idx] <- collapsed$symbol
+  }
+
+  return(gene_lists)
+}
+
+# Add to loops_df
+loops_df$anchor1_all_genes <- collapse_genes(anchor1_all_genes_df, nrow(loops_df))
+loops_df$anchor2_all_genes <- collapse_genes(anchor2_all_genes_df, nrow(loops_df))
+
+# Count genes per anchor
+loops_df$anchor1_gene_count <- sapply(strsplit(as.character(loops_df$anchor1_all_genes), ","),
+                                       function(x) sum(!is.na(x) & x != ""))
+loops_df$anchor2_gene_count <- sapply(strsplit(as.character(loops_df$anchor2_all_genes), ","),
+                                       function(x) sum(!is.na(x) & x != ""))
+
+# Save complete annotation file
+all_genes_annotation <- loops_df %>%
+  mutate(direction = ifelse(logFC > 0, "up", "down")) %>%
+  select(loop_id, logFC, FDR, direction,
+         anchor1_chr, anchor1_start, anchor1_end,
+         anchor1_annotation, anchor1_all_genes, anchor1_gene_count,
+         anchor2_chr, anchor2_start, anchor2_end,
+         anchor2_annotation, anchor2_all_genes, anchor2_gene_count)
+
+write.table(all_genes_annotation,
+            file.path(output_dir, "features", "anchors_all_genes.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+cat(sprintf("  Saved complete gene annotations to features/anchors_all_genes.tsv\n"))
+cat(sprintf("  Anchor1: median %d genes, max %d genes\n",
+            median(loops_df$anchor1_gene_count, na.rm = TRUE),
+            max(loops_df$anchor1_gene_count, na.rm = TRUE)))
+cat(sprintf("  Anchor2: median %d genes, max %d genes\n",
+            median(loops_df$anchor2_gene_count, na.rm = TRUE),
+            max(loops_df$anchor2_gene_count, na.rm = TRUE)))
+
 # Create feature distribution summary
 feature_summary <- data.frame(
   category = character(),
