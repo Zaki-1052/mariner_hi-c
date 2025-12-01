@@ -365,6 +365,26 @@ anno2_df <- as.data.frame(anno2)
 loops_df$anchor1_annotation <- anno1_df$annotation
 loops_df$anchor2_annotation <- anno2_df$annotation
 
+# Extract loops with promoter-annotated anchors
+promoter_loops <- loops_df %>%
+  filter(grepl("Promoter", anchor1_annotation) | grepl("Promoter", anchor2_annotation))
+
+# Get genes from promoter anchors
+promoter_genes <- data.frame(
+  loop_id = promoter_loops$loop_id,
+  direction = ifelse(promoter_loops$logFC > 0, "up", "down"),
+  anchor1_annotation = promoter_loops$anchor1_annotation,
+  anchor2_annotation = promoter_loops$anchor2_annotation,
+  anchor1_gene = anno1_df$SYMBOL[match(promoter_loops$loop_id, loops_df$loop_id)],
+  anchor2_gene = anno2_df$SYMBOL[match(promoter_loops$loop_id, loops_df$loop_id)]
+)
+
+write.table(promoter_genes,
+            file.path(output_dir, "features", "promoter_annotated_loops.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+
+cat(sprintf("  Saved %d promoter-annotated loops to features/promoter_annotated_loops.tsv\n", nrow(promoter_genes)))
+
 # Create feature distribution summary
 feature_summary <- data.frame(
   category = character(),
