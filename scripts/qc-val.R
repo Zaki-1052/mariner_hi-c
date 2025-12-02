@@ -1160,7 +1160,7 @@ cat(sprintf("Loops with |M|>1:    %d (%.1f%%)\n",
             sum(abs(M) > 1, na.rm = TRUE),
             100 * sum(abs(M) > 1, na.rm = TRUE) / length(M)))
 cat(sprintf("Positional shifts:   %d (%.1f%%)\n",
-            qc_report$matrix_stats$shifts_pct * nrow(counts_matrix) / 100,
+            as.integer(qc_report$matrix_stats$shifts_pct * nrow(counts_matrix) / 100),
             qc_report$matrix_stats$shifts_pct))
 cat(sprintf("Center enrichment:   %.3f (ctrl), %.3f (mut)\n",
             qc_report$matrix_stats$mean_center_enrichment_ctrl,
