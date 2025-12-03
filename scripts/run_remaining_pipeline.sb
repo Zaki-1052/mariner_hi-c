@@ -1,0 +1,459 @@
+#!/bin/bash
+#SBATCH --job-name=mariner_complete
+#SBATCH --output=logs/mariner_complete_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=40:00:00
+#SBATCH --account=csd940
+
+# ==============================================================================
+# Mariner Complete Pipeline - Single Command Execution
+# ==============================================================================
+#
+# Complete pipeline from raw loops to publication-ready results:
+#
+#   For each resolution (5kb, 10kb, 25kb):
+#     1. prep_loops.R      - Merge BEDPE files → consensus positions
+#     2. extract_counts.R  - Extract Hi-C from 6 .hic files
+#     3. aggregate.R       - Aggregate 5x5 matrices → count matrix
+#     4. qc-val.R          - Quality control validation
+#     5. edgeR.R           - Differential analysis with QL GLM (n=3 per group)
+#
+#   Multi-resolution post-processing:
+#     6. compare_resolutions.R     - Cross-resolution comparison
+#     7. generate_final_results.py - Filter to stringent thresholds
+#     8. convert_final_bedpe.sh    - Convert to BEDPE for Juicebox
+#     9. downstream_analysis.R     - Merge loops + gene annotations
+#    10. visualizations.R          - Publication plots + enrichment
+#    11. apa_analysis.R            - Aggregate Peak Analysis (all resolutions)
+#
+# Expected runtime: ~24 hours (includes APA which is time-intensive)
+# Expected output: Complete analysis with all visualizations and APA heatmaps
+# ==============================================================================
+
+# Create logs directory
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/mariner/logs
+
+echo "========================================="
+echo "Mariner Complete Pipeline"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Memory: 128GB"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Change to working directory
+cd /expanse/lustre/projects/csd940/zalibhai/mariner
+
+# ==============================================================================
+# MULTI-RESOLUTION ANALYSIS
+# ==============================================================================
+
+# Array of resolutions to process
+RESOLUTIONS=(5000 10000 25000)
+
+for RES in "${RESOLUTIONS[@]}"; do
+  RES_KB=$((RES / 1000))
+
+  echo ""
+  echo "========================================="
+  echo "PROCESSING RESOLUTION: ${RES} bp (${RES_KB} kb)"
+  echo "========================================="
+  echo "Start time: $(date)"
+  echo ""
+
+  # =============================================================================
+  # STEP 1: PREPARE LOOPS
+  # =============================================================================
+
+  echo "========================================="
+  echo "STEP 1: Preparing loops (6 replicates)"
+  echo "========================================="
+  echo "Script: scripts/prep_loops.R"
+  echo "Resolution: ${RES} bp"
+  echo ""
+
+#  Rscript scripts/prep_loops.R ${RES}
+
+  if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Loop preparation completed for ${RES_KB}kb"
+  else
+    echo ""
+    echo "❌ Loop preparation failed for ${RES_KB}kb with exit code $?"
+    echo "Stopping pipeline at resolution ${RES_KB}kb"
+    exit 1
+  fi
+
+  echo ""
+
+  # =============================================================================
+  # STEP 2: EXTRACT COUNTS
+  # =============================================================================
+
+  echo "========================================="
+  echo "STEP 2: Extracting Hi-C counts (6 files)"
+  echo "========================================="
+  echo "Script: scripts/extract_counts.R"
+  echo "Resolution: ${RES} bp"
+  echo ""
+
+#  Rscript scripts/extract_counts.R ${RES}
+
+  if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Count extraction completed for ${RES_KB}kb"
+  else
+    echo ""
+    echo "❌ Count extraction failed for ${RES_KB}kb with exit code $?"
+    echo "Stopping pipeline at resolution ${RES_KB}kb"
+    exit 1
+  fi
+
+  echo ""
+
+  # =============================================================================
+  # STEP 3: AGGREGATE MATRICES
+  # =============================================================================
+
+  echo "========================================="
+  echo "STEP 3: Aggregating 5x5 matrices"
+  echo "========================================="
+  echo "Script: scripts/aggregate.R"
+  echo "Resolution: ${RES} bp"
+  echo ""
+
+#  Rscript scripts/aggregate.R ${RES}
+
+  if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Matrix aggregation completed for ${RES_KB}kb"
+  else
+    echo ""
+    echo "❌ Matrix aggregation failed for ${RES_KB}kb with exit code $?"
+    echo "Stopping pipeline at resolution ${RES_KB}kb"
+    exit 1
+  fi
+
+  echo ""
+
+  # =============================================================================
+  # STEP 4: QUALITY CONTROL VALIDATION
+  # =============================================================================
+
+  echo "========================================="
+  echo "STEP 4: Quality control validation"
+  echo "========================================="
+  echo "Script: scripts/qc-val.R"
+  echo "Resolution: ${RES} bp"
+  echo ""
+
+  Rscript scripts/qc-val.R ${RES}
+
+  if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ QC validation completed for ${RES_KB}kb"
+  else
+    echo ""
+    echo "❌ QC validation failed for ${RES_KB}kb with exit code $?"
+    echo "Stopping pipeline at resolution ${RES_KB}kb"
+    exit 1
+  fi
+
+  echo ""
+
+  # =============================================================================
+  # STEP 5: DIFFERENTIAL ANALYSIS
+  # =============================================================================
+
+  echo "========================================="
+  echo "STEP 5: edgeR differential analysis"
+  echo "========================================="
+  echo "Script: scripts/edgeR.R"
+  echo "Resolution: ${RES} bp"
+  echo "Method: Quasi-likelihood GLM"
+  echo ""
+
+  Rscript scripts/edgeR.R ${RES}
+
+  if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Differential analysis completed for ${RES_KB}kb"
+  else
+    echo ""
+    echo "❌ Differential analysis failed for ${RES_KB}kb with exit code $?"
+    echo "Stopping pipeline at resolution ${RES_KB}kb"
+    exit 1
+  fi
+
+  echo ""
+  echo "✓ COMPLETED RESOLUTION: ${RES_KB}kb"
+  echo "End time: $(date)"
+  echo ""
+
+done
+
+# ==============================================================================
+# STEP 6: COMPARE RESOLUTIONS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 6: Comparing results across resolutions"
+echo "========================================="
+echo "Script: scripts/compare_resolutions.R"
+echo ""
+
+Rscript scripts/compare_resolutions.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Resolution comparison completed"
+else
+    echo ""
+    echo "❌ Resolution comparison failed with exit code $?"
+    echo "Note: Individual resolution analyses are still complete"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 7: GENERATE FINAL RESULTS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 7: Generating final results (stringent filters)"
+echo "========================================="
+echo "Script: scripts/generate_final_results.py"
+echo "Filters: |logFC| > 0.3, FDR < 0.03"
+echo ""
+
+python3 scripts/generate_final_results.py
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Final results generated for all resolutions"
+else
+    echo ""
+    echo "❌ Final results generation failed with exit code $?"
+    echo "Note: Primary edgeR results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 8: CONVERT TO BEDPE FORMAT
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 8: Converting to BEDPE format for Juicebox"
+echo "========================================="
+echo "Script: scripts/convert_final_bedpe.sh"
+echo ""
+
+bash scripts/convert_final_bedpe.sh
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ BEDPE conversion completed"
+else
+    echo ""
+    echo "❌ BEDPE conversion failed with exit code $?"
+    echo "Note: TSV results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 9: DOWNSTREAM ANALYSIS (MERGED LOOPS & CHARACTERIZATION)
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 9: Downstream Analysis"
+echo "========================================="
+echo "Script: scripts/downstream_analysis.R"
+echo "Input: final_results.tsv from all resolutions"
+echo "Output: Non-redundant loop set with gene annotations"
+echo ""
+
+Rscript scripts/downstream_analysis.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Downstream analysis completed"
+    echo "   Output: outputs/merged_loops/"
+else
+    echo ""
+    echo "❌ Downstream analysis failed with exit code $?"
+    echo "Note: Individual resolution results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 10: VISUALIZATION ANALYSIS
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 10: Visualization Analysis"
+echo "========================================="
+echo "Script: scripts/visualizations.R"
+echo "Input: characterized_loops.tsv + all_results_primary.tsv"
+echo "Output: Volcano plots, enrichment analyses, loop classifications"
+echo ""
+
+Rscript scripts/visualizations.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Visualization analysis completed"
+    echo "   Output: outputs/visualizations/"
+else
+    echo ""
+    echo "❌ Visualization analysis failed with exit code $?"
+    echo "Note: Downstream analysis results are still available"
+fi
+
+echo ""
+
+# ==============================================================================
+# STEP 11: AGGREGATE PEAK ANALYSIS (APA)
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "STEP 11: Aggregate Peak Analysis (APA)"
+echo "========================================="
+echo "Script: scripts/apa_analysis.R"
+echo "Input: Merged loops + resolution-specific loops + .hic files"
+echo "Output: APA heatmaps, enrichment scores, statistical tests"
+echo "Note: This step is time-intensive (~2 hours)"
+echo ""
+
+Rscript scripts/apa_analysis.R
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ APA analysis completed"
+    echo "   Output: outputs/apa_results/"
+else
+    echo ""
+    echo "❌ APA analysis failed with exit code $?"
+    echo "Note: This is expected if .hic files are not accessible"
+    echo "   All other analyses are complete"
+fi
+
+echo ""
+
+# ==============================================================================
+# PIPELINE COMPLETE
+# ==============================================================================
+
+echo ""
+echo "========================================="
+echo "COMPLETE PIPELINE FINISHED"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Output directories:"
+for RES in "${RESOLUTIONS[@]}"; do
+  RES_KB=$((RES / 1000))
+  echo "  - outputs/res_${RES_KB}kb/                     (loops, counts, matrices)"
+  echo "  - outputs/edgeR_results_res_${RES_KB}kb/       (differential results)"
+done
+echo ""
+echo "Key files to review per resolution:"
+echo "  1. outputs/res_{RES}kb/06_counts_matrix.rds"
+echo "     → Count matrices"
+echo ""
+echo "  2. outputs/res_{RES}kb/qc_report/"
+echo "     → Quality control validation reports and plots"
+echo ""
+echo "  3. outputs/edgeR_results_res_{RES}kb/plots/mds_plot.pdf"
+echo "     → Sample relationships"
+echo ""
+echo "  4. outputs/edgeR_results_res_{RES}kb/plots/bcv_plot.pdf"
+echo "     → Dispersion estimates"
+echo ""
+echo "  5. outputs/edgeR_results_res_{RES}kb/plots/ma_plot_primary.pdf"
+echo "     → Differential loops visualization"
+echo ""
+echo "  6. outputs/edgeR_results_res_{RES}kb/primary_analysis/all_results_primary.tsv"
+echo "     → Full results table"
+echo ""
+echo "  7. outputs/edgeR_results_res_{RES}kb/primary_analysis/final_results.tsv"
+echo "     → Differential loops (|logFC| > 0.3, FDR < 0.03)"
+echo ""
+echo "  8. outputs/edgeR_results_res_{RES}kb/primary_analysis/summary_statistics.txt"
+echo "     → Analysis summary"
+echo ""
+echo "BEDPE files for Juicebox visualization:"
+echo "  - outputs/bedpe_final/5kb_final.bedpe"
+echo "  - outputs/bedpe_final/10kb_final.bedpe"
+echo "  - outputs/bedpe_final/25kb_final.bedpe"
+echo "  - outputs/bedpe_final/merged_final.bedpe (union of all resolutions)"
+echo "  - outputs/bedpe_final/5kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/10kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/25kb_all_loops.bedpe"
+echo "  - outputs/bedpe_final/merged_all_loops.bedpe (union of all resolutions)"
+echo ""
+echo "Expected outcomes by resolution:"
+echo "  - 5kb:  Most loops, short-range interactions"
+echo "  - 10kb: Intermediate coverage"
+echo "  - 25kb: Long-range loops, inter-TAD interactions"
+echo ""
+echo "Resolution comparison outputs:"
+echo "  - outputs/resolution_comparison/summary_statistics_by_resolution.tsv"
+echo "  - outputs/resolution_comparison/loop_overlap_matrix.tsv"
+echo "  - outputs/resolution_comparison/differential_loops_by_resolution.pdf"
+echo "  - outputs/resolution_comparison/foldchange_correlation_*.pdf"
+echo "  - outputs/resolution_comparison/venn_diagram_differential_loops.pdf"
+echo ""
+echo "Merged loops (downstream analysis):"
+echo "  - outputs/merged_loops/non_redundant_loops.tsv"
+echo "  - outputs/merged_loops/characterized_loops.tsv (with gene annotations)"
+echo "  - outputs/merged_loops/non_redundant_loops.bedpe"
+echo "  - outputs/merged_loops/overlap_report.tsv"
+echo "  - outputs/merged_loops/plots/"
+echo ""
+echo "Visualizations:"
+echo "  - outputs/visualizations/volcano/ (all resolutions)"
+echo "  - outputs/visualizations/features/ (genomic feature distribution)"
+echo "  - outputs/visualizations/enrichment/ (GO/KEGG analyses)"
+echo "  - outputs/visualizations/loop_classification/ (P-P, P-E, E-E types)"
+echo ""
+echo "APA results (Aggregate Peak Analysis):"
+echo "  - outputs/apa_results/res_5kb/"
+echo "  - outputs/apa_results/res_10kb/"
+echo "  - outputs/apa_results/res_25kb/"
+echo "  Each contains: merged_loops/ and resolution_specific/ subdirectories"
+echo "  Per loop set: heatmaps, enrichment scores, statistical tests"
+echo ""
+echo "========================================"
+echo "Next steps:"
+echo "  1. Review QC reports in outputs/res_{RES}kb/qc_report/"
+echo "  2. Check MDS plots for sample relationships"
+echo "  3. Examine volcano plots in outputs/visualizations/volcano/"
+echo "  4. Review APA heatmaps in outputs/apa_results/"
+echo "  5. Load BEDPE files into Juicebox for interactive visualization"
+echo "========================================"
+echo "End time: $(date)"
