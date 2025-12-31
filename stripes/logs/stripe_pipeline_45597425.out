@@ -1,0 +1,1468 @@
+===========================================
+DIFFERENTIAL STRIPE ANALYSIS PIPELINE
+===========================================
+Job ID: 45597425
+Node: exp-13-45
+CPUs: 12
+Memory: 65536
+Start time: Tue Dec 30 22:43:15 PST 2025
+===========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Checking R packages...
+Loading required package: SparseArray
+Loading required package: Matrix
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: MatrixGenerics
+Loading required package: matrixStats
+
+Attaching package: ‘MatrixGenerics’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+    colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+    colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+    colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+    colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+    colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+    colWeightedMeans, colWeightedMedians, colWeightedSds,
+    colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+    rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+    rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+    rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+    rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+    rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+    rowWeightedSds, rowWeightedVars
+
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: ‘S4Vectors’
+
+The following objects are masked from ‘package:Matrix’:
+
+    expand, unname
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: S4Arrays
+Loading required package: abind
+Loading required package: IRanges
+
+Attaching package: ‘S4Arrays’
+
+The following object is masked from ‘package:abind’:
+
+    abind
+
+The following object is masked from ‘package:base’:
+
+    rowsum
+
+Loading required package: DelayedArray
+
+Attaching package: ‘DelayedArray’
+
+The following objects are masked from ‘package:base’:
+
+    apply, scale, sweep
+
+Loading required package: rhdf5
+
+Attaching package: ‘HDF5Array’
+
+The following object is masked from ‘package:rhdf5’:
+
+    h5ls
+
+Warning messages:
+1: package ‘Matrix’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading required package: limma
+
+Attaching package: ‘limma’
+
+The following object is masked from ‘package:BiocGenerics’:
+
+    plotMA
+
+All required packages available
+
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+
+
+###############################################
+# PROCESSING TIMEPOINT: early
+###############################################
+
+===========================================
+PHASE 1: Detection & Union Set (early)
+===========================================
+Start: Tue Dec 30 22:43:26 PST 2025
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 1: Detection & Union Set Creation
+Timepoint: early
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Project base: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+
+Timepoint directory: 250831
+Anchor tolerance: 50 kb
+Primary resolution: 5 kb
+
+=== Loading BEDPE Files ===
+  ctrl_merged: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/data/quagga/5kb/250831/ctrl_merged_stripes.bedpe
+  mut_merged: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/data/quagga/5kb/250831/mut_merged_stripes.bedpe
+
+  Loaded ctrl: 200 stripes
+  Loaded mut: 160 stripes
+
+=== Building Union Set ===
+  Control merged: 200 stripes
+  Mutant merged: 160 stripes
+  Shared: 74, Control-only: 126, Mutant-only: 86
+Total union: 286 stripes
+
+=== Counting Replicate Support ===
+
+=== 10kb Validation ===
+  10kb stripes for validation: 1909
+  Validated in 10kb: 165 (57.7%)
+
+=== Confidence Scoring ===
+
+=== Saving Outputs ===
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/01_unified_stripes.rds
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/01_unified_stripes.tsv
+
+=================================
+Phase 1 Complete
+=================================
+
+Timepoint: early (250831)
+Total stripes: 286
+
+By source:
+
+control_only  mutant_only       shared 
+         126           86           74 
+
+By direction:
+
+3prime 
+   286 
+
+By confidence:
+
+   low medium 
+    24    262 
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early
+
+Next: Rscript scripts/phase2_quantification.R early
+
+Phase 1 complete: 286 stripes detected
+
+===========================================
+PHASE 2: Hi-C Quantification (early)
+===========================================
+Start: Tue Dec 30 22:43:31 PST 2025
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+5: package ‘yaml’ was built under R version 4.4.3 
+6: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 2: Hi-C Quantification
+Timepoint: early
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Project base: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+
+Parameters:
+  Timepoint dir: 250831
+  Resolution: 5000 bp (5 kb)
+  Sampling distance: 100000 bp
+  Buffer: 2 bins (= 5x5 matrix)
+  Normalization: KR (fallback: VC)
+
+=== Loading Phase 1 Unified Stripes ===
+  Loaded: 286 stripes from /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/01_unified_stripes.tsv
+  Stripe counts by source:
+
+control_only  mutant_only       shared 
+         126           86           74 
+
+=== Converting Stripes to GInteractions ===
+  Sampling points within span: 94 / 286 (32.9%)
+  Created GInteractions: 286 interactions
+
+=== Binning to Resolution Grid ===
+  Binned to 5000 bp resolution
+  Added buffer: 5x5 pixel regions
+
+=== Loading Hi-C Files ===
+Verifying Hi-C files:
+  ctrl_M1: 3.7 GB - OK
+  ctrl_M2: 3.6 GB - OK
+  ctrl_M3: 4.0 GB - OK
+  mut_M1: 3.9 GB - OK
+  mut_M2: 3.6 GB - OK
+  mut_M3: 3.9 GB - OK
+
+Checking available normalizations:
+  Available: KR, NONE
+  Using: KR (preferred)
+
+=== Extracting Hi-C Matrices ===
+Cleaning up existing temp HDF5 directory...
+  HDF5 output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/temp_hdf5/stripe_matrices.h5
+
+Extracting 286 stripes x 6 samples x 25 pixels...
+
+Extraction completed in 136.6 seconds
+
+=== Validation of Extracted Data ===
+Dimensions: 5 x 5 x 286 x 6
+  = 5x5 pixels x 286 stripes x 6 samples
+
+NA values: 0 (0.00%)
+
+Value distribution (excluding NAs):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.968   5.183   6.178   8.105  66.421 
+
+Sparsity: 7.0% zeros
+
+=== Aggregating to Count Matrix ===
+Strategy: Sum all pixels in 5x5 region
+Aggregating... 50 100 150 200 250 Done
+  Count matrix: 286 stripes x 6 samples
+
+Count summary:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00   94.79  127.42  154.45  187.94  760.19 
+
+=== Correlation Analysis ===
+
+Correlation matrix:
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.970   0.967  0.971  0.972  0.971
+ctrl_M2   0.970   1.000   0.971  0.972  0.971  0.967
+ctrl_M3   0.967   0.971   1.000  0.971  0.970  0.969
+mut_M1    0.971   0.972   0.971  1.000  0.977  0.977
+mut_M2    0.972   0.971   0.970  0.977  1.000  0.970
+mut_M3    0.971   0.967   0.969  0.977  0.970  1.000
+
+Within-condition correlations:
+  Control (within): 0.969
+  Mutant (within): 0.975
+  Between groups: 0.970
+
+Quality Assessment:
+  Excellent within-condition reproducibility (>0.95)
+  WARNING: Within-condition correlations not much higher than between
+
+=== Saving Outputs ===
+  Count matrix: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_stripe_counts.tsv
+  Count matrix RDS: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_stripe_counts.rds
+  Metadata: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_extraction_metadata.rds
+
+Saving HDF5 data...
+Start writing assay 1/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 1/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_extractedassays.h5
+
+Start writing assay 2/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 2/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_extractedassays.h5
+
+Start writing assay 3/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 3/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_extractedassays.h5
+
+Serialize InteractionArray object to RDS file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/02_extractedse.rds
+
+=================================
+Phase 2 Complete
+=================================
+
+Timepoint: early (250831)
+Resolution: 5000 bp
+Stripes quantified: 286
+Samples: 6
+Normalization: KR
+
+Quality Metrics:
+  Within-ctrl correlation: 0.969
+  Within-mut correlation: 0.975
+  Between-group correlation: 0.970
+  NA percent: 0.00%
+  Extraction time: 136.6 sec
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early
+
+Next: Rscript scripts/phase3_edgeR.R early
+
+Phase 2 complete: 9.8K
+
+===========================================
+PHASE 3: edgeR Analysis (early)
+===========================================
+Start: Tue Dec 30 22:46:37 PST 2025
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 3: edgeR Differential Analysis
+Timepoint: early
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Input: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early
+  Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/edgeR_results
+
+=== Loading Data ===
+  Count matrix: 286 stripes x 6 samples
+  Stripe metadata: 286 stripes
+
+=== Creating Annotations ===
+  Annotation created for 286 stripes
+
+=== Creating DGEList ===
+  DGEList created: 286 stripes x 6 samples
+  Groups: ctrl, mut
+  Replicates per group: n = 3
+
+  Library sizes:
+    ctrl_M1 (ctrl): 44565
+    ctrl_M2 (ctrl): 40602
+    ctrl_M3 (ctrl): 41839
+    mut_M1 (mut): 45327
+    mut_M2 (mut): 47172
+    mut_M3 (mut): 45529
+
+=== Filtering ===
+  SKIPPING low-count filtering (per design decision)
+  Retaining ALL 286 stripes for analysis
+  Rationale: Small feature set (~150-300 stripes)
+
+=== Normalization ===
+  Method: TMM
+  Normalization factors:
+    ctrl_M1: 1.0046
+    ctrl_M2: 0.9984
+    ctrl_M3: 1.0005
+    mut_M1: 1.0045
+    mut_M2: 0.9929
+    mut_M3: 0.9991
+
+=== Generating MDS Plot ===
+null device 
+          1 
+  Saved: mds_plot.pdf
+
+=== Dispersion Estimation ===
+  Design matrix:
+    - Intercept: Baseline (control)
+    - MutantEffect: Difference (mutant - control)
+
+  Common dispersion: 0.0045
+  Common BCV: 0.067
+  Tagwise BCV range: 0.010 - 0.614
+  Median tagwise BCV: 0.063
+null device 
+          1 
+  Saved: bcv_plot.pdf
+
+=== Quasi-Likelihood GLM ===
+  Residual df: 4
+null device 
+          1 
+  Saved: ql_dispersion_plot.pdf
+
+=== Differential Testing ===
+  Test: Mutant effect (positive logFC = higher in mutant)
+
+  Results (FDR < 0.05):
+    Significant: 0 / 286 (0.0%)
+    Up in mutant: 0
+    Down in mutant: 0
+
+  Exploratory (FDR < 0.10): 0
+
+=== Generating Volcano Plot ===
+null device 
+          1 
+  Saved: volcano_plot.pdf
+null device 
+          1 
+  Saved: ma_plot.pdf
+
+=== Saving Outputs ===
+  Saved: 03_dge_object.rds
+  Saved: 03_fit_object.rds
+  Saved: 03_all_results.tsv/rds
+  Saved: 03_significant_FDR05.tsv (0 stripes)
+  Saved: 03_summary.txt
+
+=================================
+Phase 3 Complete
+=================================
+
+Timepoint: early
+Stripes analyzed: 286
+Significant (FDR < 0.05): 0 (0.0%)
+  Up in mutant: 0
+  Down in mutant: 0
+Common BCV: 0.067
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/edgeR_results
+
+Next: Rscript scripts/phase4_integration.R early
+
+Phase 3 complete
+
+===========================================
+PHASE 4: Integration (early)
+===========================================
+Start: Tue Dec 30 22:46:39 PST 2025
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 4: Integration & Classification
+Timepoint: early
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Base dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early
+  edgeR dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/edgeR_results
+
+=== Loading Data ===
+  Phase 1: 286 stripes
+  Phase 3: 286 stripes with edgeR statistics
+
+=== Merging Data ===
+  Merged: 286 stripes
+
+=== Direction Classification ===
+  FDR threshold: 0.05
+  logFC threshold: 0.30
+  Tiered thresholds: high_fdr=0.10, medium_logfc=0.20
+
+Direction classification:
+
+   gained      lost unchanged 
+       86       126        74 
+
+Source x Direction:
+              
+               gained lost unchanged
+  control_only      0  126         0
+  mutant_only      86    0         0
+  shared            0    0        74
+
+=== Adding Derived Metrics ===
+  Added: stripe_length, anchor_width, effect_category
+
+Effect categories (significant stripes):
+< table of extent 0 >
+
+=== Creating BEDPE Output ===
+  BEDPE created: 286 entries
+
+=== Summary Statistics ===
+
+Total stripes: 286
+
+By source:
+  control_only: 126
+  mutant_only: 86
+  shared: 74
+
+By direction (tiered confidence):
+  LOST: 126 total
+    - High:   0 (FDR<0.1 + direction match)
+    - Medium: 9 (direction match, logFC<-0.2)
+    - Low:    117 (detection only)
+  GAINED: 86 total
+    - High:   0 (FDR<0.1 + direction match)
+    - Medium: 10 (direction match, logFC>0.2)
+    - Low:    76 (detection only)
+  strengthened: 0
+  weakened: 0
+  unchanged: 74
+
+Directional consistency: 45.8% (97/212)
+
+=== Saving Outputs ===
+  Saved: 04_final_differential_stripes.tsv/rds (286 stripes)
+  Saved: 04_final_differential_stripes.bedpe
+  Saved: 04_summary.txt
+  Saved: 04_stripes_lost.tsv (126 stripes)
+  Saved: 04_stripes_gained.tsv (86 stripes)
+
+=================================
+Phase 4 Complete
+=================================
+
+Timepoint: early
+Total stripes: 286
+
+Differential stripes (tiered):
+  Lost: 126 (H:0 M:9 L:117)
+  Gained: 86 (H:0 M:10 L:76)
+  Strengthened: 0
+  Weakened: 0
+
+Directional consistency: 45.8%
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early
+
+Pipeline complete! Review results in:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/04_final_differential_stripes.tsv
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/early/04_final_differential_stripes.bedpe (for Juicebox)
+
+Phase 4 complete
+
+--- early Summary ---
+
+================================================================================
+DIFFERENTIAL STRIPE ANALYSIS - FINAL RESULTS (Tiered Classification)
+================================================================================
+Timepoint: early (250831)
+Date: 2025-12-30
+
+STRIPE COUNTS
+-------------
+Total stripes analyzed: 286
+
+By detection source:
+  control_only:  126 (detected in ctrl merged only)
+  mutant_only:    86 (detected in mut merged only)
+  shared:         74 (detected in both conditions)
+
+DIFFERENTIAL DIRECTION (Tiered Confidence)
+------------------------------------------
+LOST (control_only stripes): 126 total
+  - High confidence:     0 (FDR < 0.10 + logFC < 0)
+
+early completed in 3 minutes
+
+
+###############################################
+# PROCESSING TIMEPOINT: late
+###############################################
+
+===========================================
+PHASE 1: Detection & Union Set (late)
+===========================================
+Start: Tue Dec 30 22:46:40 PST 2025
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 1: Detection & Union Set Creation
+Timepoint: late
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Project base: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+
+Timepoint directory: 250402
+Anchor tolerance: 50 kb
+Primary resolution: 5 kb
+
+=== Loading BEDPE Files ===
+  ctrl_merged: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/data/quagga/5kb/250402/ctrl_merged_stripes.bedpe
+  mut_merged: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/data/quagga/5kb/250402/mut_merged_stripes.bedpe
+
+  Loaded ctrl: 127 stripes
+  Loaded mut: 117 stripes
+
+=== Building Union Set ===
+  Control merged: 127 stripes
+  Mutant merged: 117 stripes
+  Shared: 44, Control-only: 83, Mutant-only: 73
+Total union: 200 stripes
+
+=== Counting Replicate Support ===
+
+=== 10kb Validation ===
+  10kb stripes for validation: 1312
+  Validated in 10kb: 94 (47.0%)
+
+=== Confidence Scoring ===
+
+=== Saving Outputs ===
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/01_unified_stripes.rds
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/01_unified_stripes.tsv
+
+=================================
+Phase 1 Complete
+=================================
+
+Timepoint: late (250402)
+Total stripes: 200
+
+By source:
+
+control_only  mutant_only       shared 
+          83           73           44 
+
+By direction:
+
+3prime 
+   200 
+
+By confidence:
+
+  high    low medium 
+     3      8    189 
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late
+
+Next: Rscript scripts/phase2_quantification.R late
+
+Phase 1 complete: 200 stripes detected
+
+===========================================
+PHASE 2: Hi-C Quantification (late)
+===========================================
+Start: Tue Dec 30 22:46:44 PST 2025
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+5: package ‘yaml’ was built under R version 4.4.3 
+6: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 2: Hi-C Quantification
+Timepoint: late
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Project base: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+
+Parameters:
+  Timepoint dir: 250402
+  Resolution: 5000 bp (5 kb)
+  Sampling distance: 100000 bp
+  Buffer: 2 bins (= 5x5 matrix)
+  Normalization: KR (fallback: VC)
+
+=== Loading Phase 1 Unified Stripes ===
+  Loaded: 200 stripes from /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/01_unified_stripes.tsv
+  Stripe counts by source:
+
+control_only  mutant_only       shared 
+          83           73           44 
+
+=== Converting Stripes to GInteractions ===
+  Sampling points within span: 80 / 200 (40.0%)
+  Created GInteractions: 200 interactions
+
+=== Binning to Resolution Grid ===
+  Binned to 5000 bp resolution
+  Added buffer: 5x5 pixel regions
+
+=== Loading Hi-C Files ===
+Verifying Hi-C files:
+  ctrl_M1: 2.4 GB - OK
+  ctrl_M2: 3.3 GB - OK
+  ctrl_M3: 3.1 GB - OK
+  mut_M1: 2.8 GB - OK
+  mut_M2: 2.9 GB - OK
+  mut_M3: 2.6 GB - OK
+
+Checking available normalizations:
+  Available: KR, NONE
+  Using: KR (preferred)
+
+=== Extracting Hi-C Matrices ===
+Cleaning up existing temp HDF5 directory...
+  HDF5 output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/temp_hdf5/stripe_matrices.h5
+
+Extracting 200 stripes x 6 samples x 25 pixels...
+
+Extraction completed in 97.0 seconds
+
+=== Validation of Extracted Data ===
+Dimensions: 5 x 5 x 200 x 6
+  = 5x5 pixels x 200 stripes x 6 samples
+
+NA values: 0 (0.00%)
+
+Value distribution (excluding NAs):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.017   3.813   4.828   6.304 176.088 
+
+Sparsity: 8.9% zeros
+
+=== Aggregating to Count Matrix ===
+Strategy: Sum all pixels in 5x5 region
+Aggregating... 50 100 150 200 Done
+  Count matrix: 200 stripes x 6 samples
+
+Count summary:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  18.18   66.05   92.77  120.69  150.18  572.46 
+
+=== Correlation Analysis ===
+
+Correlation matrix:
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.968   0.969  0.965  0.970  0.952
+ctrl_M2   0.968   1.000   0.976  0.965  0.975  0.961
+ctrl_M3   0.969   0.976   1.000  0.951  0.972  0.942
+mut_M1    0.965   0.965   0.951  1.000  0.972  0.968
+mut_M2    0.970   0.975   0.972  0.972  1.000  0.966
+mut_M3    0.952   0.961   0.942  0.968  0.966  1.000
+
+Within-condition correlations:
+  Control (within): 0.971
+  Mutant (within): 0.969
+  Between groups: 0.961
+
+Quality Assessment:
+  Excellent within-condition reproducibility (>0.95)
+  WARNING: Within-condition correlations not much higher than between
+
+=== Saving Outputs ===
+  Count matrix: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_stripe_counts.tsv
+  Count matrix RDS: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_stripe_counts.rds
+  Metadata: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_extraction_metadata.rds
+
+Saving HDF5 data...
+Start writing assay 1/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 1/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_extractedassays.h5
+
+Start writing assay 2/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 2/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_extractedassays.h5
+
+Start writing assay 3/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 3/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_extractedassays.h5
+
+Serialize InteractionArray object to RDS file:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/02_extractedse.rds
+
+=================================
+Phase 2 Complete
+=================================
+
+Timepoint: late (250402)
+Resolution: 5000 bp
+Stripes quantified: 200
+Samples: 6
+Normalization: KR
+
+Quality Metrics:
+  Within-ctrl correlation: 0.971
+  Within-mut correlation: 0.969
+  Between-group correlation: 0.961
+  NA percent: 0.00%
+  Extraction time: 97.0 sec
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late
+
+Next: Rscript scripts/phase3_edgeR.R late
+
+Phase 2 complete: 6.9K
+
+===========================================
+PHASE 3: edgeR Analysis (late)
+===========================================
+Start: Tue Dec 30 22:48:58 PST 2025
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 3: edgeR Differential Analysis
+Timepoint: late
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Input: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late
+  Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/edgeR_results
+
+=== Loading Data ===
+  Count matrix: 200 stripes x 6 samples
+  Stripe metadata: 200 stripes
+
+=== Creating Annotations ===
+  Annotation created for 200 stripes
+
+=== Creating DGEList ===
+  DGEList created: 200 stripes x 6 samples
+  Groups: ctrl, mut
+  Replicates per group: n = 3
+
+  Library sizes:
+    ctrl_M1 (ctrl): 19532
+    ctrl_M2 (ctrl): 27970
+    ctrl_M3 (ctrl): 26900
+    mut_M1 (mut): 24074
+    mut_M2 (mut): 24287
+    mut_M3 (mut): 22065
+
+=== Filtering ===
+  SKIPPING low-count filtering (per design decision)
+  Retaining ALL 200 stripes for analysis
+  Rationale: Small feature set (~150-300 stripes)
+
+=== Normalization ===
+  Method: TMM
+  Normalization factors:
+    ctrl_M1: 1.0042
+    ctrl_M2: 1.0003
+    ctrl_M3: 1.0039
+    mut_M1: 0.9946
+    mut_M2: 1.0045
+    mut_M3: 0.9926
+
+=== Generating MDS Plot ===
+null device 
+          1 
+  Saved: mds_plot.pdf
+
+=== Dispersion Estimation ===
+  Design matrix:
+    - Intercept: Baseline (control)
+    - MutantEffect: Difference (mutant - control)
+
+  Common dispersion: 0.0038
+  Common BCV: 0.062
+  Tagwise BCV range: 0.027 - 0.384
+  Median tagwise BCV: 0.067
+null device 
+          1 
+  Saved: bcv_plot.pdf
+
+=== Quasi-Likelihood GLM ===
+  Residual df: 4
+null device 
+          1 
+  Saved: ql_dispersion_plot.pdf
+
+=== Differential Testing ===
+  Test: Mutant effect (positive logFC = higher in mutant)
+
+  Results (FDR < 0.05):
+    Significant: 0 / 200 (0.0%)
+    Up in mutant: 0
+    Down in mutant: 0
+
+  Exploratory (FDR < 0.10): 1
+
+=== Generating Volcano Plot ===
+null device 
+          1 
+  Saved: volcano_plot.pdf
+null device 
+          1 
+  Saved: ma_plot.pdf
+
+=== Saving Outputs ===
+  Saved: 03_dge_object.rds
+  Saved: 03_fit_object.rds
+  Saved: 03_all_results.tsv/rds
+  Saved: 03_significant_FDR05.tsv (0 stripes)
+  Saved: 03_summary.txt
+
+=================================
+Phase 3 Complete
+=================================
+
+Timepoint: late
+Stripes analyzed: 200
+Significant (FDR < 0.05): 0 (0.0%)
+  Up in mutant: 0
+  Down in mutant: 0
+Common BCV: 0.062
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/edgeR_results
+
+Next: Rscript scripts/phase4_integration.R late
+
+Phase 3 complete
+
+===========================================
+PHASE 4: Integration (late)
+===========================================
+Start: Tue Dec 30 22:49:00 PST 2025
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 4: Integration & Classification
+Timepoint: late
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Base dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late
+  edgeR dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/edgeR_results
+
+=== Loading Data ===
+  Phase 1: 200 stripes
+  Phase 3: 200 stripes with edgeR statistics
+
+=== Merging Data ===
+  Merged: 200 stripes
+
+=== Direction Classification ===
+  FDR threshold: 0.05
+  logFC threshold: 0.30
+  Tiered thresholds: high_fdr=0.10, medium_logfc=0.20
+
+Direction classification:
+
+   gained      lost unchanged 
+       73        83        44 
+
+Source x Direction:
+              
+               gained lost unchanged
+  control_only      0   83         0
+  mutant_only      73    0         0
+  shared            0    0        44
+
+=== Adding Derived Metrics ===
+  Added: stripe_length, anchor_width, effect_category
+
+Effect categories (significant stripes):
+< table of extent 0 >
+
+=== Creating BEDPE Output ===
+  BEDPE created: 200 entries
+
+=== Summary Statistics ===
+
+Total stripes: 200
+
+By source:
+  control_only: 83
+  mutant_only: 73
+  shared: 44
+
+By direction (tiered confidence):
+  LOST: 83 total
+    - High:   0 (FDR<0.1 + direction match)
+    - Medium: 10 (direction match, logFC<-0.2)
+    - Low:    73 (detection only)
+  GAINED: 73 total
+    - High:   1 (FDR<0.1 + direction match)
+    - Medium: 6 (direction match, logFC>0.2)
+    - Low:    66 (detection only)
+  strengthened: 0
+  weakened: 0
+  unchanged: 44
+
+Directional consistency: 53.2% (83/156)
+
+=== Saving Outputs ===
+  Saved: 04_final_differential_stripes.tsv/rds (200 stripes)
+  Saved: 04_final_differential_stripes.bedpe
+  Saved: 04_summary.txt
+  Saved: 04_stripes_lost.tsv (83 stripes)
+  Saved: 04_stripes_gained.tsv (73 stripes)
+
+=================================
+Phase 4 Complete
+=================================
+
+Timepoint: late
+Total stripes: 200
+
+Differential stripes (tiered):
+  Lost: 83 (H:0 M:10 L:73)
+  Gained: 73 (H:1 M:6 L:66)
+  Strengthened: 0
+  Weakened: 0
+
+Directional consistency: 53.2%
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late
+
+Pipeline complete! Review results in:
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/04_final_differential_stripes.tsv
+  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/04_final_differential_stripes.bedpe (for Juicebox)
+
+Phase 4 complete
+
+--- late Summary ---
+
+================================================================================
+DIFFERENTIAL STRIPE ANALYSIS - FINAL RESULTS (Tiered Classification)
+================================================================================
+Timepoint: late (250402)
+Date: 2025-12-30
+
+STRIPE COUNTS
+-------------
+Total stripes analyzed: 200
+
+By detection source:
+  control_only:   83 (detected in ctrl merged only)
+  mutant_only:    73 (detected in mut merged only)
+  shared:         44 (detected in both conditions)
+
+DIFFERENTIAL DIRECTION (Tiered Confidence)
+------------------------------------------
+LOST (control_only stripes): 83 total
+  - High confidence:     0 (FDR < 0.10 + logFC < 0)
+
+late completed in 2 minutes
+
+
+###############################################
+# PHASE 5: VISUALIZATION (Both Timepoints)
+###############################################
+
+Start: Tue Dec 30 22:49:00 PST 2025
+
+
+========================================
+Stripe Visualization Analysis
+========================================
+
+Loading required packages...
+Warning messages:
+1: package ‘rtracklayer’ was built under R version 4.4.3 
+2: package ‘tibble’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘yaml’ was built under R version 4.4.3 
+Packages loaded
+
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/visualizations
+
+
+========================================
+SECTION 1: Loading & Filtering Data
+========================================
+
+  early: Loaded 286 stripes
+    Lost: 126 | Gained: 86 | Shared: 74
+  late: Loaded 200 stripes
+    Lost: 83 | Gained: 73 | Shared: 44
+
+Filtering to medium/high confidence stripes:
+
+early timepoint:
+  Filtered to medium/high confidence: 19 stripes
+    High: 0 | Medium: 19
+
+late timepoint:
+  Filtered to medium/high confidence: 17 stripes
+    High: 1 | Medium: 16
+
+Exporting filtered differential lists...
+  Saved: early_medium_high_confidence_stripes.tsv (19 stripes)
+  Saved: late_medium_high_confidence_stripes.tsv (17 stripes)
+
+Section 1 complete
+
+========================================
+SECTION 2: Volcano Plots
+========================================
+
+Creating volcano plot: early
+  Total: 286 | Lost: 126 (M/H: 9) | Gained: 86 (M/H: 10)
+  Saved: volcano_early.pdf
+Creating volcano plot: late
+  Total: 200 | Lost: 83 (M/H: 10) | Gained: 73 (M/H: 7)
+  Saved: volcano_late.pdf
+
+Creating combined volcano plot...
+  Saved: volcano_combined.pdf
+
+Section 2 complete: Volcano plots generated
+
+========================================
+SECTION 3: Length Distribution Analysis
+========================================
+
+Analyzing length distribution: early
+  Length statistics by direction:
+# A tibble: 3 × 8
+  direction_label     n median_length_kb mean_length_kb sd_length_kb
+  <chr>           <int>            <dbl>          <dbl>        <dbl>
+1 Gained             86              100           342.         471.
+2 Lost              126               65           334.         528.
+3 Shared             74              260           259.         299.
+# ℹ 3 more variables: min_length_kb <dbl>, max_length_kb <dbl>,
+#   median_anchor_kb <dbl>
+  Wilcoxon test (Lost vs Gained): p = 1.367e-01
+  Saved: length_distribution_early.pdf
+Analyzing length distribution: late
+  Length statistics by direction:
+# A tibble: 3 × 8
+  direction_label     n median_length_kb mean_length_kb sd_length_kb
+  <chr>           <int>            <dbl>          <dbl>        <dbl>
+1 Gained             73              255           522.         690.
+2 Lost               83              250           421.         590.
+3 Shared             44              245           205.         183.
+# ℹ 3 more variables: min_length_kb <dbl>, max_length_kb <dbl>,
+#   median_anchor_kb <dbl>
+  Wilcoxon test (Lost vs Gained): p = 4.575e-01
+  Saved: length_distribution_late.pdf
+
+Creating combined length comparison...
+  Saved: length_comparison.pdf
+
+Section 3 complete: Length distribution analyzed
+
+========================================
+SECTION 4: ChIP-seq Anchor Annotation
+========================================
+
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+Loaded 24528 TSS positions from mm10
+
+Annotating anchors: early timepoint
+  Loading H3K27ac: P12_ctrl_H3K27ac_early_peaks.bed
+    Loaded 28042 peaks
+  Loading H3K27me3: P12_ctrl_H3K27me3_early_peaks.bed
+    Loaded 23491 peaks
+  Computing distance to nearest TSS...
+'select()' returned 1:1 mapping between keys and columns
+  Computing ChIP-seq overlaps...
+    H3K27ac overlaps: 188 (65.7%)
+    H3K27me3 overlaps: 115 (40.2%)
+  Classifying anchor types...
+
+  Anchor type distribution:
+    Active_Enhancer: 33 (11.5%)
+    Other: 78 (27.3%)
+    Polycomb_Domain: 20 (7.0%)
+    Promoter: 155 (54.2%)
+
+Annotating anchors: late timepoint
+  Loading H3K27ac: 220310index25H3K27acLatePeakRegions.bed
+    Loaded 18687 peaks
+  Loading H3K4me1: K4me1_aligned_reads_peaks.broadPeak-filtered.bed
+    Loaded 113781 peaks
+  Computing distance to nearest TSS...
+'select()' returned 1:1 mapping between keys and columns
+  Computing ChIP-seq overlaps...
+    H3K27ac overlaps: 103 (51.5%)
+    H3K4me1 overlaps: 158 (79.0%)
+  Classifying anchor types...
+
+  Anchor type distribution:
+    Active_Enhancer: 12 (6.0%)
+    Other: 69 (34.5%)
+    Poised_Enhancer: 28 (14.0%)
+    Promoter: 91 (45.5%)
+
+Creating anchor classification plots: early
+  Saved: anchor_classification_early.pdf
+
+Creating anchor classification plots: late
+  Saved: anchor_classification_late.pdf
+Warning messages:
+1: In scale_y_log10() : log-10 transformation introduced infinite values.
+2: In scale_y_log10() : log-10 transformation introduced infinite values.
+3: Removed 186 rows containing non-finite outside the scale range
+(`stat_ydensity()`). 
+4: Removed 186 rows containing non-finite outside the scale range
+(`stat_boxplot()`). 
+5: In scale_y_log10() : log-10 transformation introduced infinite values.
+6: In scale_y_log10() : log-10 transformation introduced infinite values.
+7: Removed 128 rows containing non-finite outside the scale range
+(`stat_ydensity()`). 
+8: Removed 128 rows containing non-finite outside the scale range
+(`stat_boxplot()`). 
+
+Exporting annotated stripe lists...
+  Saved: early_annotated_stripes.tsv (286 stripes)
+  Saved: late_annotated_stripes.tsv (200 stripes)
+
+Section 4 complete: ChIP-seq anchor annotation done
+
+========================================
+SECTION 4B: Annotated Confident Stripe Export
+========================================
+
+Exporting annotated confident stripes (TSV + BEDPE)...
+
+early timepoint: 19 confident stripes
+  Lost: 9 | Gained: 10
+  High: 0 | Medium: 19
+  Saved TSV: early_medium_high_confidence_stripes.tsv
+  Saved BEDPE: early_medium_high_confidence_stripes.bedpe
+
+late timepoint: 17 confident stripes
+  Lost: 10 | Gained: 7
+  High: 1 | Medium: 16
+  Saved TSV: late_medium_high_confidence_stripes.tsv
+  Saved BEDPE: late_medium_high_confidence_stripes.bedpe
+
+Section 4B complete: Annotated confident stripe exports done
+
+========================================
+SECTION 5: Summary Statistics
+========================================
+
+Summary statistics saved to: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/visualizations/combined/summary_statistics.txt 
+
+=========================================
+DIFFERENTIAL STRIPE ANALYSIS SUMMARY
+=========================================
+Generated: 2025-12-30 22:49:19.08823
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+
+--- EARLY TIMEPOINT ---
+Total stripes: 286
+
+Direction breakdown:
+  Lost (control_only): 126
+  Gained (mutant_only): 86
+  Shared: 74
+
+Confidence tiers (lost/gained only):
+  High: 0
+  Medium: 19
+  Low: 193
+
+Stripe length statistics:
+  Median: 235.0 kb
+  Mean: 317.0 kb
+  Range: 5.0 - 2970.0 kb
+
+Anchor type distribution:
+  Active_Enhancer: 33 (11.5%)
+  Other: 78 (27.3%)
+  Polycomb_Domain: 20 (7%)
+  Promoter: 155 (54.2%)
+
+Directional consistency:
+  Consistent: 97 (45.8%)
+  Inconsistent: 115
+
+Statistical significance:
+  FDR < 0.05: 0
+  FDR < 0.10: 0
+
+========================================
+
+--- LATE TIMEPOINT ---
+Total stripes: 200
+
+Direction breakdown:
+  Lost (control_only): 83
+  Gained (mutant_only): 73
+  Shared: 44
+
+Confidence tiers (lost/gained only):
+  High: 1
+  Medium: 16
+  Low: 139
+
+Stripe length statistics:
+  Median: 250.0 kb
+  Mean: 410.2 kb
+  Range: 5.0 - 3505.0 kb
+
+Anchor type distribution:
+  Active_Enhancer: 12 (6%)
+  Other: 69 (34.5%)
+  Poised_Enhancer: 28 (14%)
+  Promoter: 91 (45.5%)
+
+Directional consistency:
+  Consistent: 83 (53.2%)
+  Inconsistent: 73
+
+Statistical significance:
+  FDR < 0.05: 0
+  FDR < 0.10: 1
+
+========================================
+
+OUTPUT FILES GENERATED:
+
+Per timepoint (early/late):
+  - volcano_{timepoint}.pdf
+  - length_distribution_{timepoint}.pdf
+  - length_statistics_{timepoint}.tsv
+  - anchor_classification_{timepoint}.pdf
+  - {timepoint}_annotated_stripes.tsv (all stripes)
+  - {timepoint}_medium_high_confidence_stripes.tsv (confident only)
+  - {timepoint}_medium_high_confidence_stripes.bedpe (confident, for JuiceBox)
+
+Combined:
+  - volcano_combined.pdf
+  - length_comparison.pdf
+  - summary_statistics.txt
+
+=========================================
+
+========================================
+STRIPE VISUALIZATION ANALYSIS COMPLETE
+========================================
+
+Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/visualizations
+
+Generated files:
+
+Early timepoint (outputs/visualizations/early/):
+  - volcano_early.pdf
+  - length_distribution_early.pdf
+  - anchor_classification_early.pdf
+  - early_annotated_stripes.tsv (all stripes)
+  - early_medium_high_confidence_stripes.tsv (confident only)
+  - early_medium_high_confidence_stripes.bedpe (for JuiceBox)
+
+Late timepoint (outputs/visualizations/late/):
+  - volcano_late.pdf
+  - length_distribution_late.pdf
+  - anchor_classification_late.pdf
+  - late_annotated_stripes.tsv (all stripes)
+  - late_medium_high_confidence_stripes.tsv (confident only)
+  - late_medium_high_confidence_stripes.bedpe (for JuiceBox)
+
+Combined (outputs/visualizations/combined/):
+  - volcano_combined.pdf
+  - length_comparison.pdf
+  - summary_statistics.txt
+
+========================================
+
+Visualization complete
+
+
+===========================================
+PIPELINE COMPLETE
+===========================================
+
+Total runtime: 5 minutes
+End time: Tue Dec 30 22:49:19 PST 2025
+
+Output structure:
+
+outputs/
+  early/
+    01_unified_stripes.rds
+    01_unified_stripes.tsv
+    02_extractedse.rds
+    02_extraction_metadata.rds
+    02_stripe_counts.rds
+    02_stripe_counts.tsv
+    04_final_differential_stripes.bedpe
+    04_final_differential_stripes.rds
+    04_final_differential_stripes.tsv
+    04_stripes_gained.tsv
+    04_stripes_lost.tsv
+    04_summary_stats.rds
+    edgeR_results/
+  late/
+    01_unified_stripes.rds
+    01_unified_stripes.tsv
+    02_extractedse.rds
+    02_extraction_metadata.rds
+    02_stripe_counts.rds
+    02_stripe_counts.tsv
+    04_final_differential_stripes.bedpe
+    04_final_differential_stripes.rds
+    04_final_differential_stripes.tsv
+    04_stripes_gained.tsv
+    04_stripes_lost.tsv
+    04_summary_stats.rds
+    edgeR_results/
+  visualizations/
+    combined
+    early
+    late
+
+===========================================
+SUCCESS: All phases completed
+===========================================
