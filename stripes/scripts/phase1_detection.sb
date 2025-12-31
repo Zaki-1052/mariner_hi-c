@@ -1,0 +1,71 @@
+#!/bin/bash
+#SBATCH --job-name=stripe_phase1
+#SBATCH --output=logs/phase1_%A_%a.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+#SBATCH --array=0-1
+
+# ==============================================================================
+# Phase 1: Detection & Union Set Creation for Differential Stripe Analysis
+# ==============================================================================
+#
+# Creates unified stripe sets from merged BEDPE files for both timepoints
+# with direction-aware anchor matching and confidence scoring.
+#
+# Array jobs: 0=early, 1=late
+#
+# Expected runtime: ~30-60 min per timepoint
+# Output: {outputs_dir}/{timepoint}/res_5kb/01_unified_stripes.rds
+# ==============================================================================
+
+# Map array index to timepoint
+TIMEPOINTS=("early" "late")
+TIMEPOINT=${TIMEPOINTS[$SLURM_ARRAY_TASK_ID]}
+
+echo "========================================="
+echo "Stripe Phase 1: Detection & Union Set"
+echo "========================================="
+echo "Job ID: ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "Timepoint: ${TIMEPOINT}"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Change to project directory
+cd /expanse/lustre/projects/csd940/zalibhai/stripes
+
+# Create logs directory if needed
+mkdir -p logs
+
+echo "Starting Phase 1 detection for ${TIMEPOINT}..."
+echo ""
+
+Rscript scripts/phase1_detection.R ${TIMEPOINT}
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Phase 1 completed successfully for ${TIMEPOINT}"
+else
+    echo ""
+    echo "❌ Phase 1 failed for ${TIMEPOINT} with exit code $?"
+    exit 1
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="

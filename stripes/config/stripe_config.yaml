@@ -1,0 +1,165 @@
+# stripes/config/stripe_config.yaml
+# Configuration for Differential Chromatin Stripe Analysis Pipeline
+# BAP1-KO vs Wildtype Comparison - Mouse Cerebellum (mm10)
+# Designed to run on SDSC Expanse HPC
+
+# ==============================================================================
+# Project Settings
+# ==============================================================================
+project:
+  name: "Differential Stripe Analysis"
+  version: "1.0.0"
+  base_dir: "/expanse/lustre/projects/csd940/zalibhai/stripes"
+
+# ==============================================================================
+# Stripe Data Paths (BEDPE files from Quagga)
+# ==============================================================================
+stripe_data:
+  # Base path to stripe BEDPE files
+  # Structure: {base_path}/{resolution}kb/{timepoint}/{sample}_stripes.bedpe
+  base_path: "/expanse/lustre/projects/csd940/zalibhai/stripes/stripe-data"
+
+  # Timepoint directory names
+  timepoints:
+    early: "250831"
+    late: "250402"
+
+  # Resolutions available (in bp)
+  resolutions:
+    primary: 5000      # 5kb - primary analysis resolution
+    validation: 10000  # 10kb - for confidence annotation only
+
+# ==============================================================================
+# Hi-C Files (for Phase 2 quantification)
+# ==============================================================================
+hic_files:
+  # Base path to .hic files
+  # Structure: {base_path}/{timepoint}/{sample}.hic
+  base_path: "/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+
+# ==============================================================================
+# Sample Information
+# ==============================================================================
+samples:
+  names: ["ctrl_M1", "ctrl_M2", "ctrl_M3", "mut_M1", "mut_M2", "mut_M3"]
+  groups: ["ctrl", "ctrl", "ctrl", "mut", "mut", "mut"]
+  replicates: ["M1", "M2", "M3"]
+  conditions:
+    ctrl: "Wildtype control"
+    mut: "BAP1-KO mutant"
+
+# ==============================================================================
+# Phase 1: Detection Parameters
+# ==============================================================================
+detection:
+  # Anchor matching tolerance (bp)
+  # Stripes with anchors overlapping within this distance are considered "same stripe"
+  anchor_tolerance_bp: 50000  # 50kb
+
+  # Minimum stripe length (already filtered at Quagga level)
+  min_stripe_length: 200000   # 200kb
+
+  # Confidence scoring thresholds
+  confidence:
+    # High confidence: detected in >= 2 replicates AND validated at 10kb
+    high_min_reps: 2
+    # Medium confidence: detected in >= 1 replicate OR in_10kb OR pval < threshold
+    medium_min_reps: 1
+    high_pval_threshold: 1e-10  # Very significant detection
+
+# ==============================================================================
+# Phase 2: Quantification Parameters
+# ==============================================================================
+quantification:
+  # Sampling distance into span direction (from anchor center)
+  # This defines where to extract Hi-C signal for quantification
+  sampling_distance_bp: 100000  # 100kb into span
+
+  # Buffer size for matrix extraction
+  # buffer=2 means ±2 bins around center = 5x5 pixel matrix
+  buffer_bins: 2
+
+  # Hi-C normalization method
+  normalization: "KR"     # Knight-Ruiz preferred
+  fallback_norm: "VC"     # Vanilla Coverage fallback if KR unavailable
+
+  # HDF5 settings for out-of-memory processing
+  on_disk: true
+  block_size: 1000000     # 1Mb blocks for memory efficiency
+  compression_level: 1
+
+# ==============================================================================
+# Phase 3: edgeR Parameters
+# ==============================================================================
+edger:
+  # Skip filtering due to small feature set (~150-300 stripes)
+  skip_filtering: true
+  min_count: 0            # Keep all stripes
+
+  # Normalization method
+  normalization_method: "TMM"
+
+  # GLM settings
+  robust_dispersion: true
+
+  # Significance thresholds
+  fdr_primary: 0.05       # Primary FDR threshold
+  fdr_exploratory: 0.10   # Exploratory/relaxed threshold
+
+# ==============================================================================
+# Phase 4: Classification Parameters
+# ==============================================================================
+classification:
+  # logFC threshold for strengthened/weakened classification
+  logFC_threshold: 0.3
+
+  # FDR threshold for direction classification
+  fdr_threshold: 0.05
+
+  # Direction categories and their criteria:
+  # - lost: control_only & FDR < 0.05 & logFC < 0
+  # - gained: mutant_only & FDR < 0.05 & logFC > 0
+  # - strengthened: shared & FDR < 0.05 & logFC > 0.3
+  # - weakened: shared & FDR < 0.05 & logFC < -0.3
+  # - unchanged: shared & (FDR >= 0.05 OR |logFC| <= 0.3)
+  # - ambiguous: doesn't fit expected patterns
+
+# ==============================================================================
+# Output Settings
+# ==============================================================================
+outputs:
+  # Output file formats
+  formats: ["tsv", "rds", "bedpe"]
+
+  # Output directory (on Expanse)
+  base_dir: "/expanse/lustre/projects/csd940/zalibhai/stripes/outputs"
+
+  # Subdirectory structure:
+  # {base_dir}/{timepoint}/res_5kb/        - Phase 1-2 intermediates
+  # {base_dir}/{timepoint}/edgeR_results/  - Phase 3-4 results
+
+# ==============================================================================
+# Runtime Settings
+# ==============================================================================
+runtime:
+  seed: 42
+  verbose: true
+  parallel_cores: 12  # Match SLURM allocation
+
+# ==============================================================================
+# Chromosome Filtering
+# ==============================================================================
+filtering:
+  # Exclude sex chromosomes and unplaced contigs
+  exclude_chromosomes: ["chrX", "chrY", "chrM"]
+
+# ==============================================================================
+# SLURM Settings (for reference)
+# ==============================================================================
+slurm:
+  partition: "shared"
+  nodes: 1
+  cpus_per_task: 12
+  memory: "64G"
+  time: "24:00:00"
+  account: "csd940"
