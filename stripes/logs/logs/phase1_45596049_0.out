@@ -1,0 +1,89 @@
+=========================================
+Stripe Phase 1: Detection & Union Set
+=========================================
+Job ID: 45596049_0
+Timepoint: early
+Node: exp-1-24
+Start time: Tue Dec 30 16:28:19 PST 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Starting Phase 1 detection for early...
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 1: Detection & Union Set Creation
+Timepoint: early
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Project base: /expanse/lustre/projects/csd940/zalibhai/stripes
+
+Timepoint directory: 250831
+Anchor tolerance: 50 kb
+Primary resolution: 5 kb
+
+=== Loading BEDPE Files ===
+  ctrl_merged: /expanse/lustre/projects/csd940/zalibhai/stripes/stripe-data/5kb/250831/ctrl_merged_stripes.bedpe
+  mut_merged: /expanse/lustre/projects/csd940/zalibhai/stripes/stripe-data/5kb/250831/mut_merged_stripes.bedpe
+
+  Loaded ctrl: 200 stripes
+  Loaded mut: 160 stripes
+
+=== Building Union Set ===
+  Control merged: 200 stripes
+  Mutant merged: 160 stripes
+  Shared: 74, Control-only: 126, Mutant-only: 86
+Total union: 286 stripes
+
+=== Counting Replicate Support ===
+
+=== 10kb Validation ===
+  10kb stripes for validation: 1909
+  Validated in 10kb: 165 (57.7%)
+
+=== Confidence Scoring ===
+
+=== Saving Outputs ===
+  Created: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb
+  Saved: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/01_unified_stripes.rds
+  Saved: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/01_unified_stripes.tsv
+
+=================================
+Phase 1 Complete
+=================================
+
+Timepoint: early (250831)
+Total stripes: 286
+
+By source:
+
+control_only  mutant_only       shared 
+         126           86           74 
+
+By direction:
+
+3prime 
+   286 
+
+By confidence:
+
+   low medium 
+    24    262 
+
+Output: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb
+
+Next: Rscript scripts/phase2_quantification.R early
+
+
+✅ Phase 1 completed successfully for early
+
+End time: Tue Dec 30 16:28:35 PST 2025
+=========================================
