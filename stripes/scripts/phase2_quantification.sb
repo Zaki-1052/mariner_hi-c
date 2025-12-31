@@ -1,0 +1,103 @@
+#!/bin/bash
+#SBATCH --job-name=stripe_phase2
+#SBATCH --output=logs/phase2_%A_%a.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+#SBATCH --array=0-1
+
+# ==============================================================================
+# Phase 2: Hi-C Matrix Extraction and Count Aggregation
+# ==============================================================================
+#
+# Extracts 5x5 Hi-C matrices at stripe sampling points using mariner.
+# Aggregates matrices to count matrix for edgeR differential analysis.
+#
+# Array jobs: 0=early, 1=late
+#
+# Expected runtime: ~30-60 min per timepoint
+# Memory requirement: ~32-64 GB (Hi-C matrix extraction)
+# Output: {outputs_dir}/{timepoint}/res_5kb/02_stripe_counts.rds
+# ==============================================================================
+
+# Map array index to timepoint
+TIMEPOINTS=("early" "late")
+TIMEPOINT=${TIMEPOINTS[$SLURM_ARRAY_TASK_ID]}
+
+echo "========================================="
+echo "Stripe Phase 2: Hi-C Quantification"
+echo "========================================="
+echo "Job ID: ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "Timepoint: ${TIMEPOINT}"
+echo "Node: $HOSTNAME"
+echo "CPUs: ${SLURM_CPUS_PER_TASK}"
+echo "Memory: ${SLURM_MEM_PER_NODE}"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Check for required packages
+echo "Checking R packages..."
+R --slave -e "library(mariner); library(strawr); library(HDF5Array)" 2>&1
+if [ $? -ne 0 ]; then
+    echo "ERROR: Required R packages not available"
+    exit 1
+fi
+echo "All required packages available"
+echo ""
+
+# Change to project directory
+cd /expanse/lustre/projects/csd940/zalibhai/stripes
+
+# Create logs directory if needed
+mkdir -p logs
+
+# Verify Phase 1 output exists
+PHASE1_OUTPUT="outputs/${TIMEPOINT}/res_5kb/01_unified_stripes.tsv"
+if [ ! -f "$PHASE1_OUTPUT" ]; then
+    echo "ERROR: Phase 1 output not found: ${PHASE1_OUTPUT}"
+    echo "Run phase1_detection.R first"
+    exit 1
+fi
+echo "Phase 1 output found: ${PHASE1_OUTPUT}"
+echo ""
+
+echo "Starting Phase 2 quantification for ${TIMEPOINT}..."
+echo ""
+
+Rscript scripts/phase2_quantification.R ${TIMEPOINT}
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "Phase 2 completed successfully for ${TIMEPOINT}"
+
+    # Verify output
+    OUTPUT="outputs/${TIMEPOINT}/res_5kb/02_stripe_counts.rds"
+    if [ -f "$OUTPUT" ]; then
+        echo "Output verified: ${OUTPUT}"
+        ls -lh "${OUTPUT}"
+    else
+        echo "WARNING: Expected output not found"
+    fi
+else
+    echo ""
+    echo "Phase 2 failed for ${TIMEPOINT} with exit code $?"
+    exit 1
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="

@@ -1,0 +1,193 @@
+#!/bin/bash
+#SBATCH --job-name=stripe_full
+#SBATCH --output=logs/stripe_full_%A_%a.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=64G
+#SBATCH --time=06:00:00
+#SBATCH --account=csd940
+#SBATCH --array=0-1
+
+# ==============================================================================
+# Master SLURM Script: Differential Stripe Analysis Phases 2-4
+# ==============================================================================
+#
+# Runs the complete differential stripe analysis pipeline:
+#   Phase 2: Hi-C matrix extraction and count aggregation
+#   Phase 3: edgeR differential analysis
+#   Phase 4: Integration and direction classification
+#
+# Prerequisites:
+#   - Phase 1 must be complete (01_unified_stripes.tsv exists)
+#   - Hi-C files must be accessible
+#   - mariner_env conda environment configured
+#
+# Array jobs: 0=early, 1=late
+#
+# Expected runtime: ~1-2 hours per timepoint
+# Output: Final differential stripes in outputs/{timepoint}/res_5kb/
+# ==============================================================================
+
+# Map array index to timepoint
+TIMEPOINTS=("early" "late")
+TIMEPOINT=${TIMEPOINTS[$SLURM_ARRAY_TASK_ID]}
+
+echo "==========================================="
+echo "DIFFERENTIAL STRIPE ANALYSIS - PHASES 2-4"
+echo "==========================================="
+echo "Job ID: ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "Timepoint: ${TIMEPOINT}"
+echo "Node: $HOSTNAME"
+echo "CPUs: ${SLURM_CPUS_PER_TASK}"
+echo "Memory: ${SLURM_MEM_PER_NODE}"
+echo "Start time: $(date)"
+echo "==========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Check for required packages
+echo "Checking R packages..."
+R --slave -e "library(mariner); library(strawr); library(HDF5Array); library(edgeR)" 2>&1
+if [ $? -ne 0 ]; then
+    echo "ERROR: Required R packages not available"
+    exit 1
+fi
+echo "All required packages available"
+echo ""
+
+# Change to project directory
+cd /expanse/lustre/projects/csd940/zalibhai/stripes
+
+# Create logs directory if needed
+mkdir -p logs
+
+# Verify Phase 1 output exists
+PHASE1_OUTPUT="outputs/${TIMEPOINT}/res_5kb/01_unified_stripes.tsv"
+if [ ! -f "$PHASE1_OUTPUT" ]; then
+    echo "ERROR: Phase 1 output not found: ${PHASE1_OUTPUT}"
+    echo "Run phase1_detection.R first"
+    exit 1
+fi
+echo "Phase 1 output found: ${PHASE1_OUTPUT}"
+STRIPE_COUNT=$(wc -l < "$PHASE1_OUTPUT")
+echo "  Stripes: $((STRIPE_COUNT - 1))"
+echo ""
+
+# ==============================================================================
+# PHASE 2: Hi-C Quantification
+# ==============================================================================
+echo "==========================================="
+echo "PHASE 2: Hi-C Matrix Extraction"
+echo "==========================================="
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/phase2_quantification.R ${TIMEPOINT}
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "ERROR: Phase 2 failed for ${TIMEPOINT}"
+    exit 1
+fi
+
+# Verify Phase 2 output
+PHASE2_OUTPUT="outputs/${TIMEPOINT}/res_5kb/02_stripe_counts.rds"
+if [ ! -f "$PHASE2_OUTPUT" ]; then
+    echo "ERROR: Phase 2 output not found: ${PHASE2_OUTPUT}"
+    exit 1
+fi
+echo ""
+echo "Phase 2 completed: $(date)"
+echo "Output: ${PHASE2_OUTPUT}"
+echo ""
+
+# ==============================================================================
+# PHASE 3: edgeR Differential Analysis
+# ==============================================================================
+echo "==========================================="
+echo "PHASE 3: edgeR Differential Analysis"
+echo "==========================================="
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/phase3_edgeR.R ${TIMEPOINT}
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "ERROR: Phase 3 failed for ${TIMEPOINT}"
+    exit 1
+fi
+
+# Verify Phase 3 output
+PHASE3_OUTPUT="outputs/${TIMEPOINT}/res_5kb/edgeR_results/03_all_results.tsv"
+if [ ! -f "$PHASE3_OUTPUT" ]; then
+    echo "ERROR: Phase 3 output not found: ${PHASE3_OUTPUT}"
+    exit 1
+fi
+echo ""
+echo "Phase 3 completed: $(date)"
+echo "Output: ${PHASE3_OUTPUT}"
+echo ""
+
+# ==============================================================================
+# PHASE 4: Integration & Classification
+# ==============================================================================
+echo "==========================================="
+echo "PHASE 4: Integration & Classification"
+echo "==========================================="
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/phase4_integration.R ${TIMEPOINT}
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "ERROR: Phase 4 failed for ${TIMEPOINT}"
+    exit 1
+fi
+
+# Verify Phase 4 output
+PHASE4_OUTPUT="outputs/${TIMEPOINT}/res_5kb/04_final_differential_stripes.tsv"
+if [ ! -f "$PHASE4_OUTPUT" ]; then
+    echo "ERROR: Phase 4 output not found: ${PHASE4_OUTPUT}"
+    exit 1
+fi
+echo ""
+echo "Phase 4 completed: $(date)"
+echo ""
+
+# ==============================================================================
+# FINAL SUMMARY
+# ==============================================================================
+echo "==========================================="
+echo "PIPELINE COMPLETE"
+echo "==========================================="
+echo ""
+echo "Timepoint: ${TIMEPOINT}"
+echo "End time: $(date)"
+echo ""
+echo "Final outputs:"
+ls -la "outputs/${TIMEPOINT}/res_5kb/04_"*.{tsv,bedpe,rds} 2>/dev/null
+echo ""
+echo "edgeR results:"
+ls -la "outputs/${TIMEPOINT}/res_5kb/edgeR_results/" 2>/dev/null | head -10
+echo ""
+
+# Print summary statistics
+echo "Summary:"
+cat "outputs/${TIMEPOINT}/res_5kb/04_summary.txt" 2>/dev/null | head -40
+echo ""
+
+echo "==========================================="
+echo "SUCCESS: All phases completed for ${TIMEPOINT}"
+echo "==========================================="

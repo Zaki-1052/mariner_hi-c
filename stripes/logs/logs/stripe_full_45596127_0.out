@@ -1,0 +1,570 @@
+===========================================
+DIFFERENTIAL STRIPE ANALYSIS - PHASES 2-4
+===========================================
+Job ID: 45596127_0
+Timepoint: early
+Node: exp-1-24
+CPUs: 12
+Memory: 65536
+Start time: Tue Dec 30 17:27:52 PST 2025
+===========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Checking R packages...
+Loading required package: SparseArray
+Loading required package: Matrix
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: MatrixGenerics
+Loading required package: matrixStats
+
+Attaching package: ‘MatrixGenerics’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colAlls, colAnyNAs, colAnys, colAvgsPerRowSet, colCollapse,
+    colCounts, colCummaxs, colCummins, colCumprods, colCumsums,
+    colDiffs, colIQRDiffs, colIQRs, colLogSumExps, colMadDiffs,
+    colMads, colMaxs, colMeans2, colMedians, colMins, colOrderStats,
+    colProds, colQuantiles, colRanges, colRanks, colSdDiffs, colSds,
+    colSums2, colTabulates, colVarDiffs, colVars, colWeightedMads,
+    colWeightedMeans, colWeightedMedians, colWeightedSds,
+    colWeightedVars, rowAlls, rowAnyNAs, rowAnys, rowAvgsPerColSet,
+    rowCollapse, rowCounts, rowCummaxs, rowCummins, rowCumprods,
+    rowCumsums, rowDiffs, rowIQRDiffs, rowIQRs, rowLogSumExps,
+    rowMadDiffs, rowMads, rowMaxs, rowMeans2, rowMedians, rowMins,
+    rowOrderStats, rowProds, rowQuantiles, rowRanges, rowRanks,
+    rowSdDiffs, rowSds, rowSums2, rowTabulates, rowVarDiffs, rowVars,
+    rowWeightedMads, rowWeightedMeans, rowWeightedMedians,
+    rowWeightedSds, rowWeightedVars
+
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: ‘S4Vectors’
+
+The following objects are masked from ‘package:Matrix’:
+
+    expand, unname
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: S4Arrays
+Loading required package: abind
+Loading required package: IRanges
+
+Attaching package: ‘S4Arrays’
+
+The following object is masked from ‘package:abind’:
+
+    abind
+
+The following object is masked from ‘package:base’:
+
+    rowsum
+
+Loading required package: DelayedArray
+
+Attaching package: ‘DelayedArray’
+
+The following objects are masked from ‘package:base’:
+
+    apply, scale, sweep
+
+Loading required package: rhdf5
+
+Attaching package: ‘HDF5Array’
+
+The following object is masked from ‘package:rhdf5’:
+
+    h5ls
+
+Warning messages:
+1: package ‘Matrix’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+Loading required package: limma
+
+Attaching package: ‘limma’
+
+The following object is masked from ‘package:BiocGenerics’:
+
+    plotMA
+
+All required packages available
+
+Phase 1 output found: outputs/early/res_5kb/01_unified_stripes.tsv
+  Stripes: 286
+
+===========================================
+PHASE 2: Hi-C Matrix Extraction
+===========================================
+Start: Tue Dec 30 17:28:13 PST 2025
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+5: package ‘yaml’ was built under R version 4.4.3 
+6: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 2: Hi-C Quantification
+Timepoint: early
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Project base: /expanse/lustre/projects/csd940/zalibhai/stripes
+
+Parameters:
+  Timepoint dir: 250831
+  Resolution: 5000 bp (5 kb)
+  Sampling distance: 100000 bp
+  Buffer: 2 bins (= 5x5 matrix)
+  Normalization: KR (fallback: VC)
+
+=== Loading Phase 1 Unified Stripes ===
+  Loaded: 286 stripes from /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/01_unified_stripes.tsv
+  Stripe counts by source:
+
+control_only  mutant_only       shared 
+         126           86           74 
+
+=== Converting Stripes to GInteractions ===
+  Sampling points within span: 94 / 286 (32.9%)
+  Created GInteractions: 286 interactions
+
+=== Binning to Resolution Grid ===
+  Binned to 5000 bp resolution
+  Added buffer: 5x5 pixel regions
+
+=== Loading Hi-C Files ===
+Verifying Hi-C files:
+  ctrl_M1: 3.7 GB - OK
+  ctrl_M2: 3.6 GB - OK
+  ctrl_M3: 4.0 GB - OK
+  mut_M1: 3.9 GB - OK
+  mut_M2: 3.6 GB - OK
+  mut_M3: 3.9 GB - OK
+
+Checking available normalizations:
+  Available: NONE, KR
+  Using: KR (preferred)
+
+=== Extracting Hi-C Matrices ===
+  HDF5 output: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/temp_hdf5/stripe_matrices.h5
+
+Extracting 286 stripes x 6 samples x 25 pixels...
+
+Extraction completed in 143.5 seconds
+
+=== Validation of Extracted Data ===
+Dimensions: 5 x 5 x 286 x 6
+  = 5x5 pixels x 286 stripes x 6 samples
+
+NA values: 0 (0.00%)
+
+Value distribution (excluding NAs):
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.968   5.183   6.178   8.105  66.421 
+
+Sparsity: 7.0% zeros
+
+=== Aggregating to Count Matrix ===
+Strategy: Sum all pixels in 5x5 region
+Aggregating... 50 100 150 200 250 Done
+  Count matrix: 286 stripes x 6 samples
+
+Count summary:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00   94.79  127.42  154.45  187.94  760.19 
+
+=== Correlation Analysis ===
+
+Correlation matrix:
+        ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3
+ctrl_M1   1.000   0.970   0.967  0.971  0.972  0.971
+ctrl_M2   0.970   1.000   0.971  0.972  0.971  0.967
+ctrl_M3   0.967   0.971   1.000  0.971  0.970  0.969
+mut_M1    0.971   0.972   0.971  1.000  0.977  0.977
+mut_M2    0.972   0.971   0.970  0.977  1.000  0.970
+mut_M3    0.971   0.967   0.969  0.977  0.970  1.000
+
+Within-condition correlations:
+  Control (within): 0.969
+  Mutant (within): 0.975
+  Between groups: 0.970
+
+Quality Assessment:
+  Excellent within-condition reproducibility (>0.95)
+  WARNING: Within-condition correlations not much higher than between
+
+=== Saving Outputs ===
+  Count matrix: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_stripe_counts.tsv
+  Count matrix RDS: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_stripe_counts.rds
+  Metadata: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_extraction_metadata.rds
+
+Saving HDF5 data...
+Start writing assay 1/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 1/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_extractedassays.h5
+
+Start writing assay 2/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 2/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_extractedassays.h5
+
+Start writing assay 3/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_extractedassays.h5
+/ reading and realizing block 1/1 ... ok
+\ Writing it ... OK
+Finished writing assay 3/3 to HDF5 file:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_extractedassays.h5
+
+Serialize InteractionArray object to RDS file:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/02_extractedse.rds
+
+=================================
+Phase 2 Complete
+=================================
+
+Timepoint: early (250831)
+Resolution: 5000 bp
+Stripes quantified: 286
+Samples: 6
+Normalization: KR
+
+Quality Metrics:
+  Within-ctrl correlation: 0.969
+  Within-mut correlation: 0.975
+  Between-group correlation: 0.970
+  NA percent: 0.00%
+  Extraction time: 143.5 sec
+
+Output: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb
+
+Next: Rscript scripts/phase3_edgeR.R early
+
+
+Phase 2 completed: Tue Dec 30 17:31:29 PST 2025
+Output: outputs/early/res_5kb/02_stripe_counts.rds
+
+===========================================
+PHASE 3: edgeR Differential Analysis
+===========================================
+Start: Tue Dec 30 17:31:29 PST 2025
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 3: edgeR Differential Analysis
+Timepoint: early
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Input: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb
+  Output: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/edgeR_results
+
+=== Loading Data ===
+  Count matrix: 286 stripes x 6 samples
+  Stripe metadata: 286 stripes
+
+=== Creating Annotations ===
+  Annotation created for 286 stripes
+
+=== Creating DGEList ===
+  DGEList created: 286 stripes x 6 samples
+  Groups: ctrl, mut
+  Replicates per group: n = 3
+
+  Library sizes:
+    ctrl_M1 (ctrl): 44565
+    ctrl_M2 (ctrl): 40602
+    ctrl_M3 (ctrl): 41839
+    mut_M1 (mut): 45327
+    mut_M2 (mut): 47172
+    mut_M3 (mut): 45529
+
+=== Filtering ===
+  SKIPPING low-count filtering (per design decision)
+  Retaining ALL 286 stripes for analysis
+  Rationale: Small feature set (~150-300 stripes)
+
+=== Normalization ===
+  Method: TMM
+  Normalization factors:
+    ctrl_M1: 1.0046
+    ctrl_M2: 0.9984
+    ctrl_M3: 1.0005
+    mut_M1: 1.0045
+    mut_M2: 0.9929
+    mut_M3: 0.9991
+
+=== Generating MDS Plot ===
+null device 
+          1 
+  Saved: mds_plot.pdf
+
+=== Dispersion Estimation ===
+  Design matrix:
+    - Intercept: Baseline (control)
+    - MutantEffect: Difference (mutant - control)
+
+  Common dispersion: 0.0045
+  Common BCV: 0.067
+  Tagwise BCV range: 0.010 - 0.614
+  Median tagwise BCV: 0.063
+null device 
+          1 
+  Saved: bcv_plot.pdf
+
+=== Quasi-Likelihood GLM ===
+  Residual df: 4
+null device 
+          1 
+  Saved: ql_dispersion_plot.pdf
+
+=== Differential Testing ===
+  Test: Mutant effect (positive logFC = higher in mutant)
+
+  Results (FDR < 0.05):
+    Significant: 0 / 286 (0.0%)
+    Up in mutant: 0
+    Down in mutant: 0
+
+  Exploratory (FDR < 0.10): 0
+
+=== Generating Volcano Plot ===
+null device 
+          1 
+  Saved: volcano_plot.pdf
+null device 
+          1 
+  Saved: ma_plot.pdf
+
+=== Saving Outputs ===
+  Saved: 03_dge_object.rds
+  Saved: 03_fit_object.rds
+  Saved: 03_all_results.tsv/rds
+  Saved: 03_significant_FDR05.tsv (0 stripes)
+  Saved: 03_summary.txt
+
+=================================
+Phase 3 Complete
+=================================
+
+Timepoint: early
+Stripes analyzed: 286
+Significant (FDR < 0.05): 0 (0.0%)
+  Up in mutant: 0
+  Down in mutant: 0
+Common BCV: 0.067
+
+Output: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/edgeR_results
+
+Next: Rscript scripts/phase4_integration.R early
+
+
+Phase 3 completed: Tue Dec 30 17:31:31 PST 2025
+Output: outputs/early/res_5kb/edgeR_results/03_all_results.tsv
+
+===========================================
+PHASE 4: Integration & Classification
+===========================================
+Start: Tue Dec 30 17:31:31 PST 2025
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 4: Integration & Classification
+Timepoint: early
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Base dir: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb
+  edgeR dir: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/edgeR_results
+
+=== Loading Data ===
+  Phase 1: 286 stripes
+  Phase 3: 286 stripes with edgeR statistics
+
+=== Merging Data ===
+  Merged: 286 stripes
+
+=== Direction Classification ===
+  FDR threshold: 0.05
+  logFC threshold: 0.30
+
+Direction classification:
+
+ambiguous unchanged 
+      212        74 
+
+Source x Direction:
+              
+               ambiguous unchanged
+  control_only       126         0
+  mutant_only         86         0
+  shared               0        74
+
+=== Adding Derived Metrics ===
+  Added: stripe_length, anchor_width, effect_category
+
+Effect categories (significant stripes):
+< table of extent 0 >
+
+=== Creating BEDPE Output ===
+  BEDPE created: 286 entries
+
+=== Summary Statistics ===
+
+Total stripes: 286
+
+By source:
+  control_only: 126
+  mutant_only: 86
+  shared: 74
+
+By direction:
+  lost: 0
+  gained: 0
+  strengthened: 0
+  weakened: 0
+  unchanged: 74
+  ambiguous: 212
+
+=== Saving Outputs ===
+  Saved: 04_final_differential_stripes.tsv/rds (286 stripes)
+  Saved: 04_final_differential_stripes.bedpe
+  Saved: 04_summary.txt
+
+=================================
+Phase 4 Complete
+=================================
+
+Timepoint: early
+Total stripes: 286
+
+Differential stripes:
+  Lost: 0
+  Gained: 0
+  Strengthened: 0
+  Weakened: 0
+
+Output: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb
+
+Pipeline complete! Review results in:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/04_final_differential_stripes.tsv
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/early/res_5kb/04_final_differential_stripes.bedpe (for Juicebox)
+
+
+Phase 4 completed: Tue Dec 30 17:31:32 PST 2025
+
+===========================================
+PIPELINE COMPLETE
+===========================================
+
+Timepoint: early
+End time: Tue Dec 30 17:31:32 PST 2025
+
+Final outputs:
+-rw-r--r-- 1 zalibhai csd940 43637 Dec 30 17:31 outputs/early/res_5kb/04_final_differential_stripes.bedpe
+-rw-r--r-- 1 zalibhai csd940 21817 Dec 30 17:31 outputs/early/res_5kb/04_final_differential_stripes.rds
+-rw-r--r-- 1 zalibhai csd940 76845 Dec 30 17:31 outputs/early/res_5kb/04_final_differential_stripes.tsv
+-rw-r--r-- 1 zalibhai csd940   447 Dec 30 17:31 outputs/early/res_5kb/04_summary_stats.rds
+
+edgeR results:
+total 62
+drwxr-sr-x 3 zalibhai csd940  1024 Dec 30 17:31 .
+drwxr-sr-x 4 zalibhai csd940 57344 Dec 30 17:31 ..
+-rw-r--r-- 1 zalibhai csd940 24848 Dec 30 17:31 03_all_results.rds
+-rw-r--r-- 1 zalibhai csd940 79696 Dec 30 17:31 03_all_results.tsv
+-rw-r--r-- 1 zalibhai csd940 32094 Dec 30 17:31 03_dge_object.rds
+-rw-r--r-- 1 zalibhai csd940 60788 Dec 30 17:31 03_fit_object.rds
+-rw-r--r-- 1 zalibhai csd940   235 Dec 30 17:31 03_significant_FDR05.tsv
+-rw-r--r-- 1 zalibhai csd940   334 Dec 30 17:31 03_summary_stats.rds
+-rw-r--r-- 1 zalibhai csd940   649 Dec 30 17:31 03_summary.txt
+
+Summary:
+
+================================================================================
+DIFFERENTIAL STRIPE ANALYSIS - FINAL RESULTS
+================================================================================
+Timepoint: early (250831)
+Date: 2025-12-30
+
+STRIPE COUNTS
+-------------
+Total stripes analyzed: 286
+
+By detection source:
+  control_only:  126 (detected in ctrl merged only)
+  mutant_only:    86 (detected in mut merged only)
+  shared:         74 (detected in both conditions)
+
+By differential direction:
+  lost:            0 (control_only with sig. decrease)
+  gained:          0 (mutant_only with sig. increase)
+  strengthened:    0 (shared with sig. increase |logFC| > 0.3)
+  weakened:        0 (shared with sig. decrease |logFC| > 0.3)
+  unchanged:      74 (shared without significant change)
+  ambiguous:     212 (unexpected pattern)
+
+SIGNIFICANCE
+------------
+FDR < 0.05: 0 stripes
+FDR < 0.10: 0 stripes
+
+CONFIDENCE (from Phase 1)
+-------------------------
+High:   0
+Medium: 262
+Low:    24
+
+FOLD CHANGE STATISTICS
+----------------------
+Median logFC (all): 0.003
+Median logFC (sig): NA
+Range: -0.568 to 1.000
+
+===========================================
+SUCCESS: All phases completed for early
+===========================================
