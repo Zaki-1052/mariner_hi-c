@@ -912,6 +912,191 @@ for (tp_name in names(annotated_stripes)) {
 cat("Section 4B complete: Annotated confident stripe exports done\n")
 
 # =============================================================================
+# SECTION 4C: JUICEBOX-FRIENDLY VISUALIZATION FORMATS
+# =============================================================================
+
+cat("\n========================================\n")
+cat("SECTION 4C: JuiceBox Visualization Formats\n")
+cat("========================================\n\n")
+
+# Function to create JuiceBox-friendly BEDPE formats
+# Stripes need special formatting because they're linear features, not point-like loops
+create_juicebox_bedpe_formats <- function(stripes_df, timepoint_name, output_dir) {
+  if (is.null(stripes_df) || nrow(stripes_df) == 0) {
+    cat(sprintf("  Skipping JuiceBox formats for %s (no data)\n", timepoint_name))
+    return(NULL)
+  }
+
+  cat(sprintf("Creating JuiceBox-friendly formats: %s (%d stripes)\n",
+              timepoint_name, nrow(stripes_df)))
+
+  # Calculate full stripe extent for each stripe
+  stripes_df <- stripes_df %>%
+    mutate(
+      full_start = pmin(anchor_x1, span_y1),
+      full_end = pmax(anchor_x2, span_y2)
+    )
+
+  # Color coding (consistent with existing)
+  get_color <- function(direction, confidence) {
+    case_when(
+      direction == "lost" & confidence == "high" ~ "0,0,139",
+      direction == "lost" & confidence == "medium" ~ "65,105,225",
+      direction == "lost" ~ "135,206,235",
+      direction == "gained" & confidence == "high" ~ "139,0,0",
+      direction == "gained" & confidence == "medium" ~ "220,20,60",
+      direction == "gained" ~ "255,160,122",
+      TRUE ~ "128,128,128"
+    )
+  }
+
+  colors <- get_color(stripes_df$direction, stripes_df$direction_confidence)
+
+  # FORMAT 1: Diagonal BEDPE
+  # Both x and y span the full stripe extent - shows as line along diagonal
+  diagonal_bedpe <- data.frame(
+    chr1 = stripes_df$chr,
+    x1 = stripes_df$full_start,
+    x2 = stripes_df$full_end,
+    chr2 = stripes_df$chr,
+    y1 = stripes_df$full_start,
+    y2 = stripes_df$full_end,
+    name = stripes_df$stripe_id,
+    score = ifelse(is.na(stripes_df$FDR) | stripes_df$FDR == 0,
+                   300, -log10(stripes_df$FDR + 1e-300)),
+    strand1 = ".",
+    strand2 = ".",
+    color = colors,
+    direction = stripes_df$direction,
+    confidence = stripes_df$direction_confidence,
+    logFC = round(stripes_df$logFC, 4),
+    stringsAsFactors = FALSE
+  )
+
+  diagonal_file <- file.path(output_dir, sprintf("%s_stripes_diagonal.bedpe", timepoint_name))
+  write.table(diagonal_bedpe, diagonal_file, sep = "\t", quote = FALSE,
+              row.names = FALSE, col.names = TRUE)
+  cat(sprintf("  Saved: %s (diagonal format - shows stripe extent along diagonal)\n",
+              basename(diagonal_file)))
+
+  # FORMAT 2: Rectangle BEDPE
+  # x = narrow anchor, y = full span from anchor to endpoint
+  # Shows the off-diagonal rectangular stripe body region
+  rectangle_bedpe <- data.frame(
+    chr1 = stripes_df$chr,
+    x1 = stripes_df$anchor_x1,
+    x2 = stripes_df$anchor_x2,
+    chr2 = stripes_df$chr,
+    y1 = stripes_df$full_start,
+    y2 = stripes_df$full_end,
+    name = stripes_df$stripe_id,
+    score = ifelse(is.na(stripes_df$FDR) | stripes_df$FDR == 0,
+                   300, -log10(stripes_df$FDR + 1e-300)),
+    strand1 = ".",
+    strand2 = ".",
+    color = colors,
+    direction = stripes_df$direction,
+    confidence = stripes_df$direction_confidence,
+    logFC = round(stripes_df$logFC, 4),
+    stringsAsFactors = FALSE
+  )
+
+  rectangle_file <- file.path(output_dir, sprintf("%s_stripes_rectangle.bedpe", timepoint_name))
+  write.table(rectangle_bedpe, rectangle_file, sep = "\t", quote = FALSE,
+              row.names = FALSE, col.names = TRUE)
+  cat(sprintf("  Saved: %s (rectangle format - shows stripe body region)\n",
+              basename(rectangle_file)))
+
+  return(list(diagonal = diagonal_bedpe, rectangle = rectangle_bedpe))
+}
+
+# Function to create 1D BED files for track visualization
+create_1d_bed_files <- function(stripes_df, timepoint_name, output_dir) {
+  if (is.null(stripes_df) || nrow(stripes_df) == 0) {
+    return(NULL)
+  }
+
+  cat(sprintf("Creating 1D BED tracks: %s\n", timepoint_name))
+
+  # Calculate full extent
+  stripes_df <- stripes_df %>%
+    mutate(
+      full_start = pmin(anchor_x1, span_y1),
+      full_end = pmax(anchor_x2, span_y2)
+    )
+
+  # BED 1: Anchors only
+  anchors_bed <- data.frame(
+    chr = stripes_df$chr,
+    start = stripes_df$anchor_x1,
+    end = stripes_df$anchor_x2,
+    name = stripes_df$stripe_id,
+    score = ifelse(is.na(stripes_df$FDR) | stripes_df$FDR == 0,
+                   1000, round(-log10(stripes_df$FDR + 1e-300) * 100)),
+    strand = ".",
+    stringsAsFactors = FALSE
+  )
+
+  anchors_file <- file.path(output_dir, sprintf("%s_anchors.bed", timepoint_name))
+  write.table(anchors_bed, anchors_file, sep = "\t", quote = FALSE,
+              row.names = FALSE, col.names = FALSE)
+  cat(sprintf("  Saved: %s (anchor positions only)\n", basename(anchors_file)))
+
+  # BED 2: Full stripe extent
+  extent_bed <- data.frame(
+    chr = stripes_df$chr,
+    start = stripes_df$full_start,
+    end = stripes_df$full_end,
+    name = stripes_df$stripe_id,
+    score = ifelse(is.na(stripes_df$FDR) | stripes_df$FDR == 0,
+                   1000, round(-log10(stripes_df$FDR + 1e-300) * 100)),
+    strand = ".",
+    stringsAsFactors = FALSE
+  )
+
+  extent_file <- file.path(output_dir, sprintf("%s_full_extent.bed", timepoint_name))
+  write.table(extent_bed, extent_file, sep = "\t", quote = FALSE,
+              row.names = FALSE, col.names = FALSE)
+  cat(sprintf("  Saved: %s (full stripe extent)\n", basename(extent_file)))
+
+  return(list(anchors = anchors_bed, extent = extent_bed))
+}
+
+# Generate JuiceBox-friendly formats for each timepoint
+cat("Generating JuiceBox-friendly visualization formats...\n\n")
+
+for (tp_name in names(annotated_stripes)) {
+  df <- annotated_stripes[[tp_name]]
+  if (is.null(df)) next
+
+  output_dir <- file.path(output_base, tp_name)
+
+  # Filter to medium/high confidence for visualization files
+  confident_df <- df %>%
+    filter(direction %in% c("lost", "gained") &
+             direction_confidence %in% c("high", "medium"))
+
+  if (nrow(confident_df) > 0) {
+    # Create BEDPE formats
+    create_juicebox_bedpe_formats(confident_df, tp_name, output_dir)
+
+    # Create 1D BED files
+    create_1d_bed_files(confident_df, tp_name, output_dir)
+  } else {
+    cat(sprintf("  %s: No confident stripes for visualization\n", tp_name))
+  }
+
+  cat("\n")
+}
+
+cat("Section 4C complete: JuiceBox visualization formats generated\n")
+cat("\nVisualization file usage:\n")
+cat("  *_stripes_diagonal.bedpe  - Load as 2D annotation, shows stripe extent along diagonal\n")
+cat("  *_stripes_rectangle.bedpe - Load as 2D annotation, shows off-diagonal stripe body\n")
+cat("  *_anchors.bed             - Load as 1D track, marks anchor positions\n")
+cat("  *_full_extent.bed         - Load as 1D track, shows full stripe span\n")
+
+# =============================================================================
 # SECTION 5: SUMMARY STATISTICS & FINAL EXPORT
 # =============================================================================
 
@@ -992,7 +1177,13 @@ summary_lines <- c(summary_lines,
   "  - anchor_classification_{timepoint}.pdf",
   "  - {timepoint}_annotated_stripes.tsv (all stripes)",
   "  - {timepoint}_medium_high_confidence_stripes.tsv (confident only)",
-  "  - {timepoint}_medium_high_confidence_stripes.bedpe (confident, for JuiceBox)",
+  "  - {timepoint}_medium_high_confidence_stripes.bedpe (confident, original format)",
+  "",
+  "JuiceBox visualization formats (confident stripes):",
+  "  - {timepoint}_stripes_diagonal.bedpe (shows stripe extent along diagonal)",
+  "  - {timepoint}_stripes_rectangle.bedpe (shows off-diagonal stripe body)",
+  "  - {timepoint}_anchors.bed (1D track - anchor positions)",
+  "  - {timepoint}_full_extent.bed (1D track - full stripe span)",
   "",
   "Combined:",
   "  - volcano_combined.pdf",
@@ -1030,7 +1221,12 @@ cat("  - length_distribution_early.pdf\n")
 cat("  - anchor_classification_early.pdf\n")
 cat("  - early_annotated_stripes.tsv (all stripes)\n")
 cat("  - early_medium_high_confidence_stripes.tsv (confident only)\n")
-cat("  - early_medium_high_confidence_stripes.bedpe (for JuiceBox)\n\n")
+cat("  - early_medium_high_confidence_stripes.bedpe (original format)\n")
+cat("  JuiceBox visualization formats:\n")
+cat("  - early_stripes_diagonal.bedpe (shows stripe extent along diagonal)\n")
+cat("  - early_stripes_rectangle.bedpe (shows off-diagonal stripe body)\n")
+cat("  - early_anchors.bed (1D track - anchor positions)\n")
+cat("  - early_full_extent.bed (1D track - full stripe span)\n\n")
 
 cat("Late timepoint (outputs/visualizations/late/):\n")
 cat("  - volcano_late.pdf\n")
@@ -1038,11 +1234,21 @@ cat("  - length_distribution_late.pdf\n")
 cat("  - anchor_classification_late.pdf\n")
 cat("  - late_annotated_stripes.tsv (all stripes)\n")
 cat("  - late_medium_high_confidence_stripes.tsv (confident only)\n")
-cat("  - late_medium_high_confidence_stripes.bedpe (for JuiceBox)\n\n")
+cat("  - late_medium_high_confidence_stripes.bedpe (original format)\n")
+cat("  JuiceBox visualization formats:\n")
+cat("  - late_stripes_diagonal.bedpe (shows stripe extent along diagonal)\n")
+cat("  - late_stripes_rectangle.bedpe (shows off-diagonal stripe body)\n")
+cat("  - late_anchors.bed (1D track - anchor positions)\n")
+cat("  - late_full_extent.bed (1D track - full stripe span)\n\n")
 
 cat("Combined (outputs/visualizations/combined/):\n")
 cat("  - volcano_combined.pdf\n")
 cat("  - length_comparison.pdf\n")
 cat("  - summary_statistics.txt\n\n")
 
+cat("========================================\n")
+cat("JuiceBox Usage:\n")
+cat("  - Diagonal BEDPE: Shows stripe as line along diagonal (recommended)\n")
+cat("  - Rectangle BEDPE: Shows off-diagonal stripe body region\n")
+cat("  - 1D BED files: Load as tracks for anchor/extent visualization\n")
 cat("========================================\n\n")
