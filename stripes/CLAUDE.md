@@ -380,23 +380,61 @@ counts[i, j] <- sum(matrices[, , i, j])
 - chr, anchor_x1, anchor_x2, span_y1, span_y2 (original bedpe coordinates)
 - source: control_only | mutant_only | shared
 - pval_ctrl, pval_mut (Quagga detection p-values)
-- confidence: high | medium | low
+- confidence: high | medium | low (Phase 1 detection confidence)
 - n_ctrl_reps, n_mut_reps
 - in_10kb
 - logFC, FDR (edgeR differential statistics)
 - direction: lost | gained | unchanged | strengthened | weakened
+- direction_confidence: high | medium | low (tiered confidence for direction)
+- direction_consistent: TRUE | FALSE | NA (whether logFC matches source)
 
-**Direction classification logic:**
+**Direction classification logic (tiered confidence):**
+
+Detection (source) is the PRIMARY evidence for condition-specific stripes.
+FDR and logFC direction provide confidence tiers, not classification gates.
+
 ```
+# Direction assignment (all condition-specific stripes get classified)
 direction = case_when(
-  source == "control_only" & FDR < 0.05 & logFC < 0 ~ "lost",
-  source == "mutant_only" & FDR < 0.05 & logFC > 0 ~ "gained",
+  source == "control_only" ~ "lost",       # By detection
+  source == "mutant_only" ~ "gained",      # By detection
   source == "shared" & FDR < 0.05 & logFC > 0.3 ~ "strengthened",
   source == "shared" & FDR < 0.05 & logFC < -0.3 ~ "weakened",
-  source == "shared" ~ "unchanged",
-  TRUE ~ "ambiguous"
+  source == "shared" ~ "unchanged"
+)
+
+# Confidence tier (separate column)
+direction_confidence = case_when(
+  # Lost confidence tiers
+  source == "control_only" & FDR < 0.10 & logFC < 0 ~ "high",
+  source == "control_only" & logFC < -0.2 ~ "medium",
+  source == "control_only" ~ "low",
+  # Gained confidence tiers
+  source == "mutant_only" & FDR < 0.10 & logFC > 0 ~ "high",
+  source == "mutant_only" & logFC > 0.2 ~ "medium",
+  source == "mutant_only" ~ "low",
+  # Shared
+  source == "shared" & FDR < 0.05 ~ "high",
+  source == "shared" & FDR < 0.10 ~ "medium",
+  TRUE ~ "low"
+)
+
+# Directional consistency flag
+direction_consistent = case_when(
+  source == "control_only" & logFC < 0 ~ TRUE,
+  source == "mutant_only" & logFC > 0 ~ TRUE,
+  source == "shared" ~ NA,
+  TRUE ~ FALSE
 )
 ```
+
+**Confidence tier interpretation:**
+- **High**: Quantitative support (FDR < 0.10 + correct direction)
+- **Medium**: Directional support (logFC > 0.2 in expected direction)
+- **Low**: Detection only (may lack quantitative support)
+
+**Note:** Low directional consistency (~50%) may indicate noisy detection
+or weak biological signal. This is tracked and reported in summaries.
 
 ---
 

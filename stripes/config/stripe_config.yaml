@@ -110,19 +110,34 @@ edger:
 # Phase 4: Classification Parameters
 # ==============================================================================
 classification:
-  # logFC threshold for strengthened/weakened classification
+  # logFC threshold for strengthened/weakened classification (shared stripes)
   logFC_threshold: 0.3
 
-  # FDR threshold for direction classification
+  # FDR threshold for shared stripe classification (strengthened/weakened)
   fdr_threshold: 0.05
 
-  # Direction categories and their criteria:
-  # - lost: control_only & FDR < 0.05 & logFC < 0
-  # - gained: mutant_only & FDR < 0.05 & logFC > 0
-  # - strengthened: shared & FDR < 0.05 & logFC > 0.3
-  # - weakened: shared & FDR < 0.05 & logFC < -0.3
-  # - unchanged: shared & (FDR >= 0.05 OR |logFC| <= 0.3)
-  # - ambiguous: doesn't fit expected patterns
+  # Tiered confidence thresholds for condition-specific stripes
+  # (lost/gained now use detection as primary evidence)
+  tiered:
+    high_fdr: 0.10           # FDR threshold for high confidence tier
+    medium_logfc: 0.2        # logFC threshold for medium confidence tier
+    # Low confidence = detection only (no additional threshold)
+
+  # Updated classification logic (tiered):
+  # LOST (control_only stripes):
+  #   - High: FDR < 0.10 AND logFC < 0 (quantitative support)
+  #   - Medium: logFC < -0.2 (directional support)
+  #   - Low: detection only (may not have quantitative support)
+  #
+  # GAINED (mutant_only stripes):
+  #   - High: FDR < 0.10 AND logFC > 0 (quantitative support)
+  #   - Medium: logFC > 0.2 (directional support)
+  #   - Low: detection only (may not have quantitative support)
+  #
+  # SHARED stripes (unchanged from original):
+  #   - strengthened: FDR < 0.05 AND logFC > 0.3
+  #   - weakened: FDR < 0.05 AND logFC < -0.3
+  #   - unchanged: doesn't meet above criteria
 
 # ==============================================================================
 # Output Settings

@@ -1,0 +1,115 @@
+#!/bin/bash
+#SBATCH --job-name=stripe_phase4
+#SBATCH --output=logs/phase4_%A_%a.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=00:30:00
+#SBATCH --account=csd940
+#SBATCH --array=0-1
+
+# ==============================================================================
+# Phase 4: Integration & Tiered Classification
+# ==============================================================================
+#
+# Merges Phase 1 annotations with Phase 3 statistics and classifies
+# each stripe as lost/gained/strengthened/weakened/unchanged using
+# tiered confidence (detection-based classification).
+#
+# Array jobs: 0=early, 1=late
+#
+# Expected runtime: ~5 min per timepoint
+# Output: {outputs_dir}/{timepoint}/res_5kb/04_final_differential_stripes.*
+# ==============================================================================
+
+# Map array index to timepoint
+TIMEPOINTS=("early" "late")
+TIMEPOINT=${TIMEPOINTS[$SLURM_ARRAY_TASK_ID]}
+
+echo "========================================="
+echo "Stripe Phase 4: Integration & Classification"
+echo "========================================="
+echo "Job ID: ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "Timepoint: ${TIMEPOINT}"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Check for required packages
+echo "Checking R packages..."
+R --slave -e "library(yaml); library(dplyr)" 2>&1
+if [ $? -ne 0 ]; then
+    echo "ERROR: Required R packages not available"
+    exit 1
+fi
+echo "All required packages available"
+echo ""
+
+# Change to project directory
+cd /expanse/lustre/projects/csd940/zalibhai/stripes
+
+# Create logs directory if needed
+mkdir -p logs
+
+# Verify Phase 1 output exists
+PHASE1_OUTPUT="outputs/${TIMEPOINT}/res_5kb/01_unified_stripes.tsv"
+if [ ! -f "$PHASE1_OUTPUT" ]; then
+    echo "ERROR: Phase 1 output not found: ${PHASE1_OUTPUT}"
+    echo "Run phase1_detection.R first"
+    exit 1
+fi
+echo "Phase 1 output found: ${PHASE1_OUTPUT}"
+
+# Verify Phase 3 output exists
+PHASE3_OUTPUT="outputs/${TIMEPOINT}/res_5kb/edgeR_results/03_all_results.tsv"
+if [ ! -f "$PHASE3_OUTPUT" ]; then
+    echo "ERROR: Phase 3 output not found: ${PHASE3_OUTPUT}"
+    echo "Run phase3_edgeR.R first"
+    exit 1
+fi
+echo "Phase 3 output found: ${PHASE3_OUTPUT}"
+echo ""
+
+echo "Starting Phase 4 integration for ${TIMEPOINT}..."
+echo "(Using tiered classification: detection as primary evidence)"
+echo ""
+
+Rscript scripts/phase4_integration.R ${TIMEPOINT}
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "Phase 4 completed successfully for ${TIMEPOINT}"
+
+    # Verify outputs
+    OUTPUT_DIR="outputs/${TIMEPOINT}/res_5kb"
+    echo ""
+    echo "Outputs:"
+    ls -la "${OUTPUT_DIR}"/04_*.tsv "${OUTPUT_DIR}"/04_*.rds "${OUTPUT_DIR}"/04_*.bedpe 2>/dev/null
+
+    # Show summary
+    if [ -f "${OUTPUT_DIR}/04_summary.txt" ]; then
+        echo ""
+        echo "=== Summary ==="
+        cat "${OUTPUT_DIR}/04_summary.txt"
+    fi
+else
+    echo ""
+    echo "Phase 4 failed for ${TIMEPOINT} with exit code $?"
+    exit 1
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="
