@@ -797,6 +797,121 @@ for (tp_name in names(annotated_stripes)) {
 cat("\nSection 4 complete: ChIP-seq anchor annotation done\n")
 
 # =============================================================================
+# SECTION 4B: EXPORT ANNOTATED CONFIDENT STRIPES (TSV + BEDPE)
+# =============================================================================
+
+cat("\n========================================\n")
+cat("SECTION 4B: Annotated Confident Stripe Export\n")
+cat("========================================\n\n")
+
+# Function to create BEDPE from annotated stripes
+create_annotated_bedpe <- function(stripes_df, output_path) {
+  if (is.null(stripes_df) || nrow(stripes_df) == 0) {
+    return(NULL)
+  }
+
+  # Create BEDPE format with annotations
+  # Standard BEDPE: chr1, x1, x2, chr2, y1, y2, name, score, strand1, strand2
+  # Plus annotation columns
+  bedpe_df <- data.frame(
+    chr1 = stripes_df$chr,
+    x1 = stripes_df$anchor_x1,
+    x2 = stripes_df$anchor_x2,
+    chr2 = stripes_df$chr,
+    y1 = stripes_df$span_y1,
+    y2 = stripes_df$span_y2,
+    name = stripes_df$stripe_id,
+    score = ifelse(is.na(stripes_df$FDR) | stripes_df$FDR == 0,
+                   300, -log10(stripes_df$FDR + 1e-300)),
+    strand1 = ".",
+    strand2 = ".",
+    # Color by direction and confidence (RGB format for JuiceBox)
+    color = case_when(
+      stripes_df$direction == "lost" & stripes_df$direction_confidence == "high" ~ "0,0,139",
+      stripes_df$direction == "lost" & stripes_df$direction_confidence == "medium" ~ "65,105,225",
+      stripes_df$direction == "lost" ~ "135,206,235",
+      stripes_df$direction == "gained" & stripes_df$direction_confidence == "high" ~ "139,0,0",
+      stripes_df$direction == "gained" & stripes_df$direction_confidence == "medium" ~ "220,20,60",
+      stripes_df$direction == "gained" ~ "255,160,122",
+      TRUE ~ "128,128,128"
+    ),
+    # Key analysis columns
+    direction = stripes_df$direction,
+    direction_confidence = stripes_df$direction_confidence,
+    logFC = round(stripes_df$logFC, 4),
+    FDR = signif(stripes_df$FDR, 4),
+    source = stripes_df$source,
+    # Quagga detection p-values
+    pval_ctrl = signif(stripes_df$pval_ctrl, 4),
+    pval_mut = signif(stripes_df$pval_mut, 4),
+    # Detection confidence
+    detection_confidence = stripes_df$confidence,
+    in_10kb = stripes_df$in_10kb,
+    # Genomic annotations
+    nearest_gene = stripes_df$nearest_gene_symbol,
+    distance_to_tss = stripes_df$distance_to_tss,
+    anchor_type = stripes_df$anchor_type,
+    # ChIP-seq overlaps
+    h3k27ac = stripes_df$h3k27ac_overlap,
+    h3k27me3 = stripes_df$h3k27me3_overlap,
+    h3k4me1 = stripes_df$h3k4me1_overlap,
+    # Geometry
+    stripe_length_kb = round(stripes_df$stripe_length / 1000, 1),
+    anchor_width_kb = round(stripes_df$anchor_width / 1000, 1),
+    stringsAsFactors = FALSE
+  )
+
+  write.table(bedpe_df, output_path, sep = "\t", quote = FALSE,
+              row.names = FALSE, col.names = TRUE)
+
+  return(bedpe_df)
+}
+
+# Filter annotated stripes to medium/high confidence and export
+cat("Exporting annotated confident stripes (TSV + BEDPE)...\n\n")
+
+for (tp_name in names(annotated_stripes)) {
+  df <- annotated_stripes[[tp_name]]
+  if (is.null(df)) next
+
+  # Filter to medium/high confidence lost/gained
+  confident_df <- df %>%
+    filter(direction %in% c("lost", "gained") &
+             direction_confidence %in% c("high", "medium"))
+
+  if (nrow(confident_df) == 0) {
+    cat(sprintf("  %s: No medium/high confidence stripes\n", tp_name))
+    next
+  }
+
+  cat(sprintf("%s timepoint: %d confident stripes\n", tp_name, nrow(confident_df)))
+  cat(sprintf("  Lost: %d | Gained: %d\n",
+              sum(confident_df$direction == "lost"),
+              sum(confident_df$direction == "gained")))
+  cat(sprintf("  High: %d | Medium: %d\n",
+              sum(confident_df$direction_confidence == "high"),
+              sum(confident_df$direction_confidence == "medium")))
+
+  output_dir <- file.path(output_base, tp_name)
+
+  # Export annotated TSV (overwrites previous non-annotated version)
+  tsv_file <- file.path(output_dir,
+                        sprintf("%s_medium_high_confidence_stripes.tsv", tp_name))
+  write.table(confident_df, tsv_file, sep = "\t", quote = FALSE, row.names = FALSE)
+  cat(sprintf("  Saved TSV: %s\n", basename(tsv_file)))
+
+  # Export BEDPE with annotations
+  bedpe_file <- file.path(output_dir,
+                          sprintf("%s_medium_high_confidence_stripes.bedpe", tp_name))
+  create_annotated_bedpe(confident_df, bedpe_file)
+  cat(sprintf("  Saved BEDPE: %s\n", basename(bedpe_file)))
+
+  cat("\n")
+}
+
+cat("Section 4B complete: Annotated confident stripe exports done\n")
+
+# =============================================================================
 # SECTION 5: SUMMARY STATISTICS & FINAL EXPORT
 # =============================================================================
 
@@ -875,8 +990,9 @@ summary_lines <- c(summary_lines,
   "  - length_distribution_{timepoint}.pdf",
   "  - length_statistics_{timepoint}.tsv",
   "  - anchor_classification_{timepoint}.pdf",
-  "  - {timepoint}_medium_high_confidence_stripes.tsv",
-  "  - {timepoint}_annotated_stripes.tsv",
+  "  - {timepoint}_annotated_stripes.tsv (all stripes)",
+  "  - {timepoint}_medium_high_confidence_stripes.tsv (confident only)",
+  "  - {timepoint}_medium_high_confidence_stripes.bedpe (confident, for JuiceBox)",
   "",
   "Combined:",
   "  - volcano_combined.pdf",
@@ -912,15 +1028,17 @@ cat("Early timepoint (outputs/visualizations/early/):\n")
 cat("  - volcano_early.pdf\n")
 cat("  - length_distribution_early.pdf\n")
 cat("  - anchor_classification_early.pdf\n")
-cat("  - early_medium_high_confidence_stripes.tsv\n")
-cat("  - early_annotated_stripes.tsv\n\n")
+cat("  - early_annotated_stripes.tsv (all stripes)\n")
+cat("  - early_medium_high_confidence_stripes.tsv (confident only)\n")
+cat("  - early_medium_high_confidence_stripes.bedpe (for JuiceBox)\n\n")
 
 cat("Late timepoint (outputs/visualizations/late/):\n")
 cat("  - volcano_late.pdf\n")
 cat("  - length_distribution_late.pdf\n")
 cat("  - anchor_classification_late.pdf\n")
-cat("  - late_medium_high_confidence_stripes.tsv\n")
-cat("  - late_annotated_stripes.tsv\n\n")
+cat("  - late_annotated_stripes.tsv (all stripes)\n")
+cat("  - late_medium_high_confidence_stripes.tsv (confident only)\n")
+cat("  - late_medium_high_confidence_stripes.bedpe (for JuiceBox)\n\n")
 
 cat("Combined (outputs/visualizations/combined/):\n")
 cat("  - volcano_combined.pdf\n")
