@@ -1,6 +1,6 @@
 
 ================================================================================
-DIFFERENTIAL STRIPE ANALYSIS - FINAL RESULTS
+DIFFERENTIAL STRIPE ANALYSIS - FINAL RESULTS (Tiered Classification)
 ================================================================================
 Timepoint: late (250402)
 Date: 2025-12-30
@@ -14,22 +14,40 @@ By detection source:
   mutant_only:    73 (detected in mut merged only)
   shared:         44 (detected in both conditions)
 
-By differential direction:
-  lost:            0 (control_only with sig. decrease)
-  gained:          0 (mutant_only with sig. increase)
-  strengthened:    0 (shared with sig. increase |logFC| > 0.3)
-  weakened:        0 (shared with sig. decrease |logFC| > 0.3)
-  unchanged:      44 (shared without significant change)
-  ambiguous:     156 (unexpected pattern)
+DIFFERENTIAL DIRECTION (Tiered Confidence)
+------------------------------------------
+LOST (control_only stripes): 83 total
+  - High confidence:     0 (FDR < 0.10 + logFC < 0)
+  - Medium confidence:  10 (logFC < -0.2, any FDR)
+  - Low confidence:     73 (detection only)
 
-SIGNIFICANCE
-------------
+GAINED (mutant_only stripes): 73 total
+  - High confidence:     1 (FDR < 0.10 + logFC > 0)
+  - Medium confidence:   6 (logFC > 0.2, any FDR)
+  - Low confidence:     66 (detection only)
+
+SHARED stripes:
+  strengthened:    0 (FDR < 0.05, logFC > 0.3)
+  weakened:        0 (FDR < 0.05, logFC < -0.3)
+  unchanged:      44
+
+DIRECTIONAL CONSISTENCY
+-----------------------
+Consistent (logFC matches source): 83 (53.2%)
+Inconsistent:                      73
+
+Note: Directional consistency measures whether quantitative logFC
+agrees with detection-based classification. Low consistency (~50%)
+may indicate noisy detection or weak biological signal.
+
+edgeR SIGNIFICANCE
+------------------
 FDR < 0.05: 0 stripes
 FDR < 0.10: 1 stripes
 
-CONFIDENCE (from Phase 1)
--------------------------
-High:   3
+DETECTION CONFIDENCE (from Phase 1)
+------------------------------------
+High:   3 (replicate support + 10kb validation)
 Medium: 189
 Low:    8
 
