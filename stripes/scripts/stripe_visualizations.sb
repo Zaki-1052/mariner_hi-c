@@ -1,0 +1,91 @@
+#!/bin/bash
+#SBATCH --job-name=stripe_viz
+#SBATCH --output=logs/stripe_viz_%A_%a.out
+#SBATCH --array=0-1
+#SBATCH --time=01:00:00
+#SBATCH --mem=16G
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --account=csd940
+
+# scripts/stripe_visualizations.sb
+# SLURM batch script for stripe visualization pipeline
+#
+# Usage:
+#   sbatch scripts/stripe_visualizations.sb
+#
+# This runs the visualization for both early and late timepoints as an array job.
+
+# =========================================
+# Setup
+# =========================================
+
+echo "========================================="
+echo "Stripe Visualization Pipeline"
+echo "========================================="
+echo "Job ID: ${SLURM_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "Node: $(hostname)"
+echo "Start time: $(date)"
+echo "========================================="
+
+# Define timepoints
+TIMEPOINTS=("early" "late")
+TIMEPOINT=${TIMEPOINTS[$SLURM_ARRAY_TASK_ID]}
+
+echo ""
+echo "Processing timepoint: ${TIMEPOINT}"
+echo ""
+
+# Change to project directory
+cd /expanse/lustre/projects/csd940/zalibhai/stripes
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+# Verify R is available
+echo "R version:"
+R --version | head -n 1
+
+# Create logs directory if needed
+mkdir -p logs
+
+# =========================================
+# Run Visualization Script
+# =========================================
+
+echo ""
+echo "Running stripe_visualizations.R for ${TIMEPOINT}..."
+echo ""
+
+Rscript scripts/stripe_visualizations.R ${TIMEPOINT}
+
+EXIT_CODE=$?
+
+# =========================================
+# Summary
+# =========================================
+
+echo ""
+echo "========================================="
+echo "Job Complete"
+echo "========================================="
+echo "Timepoint: ${TIMEPOINT}"
+echo "Exit code: ${EXIT_CODE}"
+echo "End time: $(date)"
+
+if [ $EXIT_CODE -eq 0 ]; then
+    echo ""
+    echo "Outputs:"
+    ls -lh outputs/${TIMEPOINT}/res_5kb/05_*.tsv 2>/dev/null || echo "  No TSV files found"
+    ls -lh outputs/${TIMEPOINT}/res_5kb/05_*.txt 2>/dev/null || echo "  No summary file found"
+    echo ""
+    echo "Plots:"
+    ls -lh outputs/${TIMEPOINT}/res_5kb/plots/*.pdf 2>/dev/null || echo "  No PDF files found"
+fi
+
+echo "========================================="
+
+exit $EXIT_CODE
