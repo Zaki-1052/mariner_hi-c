@@ -1,0 +1,255 @@
+#!/bin/bash
+#SBATCH --job-name=stripe_pipeline
+#SBATCH --output=logs/stripe_pipeline_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=64G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+
+# ==============================================================================
+# Master Pipeline: Differential Chromatin Stripe Analysis
+# ==============================================================================
+#
+# Runs the complete differential stripe analysis pipeline for both timepoints:
+#   Phase 1: Detection & Union Set Creation
+#   Phase 2: Hi-C Matrix Extraction & Count Aggregation
+#   Phase 3: edgeR Differential Analysis
+#   Phase 4: Integration & Classification
+#   Phase 5: Visualization (combined)
+#
+# Prerequisites:
+#   - Quagga stripe calls in data/quagga/{5kb,10kb}/{timepoint}/
+#   - Hi-C .hic files accessible
+#   - mariner_env conda environment with all required packages
+#
+# Expected runtime: ~4-6 hours total (both timepoints)
+# Output: stripes/outputs/{early,late}/ and stripes/outputs/visualizations/
+# ==============================================================================
+
+echo "==========================================="
+echo "DIFFERENTIAL STRIPE ANALYSIS PIPELINE"
+echo "==========================================="
+echo "Job ID: ${SLURM_JOB_ID}"
+echo "Node: $HOSTNAME"
+echo "CPUs: ${SLURM_CPUS_PER_TASK}"
+echo "Memory: ${SLURM_MEM_PER_NODE}"
+echo "Start time: $(date)"
+echo "==========================================="
+echo ""
+
+# ==============================================================================
+# ENVIRONMENT SETUP
+# ==============================================================================
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Check for required packages
+echo "Checking R packages..."
+R --slave -e "library(mariner); library(strawr); library(HDF5Array); library(edgeR); library(ggplot2)" 2>&1
+if [ $? -ne 0 ]; then
+    echo "ERROR: Required R packages not available"
+    exit 1
+fi
+echo "All required packages available"
+echo ""
+
+# Change to project directory
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+
+# Create necessary directories
+mkdir -p logs
+mkdir -p outputs/early
+mkdir -p outputs/late
+mkdir -p outputs/visualizations
+
+echo "Working directory: $(pwd)"
+echo ""
+
+# ==============================================================================
+# PIPELINE EXECUTION
+# ==============================================================================
+
+PIPELINE_START=$(date +%s)
+
+for TIMEPOINT in early late; do
+    echo ""
+    echo "###############################################"
+    echo "# PROCESSING TIMEPOINT: ${TIMEPOINT}"
+    echo "###############################################"
+    echo ""
+    TIMEPOINT_START=$(date +%s)
+
+    # --------------------------------------------------------------------------
+    # PHASE 1: Detection & Union Set Creation
+    # --------------------------------------------------------------------------
+    echo "==========================================="
+    echo "PHASE 1: Detection & Union Set (${TIMEPOINT})"
+    echo "==========================================="
+    echo "Start: $(date)"
+    echo ""
+
+    Rscript scripts/phase1_detection.R ${TIMEPOINT}
+
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Phase 1 failed for ${TIMEPOINT}"
+        exit 1
+    fi
+
+    # Verify output
+    PHASE1_OUTPUT="outputs/${TIMEPOINT}/01_unified_stripes.tsv"
+    if [ ! -f "$PHASE1_OUTPUT" ]; then
+        echo "ERROR: Phase 1 output not found: ${PHASE1_OUTPUT}"
+        exit 1
+    fi
+    STRIPE_COUNT=$(wc -l < "$PHASE1_OUTPUT")
+    echo "Phase 1 complete: $((STRIPE_COUNT - 1)) stripes detected"
+    echo ""
+
+    # --------------------------------------------------------------------------
+    # PHASE 2: Hi-C Quantification
+    # --------------------------------------------------------------------------
+    echo "==========================================="
+    echo "PHASE 2: Hi-C Quantification (${TIMEPOINT})"
+    echo "==========================================="
+    echo "Start: $(date)"
+    echo ""
+
+    Rscript scripts/phase2_quantification.R ${TIMEPOINT}
+
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Phase 2 failed for ${TIMEPOINT}"
+        exit 1
+    fi
+
+    # Verify output
+    PHASE2_OUTPUT="outputs/${TIMEPOINT}/02_stripe_counts.rds"
+    if [ ! -f "$PHASE2_OUTPUT" ]; then
+        echo "ERROR: Phase 2 output not found: ${PHASE2_OUTPUT}"
+        exit 1
+    fi
+    echo "Phase 2 complete: $(ls -lh ${PHASE2_OUTPUT} | awk '{print $5}')"
+    echo ""
+
+    # --------------------------------------------------------------------------
+    # PHASE 3: edgeR Differential Analysis
+    # --------------------------------------------------------------------------
+    echo "==========================================="
+    echo "PHASE 3: edgeR Analysis (${TIMEPOINT})"
+    echo "==========================================="
+    echo "Start: $(date)"
+    echo ""
+
+    Rscript scripts/phase3_edgeR.R ${TIMEPOINT}
+
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Phase 3 failed for ${TIMEPOINT}"
+        exit 1
+    fi
+
+    # Verify output
+    PHASE3_OUTPUT="outputs/${TIMEPOINT}/edgeR_results/03_all_results.tsv"
+    if [ ! -f "$PHASE3_OUTPUT" ]; then
+        echo "ERROR: Phase 3 output not found: ${PHASE3_OUTPUT}"
+        exit 1
+    fi
+    echo "Phase 3 complete"
+    echo ""
+
+    # --------------------------------------------------------------------------
+    # PHASE 4: Integration & Classification
+    # --------------------------------------------------------------------------
+    echo "==========================================="
+    echo "PHASE 4: Integration (${TIMEPOINT})"
+    echo "==========================================="
+    echo "Start: $(date)"
+    echo ""
+
+    Rscript scripts/phase4_integration.R ${TIMEPOINT}
+
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Phase 4 failed for ${TIMEPOINT}"
+        exit 1
+    fi
+
+    # Verify output
+    PHASE4_OUTPUT="outputs/${TIMEPOINT}/04_final_differential_stripes.tsv"
+    if [ ! -f "$PHASE4_OUTPUT" ]; then
+        echo "ERROR: Phase 4 output not found: ${PHASE4_OUTPUT}"
+        exit 1
+    fi
+    echo "Phase 4 complete"
+    echo ""
+
+    # Show summary for this timepoint
+    if [ -f "outputs/${TIMEPOINT}/04_summary.txt" ]; then
+        echo "--- ${TIMEPOINT} Summary ---"
+        head -20 "outputs/${TIMEPOINT}/04_summary.txt"
+        echo ""
+    fi
+
+    TIMEPOINT_END=$(date +%s)
+    TIMEPOINT_DURATION=$((TIMEPOINT_END - TIMEPOINT_START))
+    echo "${TIMEPOINT} completed in $((TIMEPOINT_DURATION / 60)) minutes"
+    echo ""
+
+done
+
+# ==============================================================================
+# PHASE 5: VISUALIZATION
+# ==============================================================================
+echo ""
+echo "###############################################"
+echo "# PHASE 5: VISUALIZATION (Both Timepoints)"
+echo "###############################################"
+echo ""
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/stripe_visualizations.R
+
+VIZ_EXIT=$?
+if [ $VIZ_EXIT -ne 0 ]; then
+    echo "WARNING: Visualization script failed (exit code: ${VIZ_EXIT})"
+    echo "Core analysis complete, but visualizations may be incomplete"
+else
+    echo "Visualization complete"
+fi
+echo ""
+
+# ==============================================================================
+# FINAL SUMMARY
+# ==============================================================================
+PIPELINE_END=$(date +%s)
+PIPELINE_DURATION=$((PIPELINE_END - PIPELINE_START))
+
+echo ""
+echo "==========================================="
+echo "PIPELINE COMPLETE"
+echo "==========================================="
+echo ""
+echo "Total runtime: $((PIPELINE_DURATION / 60)) minutes"
+echo "End time: $(date)"
+echo ""
+echo "Output structure:"
+echo ""
+echo "outputs/"
+for TP in early late; do
+    echo "  ${TP}/"
+    ls outputs/${TP}/0*.{tsv,rds,bedpe} 2>/dev/null | xargs -I {} basename {} | sed 's/^/    /'
+    echo "    edgeR_results/"
+done
+echo "  visualizations/"
+ls -d outputs/visualizations/*/ 2>/dev/null | xargs -I {} basename {} | sed 's/^/    /'
+echo ""
+
+echo "==========================================="
+echo "SUCCESS: All phases completed"
+echo "==========================================="
