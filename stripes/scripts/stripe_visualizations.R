@@ -75,7 +75,7 @@ dir.create(file.path(output_base, "combined"), recursive = TRUE, showWarnings = 
 cat(sprintf("Output directory: %s\n\n", output_base))
 
 # Define timepoints (directory names match these directly)
-timepoints <- c("250831", "250402")
+timepoints <- c("early", "late")
 
 # =============================================================================
 # SECTION 1: LOAD & FILTER DATA
