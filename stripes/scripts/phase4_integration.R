@@ -49,8 +49,7 @@ cat(sprintf("  Config: %s\n", config_file))
 # PATH SETUP
 # ==============================================================================
 resolution_kb <- config$stripe_data$resolutions$primary / 1000
-base_dir <- file.path(config$outputs$base_dir, TIMEPOINT,
-                      paste0("res_", resolution_kb, "kb"))
+base_dir <- file.path(config$outputs$base_dir, TIMEPOINT)
 edger_dir <- file.path(base_dir, "edgeR_results")
 
 cat(sprintf("  Base dir: %s\n", base_dir))

@@ -67,11 +67,10 @@ get_stripe_bedpe_path <- function(resolution_kb, timepoint, sample, config) {
 }
 
 get_output_dir <- function(timepoint, resolution_kb, config) {
-  # Build path: {base_dir}/{timepoint}/res_{resolution}kb/
+  # Build path: {base_dir}/{timepoint}/
   file.path(
     config$outputs$base_dir,
-    timepoint,
-    paste0("res_", resolution_kb, "kb")
+    timepoint
   )
 }
 

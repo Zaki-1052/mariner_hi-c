@@ -60,8 +60,7 @@ cat(sprintf("  Project base: %s\n", config$project$base_dir))
 get_output_dir <- function(timepoint, resolution_kb, config) {
   file.path(
     config$outputs$base_dir,
-    timepoint,
-    paste0("res_", resolution_kb, "kb")
+    timepoint
   )
 }
 

@@ -21,7 +21,7 @@
 # Array jobs: 0=early, 1=late
 #
 # Expected runtime: ~5 min per timepoint
-# Output: {outputs_dir}/{timepoint}/res_5kb/04_final_differential_stripes.*
+# Output: {outputs_dir}/{timepoint}/04_final_differential_stripes.*
 # ==============================================================================
 
 # Map array index to timepoint
@@ -64,7 +64,7 @@ cd /expanse/lustre/projects/csd940/zalibhai/stripes
 mkdir -p logs
 
 # Verify Phase 1 output exists
-PHASE1_OUTPUT="outputs/${TIMEPOINT}/res_5kb/01_unified_stripes.tsv"
+PHASE1_OUTPUT="outputs/${TIMEPOINT}/01_unified_stripes.tsv"
 if [ ! -f "$PHASE1_OUTPUT" ]; then
     echo "ERROR: Phase 1 output not found: ${PHASE1_OUTPUT}"
     echo "Run phase1_detection.R first"
@@ -73,7 +73,7 @@ fi
 echo "Phase 1 output found: ${PHASE1_OUTPUT}"
 
 # Verify Phase 3 output exists
-PHASE3_OUTPUT="outputs/${TIMEPOINT}/res_5kb/edgeR_results/03_all_results.tsv"
+PHASE3_OUTPUT="outputs/${TIMEPOINT}/edgeR_results/03_all_results.tsv"
 if [ ! -f "$PHASE3_OUTPUT" ]; then
     echo "ERROR: Phase 3 output not found: ${PHASE3_OUTPUT}"
     echo "Run phase3_edgeR.R first"
@@ -93,7 +93,7 @@ if [ $? -eq 0 ]; then
     echo "Phase 4 completed successfully for ${TIMEPOINT}"
 
     # Verify outputs
-    OUTPUT_DIR="outputs/${TIMEPOINT}/res_5kb"
+    OUTPUT_DIR="outputs/${TIMEPOINT}"
     echo ""
     echo "Outputs:"
     ls -la "${OUTPUT_DIR}"/04_*.tsv "${OUTPUT_DIR}"/04_*.rds "${OUTPUT_DIR}"/04_*.bedpe 2>/dev/null

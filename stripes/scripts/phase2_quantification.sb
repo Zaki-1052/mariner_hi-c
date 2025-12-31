@@ -21,7 +21,7 @@
 #
 # Expected runtime: ~30-60 min per timepoint
 # Memory requirement: ~32-64 GB (Hi-C matrix extraction)
-# Output: {outputs_dir}/{timepoint}/res_5kb/02_stripe_counts.rds
+# Output: {outputs_dir}/{timepoint}/02_stripe_counts.rds
 # ==============================================================================
 
 # Map array index to timepoint
@@ -66,7 +66,7 @@ cd /expanse/lustre/projects/csd940/zalibhai/stripes
 mkdir -p logs
 
 # Verify Phase 1 output exists
-PHASE1_OUTPUT="outputs/${TIMEPOINT}/res_5kb/01_unified_stripes.tsv"
+PHASE1_OUTPUT="outputs/${TIMEPOINT}/01_unified_stripes.tsv"
 if [ ! -f "$PHASE1_OUTPUT" ]; then
     echo "ERROR: Phase 1 output not found: ${PHASE1_OUTPUT}"
     echo "Run phase1_detection.R first"
@@ -85,7 +85,7 @@ if [ $? -eq 0 ]; then
     echo "Phase 2 completed successfully for ${TIMEPOINT}"
 
     # Verify output
-    OUTPUT="outputs/${TIMEPOINT}/res_5kb/02_stripe_counts.rds"
+    OUTPUT="outputs/${TIMEPOINT}/02_stripe_counts.rds"
     if [ -f "$OUTPUT" ]; then
         echo "Output verified: ${OUTPUT}"
         ls -lh "${OUTPUT}"
