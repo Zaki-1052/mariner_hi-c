@@ -1,0 +1,223 @@
+=========================================
+Stripe Phase 4: Integration & Classification
+=========================================
+Job ID: 45596148_1
+Timepoint: late
+Node: exp-1-24
+Start time: Tue Dec 30 17:54:40 PST 2025
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Checking R packages...
+Warning message:
+package ‘yaml’ was built under R version 4.4.3 
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+package ‘dplyr’ was built under R version 4.4.3 
+All required packages available
+
+Phase 1 output found: outputs/late/res_5kb/01_unified_stripes.tsv
+Phase 3 output found: outputs/late/res_5kb/edgeR_results/03_all_results.tsv
+
+Starting Phase 4 integration for late...
+(Using tiered classification: detection as primary evidence)
+
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 4: Integration & Classification
+Timepoint: late
+========================================
+
+Loading configuration...
+  Config: config/stripe_config.yaml
+  Base dir: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/late/res_5kb
+  edgeR dir: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/late/res_5kb/edgeR_results
+
+=== Loading Data ===
+  Phase 1: 200 stripes
+  Phase 3: 200 stripes with edgeR statistics
+
+=== Merging Data ===
+  Merged: 200 stripes
+
+=== Direction Classification ===
+  FDR threshold: 0.05
+  logFC threshold: 0.30
+  Tiered thresholds: high_fdr=0.10, medium_logfc=0.20
+
+Direction classification:
+
+   gained      lost unchanged 
+       73        83        44 
+
+Source x Direction:
+              
+               gained lost unchanged
+  control_only      0   83         0
+  mutant_only      73    0         0
+  shared            0    0        44
+
+=== Adding Derived Metrics ===
+  Added: stripe_length, anchor_width, effect_category
+
+Effect categories (significant stripes):
+< table of extent 0 >
+
+=== Creating BEDPE Output ===
+  BEDPE created: 200 entries
+
+=== Summary Statistics ===
+
+Total stripes: 200
+
+By source:
+  control_only: 83
+  mutant_only: 73
+  shared: 44
+
+By direction (tiered confidence):
+  LOST: 83 total
+    - High:   0 (FDR<0.1 + direction match)
+    - Medium: 10 (direction match, logFC<-0.2)
+    - Low:    73 (detection only)
+  GAINED: 73 total
+    - High:   1 (FDR<0.1 + direction match)
+    - Medium: 6 (direction match, logFC>0.2)
+    - Low:    66 (detection only)
+  strengthened: 0
+  weakened: 0
+  unchanged: 44
+
+Directional consistency: 53.2% (83/156)
+
+=== Saving Outputs ===
+  Saved: 04_final_differential_stripes.tsv/rds (200 stripes)
+  Saved: 04_final_differential_stripes.bedpe
+  Saved: 04_summary.txt
+  Saved: 04_stripes_lost.tsv (83 stripes)
+  Saved: 04_stripes_gained.tsv (73 stripes)
+
+=================================
+Phase 4 Complete
+=================================
+
+Timepoint: late
+Total stripes: 200
+
+Differential stripes (tiered):
+  Lost: 83 (H:0 M:10 L:73)
+  Gained: 73 (H:1 M:6 L:66)
+  Strengthened: 0
+  Weakened: 0
+
+Directional consistency: 53.2%
+
+Output: /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/late/res_5kb
+
+Pipeline complete! Review results in:
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/late/res_5kb/04_final_differential_stripes.tsv
+  /expanse/lustre/projects/csd940/zalibhai/stripes/outputs/late/res_5kb/04_final_differential_stripes.bedpe (for Juicebox)
+
+
+Phase 4 completed successfully for late
+
+Outputs:
+-rw-r--r-- 1 zalibhai csd940 29907 Dec 30 17:54 outputs/late/res_5kb/04_final_differential_stripes.bedpe
+-rw-r--r-- 1 zalibhai csd940 15538 Dec 30 17:54 outputs/late/res_5kb/04_final_differential_stripes.rds
+-rw-r--r-- 1 zalibhai csd940 54948 Dec 30 17:54 outputs/late/res_5kb/04_final_differential_stripes.tsv
+-rw-r--r-- 1 zalibhai csd940 20061 Dec 30 17:54 outputs/late/res_5kb/04_stripes_gained.tsv
+-rw-r--r-- 1 zalibhai csd940 22686 Dec 30 17:54 outputs/late/res_5kb/04_stripes_lost.tsv
+-rw-r--r-- 1 zalibhai csd940   543 Dec 30 17:54 outputs/late/res_5kb/04_summary_stats.rds
+
+=== Summary ===
+
+================================================================================
+DIFFERENTIAL STRIPE ANALYSIS - FINAL RESULTS (Tiered Classification)
+================================================================================
+Timepoint: late (250402)
+Date: 2025-12-30
+
+STRIPE COUNTS
+-------------
+Total stripes analyzed: 200
+
+By detection source:
+  control_only:   83 (detected in ctrl merged only)
+  mutant_only:    73 (detected in mut merged only)
+  shared:         44 (detected in both conditions)
+
+DIFFERENTIAL DIRECTION (Tiered Confidence)
+------------------------------------------
+LOST (control_only stripes): 83 total
+  - High confidence:     0 (FDR < 0.10 + logFC < 0)
+  - Medium confidence:  10 (logFC < -0.2, any FDR)
+  - Low confidence:     73 (detection only)
+
+GAINED (mutant_only stripes): 73 total
+  - High confidence:     1 (FDR < 0.10 + logFC > 0)
+  - Medium confidence:   6 (logFC > 0.2, any FDR)
+  - Low confidence:     66 (detection only)
+
+SHARED stripes:
+  strengthened:    0 (FDR < 0.05, logFC > 0.3)
+  weakened:        0 (FDR < 0.05, logFC < -0.3)
+  unchanged:      44
+
+DIRECTIONAL CONSISTENCY
+-----------------------
+Consistent (logFC matches source): 83 (53.2%)
+Inconsistent:                      73
+
+Note: Directional consistency measures whether quantitative logFC
+agrees with detection-based classification. Low consistency (~50%)
+may indicate noisy detection or weak biological signal.
+
+edgeR SIGNIFICANCE
+------------------
+FDR < 0.05: 0 stripes
+FDR < 0.10: 1 stripes
+
+DETECTION CONFIDENCE (from Phase 1)
+------------------------------------
+High:   3 (replicate support + 10kb validation)
+Medium: 189
+Low:    8
+
+FOLD CHANGE STATISTICS
+----------------------
+Median logFC (all): -0.009
+Median logFC (sig): NA
+Range: -0.624 to 0.437
+
+STRIPE GEOMETRY
+---------------
+Median stripe length: 250000 bp
+Median anchor width: 60000 bp
+
+OUTPUTS
+-------
+/expanse/lustre/projects/csd940/zalibhai/stripes/outputs/late/res_5kb/04_final_differential_stripes.tsv  - Full results
+/expanse/lustre/projects/csd940/zalibhai/stripes/outputs/late/res_5kb/04_final_differential_stripes.rds  - R object
+/expanse/lustre/projects/csd940/zalibhai/stripes/outputs/late/res_5kb/04_final_differential_stripes.bedpe - Juicebox visualization
+
+================================================================================
+
+
+End time: Tue Dec 30 17:54:45 PST 2025
+=========================================
