@@ -1,0 +1,129 @@
+#!/bin/bash
+#SBATCH --job-name=stripe_viz
+#SBATCH --output=logs/stripe_viz_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+# ==============================================================================
+# SLURM Script: Stripe Visualization Analysis
+# ==============================================================================
+#
+# Generates publication-quality visualizations from differential stripe analysis:
+#   - Volcano plots
+#   - Length distribution analysis
+#   - ChIP-seq anchor annotation
+#   - Summary statistics
+#
+# Prerequisites:
+#   - Phase 4 must be complete (04_final_differential_stripes.tsv exists)
+#   - ChIP-seq peak files accessible
+#   - mariner_env conda environment configured
+#
+# Processes both early and late timepoints in a single run.
+#
+# Expected runtime: ~30 minutes
+# Output: outputs/visualizations/{early,late,combined}/
+# ==============================================================================
+
+echo "==========================================="
+echo "STRIPE VISUALIZATION ANALYSIS"
+echo "==========================================="
+echo "Job ID: ${SLURM_JOB_ID}"
+echo "Node: $HOSTNAME"
+echo "CPUs: ${SLURM_CPUS_PER_TASK}"
+echo "Memory: ${SLURM_MEM_PER_NODE}"
+echo "Start time: $(date)"
+echo "==========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -n 1
+echo ""
+
+# Check for required packages
+echo "Checking R packages..."
+R --slave -e "library(ggplot2); library(EnhancedVolcano); library(GenomicRanges); library(ChIPseeker)" 2>&1
+if [ $? -ne 0 ]; then
+    echo "ERROR: Required R packages not available"
+    exit 1
+fi
+echo "All required packages available"
+echo ""
+
+# Change to project directory
+cd /expanse/lustre/projects/csd940/zalibhai/stripes
+
+# Create logs directory if needed
+mkdir -p logs
+
+# Verify Phase 4 outputs exist for both timepoints
+echo "Checking Phase 4 outputs..."
+for TIMEPOINT in early late; do
+    PHASE4_OUTPUT="outputs/${TIMEPOINT}/res_5kb/04_final_differential_stripes.tsv"
+    if [ ! -f "$PHASE4_OUTPUT" ]; then
+        echo "WARNING: Phase 4 output not found: ${PHASE4_OUTPUT}"
+        echo "  Visualization for ${TIMEPOINT} may fail"
+    else
+        STRIPE_COUNT=$(wc -l < "$PHASE4_OUTPUT")
+        echo "  ${TIMEPOINT}: $((STRIPE_COUNT - 1)) stripes"
+    fi
+done
+echo ""
+
+# ==============================================================================
+# RUN VISUALIZATION SCRIPT
+# ==============================================================================
+echo "==========================================="
+echo "Running stripe_visualizations.R"
+echo "==========================================="
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/stripe_visualizations.R
+
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "ERROR: Visualization script failed"
+    exit 1
+fi
+
+echo ""
+echo "Visualization script completed: $(date)"
+echo ""
+
+# ==============================================================================
+# FINAL SUMMARY
+# ==============================================================================
+echo "==========================================="
+echo "VISUALIZATION COMPLETE"
+echo "==========================================="
+echo ""
+echo "End time: $(date)"
+echo ""
+echo "Output files:"
+echo ""
+echo "Early timepoint:"
+ls -la outputs/visualizations/early/*.{pdf,tsv} 2>/dev/null | head -10
+echo ""
+echo "Late timepoint:"
+ls -la outputs/visualizations/late/*.{pdf,tsv} 2>/dev/null | head -10
+echo ""
+echo "Combined:"
+ls -la outputs/visualizations/combined/*.{pdf,txt} 2>/dev/null | head -10
+echo ""
+
+echo "==========================================="
+echo "SUCCESS: Visualization analysis complete"
+echo "==========================================="
