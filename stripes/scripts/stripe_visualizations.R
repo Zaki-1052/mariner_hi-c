@@ -87,8 +87,8 @@ cat("========================================\n\n")
 
 # Function to load stripe data for a timepoint
 load_stripe_data <- function(timepoint_name) {
-  # Directory structure: outputs/{timepoint}/res_5kb/
-  input_file <- file.path(config$outputs$base_dir, timepoint_name, "res_5kb",
+  # Directory structure: outputs/{timepoint}/
+  input_file <- file.path(config$outputs$base_dir, timepoint_name,
                           "04_final_differential_stripes.tsv")
 
   if (!file.exists(input_file)) {

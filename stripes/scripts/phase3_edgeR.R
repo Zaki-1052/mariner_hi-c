@@ -55,8 +55,7 @@ set.seed(config$runtime$seed)
 # PATH SETUP
 # ==============================================================================
 resolution_kb <- config$stripe_data$resolutions$primary / 1000
-input_dir <- file.path(config$outputs$base_dir, TIMEPOINT,
-                       paste0("res_", resolution_kb, "kb"))
+input_dir <- file.path(config$outputs$base_dir, TIMEPOINT)
 output_dir <- file.path(input_dir, "edgeR_results")
 plots_dir <- file.path(output_dir, "plots")
 
