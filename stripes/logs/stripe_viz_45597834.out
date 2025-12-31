@@ -1,0 +1,464 @@
+===========================================
+STRIPE VISUALIZATION ANALYSIS
+===========================================
+Job ID: 45597834
+Node: exp-2-20
+CPUs: 4
+Memory: 32768
+Start time: Tue Dec 30 23:53:32 PST 2025
+===========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Checking R packages...
+Loading required package: ggrepel
+Loading required package: stats4
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+
+ChIPseeker v1.42.1 Learn more at https://yulab-smu.top/contribution-knowledge-mining/
+
+Please cite:
+
+Qianwen Wang, Ming Li, Tianzhi Wu, Li Zhan, Lin Li, Meijun Chen, Wenqin
+Xie, Zijing Xie, Erqiang Hu, Shuangbin Xu, Guangchuang Yu. Exploring
+epigenomic datasets by ChIPseeker. Current Protocols. 2022, 2(10): e585
+All required packages available
+
+Checking Phase 4 outputs...
+  early: 286 stripes
+  late: 200 stripes
+
+===========================================
+Running stripe_visualizations.R
+===========================================
+Start: Tue Dec 30 23:53:47 PST 2025
+
+
+========================================
+Stripe Visualization Analysis
+========================================
+
+Loading required packages...
+Warning messages:
+1: package ‘rtracklayer’ was built under R version 4.4.3 
+2: package ‘tibble’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘yaml’ was built under R version 4.4.3 
+Packages loaded
+
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/visualizations
+
+
+========================================
+SECTION 1: Loading & Filtering Data
+========================================
+
+  early: Loaded 286 stripes
+    Lost: 126 | Gained: 86 | Shared: 74
+  late: Loaded 200 stripes
+    Lost: 83 | Gained: 73 | Shared: 44
+
+Filtering to medium/high confidence stripes:
+
+early timepoint:
+  Filtered to medium/high confidence: 19 stripes
+    High: 0 | Medium: 19
+
+late timepoint:
+  Filtered to medium/high confidence: 17 stripes
+    High: 1 | Medium: 16
+
+Exporting filtered differential lists...
+  Saved: early_medium_high_confidence_stripes.tsv (19 stripes)
+  Saved: late_medium_high_confidence_stripes.tsv (17 stripes)
+
+Section 1 complete
+
+========================================
+SECTION 2: Volcano Plots
+========================================
+
+Creating volcano plot: early
+  Total: 286 | Lost: 126 (M/H: 9) | Gained: 86 (M/H: 10)
+  Saved: volcano_early.pdf
+Creating volcano plot: late
+  Total: 200 | Lost: 83 (M/H: 10) | Gained: 73 (M/H: 7)
+  Saved: volcano_late.pdf
+
+Creating combined volcano plot...
+  Saved: volcano_combined.pdf
+
+Section 2 complete: Volcano plots generated
+
+========================================
+SECTION 3: Length Distribution Analysis
+========================================
+
+Analyzing length distribution: early
+  Length statistics by direction:
+# A tibble: 3 × 8
+  direction_label     n median_length_kb mean_length_kb sd_length_kb
+  <chr>           <int>            <dbl>          <dbl>        <dbl>
+1 Gained             86              100           342.         471.
+2 Lost              126               65           334.         528.
+3 Shared             74              260           259.         299.
+# ℹ 3 more variables: min_length_kb <dbl>, max_length_kb <dbl>,
+#   median_anchor_kb <dbl>
+  Wilcoxon test (Lost vs Gained): p = 1.367e-01
+  Saved: length_distribution_early.pdf
+Analyzing length distribution: late
+  Length statistics by direction:
+# A tibble: 3 × 8
+  direction_label     n median_length_kb mean_length_kb sd_length_kb
+  <chr>           <int>            <dbl>          <dbl>        <dbl>
+1 Gained             73              255           522.         690.
+2 Lost               83              250           421.         590.
+3 Shared             44              245           205.         183.
+# ℹ 3 more variables: min_length_kb <dbl>, max_length_kb <dbl>,
+#   median_anchor_kb <dbl>
+  Wilcoxon test (Lost vs Gained): p = 4.575e-01
+  Saved: length_distribution_late.pdf
+
+Creating combined length comparison...
+  Saved: length_comparison.pdf
+
+Section 3 complete: Length distribution analyzed
+
+========================================
+SECTION 4: ChIP-seq Anchor Annotation
+========================================
+
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+Loaded 24528 TSS positions from mm10
+
+Annotating anchors: early timepoint
+  Loading H3K27ac: P12_ctrl_H3K27ac_early_peaks.bed
+    Loaded 28042 peaks
+  Loading H3K27me3: P12_ctrl_H3K27me3_early_peaks.bed
+    Loaded 23491 peaks
+  Computing distance to nearest TSS...
+'select()' returned 1:1 mapping between keys and columns
+  Computing ChIP-seq overlaps...
+    H3K27ac overlaps: 188 (65.7%)
+    H3K27me3 overlaps: 115 (40.2%)
+  Classifying anchor types...
+
+  Anchor type distribution:
+    Active_Enhancer: 33 (11.5%)
+    Other: 78 (27.3%)
+    Polycomb_Domain: 20 (7.0%)
+    Promoter: 155 (54.2%)
+
+Annotating anchors: late timepoint
+  Loading H3K27ac: 220310index25H3K27acLatePeakRegions.bed
+    Loaded 18687 peaks
+  Loading H3K4me1: K4me1_aligned_reads_peaks.broadPeak-filtered.bed
+    Loaded 113781 peaks
+  Computing distance to nearest TSS...
+'select()' returned 1:1 mapping between keys and columns
+  Computing ChIP-seq overlaps...
+    H3K27ac overlaps: 103 (51.5%)
+    H3K4me1 overlaps: 158 (79.0%)
+  Classifying anchor types...
+
+  Anchor type distribution:
+    Active_Enhancer: 12 (6.0%)
+    Other: 69 (34.5%)
+    Poised_Enhancer: 28 (14.0%)
+    Promoter: 91 (45.5%)
+
+Creating anchor classification plots: early
+  Saved: anchor_classification_early.pdf
+
+Creating anchor classification plots: late
+  Saved: anchor_classification_late.pdf
+Warning messages:
+1: In scale_y_log10() : log-10 transformation introduced infinite values.
+2: In scale_y_log10() : log-10 transformation introduced infinite values.
+3: Removed 186 rows containing non-finite outside the scale range
+(`stat_ydensity()`). 
+4: Removed 186 rows containing non-finite outside the scale range
+(`stat_boxplot()`). 
+5: In scale_y_log10() : log-10 transformation introduced infinite values.
+6: In scale_y_log10() : log-10 transformation introduced infinite values.
+7: Removed 128 rows containing non-finite outside the scale range
+(`stat_ydensity()`). 
+8: Removed 128 rows containing non-finite outside the scale range
+(`stat_boxplot()`). 
+
+Exporting annotated stripe lists...
+  Saved: early_annotated_stripes.tsv (286 stripes)
+  Saved: late_annotated_stripes.tsv (200 stripes)
+
+Section 4 complete: ChIP-seq anchor annotation done
+
+========================================
+SECTION 4B: Annotated Confident Stripe Export
+========================================
+
+Exporting annotated confident stripes (TSV + BEDPE)...
+
+early timepoint: 19 confident stripes
+  Lost: 9 | Gained: 10
+  High: 0 | Medium: 19
+  Saved TSV: early_medium_high_confidence_stripes.tsv
+  Saved BEDPE: early_medium_high_confidence_stripes.bedpe
+
+late timepoint: 17 confident stripes
+  Lost: 10 | Gained: 7
+  High: 1 | Medium: 16
+  Saved TSV: late_medium_high_confidence_stripes.tsv
+  Saved BEDPE: late_medium_high_confidence_stripes.bedpe
+
+Section 4B complete: Annotated confident stripe exports done
+
+========================================
+SECTION 4C: JuiceBox Visualization Formats
+========================================
+
+Generating JuiceBox-friendly visualization formats...
+
+Creating JuiceBox-friendly formats: early (19 stripes)
+  Saved: early_stripes_diagonal.bedpe (diagonal format - shows stripe extent along diagonal)
+  Saved: early_stripes_rectangle.bedpe (rectangle format - shows stripe body region)
+Creating 1D BED tracks: early
+  Saved: early_anchors.bed (anchor positions only)
+  Saved: early_full_extent.bed (full stripe extent)
+
+Creating JuiceBox-friendly formats: late (17 stripes)
+  Saved: late_stripes_diagonal.bedpe (diagonal format - shows stripe extent along diagonal)
+  Saved: late_stripes_rectangle.bedpe (rectangle format - shows stripe body region)
+Creating 1D BED tracks: late
+  Saved: late_anchors.bed (anchor positions only)
+  Saved: late_full_extent.bed (full stripe extent)
+
+Section 4C complete: JuiceBox visualization formats generated
+
+Visualization file usage:
+  *_stripes_diagonal.bedpe  - Load as 2D annotation, shows stripe extent along diagonal
+  *_stripes_rectangle.bedpe - Load as 2D annotation, shows off-diagonal stripe body
+  *_anchors.bed             - Load as 1D track, marks anchor positions
+  *_full_extent.bed         - Load as 1D track, shows full stripe span
+
+========================================
+SECTION 5: Summary Statistics
+========================================
+
+Summary statistics saved to: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/visualizations/combined/summary_statistics.txt 
+
+=========================================
+DIFFERENTIAL STRIPE ANALYSIS SUMMARY
+=========================================
+Generated: 2025-12-30 23:54:12.946586
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes
+
+--- EARLY TIMEPOINT ---
+Total stripes: 286
+
+Direction breakdown:
+  Lost (control_only): 126
+  Gained (mutant_only): 86
+  Shared: 74
+
+Confidence tiers (lost/gained only):
+  High: 0
+  Medium: 19
+  Low: 193
+
+Stripe length statistics:
+  Median: 235.0 kb
+  Mean: 317.0 kb
+  Range: 5.0 - 2970.0 kb
+
+Anchor type distribution:
+  Active_Enhancer: 33 (11.5%)
+  Other: 78 (27.3%)
+  Polycomb_Domain: 20 (7%)
+  Promoter: 155 (54.2%)
+
+Directional consistency:
+  Consistent: 97 (45.8%)
+  Inconsistent: 115
+
+Statistical significance:
+  FDR < 0.05: 0
+  FDR < 0.10: 0
+
+========================================
+
+--- LATE TIMEPOINT ---
+Total stripes: 200
+
+Direction breakdown:
+  Lost (control_only): 83
+  Gained (mutant_only): 73
+  Shared: 44
+
+Confidence tiers (lost/gained only):
+  High: 1
+  Medium: 16
+  Low: 139
+
+Stripe length statistics:
+  Median: 250.0 kb
+  Mean: 410.2 kb
+  Range: 5.0 - 3505.0 kb
+
+Anchor type distribution:
+  Active_Enhancer: 12 (6%)
+  Other: 69 (34.5%)
+  Poised_Enhancer: 28 (14%)
+  Promoter: 91 (45.5%)
+
+Directional consistency:
+  Consistent: 83 (53.2%)
+  Inconsistent: 73
+
+Statistical significance:
+  FDR < 0.05: 0
+  FDR < 0.10: 1
+
+========================================
+
+OUTPUT FILES GENERATED:
+
+Per timepoint (early/late):
+  - volcano_{timepoint}.pdf
+  - length_distribution_{timepoint}.pdf
+  - length_statistics_{timepoint}.tsv
+  - anchor_classification_{timepoint}.pdf
+  - {timepoint}_annotated_stripes.tsv (all stripes)
+  - {timepoint}_medium_high_confidence_stripes.tsv (confident only)
+  - {timepoint}_medium_high_confidence_stripes.bedpe (confident, original format)
+
+JuiceBox visualization formats (confident stripes):
+  - {timepoint}_stripes_diagonal.bedpe (shows stripe extent along diagonal)
+  - {timepoint}_stripes_rectangle.bedpe (shows off-diagonal stripe body)
+  - {timepoint}_anchors.bed (1D track - anchor positions)
+  - {timepoint}_full_extent.bed (1D track - full stripe span)
+
+Combined:
+  - volcano_combined.pdf
+  - length_comparison.pdf
+  - summary_statistics.txt
+
+=========================================
+
+========================================
+STRIPE VISUALIZATION ANALYSIS COMPLETE
+========================================
+
+Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/visualizations
+
+Generated files:
+
+Early timepoint (outputs/visualizations/early/):
+  - volcano_early.pdf
+  - length_distribution_early.pdf
+  - anchor_classification_early.pdf
+  - early_annotated_stripes.tsv (all stripes)
+  - early_medium_high_confidence_stripes.tsv (confident only)
+  - early_medium_high_confidence_stripes.bedpe (original format)
+  JuiceBox visualization formats:
+  - early_stripes_diagonal.bedpe (shows stripe extent along diagonal)
+  - early_stripes_rectangle.bedpe (shows off-diagonal stripe body)
+  - early_anchors.bed (1D track - anchor positions)
+  - early_full_extent.bed (1D track - full stripe span)
+
+Late timepoint (outputs/visualizations/late/):
+  - volcano_late.pdf
+  - length_distribution_late.pdf
+  - anchor_classification_late.pdf
+  - late_annotated_stripes.tsv (all stripes)
+  - late_medium_high_confidence_stripes.tsv (confident only)
+  - late_medium_high_confidence_stripes.bedpe (original format)
+  JuiceBox visualization formats:
+  - late_stripes_diagonal.bedpe (shows stripe extent along diagonal)
+  - late_stripes_rectangle.bedpe (shows off-diagonal stripe body)
+  - late_anchors.bed (1D track - anchor positions)
+  - late_full_extent.bed (1D track - full stripe span)
+
+Combined (outputs/visualizations/combined/):
+  - volcano_combined.pdf
+  - length_comparison.pdf
+  - summary_statistics.txt
+
+========================================
+JuiceBox Usage:
+  - Diagonal BEDPE: Shows stripe as line along diagonal (recommended)
+  - Rectangle BEDPE: Shows off-diagonal stripe body region
+  - 1D BED files: Load as tracks for anchor/extent visualization
+========================================
+
+
+Visualization script completed: Tue Dec 30 23:54:13 PST 2025
+
+===========================================
+VISUALIZATION COMPLETE
+===========================================
+
+End time: Tue Dec 30 23:54:13 PST 2025
+
+Output files:
+
+Early timepoint:
+-rw-r--r-- 1 zalibhai csd940 23657 Dec 30 23:54 outputs/visualizations/early/anchor_classification_early.pdf
+-rw-r--r-- 1 zalibhai csd940 92963 Dec 30 23:54 outputs/visualizations/early/early_annotated_stripes.tsv
+-rw-r--r-- 1 zalibhai csd940  6520 Dec 30 23:54 outputs/visualizations/early/early_medium_high_confidence_stripes.tsv
+-rw-r--r-- 1 zalibhai csd940 55585 Dec 30 23:54 outputs/visualizations/early/length_distribution_early.pdf
+-rw-r--r-- 1 zalibhai csd940   286 Dec 30 23:54 outputs/visualizations/early/length_statistics_early.tsv
+-rw-r--r-- 1 zalibhai csd940 22200 Dec 30 23:54 outputs/visualizations/early/volcano_early.pdf
+
+Late timepoint:
+-rw-r--r-- 1 zalibhai csd940 23966 Dec 30 23:54 outputs/visualizations/late/anchor_classification_late.pdf
+-rw-r--r-- 1 zalibhai csd940 64791 Dec 30 23:54 outputs/visualizations/late/late_annotated_stripes.tsv
+-rw-r--r-- 1 zalibhai csd940  5863 Dec 30 23:54 outputs/visualizations/late/late_medium_high_confidence_stripes.tsv
+-rw-r--r-- 1 zalibhai csd940 51864 Dec 30 23:54 outputs/visualizations/late/length_distribution_late.pdf
+-rw-r--r-- 1 zalibhai csd940   281 Dec 30 23:54 outputs/visualizations/late/length_statistics_late.tsv
+-rw-r--r-- 1 zalibhai csd940 17667 Dec 30 23:54 outputs/visualizations/late/volcano_late.pdf
+
+Combined:
+-rw-r--r-- 1 zalibhai csd940 36678 Dec 30 23:54 outputs/visualizations/combined/length_comparison.pdf
+-rw-r--r-- 1 zalibhai csd940  2278 Dec 30 23:54 outputs/visualizations/combined/summary_statistics.txt
+-rw-r--r-- 1 zalibhai csd940 35106 Dec 30 23:54 outputs/visualizations/combined/volcano_combined.pdf
+
+===========================================
+SUCCESS: Visualization analysis complete
+===========================================
