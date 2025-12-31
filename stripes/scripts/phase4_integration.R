@@ -117,25 +117,72 @@ logfc_thresh <- config$classification$logFC_threshold
 cat(sprintf("  FDR threshold: %.2f\n", fdr_thresh))
 cat(sprintf("  logFC threshold: %.2f\n", logfc_thresh))
 
-# Apply classification logic per CLAUDE.md spec
+# Tiered classification logic
+# Detection (source) is PRIMARY evidence; FDR + direction provide confidence tiers
+# This replaces the original FDR-dependent logic that produced 0 differential stripes
+
+# Get tiered thresholds from config (or use defaults)
+high_fdr_thresh <- if (!is.null(config$classification$tiered$high_fdr)) {
+  config$classification$tiered$high_fdr
+} else {
+  0.10  # Default: FDR < 0.1 for high confidence
+}
+medium_logfc_thresh <- if (!is.null(config$classification$tiered$medium_logfc)) {
+  config$classification$tiered$medium_logfc
+} else {
+  0.2  # Default: |logFC| > 0.2 for medium confidence
+}
+
+cat(sprintf("  Tiered thresholds: high_fdr=%.2f, medium_logfc=%.2f\n",
+            high_fdr_thresh, medium_logfc_thresh))
+
+# Direction classification: all condition-specific stripes get classified
 final$direction <- case_when(
-  # Lost: control_only stripe with significant negative logFC
-  final$source == "control_only" & final$FDR < fdr_thresh & final$logFC < 0 ~ "lost",
+  # === LOST (control_only stripes) ===
+  # All control_only stripes are "lost" - detection is primary evidence
+  final$source == "control_only" ~ "lost",
 
-  # Gained: mutant_only stripe with significant positive logFC
-  final$source == "mutant_only" & final$FDR < fdr_thresh & final$logFC > 0 ~ "gained",
+  # === GAINED (mutant_only stripes) ===
+  # All mutant_only stripes are "gained" - detection is primary evidence
+  final$source == "mutant_only" ~ "gained",
 
-  # Strengthened: shared stripe with significant positive logFC above threshold
+  # === SHARED stripes ===
+  # Strengthened: FDR significant + positive logFC above threshold
   final$source == "shared" & final$FDR < fdr_thresh & final$logFC > logfc_thresh ~ "strengthened",
-
-  # Weakened: shared stripe with significant negative logFC below threshold
+  # Weakened: FDR significant + negative logFC below threshold
   final$source == "shared" & final$FDR < fdr_thresh & final$logFC < -logfc_thresh ~ "weakened",
+  # Unchanged: shared without significant change
+  final$source == "shared" ~ "unchanged"
+)
 
-  # Unchanged: shared stripe without significant strong change
-  final$source == "shared" ~ "unchanged",
+# Add confidence tier as separate column
+final$direction_confidence <- case_when(
+  # Lost confidence tiers
+  final$source == "control_only" & final$FDR < high_fdr_thresh & final$logFC < 0 ~ "high",
+  final$source == "control_only" & final$logFC < -medium_logfc_thresh ~ "medium",
+  final$source == "control_only" ~ "low",
 
-  # Ambiguous: doesn't fit expected pattern
-  TRUE ~ "ambiguous"
+  # Gained confidence tiers
+  final$source == "mutant_only" & final$FDR < high_fdr_thresh & final$logFC > 0 ~ "high",
+  final$source == "mutant_only" & final$logFC > medium_logfc_thresh ~ "medium",
+  final$source == "mutant_only" ~ "low",
+
+  # Shared stripes confidence (based on FDR only)
+  final$source == "shared" & final$FDR < 0.05 ~ "high",
+  final$source == "shared" & final$FDR < 0.10 ~ "medium",
+  TRUE ~ "low"
+)
+
+# Flag directional consistency for condition-specific stripes
+# TRUE = logFC direction matches expected for source
+# FALSE = logFC direction opposite to expected
+# NA = shared stripes (not applicable)
+final$direction_consistent <- case_when(
+  final$source == "control_only" & final$logFC < 0 ~ TRUE,
+  final$source == "control_only" & final$logFC >= 0 ~ FALSE,
+  final$source == "mutant_only" & final$logFC > 0 ~ TRUE,
+  final$source == "mutant_only" & final$logFC <= 0 ~ FALSE,
+  final$source == "shared" ~ NA
 )
 
 # Print direction summary
@@ -188,13 +235,27 @@ bedpe_df <- data.frame(
   score = -log10(final$FDR + 1e-300),  # Transform FDR to score
   strand1 = ".",
   strand2 = ".",
+  # Color gradient by direction and confidence
   color = case_when(
-    final$direction == "lost" ~ "0,0,255",      # Blue
-    final$direction == "gained" ~ "255,0,0",    # Red
-    final$direction == "strengthened" ~ "255,165,0",  # Orange
-    final$direction == "weakened" ~ "100,149,237",    # Cornflower blue
-    final$direction == "unchanged" ~ "128,128,128",   # Gray
-    TRUE ~ "200,200,200"  # Light gray for ambiguous
+    # Lost stripes: blue gradient (dark=high conf, light=low conf)
+    final$direction == "lost" &
+      final$direction_confidence == "high" ~ "0,0,255",
+    final$direction == "lost" &
+      final$direction_confidence == "medium" ~ "100,100,255",
+    final$direction == "lost" &
+      final$direction_confidence == "low" ~ "180,180,255",
+    # Gained stripes: red gradient (dark=high conf, light=low conf)
+    final$direction == "gained" &
+      final$direction_confidence == "high" ~ "255,0,0",
+    final$direction == "gained" &
+      final$direction_confidence == "medium" ~ "255,100,100",
+    final$direction == "gained" &
+      final$direction_confidence == "low" ~ "255,180,180",
+    # Shared stripes
+    final$direction == "strengthened" ~ "255,165,0",     # Orange
+    final$direction == "weakened" ~ "100,149,237",       # Cornflower blue
+    final$direction == "unchanged" ~ "128,128,128",      # Gray
+    TRUE ~ "200,200,200"
   ),
   logFC = final$logFC,
   FDR = final$FDR,
@@ -219,22 +280,42 @@ summary_stats <- list(
   n_mutant_only = sum(final$source == "mutant_only"),
   n_shared = sum(final$source == "shared"),
 
-  # By direction
+  # By direction (now all classified, no ambiguous)
   n_lost = sum(final$direction == "lost"),
   n_gained = sum(final$direction == "gained"),
   n_strengthened = sum(final$direction == "strengthened"),
   n_weakened = sum(final$direction == "weakened"),
   n_unchanged = sum(final$direction == "unchanged"),
-  n_ambiguous = sum(final$direction == "ambiguous"),
 
-  # By significance
+  # Tiered confidence breakdown for lost/gained
+  n_lost_high = sum(final$direction == "lost" &
+                    final$direction_confidence == "high"),
+  n_lost_medium = sum(final$direction == "lost" &
+                      final$direction_confidence == "medium"),
+  n_lost_low = sum(final$direction == "lost" &
+                   final$direction_confidence == "low"),
+  n_gained_high = sum(final$direction == "gained" &
+                      final$direction_confidence == "high"),
+  n_gained_medium = sum(final$direction == "gained" &
+                        final$direction_confidence == "medium"),
+  n_gained_low = sum(final$direction == "gained" &
+                     final$direction_confidence == "low"),
+
+  # Directional consistency metrics
+  n_direction_consistent = sum(final$direction_consistent, na.rm = TRUE),
+  n_direction_inconsistent = sum(!final$direction_consistent, na.rm = TRUE),
+  pct_direction_consistent = round(
+    mean(final$direction_consistent, na.rm = TRUE) * 100, 1
+  ),
+
+  # By edgeR significance
   n_significant_FDR05 = sum(final$significant_FDR05),
   n_significant_FDR10 = sum(final$significant_FDR10),
 
-  # By confidence
-  n_high_confidence = sum(final$confidence == "high"),
-  n_medium_confidence = sum(final$confidence == "medium"),
-  n_low_confidence = sum(final$confidence == "low"),
+  # By Phase 1 confidence (detection quality)
+  n_high_detection_conf = sum(final$confidence == "high"),
+  n_medium_detection_conf = sum(final$confidence == "medium"),
+  n_low_detection_conf = sum(final$confidence == "low"),
 
   # Fold change stats
   median_logFC = median(final$logFC, na.rm = TRUE),
@@ -249,6 +330,8 @@ summary_stats <- list(
   # Parameters used
   fdr_threshold = fdr_thresh,
   logfc_threshold = logfc_thresh,
+  high_fdr_threshold = high_fdr_thresh,
+  medium_logfc_threshold = medium_logfc_thresh,
 
   date = Sys.Date()
 )
@@ -259,13 +342,27 @@ cat(sprintf("\nBy source:\n"))
 cat(sprintf("  control_only: %d\n", summary_stats$n_control_only))
 cat(sprintf("  mutant_only: %d\n", summary_stats$n_mutant_only))
 cat(sprintf("  shared: %d\n", summary_stats$n_shared))
-cat(sprintf("\nBy direction:\n"))
-cat(sprintf("  lost: %d\n", summary_stats$n_lost))
-cat(sprintf("  gained: %d\n", summary_stats$n_gained))
+cat(sprintf("\nBy direction (tiered confidence):\n"))
+cat(sprintf("  LOST: %d total\n", summary_stats$n_lost))
+cat(sprintf("    - High:   %d (FDR<0.1 + direction match)\n",
+            summary_stats$n_lost_high))
+cat(sprintf("    - Medium: %d (direction match, logFC<-0.2)\n",
+            summary_stats$n_lost_medium))
+cat(sprintf("    - Low:    %d (detection only)\n", summary_stats$n_lost_low))
+cat(sprintf("  GAINED: %d total\n", summary_stats$n_gained))
+cat(sprintf("    - High:   %d (FDR<0.1 + direction match)\n",
+            summary_stats$n_gained_high))
+cat(sprintf("    - Medium: %d (direction match, logFC>0.2)\n",
+            summary_stats$n_gained_medium))
+cat(sprintf("    - Low:    %d (detection only)\n", summary_stats$n_gained_low))
 cat(sprintf("  strengthened: %d\n", summary_stats$n_strengthened))
 cat(sprintf("  weakened: %d\n", summary_stats$n_weakened))
 cat(sprintf("  unchanged: %d\n", summary_stats$n_unchanged))
-cat(sprintf("  ambiguous: %d\n", summary_stats$n_ambiguous))
+cat(sprintf("\nDirectional consistency: %.1f%% (%d/%d)\n",
+            summary_stats$pct_direction_consistent,
+            summary_stats$n_direction_consistent,
+            summary_stats$n_direction_consistent +
+              summary_stats$n_direction_inconsistent))
 
 # ==============================================================================
 # SAVE OUTPUTS
@@ -295,7 +392,7 @@ saveRDS(summary_stats, file.path(output_dir, "04_summary_stats.rds"))
 # Summary text file
 summary_text <- sprintf("
 ================================================================================
-DIFFERENTIAL STRIPE ANALYSIS - FINAL RESULTS
+DIFFERENTIAL STRIPE ANALYSIS - FINAL RESULTS (Tiered Classification)
 ================================================================================
 Timepoint: %s (%s)
 Date: %s
@@ -309,22 +406,40 @@ By detection source:
   mutant_only:   %3d (detected in mut merged only)
   shared:        %3d (detected in both conditions)
 
-By differential direction:
-  lost:          %3d (control_only with sig. decrease)
-  gained:        %3d (mutant_only with sig. increase)
-  strengthened:  %3d (shared with sig. increase |logFC| > %.1f)
-  weakened:      %3d (shared with sig. decrease |logFC| > %.1f)
-  unchanged:     %3d (shared without significant change)
-  ambiguous:     %3d (unexpected pattern)
+DIFFERENTIAL DIRECTION (Tiered Confidence)
+------------------------------------------
+LOST (control_only stripes): %d total
+  - High confidence:   %3d (FDR < %.2f + logFC < 0)
+  - Medium confidence: %3d (logFC < -%.1f, any FDR)
+  - Low confidence:    %3d (detection only)
 
-SIGNIFICANCE
-------------
+GAINED (mutant_only stripes): %d total
+  - High confidence:   %3d (FDR < %.2f + logFC > 0)
+  - Medium confidence: %3d (logFC > %.1f, any FDR)
+  - Low confidence:    %3d (detection only)
+
+SHARED stripes:
+  strengthened:  %3d (FDR < %.2f, logFC > %.1f)
+  weakened:      %3d (FDR < %.2f, logFC < -%.1f)
+  unchanged:     %3d
+
+DIRECTIONAL CONSISTENCY
+-----------------------
+Consistent (logFC matches source): %d (%.1f%%)
+Inconsistent:                      %d
+
+Note: Directional consistency measures whether quantitative logFC
+agrees with detection-based classification. Low consistency (~50%%)
+may indicate noisy detection or weak biological signal.
+
+edgeR SIGNIFICANCE
+------------------
 FDR < %.2f: %d stripes
 FDR < %.2f: %d stripes
 
-CONFIDENCE (from Phase 1)
--------------------------
-High:   %d
+DETECTION CONFIDENCE (from Phase 1)
+------------------------------------
+High:   %d (replicate support + 10kb validation)
 Medium: %d
 Low:    %d
 
@@ -357,27 +472,46 @@ OUTPUTS
   summary_stats$n_mutant_only,
   summary_stats$n_shared,
 
+  # LOST section
   summary_stats$n_lost,
-  summary_stats$n_gained,
-  summary_stats$n_strengthened, logfc_thresh,
-  summary_stats$n_weakened, logfc_thresh,
-  summary_stats$n_unchanged,
-  summary_stats$n_ambiguous,
+  summary_stats$n_lost_high, high_fdr_thresh,
+  summary_stats$n_lost_medium, medium_logfc_thresh,
+  summary_stats$n_lost_low,
 
+  # GAINED section
+  summary_stats$n_gained,
+  summary_stats$n_gained_high, high_fdr_thresh,
+  summary_stats$n_gained_medium, medium_logfc_thresh,
+  summary_stats$n_gained_low,
+
+  # SHARED section
+  summary_stats$n_strengthened, fdr_thresh, logfc_thresh,
+  summary_stats$n_weakened, fdr_thresh, logfc_thresh,
+  summary_stats$n_unchanged,
+
+  # Directional consistency
+  summary_stats$n_direction_consistent, summary_stats$pct_direction_consistent,
+  summary_stats$n_direction_inconsistent,
+
+  # edgeR significance
   fdr_thresh, summary_stats$n_significant_FDR05,
   config$edger$fdr_exploratory, summary_stats$n_significant_FDR10,
 
-  summary_stats$n_high_confidence,
-  summary_stats$n_medium_confidence,
-  summary_stats$n_low_confidence,
+  # Detection confidence
+  summary_stats$n_high_detection_conf,
+  summary_stats$n_medium_detection_conf,
+  summary_stats$n_low_detection_conf,
 
+  # Fold change stats
   summary_stats$median_logFC,
   summary_stats$median_logFC_sig,
   summary_stats$min_logFC, summary_stats$max_logFC,
 
+  # Geometry
   summary_stats$median_stripe_length,
   summary_stats$median_anchor_width,
 
+  # Output paths
   output_dir, output_dir, output_dir
 )
 
@@ -406,11 +540,17 @@ cat("=================================\n\n")
 
 cat(sprintf("Timepoint: %s\n", TIMEPOINT))
 cat(sprintf("Total stripes: %d\n", nrow(final)))
-cat(sprintf("\nDifferential stripes:\n"))
-cat(sprintf("  Lost: %d\n", summary_stats$n_lost))
-cat(sprintf("  Gained: %d\n", summary_stats$n_gained))
+cat(sprintf("\nDifferential stripes (tiered):\n"))
+cat(sprintf("  Lost: %d (H:%d M:%d L:%d)\n",
+            summary_stats$n_lost, summary_stats$n_lost_high,
+            summary_stats$n_lost_medium, summary_stats$n_lost_low))
+cat(sprintf("  Gained: %d (H:%d M:%d L:%d)\n",
+            summary_stats$n_gained, summary_stats$n_gained_high,
+            summary_stats$n_gained_medium, summary_stats$n_gained_low))
 cat(sprintf("  Strengthened: %d\n", summary_stats$n_strengthened))
 cat(sprintf("  Weakened: %d\n", summary_stats$n_weakened))
+cat(sprintf("\nDirectional consistency: %.1f%%\n",
+            summary_stats$pct_direction_consistent))
 
 cat(sprintf("\nOutput: %s\n", output_dir))
 cat("\nPipeline complete! Review results in:\n")
