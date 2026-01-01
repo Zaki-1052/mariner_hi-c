@@ -11,6 +11,7 @@ This pipeline performs **replicate-aware differential analysis of chromatin stri
 - **Multi-timepoint analysis**: Processes early (P12) and late developmental stages
 - **Tiered confidence scoring**: Detection + replicate + 10kb validation for confidence levels
 - **Direction classification**: Lost, gained, strengthened, weakened, unchanged categories
+- **GO/KEGG enrichment**: Functional analysis of genes near differential stripe anchors
 - **Publication-ready outputs**: Volcano plots, length distributions, ChIP-seq annotations
 
 ### Biological Context
@@ -233,7 +234,7 @@ low:    detection only
 
 ### Phase 5: Visualization (`stripe_visualizations.R`)
 
-**Purpose:** Generate publication-quality figures and ChIP-seq annotations.
+**Purpose:** Generate publication-quality figures, ChIP-seq annotations, and functional enrichment.
 
 **Input:**
 - Phase 4 results from both timepoints
@@ -243,14 +244,27 @@ low:    detection only
 1. **Volcano plots**: Per-timepoint and combined
 2. **Length distribution**: CTCF vs EP classification
 3. **ChIP-seq annotation**: Active, Polycomb, or indeterminate anchors
-4. **Summary statistics**: Confidence tiers, direction categories
+4. **GO/KEGG enrichment**: Functional analysis of genes near stripe anchors
+5. **Summary statistics**: Confidence tiers, direction categories
 
 **Output:** `outputs/visualizations/`
 - `{timepoint}/volcano_{timepoint}.pdf`
 - `{timepoint}/length_distribution_{timepoint}.pdf`
 - `{timepoint}/anchor_classification_{timepoint}.pdf`
 - `{timepoint}/{timepoint}_annotated_stripes.tsv`
+- `enrichment/go_bp_dotplot_{timepoint}.pdf` (GO Biological Process)
+- `enrichment/go_cc_dotplot_{timepoint}.pdf` (GO Cellular Component)
+- `enrichment/go_mf_dotplot_{timepoint}.pdf` (GO Molecular Function)
+- `enrichment/kegg_dotplot_{timepoint}.pdf` (KEGG Pathways)
+- `enrichment/stripe_anchor_genes_{timepoint}.tsv` (genes near anchors)
 - `combined/summary_statistics.txt`
+
+**GO/KEGG Enrichment Details:**
+- Extracts genes within 10kb of stripe anchors
+- Groups genes by stripe direction (lost vs gained)
+- Uses `clusterProfiler::compareCluster()` for enrichment
+- Only includes medium/high confidence differential stripes
+- Requires minimum 5 genes per category for analysis
 
 ---
 
@@ -283,6 +297,7 @@ stripes/
 │   └── visualizations/            # Phase 5: Plots
 │       ├── early/
 │       ├── late/
+│       ├── enrichment/            # GO/KEGG enrichment results
 │       └── combined/
 │
 ├── config/
@@ -478,7 +493,11 @@ BiocManager::install(c(
   "HDF5Array",         # Out-of-memory arrays
   "strawr",            # .hic file reading
   "ChIPseeker",        # Peak annotation
-  "EnhancedVolcano"    # Volcano plots
+  "EnhancedVolcano",   # Volcano plots
+  "clusterProfiler",   # GO/KEGG enrichment
+  "enrichplot",        # Enrichment visualization
+  "org.Mm.eg.db",      # Mouse gene annotations
+  "TxDb.Mmusculus.UCSC.mm10.knownGene"  # Mouse transcript database
 ))
 
 # CRAN

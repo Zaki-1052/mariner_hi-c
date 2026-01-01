@@ -10,7 +10,8 @@
 #   2. Volcano plots (EnhancedVolcano)
 #   3. Length distribution analysis
 #   4. ChIP-seq-based anchor annotation (enhancer/promoter/Polycomb)
-#   5. Summary statistics and exports
+#   5. GO/KEGG enrichment analysis (clusterProfiler)
+#   6. Summary statistics and exports
 #
 # Usage:
 #   Rscript scripts/stripe_visualizations.R
@@ -1097,11 +1098,255 @@ cat("  *_anchors.bed             - Load as 1D track, marks anchor positions\n")
 cat("  *_full_extent.bed         - Load as 1D track, shows full stripe span\n")
 
 # =============================================================================
-# SECTION 5: SUMMARY STATISTICS & FINAL EXPORT
+# SECTION 5: GO/KEGG ENRICHMENT ANALYSIS
 # =============================================================================
 
 cat("\n========================================\n")
-cat("SECTION 5: Summary Statistics\n")
+cat("SECTION 5: GO/KEGG Enrichment Analysis\n")
+cat("========================================\n\n")
+
+# Load additional packages for enrichment analysis
+suppressPackageStartupMessages({
+  library(clusterProfiler)
+  library(enrichplot)
+})
+
+# Create enrichment output directory
+enrichment_dir <- file.path(output_base, "enrichment")
+dir.create(enrichment_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Function to get genes near stripe anchors
+get_anchor_genes <- function(stripes_df, max_dist = 10000) {
+  if (is.null(stripes_df) || nrow(stripes_df) == 0) {
+    return(character(0))
+  }
+
+  # Create GRanges for stripe anchors
+  anchor_gr <- GRanges(
+    seqnames = stripes_df$chr,
+    ranges = IRanges(start = stripes_df$anchor_x1, end = stripes_df$anchor_x2)
+  )
+
+  # Get genes from TxDb
+  genes_txdb <- genes(txdb)
+
+  # Find overlaps within max_dist
+  overlaps <- findOverlaps(anchor_gr, genes_txdb, maxgap = max_dist)
+
+  # Get gene IDs (these are Entrez IDs from TxDb.Mmusculus.UCSC.mm10.knownGene)
+  gene_ids <- names(genes_txdb)[subjectHits(overlaps)]
+
+  # Return unique Entrez IDs
+  return(unique(gene_ids[!is.na(gene_ids)]))
+}
+
+# Function to run enrichment analysis for a timepoint
+run_stripe_enrichment <- function(stripes_df, timepoint_name, output_dir) {
+  if (is.null(stripes_df) || nrow(stripes_df) == 0) {
+    cat(sprintf("  Skipping enrichment for %s (no data)\n", timepoint_name))
+    return(NULL)
+  }
+
+  cat(sprintf("\nRunning enrichment analysis: %s timepoint\n", timepoint_name))
+
+  # Filter to medium/high confidence differential stripes
+  confident_df <- stripes_df %>%
+    filter(direction %in% c("lost", "gained") &
+             direction_confidence %in% c("high", "medium"))
+
+  if (nrow(confident_df) == 0) {
+    cat(sprintf("  No confident differential stripes for enrichment\n"))
+    return(NULL)
+  }
+
+  # Get genes for lost and gained stripes
+  lost_stripes <- confident_df %>% filter(direction == "lost")
+  gained_stripes <- confident_df %>% filter(direction == "gained")
+
+  lost_genes <- get_anchor_genes(lost_stripes)
+  gained_genes <- get_anchor_genes(gained_stripes)
+
+  cat(sprintf("  Lost stripes: %d stripes, %d genes\n", nrow(lost_stripes), length(lost_genes)))
+  cat(sprintf("  Gained stripes: %d stripes, %d genes\n", nrow(gained_stripes), length(gained_genes)))
+
+  # Check if we have enough genes
+  if (length(lost_genes) < 10 && length(gained_genes) < 10) {
+    cat(sprintf("  Warning: Few genes for enrichment analysis. Results may be limited.\n"))
+  }
+
+  # Create gene list for compareCluster
+  gene_list <- list()
+  if (length(lost_genes) >= 5) gene_list$lost_genes <- lost_genes
+  if (length(gained_genes) >= 5) gene_list$gained_genes <- gained_genes
+
+  if (length(gene_list) == 0) {
+    cat(sprintf("  Insufficient genes for enrichment analysis\n"))
+    return(NULL)
+  }
+
+  results <- list()
+
+  # GO Biological Process
+  cat("  GO Biological Process...\n")
+  go_bp <- tryCatch({
+    compareCluster(
+      geneCluster = gene_list,
+      fun = "enrichGO",
+      OrgDb = org.Mm.eg.db,
+      ont = "BP",
+      pAdjustMethod = "BH",
+      pvalueCutoff = 0.05,
+      qvalueCutoff = 0.05
+    )
+  }, error = function(e) {
+    cat(sprintf("    Error: %s\n", e$message))
+    return(NULL)
+  })
+
+  if (!is.null(go_bp) && nrow(go_bp@compareClusterResult) > 0) {
+    p_go_bp <- dotplot(go_bp, showCategory = 20) +
+      labs(title = sprintf("GO Biological Process: %s Stripes", tools::toTitleCase(timepoint_name))) +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+    ggsave(file.path(output_dir, sprintf("go_bp_dotplot_%s.pdf", timepoint_name)),
+           p_go_bp, width = 12, height = 10)
+    cat("    Saved: go_bp_dotplot.pdf\n")
+    results$go_bp <- go_bp
+  } else {
+    cat("    No significant GO BP terms found\n")
+  }
+
+  # GO Cellular Component
+  cat("  GO Cellular Component...\n")
+  go_cc <- tryCatch({
+    compareCluster(
+      geneCluster = gene_list,
+      fun = "enrichGO",
+      OrgDb = org.Mm.eg.db,
+      ont = "CC",
+      pAdjustMethod = "BH",
+      pvalueCutoff = 0.05,
+      qvalueCutoff = 0.05
+    )
+  }, error = function(e) {
+    cat(sprintf("    Error: %s\n", e$message))
+    return(NULL)
+  })
+
+  if (!is.null(go_cc) && nrow(go_cc@compareClusterResult) > 0) {
+    p_go_cc <- dotplot(go_cc, showCategory = 15) +
+      labs(title = sprintf("GO Cellular Component: %s Stripes", tools::toTitleCase(timepoint_name))) +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+    ggsave(file.path(output_dir, sprintf("go_cc_dotplot_%s.pdf", timepoint_name)),
+           p_go_cc, width = 10, height = 8)
+    cat("    Saved: go_cc_dotplot.pdf\n")
+    results$go_cc <- go_cc
+  } else {
+    cat("    No significant GO CC terms found\n")
+  }
+
+  # GO Molecular Function
+  cat("  GO Molecular Function...\n")
+  go_mf <- tryCatch({
+    compareCluster(
+      geneCluster = gene_list,
+      fun = "enrichGO",
+      OrgDb = org.Mm.eg.db,
+      ont = "MF",
+      pAdjustMethod = "BH",
+      pvalueCutoff = 0.05,
+      qvalueCutoff = 0.05
+    )
+  }, error = function(e) {
+    cat(sprintf("    Error: %s\n", e$message))
+    return(NULL)
+  })
+
+  if (!is.null(go_mf) && nrow(go_mf@compareClusterResult) > 0) {
+    p_go_mf <- dotplot(go_mf, showCategory = 15) +
+      labs(title = sprintf("GO Molecular Function: %s Stripes", tools::toTitleCase(timepoint_name))) +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+    ggsave(file.path(output_dir, sprintf("go_mf_dotplot_%s.pdf", timepoint_name)),
+           p_go_mf, width = 10, height = 8)
+    cat("    Saved: go_mf_dotplot.pdf\n")
+    results$go_mf <- go_mf
+  } else {
+    cat("    No significant GO MF terms found\n")
+  }
+
+  # KEGG pathways
+  cat("  KEGG pathways...\n")
+  kegg <- tryCatch({
+    compareCluster(
+      geneCluster = gene_list,
+      fun = "enrichKEGG",
+      organism = "mmu",
+      pAdjustMethod = "BH",
+      pvalueCutoff = 0.05,
+      qvalueCutoff = 0.05
+    )
+  }, error = function(e) {
+    cat(sprintf("    Error: %s\n", e$message))
+    return(NULL)
+  })
+
+  if (!is.null(kegg) && nrow(kegg@compareClusterResult) > 0) {
+    p_kegg <- dotplot(kegg, showCategory = 20) +
+      labs(title = sprintf("KEGG Pathways: %s Stripes", tools::toTitleCase(timepoint_name))) +
+      theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+    ggsave(file.path(output_dir, sprintf("kegg_dotplot_%s.pdf", timepoint_name)),
+           p_kegg, width = 12, height = 10)
+    cat("    Saved: kegg_dotplot.pdf\n")
+    results$kegg <- kegg
+  } else {
+    cat("    No significant KEGG pathways found\n")
+  }
+
+  # Save gene lists
+  gene_list_df <- data.frame(
+    gene_id = c(lost_genes, gained_genes),
+    direction = c(rep("lost", length(lost_genes)), rep("gained", length(gained_genes))),
+    stringsAsFactors = FALSE
+  )
+
+  # Add gene symbols
+  if (nrow(gene_list_df) > 0) {
+    symbol_map <- tryCatch({
+      AnnotationDbi::select(org.Mm.eg.db,
+                            keys = unique(gene_list_df$gene_id),
+                            columns = "SYMBOL",
+                            keytype = "ENTREZID")
+    }, error = function(e) {
+      data.frame(ENTREZID = character(), SYMBOL = character())
+    })
+    gene_list_df$symbol <- symbol_map$SYMBOL[match(gene_list_df$gene_id, symbol_map$ENTREZID)]
+
+    write.table(gene_list_df,
+                file.path(output_dir, sprintf("stripe_anchor_genes_%s.tsv", timepoint_name)),
+                sep = "\t", quote = FALSE, row.names = FALSE)
+    cat(sprintf("  Saved: stripe_anchor_genes_%s.tsv\n", timepoint_name))
+  }
+
+  return(results)
+}
+
+# Run enrichment for each timepoint
+enrichment_results <- list()
+for (tp_name in names(annotated_stripes)) {
+  enrichment_results[[tp_name]] <- run_stripe_enrichment(
+    annotated_stripes[[tp_name]],
+    tp_name,
+    enrichment_dir
+  )
+}
+
+cat("\nSection 5 complete: GO/KEGG enrichment analysis done\n")
+
+# =============================================================================
+# SECTION 6: SUMMARY STATISTICS & FINAL EXPORT
+# =============================================================================
+
+cat("\n========================================\n")
+cat("SECTION 6: Summary Statistics\n")
 cat("========================================\n\n")
 
 # Generate comprehensive summary
@@ -1185,6 +1430,13 @@ summary_lines <- c(summary_lines,
   "  - {timepoint}_anchors.bed (1D track - anchor positions)",
   "  - {timepoint}_full_extent.bed (1D track - full stripe span)",
   "",
+  "Enrichment analysis (outputs/visualizations/enrichment/):",
+  "  - go_bp_dotplot_{timepoint}.pdf (GO Biological Process)",
+  "  - go_cc_dotplot_{timepoint}.pdf (GO Cellular Component)",
+  "  - go_mf_dotplot_{timepoint}.pdf (GO Molecular Function)",
+  "  - kegg_dotplot_{timepoint}.pdf (KEGG Pathways)",
+  "  - stripe_anchor_genes_{timepoint}.tsv (genes near stripe anchors)",
+  "",
   "Combined:",
   "  - volcano_combined.pdf",
   "  - length_comparison.pdf",
@@ -1240,6 +1492,13 @@ cat("  - late_stripes_diagonal.bedpe (shows stripe extent along diagonal)\n")
 cat("  - late_stripes_rectangle.bedpe (shows off-diagonal stripe body)\n")
 cat("  - late_anchors.bed (1D track - anchor positions)\n")
 cat("  - late_full_extent.bed (1D track - full stripe span)\n\n")
+
+cat("Enrichment analysis (outputs/visualizations/enrichment/):\n")
+cat("  - go_bp_dotplot_{early,late}.pdf (GO Biological Process)\n")
+cat("  - go_cc_dotplot_{early,late}.pdf (GO Cellular Component)\n")
+cat("  - go_mf_dotplot_{early,late}.pdf (GO Molecular Function)\n")
+cat("  - kegg_dotplot_{early,late}.pdf (KEGG Pathways)\n")
+cat("  - stripe_anchor_genes_{early,late}.tsv (genes near stripe anchors)\n\n")
 
 cat("Combined (outputs/visualizations/combined/):\n")
 cat("  - volcano_combined.pdf\n")
