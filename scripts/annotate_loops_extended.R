@@ -14,15 +14,15 @@
 #   3. Polycomb:        H3K27me3+ AND NOT H3K27ac+ (pure repressive)
 #   4. Active_Enhancer: H3K27ac+ AND >2kb from TSS
 #   5. Poised_Enhancer: H3K4me1+ (no H3K27ac) AND >2kb from TSS
-#   6. Other:           No ChIP-seq marks
+#   6. Distal:          No ChIP-seq marks
 #
 # Loop Types (21 combinations):
-#   P-P, P-B, P-Pc, P-AE, P-PE, P-O
-#   B-B, B-Pc, B-AE, B-PE, B-O
-#   Pc-Pc, Pc-AE, Pc-PE, Pc-O
-#   AE-AE, AE-PE, AE-O
-#   PE-PE, PE-O
-#   O-O
+#   P-P, P-B, P-Pc, P-AE, P-PE, P-D
+#   B-B, B-Pc, B-AE, B-PE, B-D
+#   Pc-Pc, Pc-AE, Pc-PE, Pc-D
+#   AE-AE, AE-PE, AE-D
+#   PE-PE, PE-D
+#   D-D
 #
 # Usage:
 #   Rscript scripts/annotate_loops_extended.R [--input FILE] [--output DIR]
@@ -61,7 +61,7 @@ DEFAULT_OUTPUT_DIR <- "outputs/loop_annotation_extended"
 
 # Anchor type hierarchy (for consistent loop type ordering)
 ANCHOR_TYPE_ORDER <- c("Promoter", "Bivalent", "Polycomb",
-                       "Active_Enhancer", "Poised_Enhancer", "Other")
+                       "Active_Enhancer", "Poised_Enhancer", "Distal")
 
 # Color scheme for visualizations
 ANCHOR_COLORS <- c(
@@ -70,7 +70,7 @@ ANCHOR_COLORS <- c(
   "Polycomb" = "#4daf4a",        # Green
   "Active_Enhancer" = "#377eb8", # Blue
   "Poised_Enhancer" = "#ff7f00", # Orange
-  "Other" = "#999999"            # Gray
+  "Distal" = "#999999"           # Gray
 )
 
 # =============================================================================
@@ -201,7 +201,7 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
                                           h3k4me1_overlap, bivalent_overlap,
                                           distance_to_tss, tss_threshold = 2000) {
   n <- length(h3k27ac_overlap)
-  anchor_type <- rep("Other", n)
+  anchor_type <- rep("Distal", n)
 
   # 1. Promoter: H3K27ac+ AND ≤2kb from TSS (highest priority)
   is_promoter <- h3k27ac_overlap &
@@ -232,7 +232,7 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
                         (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   anchor_type[is_poised_enhancer] <- "Poised_Enhancer"
 
-  # 6. Other: default (everything else)
+  # 6. Distal: default (everything else - no ChIP-seq marks)
   return(anchor_type)
 }
 
@@ -734,11 +734,11 @@ create_anchor_type_barplot <- function(loops_df, output_dir) {
   # Reshape data
   anchor_data <- bind_rows(
     loops_df %>%
-      select(direction, anchor_type = anchor1_type_extended) %>%
-      mutate(anchor = "Anchor1"),
+      dplyr::select(direction, anchor_type = anchor1_type_extended) %>%
+      dplyr::mutate(anchor = "Anchor1"),
     loops_df %>%
-      select(direction, anchor_type = anchor2_type_extended) %>%
-      mutate(anchor = "Anchor2")
+      dplyr::select(direction, anchor_type = anchor2_type_extended) %>%
+      dplyr::mutate(anchor = "Anchor2")
   )
 
   anchor_summary <- anchor_data %>%
