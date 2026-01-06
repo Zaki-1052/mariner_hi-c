@@ -1,0 +1,76 @@
+- ctcf: anchors
+- rad21 cohesin subunit
+- 4 figures:
+- 1. compartment and tad level differences
+- representative loci
+- saddle - compartment strength
+- validate with hi-c explorer
+- +-.25 no huge compartment switching
+- some weakening, not overtly switching
+- tad level diffs: 900
+- using consensus tad set
+- interaction density 
+- boundaries? drifting, eroding, etc
+- insulation - low interactions at boundaries
+- identify - insulation data - identify tad boundaries
+- match control and mutant at each tad boundary 
+- predicting % of tads, smaller/bigger
+- or boundaries shifted inwards
+- nearest tad in this many kb
+- from control, assign tad identifier
+- 1kb shift, etc, and plot insulation at that site
+- tad boundaries at control and plot insulation over those
+- not how shifting, just boundaries getting weaker or stronger
+- pair with ctcf and rad21
+- bin loops by lengths 
+- how strong are histone modifications
+- between short and long loops 
+- bin differential loops by length
+- see how correlated to 119ub, 27ac, me3
+- heatmaps - bigwigs
+- 0-2kb, etc
+- deep-tools and aggregate heatmaps
+- if a lot of loci
+- if only a few, harder visual diff
+- lower priority
+- bigger: tad boundaries
+- compartments weakening, not completely shifting
+- k27, tri methyl diff
+- tad level diffs, loop level, length and enhancer promoter contacts
+- micro-c, capture promoters
+- virtual 4-c: probes to one promoter, all contacts to probe, small sequence
+- compare: mutant - promoter lost contacts
+- nice to have tool for 4c
+- pick specific promoter for dysregulated genes
+- tie back to enhancer promoter genes
+- look at syt1 -- obviously almost completely collapsed
+- control mutant plot: peak for control
+- enhancer promoter set of contacts, 
+- flat for mutant because collapsed
+- lower priority: decay plots: hicexplorer - just a/b
+- no subcompartment analysis - easy to misinterpret
+- for every gene, contact frequency - for ccbb
+  4 figs:
+- representative loci
+- compartment level differences
+- if get ctcf/rad21 - own fig for tad level
+- 3: developmental loops, long loops lost
+- another correlate to cut&run changes, explains directionality
+- of contact changes
+- one to show global/compartment, strong effect
+- one to show if or not, boundaries changed, tad level difference
+- is boundary or tad level - tads can change, boundaries stronger/weaker
+- a get weaker, then tad might compact and interact more
+- loops: long range lost
+- developmental genes rewired
+- lost and gained loop at site
+- if rad21/ctcf: at p13: not a lot of differences
+- chromatin state diff first, k27ac, me3 diff
+- losing long range interactions, gaining "shorter"/standard
+- loop rewriting
+- gene ontology
+- genes mapping to different metrics
+- diff https://www.sciencedirect.com/science/article/pii/S1097276523010705
+- dchic not as good for us
+- hawks locus, 1 loop to another
+- bedpe. - colors
