@@ -86,7 +86,15 @@ load_h3k27ac_peaks <- function(bed_path = DEFAULT_H3K27AC_PATH) {
     stop(sprintf("H3K27ac bed file not found: %s", bed_path))
   }
   cat(sprintf("  Loading H3K27ac peaks from: %s\n", bed_path))
-  gr <- import(bed_path, format = "bed")
+
+  # Read as table first (handles non-standard BED formats)
+  df <- read.table(bed_path, sep = "\t", header = FALSE,
+                   stringsAsFactors = FALSE)
+  gr <- GRanges(
+    seqnames = df$V1,
+    ranges = IRanges(start = df$V2, end = df$V3)
+  )
+
   cat(sprintf("    Loaded %d peaks\n", length(gr)))
   return(gr)
 }
@@ -100,7 +108,14 @@ load_h3k27me3_peaks <- function(bed_path = DEFAULT_H3K27ME3_PATH) {
     stop(sprintf("H3K27me3 bed file not found: %s", bed_path))
   }
   cat(sprintf("  Loading H3K27me3 peaks from: %s\n", bed_path))
-  gr <- import(bed_path, format = "bed")
+
+  # Read as table first (handles non-standard BED formats)
+  df <- read.table(bed_path, sep = "\t", header = FALSE, stringsAsFactors = FALSE)
+  gr <- GRanges(
+    seqnames = df$V1,
+    ranges = IRanges(start = df$V2, end = df$V3)
+  )
+
   cat(sprintf("    Loaded %d peaks\n", length(gr)))
   return(gr)
 }
@@ -114,7 +129,15 @@ load_h3k4me1_peaks <- function(bed_path = DEFAULT_H3K4ME1_PATH) {
     stop(sprintf("H3K4me1 bed file not found: %s", bed_path))
   }
   cat(sprintf("  Loading H3K4me1 peaks from: %s\n", bed_path))
-  gr <- import(bed_path, format = "bed")
+
+  # Read as table first (handles non-standard BED formats)
+  df <- read.table(bed_path, sep = "\t", header = FALSE,
+                   stringsAsFactors = FALSE)
+  gr <- GRanges(
+    seqnames = df$V1,
+    ranges = IRanges(start = df$V2, end = df$V3)
+  )
+
   cat(sprintf("    Loaded %d peaks\n", length(gr)))
   return(gr)
 }
@@ -128,7 +151,15 @@ load_bivalent_peaks <- function(bed_path = DEFAULT_BIVALENT_PATH) {
     stop(sprintf("Bivalent bed file not found: %s", bed_path))
   }
   cat(sprintf("  Loading bivalent (K4me1+K27me3) regions from: %s\n", bed_path))
-  gr <- import(bed_path, format = "bed")
+
+  # Read as table first (handles non-standard BED formats)
+  df <- read.table(bed_path, sep = "\t", header = FALSE,
+                   stringsAsFactors = FALSE)
+  gr <- GRanges(
+    seqnames = df$V1,
+    ranges = IRanges(start = df$V2, end = df$V3)
+  )
+
   cat(sprintf("    Loaded %d regions\n", length(gr)))
   return(gr)
 }
