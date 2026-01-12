@@ -1,0 +1,60 @@
+=========================================
+H3K4me3 Consensus Peak Generation
+=========================================
+Start time: Mon Jan 12 13:54:03 PST 2026
+=========================================
+
+Configuration:
+  Input directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/H3K4me3
+  Output file: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/consensus_H3K4me3_late_peaks.bed
+  Replicate threshold: 2/4
+  Merge distance: 10 bp
+
+Environment check:
+  bedtools: /opt/homebrew/bin/bedtools
+bedtools v2.31.1
+
+Checking input files...
+  240103_index_15_BAP1_P68_ctrl_2_H3K4me3_S24_L001_aligned_reads_treat.stringent.sort_subtracted.bed:     7350 peaks
+  240725-index-15-BAP1-P51-ctrl-2-H3K4me3_S11_L007_aligned_reads_treat.stringent.sort_subtracted.bed:     8051 peaks
+  250514_index_37_Bap1_P60_ctrl1_H3K4me3_S9_L002_aligned_reads_treat.stringent.sort_subtracted.bed:     9134 peaks
+  250514_index_39_Bap1_P60_ctrl2_H3K4me3_S11_L002_aligned_reads_treat.stringent.sort_subtracted.bed:    12418 peaks
+
+Processing H3K4me3...
+  Sorting input files...
+  Finding overlapping regions (>=2 replicates)...
+    Found    37755 overlapping regions
+  Merging adjacent/overlapping peaks (distance: 10bp)...
+        9651 peaks after merging
+  Finalizing output...
+
+========================================
+Summary
+========================================
+
+Input replicates:
+  Replicate 1 (P68):     7350 peaks
+  Replicate 2 (P51):     8051 peaks
+  Replicate 3 (P60 ctrl1):     9134 peaks
+  Replicate 4 (P60 ctrl2):    12418 peaks
+
+Consensus generation:
+  Threshold: present in >= 2/4 replicates
+  Merge distance: 10 bp
+  Final consensus:     9651 peaks
+
+Peak size distribution:
+  Count: 9651
+  Mean: 2704 bp
+  Median: 2367 bp
+  Min: 9 bp
+  Max: 23323 bp
+
+Cleaning up temporary files...
+
+========================================
+Output: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/consensus_H3K4me3_late_peaks.bed
+========================================
+
+End time: Mon Jan 12 13:54:04 PST 2026
+=========================================
