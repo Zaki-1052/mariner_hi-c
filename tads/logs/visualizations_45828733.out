@@ -1,0 +1,365 @@
+=========================================
+TADCompare Pipeline - Step 5: Visualizations
+=========================================
+Job ID: 45828733
+Node: exp-2-02
+Start time: Sun Jan 11 17:44:59 PST 2026
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Configuration:
+  Timepoint: late
+  Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
+  Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late
+
+Input file: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/tadcompare_final_annotated.tsv
+  Lines: 8265
+
+Output directories created.
+
+=========================================
+Running R visualization script...
+=========================================
+
+
+========================================
+TADCompare Visualization Analysis
+========================================
+
+Configuration:
+  Timepoint: late
+
+Loading required packages...
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘rtracklayer’ was built under R version 4.4.3 
+Packages loaded
+
+  Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
+  Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+Output directory: results/visualizations/late
+
+========================================
+Loading Input Data
+========================================
+
+Loaded TADCompare results: 8264 boundaries
+  Total boundaries: 8264
+  Differential: 1638 (19.8%)
+  Shifted: 254 (3.1%)
+
+========================================
+SECTION 1: Overview Plots
+========================================
+
+Creating Gap Score distribution plot...
+  Saved: gap_score_distribution.pdf
+Creating TAD Score scatter plot...
+  Saved: tad_score_scatter.pdf
+Creating differential landscape plot...
+  Saved: differential_landscape.pdf
+
+Section 1 complete: Overview plots generated
+
+========================================
+SECTION 2: Boundary Type Classification
+========================================
+
+Creating boundary type pie charts...
+  Saved: boundary_type_pie.pdf
+Creating boundary type by chromosome plot...
+  Saved: boundary_type_by_chromosome.pdf
+Creating enrichment direction by type plot...
+  Saved: enrichment_direction_by_type.pdf
+
+Section 2 complete: Boundary type classification plots generated
+
+========================================
+SECTION 3: Shift Distance Analysis
+========================================
+
+Shifted boundaries with distance data: 254
+  Median shift: 0.0 kb
+  Mean shift: 18.5 kb
+  Range: 0.0 - 100.0 kb
+Creating shift distance histogram...
+  Saved: shift_distance_histogram.pdf
+Creating shift distance violin plot...
+  Saved: shift_distance_violin.pdf
+Creating shift vs Gap Score scatter...
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: shift_vs_gap_score.pdf
+
+Section 3 complete: Shift distance analysis plots generated
+
+========================================
+SECTION 4: Robustness Analysis
+========================================
+
+Creating robustness x differential heatmap...
+  Saved: robustness_differential_heatmap.pdf
+Creating robustness by type plot...
+  Saved: robustness_by_type.pdf
+
+Section 4 complete: Robustness analysis plots generated
+
+========================================
+SECTION 5: Chromosome-Level Analysis
+========================================
+
+Creating per-chromosome differential percentage plot...
+  Saved: per_chromosome_differential.pdf
+
+Section 5 complete: Chromosome-level analysis plots generated
+
+========================================
+SECTION 6: ChIP-seq Integration
+========================================
+
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+Loaded 24528 TSS positions from mm10
+  Loading H3K27ac: 220310index25H3K27acLatePeakRegions.bed
+    Loaded 18687 peaks
+  Loading H3K27me3: 220310index29H3K27me3LatePeakRegions.bed
+    Loaded 15809 peaks
+  Loading H3K4me1: K4me1_aligned_reads_peaks.broadPeak-filtered.bed
+    Loaded 113781 peaks
+Computing distance to nearest TSS...
+Computing ChIP-seq overlaps...
+  H3K27ac overlaps: 1770 (21.4%)
+  H3K27me3 overlaps: 1056 (12.8%)
+  H3K4me1 overlaps: 4806 (58.2%)
+Classifying boundary types...
+
+Anchor type distribution:
+  Active_Enhancer: 606 (7.3%)
+  Other: 3862 (46.7%)
+  Poised_Enhancer: 1684 (20.4%)
+  Polycomb_Domain: 948 (11.5%)
+  Promoter: 1164 (14.1%)
+
+Creating anchor classification plot...
+  Saved: anchor_classification.pdf
+Creating ChIP-seq overlap heatmap...
+  Saved: chipseq_overlap_heatmap.pdf
+Creating ChIP-seq by enrichment direction plot...
+  Saved: chipseq_by_enrichment_direction.pdf
+
+Section 6 complete: ChIP-seq integration plots generated
+
+========================================
+SECTION 7: Gene Enrichment Analysis
+========================================
+
+Control-enriched differential boundaries: 659
+Mutant-enriched differential boundaries: 979
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Genes near control-enriched boundaries: 470
+  Genes near mutant-enriched boundaries: 639
+'select()' returned 1:1 mapping between keys and columns
+  Saved: boundary_genes.tsv
+
+Running GO Biological Process enrichment...
+  Saved: go_bp_dotplot.pdf
+Running GO Cellular Component enrichment...
+  Saved: go_cc_dotplot.pdf
+Running GO Molecular Function enrichment...
+  Saved: go_mf_dotplot.pdf
+Running KEGG pathway enrichment...
+  Saved: kegg_dotplot.pdf
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+
+Section 7 complete: Gene enrichment analysis done
+
+========================================
+SECTION 8: syt1/nav3 Locus Focus (chr10)
+========================================
+
+Boundaries in syt1/nav3 region (chr10:107000000-111000000): 18
+  Differential: 7 (38.9%)
+  Shifted: 0 (0.0%)
+Creating syt1/nav3 regional overview...
+  Saved: syt1_nav3_regional_overview.pdf
+  Saved: syt1_nav3_statistics.tsv
+
+Section 8 complete: syt1/nav3 locus focus done
+
+========================================
+SECTION 9: Final Summary
+========================================
+
+Summary saved: results/visualizations/late/summary/visualization_summary.txt
+
+==========================================
+TADCompare VISUALIZATION ANALYSIS SUMMARY
+==========================================
+Generated: 2026-01-11 17:46:56.690913
+Timepoint: late
+Output directory: results/visualizations/late
+
+--- DATA OVERVIEW ---
+Total TAD boundaries: 8264
+Differential boundaries: 1638 (19.8%)
+Shifted boundaries: 254 (3.1%)
+
+--- BOUNDARY TYPE DISTRIBUTION ---
+  Non-Differential: 6607 (79.9%)
+  Strength Change: 714 (8.6%)
+  Complex: 363 (4.4%)
+  Shifted: 254 (3.1%)
+  Merge: 193 (2.3%)
+  Split: 112 (1.4%)
+
+--- ROBUSTNESS DISTRIBUTION ---
+  Both: 1818 (22.0%)
+  Control_only: 398 (4.8%)
+  Mutant_only: 429 (5.2%)
+  Neither: 5619 (68.0%)
+
+--- ENRICHMENT DIRECTION (Differential Only) ---
+  Control-enriched: 658 (40.2%)
+  Mutant-enriched: 978 (59.8%)
+
+--- SHIFT DISTANCE STATISTICS ---
+  Median: 0.0 kb
+  Mean: 18.5 kb
+  SD: 31.3 kb
+  Range: 0.0 - 100.0 kb
+
+--- ANCHOR TYPE DISTRIBUTION ---
+  Active_Enhancer: 606 (7.3%)
+  Other: 3862 (46.7%)
+  Poised_Enhancer: 1684 (20.4%)
+  Polycomb_Domain: 948 (11.5%)
+  Promoter: 1164 (14.1%)
+
+==========================================
+OUTPUT FILES GENERATED
+==========================================
+
+Overview:
+  - gap_score_distribution.pdf
+  - tad_score_scatter.pdf
+  - differential_landscape.pdf
+
+Classification:
+  - boundary_type_pie.pdf
+  - boundary_type_by_chromosome.pdf
+  - enrichment_direction_by_type.pdf
+
+Shift Analysis:
+  - shift_distance_histogram.pdf
+  - shift_distance_violin.pdf
+  - shift_vs_gap_score.pdf
+
+Robustness:
+  - robustness_differential_heatmap.pdf
+  - robustness_by_type.pdf
+
+Chromosome:
+  - per_chromosome_differential.pdf
+
+ChIP-seq:
+  - anchor_classification.pdf
+  - chipseq_overlap_heatmap.pdf
+  - chipseq_by_enrichment_direction.pdf
+
+Enrichment:
+  - go_bp_dotplot.pdf
+  - go_cc_dotplot.pdf
+  - go_mf_dotplot.pdf
+  - kegg_dotplot.pdf
+  - boundary_genes.tsv
+
+syt1/nav3 Focus:
+  - syt1_nav3_regional_overview.pdf
+  - syt1_nav3_statistics.tsv
+
+Summary:
+  - visualization_summary.txt
+
+==========================================
+
+========================================
+TADCompare VISUALIZATION ANALYSIS COMPLETE
+========================================
+
+Output directory: results/visualizations/late
+
+All visualizations have been generated successfully!
+
+
+=========================================
+Output files generated:
+=========================================
+
+Overview plots:
+-rw-r--r-- 1 zalibhai csd940 469K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/overview/differential_landscape.pdf
+-rw-r--r-- 1 zalibhai csd940  20K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/overview/gap_score_distribution.pdf
+-rw-r--r-- 1 zalibhai csd940 479K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/overview/tad_score_scatter.pdf
+
+Classification plots:
+-rw-r--r-- 1 zalibhai csd940 6.2K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/classification/boundary_type_by_chromosome.pdf
+-rw-r--r-- 1 zalibhai csd940  11K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/classification/boundary_type_pie.pdf
+-rw-r--r-- 1 zalibhai csd940 4.8K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/classification/enrichment_direction_by_type.pdf
+
+Shift analysis plots:
+-rw-r--r-- 1 zalibhai csd940 5.2K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/shift_analysis/shift_distance_histogram.pdf
+-rw-r--r-- 1 zalibhai csd940  31K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/shift_analysis/shift_distance_violin.pdf
+-rw-r--r-- 1 zalibhai csd940  21K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/shift_analysis/shift_vs_gap_score.pdf
+
+Robustness plots:
+-rw-r--r-- 1 zalibhai csd940 5.1K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/robustness/robustness_by_type.pdf
+-rw-r--r-- 1 zalibhai csd940 6.1K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/robustness/robustness_differential_heatmap.pdf
+
+Chromosome plots:
+-rw-r--r-- 1 zalibhai csd940 5.1K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/chromosome/per_chromosome_differential.pdf
+
+ChIP-seq integration plots:
+-rw-r--r-- 1 zalibhai csd940 5.0K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/chipseq/anchor_classification.pdf
+-rw-r--r-- 1 zalibhai csd940 4.8K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/chipseq/chipseq_by_enrichment_direction.pdf
+-rw-r--r-- 1 zalibhai csd940 6.2K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/chipseq/chipseq_overlap_heatmap.pdf
+
+Enrichment analysis:
+-rw-r--r-- 1 zalibhai csd940 9.2K Jan 11 17:46 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/enrichment/go_bp_dotplot.pdf
+-rw-r--r-- 1 zalibhai csd940 8.7K Jan 11 17:46 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/enrichment/go_cc_dotplot.pdf
+-rw-r--r-- 1 zalibhai csd940 8.8K Jan 11 17:46 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/enrichment/go_mf_dotplot.pdf
+-rw-r--r-- 1 zalibhai csd940 6.2K Jan 11 17:46 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/enrichment/kegg_dotplot.pdf
+-rw-r--r-- 1 zalibhai csd940 23K Jan 11 17:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/enrichment/boundary_genes.tsv
+
+syt1/nav3 focus:
+-rw-r--r-- 1 zalibhai csd940 6.7K Jan 11 17:46 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/syt1_nav3_focus/syt1_nav3_regional_overview.pdf
+-rw-r--r-- 1 zalibhai csd940 2.4K Jan 11 17:46 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/syt1_nav3_focus/syt1_nav3_statistics.tsv
+
+Summary:
+-rw-r--r-- 1 zalibhai csd940 2.0K Jan 11 17:46 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/visualizations/late/summary/visualization_summary.txt
+
+=========================================
+Visualization generation completed successfully
+Total PDF files generated: 20
+
+End time: Sun Jan 11 17:46:56 PST 2026
+=========================================

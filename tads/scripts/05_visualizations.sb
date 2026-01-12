@@ -1,0 +1,138 @@
+#!/bin/bash
+#SBATCH --job-name=tad_visualizations
+#SBATCH --output=logs/visualizations_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+# 05_visualizations.sb
+# Generate publication-quality visualizations from TADCompare results
+# Includes: Overview plots, classification, shift analysis, ChIP-seq integration,
+#           GO/KEGG enrichment, syt1/nav3 locus focus
+
+echo "========================================="
+echo "TADCompare Pipeline - Step 5: Visualizations"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -1
+echo ""
+
+# === Configuration ===
+TIMEPOINT="${1:-late}"  # Default to "late", can pass "early" as argument
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+SCRIPTS_DIR="${BASE_DIR}/scripts"
+OUTPUT_DIR="${BASE_DIR}/results/visualizations/${TIMEPOINT}"
+
+echo "Configuration:"
+echo "  Timepoint: ${TIMEPOINT}"
+echo "  Base directory: ${BASE_DIR}"
+echo "  Output directory: ${OUTPUT_DIR}"
+echo ""
+
+# === Verify input files exist ===
+INPUT_FILE="${BASE_DIR}/results/final/tadcompare_final_annotated.tsv"
+if [ ! -f "${INPUT_FILE}" ]; then
+    echo "ERROR: Input file not found: ${INPUT_FILE}"
+    echo "Please run steps 1-4 first."
+    exit 1
+fi
+
+echo "Input file: ${INPUT_FILE}"
+echo "  Lines: $(wc -l < ${INPUT_FILE})"
+echo ""
+
+# === Create output directories ===
+mkdir -p "${OUTPUT_DIR}"/{overview,classification,shift_analysis,robustness,chromosome,chipseq,enrichment,syt1_nav3_focus,summary}
+mkdir -p "${BASE_DIR}/logs"
+
+echo "Output directories created."
+echo ""
+
+# === Run visualization script ===
+echo "========================================="
+echo "Running R visualization script..."
+echo "========================================="
+echo ""
+
+cd "${BASE_DIR}"
+Rscript "${SCRIPTS_DIR}/tad_visualizations.R" --timepoint "${TIMEPOINT}"
+
+R_EXIT=$?
+
+# === Summary ===
+echo ""
+echo "========================================="
+echo "Output files generated:"
+echo "========================================="
+
+if [ -d "${OUTPUT_DIR}" ]; then
+    echo ""
+    echo "Overview plots:"
+    ls -lh "${OUTPUT_DIR}/overview/"*.pdf 2>/dev/null || echo "  (none)"
+
+    echo ""
+    echo "Classification plots:"
+    ls -lh "${OUTPUT_DIR}/classification/"*.pdf 2>/dev/null || echo "  (none)"
+
+    echo ""
+    echo "Shift analysis plots:"
+    ls -lh "${OUTPUT_DIR}/shift_analysis/"*.pdf 2>/dev/null || echo "  (none)"
+
+    echo ""
+    echo "Robustness plots:"
+    ls -lh "${OUTPUT_DIR}/robustness/"*.pdf 2>/dev/null || echo "  (none)"
+
+    echo ""
+    echo "Chromosome plots:"
+    ls -lh "${OUTPUT_DIR}/chromosome/"*.pdf 2>/dev/null || echo "  (none)"
+
+    echo ""
+    echo "ChIP-seq integration plots:"
+    ls -lh "${OUTPUT_DIR}/chipseq/"*.pdf 2>/dev/null || echo "  (none)"
+
+    echo ""
+    echo "Enrichment analysis:"
+    ls -lh "${OUTPUT_DIR}/enrichment/"*.pdf 2>/dev/null || echo "  (none)"
+    ls -lh "${OUTPUT_DIR}/enrichment/"*.tsv 2>/dev/null || echo "  (no TSV files)"
+
+    echo ""
+    echo "syt1/nav3 focus:"
+    ls -lh "${OUTPUT_DIR}/syt1_nav3_focus/"* 2>/dev/null || echo "  (none)"
+
+    echo ""
+    echo "Summary:"
+    ls -lh "${OUTPUT_DIR}/summary/"* 2>/dev/null || echo "  (none)"
+fi
+
+echo ""
+echo "========================================="
+if [ ${R_EXIT} -eq 0 ]; then
+    echo "Visualization generation completed successfully"
+
+    # Count total PDFs generated
+    N_PDFS=$(find "${OUTPUT_DIR}" -name "*.pdf" | wc -l)
+    echo "Total PDF files generated: ${N_PDFS}"
+else
+    echo "Visualization generation failed with exit code ${R_EXIT}"
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="
+
+exit ${R_EXIT}
+
