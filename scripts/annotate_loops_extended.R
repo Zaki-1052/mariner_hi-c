@@ -1,28 +1,30 @@
 #!/usr/bin/env Rscript
 # scripts/annotate_loops_extended.R
-# Extended ChIP-seq-Based Loop Anchor Annotation with Polycomb & Bivalent Categories
+# Extended ChIP-seq-Based Loop Anchor Annotation with Chromatin State Categories
 # Author: Zakir Alibhai
-# Date: 2025-01-05
+# Date: 2025-01-05 (Updated: 2026-01-12)
 #
 # Purpose:
-#   Extend the loop anchor annotation system to include Polycomb and Bivalent
-#   chromatin categories, using late timepoint ChIP-seq data.
+#   Annotate loop anchors with chromatin state categories using ChIP-seq data.
+#   Categories are biologically defined based on histone modifications and TSS proximity.
 #
-# Anchor Categories (6 types, priority order):
-#   1. Promoter:        H3K27ac+ AND ≤2kb from TSS
-#   2. Bivalent:        K4me1_K27me3 region overlap (both marks)
-#   3. Polycomb:        H3K27me3+ AND NOT H3K27ac+ (pure repressive)
-#   4. Active_Enhancer: H3K27ac+ AND >2kb from TSS
-#   5. Poised_Enhancer: H3K4me1+ (no H3K27ac) AND >2kb from TSS
-#   6. Distal:          No ChIP-seq marks
+# Anchor Categories (7 types, priority order):
+#   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
+#   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND ≤2kb from TSS
+#   3. Bivalent:           K4me3+K27me3 overlap (Addison file, early timepoint)
+#   4. Polycomb:           H3K27me3+ AND >2kb from TSS (distal repressive)
+#   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS
+#   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb from TSS
+#   7. Other:              No ChIP-seq marks / structural elements
 #
-# Loop Types (21 combinations):
-#   P-P, P-B, P-Pc, P-AE, P-PE, P-D
-#   B-B, B-Pc, B-AE, B-PE, B-D
-#   Pc-Pc, Pc-AE, Pc-PE, Pc-D
-#   AE-AE, AE-PE, AE-D
-#   PE-PE, PE-D
-#   D-D
+# Loop Types (28 combinations):
+#   AP-AP, AP-RP, AP-B, AP-Pc, AP-AE, AP-PE, AP-O
+#   RP-RP, RP-B, RP-Pc, RP-AE, RP-PE, RP-O
+#   B-B, B-Pc, B-AE, B-PE, B-O
+#   Pc-Pc, Pc-AE, Pc-PE, Pc-O
+#   AE-AE, AE-PE, AE-O
+#   PE-PE, PE-O
+#   O-O
 #
 # Usage:
 #   Rscript scripts/annotate_loops_extended.R [--input FILE] [--output DIR]
@@ -45,34 +47,38 @@ suppressPackageStartupMessages({
   library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 })
 
-#TODO: distal --> back to other
-
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
 
-# Default ChIP-seq peak files (late timepoint)
+# Default ChIP-seq peak files
+# Note: These paths can be easily updated when standardized files are provided
 DEFAULT_H3K27AC_PATH <- "peaks/220310index25H3K27acLatePeakRegions.bed"
 DEFAULT_H3K27ME3_PATH <- "peaks/220310index29H3K27me3LatePeakRegions.bed"
 DEFAULT_H3K4ME1_PATH <- "peaks/K4me1_aligned_reads_peaks.broadPeak-filtered.bed"
-DEFAULT_BIVALENT_PATH <- "peaks/K4me1_K27me3.bed" #repressed enhancer
+DEFAULT_H3K4ME3_PATH <- "consensus_H3K4me3_late_peaks.bed"  # Adult H3K4me3 consensus
+
+# Bivalent regions: K4me3+K27me3 overlap from early timepoint (Addison file)
+DEFAULT_BIVALENT_PATH <- "250224AddisonH3K4me3H3K27me3Early.bed"
 
 # Default input/output paths
 DEFAULT_INPUT_FILE <- "25042-late_outputs/merged_loops/non_redundant_loops.tsv"
 DEFAULT_OUTPUT_DIR <- "outputs/loop_annotation_extended"
 
 # Anchor type hierarchy (for consistent loop type ordering)
-ANCHOR_TYPE_ORDER <- c("Promoter", "Bivalent", "Polycomb",
-                       "Active_Enhancer", "Poised_Enhancer", "Distal")
+# 7 categories reflecting chromatin states
+ANCHOR_TYPE_ORDER <- c("Active_Promoter", "Repressed_Promoter", "Bivalent",
+                       "Polycomb", "Active_Enhancer", "Poised_Enhancer", "Other")
 
 # Color scheme for visualizations
 ANCHOR_COLORS <- c(
-  "Promoter" = "#e41a1c",        # Red
-  "Bivalent" = "#984ea3",        # Purple
-  "Polycomb" = "#4daf4a",        # Green
-  "Active_Enhancer" = "#377eb8", # Blue
-  "Poised_Enhancer" = "#ff7f00", # Orange
-  "Distal" = "#999999"           # Gray
+  "Active_Promoter" = "#e41a1c",     # Red - active transcription
+  "Repressed_Promoter" = "#756bb1", # Purple - Polycomb-silenced promoter
+  "Bivalent" = "#984ea3",            # Magenta - developmental poised
+  "Polycomb" = "#4daf4a",            # Green - distal repressive
+  "Active_Enhancer" = "#377eb8",     # Blue - active enhancer
+  "Poised_Enhancer" = "#ff7f00",     # Orange - primed enhancer
+  "Other" = "#999999"                # Gray - structural/unmarked
 )
 
 # =============================================================================
@@ -144,15 +150,40 @@ load_h3k4me1_peaks <- function(bed_path = DEFAULT_H3K4ME1_PATH) {
   return(gr)
 }
 
-#' Load bivalent (K4me1+K27me3) regions
+#' Load H3K4me3 ChIP-seq peaks (active promoter mark)
 #'
-#' @param bed_path Path to K4me1_K27me3 bed file
+#' @param bed_path Path to H3K4me3 bed file (consensus peaks)
+#' @return GRanges object
+load_h3k4me3_peaks <- function(bed_path = DEFAULT_H3K4ME3_PATH) {
+  if (!file.exists(bed_path)) {
+    stop(sprintf("H3K4me3 bed file not found: %s", bed_path))
+  }
+  cat(sprintf("  Loading H3K4me3 peaks from: %s\n", bed_path))
+
+  # Read as table first (handles non-standard BED formats)
+  df <- read.table(bed_path, sep = "\t", header = FALSE,
+                   stringsAsFactors = FALSE)
+  gr <- GRanges(
+    seqnames = df$V1,
+    ranges = IRanges(start = df$V2, end = df$V3)
+  )
+
+  cat(sprintf("    Loaded %d peaks\n", length(gr)))
+  return(gr)
+}
+
+#' Load bivalent (K4me3+K27me3) regions
+#'
+#' Bivalent domains contain both active (H3K4me3) and repressive (H3K27me3) marks.
+#' These regions are characteristic of developmental poised states.
+#'
+#' @param bed_path Path to K4me3+K27me3 overlap bed file (Addison file)
 #' @return GRanges object
 load_bivalent_peaks <- function(bed_path = DEFAULT_BIVALENT_PATH) {
   if (!file.exists(bed_path)) {
     stop(sprintf("Bivalent bed file not found: %s", bed_path))
   }
-  cat(sprintf("  Loading bivalent (K4me1+K27me3) regions from: %s\n", bed_path))
+  cat(sprintf("  Loading bivalent (K4me3+K27me3) regions from: %s\n", bed_path))
 
   # Read as table first (handles non-standard BED formats)
   df <- read.table(bed_path, sep = "\t", header = FALSE,
@@ -176,79 +207,94 @@ load_bivalent_peaks <- function(bed_path = DEFAULT_BIVALENT_PATH) {
 #' @param k27ac_gr H3K27ac peaks
 #' @param k27me3_gr H3K27me3 peaks
 #' @param k4me1_gr H3K4me1 peaks
-#' @param bivalent_gr Bivalent regions
+#' @param k4me3_gr H3K4me3 peaks (active promoter mark)
+#' @param bivalent_gr Bivalent regions (K4me3+K27me3 overlap)
 #' @return data.frame with overlap columns
 annotate_chip_overlaps_extended <- function(anchor_gr, k27ac_gr, k27me3_gr,
-                                            k4me1_gr, bivalent_gr) {
+                                            k4me1_gr, k4me3_gr, bivalent_gr) {
   data.frame(
     H3K27ac_overlap = countOverlaps(anchor_gr, k27ac_gr) > 0,
     H3K27me3_overlap = countOverlaps(anchor_gr, k27me3_gr) > 0,
     H3K4me1_overlap = countOverlaps(anchor_gr, k4me1_gr) > 0,
+    H3K4me3_overlap = countOverlaps(anchor_gr, k4me3_gr) > 0,
     Bivalent_overlap = countOverlaps(anchor_gr, bivalent_gr) > 0
   )
 }
 
-#' Classify anchor type with extended categories (6 types)
+#' Classify anchor type with chromatin state categories (7 types)
 #'
-#' Priority order: Promoter > Bivalent > Polycomb > Active_Enhancer > Poised_Enhancer > Other
+#' Priority order:
+#'   Active_Promoter > Repressed_Promoter > Bivalent > Polycomb >
+#'   Active_Enhancer > Poised_Enhancer > Other
+#'
+#' Biological rationale:
+#'   - Active promoters: H3K4me3 is the canonical active promoter mark
+#'     (housekeeping genes can have H3K4me3 without H3K27ac)
+#'   - Repressed promoters: H3K27me3 at TSS indicates Polycomb silencing
+#'   - Bivalent: K4me3+K27me3 overlap marks developmental poised domains
+#'   - Polycomb: Distal H3K27me3 regions (long-range repressive loops)
+#'   - Poised enhancers: H3K4me1 without repressive or active marks
 #'
 #' @param h3k27ac_overlap Logical - overlaps H3K27ac peak
 #' @param h3k27me3_overlap Logical - overlaps H3K27me3 peak
 #' @param h3k4me1_overlap Logical - overlaps H3K4me1 peak
-#' @param bivalent_overlap Logical - overlaps K4me1_K27me3 region
+#' @param h3k4me3_overlap Logical - overlaps H3K4me3 peak (active promoter)
+#' @param bivalent_overlap Logical - overlaps K4me3+K27me3 region (Addison file)
 #' @param distance_to_tss Numeric - distance to nearest TSS
 #' @param tss_threshold Numeric - promoter distance threshold (default 2000bp)
 #' @return Character vector with anchor types
 classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
-                                          h3k4me1_overlap, bivalent_overlap,
-                                          distance_to_tss, tss_threshold = 2000) {
+                                          h3k4me1_overlap, h3k4me3_overlap,
+                                          bivalent_overlap, distance_to_tss,
+                                          tss_threshold = 2000) {
   n <- length(h3k27ac_overlap)
-  anchor_type <- rep("Distal", n)
+  anchor_type <- rep("Other", n)
 
-  # 1. Promoter: H3K27ac+ AND ≤2kb from TSS (highest priority)
-  #TODO: **Active** promoter
-  is_promoter <- h3k27ac_overlap &
-                 !is.na(distance_to_tss) &
-                 distance_to_tss <= tss_threshold
-  anchor_type[is_promoter] <- "Promoter"
+  # 1. Active_Promoter: H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
+  # H3K4me3 is the canonical active promoter mark; H3K27ac not required
+  # (housekeeping genes can be H3K4me3+ without K27ac)
+  is_active_promoter <- h3k4me3_overlap & !h3k27me3_overlap &
+                        !is.na(distance_to_tss) &
+                        distance_to_tss <= tss_threshold
+  anchor_type[is_active_promoter] <- "Active_Promoter"
 
-  #new category: ac abd no h3k4me3 
-  #inactive/repressed promoters: me3 and <=2kb
+  # 2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND ≤2kb from TSS
+  # Polycomb-silenced promoter near TSS
+  is_repressed_promoter <- !is_active_promoter &
+                           h3k27me3_overlap & !h3k27ac_overlap &
+                           !is.na(distance_to_tss) &
+                           distance_to_tss <= tss_threshold
+  anchor_type[is_repressed_promoter] <- "Repressed_Promoter"
 
-
-  # 2. Bivalent: K4me3_K27me3 overlap (but not promoter)
-  #early timepoint - developmental
-  #eliminate bivalency ? - no keep
-  #late - new addison file in root
-  # TODO: 
-  is_bivalent <- !is_promoter & bivalent_overlap
+  # 3. Bivalent: K4me3+K27me3 overlap (not already classified as promoter)
+  # Developmental poised domains from early timepoint (Addison file)
+  is_bivalent <- !is_active_promoter & !is_repressed_promoter & bivalent_overlap
   anchor_type[is_bivalent] <- "Bivalent"
 
-  # 3. Polycomb: H3K27me3+ AND NOT H3K27ac+ (pure repressive, not promoter/bivalent)
-  #delete not k27ac
-  #not 2kb
-  is_polycomb <- !is_promoter & !is_bivalent &
-                 h3k27me3_overlap & !h3k27ac_overlap &
+  # 4. Polycomb: H3K27me3+ AND >2kb from TSS (distal repressive)
+  # Polycomb loops tend to be long-range
+  is_polycomb <- !is_active_promoter & !is_repressed_promoter & !is_bivalent &
+                 h3k27me3_overlap &
                  (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   anchor_type[is_polycomb] <- "Polycomb"
 
-  # 4. Active Enhancer: H3K27ac+ AND >2kb from TSS (not promoter/bivalent/polycomb)
-  is_active_enhancer <- !is_promoter & !is_bivalent & !is_polycomb &
+  # 5. Active_Enhancer: H3K27ac+ AND >2kb from TSS
+  is_active_enhancer <- !is_active_promoter & !is_repressed_promoter &
+                        !is_bivalent & !is_polycomb &
                         h3k27ac_overlap &
                         (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   anchor_type[is_active_enhancer] <- "Active_Enhancer"
 
-  # 5. Poised Enhancer: H3K4me1+ (no H3K27ac) AND >2kb from TSS
-  #TODO: no k27me3
-  is_poised_enhancer <- !is_promoter & !is_bivalent & !is_polycomb &
-                        !is_active_enhancer &
-                        h3k4me1_overlap & !h3k27ac_overlap &
+  # 6. Poised_Enhancer: H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+  # Primed enhancer without active or repressive marks
+  is_poised_enhancer <- !is_active_promoter & !is_repressed_promoter &
+                        !is_bivalent & !is_polycomb & !is_active_enhancer &
+                        h3k4me1_overlap & !h3k27ac_overlap & !h3k27me3_overlap &
                         (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   anchor_type[is_poised_enhancer] <- "Poised_Enhancer"
 
-  # 6. Distal: default (everything else - no ChIP-seq marks)
+  # 7. Other: default (no ChIP-seq marks - structural elements, CTCF sites, etc.)
   return(anchor_type)
-  #TODO: DISTAL -> OTHER
 }
 
 # =============================================================================
@@ -291,14 +337,15 @@ classify_loop_type_extended <- function(anchor1_type, anchor2_type) {
 # MAIN ANNOTATION FUNCTION
 # =============================================================================
 
-#' Annotate loops with extended ChIP-seq categories
+#' Annotate loops with chromatin state categories
 #'
-#' @param input_file Path to input TSV (non_redundant_loops.tsv or characterized_loops.tsv)
+#' @param input_file Path to input TSV (non_redundant_loops.tsv or similar)
 #' @param output_dir Output directory
 #' @param h3k27ac_path Path to H3K27ac peaks
 #' @param h3k27me3_path Path to H3K27me3 peaks
 #' @param h3k4me1_path Path to H3K4me1 peaks
-#' @param bivalent_path Path to bivalent regions
+#' @param h3k4me3_path Path to H3K4me3 peaks (active promoter mark)
+#' @param bivalent_path Path to bivalent regions (K4me3+K27me3 overlap)
 #' @param tss_threshold Promoter distance threshold (bp)
 #' @return data.frame with annotated loops
 annotate_loops_extended <- function(
@@ -307,6 +354,7 @@ annotate_loops_extended <- function(
   h3k27ac_path = DEFAULT_H3K27AC_PATH,
   h3k27me3_path = DEFAULT_H3K27ME3_PATH,
   h3k4me1_path = DEFAULT_H3K4ME1_PATH,
+  h3k4me3_path = DEFAULT_H3K4ME3_PATH,
   bivalent_path = DEFAULT_BIVALENT_PATH,
   tss_threshold = 2000
 ) {
@@ -350,6 +398,7 @@ annotate_loops_extended <- function(
   k27ac_gr <- load_h3k27ac_peaks(h3k27ac_path)
   k27me3_gr <- load_h3k27me3_peaks(h3k27me3_path)
   k4me1_gr <- load_h3k4me1_peaks(h3k4me1_path)
+  k4me3_gr <- load_h3k4me3_peaks(h3k4me3_path)
   bivalent_gr <- load_bivalent_peaks(bivalent_path)
   cat("\n")
 
@@ -397,9 +446,9 @@ annotate_loops_extended <- function(
   cat("Step 5: Annotating ChIP-seq overlaps...\n")
 
   anchor1_chip <- annotate_chip_overlaps_extended(anchor1_gr, k27ac_gr, k27me3_gr,
-                                                  k4me1_gr, bivalent_gr)
+                                                  k4me1_gr, k4me3_gr, bivalent_gr)
   anchor2_chip <- annotate_chip_overlaps_extended(anchor2_gr, k27ac_gr, k27me3_gr,
-                                                  k4me1_gr, bivalent_gr)
+                                                  k4me1_gr, k4me3_gr, bivalent_gr)
 
   cat("  Anchor1 overlaps:\n")
   cat(sprintf("    H3K27ac+:  %d (%.1f%%)\n",
@@ -411,6 +460,9 @@ annotate_loops_extended <- function(
   cat(sprintf("    H3K4me1+:  %d (%.1f%%)\n",
               sum(anchor1_chip$H3K4me1_overlap),
               100 * mean(anchor1_chip$H3K4me1_overlap)))
+  cat(sprintf("    H3K4me3+:  %d (%.1f%%)\n",
+              sum(anchor1_chip$H3K4me3_overlap),
+              100 * mean(anchor1_chip$H3K4me3_overlap)))
   cat(sprintf("    Bivalent:  %d (%.1f%%)\n",
               sum(anchor1_chip$Bivalent_overlap),
               100 * mean(anchor1_chip$Bivalent_overlap)))
@@ -425,17 +477,21 @@ annotate_loops_extended <- function(
   cat(sprintf("    H3K4me1+:  %d (%.1f%%)\n",
               sum(anchor2_chip$H3K4me1_overlap),
               100 * mean(anchor2_chip$H3K4me1_overlap)))
+  cat(sprintf("    H3K4me3+:  %d (%.1f%%)\n",
+              sum(anchor2_chip$H3K4me3_overlap),
+              100 * mean(anchor2_chip$H3K4me3_overlap)))
   cat(sprintf("    Bivalent:  %d (%.1f%%)\n\n",
               sum(anchor2_chip$Bivalent_overlap),
               100 * mean(anchor2_chip$Bivalent_overlap)))
 
   # --- Step 6: Classify anchor types ---
-  cat("Step 6: Classifying anchor types (6 categories)...\n")
+  cat("Step 6: Classifying anchor types (7 categories)...\n")
 
   anchor1_type <- classify_anchor_type_extended(
     anchor1_chip$H3K27ac_overlap,
     anchor1_chip$H3K27me3_overlap,
     anchor1_chip$H3K4me1_overlap,
+    anchor1_chip$H3K4me3_overlap,
     anchor1_chip$Bivalent_overlap,
     anchor1_distance_to_tss,
     tss_threshold
@@ -445,6 +501,7 @@ annotate_loops_extended <- function(
     anchor2_chip$H3K27ac_overlap,
     anchor2_chip$H3K27me3_overlap,
     anchor2_chip$H3K4me1_overlap,
+    anchor2_chip$H3K4me3_overlap,
     anchor2_chip$Bivalent_overlap,
     anchor2_distance_to_tss,
     tss_threshold
@@ -466,7 +523,7 @@ annotate_loops_extended <- function(
   cat("\n")
 
   # --- Step 7: Classify loop types ---
-  cat("Step 7: Classifying loop types (21 combinations)...\n")
+  cat("Step 7: Classifying loop types (28 combinations)...\n")
 
   loop_type <- classify_loop_type_extended(anchor1_type, anchor2_type)
 
@@ -489,11 +546,13 @@ annotate_loops_extended <- function(
   loops_df$anchor1_H3K27ac_overlap <- anchor1_chip$H3K27ac_overlap
   loops_df$anchor1_H3K27me3_overlap <- anchor1_chip$H3K27me3_overlap
   loops_df$anchor1_H3K4me1_overlap <- anchor1_chip$H3K4me1_overlap
+  loops_df$anchor1_H3K4me3_overlap <- anchor1_chip$H3K4me3_overlap
   loops_df$anchor1_Bivalent_overlap <- anchor1_chip$Bivalent_overlap
 
   loops_df$anchor2_H3K27ac_overlap <- anchor2_chip$H3K27ac_overlap
   loops_df$anchor2_H3K27me3_overlap <- anchor2_chip$H3K27me3_overlap
   loops_df$anchor2_H3K4me1_overlap <- anchor2_chip$H3K4me1_overlap
+  loops_df$anchor2_H3K4me3_overlap <- anchor2_chip$H3K4me3_overlap
   loops_df$anchor2_Bivalent_overlap <- anchor2_chip$Bivalent_overlap
 
   # TSS distances
@@ -511,6 +570,7 @@ annotate_loops_extended <- function(
   cat("    - anchor1/2_H3K27ac_overlap\n")
   cat("    - anchor1/2_H3K27me3_overlap\n")
   cat("    - anchor1/2_H3K4me1_overlap\n")
+  cat("    - anchor1/2_H3K4me3_overlap\n")
   cat("    - anchor1/2_Bivalent_overlap\n")
   cat("    - anchor1/2_distance_to_tss_ext\n")
   cat("    - anchor1/2_type_extended\n")
@@ -585,6 +645,7 @@ annotate_loops_extended <- function(
     sprintf("  H3K27ac:  %s (%d peaks)", h3k27ac_path, length(k27ac_gr)),
     sprintf("  H3K27me3: %s (%d peaks)", h3k27me3_path, length(k27me3_gr)),
     sprintf("  H3K4me1:  %s (%d peaks)", h3k4me1_path, length(k4me1_gr)),
+    sprintf("  H3K4me3:  %s (%d peaks)", h3k4me3_path, length(k4me3_gr)),
     sprintf("  Bivalent: %s (%d regions)", bivalent_path, length(bivalent_gr)),
     "",
     "Anchor Type Distribution:",
@@ -874,8 +935,9 @@ parse_arguments <- function() {
       cat("  --output DIR    Output directory (default: outputs/loop_annotation_extended)\n")
       cat("  --help, -h      Show this help message\n\n")
       cat("Description:\n")
-      cat("  Annotates differential loops with extended ChIP-seq categories:\n")
-      cat("    - Promoter, Bivalent, Polycomb, Active_Enhancer, Poised_Enhancer, Other\n\n")
+      cat("  Annotates differential loops with chromatin state categories:\n")
+      cat("    - Active_Promoter, Repressed_Promoter, Bivalent, Polycomb,\n")
+      cat("      Active_Enhancer, Poised_Enhancer, Other\n\n")
       cat("Output files:\n")
       cat("  - extended_characterized_loops.tsv  Full annotation table\n")
       cat("  - anchor_type_summary.tsv           Per-anchor statistics\n")
