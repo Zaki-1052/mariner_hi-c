@@ -1,0 +1,323 @@
+#!/bin/bash
+#SBATCH --job-name=tad_postprocess
+#SBATCH --output=logs/postprocess_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=8G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+# 04_postprocess.sh
+# Calculate shift distances for "Shifted" boundaries and generate final outputs
+
+echo "========================================="
+echo "TADCompare Pipeline - Step 4: Post-processing"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which bedtools
+bedtools --version
+echo ""
+
+# === Configuration ===
+RESOLUTION=25000
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+TADCOMPARE_DIR="${BASE_DIR}/results/tadcompare"
+CONSENSUS_DIR="${BASE_DIR}/results/consensus"
+FINAL_DIR="${BASE_DIR}/results/final"
+TMP_DIR="${BASE_DIR}/results/final/tmp"
+
+mkdir -p "${FINAL_DIR}" "${TMP_DIR}"
+
+# === Step 1: Prepare boundary files for shift distance calculation ===
+echo "Step 1: Preparing boundary files..."
+echo "------------------------------------"
+
+# Input file (use robustness-annotated if available, otherwise original)
+if [ -f "${CONSENSUS_DIR}/tadcompare_with_robustness.tsv" ]; then
+    INPUT_FILE="${CONSENSUS_DIR}/tadcompare_with_robustness.tsv"
+    HAS_ROBUSTNESS=true
+    echo "Using robustness-annotated file"
+else
+    INPUT_FILE="${TADCOMPARE_DIR}/tadcompare_all_boundaries.tsv"
+    HAS_ROBUSTNESS=false
+    echo "Using original TADCompare file (no robustness annotation)"
+fi
+
+# Extract boundaries enriched in control (Matrix 1) - these shifted FROM control position
+# Format: chr, start, end, boundary_id
+awk -F'\t' 'NR>1 && $7=="Matrix 1" {
+    print $1"\t"$2"\t"$2+'${RESOLUTION}'"\t"NR
+}' "${INPUT_FILE}" > "${TMP_DIR}/ctrl_boundaries.bed"
+
+# Extract boundaries enriched in mutant (Matrix 2) - these shifted TO mutant position  
+awk -F'\t' 'NR>1 && $7=="Matrix 2" {
+    print $1"\t"$2"\t"$2+'${RESOLUTION}'"\t"NR
+}' "${INPUT_FILE}" > "${TMP_DIR}/mut_boundaries.bed"
+
+echo "  Control-enriched boundaries: $(wc -l < ${TMP_DIR}/ctrl_boundaries.bed)"
+echo "  Mutant-enriched boundaries: $(wc -l < ${TMP_DIR}/mut_boundaries.bed)"
+
+# Sort for bedtools
+sort -k1,1 -k2,2n "${TMP_DIR}/ctrl_boundaries.bed" > "${TMP_DIR}/ctrl_boundaries.sorted.bed"
+sort -k1,1 -k2,2n "${TMP_DIR}/mut_boundaries.bed" > "${TMP_DIR}/mut_boundaries.sorted.bed"
+
+# === Step 2: Calculate shift distances using bedtools closest ===
+echo ""
+echo "Step 2: Calculating shift distances..."
+echo "--------------------------------------"
+
+# For control-enriched boundaries, find nearest mutant boundary
+# -d reports distance, -t first takes first if tie
+bedtools closest -a "${TMP_DIR}/ctrl_boundaries.sorted.bed" \
+                 -b "${TMP_DIR}/mut_boundaries.sorted.bed" \
+                 -d -t first \
+                 > "${TMP_DIR}/ctrl_to_mut_distances.txt" 2>/dev/null
+
+# For mutant-enriched boundaries, find nearest control boundary
+bedtools closest -a "${TMP_DIR}/mut_boundaries.sorted.bed" \
+                 -b "${TMP_DIR}/ctrl_boundaries.sorted.bed" \
+                 -d -t first \
+                 > "${TMP_DIR}/mut_to_ctrl_distances.txt" 2>/dev/null
+
+echo "  Control→Mutant distances calculated"
+echo "  Mutant→Control distances calculated"
+
+# === Step 3: Generate shift distance summary ===
+echo ""
+echo "Step 3: Analyzing shift distances..."
+echo "------------------------------------"
+
+# Create R script for detailed analysis
+cat > "${TMP_DIR}/analyze_shifts.R" << 'RSCRIPT'
+suppressPackageStartupMessages({
+    library(dplyr)
+    library(readr)
+})
+
+args <- commandArgs(trailingOnly = TRUE)
+base_dir <- args[1]
+resolution <- as.numeric(args[2])
+
+tmp_dir <- file.path(base_dir, "results/final/tmp")
+final_dir <- file.path(base_dir, "results/final")
+consensus_dir <- file.path(base_dir, "results/consensus")
+tadcompare_dir <- file.path(base_dir, "results/tadcompare")
+
+cat("Loading distance files...\n")
+
+# Load distance results
+# bedtools closest output: chr1, start1, end1, id1, chr2, start2, end2, id2, distance
+ctrl_to_mut <- tryCatch(
+    read.table(file.path(tmp_dir, "ctrl_to_mut_distances.txt"), 
+               header = FALSE, sep = "\t",
+               col.names = c("chr", "start", "end", "id", 
+                            "chr2", "start2", "end2", "id2", "distance")),
+    error = function(e) data.frame()
+)
+
+mut_to_ctrl <- tryCatch(
+    read.table(file.path(tmp_dir, "mut_to_ctrl_distances.txt"),
+               header = FALSE, sep = "\t",
+               col.names = c("chr", "start", "end", "id",
+                            "chr2", "start2", "end2", "id2", "distance")),
+    error = function(e) data.frame()
+)
+
+# Load original TADCompare results
+if (file.exists(file.path(consensus_dir, "tadcompare_with_robustness.tsv"))) {
+    tadcompare <- read_tsv(file.path(consensus_dir, "tadcompare_with_robustness.tsv"), 
+                           show_col_types = FALSE)
+    has_robustness <- TRUE
+} else {
+    tadcompare <- read_tsv(file.path(tadcompare_dir, "tadcompare_all_boundaries.tsv"),
+                           show_col_types = FALSE)
+    has_robustness <- FALSE
+}
+
+cat("Calculating shift distances...\n")
+
+# Add row IDs to match with distance results
+tadcompare <- tadcompare %>% mutate(row_id = row_number() + 1)  # +1 for header
+
+# Create distance lookup
+ctrl_distances <- ctrl_to_mut %>%
+    mutate(boundary = start) %>%
+    select(chr, boundary, shift_distance = distance)
+
+mut_distances <- mut_to_ctrl %>%
+    mutate(boundary = start) %>%
+    select(chr, boundary, shift_distance = distance)
+
+# Join distances back to main results
+tadcompare_final <- tadcompare %>%
+    left_join(
+        bind_rows(ctrl_distances, mut_distances),
+        by = c("chr", "Boundary" = "boundary")
+    )
+
+# For non-shifted boundaries, set distance to NA
+tadcompare_final <- tadcompare_final %>%
+    mutate(shift_distance = ifelse(Type == "Shifted", shift_distance, NA_real_))
+
+# Convert to kb for readability
+tadcompare_final <- tadcompare_final %>%
+    mutate(shift_distance_kb = shift_distance / 1000)
+
+# === Summary Statistics ===
+cat("\n=========================================\n")
+cat("Shift Distance Summary\n")
+cat("=========================================\n")
+
+shifted_only <- tadcompare_final %>% filter(Type == "Shifted", !is.na(shift_distance))
+
+if (nrow(shifted_only) > 0) {
+    cat("\nShifted boundaries with calculated distances:", nrow(shifted_only), "\n")
+    
+    cat("\nShift distance distribution (kb):\n")
+    cat("  Min:    ", round(min(shifted_only$shift_distance_kb), 1), "\n")
+    cat("  Q1:     ", round(quantile(shifted_only$shift_distance_kb, 0.25), 1), "\n")
+    cat("  Median: ", round(median(shifted_only$shift_distance_kb), 1), "\n")
+    cat("  Mean:   ", round(mean(shifted_only$shift_distance_kb), 1), "\n")
+    cat("  Q3:     ", round(quantile(shifted_only$shift_distance_kb, 0.75), 1), "\n")
+    cat("  Max:    ", round(max(shifted_only$shift_distance_kb), 1), "\n")
+    
+    # Binned distribution
+    cat("\nShift distance bins:\n")
+    bins <- shifted_only %>%
+        mutate(bin = cut(shift_distance_kb, 
+                        breaks = c(0, 25, 50, 100, 200, 500, Inf),
+                        labels = c("0-25kb", "25-50kb", "50-100kb", 
+                                  "100-200kb", "200-500kb", ">500kb"))) %>%
+        count(bin) %>%
+        mutate(pct = round(n / sum(n) * 100, 1))
+    print(bins)
+    
+    # By enrichment direction
+    cat("\nBy enrichment direction:\n")
+    by_enrichment <- shifted_only %>%
+        group_by(Enriched_In) %>%
+        summarise(
+            n = n(),
+            median_kb = round(median(shift_distance_kb), 1),
+            mean_kb = round(mean(shift_distance_kb), 1),
+            .groups = "drop"
+        )
+    print(by_enrichment)
+} else {
+    cat("\nNo shifted boundaries with calculable distances found.\n")
+}
+
+# === Save Final Outputs ===
+cat("\n=========================================\n")
+cat("Saving final outputs...\n")
+
+# Full annotated results
+output_full <- file.path(final_dir, "tadcompare_final_annotated.tsv")
+write_tsv(tadcompare_final %>% select(-row_id), output_full)
+cat("Full annotated results:", output_full, "\n")
+
+# Create comprehensive BED file
+bed_final <- tadcompare_final %>%
+    mutate(
+        start = Boundary,
+        end = Boundary + resolution,
+        name = paste(Type, Enriched_In, sep = "_"),
+        score = round(abs(Gap_Score) * 100),
+        strand = ".",
+        thickStart = start,
+        thickEnd = end
+    )
+
+# Standard BED6 + extra columns
+bed_output <- bed_final %>%
+    select(chr, start, end, name, score, strand,
+           Gap_Score, TAD_Score1, TAD_Score2, Differential, 
+           Enriched_In, Type, shift_distance_kb)
+
+bed_file <- file.path(final_dir, "tadcompare_final.bed")
+write_tsv(bed_output, bed_file, col_names = FALSE)
+cat("Final BED file:", bed_file, "\n")
+
+# Differential-only BED with shift distances
+diff_bed <- bed_output %>% filter(Differential == "Differential")
+diff_file <- file.path(final_dir, "differential_boundaries_final.bed")
+write_tsv(diff_bed, diff_file, col_names = FALSE)
+cat("Differential BED:", diff_file, "\n")
+
+# Shifted-only BED with distances
+shifted_bed <- bed_output %>% filter(Type == "Shifted")
+shifted_file <- file.path(final_dir, "shifted_boundaries.bed")
+write_tsv(shifted_bed, shifted_file, col_names = FALSE)
+cat("Shifted BED:", shifted_file, "\n")
+
+# Summary statistics file
+summary_file <- file.path(final_dir, "shift_distance_summary.txt")
+sink(summary_file)
+cat("TADCompare Shift Distance Summary\n")
+cat("=================================\n")
+cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
+cat("Resolution:", resolution, "bp\n\n")
+
+cat("Total boundaries:", nrow(tadcompare_final), "\n")
+cat("Differential boundaries:", sum(tadcompare_final$Differential == "Differential", na.rm = TRUE), "\n")
+cat("Shifted boundaries:", sum(tadcompare_final$Type == "Shifted", na.rm = TRUE), "\n\n")
+
+if (nrow(shifted_only) > 0) {
+    cat("Shift Distance Statistics (kb):\n")
+    cat("  Min:", round(min(shifted_only$shift_distance_kb), 1), "\n")
+    cat("  Q1:", round(quantile(shifted_only$shift_distance_kb, 0.25), 1), "\n")
+    cat("  Median:", round(median(shifted_only$shift_distance_kb), 1), "\n")
+    cat("  Mean:", round(mean(shifted_only$shift_distance_kb), 1), "\n")
+    cat("  Q3:", round(quantile(shifted_only$shift_distance_kb, 0.75), 1), "\n")
+    cat("  Max:", round(max(shifted_only$shift_distance_kb), 1), "\n\n")
+    
+    cat("Shift Distance Distribution:\n")
+    print(bins)
+}
+sink()
+cat("Summary file:", summary_file, "\n")
+
+cat("\n✅ Analysis complete\n")
+RSCRIPT
+
+# Run the R analysis script
+echo "Running shift distance analysis..."
+Rscript "${TMP_DIR}/analyze_shifts.R" "${BASE_DIR}" "${RESOLUTION}"
+
+# === Step 4: Cleanup ===
+echo ""
+echo "Step 4: Cleanup..."
+echo "------------------"
+rm -rf "${TMP_DIR}"
+echo "Temporary files removed"
+
+# === Final summary ===
+echo ""
+echo "========================================="
+echo "Final Output Files"
+echo "========================================="
+echo ""
+ls -lh "${FINAL_DIR}"/*.{tsv,bed,txt} 2>/dev/null
+
+echo ""
+echo "========================================="
+if [ $? -eq 0 ]; then
+    echo "✅ Post-processing completed successfully"
+else
+    echo "❌ Post-processing encountered errors"
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="
