@@ -1,19 +1,32 @@
 # 04_analyze_shifts.R
 # Calculate shift distances and generate final annotated outputs
-# Requires: bedtools closest output files from 04_postprocess.sh
+# Requires: bedtools closest output files from 04_postprocess.sb
+# Usage: Rscript scripts/04_analyze_shifts.R [timepoint]
+#   timepoint: "late" (default) or "early"
 
 suppressPackageStartupMessages({
     library(dplyr)
     library(readr)
 })
 
+# === Parse Arguments ===
+args <- commandArgs(trailingOnly = TRUE)
+TIMEPOINT <- if (length(args) >= 1) args[1] else "late"
+
+# Validate timepoint
+if (!TIMEPOINT %in% c("late", "early")) {
+    stop("ERROR: Unknown timepoint '", TIMEPOINT, "'. Use 'late' or 'early'.")
+}
+
+cat("Timepoint:", TIMEPOINT, "\n\n")
+
 # === Configuration ===
 RESOLUTION <- 25000
 BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
-TMP_DIR <- file.path(BASE_DIR, "results/final/tmp")
-FINAL_DIR <- file.path(BASE_DIR, "results/final")
-CONSENSUS_DIR <- file.path(BASE_DIR, "results/consensus")
-TADCOMPARE_DIR <- file.path(BASE_DIR, "results/tadcompare")
+TMP_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "final/tmp")
+FINAL_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "final")
+CONSENSUS_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "consensus")
+TADCOMPARE_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "tadcompare")
 
 cat("=========================================\n")
 cat("Shift Distance Analysis\n")

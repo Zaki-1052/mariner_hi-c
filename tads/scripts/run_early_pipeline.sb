@@ -1,0 +1,165 @@
+#!/bin/bash
+#SBATCH --job-name=tad_early_pipeline
+#SBATCH --output=logs/early_pipeline_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=06:00:00
+#SBATCH --account=csd940
+
+# run_early_pipeline.sb
+# Run full TADCompare pipeline for EARLY timepoint (250831)
+# All steps run sequentially in a single SLURM job
+#
+# Usage: sbatch scripts/run_early_pipeline.sb
+#
+# Steps:
+#   1. Extract matrices from .hic files (straw)
+#   2. Run TADCompare differential analysis
+#   3. Run ConsensusTADs robustness check
+#   4. Post-processing (shift distances with bedtools)
+#   5. Generate visualizations
+
+set -e  # Exit on any error
+
+TIMEPOINT="early"
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+
+echo "========================================="
+echo "TADCompare Pipeline - EARLY Timepoint (250831)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+cd "${BASE_DIR}"
+
+# Create output directories
+mkdir -p "data/${TIMEPOINT}/extracted/merged"
+mkdir -p "data/${TIMEPOINT}/extracted/replicates"
+mkdir -p "results/${TIMEPOINT}/tadcompare"
+mkdir -p "results/${TIMEPOINT}/consensus"
+mkdir -p "results/${TIMEPOINT}/final"
+mkdir -p "results/visualizations/${TIMEPOINT}"
+mkdir -p "logs"
+
+echo "Output directories created:"
+echo "  data/${TIMEPOINT}/extracted/"
+echo "  results/${TIMEPOINT}/"
+echo "  results/visualizations/${TIMEPOINT}/"
+echo ""
+
+# =========================================
+# Step 1: Extract matrices from .hic files
+# =========================================
+echo ""
+echo "========================================="
+echo "Step 1/5: Extract Matrices"
+echo "========================================="
+echo "Start: $(date)"
+echo ""
+
+bash scripts/01_extract_matrices.sb "${TIMEPOINT}"
+
+echo ""
+echo "Step 1 complete: $(date)"
+echo "Files created:"
+ls -lh "data/${TIMEPOINT}/extracted/merged/" | head -5
+echo "..."
+
+# =========================================
+# Step 2: Run TADCompare differential analysis
+# =========================================
+echo ""
+echo "========================================="
+echo "Step 2/5: Run TADCompare"
+echo "========================================="
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/02_run_tadcompare.R "${TIMEPOINT}"
+
+echo ""
+echo "Step 2 complete: $(date)"
+echo "Output:"
+ls -lh "results/${TIMEPOINT}/tadcompare/"
+
+# =========================================
+# Step 3: Run ConsensusTADs robustness check
+# =========================================
+echo ""
+echo "========================================="
+echo "Step 3/5: Run ConsensusTADs"
+echo "========================================="
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/03_run_consensus.R "${TIMEPOINT}"
+
+echo ""
+echo "Step 3 complete: $(date)"
+echo "Output:"
+ls -lh "results/${TIMEPOINT}/consensus/"
+
+# =========================================
+# Step 4: Post-processing (shift distances)
+# =========================================
+echo ""
+echo "========================================="
+echo "Step 4/5: Post-processing"
+echo "========================================="
+echo "Start: $(date)"
+echo ""
+
+bash scripts/04_postprocess.sb "${TIMEPOINT}"
+
+echo ""
+echo "Step 4 complete: $(date)"
+echo "Output:"
+ls -lh "results/${TIMEPOINT}/final/"
+
+# =========================================
+# Step 5: Generate visualizations
+# =========================================
+echo ""
+echo "========================================="
+echo "Step 5/5: Visualizations"
+echo "========================================="
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/tad_visualizations.R --timepoint "${TIMEPOINT}"
+
+echo ""
+echo "Step 5 complete: $(date)"
+echo "Visualizations:"
+find "results/visualizations/${TIMEPOINT}" -name "*.pdf" | wc -l
+echo " PDF files generated"
+
+# =========================================
+# Summary
+# =========================================
+echo ""
+echo "========================================="
+echo "Pipeline Complete!"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Output locations:"
+echo "  Extracted data: data/${TIMEPOINT}/extracted/"
+echo "  TADCompare:     results/${TIMEPOINT}/tadcompare/"
+echo "  Consensus:      results/${TIMEPOINT}/consensus/"
+echo "  Final:          results/${TIMEPOINT}/final/"
+echo "  Visualizations: results/visualizations/${TIMEPOINT}/"
+echo ""
+echo "Key output files:"
+ls -lh "results/${TIMEPOINT}/final/"*.tsv 2>/dev/null || echo "  (no TSV files found)"
+echo ""
+echo "========================================="

@@ -9,14 +9,19 @@
 #SBATCH --time=04:00:00
 #SBATCH --account=csd940
 
-# 02_run_tadcompare.sh
+# 02_run_tadcompare.sb
 # TADCompare differential boundary analysis: Control vs BAP1-KO mutant
+# Usage: bash scripts/02_run_tadcompare.sb [timepoint]
+#   timepoint: "late" (default) or "early"
+
+TIMEPOINT="${1:-late}"
 
 echo "========================================="
 echo "TADCompare Pipeline - Step 2: Differential Analysis"
 echo "========================================="
 echo "Job ID: $SLURM_JOB_ID"
 echo "Node: $HOSTNAME"
+echo "Timepoint: ${TIMEPOINT}"
 echo "Start time: $(date)"
 echo "========================================="
 echo ""
@@ -29,9 +34,9 @@ which R
 R --version | head -n 1
 echo ""
 
-echo "Starting TADCompare analysis..."
+echo "Starting TADCompare analysis for ${TIMEPOINT} timepoint..."
 cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
-Rscript scripts/02_run_tadcompare.R
+Rscript scripts/02_run_tadcompare.R "${TIMEPOINT}"
 
 if [ $? -eq 0 ]; then
     echo ""
