@@ -11,7 +11,9 @@
 
 # 01_extract_matrices.sb
 # Extract sparse contact matrices from .hic files for TADCompare analysis
-# Control vs BAP1-KO mutant, late timepoint (250402), 25kb resolution
+# Control vs BAP1-KO mutant, 25kb resolution
+# Usage: bash scripts/01_extract_matrices.sb [timepoint]
+#   timepoint: "late" (250402, default) or "early" (250831)
 
 echo "========================================="
 echo "TADCompare Pipeline - Step 1: Matrix Extraction"
@@ -30,11 +32,23 @@ which straw
 echo ""
 
 # === Configuration ===
+TIMEPOINT="${1:-late}"  # Accept timepoint as first arg, default to "late"
+
+# Map timepoint to HIC directory date
+case ${TIMEPOINT} in
+    late)   HIC_DATE="250402" ;;
+    early)  HIC_DATE="250831" ;;
+    *)      echo "ERROR: Unknown timepoint: ${TIMEPOINT}. Use 'late' or 'early'."; exit 1 ;;
+esac
+
+echo "Timepoint: ${TIMEPOINT} (HIC date: ${HIC_DATE})"
+echo ""
+
 RESOLUTION=25000
-HIC_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402"
+HIC_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/${HIC_DATE}"
 BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
-OUT_MERGED="${BASE_DIR}/data/extracted/merged"
-OUT_REPS="${BASE_DIR}/data/extracted/replicates"
+OUT_MERGED="${BASE_DIR}/data/${TIMEPOINT}/extracted/merged"
+OUT_REPS="${BASE_DIR}/data/${TIMEPOINT}/extracted/replicates"
 
 # Mouse autosomes (excluding chrX, chrY)
 CHROMOSOMES=(chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19)

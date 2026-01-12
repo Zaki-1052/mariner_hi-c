@@ -83,14 +83,30 @@ cat(sprintf("  Working directory: %s\n", tads_dir))
 cat(sprintf("  Base directory: %s\n", base_dir))
 
 # Input/output paths (relative to tads/)
-input_file <- "results/final/tadcompare_final_annotated.tsv"
+# Use timepoint-specific input directory
+input_file <- file.path("results", timepoint, "final/tadcompare_final_annotated.tsv")
 output_base <- file.path("results/visualizations", timepoint)
 
 # ChIP-seq peak paths (in parent directory peaks/)
+# Timepoint-specific: late has H3K4me1, early does not
 peaks_dir <- file.path(base_dir, "peaks")
-h3k27ac_path <- file.path(peaks_dir, "220310index25H3K27acLatePeakRegions.bed")
-h3k27me3_path <- file.path(peaks_dir, "220310index29H3K27me3LatePeakRegions.bed")
-h3k4me1_path <- file.path(peaks_dir, "K4me1_aligned_reads_peaks.broadPeak-filtered.bed")
+
+if (timepoint == "late") {
+  h3k27ac_path <- file.path(peaks_dir, "220310index25H3K27acLatePeakRegions.bed")
+  h3k27me3_path <- file.path(peaks_dir, "220310index29H3K27me3LatePeakRegions.bed")
+  h3k4me1_path <- file.path(peaks_dir, "K4me1_aligned_reads_peaks.broadPeak-filtered.bed")
+} else if (timepoint == "early") {
+  h3k27ac_path <- file.path(peaks_dir, "P12_ctrl_H3K27ac_early_peaks.bed")
+  h3k27me3_path <- file.path(peaks_dir, "P12_ctrl_H3K27me3_early_peaks.bed")
+  h3k4me1_path <- NULL  # Not available for early timepoint
+} else {
+  stop(sprintf("Unknown timepoint: %s. Use 'late' or 'early'.", timepoint))
+}
+
+cat(sprintf("ChIP-seq files:\n"))
+cat(sprintf("  H3K27ac:  %s\n", basename(h3k27ac_path)))
+cat(sprintf("  H3K27me3: %s\n", basename(h3k27me3_path)))
+cat(sprintf("  H3K4me1:  %s\n", if (!is.null(h3k4me1_path)) basename(h3k4me1_path) else "NOT AVAILABLE"))
 
 # Create output directories
 subdirs <- c("overview", "classification", "shift_analysis", "robustness",
@@ -642,7 +658,13 @@ load_peaks <- function(peak_file, peak_type) {
 # Load ChIP-seq peaks
 h3k27ac_peaks <- load_peaks(h3k27ac_path, "H3K27ac")
 h3k27me3_peaks <- load_peaks(h3k27me3_path, "H3K27me3")
-h3k4me1_peaks <- load_peaks(h3k4me1_path, "H3K4me1")
+# H3K4me1 not available for early timepoint
+if (!is.null(h3k4me1_path)) {
+  h3k4me1_peaks <- load_peaks(h3k4me1_path, "H3K4me1")
+} else {
+  cat("  H3K4me1: Not available for this timepoint\n")
+  h3k4me1_peaks <- NULL
+}
 
 # Create GRanges for TAD boundaries (use 25kb window around boundary)
 boundary_gr <- GRanges(
@@ -690,6 +712,9 @@ if (!is.null(h3k4me1_peaks)) {
 
 # Classify boundary anchors
 cat("Classifying boundary types...\n")
+if (is.null(h3k4me1_peaks)) {
+  cat("  Note: Poised_Enhancer classification unavailable (no H3K4me1 data)\n")
+}
 tss_threshold <- 2000  # 2kb
 
 tad_df$anchor_type <- case_when(
@@ -741,6 +766,10 @@ cat("  Saved: anchor_classification.pdf\n")
 # 6.2 ChIP-seq Overlap Heatmap by Boundary Type
 cat("Creating ChIP-seq overlap heatmap...\n")
 
+# Build mark list based on available data
+chip_marks <- c("H3K27ac", "H3K27me3")
+if (!is.null(h3k4me1_peaks)) chip_marks <- c(chip_marks, "H3K4me1")
+
 chip_overlap_summary <- tad_df %>%
   filter(Type != "Non-Differential") %>%
   group_by(Type) %>%
@@ -750,8 +779,14 @@ chip_overlap_summary <- tad_df %>%
     H3K4me1 = 100 * mean(h3k4me1_overlap, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  pivot_longer(cols = c(H3K27ac, H3K27me3, H3K4me1),
+  pivot_longer(cols = all_of(chip_marks),
                names_to = "Mark", values_to = "Percentage")
+
+chip_subtitle <- if (is.null(h3k4me1_peaks)) {
+  sprintf("Differential boundaries only | %s timepoint (no H3K4me1)", timepoint)
+} else {
+  "Differential boundaries only"
+}
 
 p_chip_heatmap <- ggplot(chip_overlap_summary, aes(x = Mark, y = Type, fill = Percentage)) +
   geom_tile(color = "white", linewidth = 1) +
@@ -759,7 +794,7 @@ p_chip_heatmap <- ggplot(chip_overlap_summary, aes(x = Mark, y = Type, fill = Pe
   scale_fill_gradient(low = "white", high = "#2166ac", name = "% Overlap") +
   labs(
     title = "ChIP-seq Mark Overlap by Boundary Type",
-    subtitle = "Differential boundaries only",
+    subtitle = chip_subtitle,
     x = "Histone Mark",
     y = "Boundary Type"
   ) +
@@ -782,7 +817,7 @@ chip_by_enrich <- tad_df %>%
     H3K4me1 = 100 * mean(h3k4me1_overlap, na.rm = TRUE),
     .groups = "drop"
   ) %>%
-  pivot_longer(cols = c(H3K27ac, H3K27me3, H3K4me1),
+  pivot_longer(cols = all_of(chip_marks),
                names_to = "Mark", values_to = "Percentage")
 
 p_chip_enrich <- ggplot(chip_by_enrich, aes(x = Mark, y = Percentage, fill = Enriched_In)) +
@@ -791,7 +826,7 @@ p_chip_enrich <- ggplot(chip_by_enrich, aes(x = Mark, y = Percentage, fill = Enr
                     labels = c("Matrix 1" = "Control", "Matrix 2" = "Mutant")) +
   labs(
     title = "ChIP-seq Overlap by Enrichment Direction",
-    subtitle = "Differential boundaries only",
+    subtitle = chip_subtitle,
     x = "Histone Mark",
     y = "% of Boundaries with Overlap"
   ) +

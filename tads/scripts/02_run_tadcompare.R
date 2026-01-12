@@ -1,6 +1,8 @@
 # 02_run_tadcompare.R
 # TADCompare differential boundary analysis: Control vs BAP1-KO mutant
 # Uses merged contact matrices at 25kb resolution
+# Usage: Rscript scripts/02_run_tadcompare.R [timepoint]
+#   timepoint: "late" (default) or "early"
 
 suppressPackageStartupMessages({
     library(TADCompare)
@@ -8,11 +10,22 @@ suppressPackageStartupMessages({
     library(readr)
 })
 
+# === Parse Arguments ===
+args <- commandArgs(trailingOnly = TRUE)
+TIMEPOINT <- if (length(args) >= 1) args[1] else "late"
+
+# Validate timepoint
+if (!TIMEPOINT %in% c("late", "early")) {
+    stop("ERROR: Unknown timepoint '", TIMEPOINT, "'. Use 'late' or 'early'.")
+}
+
+cat("Timepoint:", TIMEPOINT, "\n\n")
+
 # === Configuration ===
 RESOLUTION <- 25000
 BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
-INPUT_DIR <- file.path(BASE_DIR, "data/extracted/merged")
-OUTPUT_DIR <- file.path(BASE_DIR, "results/tadcompare")
+INPUT_DIR <- file.path(BASE_DIR, "data", TIMEPOINT, "extracted/merged")
+OUTPUT_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "tadcompare")
 
 # Mouse autosomes
 CHROMOSOMES <- paste0("chr", 1:19)

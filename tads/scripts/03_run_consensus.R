@@ -1,6 +1,8 @@
 # 03_run_consensus.R
 # ConsensusTADs analysis for replicate robustness assessment
 # Identifies consistently-detected boundaries across biological replicates
+# Usage: Rscript scripts/03_run_consensus.R [timepoint]
+#   timepoint: "late" (default) or "early"
 
 suppressPackageStartupMessages({
     library(TADCompare)
@@ -8,12 +10,23 @@ suppressPackageStartupMessages({
     library(readr)
 })
 
+# === Parse Arguments ===
+args <- commandArgs(trailingOnly = TRUE)
+TIMEPOINT <- if (length(args) >= 1) args[1] else "late"
+
+# Validate timepoint
+if (!TIMEPOINT %in% c("late", "early")) {
+    stop("ERROR: Unknown timepoint '", TIMEPOINT, "'. Use 'late' or 'early'.")
+}
+
+cat("Timepoint:", TIMEPOINT, "\n\n")
+
 # === Configuration ===
 RESOLUTION <- 25000
 BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
-INPUT_DIR <- file.path(BASE_DIR, "data/extracted/replicates")
-OUTPUT_DIR <- file.path(BASE_DIR, "results/consensus")
-TADCOMPARE_DIR <- file.path(BASE_DIR, "results/tadcompare")
+INPUT_DIR <- file.path(BASE_DIR, "data", TIMEPOINT, "extracted/replicates")
+OUTPUT_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "consensus")
+TADCOMPARE_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "tadcompare")
 
 CHROMOSOMES <- paste0("chr", 1:19)
 
