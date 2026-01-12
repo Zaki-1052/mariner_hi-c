@@ -45,6 +45,8 @@ suppressPackageStartupMessages({
   library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 })
 
+#TODO: distal --> back to other
+
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
@@ -53,7 +55,7 @@ suppressPackageStartupMessages({
 DEFAULT_H3K27AC_PATH <- "peaks/220310index25H3K27acLatePeakRegions.bed"
 DEFAULT_H3K27ME3_PATH <- "peaks/220310index29H3K27me3LatePeakRegions.bed"
 DEFAULT_H3K4ME1_PATH <- "peaks/K4me1_aligned_reads_peaks.broadPeak-filtered.bed"
-DEFAULT_BIVALENT_PATH <- "peaks/K4me1_K27me3.bed"
+DEFAULT_BIVALENT_PATH <- "peaks/K4me1_K27me3.bed" #repressed enhancer
 
 # Default input/output paths
 DEFAULT_INPUT_FILE <- "25042-late_outputs/merged_loops/non_redundant_loops.tsv"
@@ -204,16 +206,27 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
   anchor_type <- rep("Distal", n)
 
   # 1. Promoter: H3K27ac+ AND ≤2kb from TSS (highest priority)
+  #TODO: **Active** promoter
   is_promoter <- h3k27ac_overlap &
                  !is.na(distance_to_tss) &
                  distance_to_tss <= tss_threshold
   anchor_type[is_promoter] <- "Promoter"
 
-  # 2. Bivalent: K4me1_K27me3 overlap (but not promoter)
+  #new category: ac abd no h3k4me3 
+  #inactive/repressed promoters: me3 and <=2kb
+
+
+  # 2. Bivalent: K4me3_K27me3 overlap (but not promoter)
+  #early timepoint - developmental
+  #eliminate bivalency ? - no keep
+  #late - new addison file in root
+  # TODO: 
   is_bivalent <- !is_promoter & bivalent_overlap
   anchor_type[is_bivalent] <- "Bivalent"
 
   # 3. Polycomb: H3K27me3+ AND NOT H3K27ac+ (pure repressive, not promoter/bivalent)
+  #delete not k27ac
+  #not 2kb
   is_polycomb <- !is_promoter & !is_bivalent &
                  h3k27me3_overlap & !h3k27ac_overlap &
                  (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
@@ -226,6 +239,7 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
   anchor_type[is_active_enhancer] <- "Active_Enhancer"
 
   # 5. Poised Enhancer: H3K4me1+ (no H3K27ac) AND >2kb from TSS
+  #TODO: no k27me3
   is_poised_enhancer <- !is_promoter & !is_bivalent & !is_polycomb &
                         !is_active_enhancer &
                         h3k4me1_overlap & !h3k27ac_overlap &
@@ -234,6 +248,7 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
 
   # 6. Distal: default (everything else - no ChIP-seq marks)
   return(anchor_type)
+  #TODO: DISTAL -> OTHER
 }
 
 # =============================================================================
