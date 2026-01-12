@@ -1,0 +1,94 @@
+=========================================
+TADCompare Pipeline - Step 4: Post-processing
+=========================================
+Job ID: 45828630
+Node: exp-1-06
+Start time: Sun Jan 11 16:50:54 PST 2026
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/bedtools
+bedtools v2.31.1
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+
+Using: robustness-annotated file
+
+Extracting boundaries for bedtools...
+  Control-enriched: 3810
+  Mutant-enriched: 4454
+
+Running bedtools closest...
+  ✓ Distance calculations complete
+
+Running R analysis...
+Warning message:
+package ‘dplyr’ was built under R version 4.4.3 
+=========================================
+Shift Distance Analysis
+=========================================
+Loading distance files from bedtools...
+  Control→Mutant pairs: 3810 
+  Mutant→Control pairs: 4454 
+
+Loading TADCompare results...
+  Using robustness-annotated file
+  Total boundaries: 8264 
+
+Merging shift distances...
+
+=========================================
+Shift Distance Summary
+=========================================
+
+Shifted boundaries with distances: 254 / 254 
+
+Distribution (kb):
+  Min:     0 
+  Q1:      0 
+  Median:  0 
+  Mean:    18.5 
+  Q3:      25 
+  Max:     100 
+
+Binned distribution:
+# A tibble: 4 × 3
+  bin           n   pct
+  <fct>     <int> <dbl>
+1 0-25kb      167  65.7
+2 25-50kb      39  15.4
+3 50-100kb     28  11  
+4 100-200kb    20   7.9
+
+By enrichment:
+# A tibble: 2 × 4
+  Enriched_In     n median_kb mean_kb
+  <chr>       <int>     <dbl>   <dbl>
+1 Matrix 1      127         0    18.7
+2 Matrix 2      127         0    18.3
+
+=========================================
+Saving outputs...
+Full results: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/tadcompare_final_annotated.tsv 
+All boundaries BED: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/tadcompare_final.bed 
+Differential BED: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/differential_boundaries_final.bed 
+Shifted BED: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/shifted_boundaries.bed 
+Summary: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/analysis_summary.txt 
+
+=========================================
+✅ Shift distance analysis complete
+=========================================
+
+Cleaning up temporary files...
+
+=========================================
+Final outputs:
+-rw-r--r-- 1 zalibhai csd940  225 Jan 11 16:51 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/analysis_summary.txt
+-rw-r--r-- 1 zalibhai csd940 194K Jan 11 16:51 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/differential_boundaries_final.bed
+-rw-r--r-- 1 zalibhai csd940  34K Jan 11 16:51 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/shifted_boundaries.bed
+-rw-r--r-- 1 zalibhai csd940 1.1M Jan 11 16:51 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/tadcompare_final_annotated.tsv
+-rw-r--r-- 1 zalibhai csd940 1.3M Jan 11 16:51 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/results/final/tadcompare_final.bed
+
+✅ Post-processing completed successfully
+
+End time: Sun Jan 11 16:51:01 PST 2026
+=========================================
