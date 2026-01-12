@@ -190,7 +190,7 @@ category_summary <- loops_directional %>%
 
 # Calculate fold-enrichment (lost / gained ratio)
 enrichment <- category_summary %>%
-  select(direction_label, distance_category, count) %>%
+  dplyr::select(direction_label, distance_category, count) %>%
   pivot_wider(names_from = direction_label, values_from = count) %>%
   mutate(
     ratio = `Lost in BAP1-KO` / `Gained in BAP1-KO`,
@@ -441,7 +441,7 @@ cat("=== Generating Figure 7: ChIP-seq x Distance Analysis ===\n")
 
 # Summarize anchor types by distance and direction
 anchor_type_summary <- loops_directional %>%
-  select(loop_id, direction_label, distance_category, anchor1_type, anchor2_type) %>%
+  dplyr::select(loop_id, direction_label, distance_category, anchor1_type, anchor2_type) %>%
   pivot_longer(cols = c(anchor1_type, anchor2_type),
                names_to = "anchor", values_to = "type") %>%
   group_by(direction_label, distance_category, type) %>%
@@ -535,7 +535,7 @@ cat("=== Generating Figure 8: GO Enrichment Comparison ===\n")
 # Extract genes from long lost loops (>500kb, down_in_mutant)
 long_lost_genes <- loops_directional %>%
   filter(direction == "down_in_mutant", loop_distance > 500000) %>%
-  select(anchor1_nearest_gene, anchor2_nearest_gene) %>%
+  dplyr::select(anchor1_nearest_gene, anchor2_nearest_gene) %>%
   pivot_longer(everything(), values_to = "gene") %>%
   pull(gene) %>%
   unique() %>%
@@ -544,7 +544,7 @@ long_lost_genes <- loops_directional %>%
 # Extract genes from short gained loops (<500kb, up_in_mutant)
 short_gained_genes <- loops_directional %>%
   filter(direction == "up_in_mutant", loop_distance < 500000) %>%
-  select(anchor1_nearest_gene, anchor2_nearest_gene) %>%
+  dplyr::select(anchor1_nearest_gene, anchor2_nearest_gene) %>%
   pivot_longer(everything(), values_to = "gene") %>%
   pull(gene) %>%
   unique() %>%
@@ -694,7 +694,7 @@ p9a <- ggplot(loops_directional, aes(x = loop_distance_kb, color = direction_lab
 
 # Simplified bar chart for summary (percentage)
 category_pct <- category_summary %>%
-  select(direction_label, distance_category, percentage)
+  dplyr::select(direction_label, distance_category, percentage)
 
 p9b <- ggplot(category_pct,
                aes(x = distance_category, y = percentage, fill = direction_label)) +
