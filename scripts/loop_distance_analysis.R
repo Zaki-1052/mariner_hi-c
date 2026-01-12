@@ -533,13 +533,15 @@ cat("Saved: 07_chipseq_distance_analysis.pdf\n")
 cat("=== Generating Figure 8: GO Enrichment Comparison ===\n")
 
 # Extract genes from long lost loops (>500kb, down_in_mutant)
+# Note: Gene names in this dataset are already Entrez IDs (numeric)
 long_lost_genes <- loops_directional %>%
   filter(direction == "down_in_mutant", loop_distance > 500000) %>%
   dplyr::select(anchor1_nearest_gene, anchor2_nearest_gene) %>%
   pivot_longer(everything(), values_to = "gene") %>%
   pull(gene) %>%
   unique() %>%
-  na.omit()
+  na.omit() %>%
+  as.character()
 
 # Extract genes from short gained loops (<500kb, up_in_mutant)
 short_gained_genes <- loops_directional %>%
@@ -548,26 +550,26 @@ short_gained_genes <- loops_directional %>%
   pivot_longer(everything(), values_to = "gene") %>%
   pull(gene) %>%
   unique() %>%
-  na.omit()
+  na.omit() %>%
+  as.character()
 
 cat("Long lost loop genes:", length(long_lost_genes), "\n")
 cat("Short gained loop genes:", length(short_gained_genes), "\n")
 
-# Try GO enrichment (may fail if gene symbols don't map)
+# Try GO enrichment - gene IDs are already Entrez IDs in this dataset
 tryCatch({
-  # Convert gene symbols to Entrez IDs
-  long_lost_entrez <- bitr(long_lost_genes, fromType = "SYMBOL",
-                           toType = "ENTREZID", OrgDb = org.Mm.eg.db)
-  short_gained_entrez <- bitr(short_gained_genes, fromType = "SYMBOL",
-                              toType = "ENTREZID", OrgDb = org.Mm.eg.db)
+  # Filter to valid Entrez IDs (numeric strings)
+  long_lost_entrez <- long_lost_genes[grepl("^[0-9]+$", long_lost_genes)]
+  short_gained_entrez <- short_gained_genes[grepl("^[0-9]+$", short_gained_genes)]
 
-  cat("Mapped Entrez IDs - Long lost:", nrow(long_lost_entrez),
-      ", Short gained:", nrow(short_gained_entrez), "\n")
+  cat("Valid Entrez IDs - Long lost:", length(long_lost_entrez),
+      ", Short gained:", length(short_gained_entrez), "\n")
 
   # Run GO enrichment for long lost loops
   go_long_lost <- enrichGO(
-    gene = long_lost_entrez$ENTREZID,
+    gene = long_lost_entrez,
     OrgDb = org.Mm.eg.db,
+    keyType = "ENTREZID",
     ont = "BP",
     pAdjustMethod = "BH",
     pvalueCutoff = 0.05,
@@ -577,8 +579,9 @@ tryCatch({
 
   # Run GO enrichment for short gained loops
   go_short_gained <- enrichGO(
-    gene = short_gained_entrez$ENTREZID,
+    gene = short_gained_entrez,
     OrgDb = org.Mm.eg.db,
+    keyType = "ENTREZID",
     ont = "BP",
     pAdjustMethod = "BH",
     pvalueCutoff = 0.05,
