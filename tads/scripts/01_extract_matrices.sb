@@ -1,0 +1,180 @@
+#!/bin/bash
+#SBATCH --job-name=extract_hic
+#SBATCH --output=logs/extract_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+# 01_extract_matrices.sb
+# Extract sparse contact matrices from .hic files for TADCompare analysis
+# Control vs BAP1-KO mutant, late timepoint (250402), 25kb resolution
+
+echo "========================================="
+echo "TADCompare Pipeline - Step 1: Matrix Extraction"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which straw
+echo ""
+
+# === Configuration ===
+RESOLUTION=25000
+HIC_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402"
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+OUT_MERGED="${BASE_DIR}/data/extracted/merged"
+OUT_REPS="${BASE_DIR}/data/extracted/replicates"
+
+# Mouse autosomes (excluding chrX, chrY)
+CHROMOSOMES=(chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19)
+
+# Sample files
+MERGED_FILES=("ctrl_merged" "mut_merged")
+REPLICATE_FILES=("ctrl_M1" "ctrl_M2" "ctrl_M3" "mut_M1" "mut_M2" "mut_M3")
+
+# === Setup directories ===
+mkdir -p "${OUT_MERGED}" "${OUT_REPS}" "${BASE_DIR}/logs"
+
+# Tracking variables
+TOTAL_EXTRACTIONS=0
+SUCCESSFUL=0
+FAILED=0
+FAILED_LIST=()
+
+# === Function: Extract contacts for one file/chromosome ===
+extract_contacts() {
+    local hic_file="$1"
+    local chrom="$2"
+    local output_file="$3"
+    
+    # straw format: straw <norm> <file> <chr1> <chr2> <unit> <resolution>
+    # Using NONE (raw) per TADCompare vignette examples
+    if straw observed NONE "${hic_file}" "${chrom}" "${chrom}" BP ${RESOLUTION} > "${output_file}" 2>/dev/null; then
+        # Verify output has data (more than just header/empty)
+        local line_count=$(wc -l < "${output_file}")
+        if [ "${line_count}" -gt 10 ]; then
+            return 0
+        else
+            echo "    WARNING: Output file has only ${line_count} lines"
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+
+# === Extract merged matrices ===
+echo "Extracting merged matrices..."
+echo "-----------------------------"
+
+for sample in "${MERGED_FILES[@]}"; do
+    hic_path="${HIC_DIR}/${sample}.hic"
+    
+    if [ ! -f "${hic_path}" ]; then
+        echo "ERROR: File not found: ${hic_path}"
+        continue
+    fi
+    
+    echo "Processing ${sample}.hic ..."
+    
+    for chrom in "${CHROMOSOMES[@]}"; do
+        output="${OUT_MERGED}/${sample}.${chrom}.25kb.txt"
+        TOTAL_EXTRACTIONS=$((TOTAL_EXTRACTIONS + 1))
+        
+        if extract_contacts "${hic_path}" "${chrom}" "${output}"; then
+            echo "  ✓ ${chrom}"
+            SUCCESSFUL=$((SUCCESSFUL + 1))
+        else
+            echo "  ✗ ${chrom} FAILED"
+            FAILED=$((FAILED + 1))
+            FAILED_LIST+=("${sample}.${chrom}")
+        fi
+    done
+    echo ""
+done
+
+# === Extract replicate matrices ===
+echo "Extracting replicate matrices..."
+echo "--------------------------------"
+
+for sample in "${REPLICATE_FILES[@]}"; do
+    hic_path="${HIC_DIR}/${sample}.hic"
+    
+    if [ ! -f "${hic_path}" ]; then
+        echo "ERROR: File not found: ${hic_path}"
+        continue
+    fi
+    
+    echo "Processing ${sample}.hic ..."
+    
+    for chrom in "${CHROMOSOMES[@]}"; do
+        output="${OUT_REPS}/${sample}.${chrom}.25kb.txt"
+        TOTAL_EXTRACTIONS=$((TOTAL_EXTRACTIONS + 1))
+        
+        if extract_contacts "${hic_path}" "${chrom}" "${output}"; then
+            echo "  ✓ ${chrom}"
+            SUCCESSFUL=$((SUCCESSFUL + 1))
+        else
+            echo "  ✗ ${chrom} FAILED"
+            FAILED=$((FAILED + 1))
+            FAILED_LIST+=("${sample}.${chrom}")
+        fi
+    done
+    echo ""
+done
+
+# === Summary ===
+echo "========================================="
+echo "Extraction Summary"
+echo "========================================="
+echo "Total extractions attempted: ${TOTAL_EXTRACTIONS}"
+echo "Successful: ${SUCCESSFUL}"
+echo "Failed: ${FAILED}"
+
+if [ ${FAILED} -gt 0 ]; then
+    echo ""
+    echo "Failed extractions:"
+    for item in "${FAILED_LIST[@]}"; do
+        echo "  - ${item}"
+    done
+fi
+
+echo ""
+echo "Output locations:"
+echo "  Merged:     ${OUT_MERGED}"
+echo "  Replicates: ${OUT_REPS}"
+echo ""
+
+# Verify output file counts
+merged_count=$(ls -1 "${OUT_MERGED}"/*.txt 2>/dev/null | wc -l)
+rep_count=$(ls -1 "${OUT_REPS}"/*.txt 2>/dev/null | wc -l)
+echo "Files created:"
+echo "  Merged matrices: ${merged_count}"
+echo "  Replicate matrices: ${rep_count}"
+
+# === Exit status ===
+if [ ${FAILED} -eq 0 ]; then
+    echo ""
+    echo "✅ All extractions completed successfully"
+    exit 0
+else
+    echo ""
+    echo "⚠️  Some extractions failed - check logs above"
+    exit 1
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="
+
