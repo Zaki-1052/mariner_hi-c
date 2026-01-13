@@ -4,7 +4,7 @@
 
 ## Overview
 
-This script annotates differential chromatin loop anchors with **7 chromatin state categories** based on histone modification ChIP-seq data. It extends the basic promoter/enhancer classification to include Polycomb-repressed regions and bivalent promoters, providing a more nuanced view of loop anchor function.
+This script annotates differential chromatin loop anchors with **8 chromatin state categories** based on histone modification ChIP-seq data. It extends the basic promoter/enhancer classification to include Polycomb-repressed regions, bivalent promoters, and CTCF-bound structural sites, providing a more nuanced view of loop anchor function.
 
 ## Purpose
 
@@ -42,7 +42,7 @@ The script evolved through several iterations to address biological and technica
 
 ## Chromatin State Categories
 
-### 7 Anchor Types (Priority Order)
+### 8 Anchor Types (Priority Order)
 
 | Category | Definition | Biological Meaning |
 |----------|------------|-------------------|
@@ -52,7 +52,8 @@ The script evolved through several iterations to address biological and technica
 | **Polycomb** | H3K27me3+ AND >2kb from TSS | Distal repressive element |
 | **Active_Enhancer** | H3K27ac+ AND >2kb from TSS | Active distal regulatory element |
 | **Poised_Enhancer** | H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb | Primed but not active enhancer |
-| **Other** | No ChIP-seq marks | Structural/CTCF sites, unmarked regions |
+| **CTCF_Site** | CTCF+ AND not classified above | Structural/insulator loop anchor |
+| **Other** | No ChIP-seq marks | Truly unmarked regions |
 
 ### Classification Logic
 
@@ -75,17 +76,21 @@ Priority 5: Active_Enhancer
 Priority 6: Poised_Enhancer
   └── H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND distance_to_TSS > 2kb
 
-Priority 7: Other
+Priority 7: CTCF_Site
+  └── CTCF+ AND not classified above (structural/insulator)
+
+Priority 8: Other
   └── Default (no marks or doesn't match above)
 ```
 
-### 28 Loop Type Combinations
+### 36 Loop Type Combinations
 
 Loop types are named by combining anchor types in hierarchy order:
 - `Active_Promoter-Active_Promoter`
 - `Active_Promoter-Repressed_Promoter`
 - `Active_Promoter-Bivalent_Promoter`
 - `Active_Promoter-Polycomb`
+- `Active_Promoter-CTCF_Site`
 - ... etc.
 
 ## Peak File Configuration
@@ -94,6 +99,9 @@ Loop types are named by combining anchor types in hierarchy order:
 
 ```
 peaks/
+├── CTCF.bed                           # CTCF peaks (32,487) - Bing Ren lab
+├── annotate_loops_extended.R          # Main annotation script
+├── README.md                          # This file
 ├── beds/                              # Standardized peak files
 │   ├── H3K27acCerebellumEarly2.bed
 │   ├── H3K27acCerebellumLate2.bed
@@ -106,7 +114,13 @@ peaks/
 │   ├── Bivalent_Cerebellum_Early.bed  # 931 peaks
 │   ├── Bivalent_Cerebellum_Late.bed   # 318 peaks
 │   └── Bivalent_Consensus_Late.bed    # 688 peaks
-└── peaks-v1/
+├── loop_annotation_extended/          # Output directories
+│   ├── early/                         # Early timepoint results
+│   ├── late/                          # Late timepoint results
+│   └── extra/                         # Comparison analyses
+│       ├── early_p12ctrl/
+│       └── late_consensus/
+└── old/peaks-v1/                      # Legacy peak files
     ├── consensus_H3K4me3_late_peaks.bed      # 9,651 peaks (4-replicate)
     ├── P12_ctrl_H3K27ac_early_peaks.bed      # 28,042 peaks (lenient)
     ├── P12_ctrl_H3K27me3_early_peaks.bed     # 23,491 peaks (lenient)
@@ -145,11 +159,12 @@ To add new peak files for future timepoints or tissues:
 PEAK_FILES <- list(
   ...
   new_timepoint = list(
-    h3k27ac  = "peaks/beds/H3K27acNew.bed",
-    h3k27me3 = "peaks/beds/H3K27me3New.bed",
-    h3k4me1  = "peaks/beds/H3K4me1New.bed",
-    h3k4me3  = "peaks/beds/H3K4me3New.bed",
-    bivalent = "peaks/beds/Bivalent_New.bed"
+    h3k27ac  = "beds/H3K27acNew.bed",
+    h3k27me3 = "beds/H3K27me3New.bed",
+    h3k4me1  = "beds/H3K4me1New.bed",
+    h3k4me3  = "beds/H3K4me3New.bed",
+    bivalent = "beds/Bivalent_New.bed",
+    ctcf     = "CTCF.bed"
   )
 )
 ```
@@ -162,17 +177,20 @@ PEAK_FILES <- list(
 ### Basic Usage
 
 ```bash
+# Run from the peaks/ directory
+cd peaks/
+
 # Run both early and late timepoints (default)
-Rscript scripts/annotate_loops_extended.R
+Rscript annotate_loops_extended.R
 
 # Run specific timepoint
-Rscript scripts/annotate_loops_extended.R --timepoint early
-Rscript scripts/annotate_loops_extended.R --timepoint late
-Rscript scripts/annotate_loops_extended.R --timepoint late_consensus
-Rscript scripts/annotate_loops_extended.R --timepoint early_p12ctrl
+Rscript annotate_loops_extended.R --timepoint early
+Rscript annotate_loops_extended.R --timepoint late
+Rscript annotate_loops_extended.R --timepoint late_consensus
+Rscript annotate_loops_extended.R --timepoint early_p12ctrl
 
 # Run all 4 timepoints for full comparison
-Rscript scripts/annotate_loops_extended.R --all
+Rscript annotate_loops_extended.R --all
 ```
 
 ### Command-Line Options
@@ -243,7 +261,7 @@ Original loop columns:
 
 ChIP-seq overlap columns:
   anchor1_H3K27ac_overlap, anchor1_H3K27me3_overlap, anchor1_H3K4me1_overlap,
-  anchor1_H3K4me3_overlap, anchor1_Bivalent_Promoter_overlap
+  anchor1_H3K4me3_overlap, anchor1_Bivalent_Promoter_overlap, anchor1_CTCF_overlap
   (same for anchor2)
 
 TSS distance columns:
