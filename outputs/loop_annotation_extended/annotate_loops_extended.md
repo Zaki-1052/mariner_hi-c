@@ -107,7 +107,10 @@ peaks/
 │   ├── Bivalent_Cerebellum_Late.bed   # 318 peaks
 │   └── Bivalent_Consensus_Late.bed    # 688 peaks
 └── peaks-v1/
-    └── consensus_H3K4me3_late_peaks.bed  # 9,651 peaks (4-replicate)
+    ├── consensus_H3K4me3_late_peaks.bed      # 9,651 peaks (4-replicate)
+    ├── P12_ctrl_H3K27ac_early_peaks.bed      # 28,042 peaks (lenient)
+    ├── P12_ctrl_H3K27me3_early_peaks.bed     # 23,491 peaks (lenient)
+    └── 250224AddisonH3K4me3H3K27me3Early.bed # 933 peaks (bivalent)
 ```
 
 ### Peak File Naming Convention
@@ -166,8 +169,9 @@ Rscript scripts/annotate_loops_extended.R
 Rscript scripts/annotate_loops_extended.R --timepoint early
 Rscript scripts/annotate_loops_extended.R --timepoint late
 Rscript scripts/annotate_loops_extended.R --timepoint late_consensus
+Rscript scripts/annotate_loops_extended.R --timepoint early_p12ctrl
 
-# Run all timepoints including consensus comparison
+# Run all 4 timepoints for full comparison
 Rscript scripts/annotate_loops_extended.R --all
 ```
 
@@ -175,8 +179,8 @@ Rscript scripts/annotate_loops_extended.R --all
 
 | Option | Description |
 |--------|-------------|
-| `--timepoint TP` | Run specific timepoint: `early`, `late`, `late_consensus`, or `both` |
-| `--all` | Run all timepoints including late_consensus |
+| `--timepoint TP` | Run specific timepoint: `early`, `late`, `late_consensus`, `early_p12ctrl`, or `both` |
+| `--all` | Run all 4 timepoints for full comparison |
 | `--input FILE` | Override input file (single timepoint only) |
 | `--output DIR` | Override output directory (single timepoint only) |
 | `--help`, `-h` | Show help message |
@@ -188,6 +192,9 @@ Rscript scripts/annotate_loops_extended.R --all
 | `early` | Cerebellum Early (10,370) | 931 | Early developmental stage |
 | `late` | Cerebellum Late (6,581) | 318 | Late/adult stage |
 | `late_consensus` | Consensus (9,651) | 688 | Compare with 4-replicate H3K4me3 |
+| `early_p12ctrl` | Cerebellum Early (10,370) | 933 (Addison) | Compare with P12_ctrl peaks |
+
+**Note:** `early_p12ctrl` uses P12_ctrl H3K27ac (28,042) and H3K27me3 (23,491) instead of Cerebellum (18,178 and 12,473). This demonstrates the ~54-88% more peaks from lenient peak calling.
 
 ## Input Data
 
@@ -264,6 +271,34 @@ The consensus H3K4me3 captures more peaks, leading to:
 - More Active_Promoter classifications (H3K4me3+ near TSS)
 - More Bivalent_Promoter classifications (from 688 vs. 318 bivalent peaks)
 - Fewer "Other" classifications
+
+## Comparing Early vs. Early_P12ctrl (Peak Source Comparison)
+
+The `early_p12ctrl` timepoint demonstrates the lack of a single source of truth for ChIP-seq annotations by comparing:
+- **Cerebellum H3K27ac** (18,178 peaks) vs. **P12_ctrl H3K27ac** (28,042 peaks) - 54% more
+- **Cerebellum H3K27me3** (12,473 peaks) vs. **P12_ctrl H3K27me3** (23,491 peaks) - 88% more
+
+### Peak Count Comparison
+
+| Mark | Cerebellum (early) | P12_ctrl (early_p12ctrl) | Difference |
+|------|-------------------|-------------------------|------------|
+| H3K27ac | 18,178 | 28,042 | +54% more |
+| H3K27me3 | 12,473 | 23,491 | +88% more |
+| H3K4me1 | 93,859 | 93,859 (same) | - |
+| H3K4me3 | 10,370 | 10,370 (same) | - |
+| Bivalent | 931 (generated) | 933 (Addison) | ~same |
+
+**Key finding:** Cerebellum files are a ~97% subset of P12_ctrl (stricter filtering applied).
+
+### Example Comparison (Early vs. Early_P12ctrl)
+
+| Category | Early (Cerebellum) | Early_P12ctrl | Change |
+|----------|-------------------|---------------|--------|
+| Bivalent_Promoter (Anchor1) | 2 (1.2%) | 4 (2.4%) | +100% |
+| Bivalent_Promoter (Anchor2) | 1 (0.6%) | 4 (2.4%) | +300% |
+| Polycomb (Anchor2) | 21 (12.7%) | 24 (14.5%) | +14% |
+
+Despite 54-88% more peaks in P12_ctrl, loop annotations are relatively stable. The biggest changes are in Bivalent and Polycomb categories.
 
 ## Biological Interpretation
 
