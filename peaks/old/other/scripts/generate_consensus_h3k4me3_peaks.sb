@@ -1,0 +1,154 @@
+#!/bin/bash
+# scripts/generate_consensus_h3k4me3_peaks.sb
+# Generate consensus H3K4me3 peaks from 4 adult/late timepoint replicates
+#
+# Can run locally with: bash scripts/generate_consensus_h3k4me3_peaks.sb
+# Or on HPC with: sbatch scripts/generate_consensus_h3k4me3_peaks.sb
+
+#SBATCH --job-name=consensus_h3k4me3
+#SBATCH --output=logs/consensus_h3k4me3_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+echo "========================================="
+echo "H3K4me3 Consensus Peak Generation"
+echo "========================================="
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Configuration
+BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+INPUT_DIR="${BASE_DIR}/peaks/H3K4me3"
+OUTPUT_DIR="${BASE_DIR}"
+OUTPUT_FILE="consensus_H3K4me3_late_peaks.bed"
+REPLICATE_THRESHOLD=2  # Minimum replicates for consensus (2/4)
+MERGE_DISTANCE=10      # Base pairs for merging adjacent peaks
+
+# Create temporary directory
+TEMP_DIR="${BASE_DIR}/temp_consensus_h3k4me3"
+mkdir -p "${TEMP_DIR}"
+
+echo "Configuration:"
+echo "  Input directory: ${INPUT_DIR}"
+echo "  Output file: ${OUTPUT_DIR}/${OUTPUT_FILE}"
+echo "  Replicate threshold: ${REPLICATE_THRESHOLD}/4"
+echo "  Merge distance: ${MERGE_DISTANCE} bp"
+echo ""
+
+# Check bedtools availability
+echo "Environment check:"
+if command -v bedtools &> /dev/null; then
+    echo "  bedtools: $(which bedtools)"
+    bedtools --version
+else
+    echo "  ERROR: bedtools not found in PATH"
+    echo "  Please install bedtools or activate conda environment"
+    exit 1
+fi
+echo ""
+
+# Define input files
+REP1="${INPUT_DIR}/240103_index_15_BAP1_P68_ctrl_2_H3K4me3_S24_L001_aligned_reads_treat.stringent.sort_subtracted.bed"
+REP2="${INPUT_DIR}/240725-index-15-BAP1-P51-ctrl-2-H3K4me3_S11_L007_aligned_reads_treat.stringent.sort_subtracted.bed"
+REP3="${INPUT_DIR}/250514_index_37_Bap1_P60_ctrl1_H3K4me3_S9_L002_aligned_reads_treat.stringent.sort_subtracted.bed"
+REP4="${INPUT_DIR}/250514_index_39_Bap1_P60_ctrl2_H3K4me3_S11_L002_aligned_reads_treat.stringent.sort_subtracted.bed"
+
+# Verify input files exist
+echo "Checking input files..."
+for file in "${REP1}" "${REP2}" "${REP3}" "${REP4}"; do
+    if [ ! -f "${file}" ]; then
+        echo "  ERROR: File not found: ${file}"
+        exit 1
+    fi
+    count=$(wc -l < "${file}")
+    echo "  $(basename "${file}"): ${count} peaks"
+done
+echo ""
+
+# Generate consensus peaks
+echo "Processing H3K4me3..."
+
+# Sort input files (use only first 3 columns for standard BED format)
+echo "  Sorting input files..."
+for i in 1 2 3 4; do
+    eval "file=\${REP${i}}"
+    cut -f1-3 "${file}" | sort -k1,1 -k2,2n > "${TEMP_DIR}/rep${i}.sorted.bed"
+done
+
+# Multi-intersect to find regions present in multiple replicates
+echo "  Finding overlapping regions (>=${REPLICATE_THRESHOLD} replicates)..."
+bedtools multiinter \
+    -i "${TEMP_DIR}/rep1.sorted.bed" "${TEMP_DIR}/rep2.sorted.bed" \
+       "${TEMP_DIR}/rep3.sorted.bed" "${TEMP_DIR}/rep4.sorted.bed" \
+    | awk -v thresh="${REPLICATE_THRESHOLD}" '$4 >= thresh' \
+    | cut -f1-3 \
+    > "${TEMP_DIR}/h3k4me3_multiinter.bed"
+
+multi_count=$(wc -l < "${TEMP_DIR}/h3k4me3_multiinter.bed")
+echo "    Found ${multi_count} overlapping regions"
+
+# Merge adjacent peaks
+echo "  Merging adjacent/overlapping peaks (distance: ${MERGE_DISTANCE}bp)..."
+bedtools merge \
+    -i "${TEMP_DIR}/h3k4me3_multiinter.bed" \
+    -d "${MERGE_DISTANCE}" \
+    > "${TEMP_DIR}/h3k4me3_merged.bed"
+
+merged_count=$(wc -l < "${TEMP_DIR}/h3k4me3_merged.bed")
+echo "    ${merged_count} peaks after merging"
+
+# Add a simple score column (peak width) and name column
+echo "  Finalizing output..."
+awk 'BEGIN{OFS="\t"} {
+    width = $3 - $2;
+    print $1, $2, $3, "H3K4me3_peak_" NR, width, "."
+}' "${TEMP_DIR}/h3k4me3_merged.bed" > "${OUTPUT_DIR}/${OUTPUT_FILE}"
+
+final_count=$(wc -l < "${OUTPUT_DIR}/${OUTPUT_FILE}")
+echo ""
+echo "========================================"
+echo "Summary"
+echo "========================================"
+echo ""
+echo "Input replicates:"
+echo "  Replicate 1 (P68): $(wc -l < "${REP1}") peaks"
+echo "  Replicate 2 (P51): $(wc -l < "${REP2}") peaks"
+echo "  Replicate 3 (P60 ctrl1): $(wc -l < "${REP3}") peaks"
+echo "  Replicate 4 (P60 ctrl2): $(wc -l < "${REP4}") peaks"
+echo ""
+echo "Consensus generation:"
+echo "  Threshold: present in >= ${REPLICATE_THRESHOLD}/4 replicates"
+echo "  Merge distance: ${MERGE_DISTANCE} bp"
+echo "  Final consensus: ${final_count} peaks"
+echo ""
+
+# Calculate peak size statistics
+echo "Peak size distribution:"
+awk '{print $3-$2}' "${OUTPUT_DIR}/${OUTPUT_FILE}" | sort -n | awk '
+    {sizes[NR]=$1; sum+=$1}
+    END {
+        print "  Count:", NR
+        print "  Mean:", int(sum/NR), "bp"
+        print "  Median:", sizes[int(NR/2)], "bp"
+        print "  Min:", sizes[1], "bp"
+        print "  Max:", sizes[NR], "bp"
+    }'
+echo ""
+
+# Clean up
+echo "Cleaning up temporary files..."
+rm -rf "${TEMP_DIR}"
+
+echo ""
+echo "========================================"
+echo "Output: ${OUTPUT_DIR}/${OUTPUT_FILE}"
+echo "========================================"
+echo ""
+echo "End time: $(date)"
+echo "========================================="
