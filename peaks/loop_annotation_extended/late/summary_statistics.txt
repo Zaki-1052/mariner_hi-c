@@ -3,8 +3,8 @@ Extended Loop Anchor Classification Summary (LATE)
 ========================================
 
 Timepoint: late
-Input file: 25042-late_outputs/merged_loops/non_redundant_loops.tsv
-Output dir: outputs/loop_annotation_extended/late
+Input file: ../25042-late_outputs/merged_loops/non_redundant_loops.tsv
+Output dir: loop_annotation_extended/late
 TSS threshold: 2000 bp
 
 Total loops: 2910
@@ -12,13 +12,14 @@ Total loops: 2910
   Down in mutant: 1187 (40.8%)
 
 ChIP-seq Peak Files:
-  H3K27ac:  peaks/beds/H3K27acCerebellumLate2.bed (15105 peaks)
-  H3K27me3: peaks/beds/H3K27me3CerebellumLate1.bed (15809 peaks)
-  H3K4me1:  peaks/beds/H3K4me1CerebellumLate1.bed (113781 peaks)
-  H3K4me3:  peaks/beds/H3K4me3CerebellumLate2.bed (6581 peaks)
+  H3K27ac:  beds/H3K27acCerebellumLate2.bed (15105 peaks)
+  H3K27me3: beds/H3K27me3CerebellumLate1.bed (15809 peaks)
+  H3K4me1:  beds/H3K4me1CerebellumLate1.bed (113781 peaks)
+  H3K4me3:  beds/H3K4me3CerebellumLate2.bed (6581 peaks)
+  CTCF:     CTCF.bed (32487 peaks)
 
 Bivalent Promoter Source: Cerebellum (single-replicate H3K4me3)
-  File: peaks/beds/Bivalent_Cerebellum_Late.bed
+  File: beds/Bivalent_Cerebellum_Late.bed
   Peaks: 318 regions
 
 Anchor Type Distribution:
@@ -29,7 +30,8 @@ Anchor Type Distribution:
     Polycomb            :   467 (16.0%)
     Active_Enhancer     :   314 (10.8%)
     Poised_Enhancer     :   616 (21.2%)
-    Other               :   967 (33.2%)
+    CTCF_Site           :   703 (24.2%)
+    Other               :   264 (9.1%)
   Anchor2:
     Active_Promoter     :   257 (8.8%)
     Repressed_Promoter  :   292 (10.0%)
@@ -37,33 +39,42 @@ Anchor Type Distribution:
     Polycomb            :   461 (15.8%)
     Active_Enhancer     :   349 (12.0%)
     Poised_Enhancer     :   556 (19.1%)
-    Other               :   971 (33.4%)
+    CTCF_Site           :   695 (23.9%)
+    Other               :   276 (9.5%)
 
 Loop Type Distribution:
-  Other-Other                        :   491 (16.9%)
-  Poised_Enhancer-Other              :   386 (13.3%)
-  Polycomb-Other                     :   237 (8.1%)
+  Poised_Enhancer-CTCF_Site          :   295 (10.1%)
+  CTCF_Site-CTCF_Site                :   266 (9.1%)
+  Polycomb-CTCF_Site                 :   175 (6.0%)
   Polycomb-Polycomb                  :   175 (6.0%)
+  CTCF_Site-Other                    :   173 (5.9%)
   Repressed_Promoter-Polycomb        :   172 (5.9%)
   Active_Enhancer-Poised_Enhancer    :   162 (5.6%)
-  Repressed_Promoter-Other           :   157 (5.4%)
   Poised_Enhancer-Poised_Enhancer    :   148 (5.1%)
   Active_Enhancer-Active_Enhancer    :   142 (4.9%)
   Polycomb-Poised_Enhancer           :   128 (4.4%)
   Active_Promoter-Active_Enhancer    :   119 (4.1%)
+  Repressed_Promoter-CTCF_Site       :   116 (4.0%)
   Active_Promoter-Poised_Enhancer    :   103 (3.5%)
-  Active_Promoter-Other              :    88 (3.0%)
+  Poised_Enhancer-Other              :    91 (3.1%)
   Active_Promoter-Active_Promoter    :    78 (2.7%)
   Repressed_Promoter-Poised_Enhancer :    76 (2.6%)
-  Active_Enhancer-Other              :    75 (2.6%)
   Repressed_Promoter-Repressed_Promoter:    64 (2.2%)
+  Polycomb-Other                     :    62 (2.1%)
+  Active_Promoter-CTCF_Site          :    53 (1.8%)
+  Other-Other                        :    52 (1.8%)
+  Active_Enhancer-CTCF_Site          :    46 (1.6%)
+  Repressed_Promoter-Other           :    41 (1.4%)
+  Active_Promoter-Other              :    35 (1.2%)
+  Active_Enhancer-Other              :    29 (1.0%)
   Active_Promoter-Polycomb           :    22 (0.8%)
   Bivalent_Promoter-Poised_Enhancer  :    21 (0.7%)
   Active_Promoter-Repressed_Promoter :    19 (0.7%)
-  Bivalent_Promoter-Other            :    13 (0.4%)
   Polycomb-Active_Enhancer           :    12 (0.4%)
+  Bivalent_Promoter-CTCF_Site        :     8 (0.3%)
   Bivalent_Promoter-Polycomb         :     7 (0.2%)
   Repressed_Promoter-Active_Enhancer :     7 (0.2%)
+  Bivalent_Promoter-Other            :     5 (0.2%)
   Bivalent_Promoter-Active_Enhancer  :     4 (0.1%)
   Active_Promoter-Bivalent_Promoter  :     3 (0.1%)
   Repressed_Promoter-Bivalent_Promoter:     1 (0.0%)
