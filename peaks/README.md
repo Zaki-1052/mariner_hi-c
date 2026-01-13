@@ -398,6 +398,80 @@ Rscript scripts/annotate_loops_extended.R --timepoint late
 - **`generate_bivalent_peaks.sb`** - Creates bivalent BED files from H3K4me3 + H3K27me3
 - **`generate_consensus_h3k4me3_peaks.sb`** - Creates consensus H3K4me3 from 4 replicates
 - **`downstream_analysis.R`** - Basic loop annotation (4-category system)
+- **`extract_other_up_loops.R`** - Extracts and analyzes "Other" category up loops (see below)
+
+---
+
+## Extracting "Other" Category Up Loops
+
+### Script: `extract_other_up_loops.R`
+
+This script extracts and annotates loops with "Other" classification (unmarked anchors) that are upregulated in BAP1-KO, with additional CTCF overlap validation and gene annotations.
+
+### Background
+
+The early timepoint shows a striking difference in "Other" classification compared to late:
+
+| Anchor Type | Early (no CTCF) | Late (with CTCF) |
+|-------------|-----------------|------------------|
+| CTCF_Site   | 0% (not available) | 24.0% |
+| Other       | **36.5%** | **9.3%** |
+
+**Key insight:** Early timepoint lacks CTCF ChIP-seq data, so many CTCF-mediated structural sites are classified as "Other". The script validates this by checking overlap with late CTCF peaks.
+
+### Usage
+
+```bash
+cd peaks/
+Rscript extract_other_up_loops.R
+```
+
+### Key Findings (Early Timepoint)
+
+- **60 out of 73 up loops (82%)** have at least one "Other" anchor
+- Only **15 out of 92 down loops (16%)** have "Other" anchors
+- **~27% of "Other" anchors** overlap with CTCF peaks (validation that many are likely CTCF-mediated)
+- chr8:71.2-71.8Mb region has a cluster of significant "Other" loops
+
+### Top Significant "Other" Up Loops
+
+| Loop ID | Coordinates | logFC | FDR | Genes |
+|---------|-------------|-------|-----|-------|
+| loop_4389 | chr8:71.21Mb ↔ 71.78Mb | +1.49 | 2.56e-05 | Haus8 - Fcho1 |
+| loop_17936 | chr8:71.19Mb ↔ 71.81Mb | +1.01 | 2.56e-05 | Haus8 - Zfp709 |
+| loop_3362 | chr8:71.17Mb ↔ 71.82Mb | +1.08 | 4.28e-05 | Haus8 - Zfp709 |
+| loop_4918 | chr8:49.80Mb ↔ 57.30Mb | +1.76 | 7.59e-04 | Gm2516 - Hand2 |
+
+### Output Files
+
+Located in `loop_annotation_extended/early/`:
+
+| File | Description |
+|------|-------------|
+| `other_category_up_loops.tsv` | Main table with 60 loops, ranked by FDR |
+| `other_up_loops_with_genes.tsv` | Full annotation with all original columns |
+| `other_up_loops_summary.txt` | Summary statistics and caveats |
+
+### Output Columns
+
+```
+loop_id, anchor1_coords, anchor2_coords
+logFC, FDR, category (strong/moderate/weak_differential)
+anchor1_type, anchor2_type, loop_type
+other_category (both_other or single_other)
+anchor1_nearest_gene, anchor1_gene_distance
+anchor2_nearest_gene, anchor2_gene_distance
+anchor1_overlaps_CTCF, anchor2_overlaps_CTCF (validation)
+loop_distance, resolution_kb
+```
+
+### Notes
+
+- The high "Other" proportion in early (~37% vs ~9% in late) is partly due to missing CTCF data and partly due to fewer loops being called overall
+- The 82% "Other" in up loops makes intuitive sense: loops gaining strength are more likely CTCF/cohesin-mediated (structural), while loops at histone-marked regulatory elements tend to be losing strength
+- The chr8:71.2-71.8Mb region has a cluster of significant "Other" loops worth noting
+
+---
 
 ## Quality Control
 
