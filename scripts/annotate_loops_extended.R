@@ -57,33 +57,44 @@ suppressPackageStartupMessages({
 
 # Peak file paths organized by timepoint
 # All files from standardized peaks/beds/ directory
+# Bivalent files generated with: bash scripts/generate_bivalent_peaks.sb
 PEAK_FILES <- list(
   early = list(
     h3k27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",
     h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",
     h3k4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",
     h3k4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",
-    bivalent = "peaks/beds/Bivalent_Early.bed"
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed"
   ),
   late = list(
     h3k27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",
     h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",
     h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",
     h3k4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",
-    bivalent = "peaks/beds/Bivalent_Late.bed"
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed"
+  ),
+  # Consensus-based bivalent for comparison (uses 4-replicate H3K4me3)
+  late_consensus = list(
+    h3k27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",
+    h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",
+    h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",
+    h3k4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",
+    bivalent = "peaks/beds/Bivalent_Consensus_Late.bed"
   )
 )
 
 # Default input files by timepoint
 DEFAULT_INPUT_FILES <- list(
   early = "250831-early_outputs/merged_loops/non_redundant_loops.tsv",
-  late  = "25042-late_outputs/merged_loops/non_redundant_loops.tsv"
+  late  = "25042-late_outputs/merged_loops/non_redundant_loops.tsv",
+  late_consensus = "25042-late_outputs/merged_loops/non_redundant_loops.tsv"
 )
 
 # Default output directories by timepoint
 DEFAULT_OUTPUT_DIRS <- list(
   early = "outputs/loop_annotation_extended/early",
-  late  = "outputs/loop_annotation_extended/late"
+  late  = "outputs/loop_annotation_extended/late",
+  late_consensus = "outputs/loop_annotation_extended/late_consensus"
 )
 
 # Anchor type hierarchy (for consistent loop type ordering)
@@ -289,8 +300,8 @@ annotate_loops_extended <- function(
   tss_threshold = 2000
 ) {
   # Validate timepoint
-  if (!timepoint %in% c("early", "late")) {
-    stop("timepoint must be 'early' or 'late'")
+  if (!timepoint %in% c("early", "late", "late_consensus")) {
+    stop("timepoint must be 'early', 'late', or 'late_consensus'")
   }
 
   # Use defaults if not specified
@@ -564,6 +575,13 @@ annotate_loops_extended <- function(
   # --- Step 11: Save summary statistics ---
   cat("\nStep 11: Saving summary statistics...\n")
 
+  # Determine bivalent source description for summary
+  bivalent_source <- if (timepoint == "late_consensus") {
+    "Consensus (4-replicate H3K4me3)"
+  } else {
+    "Cerebellum (single-replicate H3K4me3)"
+  }
+
   summary_text <- c(
     "========================================",
     sprintf("Extended Loop Anchor Classification Summary (%s)", toupper(timepoint)),
@@ -587,7 +605,10 @@ annotate_loops_extended <- function(
     sprintf("  H3K27me3: %s (%d peaks)", peak_files$h3k27me3, length(k27me3_gr)),
     sprintf("  H3K4me1:  %s (%d peaks)", peak_files$h3k4me1, length(k4me1_gr)),
     sprintf("  H3K4me3:  %s (%d peaks)", peak_files$h3k4me3, length(k4me3_gr)),
-    sprintf("  Bivalent: %s (%d regions)", peak_files$bivalent, length(bivalent_gr)),
+    "",
+    sprintf("Bivalent Promoter Source: %s", bivalent_source),
+    sprintf("  File: %s", peak_files$bivalent),
+    sprintf("  Peaks: %d regions", length(bivalent_gr)),
     "",
     "Anchor Type Distribution:",
     "  Anchor1:"
@@ -854,9 +875,10 @@ parse_arguments <- function() {
   args <- commandArgs(trailingOnly = TRUE)
 
   # Defaults
-  timepoint <- NULL  # NULL means run both
+  timepoint <- NULL  # NULL means run early + late
   input_file <- NULL
   output_dir <- NULL
+  run_all <- FALSE  # --all flag to include late_consensus
 
   # Parse arguments
   i <- 1
@@ -870,37 +892,54 @@ parse_arguments <- function() {
     } else if (args[i] == "--output" && i < length(args)) {
       output_dir <- args[i + 1]
       i <- i + 2
+    } else if (args[i] == "--all") {
+      run_all <- TRUE
+      i <- i + 1
     } else if (args[i] == "--help" || args[i] == "-h") {
       cat("\n")
-      cat("Extended Loop Anchor Annotation (Dual Timepoint)\n")
-      cat("=================================================\n\n")
+      cat("Extended Loop Anchor Annotation (Multi-Timepoint)\n")
+      cat("==================================================\n\n")
       cat("Usage: Rscript scripts/annotate_loops_extended.R [OPTIONS]\n\n")
       cat("Options:\n")
-      cat("  --timepoint TP  Timepoint: 'early', 'late', or 'both' (default: both)\n")
+      cat("  --timepoint TP  Timepoint: 'early', 'late', 'late_consensus',\n")
+      cat("                  or 'both' (default: both = early + late)\n")
+      cat("  --all           Run all timepoints including late_consensus\n")
+      cat("                  (early + late + late_consensus)\n")
       cat("  --input FILE    Override input file (only with single timepoint)\n")
       cat("  --output DIR    Override output directory (only with single timepoint)\n")
       cat("  --help, -h      Show this help message\n\n")
+      cat("Timepoints:\n")
+      cat("  early           Early developmental timepoint (Cerebellum bivalent)\n")
+      cat("  late            Late/adult timepoint (Cerebellum bivalent)\n")
+      cat("  late_consensus  Late timepoint with consensus H3K4me3 bivalent\n")
+      cat("                  (4-replicate consensus, 688 vs 318 bivalent peaks)\n\n")
       cat("Description:\n")
       cat("  Annotates differential loops with chromatin state categories:\n")
       cat("    - Active_Promoter, Repressed_Promoter, Bivalent_Promoter, Polycomb,\n")
       cat("      Active_Enhancer, Poised_Enhancer, Other\n\n")
       cat("Output structure:\n")
       cat("  outputs/loop_annotation_extended/\n")
-      cat("  ├── early/  (Early timepoint results)\n")
-      cat("  └── late/   (Late timepoint results)\n\n")
+      cat("  ├── early/           (Early timepoint results)\n")
+      cat("  ├── late/            (Late timepoint, Cerebellum bivalent)\n")
+      cat("  └── late_consensus/  (Late timepoint, Consensus bivalent)\n\n")
       cat("Output files (per timepoint):\n")
       cat("  - extended_characterized_loops.tsv  Full annotation table\n")
       cat("  - anchor_type_summary.tsv           Per-anchor statistics\n")
       cat("  - loop_type_summary.tsv             Loop type counts\n")
       cat("  - plots/                            Visualization PDFs\n")
       cat("  - summary_statistics.txt            Text summary\n\n")
+      cat("Bivalent peak sources:\n")
+      cat("  Cerebellum:  H3K4me3CerebellumLate2 + H3K27me3Late (318 peaks)\n")
+      cat("  Consensus:   consensus_H3K4me3_late (4-rep) + H3K27me3Late (688 peaks)\n")
+      cat("  Generated by: bash scripts/generate_bivalent_peaks.sb\n\n")
       quit(status = 0)
     } else {
       i <- i + 1
     }
   }
 
-  list(timepoint = timepoint, input_file = input_file, output_dir = output_dir)
+  list(timepoint = timepoint, input_file = input_file,
+       output_dir = output_dir, run_all = run_all)
 }
 
 # =============================================================================
@@ -911,15 +950,25 @@ if (!interactive()) {
   args <- parse_arguments()
 
   # Determine which timepoints to run
-  timepoints_to_run <- if (is.null(args$timepoint) || args$timepoint == "both") {
-    c("early", "late")
+  if (args$run_all) {
+    # --all flag: run early, late, AND late_consensus
+    timepoints_to_run <- c("early", "late", "late_consensus")
+  } else if (is.null(args$timepoint) || args$timepoint == "both") {
+    # Default: run early + late only
+    timepoints_to_run <- c("early", "late")
   } else {
-    args$timepoint
+    # Explicit single timepoint
+    timepoints_to_run <- args$timepoint
   }
 
   for (tp in timepoints_to_run) {
     cat(sprintf("\n\n%s\n", paste(rep("=", 60), collapse = "")))
     cat(sprintf("Processing %s timepoint\n", toupper(tp)))
+    if (tp == "late_consensus") {
+      cat("(Using consensus H3K4me3 bivalent: 688 peaks)\n")
+    } else if (tp == "late") {
+      cat("(Using Cerebellum H3K4me3 bivalent: 318 peaks)\n")
+    }
     cat(sprintf("%s\n\n", paste(rep("=", 60), collapse = "")))
 
     result <- annotate_loops_extended(
