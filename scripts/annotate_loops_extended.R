@@ -250,6 +250,8 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
   n <- length(h3k27ac_overlap)
   anchor_type <- rep("Other", n)
 
+  # MAIN LOGIC
+
   # 1. Active_Promoter: H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
   # H3K4me3 is the canonical active promoter mark; H3K27ac not required
   # (housekeeping genes can be H3K4me3+ without K27ac)
