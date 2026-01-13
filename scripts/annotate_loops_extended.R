@@ -73,13 +73,13 @@ PEAK_FILES <- list(
     h3k4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",
     bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed"
   ),
-  # Consensus-based bivalent for comparison (uses 4-replicate H3K4me3)
+  # Consensus-based for comparison (uses 4-replicate H3K4me3 for both bivalent AND Active_Promoter)
   late_consensus = list(
     h3k27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",
     h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",
     h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",
-    h3k4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",
-    bivalent = "peaks/beds/Bivalent_Consensus_Late.bed"
+    h3k4me3  = "peaks/peaks-v1/consensus_H3K4me3_late_peaks.bed",  # 9,651 peaks (4-replicate consensus)
+    bivalent = "peaks/beds/Bivalent_Consensus_Late.bed"            # 688 peaks (from consensus H3K4me3)
   )
 )
 
