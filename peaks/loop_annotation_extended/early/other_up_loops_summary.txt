@@ -1,0 +1,74 @@
+
+================================================================================
+SUMMARY: 'Other' Category Up Loops from Early Timepoint
+Generated: 2026-01-13 09:48:17.647456
+================================================================================
+
+DATA OVERVIEW
+-------------
+Total early timepoint loops: 165
+Up loops (up_in_mutant): 73
+'Other' up loops (at least one anchor): 60
+  - Both anchors 'Other': 42 (70.0%)
+  - Single anchor 'Other': 18 (30.0%)
+
+LOOP TYPE BREAKDOWN
+-------------------
+
+   Active_Enhancer-Other    Active_Promoter-Other  Bivalent_Promoter-Other 
+                       3                        2                        1 
+             Other-Other    Poised_Enhancer-Other           Polycomb-Other 
+                      42                        6                        2 
+Repressed_Promoter-Other 
+                       4 
+
+CTCF OVERLAP ANALYSIS
+---------------------
+IMPORTANT: Early timepoint lacks CTCF ChIP-seq data, so 'Other' category
+includes potential CTCF sites. We checked overlap with late CTCF peaks to
+estimate how many 'Other' anchors may be CTCF-mediated.
+
+Anchor1 'Other' overlapping CTCF: 15 / 54 (27.8%)
+Anchor2 'Other' overlapping CTCF: 12 / 48 (25.0%)
+
+KEY CAVEATS
+-----------
+1. Early 'Other' category is INFLATED (~37%) due to missing CTCF data
+   - Late timepoint with CTCF data shows only ~9% 'Other'
+   - An estimated 60-70% of early 'Other' may be CTCF-mediated
+
+2. The high 'Repressed_Promoter' in early (35%) vs late (10%) suggests
+   early cerebellum has more Polycomb-repressed chromatin architecture
+
+3. Multiple strong 'Other-Other' up loops cluster at chr8:71Mb region
+
+TOP 10 MOST SIGNIFICANT 'OTHER' UP LOOPS
+----------------------------------------
+# A tibble: 10 × 8
+   loop_id    anchor1_coords         anchor2_coords         logFC       FDR
+   <chr>      <chr>                  <chr>                  <dbl>     <dbl>
+ 1 loop_4389  chr8:71210000-71220000 chr8:71780000-71790000 1.49  0.0000256
+ 2 loop_17936 chr8:71190000-71200000 chr8:71810000-71820000 1.01  0.0000256
+ 3 loop_3362  chr8:71175000-71180000 chr8:71815000-71820000 1.08  0.0000428
+ 4 loop_4918  chr8:49800000-49825000 chr8:57300000-57325000 1.76  0.000759 
+ 5 loop_8498  chr8:71125000-71150000 chr8:71825000-71850000 0.612 0.000759 
+ 6 loop_8667  chr8:36525000-36550000 chr8:37050000-37075000 0.424 0.00375  
+ 7 loop_4914  chr8:70900000-70925000 chr8:71775000-71800000 0.553 0.00414  
+ 8 loop_6571  chr4:32700000-32725000 chr4:34625000-34650000 0.512 0.00470  
+ 9 loop_4307  chr8:71140000-71150000 chr8:71830000-71840000 0.583 0.00535  
+10 loop_4309  chr8:34850000-34860000 chr8:35460000-35470000 0.439 0.00587  
+   loop_type                anchor1_nearest_gene anchor2_nearest_gene
+   <chr>                    <chr>                <chr>               
+ 1 Other-Other              Haus8                Fcho1               
+ 2 Other-Other              Haus8                Zfp709              
+ 3 Other-Other              Haus8                Zfp709              
+ 4 Repressed_Promoter-Other Gm2516               Hand2               
+ 5 Poised_Enhancer-Other    1700026F02Rik        Zfp709              
+ 6 Polycomb-Other           Trmt9b               G630064G18Rik       
+ 7 Active_Promoter-Other    Map1s                Fcho1               
+ 8 Other-Other              Mdn1                 Rars2               
+ 9 Other-Other              1700026F02Rik        Zfp709              
+10 Other-Other              Tnks                 Eri1                
+
+================================================================================
+
