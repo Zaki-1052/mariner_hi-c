@@ -80,6 +80,15 @@ PEAK_FILES <- list(
     h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",
     h3k4me3  = "peaks/peaks-v1/consensus_H3K4me3_late_peaks.bed",  # 9,651 peaks (4-replicate consensus)
     bivalent = "peaks/beds/Bivalent_Consensus_Late.bed"            # 688 peaks (from consensus H3K4me3)
+  ),
+  # P12_ctrl peaks for early comparison (more lenient peak calling than Cerebellum)
+  # Demonstrates lack of single source of truth for ChIP-seq annotations
+  early_p12ctrl = list(
+    h3k27ac  = "peaks/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # 28,042 peaks (vs 18,178 Cerebellum)
+    h3k27me3 = "peaks/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # 23,491 peaks (vs 12,473 Cerebellum)
+    h3k4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",               # same (no P12_ctrl version)
+    h3k4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",               # same (no P12_ctrl version)
+    bivalent = "peaks/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed"  # 933 peaks (Addison)
   )
 )
 
@@ -87,14 +96,16 @@ PEAK_FILES <- list(
 DEFAULT_INPUT_FILES <- list(
   early = "250831-early_outputs/merged_loops/non_redundant_loops.tsv",
   late  = "25042-late_outputs/merged_loops/non_redundant_loops.tsv",
-  late_consensus = "25042-late_outputs/merged_loops/non_redundant_loops.tsv"
+  late_consensus = "25042-late_outputs/merged_loops/non_redundant_loops.tsv",
+  early_p12ctrl = "250831-early_outputs/merged_loops/non_redundant_loops.tsv"
 )
 
 # Default output directories by timepoint
 DEFAULT_OUTPUT_DIRS <- list(
   early = "outputs/loop_annotation_extended/early",
   late  = "outputs/loop_annotation_extended/late",
-  late_consensus = "outputs/loop_annotation_extended/late_consensus"
+  late_consensus = "outputs/loop_annotation_extended/late_consensus",
+  early_p12ctrl = "outputs/loop_annotation_extended/early_p12ctrl"
 )
 
 # Anchor type hierarchy (for consistent loop type ordering)
@@ -300,8 +311,8 @@ annotate_loops_extended <- function(
   tss_threshold = 2000
 ) {
   # Validate timepoint
-  if (!timepoint %in% c("early", "late", "late_consensus")) {
-    stop("timepoint must be 'early', 'late', or 'late_consensus'")
+  if (!timepoint %in% c("early", "late", "late_consensus", "early_p12ctrl")) {
+    stop("timepoint must be 'early', 'late', 'late_consensus', or 'early_p12ctrl'")
   }
 
   # Use defaults if not specified
@@ -578,6 +589,8 @@ annotate_loops_extended <- function(
   # Determine bivalent source description for summary
   bivalent_source <- if (timepoint == "late_consensus") {
     "Consensus (4-replicate H3K4me3)"
+  } else if (timepoint == "early_p12ctrl") {
+    "Addison (P12_ctrl H3K4me3+H3K27me3)"
   } else {
     "Cerebellum (single-replicate H3K4me3)"
   }
@@ -902,36 +915,37 @@ parse_arguments <- function() {
       cat("Usage: Rscript scripts/annotate_loops_extended.R [OPTIONS]\n\n")
       cat("Options:\n")
       cat("  --timepoint TP  Timepoint: 'early', 'late', 'late_consensus',\n")
-      cat("                  or 'both' (default: both = early + late)\n")
-      cat("  --all           Run all timepoints including late_consensus\n")
-      cat("                  (early + late + late_consensus)\n")
+      cat("                  'early_p12ctrl', or 'both' (default: both = early + late)\n")
+      cat("  --all           Run all timepoints for full comparison\n")
+      cat("                  (early + late + late_consensus + early_p12ctrl)\n")
       cat("  --input FILE    Override input file (only with single timepoint)\n")
       cat("  --output DIR    Override output directory (only with single timepoint)\n")
       cat("  --help, -h      Show this help message\n\n")
       cat("Timepoints:\n")
-      cat("  early           Early developmental timepoint (Cerebellum bivalent)\n")
-      cat("  late            Late/adult timepoint (Cerebellum bivalent)\n")
-      cat("  late_consensus  Late timepoint with consensus H3K4me3 bivalent\n")
-      cat("                  (4-replicate consensus, 688 vs 318 bivalent peaks)\n\n")
+      cat("  early           Early developmental timepoint (Cerebellum peaks)\n")
+      cat("  late            Late/adult timepoint (Cerebellum peaks)\n")
+      cat("  late_consensus  Late with consensus H3K4me3 (4-rep, 9651 peaks)\n")
+      cat("  early_p12ctrl   Early with P12_ctrl peaks (more lenient calling)\n")
+      cat("                  H3K27ac: 28042 vs 18178, H3K27me3: 23491 vs 12473\n\n")
       cat("Description:\n")
       cat("  Annotates differential loops with chromatin state categories:\n")
       cat("    - Active_Promoter, Repressed_Promoter, Bivalent_Promoter, Polycomb,\n")
       cat("      Active_Enhancer, Poised_Enhancer, Other\n\n")
       cat("Output structure:\n")
       cat("  outputs/loop_annotation_extended/\n")
-      cat("  ├── early/           (Early timepoint results)\n")
-      cat("  ├── late/            (Late timepoint, Cerebellum bivalent)\n")
-      cat("  └── late_consensus/  (Late timepoint, Consensus bivalent)\n\n")
+      cat("  ├── early/           (Early, Cerebellum peaks)\n")
+      cat("  ├── late/            (Late, Cerebellum peaks)\n")
+      cat("  ├── late_consensus/  (Late, Consensus H3K4me3)\n")
+      cat("  └── early_p12ctrl/   (Early, P12_ctrl peaks)\n\n")
       cat("Output files (per timepoint):\n")
       cat("  - extended_characterized_loops.tsv  Full annotation table\n")
       cat("  - anchor_type_summary.tsv           Per-anchor statistics\n")
       cat("  - loop_type_summary.tsv             Loop type counts\n")
       cat("  - plots/                            Visualization PDFs\n")
       cat("  - summary_statistics.txt            Text summary\n\n")
-      cat("Bivalent peak sources:\n")
-      cat("  Cerebellum:  H3K4me3CerebellumLate2 + H3K27me3Late (318 peaks)\n")
-      cat("  Consensus:   consensus_H3K4me3_late (4-rep) + H3K27me3Late (688 peaks)\n")
-      cat("  Generated by: bash scripts/generate_bivalent_peaks.sb\n\n")
+      cat("Peak source comparison (demonstrates lack of single source of truth):\n")
+      cat("  early vs early_p12ctrl: Cerebellum (strict) vs P12_ctrl (lenient)\n")
+      cat("  late vs late_consensus: Cerebellum H3K4me3 vs 4-rep consensus\n\n")
       quit(status = 0)
     } else {
       i <- i + 1
@@ -951,8 +965,8 @@ if (!interactive()) {
 
   # Determine which timepoints to run
   if (args$run_all) {
-    # --all flag: run early, late, AND late_consensus
-    timepoints_to_run <- c("early", "late", "late_consensus")
+    # --all flag: run all timepoints for full comparison
+    timepoints_to_run <- c("early", "late", "late_consensus", "early_p12ctrl")
   } else if (is.null(args$timepoint) || args$timepoint == "both") {
     # Default: run early + late only
     timepoints_to_run <- c("early", "late")
@@ -965,9 +979,13 @@ if (!interactive()) {
     cat(sprintf("\n\n%s\n", paste(rep("=", 60), collapse = "")))
     cat(sprintf("Processing %s timepoint\n", toupper(tp)))
     if (tp == "late_consensus") {
-      cat("(Using consensus H3K4me3 bivalent: 688 peaks)\n")
+      cat("(Using consensus H3K4me3: 9651 peaks, bivalent: 688 peaks)\n")
     } else if (tp == "late") {
-      cat("(Using Cerebellum H3K4me3 bivalent: 318 peaks)\n")
+      cat("(Using Cerebellum H3K4me3: 6581 peaks, bivalent: 318 peaks)\n")
+    } else if (tp == "early_p12ctrl") {
+      cat("(Using P12_ctrl peaks: H3K27ac 28042, H3K27me3 23491)\n")
+    } else if (tp == "early") {
+      cat("(Using Cerebellum peaks: H3K27ac 18178, H3K27me3 12473)\n")
     }
     cat(sprintf("%s\n\n", paste(rep("=", 60), collapse = "")))
 
