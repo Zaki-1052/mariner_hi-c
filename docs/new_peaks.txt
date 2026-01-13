@@ -1,0 +1,1781 @@
+
+ ▐▛███▜▌   Claude Code v2.1.5
+▝▜█████▛▘  Opus 4.5 · Claude Max
+  ▘▘ ▝▝    ~/Documents/GitHub/mariner_hi-c
+══════════════════ Conversation compacted · ctrl+o for history ═════════════════
+
+❯ /compact 
+  ⎿  Compacted (ctrl+o to see full summary)
+  ⎿  Referenced file scripts/annotate_loops_extended.R
+  ⎿  Read ../../CLAUDE.md (277 lines)
+  ⎿  Read scripts/generate_consensus_h3k4me3_peaks.sb (155 lines)
+  ⎿  Plan file referenced (~/.claude/plans/agile-singing-key.md)
+
+❯ great thanks! now, my PI sent me new files for everything, late and early 
+  timepoints. i want the @scripts/annotate_loops_extended.R script          
+  modified to: produce both early and late/ results (currently only does    
+  the late timepoint), and then instead of the peak files we've been using  
+  which have been kind of scattered, i want you to use the files in         
+  @peaks/beds/ -- you may also want to do an intersection (as in if they    
+  overlap) to create things like the bivalent region, using bedtools, sort  
+  of like @scripts/generate_consensus_h3k4me3_peaks.sb but obviously it is  
+  overlap rather than include all consensus. you may need to do this for a  
+  few things but i think thats the main/only one? and the rest can be done  
+  with the main algorithm/priority logic we currently have but with the new 
+  files                                                                     
+  ⎿  Read scripts/annotate_loops_extended.R (980 lines)
+  ⎿  Listed directory peaks/beds/
+  ⎿  Read scripts/generate_consensus_h3k4me3_peaks.sb (155 lines)
+
+⏺ I'll help you modify the annotation script to support both timepoints with the new standardized files. Let me first explore the current state and understand the new files.
+
+⏺ Explore(Explore new peak files structure)
+  ⎿  Done (21 tool uses · 52.0k tokens · 4m 0s)                            
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 100 lines
+
+⏺ Let me read more of the current script to understand its full structure before planning.
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 200 lines
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 300 lines
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 200 lines
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 181 lines
+
+⏺ Now I have a complete understanding. Let me check if there's an early timepoint input file for loops as well, since the user wants both timepoints.
+
+⏺ Search(pattern: "**/*early*loops*.tsv")
+  ⎿  Found 0 files 
+
+⏺ Search(pattern: "**/*Early*loops*.tsv")
+  ⎿  Found 0 files 
+
+⏺ Bash(ls -la
+      /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/*outputs*/merged_loops/
+      2>/dev/null || ls -la
+      /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/*/merge…)
+  ⎿ /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/25042-late_outputs/me
+    rged_loops/:
+    total 61080
+    … +83 lines (ctrl+o to expand)
+
+
+⏺ I now have a complete picture. There are loop data for both timepoints:
+  - Late: 25042-late_outputs/merged_loops/non_redundant_loops.tsv (2,910 loops)
+  - Early: 250831-early_outputs/merged_loops/non_redundant_loops.tsv (smaller set)
+
+  And the Bivalent files are already pre-computed by your PI. Let me update the plan file with the implementation strategy.
+
+⏺ Reading Plan(~/.claude/plans/agile-singing-key.md)
+  ⎿  Read 207 lines
+
+⏺ Now I'll update the plan file with the new implementation strategy for dual timepoint support.
+
+⏺ Updated plan
+  ⎿  /plan to preview                                                    
+        1 - # Plan: Update annotate_loops_extended.R Chromatin           
+          -Categories                                                    
+        1 + # Plan: Dual Timepoint Loop Annotation with Standardized     
+          +Peak Files                                                    
+        2                                                                
+        3 -## Summary of Changes                                         
+        3 +## Summary                                                    
+        4                                                                
+        5 - Based on your TODOs and discussion with your PI, update the  
+          -anchor classification system with biologically coherent       
+          -chromatin state categories.                                   
+        5 + Update `scripts/annotate_loops_extended.R` to:               
+        6 + 1. Support both **Early** and **Late** timepoint annotations 
+        7 + 2. Use the new standardized peak files from `peaks/beds/`    
+        8 + 3. Output separate results for each timepoint                
+        9                                                                
+       10 - ## Biological Context & Rationale                            
+       10 + ## New Data Available                                        
+       11                                                                
+       12 - **Available Data (after consensus generation):**             
+       13 - - H3K27ac (late timepoint) - active mark                     
+       14 - - H3K27me3 (late timepoint) - Polycomb repressive mark       
+       15 - - H3K4me1 (late timepoint) - enhancer priming mark           
+       16 - - **H3K4me3 (adult/late) - canonical active promoter mark**  
+          -(NEW - 4 replicates in `peaks/H3K4me3/`)                      
+       17 - - **K4me3+K27me3 overlap (Addison file, early timepoint)** - 
+          - classical bivalent promoters                                 
+       12 + ### Loop Data (Input)                                        
+       13 + | Timepoint | Input File | Loop Count |                      
+       14 + |-----------|------------|------------|                      
+       15 + | Late |                                                     
+          +`25042-late_outputs/merged_loops/non_redundant_loops.tsv` |   
+          +~2,910 |                                                      
+       16 + | Early |                                                    
+          +`250831-early_outputs/merged_loops/non_redundant_loops.tsv` | 
+          + ~smaller |                                                   
+       17                                                                
+       18 - **Key biological principles (from PI discussion):**          
+       19 - - H3K4me3 is the canonical active promoter mark (now         
+          -available in `peaks/H3K4me3/`)                                
+       20 - - Not all promoters are activated via enhancers -            
+          -housekeeping genes have H3K4me3 but no K27ac                  
+       21 - - Bivalency (K4me3+K27me3) = developmental poised state at   
+          -promoters                                                     
+       22 - - H3K27ac and H3K27me3 are mutually exclusive - no need to   
+          -explicitly exclude H3K27ac when checking H3K27me3             
+       23 - - Polycomb loops tend to be long-range (>2kb from TSS)       
+       18 + ### New Standardized Peak Files (`peaks/beds/`)              
+       19 + | Mark | Early File | Late File | Early Peaks | Late Peaks | 
+       20 + |------|------------|-----------|-------------|------------| 
+       21 + | H3K27ac | `H3K27acCerebellumEarly2.bed` |                  
+          +`H3K27acCerebellumLate2.bed` | 18,178 | 15,105 |              
+       22 + | H3K27me3 | `H3K27me3CerebellumEarly1.bed` |                
+          +`H3K27me3CerebellumLate1.bed` | 12,473 | 15,809 |             
+       23 + | H3K4me1 | `H3K4me1CerebellumEarly1.bed` |                  
+          +`H3K4me1CerebellumLate1.bed` | 93,859 | 113,781 |             
+       24 + | H3K4me3 | `H3K4me3CerebellumEarly2.bed` |                  
+          +`H3K4me3CerebellumLate2.bed` | 10,370 | 6,581 |               
+       25 + | **Bivalent** | `Bivalent_Early.bed` | `Bivalent_Late.bed`  
+          +| 933 | 320 |                                                 
+       26                                                                
+       27 - ## Proposed Categories (7 types, priority order)             
+       27 + **Key finding**: Bivalent files are **pre-computed           
+          +K4me3+K27me3 intersections** - no bedtools needed.            
+       28                                                                
+       29 - | Priority | Category | Definition | Biological Meaning |    
+       30 - |----------|----------|------------|-------------------|     
+       31 - | 1 | **Active_Promoter** | H3K4me3+ AND !H3K27me3 AND ≤2kb  
+          -from TSS | Active transcription at promoter |                 
+       32 - | 2 | **Repressed_Promoter** | H3K27me3+ AND !H3K27ac AND    
+          -≤2kb from TSS | Polycomb-silenced promoter |                  
+       33 - | 3 | **Bivalent** | Overlaps K4me3_K27me3 (Addison file) |  
+          -Developmental poised domain |                                 
+       34 - | 4 | **Polycomb** | H3K27me3+ AND >2kb from TSS | Distal    
+          -Polycomb repression |                                         
+       35 - | 5 | **Active_Enhancer** | H3K27ac+ AND >2kb from TSS |     
+          -Active enhancer element |                                     
+       36 - | 6 | **Poised_Enhancer** | H3K4me1+ AND !H3K27ac AND        
+          -!H3K27me3 AND >2kb from TSS | Primed, non-repressed enhancer  
+          -|                                                             
+       37 - | 7 | **Other** | Default (no marks) | Structural elements,  
+          -CTCF sites, etc. |                                            
+       29 + ## Files to Modify                                           
+       30                                                                
+       31 - ## Files to Create/Modify                                    
+       31 + ### `scripts/annotate_loops_extended.R`                      
+       32 + Single file modification with these changes:                 
+       33                                                                
+       34 - ### 1. NEW: `scripts/generate_consensus_h3k4me3_peaks.sb`    
+       35 - Create a consensus peak generation script for H3K4me3        
+          -(similar to existing `generate_consensus_chip_peaks.sb`)      
+       36 -                                                              
+       37 - **Input files** (4 replicates in `peaks/H3K4me3/`):          
+       38 - - `240103_index_15_BAP1_P68_ctrl_2_H3K4me3_S24_L001_aligned_ 
+          -reads_treat.stringent.sort_subtracted.bed`                    
+       39 - - `240725-index-15-BAP1-P51-ctrl-2-H3K4me3_S11_L007_aligned_ 
+          -reads_treat.stringent.sort_subtracted.bed`                    
+       40 - - `250514_index_37_Bap1_P60_ctrl1_H3K4me3_S9_L002_aligned_re 
+          -ads_treat.stringent.sort_subtracted.bed`                      
+       41 - - `250514_index_39_Bap1_P60_ctrl2_H3K4me3_S11_L002_aligned_r 
+          -eads_treat.stringent.sort_subtracted.bed`                     
+       42 -                                                              
+       43 - **Output:** `consensus_H3K4me3_late_peaks.bed` (in root      
+          -directory for easy replacement later)                         
+       44 -                                                              
+       45 - **Key settings:**                                            
+       46 - - Replicate threshold: 2/4 (peaks must appear in at least 2  
+          -replicates)                                                   
+       47 - - Merge distance: 10bp (same as existing script)             
+       48 -                                                              
+       49 - ### 2. MODIFY: `scripts/annotate_loops_extended.R`           
+       50 -                                                              
+       34   ## Implementation Steps                                      
+       35                                                                
+       36 - ### Step 1: Create                                           
+          -`scripts/generate_consensus_h3k4me3_peaks.sb`                 
+       37 - - Copy structure from `generate_consensus_chip_peaks.sb`     
+       38 - - Update input paths to use `peaks/H3K4me3/` files           
+       39 - - Output to `consensus_H3K4me3_late_peaks.bed` in root       
+       36 + ### Step 1: Update Configuration Section (lines 54-82)       
+       37                                                                
+       38 - ### Step 2: Update Configuration Section in                  
+          -annotate_loops_extended.R (~lines 54-76)                      
+       38 + Replace hardcoded paths with timepoint-specific path         
+          +dictionaries:                                                 
+       39                                                                
+       40   ```r                                                         
+       41 - # Add new H3K4me3 path                                       
+       42 - DEFAULT_H3K4ME3_PATH <- "consensus_H3K4me3_late_peaks.bed"   
+       41 + # ========================================================== 
+          +===================                                           
+       42 + # CONFIGURATION                                              
+       43 + # ========================================================== 
+          +===================                                           
+       44                                                                
+       45 - # Update bivalent path to Addison file                       
+       46 - DEFAULT_BIVALENT_PATH <-                                     
+          -"250224AddisonH3K4me3H3K27me3Early.bed"                       
+       45 + # Peak file paths organized by timepoint                     
+       46 + # All files from standardized peaks/beds/ directory          
+       47 + PEAK_FILES <- list(                                          
+       48 +   early = list(                                              
+       49 +     h3k27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",     
+       50 +     h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",    
+       51 +     h3k4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",     
+       52 +     h3k4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",     
+       53 +     bivalent = "peaks/beds/Bivalent_Early.bed"               
+       54 +   ),                                                         
+       55 +   late = list(                                               
+       56 +     h3k27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",      
+       57 +     h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",     
+       58 +     h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",      
+       59 +     h3k4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",      
+       60 +     bivalent = "peaks/beds/Bivalent_Late.bed"                
+       61 +   )                                                          
+       62 + )                                                            
+       63                                                                
+       64 - # Update anchor type order (Distal -> Other, add new         
+          -promoter categories)                                          
+       65 - ANCHOR_TYPE_ORDER <- c("Active_Promoter",                    
+          -"Repressed_Promoter", "Bivalent",                             
+       64 + # Default input files by timepoint                           
+       65 + DEFAULT_INPUT_FILES <- list(                                 
+       66 +   early =                                                    
+          +"250831-early_outputs/merged_loops/non_redundant_loops.tsv",  
+       67 +   late  =                                                    
+          +"25042-late_outputs/merged_loops/non_redundant_loops.tsv"     
+       68 + )                                                            
+       69 +                                                              
+       70 + # Default output directories by timepoint                    
+       71 + DEFAULT_OUTPUT_DIRS <- list(                                 
+       72 +   early = "outputs/loop_annotation_extended/early",          
+       73 +   late  = "outputs/loop_annotation_extended/late"            
+       74 + )                                                            
+       75 +                                                              
+       76 + # Anchor types and colors (unchanged from previous           
+          +implementation)                                               
+       77 + ANCHOR_TYPE_ORDER <- c("Active_Promoter",                    
+          +"Repressed_Promoter", "Bivalent_Promoter",                    
+       78                          "Polycomb", "Active_Enhancer",        
+           "Poised_Enhancer", "Other")                                   
+       79                                                                
+       80 - # Update colors                                              
+       80   ANCHOR_COLORS <- c(                                          
+       81 -  "Active_Promoter" = "#e41a1c",     # Red                    
+       82 -  "Repressed_Promoter" = "#756bb1",  # Purple                 
+       83 -   "Bivalent" = "#984ea3",            # Magenta               
+       84 -  "Polycomb" = "#4daf4a",            # Green                  
+       85 -  "Active_Enhancer" = "#377eb8",     # Blue                   
+       86 -  "Poised_Enhancer" = "#ff7f00",     # Orange                 
+       87 -  "Other" = "#999999"                # Gray                   
+       81 +  "Active_Promoter" = "#e41a1c",                              
+       82 +  "Repressed_Promoter" = "#756bb1",                           
+       83 +   "Bivalent_Promoter" = "#984ea3",                           
+       84 +  "Polycomb" = "#4daf4a",                                     
+       85 +  "Active_Enhancer" = "#377eb8",                              
+       86 +  "Poised_Enhancer" = "#ff7f00",                              
+       87 +  "Other" = "#999999"                                         
+       88   )                                                            
+       89   ```                                                          
+       90                                                                
+       91 - ### Step 3: Add H3K4me3 loading function (~lines 125-145)    
+       91 + ### Step 2: Update Loading Functions (lines 88-198)          
+       92                                                                
+       93 + Simplify to a single generic function:                       
+       94 +                                                              
+       95   ```r                                                         
+       96 - load_h3k4me3_peaks <- function(bed_path =                    
+          -DEFAULT_H3K4ME3_PATH) {                                       
+       97 -   # Similar structure to existing load functions             
+       96 + #' Load ChIP-seq peaks from BED file                         
+       97 + #'                                                           
+       98 + #' @param bed_path Path to BED file                          
+       99 + #' @param mark_name Name of the mark (for logging)           
+      100 + #' @return GRanges object                                    
+      101 + load_chip_peaks <- function(bed_path, mark_name = "ChIP") {  
+      102 +   if (!file.exists(bed_path)) {                              
+      103 +     stop(sprintf("%s bed file not found: %s", mark_name,     
+          +bed_path))                                                    
+      104 +   }                                                          
+      105 +   cat(sprintf("  Loading %s peaks from: %s\n", mark_name,    
+          +bed_path))                                                    
+      106 +                                                              
+      107 +   df <- read.table(bed_path, sep = "\t", header = FALSE,     
+          +stringsAsFactors = FALSE)                                     
+      108 +   gr <- GRanges(                                             
+      109 +     seqnames = df$V1,                                        
+      110 +     ranges = IRanges(start = df$V2, end = df$V3)             
+      111 +   )                                                          
+      112 +                                                              
+      113 +   cat(sprintf("    Loaded %d peaks\n", length(gr)))          
+      114 +   return(gr)                                                 
+      115   }                                                            
+      116   ```                                                          
+      117                                                                
+      118 - ### Step 4: Update `annotate_chip_overlaps_extended()`       
+          -function (~lines 181-189)                                     
+      119 - - Add `H3K4me3_overlap` column to output                     
+      118 + ### Step 3: Update Main Function Signature (line 353)        
+      119                                                                
+      120 - ### Step 5: Rewrite `classify_anchor_type_extended()`        
+          -function (~lines 202-252)                                     
+      120 + Add `timepoint` parameter:                                   
+      121                                                                
+      122   ```r                                                         
+      123 - classify_anchor_type_extended <- function(h3k27ac_overlap,   
+          -h3k27me3_overlap,                                             
+      124 -                                           h3k4me1_overlap,   
+          -h3k4me3_overlap,                                              
+      125 -                                           bivalent_overlap,  
+          -distance_to_tss,                                              
+      126 -                                           tss_threshold =    
+          -2000) {                                                       
+      127 -   n <- length(h3k27ac_overlap)                               
+      128 -   anchor_type <- rep("Other", n)                             
+      123 + annotate_loops_extended <- function(                         
+      124 +   timepoint = "late",                              # NEW:    
+          +"early" or "late"                                             
+      125 +   input_file = NULL,                               # NULL =  
+          +use default for timepoint                                     
+      126 +   output_dir = NULL,                               # NULL =  
+          +use default for timepoint                                     
+      127 +   peak_files = NULL,                               # NULL =  
+          +use defaults for timepoint                                    
+      128 +   tss_threshold = 2000                                       
+      129 + ) {                                                          
+      130 +   # Validate timepoint                                       
+      131 +   if (!timepoint %in% c("early", "late")) {                  
+      132 +     stop("timepoint must be 'early' or 'late'")              
+      133 +   }                                                          
+      134                                                                
+      135 -   # 1. Active_Promoter: H3K4me3+ AND !H3K27me3 AND ≤2kb from 
+          - TSS                                                          
+      136 -   is_active_promoter <- h3k4me3_overlap & !h3k27me3_overlap  
+          -&                                                             
+      137 -                         !is.na(distance_to_tss) &            
+          -distance_to_tss <= tss_threshold                              
+      138 -   anchor_type[is_active_promoter] <- "Active_Promoter"       
+      135 +   # Use defaults if not specified                            
+      136 +   if (is.null(input_file)) input_file <-                     
+          +DEFAULT_INPUT_FILES[[timepoint]]                              
+      137 +   if (is.null(output_dir)) output_dir <-                     
+          +DEFAULT_OUTPUT_DIRS[[timepoint]]                              
+      138 +   if (is.null(peak_files)) peak_files <-                     
+          +PEAK_FILES[[timepoint]]                                       
+      139                                                                
+      140 -   # 2. Repressed_Promoter: H3K27me3+ AND !H3K27ac AND ≤2kb   
+          -from TSS                                                      
+      141 -   is_repressed_promoter <- !is_active_promoter &             
+      142 -                            h3k27me3_overlap &                
+          -!h3k27ac_overlap &                                            
+      143 -                            !is.na(distance_to_tss) &         
+          -distance_to_tss <= tss_threshold                              
+      144 -   anchor_type[is_repressed_promoter] <- "Repressed_Promoter" 
+      140 +   # ... rest of function                                     
+      141 + }                                                            
+      142 + ```                                                          
+      143                                                                
+      144 -   # 3. Bivalent: K4me3_K27me3 overlap (not already           
+          -classified as promoter)                                       
+      145 -   is_bivalent <- !is_active_promoter &                       
+          -!is_repressed_promoter & bivalent_overlap                     
+      146 -   anchor_type[is_bivalent] <- "Bivalent"                     
+      144 + ### Step 4: Update Peak Loading in Main Function (lines      
+          +398-405)                                                      
+      145                                                                
+      146 -   # 4. Polycomb: H3K27me3+ AND >2kb from TSS (distal         
+          -repressive)                                                   
+      147 -   is_polycomb <- !is_active_promoter &                       
+          -!is_repressed_promoter & !is_bivalent &                       
+      148 -                  h3k27me3_overlap &                          
+      149 -                  (is.na(distance_to_tss) | distance_to_tss > 
+          - tss_threshold)                                               
+      150 -   anchor_type[is_polycomb] <- "Polycomb"                     
+      146 + Use the `peak_files` list:                                   
+      147                                                                
+      148 -   # 5. Active_Enhancer: H3K27ac+ AND >2kb from TSS           
+      149 -   is_active_enhancer <- !is_active_promoter &                
+          -!is_repressed_promoter &                                      
+      150 -                         !is_bivalent & !is_polycomb &        
+      151 -                         h3k27ac_overlap &                    
+      152 -                         (is.na(distance_to_tss) |            
+          -distance_to_tss > tss_threshold)                              
+      153 -   anchor_type[is_active_enhancer] <- "Active_Enhancer"       
+      148 + ```r                                                         
+      149 + # --- Step 2: Load ChIP-seq peaks ---                        
+      150 + cat(sprintf("Step 2: Loading ChIP-seq peak files (%s         
+          +timepoint)...\n", timepoint))                                 
+      151 + k27ac_gr   <- load_chip_peaks(peak_files$h3k27ac, "H3K27ac") 
+      152 + k27me3_gr  <- load_chip_peaks(peak_files$h3k27me3,           
+          +"H3K27me3")                                                   
+      153 + k4me1_gr   <- load_chip_peaks(peak_files$h3k4me1, "H3K4me1") 
+      154 + k4me3_gr   <- load_chip_peaks(peak_files$h3k4me3, "H3K4me3") 
+      155 + bivalent_gr <- load_chip_peaks(peak_files$bivalent,          
+          +"Bivalent (K4me3+K27me3)")                                    
+      156 + cat("\n")                                                    
+      157 + ```                                                          
+      158                                                                
+      159 -   # 6. Poised_Enhancer: H3K4me1+ AND !H3K27ac AND !H3K27me3  
+          -AND >2kb from TSS                                             
+      160 -   is_poised_enhancer <- !is_active_promoter &                
+          -!is_repressed_promoter &                                      
+      161 -                         !is_bivalent & !is_polycomb &        
+          -!is_active_enhancer &                                         
+      162 -                         h3k4me1_overlap & !h3k27ac_overlap & 
+          - !h3k27me3_overlap &                                          
+      163 -                         (is.na(distance_to_tss) |            
+          -distance_to_tss > tss_threshold)                              
+      164 -   anchor_type[is_poised_enhancer] <- "Poised_Enhancer"       
+      159 + ### Step 5: Update Command-Line Parsing (lines 914-956)      
+      160                                                                
+      161 -   # 7. Other: default (everything else)                      
+      162 -   return(anchor_type)                                        
+      161 + Add `--timepoint` argument:                                  
+      162 +                                                              
+      163 + ```r                                                         
+      164 + parse_arguments <- function() {                              
+      165 +   args <- commandArgs(trailingOnly = TRUE)                   
+      166 +                                                              
+      167 +   # Defaults                                                 
+      168 +   timepoint <- NULL  # NULL means run both                   
+      169 +   input_file <- NULL                                         
+      170 +   output_dir <- NULL                                         
+      171 +                                                              
+      172 +   i <- 1                                                     
+      173 +   while (i <= length(args)) {                                
+      174 +     if (args[i] == "--timepoint" && i < length(args)) {      
+      175 +       timepoint <- args[i + 1]                               
+      176 +       i <- i + 2                                             
+      177 +     } else if (args[i] == "--input" && i < length(args)) {   
+      178 +       input_file <- args[i + 1]                              
+      179 +       i <- i + 2                                             
+      180 +     } else if (args[i] == "--output" && i < length(args)) {  
+      181 +       output_dir <- args[i + 1]                              
+      182 +       i <- i + 2                                             
+      183 +     } else if (args[i] == "--help" || args[i] == "-h") {     
+      184 +       cat("\nExtended Loop Anchor Annotation (Dual           
+          +Timepoint)\n")                                                
+      185 +                                                              
+          +cat("=================================================\n\n")  
+      186 +       cat("Usage: Rscript scripts/annotate_loops_extended.R  
+          +[OPTIONS]\n\n")                                               
+      187 +       cat("Options:\n")                                      
+      188 +       cat("  --timepoint TP  Timepoint: 'early', 'late', or  
+          +'both' (default: both)\n")                                    
+      189 +       cat("  --input FILE    Override input file (only with  
+          +single timepoint)\n")                                         
+      190 +       cat("  --output DIR    Override output directory (only 
+          + with single timepoint)\n")                                   
+      191 +       cat("  --help, -h      Show this help message\n\n")    
+      192 +       quit(status = 0)                                       
+      193 +     } else {                                                 
+      194 +       i <- i + 1                                             
+      195 +     }                                                        
+      196 +   }                                                          
+      197 +                                                              
+      198 +   return(list(timepoint = timepoint, input_file =            
+          +input_file, output_dir = output_dir))                         
+      199   }                                                            
+      200   ```                                                          
+      201                                                                
+      202 - ### Step 6: Update main function to load and pass H3K4me3    
+          -peaks                                                         
+      203 - - Add `h3k4me3_path` parameter to                            
+          -`annotate_loops_extended()`                                   
+      204 - - Load H3K4me3 peaks                                         
+      205 - - Pass `h3k4me3_gr` to `annotate_chip_overlaps_extended()`   
+      206 - - Pass `h3k4me3_overlap` to                                  
+          -`classify_anchor_type_extended()`                             
+      202 + ### Step 6: Update Standalone Execution (lines 962-979)      
+      203                                                                
+      204 - ### Step 7: Update documentation                             
+      205 - - Update header comments (lines 10-26) with new category     
+          -definitions                                                   
+      206 - - Remove all TODO comments                                   
+      204 + Run both timepoints by default:                              
+      205                                                                
+      206 - ### Step 8: Update output column names                       
+      207 - - Change any remaining "Distal" references to "Other"        
+      208 - - Add `anchor1/2_H3K4me3_overlap` columns                    
+      206 + ```r                                                         
+      207 + if (!interactive()) {                                        
+      208 +   args <- parse_arguments()                                  
+      209                                                                
+      210 - ## File Path Design (for easy replacement)                   
+      210 +   # Determine which timepoints to run                        
+      211 +   timepoints_to_run <- if (is.null(args$timepoint) ||        
+          +args$timepoint == "both") {                                   
+      212 +     c("early", "late")                                       
+      213 +   } else {                                                   
+      214 +     args$timepoint                                           
+      215 +   }                                                          
+      216                                                                
+      217 - All peak file paths are defined as constants at the top of   
+          -the script:                                                   
+      217 +   for (tp in timepoints_to_run) {                            
+      218 +     cat(sprintf("\n\n%s\n", paste(rep("=", 60), collapse =   
+          +"")))                                                         
+      219 +     cat(sprintf("Processing %s timepoint\n", toupper(tp)))   
+      220 +     cat(sprintf("%s\n\n", paste(rep("=", 60), collapse =     
+          +"")))                                                         
+      221 +                                                              
+      222 +     result <- annotate_loops_extended(                       
+      223 +       timepoint = tp,                                        
+      224 +       input_file = args$input_file,  # NULL unless           
+          +overridden                                                    
+      225 +       output_dir = args$output_dir   # NULL unless           
+          +overridden                                                    
+      226 +     )                                                        
+      227 +   }                                                          
+      228 +                                                              
+      229 +   cat("\n\nAll timepoints processed successfully.\n")        
+      230 + }                                                            
+      231 + ```                                                          
+      232 +                                                              
+      233 + ### Step 7: Update Summary Statistics Output (lines 629-682) 
+      234 +                                                              
+      235 + Include timepoint in summary:                                
+      236 +                                                              
+      237   ```r                                                         
+      238 - DEFAULT_H3K27AC_PATH <-                                      
+          -"peaks/220310index25H3K27acLatePeakRegions.bed"               
+      239 - DEFAULT_H3K27ME3_PATH <-                                     
+          -"peaks/220310index29H3K27me3LatePeakRegions.bed"              
+      240 - DEFAULT_H3K4ME1_PATH <-                                      
+          -"peaks/K4me1_aligned_reads_peaks.broadPeak-filtered.bed"      
+      241 - DEFAULT_H3K4ME3_PATH <- "consensus_H3K4me3_late_peaks.bed"   
+          -# NEW                                                         
+      242 - DEFAULT_BIVALENT_PATH <-                                     
+          -"250224AddisonH3K4me3H3K27me3Early.bed"  # UPDATED            
+      238 + summary_text <- c(                                           
+      239 +   "========================================",                
+      240 +   sprintf("Extended Loop Anchor Classification Summary (%s   
+          +Timepoint)",                                                  
+      241 +           toupper(timepoint)),                               
+      242 +   "========================================",                
+      243 +   # ... rest unchanged                                       
+      244 + )                                                            
+      245   ```                                                          
+      246                                                                
+      247 - When PI sends standardized files, simply update these paths. 
+      247 + ### Step 8: Update Header Documentation (lines 1-34)         
+      248                                                                
+      249 + Update to reflect dual timepoint support.                    
+      250 +                                                              
+      251 + ## Output Structure                                          
+      252 +                                                              
+      253 + ```                                                          
+      254 + outputs/loop_annotation_extended/                            
+      255 + ├── early/                                                   
+      256 + │   ├── extended_characterized_loops.tsv                     
+      257 + │   ├── anchor_type_summary.tsv                              
+      258 + │   ├── loop_type_summary.tsv                                
+      259 + │   ├── summary_statistics.txt                               
+      260 + │   └── plots/                                               
+      261 + │       ├── loop_type_piechart_comparison.pdf                
+      262 + │       ├── anchor_type_distribution.pdf                     
+      263 + │       └── loop_type_by_direction.pdf                       
+      264 + └── late/                                                    
+      265 +     ├── extended_characterized_loops.tsv                     
+      266 +     ├── anchor_type_summary.tsv                              
+      267 +     ├── loop_type_summary.tsv                                
+      268 +     ├── summary_statistics.txt                               
+      269 +     └── plots/                                               
+      270 +         ├── loop_type_piechart_comparison.pdf                
+      271 +         ├── anchor_type_distribution.pdf                     
+      272 +         └── loop_type_by_direction.pdf                       
+      273 + ```                                                          
+      274 +                                                              
+      275 + ## Usage Examples                                            
+      276 +                                                              
+      277 + ```bash                                                      
+      278 + # Run both timepoints (default)                              
+      279 + Rscript scripts/annotate_loops_extended.R                    
+      280 +                                                              
+      281 + # Run only early timepoint                                   
+      282 + Rscript scripts/annotate_loops_extended.R --timepoint early  
+      283 +                                                              
+      284 + # Run only late timepoint                                    
+      285 + Rscript scripts/annotate_loops_extended.R --timepoint late   
+      286 +                                                              
+      287 + # Override input/output for single timepoint                 
+      288 + Rscript scripts/annotate_loops_extended.R --timepoint late   
+          +--input custom_loops.tsv --output custom_output/              
+      289 + ```                                                          
+      290 +                                                              
+      291   ## Verification                                              
+      292                                                                
+      293 - 1. **Generate H3K4me3 consensus:** Run `sbatch               
+          -scripts/generate_consensus_h3k4me3_peaks.sb` (or run locally) 
+      294 - 2. **Verify consensus output:** Check                        
+          -`consensus_H3K4me3_late_peaks.bed` exists in root             
+      295 - 3. **Run annotation:** `Rscript                              
+          -scripts/annotate_loops_extended.R`                            
+      296 - 4. **Check output:**                                         
+          -`outputs/loop_annotation_extended/summary_statistics.txt`     
+      297 - 5. **Verify all 7 categories** appear in anchor type         
+          -distribution                                                  
+      298 - 6. **Confirm files loaded:**                                 
+      299 -    - H3K4me3 consensus peaks loaded                          
+      300 -    - Bivalent file (933 regions from Addison file) loaded    
+          -correctly                                                     
+      293 + 1. Run with `--timepoint early` - verify Early peaks loaded: 
+      294 +    - H3K27ac: 18,178 peaks                                   
+      295 +    - H3K27me3: 12,473 peaks                                  
+      296 +    - H3K4me1: 93,859 peaks                                   
+      297 +    - H3K4me3: 10,370 peaks                                   
+      298 +    - Bivalent: 933 peaks                                     
+      299                                                                
+      300 - ## Expected Output Changes                                   
+      300 + 2. Run with `--timepoint late` - verify Late peaks loaded:   
+      301 +    - H3K27ac: 15,105 peaks                                   
+      302 +    - H3K27me3: 15,809 peaks                                  
+      303 +    - H3K4me1: 113,781 peaks                                  
+      304 +    - H3K4me3: 6,581 peaks                                    
+      305 +    - Bivalent: 320 peaks                                     
+      306                                                                
+      307 - **New anchor types:**                                        
+      308 - - Active_Promoter (H3K4me3+, no K27me3, ≤2kb TSS)            
+      309 - - Repressed_Promoter (H3K27me3+, no K27ac, ≤2kb TSS)         
+      310 - - Other (replaces Distal)                                    
+      307 + 3. Run with no arguments - verify both directories created   
+      308                                                                
+      309 - **Updated definitions:**                                     
+      310 - - Poised_Enhancer now requires no H3K27me3                   
+      311 - - Polycomb no longer explicitly checks for no H3K27ac        
+          -(redundant)                                                   
+      312 - - Bivalent uses new K4me3+K27me3 Addison file (933 regions)  
+      309 + 4. Check outputs exist:                                      
+      310 +    - `outputs/loop_annotation_extended/early/extended_charac 
+          +terized_loops.tsv`                                            
+      311 +    - `outputs/loop_annotation_extended/late/extended_charact 
+          +erized_loops.tsv`                                             
+      312                                                                
+      313 - ## Loop Type Combinations (28 total)                         
+      313 + ## Notes                                                     
+      314                                                                
+      315 - With 7 anchor types, there are 28 possible loop type         
+          -combinations:                                                 
+      316 - - AP-AP, AP-RP, AP-B, AP-Pc, AP-AE, AP-PE, AP-O              
+      317 - - RP-RP, RP-B, RP-Pc, RP-AE, RP-PE, RP-O                     
+      318 - - B-B, B-Pc, B-AE, B-PE, B-O                                 
+      319 - - Pc-Pc, Pc-AE, Pc-PE, Pc-O                                  
+      320 - - AE-AE, AE-PE, AE-O                                         
+      321 - - PE-PE, PE-O                                                
+      322 - - O-O                                                        
+      315 + - **No bedtools intersection needed** - Bivalent files are   
+          +pre-computed by PI                                            
+      316 + - Classification logic (7 categories) remains unchanged from 
+          + previous implementation                                      
+      317 + - Individual mark loading functions consolidated into single 
+          + generic `load_chip_peaks()`                                  
+      318 + - Old scattered peak files replaced with standardized        
+          +`peaks/beds/` structure                                       
+
+⏺ The plan is ready. I have one clarifying question before finalizing.
+                                                                           
+⏺ User answered Claude's questions:
+  ⎿  · For the Late timepoint H3K4me3, should I use the new standardized 
+     file (H3K4me3CerebellumLate2.bed with 6,581 peaks) or keep using the 
+     consensus file you previously generated 
+     (consensus_H3K4me3_late_peaks.bed with 9,651 peaks from 4 replicates)? 
+     → New standardized file (Recommended)
+
+
+⏺ The plan uses the new standardized files for all marks. I'll exit plan mode so you can approve the implementation.
+
+  Summary of changes to scripts/annotate_loops_extended.R:
+
+  1. Add timepoint support - New --timepoint argument (early/late/both)
+  2. Use standardized peak files - All from peaks/beds/ directory
+  3. Separate outputs - outputs/loop_annotation_extended/early/ and .../late/
+  4. Simplified loading - Single generic load_chip_peaks() function
+  5. Bivalent files pre-computed - No bedtools intersection needed (PI provided them)
+
+  The classification logic (7 chromatin state categories) remains unchanged from the previous implementation.
+                                                                           
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/agile-singing-key.md · /plan to edit
+     Plan: Dual Timepoint Loop Annotation with Standardized Peak Files
+
+     Summary
+
+     Update scripts/annotate_loops_extended.R to:
+     1. Support both Early and Late timepoint annotations
+     2. Use the new standardized peak files from peaks/beds/
+     3. Output separate results for each timepoint
+
+     New Data Available
+
+     Loop Data (Input)
+     Timepoint: Late
+     Input File: 25042-late_outputs/merged_loops/non_redundant_loops.tsv
+     Loop Count: ~2,910
+     ────────────────────────────────────────
+     Timepoint: Early
+     Input File: 250831-early_outputs/merged_loops/non_redundant_loops.tsv
+     Loop Count: ~smaller
+     New Standardized Peak Files (peaks/beds/)
+     Mark: H3K27ac
+     Early File: H3K27acCerebellumEarly2.bed
+     Late File: H3K27acCerebellumLate2.bed
+     Early Peaks: 18,178
+     Late Peaks: 15,105
+     ────────────────────────────────────────
+     Mark: H3K27me3
+     Early File: H3K27me3CerebellumEarly1.bed
+     Late File: H3K27me3CerebellumLate1.bed
+     Early Peaks: 12,473
+     Late Peaks: 15,809
+     ────────────────────────────────────────
+     Mark: H3K4me1
+     Early File: H3K4me1CerebellumEarly1.bed
+     Late File: H3K4me1CerebellumLate1.bed
+     Early Peaks: 93,859
+     Late Peaks: 113,781
+     ────────────────────────────────────────
+     Mark: H3K4me3
+     Early File: H3K4me3CerebellumEarly2.bed
+     Late File: H3K4me3CerebellumLate2.bed
+     Early Peaks: 10,370
+     Late Peaks: 6,581
+     ────────────────────────────────────────
+     Mark: Bivalent
+     Early File: Bivalent_Early.bed
+     Late File: Bivalent_Late.bed
+     Early Peaks: 933
+     Late Peaks: 320
+     Key finding: Bivalent files are pre-computed K4me3+K27me3 intersections
+      - no bedtools needed.
+
+     Files to Modify
+
+     scripts/annotate_loops_extended.R
+
+     Single file modification with these changes:
+
+     Implementation Steps
+
+     Step 1: Update Configuration Section (lines 54-82)
+
+     Replace hardcoded paths with timepoint-specific path dictionaries:
+
+     # =====================================================================
+     ========
+     # CONFIGURATION
+     # =====================================================================
+     ========
+
+     # Peak file paths organized by timepoint
+     # All files from standardized peaks/beds/ directory
+     PEAK_FILES <- list(
+       early = list(
+         h3k27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",
+         h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",
+         h3k4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",
+         h3k4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",
+         bivalent = "peaks/beds/Bivalent_Early.bed"
+       ),
+       late = list(
+         h3k27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",
+         h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",
+         h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",
+         h3k4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",
+         bivalent = "peaks/beds/Bivalent_Late.bed"
+       )
+     )
+
+     # Default input files by timepoint
+     DEFAULT_INPUT_FILES <- list(
+       early = "250831-early_outputs/merged_loops/non_redundant_loops.tsv",
+       late  = "25042-late_outputs/merged_loops/non_redundant_loops.tsv"
+     )
+
+     # Default output directories by timepoint
+     DEFAULT_OUTPUT_DIRS <- list(
+       early = "outputs/loop_annotation_extended/early",
+       late  = "outputs/loop_annotation_extended/late"
+     )
+
+     # Anchor types and colors (unchanged from previous implementation)
+     ANCHOR_TYPE_ORDER <- c("Active_Promoter", "Repressed_Promoter",
+     "Bivalent_Promoter",
+                            "Polycomb", "Active_Enhancer",
+     "Poised_Enhancer", "Other")
+
+     ANCHOR_COLORS <- c(
+       "Active_Promoter" = "#e41a1c",
+       "Repressed_Promoter" = "#756bb1",
+       "Bivalent_Promoter" = "#984ea3",
+       "Polycomb" = "#4daf4a",
+       "Active_Enhancer" = "#377eb8",
+       "Poised_Enhancer" = "#ff7f00",
+       "Other" = "#999999"
+     )
+
+     Step 2: Update Loading Functions (lines 88-198)
+
+     Simplify to a single generic function:
+
+     #' Load ChIP-seq peaks from BED file
+     #'
+     #' @param bed_path Path to BED file
+     #' @param mark_name Name of the mark (for logging)
+     #' @return GRanges object
+     load_chip_peaks <- function(bed_path, mark_name = "ChIP") {
+       if (!file.exists(bed_path)) {
+         stop(sprintf("%s bed file not found: %s", mark_name, bed_path))
+       }
+       cat(sprintf("  Loading %s peaks from: %s\n", mark_name, bed_path))
+
+       df <- read.table(bed_path, sep = "\t", header = FALSE,
+     stringsAsFactors = FALSE)
+       gr <- GRanges(
+         seqnames = df$V1,
+         ranges = IRanges(start = df$V2, end = df$V3)
+       )
+
+       cat(sprintf("    Loaded %d peaks\n", length(gr)))
+       return(gr)
+     }
+
+     Step 3: Update Main Function Signature (line 353)
+
+     Add timepoint parameter:
+
+     annotate_loops_extended <- function(
+       timepoint = "late",                              # NEW: "early" or 
+     "late"
+       input_file = NULL,                               # NULL = use default
+      for timepoint
+       output_dir = NULL,                               # NULL = use default
+      for timepoint
+       peak_files = NULL,                               # NULL = use 
+     defaults for timepoint
+       tss_threshold = 2000
+     ) {
+       # Validate timepoint
+       if (!timepoint %in% c("early", "late")) {
+         stop("timepoint must be 'early' or 'late'")
+       }
+
+       # Use defaults if not specified
+       if (is.null(input_file)) input_file <-
+     DEFAULT_INPUT_FILES[[timepoint]]
+       if (is.null(output_dir)) output_dir <-
+     DEFAULT_OUTPUT_DIRS[[timepoint]]
+       if (is.null(peak_files)) peak_files <- PEAK_FILES[[timepoint]]
+
+       # ... rest of function
+     }
+
+     Step 4: Update Peak Loading in Main Function (lines 398-405)
+
+     Use the peak_files list:
+
+     # --- Step 2: Load ChIP-seq peaks ---
+     cat(sprintf("Step 2: Loading ChIP-seq peak files (%s timepoint)...\n",
+     timepoint))
+     k27ac_gr   <- load_chip_peaks(peak_files$h3k27ac, "H3K27ac")
+     k27me3_gr  <- load_chip_peaks(peak_files$h3k27me3, "H3K27me3")
+     k4me1_gr   <- load_chip_peaks(peak_files$h3k4me1, "H3K4me1")
+     k4me3_gr   <- load_chip_peaks(peak_files$h3k4me3, "H3K4me3")
+     bivalent_gr <- load_chip_peaks(peak_files$bivalent, "Bivalent 
+     (K4me3+K27me3)")
+     cat("\n")
+
+     Step 5: Update Command-Line Parsing (lines 914-956)
+
+     Add --timepoint argument:
+
+     parse_arguments <- function() {
+       args <- commandArgs(trailingOnly = TRUE)
+
+       # Defaults
+       timepoint <- NULL  # NULL means run both
+       input_file <- NULL
+       output_dir <- NULL
+
+       i <- 1
+       while (i <= length(args)) {
+         if (args[i] == "--timepoint" && i < length(args)) {
+           timepoint <- args[i + 1]
+           i <- i + 2
+         } else if (args[i] == "--input" && i < length(args)) {
+           input_file <- args[i + 1]
+           i <- i + 2
+         } else if (args[i] == "--output" && i < length(args)) {
+           output_dir <- args[i + 1]
+           i <- i + 2
+         } else if (args[i] == "--help" || args[i] == "-h") {
+           cat("\nExtended Loop Anchor Annotation (Dual Timepoint)\n")
+           cat("=================================================\n\n")
+           cat("Usage: Rscript scripts/annotate_loops_extended.R 
+     [OPTIONS]\n\n")
+           cat("Options:\n")
+           cat("  --timepoint TP  Timepoint: 'early', 'late', or 'both' 
+     (default: both)\n")
+           cat("  --input FILE    Override input file (only with single 
+     timepoint)\n")
+           cat("  --output DIR    Override output directory (only with 
+     single timepoint)\n")
+           cat("  --help, -h      Show this help message\n\n")
+           quit(status = 0)
+         } else {
+           i <- i + 1
+         }
+       }
+
+       return(list(timepoint = timepoint, input_file = input_file,
+     output_dir = output_dir))
+     }
+
+     Step 6: Update Standalone Execution (lines 962-979)
+
+     Run both timepoints by default:
+
+     if (!interactive()) {
+       args <- parse_arguments()
+
+       # Determine which timepoints to run
+       timepoints_to_run <- if (is.null(args$timepoint) || args$timepoint ==
+      "both") {
+         c("early", "late")
+       } else {
+         args$timepoint
+       }
+
+       for (tp in timepoints_to_run) {
+         cat(sprintf("\n\n%s\n", paste(rep("=", 60), collapse = "")))
+         cat(sprintf("Processing %s timepoint\n", toupper(tp)))
+         cat(sprintf("%s\n\n", paste(rep("=", 60), collapse = "")))
+
+         result <- annotate_loops_extended(
+           timepoint = tp,
+           input_file = args$input_file,  # NULL unless overridden
+           output_dir = args$output_dir   # NULL unless overridden
+         )
+       }
+
+       cat("\n\nAll timepoints processed successfully.\n")
+     }
+
+     Step 7: Update Summary Statistics Output (lines 629-682)
+
+     Include timepoint in summary:
+
+     summary_text <- c(
+       "========================================",
+       sprintf("Extended Loop Anchor Classification Summary (%s Timepoint)",
+               toupper(timepoint)),
+       "========================================",
+       # ... rest unchanged
+     )
+
+     Step 8: Update Header Documentation (lines 1-34)
+
+     Update to reflect dual timepoint support.
+
+     Output Structure
+
+     outputs/loop_annotation_extended/
+     ├── early/
+     │   ├── extended_characterized_loops.tsv
+     │   ├── anchor_type_summary.tsv
+     │   ├── loop_type_summary.tsv
+     │   ├── summary_statistics.txt
+     │   └── plots/
+     │       ├── loop_type_piechart_comparison.pdf
+     │       ├── anchor_type_distribution.pdf
+     │       └── loop_type_by_direction.pdf
+     └── late/
+         ├── extended_characterized_loops.tsv
+         ├── anchor_type_summary.tsv
+         ├── loop_type_summary.tsv
+         ├── summary_statistics.txt
+         └── plots/
+             ├── loop_type_piechart_comparison.pdf
+             ├── anchor_type_distribution.pdf
+             └── loop_type_by_direction.pdf
+
+     Usage Examples
+
+     # Run both timepoints (default)
+     Rscript scripts/annotate_loops_extended.R
+
+     # Run only early timepoint
+     Rscript scripts/annotate_loops_extended.R --timepoint early
+
+     # Run only late timepoint
+     Rscript scripts/annotate_loops_extended.R --timepoint late
+
+     # Override input/output for single timepoint
+     Rscript scripts/annotate_loops_extended.R --timepoint late --input
+     custom_loops.tsv --output custom_output/
+
+     Verification
+
+     1. Run with --timepoint early - verify Early peaks loaded:
+       - H3K27ac: 18,178 peaks
+       - H3K27me3: 12,473 peaks
+       - H3K4me1: 93,859 peaks
+       - H3K4me3: 10,370 peaks
+       - Bivalent: 933 peaks
+     2. Run with --timepoint late - verify Late peaks loaded:
+       - H3K27ac: 15,105 peaks
+       - H3K27me3: 15,809 peaks
+       - H3K4me1: 113,781 peaks
+       - H3K4me3: 6,581 peaks
+       - Bivalent: 320 peaks
+     3. Run with no arguments - verify both directories created
+     4. Check outputs exist:
+       -
+     outputs/loop_annotation_extended/early/extended_characterized_loops.tsv
+       -
+     outputs/loop_annotation_extended/late/extended_characterized_loops.tsv
+
+     Notes
+
+     - No bedtools intersection needed - Bivalent files are pre-computed by
+     PI
+     - Classification logic (7 categories) remains unchanged from previous
+     implementation
+     - Individual mark loading functions consolidated into single generic
+     load_chip_peaks()
+     - Old scattered peak files replaced with standardized peaks/beds/
+     structure
+
+
+
+
+
+⏺ Let me start implementing. First, I'll read the current file to get the exact content for editing.
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 90 lines
+
+⏺ Now I'll update the configuration section with the new timepoint-specific paths.
+
+⏺ Update(scripts/annotate_loops_extended.R)
+  ⎿  Added 30 lines, removed 13 lines                                    
+      51   # CONFIGURATION                                               
+      52   # =========================================================== 
+          ==================                                             
+      53                                                                 
+      54 - # Default ChIP-seq peak files                                 
+      55 - # Note: These paths can be easily updated when standardized   
+         -files are provided                                             
+      56 - DEFAULT_H3K27AC_PATH <-                                       
+         -"peaks/220310index25H3K27acLatePeakRegions.bed"                
+      57 - DEFAULT_H3K27ME3_PATH <-                                      
+         -"peaks/220310index29H3K27me3LatePeakRegions.bed"               
+      58 - DEFAULT_H3K4ME1_PATH <-                                       
+         -"peaks/K4me1_aligned_reads_peaks.broadPeak-filtered.bed"       
+      59 - DEFAULT_H3K4ME3_PATH <- "consensus_H3K4me3_late_peaks.bed"  # 
+         - Adult H3K4me3 consensus                                       
+      54 + # Peak file paths organized by timepoint                      
+      55 + # All files from standardized peaks/beds/ directory           
+      56 + PEAK_FILES <- list(                                           
+      57 +   early = list(                                               
+      58 +     h3k27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",      
+      59 +     h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",     
+      60 +     h3k4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",      
+      61 +     h3k4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",      
+      62 +     bivalent = "peaks/beds/Bivalent_Early.bed"                
+      63 +   ),                                                          
+      64 +   late = list(                                                
+      65 +     h3k27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",       
+      66 +     h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",      
+      67 +     h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",       
+      68 +     h3k4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",       
+      69 +     bivalent = "peaks/beds/Bivalent_Late.bed"                 
+      70 +   )                                                           
+      71 + )                                                             
+      72                                                                 
+      73 - # Bivalent_Promoter regions: K4me3+K27me3 overlap from early  
+         -timepoint (Addison file)                                       
+      74 - DEFAULT_BIVALENT_PATH <-                                      
+         -"250224AddisonH3K4me3H3K27me3Early.bed"                        
+      73 + # Default input files by timepoint                            
+      74 + DEFAULT_INPUT_FILES <- list(                                  
+      75 +   early =                                                     
+         +"250831-early_outputs/merged_loops/non_redundant_loops.tsv",   
+      76 +   late  =                                                     
+         +"25042-late_outputs/merged_loops/non_redundant_loops.tsv"      
+      77 + )                                                             
+      78                                                                 
+      79 - # Default input/output paths                                  
+      80 - DEFAULT_INPUT_FILE <-                                         
+         -"25042-late_outputs/merged_loops/non_redundant_loops.tsv"      
+      81 -DEFAULT_OUTPUT_DIR <- "outputs/loop_annotation_extended"       
+      79 + # Default output directories by timepoint                     
+      80 + DEFAULT_OUTPUT_DIRS <- list(                                  
+      81 +  early = "outputs/loop_annotation_extended/early",            
+      82 +   late  = "outputs/loop_annotation_extended/late"             
+      83 + )                                                             
+      84                                                                 
+      85   # Anchor type hierarchy (for consistent loop type ordering)   
+      86   # 7 categories reflecting chromatin states                    
+     ...
+      73   # Color scheme for visualizations                             
+      74   ANCHOR_COLORS <- c(                                           
+      75     "Active_Promoter" = "#e41a1c",     # Red - active           
+          transcription                                                  
+      76 -  "Repressed_Promoter" = "#756bb1",                            
+         -# Purple - Polycomb-silenced promoter                          
+      77 -  "Bivalent_Promoter" = "#984ea3",                             
+         -# Magenta - developmental poised                               
+      76 +  "Repressed_Promoter" = "#756bb1",                            
+         +# Purple - Polycomb-silenced promoter                          
+      77 +  "Bivalent_Promoter" = "#984ea3",                             
+         +# Magenta - developmental poised                               
+      78     "Polycomb" = "#4daf4a",            # Green - distal         
+          repressive                                                     
+      79     "Active_Enhancer" = "#377eb8",     # Blue - active enhancer 
+      80     "Poised_Enhancer" = "#ff7f00",     # Orange - primed        
+          enhancer                                                       
+  ⎿  Found 255 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Now let me read and replace the individual loading functions with a single generic function.
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 130 lines
+
+⏺ Update(scripts/annotate_loops_extended.R)
+  ⎿  Added 10 lines, removed 97 lines                                    
+       99   )                                                            
+      100                                                                
+      101   # ========================================================== 
+           ===================                                           
+      102 -# ChIP-seq PEAK LOADING FUNCTIONS                             
+      102 +# ChIP-seq PEAK LOADING FUNCTION                              
+      103   # ========================================================== 
+           ===================                                           
+      104                                                                
+      105 -#' Load H3K27ac ChIP-seq peaks                                
+      105 +#' Load ChIP-seq peaks from BED file                          
+      106   #'                                                           
+      107 - #' @param bed_path Path to H3K27ac bed file                  
+      108 - #' @return GRanges object                                    
+      109 - load_h3k27ac_peaks <- function(bed_path =                    
+          -DEFAULT_H3K27AC_PATH) {                                       
+      110 -   if (!file.exists(bed_path)) {                              
+      111 -     stop(sprintf("H3K27ac bed file not found: %s",           
+          -bed_path))                                                    
+      112 -   }                                                          
+      113 -   cat(sprintf("  Loading H3K27ac peaks from: %s\n",          
+          -bed_path))                                                    
+      114 -                                                              
+      115 -   # Read as table first (handles non-standard BED formats)   
+      116 -   df <- read.table(bed_path, sep = "\t", header = FALSE,     
+      117 -                    stringsAsFactors = FALSE)                 
+      118 -   gr <- GRanges(                                             
+      119 -     seqnames = df$V1,                                        
+      120 -     ranges = IRanges(start = df$V2, end = df$V3)             
+      121 -   )                                                          
+      122 -                                                              
+      123 -   cat(sprintf("    Loaded %d peaks\n", length(gr)))          
+      124 -   return(gr)                                                 
+      125 - }                                                            
+      126 -                                                              
+      127 - #' Load H3K27me3 ChIP-seq peaks                              
+      107 + #' Generic function to load any ChIP-seq peak file.          
+      108 + #' Handles various BED formats (3-col, 6-col, etc).          
+      109   #'                                                           
+      110 -#' @param bed_path Path to H3K27me3 bed file                  
+      110 +#' @param bed_path Path to BED file                           
+      111 + #' @param mark_name Name of the mark (for logging)           
+      112   #' @return GRanges object                                    
+      113 - load_h3k27me3_peaks <- function(bed_path =                   
+          -DEFAULT_H3K27ME3_PATH) {                                      
+      113 + load_chip_peaks <- function(bed_path, mark_name = "ChIP") {  
+      114     if (!file.exists(bed_path)) {                              
+      115 -    stop(sprintf("H3K27me3 bed file not found: %s", bed_path))
+      115 +    stop(sprintf("%s bed file not found: %s", mark_name,      
+          +bed_path))                                                    
+      116     }                                                          
+      117 -  cat(sprintf("  Loading H3K27me3 peaks from: %s\n",          
+          -bed_path))                                                    
+      117 +  cat(sprintf("  Loading %s peaks from: %s\n", mark_name,     
+          +bed_path))                                                    
+      118                                                                
+      119 -   # Read as table first (handles non-standard BED formats)   
+      120 -   df <- read.table(bed_path, sep = "\t", header = FALSE,     
+          -stringsAsFactors = FALSE)                                     
+      121 -   gr <- GRanges(                                             
+      122 -     seqnames = df$V1,                                        
+      123 -     ranges = IRanges(start = df$V2, end = df$V3)             
+      124 -   )                                                          
+      125 -                                                              
+      126 -   cat(sprintf("    Loaded %d peaks\n", length(gr)))          
+      127 -   return(gr)                                                 
+      128 - }                                                            
+      129 -                                                              
+      130 - #' Load H3K4me1 ChIP-seq peaks                               
+      131 - #'                                                           
+      132 - #' @param bed_path Path to H3K4me1 bed file                  
+      133 - #' @return GRanges object                                    
+      134 - load_h3k4me1_peaks <- function(bed_path =                    
+          -DEFAULT_H3K4ME1_PATH) {                                       
+      135 -   if (!file.exists(bed_path)) {                              
+      136 -     stop(sprintf("H3K4me1 bed file not found: %s",           
+          -bed_path))                                                    
+      137 -   }                                                          
+      138 -   cat(sprintf("  Loading H3K4me1 peaks from: %s\n",          
+          -bed_path))                                                    
+      139 -                                                              
+      140 -   # Read as table first (handles non-standard BED formats)   
+      119     df <- read.table(bed_path, sep = "\t", header = FALSE,     
+      120                      stringsAsFactors = FALSE)                 
+      121     gr <- GRanges(                                             
+     ...
+      164     )                                                          
+      165                                                                
+      166     cat(sprintf("    Loaded %d peaks\n", length(gr)))          
+      167 -   return(gr)                                                 
+      167 +   gr                                                         
+      168   }                                                            
+      169                                                                
+      170 - #' Load H3K4me3 ChIP-seq peaks (active promoter mark)        
+      171 - #'                                                           
+      172 - #' @param bed_path Path to H3K4me3 bed file (consensus       
+          -peaks)                                                        
+      173 - #' @return GRanges object                                    
+      174 - load_h3k4me3_peaks <- function(bed_path =                    
+          -DEFAULT_H3K4ME3_PATH) {                                       
+      175 -   if (!file.exists(bed_path)) {                              
+      176 -     stop(sprintf("H3K4me3 bed file not found: %s",           
+          -bed_path))                                                    
+      177 -   }                                                          
+      178 -   cat(sprintf("  Loading H3K4me3 peaks from: %s\n",          
+          -bed_path))                                                    
+      179 -                                                              
+      180 -   # Read as table first (handles non-standard BED formats)   
+      181 -   df <- read.table(bed_path, sep = "\t", header = FALSE,     
+      182 -                    stringsAsFactors = FALSE)                 
+      183 -   gr <- GRanges(                                             
+      184 -     seqnames = df$V1,                                        
+      185 -     ranges = IRanges(start = df$V2, end = df$V3)             
+      186 -   )                                                          
+      187 -                                                              
+      188 -   cat(sprintf("    Loaded %d peaks\n", length(gr)))          
+      189 -   return(gr)                                                 
+      190 - }                                                            
+      191 -                                                              
+      192 - #' Load bivalent (K4me3+K27me3) regions                      
+      193 - #'                                                           
+      194 - #' Bivalent_Promoter domains contain both active (H3K4me3)   
+          -and repressive (H3K27me3) marks.                              
+      195 - #' These regions are characteristic of developmental poised  
+          -states.                                                       
+      196 - #'                                                           
+      197 - #' @param bed_path Path to K4me3+K27me3 overlap bed file     
+          -(Addison file)                                                
+      198 - #' @return GRanges object                                    
+      199 - load_bivalent_peaks <- function(bed_path =                   
+          -DEFAULT_BIVALENT_PATH) {                                      
+      200 -   if (!file.exists(bed_path)) {                              
+      201 -     stop(sprintf("Bivalent_Promoter bed file not found: %s", 
+          - bed_path))                                                   
+      202 -   }                                                          
+      203 -   cat(sprintf("  Loading bivalent (K4me3+K27me3) regions     
+          -from: %s\n", bed_path))                                       
+      204 -                                                              
+      205 -   # Read as table first (handles non-standard BED formats)   
+      206 -   df <- read.table(bed_path, sep = "\t", header = FALSE,     
+      207 -                    stringsAsFactors = FALSE)                 
+      208 -   gr <- GRanges(                                             
+      209 -     seqnames = df$V1,                                        
+      210 -     ranges = IRanges(start = df$V2, end = df$V3)             
+      211 -   )                                                          
+      212 -                                                              
+      213 -   cat(sprintf("    Loaded %d regions\n", length(gr)))        
+      214 -   return(gr)                                                 
+      215 - }                                                            
+      216 -                                                              
+      170   # ========================================================== 
+           ===================                                           
+      171   # ANCHOR ANNOTATION FUNCTIONS                                
+      172   # ========================================================== 
+           ===================                                           
+  ⎿  Found 231 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Now let me find and update the main function signature. Let me read the relevant section.
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 100 lines
+
+⏺ Update(scripts/annotate_loops_extended.R)
+  ⎿  Added 19 lines, removed 15 lines                                    
+      271                                                                
+      272   #' Annotate loops with chromatin state categories            
+      273   #'                                                           
+      274 - #' @param input_file Path to input TSV                       
+          -(non_redundant_loops.tsv or similar)                          
+      275 - #' @param output_dir Output directory                        
+      276 - #' @param h3k27ac_path Path to H3K27ac peaks                 
+      277 - #' @param h3k27me3_path Path to H3K27me3 peaks               
+      278 - #' @param h3k4me1_path Path to H3K4me1 peaks                 
+      279 - #' @param h3k4me3_path Path to H3K4me3 peaks (active         
+          -promoter mark)                                                
+      280 - #' @param bivalent_path Path to bivalent regions             
+          -(K4me3+K27me3 overlap)                                        
+      274 + #' @param timepoint Timepoint: "early" or "late"             
+      275 + #' @param input_file Path to input TSV (NULL = use default   
+          +for timepoint)                                                
+      276 + #' @param output_dir Output directory (NULL = use default    
+          +for timepoint)                                                
+      277 + #' @param peak_files List of peak file paths (NULL = use     
+          +defaults for timepoint)                                       
+      278   #' @param tss_threshold Promoter distance threshold (bp)     
+      279   #' @return data.frame with annotated loops                   
+      280   annotate_loops_extended <- function(                         
+      281 -   input_file = DEFAULT_INPUT_FILE,                           
+      282 -   output_dir = DEFAULT_OUTPUT_DIR,                           
+      283 -   h3k27ac_path = DEFAULT_H3K27AC_PATH,                       
+      284 -   h3k27me3_path = DEFAULT_H3K27ME3_PATH,                     
+      285 -   h3k4me1_path = DEFAULT_H3K4ME1_PATH,                       
+      286 -   h3k4me3_path = DEFAULT_H3K4ME3_PATH,                       
+      287 -   bivalent_path = DEFAULT_BIVALENT_PATH,                     
+      281 +   timepoint = "late",                                        
+      282 +   input_file = NULL,                                         
+      283 +   output_dir = NULL,                                         
+      284 +   peak_files = NULL,                                         
+      285     tss_threshold = 2000                                       
+      286   ) {                                                          
+      287 +   # Validate timepoint                                       
+      288 +   if (!timepoint %in% c("early", "late")) {                  
+      289 +     stop("timepoint must be 'early' or 'late'")              
+      290 +   }                                                          
+      291                                                                
+      292 +   # Use defaults if not specified                            
+      293 +   if (is.null(input_file)) input_file <-                     
+          +DEFAULT_INPUT_FILES[[timepoint]]                              
+      294 +   if (is.null(output_dir)) output_dir <-                     
+          +DEFAULT_OUTPUT_DIRS[[timepoint]]                              
+      295 +   if (is.null(peak_files)) peak_files <-                     
+          +PEAK_FILES[[timepoint]]                                       
+      296 +                                                              
+      297     cat("\n")                                                  
+      298     cat("========================================\n")          
+      299 -  cat("Extended Loop Anchor Annotation\n")                    
+      299 +  cat(sprintf("Extended Loop Anchor Annotation (%s)\n"        
+          +, toupper(timepoint)))                                        
+      300     cat("========================================\n\n")        
+      301                                                                
+      302     cat("Configuration:\n")                                    
+      303 +   cat(sprintf("  Timepoint:      %s\n", timepoint))          
+      304     cat(sprintf("  Input file:     %s\n", input_file))         
+      305     cat(sprintf("  Output dir:     %s\n", output_dir))         
+      306     cat(sprintf("  TSS threshold:  %d bp\n\n", tss_threshold)) 
+  ⎿  Found 219 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Now let me update the peak loading section to use the new generic function.
+
+⏺ Update(scripts/annotate_loops_extended.R)
+  ⎿  Added 6 lines, removed 6 lines                                      
+      330     cat(sprintf("  Down in mutant: %d\n\n",                    
+           sum(loops_df$direction == "down_in_mutant")))                 
+      331                                                                
+      332     # --- Step 2: Load ChIP-seq peaks ---                      
+      333 -  cat("Step 2: Loading ChIP-seq peak files...\n")             
+      334 -   k27ac_gr <- load_h3k27ac_peaks(h3k27ac_path)               
+      335 -   k27me3_gr <- load_h3k27me3_peaks(h3k27me3_path)            
+      336 -   k4me1_gr <- load_h3k4me1_peaks(h3k4me1_path)               
+      337 -   k4me3_gr <- load_h3k4me3_peaks(h3k4me3_path)               
+      338 -   bivalent_gr <- load_bivalent_peaks(bivalent_path)          
+      333 +  cat(sprintf("Step 2: Loading ChIP-seq peak files            
+          + (%s timepoint)...\n", timepoint))                            
+      334 +   k27ac_gr <- load_chip_peaks(peak_files$h3k27ac, "H3K27ac") 
+      335 +   k27me3_gr <- load_chip_peaks(peak_files$h3k27me3,          
+          +"H3K27me3")                                                   
+      336 +   k4me1_gr <- load_chip_peaks(peak_files$h3k4me1, "H3K4me1") 
+      337 +   k4me3_gr <- load_chip_peaks(peak_files$h3k4me3, "H3K4me3") 
+      338 +   bivalent_gr <- load_chip_peaks(peak_files$bivalent,        
+          +"Bivalent (K4me3+K27me3)")                                    
+      339     cat("\n")                                                  
+      340                                                                
+      341     # --- Step 3: Create anchor GRanges ---                    
+  ⎿  Found 3 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Let me find and update the summary statistics section.
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 70 lines
+
+⏺ Update(scripts/annotate_loops_extended.R)
+  ⎿  Added 7 lines, removed 6 lines                                      
+      562                                                                
+      563     summary_text <- c(                                         
+      564       "========================================",              
+      565 -    "Extended Loop Anchor Classification Summary",            
+      565 +    sprintf("Extended Loop Anchor Classification Summary (%s) 
+          +", toupper(timepoint)),                                       
+      566       "========================================",              
+      567       "",                                                      
+      568 +     sprintf("Timepoint: %s", timepoint),                     
+      569       sprintf("Input file: %s", input_file),                   
+      570       sprintf("Output dir: %s", output_dir),                   
+      571       sprintf("TSS threshold: %d bp", tss_threshold),          
+     ...
+      578               100 * mean(loops_df$direction ==                 
+           "down_in_mutant")),                                           
+      579       "",                                                      
+      580       "ChIP-seq Peak Files:",                                  
+      581 -    sprintf("  H3K27ac:  %s (%d peaks)", h3k27ac_path         
+          -, length(k27ac_gr)),                                          
+      582 -    sprintf("  H3K27me3: %s (%d peaks)", h3k27me3_path        
+          -, length(k27me3_gr)),                                         
+      583 -    sprintf("  H3K4me1:  %s (%d peaks)", h3k4me1_path         
+          -, length(k4me1_gr)),                                          
+      584 -    sprintf("  H3K4me3:  %s (%d peaks)", h3k4me3_path         
+          -, length(k4me3_gr)),                                          
+      585 -    sprintf("  Bivalent_Promoter: %s (%d regions)",           
+          -bivalent_path, length(bivalent_gr)),                          
+      581 +    sprintf("  H3K27ac:  %s (%d peaks)", peak_files$h3k27ac   
+          +, length(k27ac_gr)),                                          
+      582 +    sprintf("  H3K27me3: %s (%d peaks)", peak_files$h3k27me3  
+          +, length(k27me3_gr)),                                         
+      583 +    sprintf("  H3K4me1:  %s (%d peaks)", peak_files$h3k4me1   
+          +, length(k4me1_gr)),                                          
+      584 +    sprintf("  H3K4me3:  %s (%d peaks)", peak_files$h3k4me3   
+          +, length(k4me3_gr)),                                          
+      585 +    sprintf("  Bivalent: %s (%d regions)", peak_files$bivalent
+          +, length(bivalent_gr)),                                       
+      586       "",                                                      
+      587       "Anchor Type Distribution:",                             
+      588       "  Anchor1:"                                             
+  ⎿  Found 161 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Let me find the command-line parsing section.
+
+⏺ Read(scripts/annotate_loops_extended.R)
+  ⎿  Read 76 lines
+
+⏺ Update(scripts/annotate_loops_extended.R)
+  ⎿  Added 41 lines, removed 22 lines                                    
+      850     args <- commandArgs(trailingOnly = TRUE)                   
+      851                                                                
+      852     # Defaults                                                 
+      853 -   input_file <- DEFAULT_INPUT_FILE                           
+      854 -   output_dir <- DEFAULT_OUTPUT_DIR                           
+      853 +   timepoint <- NULL  # NULL means run both                   
+      854 +   input_file <- NULL                                         
+      855 +   output_dir <- NULL                                         
+      856                                                                
+      857     # Parse arguments                                          
+      858     i <- 1                                                     
+      859     while (i <= length(args)) {                                
+      860 -    if (args[i] == "--input" && i < length(args)) {           
+      860 +    if (args[i] == "--timepoint" && i < length(args)) {       
+      861 +       timepoint <- args[i + 1]                               
+      862 +       i <- i + 2                                             
+      863 +     } else if (args[i] == "--input" && i < length(args)) {   
+      864         input_file <- args[i + 1]                              
+      865         i <- i + 2                                             
+      866       } else if (args[i] == "--output" && i < length(args)) {  
+     ...
+      864         i <- i + 2                                             
+      865       } else if (args[i] == "--help" || args[i] == "-h") {     
+      866         cat("\n")                                              
+      867 -      cat("Extended Loop Anchor Annotation\n")                
+      868 -      cat("================================\n\n")             
+      867 +      cat("Extended Loop Anchor Annotation (Dual Timepoint)   
+          +\n")                                                          
+      868 +      cat("=================================================  
+          +\n\n")                                                        
+      869         cat("Usage: Rscript scripts/annotate_loops_extended.R  
+           [OPTIONS]\n\n")                                               
+      870         cat("Options:\n")                                      
+      871 -       cat("  --input FILE    Input TSV file (default:        
+          -25042-late_outputs/merged_loops/non_redundant_loops.tsv)\n")  
+      872 -       cat("  --output DIR    Output directory (default:      
+          -outputs/loop_annotation_extended)\n")                         
+      871 +       cat("  --timepoint TP  Timepoint: 'early', 'late', or  
+          +'both' (default: both)\n")                                    
+      872 +       cat("  --input FILE    Override input file (only with  
+          +single timepoint)\n")                                         
+      873 +       cat("  --output DIR    Override output directory (only 
+          + with single timepoint)\n")                                   
+      874         cat("  --help, -h      Show this help message\n\n")    
+      875         cat("Description:\n")                                  
+      876         cat("  Annotates differential loops with chromatin     
+           state categories:\n")                                         
+      877         cat("    - Active_Promoter, Repressed_Promoter,        
+           Bivalent_Promoter, Polycomb,\n")                              
+      878         cat("      Active_Enhancer, Poised_Enhancer,           
+           Other\n\n")                                                   
+      879 -      cat("Output files:\n")                                  
+      879 +      cat("Output structure:\n")                              
+      880 +       cat("  outputs/loop_annotation_extended/\n")           
+      881 +       cat("  ├── early/  (Early timepoint results)\n")       
+      882 +       cat("  └── late/   (Late timepoint results)\n\n")      
+      883 +       cat("Output files (per timepoint):\n")                 
+      884         cat("  - extended_characterized_loops.tsv  Full        
+           annotation table\n")                                          
+      885         cat("  - anchor_type_summary.tsv           Per-anchor  
+           statistics\n")                                                
+      886         cat("  - loop_type_summary.tsv             Loop type   
+           counts\n")                                                    
+     ...
+      887       }                                                        
+      888     }                                                          
+      889                                                                
+      890 -  return(list(                                                
+          -input_file = input_file, output_dir = output_dir))            
+      890 +  list(timepoint = timepoint,                                 
+          +input_file = input_file, output_dir = output_dir)             
+      891   }                                                            
+      892                                                                
+      893   # ========================================================== 
+           ===================                                           
+     ...
+      897   if (!interactive()) {                                        
+      898     args <- parse_arguments()                                  
+      899                                                                
+      900 -   result <- annotate_loops_extended(                         
+      901 -     input_file = args$input_file,                            
+      902 -     output_dir = args$output_dir                             
+      903 -   )                                                          
+      900 +   # Determine which timepoints to run                        
+      901 +   timepoints_to_run <- if (is.null(args$timepoint) ||        
+          +args$timepoint == "both") {                                   
+      902 +     c("early", "late")                                       
+      903 +   } else {                                                   
+      904 +     args$timepoint                                           
+      905 +   }                                                          
+      906                                                                
+      907 -   cat(sprintf("\nOutput saved to: %s\n", args$output_dir))   
+      908 -   cat("Files generated:\n")                                  
+      909 -   cat("  - extended_characterized_loops.tsv\n")              
+      910 -   cat("  - anchor_type_summary.tsv\n")                       
+      911 -   cat("  - loop_type_summary.tsv\n")                         
+      912 -   cat("  - plots/loop_type_piechart_comparison.pdf\n")       
+      913 -   cat("  - plots/anchor_type_distribution.pdf\n")            
+      914 -   cat("  - plots/loop_type_by_direction.pdf\n")              
+      915 -   cat("  - summary_statistics.txt\n")                        
+      907 +   for (tp in timepoints_to_run) {                            
+      908 +     cat(sprintf("\n\n%s\n", paste(rep("=", 60), collapse =   
+          +"")))                                                         
+      909 +     cat(sprintf("Processing %s timepoint\n", toupper(tp)))   
+      910 +     cat(sprintf("%s\n\n", paste(rep("=", 60), collapse =     
+          +"")))                                                         
+      911 +                                                              
+      912 +     result <- annotate_loops_extended(                       
+      913 +       timepoint = tp,                                        
+      914 +       input_file = args$input_file,                          
+      915 +       output_dir = args$output_dir                           
+      916 +     )                                                        
+      917 +   }                                                          
+      918 +                                                              
+      919 +   cat("\n\nAll timepoints processed successfully.\n")        
+      920 +   cat("Output directories:\n")                               
+      921 +   for (tp in timepoints_to_run) {                            
+      922 +     cat(sprintf("  - %s\n", DEFAULT_OUTPUT_DIRS[[tp]]))      
+      923 +   }                                                          
+      924   }                                                            
+  ⎿  Found 8 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Now let me update the header documentation to reflect dual timepoint support.
+
+⏺ Update(scripts/annotate_loops_extended.R)
+  ⎿  Added 20 lines, removed 16 lines                                    
+       1   #!/usr/bin/env Rscript                                        
+       2   # scripts/annotate_loops_extended.R                           
+       3   # Extended ChIP-seq-Based Loop Anchor Annotation with         
+          Chromatin State Categories                                     
+       4 + # Dual Timepoint Support (Early and Late)                     
+       5   # Author: Zakir Alibhai                                       
+       6   # Date: 2025-01-05 (Updated: 2026-01-12)                      
+       7   #                                                             
+       8   # Purpose:                                                    
+       9   #   Annotate loop anchors with chromatin state categories     
+          using ChIP-seq data.                                           
+      10 - #   Categories are biologically defined based on histone      
+         -modifications and TSS proximity.                               
+      10 + #   Supports both Early and Late timepoints with standardized 
+         + peak files.                                                   
+      11 + #   Categories are biologically defined based on histone      
+         +modifications and                                              
+      12 + #   TSS proximity.                                            
+      13   #                                                             
+      14   # Anchor Categories (7 types, priority order):                
+      15 -#   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND ≤     
+         -2kb from TSS                                                   
+      16 -#   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND ≤     
+         -2kb from TSS                                                   
+      17 -#   3. Bivalent_Promoter:           K4me3+K27me3 overlap (     
+         -Addison file, early timepoint)                                 
+      15 +#   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND <=    
+         +2kb from TSS                                                   
+      16 +#   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND <=    
+         +2kb from TSS                                                   
+      17 +#   3. Bivalent_Promoter:  K4me3+K27me3 overlap (pre-computed  
+         +intersection)                                                  
+      18   #   4. Polycomb:           H3K27me3+ AND >2kb from TSS        
+          (distal repressive)                                            
+      19   #   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS         
+      20 -#   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT    
+         -H3K27me3 AND >2kb from TSS                                     
+      20 +#   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT    
+         +H3K27me3 AND >2kb                                              
+      21   #   7. Other:              No ChIP-seq marks / structural     
+          elements                                                       
+      22   #                                                             
+      23 - # Loop Types (28 combinations):                               
+      24 - #   AP-AP, AP-RP, AP-B, AP-Pc, AP-AE, AP-PE, AP-O             
+      25 - #   RP-RP, RP-B, RP-Pc, RP-AE, RP-PE, RP-O                    
+      26 - #   B-B, B-Pc, B-AE, B-PE, B-O                                
+      27 - #   Pc-Pc, Pc-AE, Pc-PE, Pc-O                                 
+      28 - #   AE-AE, AE-PE, AE-O                                        
+      29 - #   PE-PE, PE-O                                               
+      30 - #   O-O                                                       
+      23 + # Peak Files (peaks/beds/):                                   
+      24 + #   - H3K27ac:  Early/Late cerebellum                         
+      25 + #   - H3K27me3: Early/Late cerebellum                         
+      26 + #   - H3K4me1:  Early/Late cerebellum                         
+      27 + #   - H3K4me3:  Early/Late cerebellum                         
+      28 + #   - Bivalent: Pre-computed K4me3+K27me3 overlap             
+         +(Early/Late)                                                   
+      29   #                                                             
+      30   # Usage:                                                      
+      31 -#   Rscript scripts/annotate_loops_extended.R [--input         
+         -FILE] [--output DIR]                                           
+      31 +#   Rscript scripts/annotate_loops_extended.R                  
+         +                     # Run both                                
+      32 + #   Rscript scripts/annotate_loops_extended.R --timepoint     
+         +early   # Early only                                           
+      33 + #   Rscript scripts/annotate_loops_extended.R --timepoint     
+         +late    # Late only                                            
+      34   #                                                             
+      35 - #   Default input:                                            
+         -25042-late_outputs/merged_loops/non_redundant_loops.tsv        
+      36 -#   Default output: outputs/loop_annotation_extended/          
+      35 + # Output:                                                     
+      36 +#   outputs/loop_annotation_extended/early/  (Early timepoint) 
+      37 + #   outputs/loop_annotation_extended/late/   (Late timepoint) 
+      38                                                                 
+      39   # =========================================================== 
+          ==================                                             
+      40   # LIBRARY LOADING                                             
+  ⎿  Found 261 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Now let me run the script to verify it works. I'll start by testing the late timepoint.
+
+⏺ Bash(Rscript scripts/annotate_loops_extended.R --timepoint late    timeout: 5m 
+      2>&1 | head -100)                                              0s
+
+  ⎿  Warning messages:                                   
+     1: package ‘ggplot2’ was built under R version 4.5.2
+     2: package ‘readr’ was built under R version 4.5.2
+     … +102 lines (ctrl+o to expand)
+
+⏺ The late timepoint works. Let me run the early timepoint to verify both work.
+
+⏺ Bash(Rscript scripts/annotate_loops_extended.R --timepoint early   timeout: 5m 
+      2>&1 | head -100)                                              0s
+
+  ⎿  Warning messages:                                   
+     1: package ‘ggplot2’ was built under R version 4.5.2
+     2: package ‘readr’ was built under R version 4.5.2
+     … +102 lines (ctrl+o to expand)
+
+⏺ Both timepoints work correctly. Let me verify the output files were created.
+
+⏺ Bash(ls -la outputs/loop_annotation_extended/early/ && echo "---" && ls -la
+      outputs/loop_annotation_extended/late/)
+  ⎿  total 0                                                
+     drwxr-xr-x@  3 zakiralibhai  staff   96 Jan 12 18:23 .
+     drwxr-xr-x@ 10 zakiralibhai  staff  320 Jan 12 18:23 ..
+     … +8 lines (ctrl+o to expand)
+
+⏺ The early timepoint seems to have had an issue - let me run it again and capture the full output to see if there are any errors.
+
+⏺ Bash(Rscript scripts/annotate_loops_extended.R --timepoint early timeout: 5m 
+      2>&1)                                                        0s
+
+  ⎿  Warning messages:                                   
+     1: package ‘ggplot2’ was built under R version 4.5.2
+     2: package ‘readr’ was built under R version 4.5.2
+     … +148 lines (ctrl+o to expand)
+
+⏺ The early timepoint completed successfully. Let me verify the output files and run both timepoints together to confirm everything works.
+
+⏺ Bash(echo "=== Early timepoint outputs ===" && ls -la
+      outputs/loop_annotation_extended/early/ && echo "" && echo "=== Late
+      timepoint outputs ===" && ls -la outputs/l…)
+  ⎿  === Early timepoint outputs ===                         
+     total 128
+     drwxr-xr-x@  7 zakiralibhai  staff    224 Jan 12 18:24 .
+     … +18 lines (ctrl+o to expand)
+
+⏺ The late timepoint is missing some output files (ran truncated earlier). Let me re-run it to complete.
+
+⏺ Bash(Rscript scripts/annotate_loops_extended.R --timepoint late    timeout: 5m 
+      2>&1 | tail -30)                                               0s
+
+  ⎿      - anchor1/2_Bivalent_Promoter_overlap
+         - anchor1/2_distance_to_tss_ext
+         - anchor1/2_type_extended
+     … +31 lines (ctrl+o to expand)
+
+⏺ Bash(echo "=== Early Summary ===" && cat
+      outputs/loop_annotation_extended/early/summary_statistics.txt && echo ""
+      && echo "=== Late Summary ===" && cat outputs/loop_…)
+  ⎿  === Early Summary ===                              
+     ========================================
+     Extended Loop Anchor Classification Summary (EARLY)
+     … +128 lines (ctrl+o to expand)
+
+⏺ All modifications are complete and verified. Here's a summary:
+
+  Summary of Changes to scripts/annotate_loops_extended.R
+
+  New Features
+
+  1. Dual Timepoint Support - Script now processes both Early and Late timepoints
+  2. Standardized Peak Files - Uses the new peaks/beds/ directory
+  3. Simplified Code - Consolidated 5 loading functions into 1 generic function
+
+  Usage
+
+  # Run both timepoints (default)
+  Rscript scripts/annotate_loops_extended.R
+
+  # Run only early
+  Rscript scripts/annotate_loops_extended.R --timepoint early
+
+  # Run only late
+  Rscript scripts/annotate_loops_extended.R --timepoint late
+
+  Output Structure
+
+  outputs/loop_annotation_extended/
+  ├── early/  (165 loops, using Early peak files)
+  └── late/   (2,910 loops, using Late peak files)
+
+  Peak Files Used
+  ┌──────────┬──────────────┬───────────────┐
+  │   Mark   │    Early     │     Late      │
+  ├──────────┼──────────────┼───────────────┤
+  │ H3K27ac  │ 18,178 peaks │ 15,105 peaks  │
+  ├──────────┼──────────────┼───────────────┤
+  │ H3K27me3 │ 12,473 peaks │ 15,809 peaks  │
+  ├──────────┼──────────────┼───────────────┤
+  │ H3K4me1  │ 93,859 peaks │ 113,781 peaks │
+  ├──────────┼──────────────┼───────────────┤
+  │ H3K4me3  │ 10,370 peaks │ 6,581 peaks   │
+  ├──────────┼──────────────┼───────────────┤
+  │ Bivalent │ 933 regions  │ 320 regions   │
+  └──────────┴──────────────┴───────────────┘
+  Key Finding
+
+  The Bivalent files (Bivalent_Early.bed, Bivalent_Late.bed) were pre-computed K4me3+K27me3 intersections - no bedtools intersection was needed.
+
+✻ Baked for 7m 31s
+
+
+
