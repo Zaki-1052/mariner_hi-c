@@ -222,13 +222,15 @@ annotate_chip_overlaps_extended <- function(anchor_gr, k27ac_gr, k27me3_gr,
 #' @param ctcf_motif_overlap Logical - overlaps CTCF DNA motif
 #' @param distance_to_tss Numeric - distance to nearest TSS
 #' @param tss_threshold Numeric - promoter distance threshold (default 2000bp)
+#' @param use_motif_for_ctcf Logical - if TRUE, use motif for CTCF (early), else use ChIP (late)
 #' @return Character vector with anchor types
 classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
                                           h3k4me1_overlap, h3k4me3_overlap,
                                           bivalent_overlap, ctcf_overlap,
                                           ctcf_motif_overlap,
                                           distance_to_tss,
-                                          tss_threshold = 2000) {
+                                          tss_threshold = 2000,
+                                          use_motif_for_ctcf = FALSE) {
   n <- length(h3k27ac_overlap)
   anchor_type <- rep("Other", n)
 
@@ -277,12 +279,20 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
                         (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   anchor_type[is_poised_enhancer] <- "Poised_Enhancer"
 
-  # 7. CTCF_Site: CTCF ChIP+ OR CTCF motif+ (structural/insulator)
-  # Captures CTCF-cohesin mediated loops not at regulatory elements
-  # Uses both ChIP-seq and DNA motif for early timepoint where CTCF ChIP is missing
-  is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
-                  !is_bivalent & !is_polycomb & !is_active_enhancer &
-                  !is_poised_enhancer & (ctcf_overlap | ctcf_motif_overlap)
+  # 7. CTCF_Site: Structural/insulator elements
+  # Early timepoints: Use CTCF motif only (no ChIP-seq data available)
+  # Late timepoints: Use CTCF ChIP-seq (actual binding data)
+  if (use_motif_for_ctcf) {
+    # Early: motif only - indicates binding potential, not confirmed binding
+    is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
+                    !is_bivalent & !is_polycomb & !is_active_enhancer &
+                    !is_poised_enhancer & ctcf_motif_overlap
+  } else {
+    # Late: ChIP only - actual CTCF binding data
+    is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
+                    !is_bivalent & !is_polycomb & !is_active_enhancer &
+                    !is_poised_enhancer & ctcf_overlap
+  }
   anchor_type[is_ctcf_site] <- "CTCF_Site"
 
   # 8. Other: default (no ChIP-seq marks - truly unmarked regions)
@@ -504,6 +514,15 @@ annotate_loops_extended <- function(
   # --- Step 6: Classify anchor types ---
   cat("Step 6: Classifying anchor types (8 categories)...\n")
 
+  # Early timepoints use CTCF motif only (no ChIP-seq data)
+  # Late timepoints use CTCF ChIP-seq (actual binding data)
+  use_motif_for_ctcf <- timepoint %in% c("early", "early_p12ctrl")
+  if (use_motif_for_ctcf) {
+    cat("  CTCF classification: Using motif only (early timepoint)\n")
+  } else {
+    cat("  CTCF classification: Using ChIP-seq (late timepoint)\n")
+  }
+
   anchor1_type <- classify_anchor_type_extended(
     anchor1_chip$H3K27ac_overlap,
     anchor1_chip$H3K27me3_overlap,
@@ -513,7 +532,8 @@ annotate_loops_extended <- function(
     anchor1_chip$CTCF_overlap,
     anchor1_chip$CTCF_motif_overlap,
     anchor1_distance_to_tss,
-    tss_threshold
+    tss_threshold,
+    use_motif_for_ctcf
   )
 
   anchor2_type <- classify_anchor_type_extended(
@@ -525,7 +545,8 @@ annotate_loops_extended <- function(
     anchor2_chip$CTCF_overlap,
     anchor2_chip$CTCF_motif_overlap,
     anchor2_distance_to_tss,
-    tss_threshold
+    tss_threshold,
+    use_motif_for_ctcf
   )
 
   cat("\n  Anchor1 type distribution:\n")

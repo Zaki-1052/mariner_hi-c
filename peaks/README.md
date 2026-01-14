@@ -52,7 +52,7 @@ The script evolved through several iterations to address biological and technica
 | **Polycomb** | H3K27me3+ AND >2kb from TSS | Distal repressive element |
 | **Active_Enhancer** | H3K27ac+ AND >2kb from TSS | Active distal regulatory element |
 | **Poised_Enhancer** | H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb | Primed but not active enhancer |
-| **CTCF_Site** | CTCF ChIP+ OR CTCF motif+ AND not classified above | Structural/insulator loop anchor |
+| **CTCF_Site** | CTCF ChIP+ OR CTCF motif+ (not classified above) | Structural/insulator loop anchor |
 | **Other** | No ChIP-seq marks AND no CTCF evidence | Truly unmarked regions |
 
 ### Classification Logic
@@ -77,10 +77,10 @@ Priority 6: Poised_Enhancer
   └── H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND distance_to_TSS > 2kb
 
 Priority 7: CTCF_Site
-  └── (CTCF ChIP+ OR CTCF motif+) AND not classified above (structural/insulator)
+  └── (CTCF ChIP+ OR CTCF motif+) AND not classified above
 
 Priority 8: Other
-  └── Default (no marks, no CTCF evidence)
+  └── Default (no histone marks AND no CTCF evidence)
 ```
 
 ### 36 Loop Type Combinations
@@ -268,8 +268,9 @@ Original loop columns:
 
 ChIP-seq overlap columns:
   anchor1_H3K27ac_overlap, anchor1_H3K27me3_overlap, anchor1_H3K4me1_overlap,
-  anchor1_H3K4me3_overlap, anchor1_Bivalent_Promoter_overlap, anchor1_CTCF_overlap,
-  anchor1_CTCF_motif_overlap (same for anchor2)
+  anchor1_H3K4me3_overlap, anchor1_Bivalent_Promoter_overlap,
+  anchor1_CTCF_overlap, anchor1_CTCF_motif_overlap
+  (same for anchor2)
 
 TSS distance columns:
   anchor1_distance_to_tss_ext, anchor2_distance_to_tss_ext
@@ -418,18 +419,18 @@ All scripts are located in `peaks/scripts/`:
 
 ### Script: `extract_other_up_loops.R`
 
-This script extracts and annotates loops with "Other" classification (truly unmarked anchors) that are upregulated in BAP1-KO, with gene annotations.
+This script extracts and annotates loops with "Other" classification (truly unmarked anchors) that are upregulated in BAP1-KO, with additional CTCF overlap validation and gene annotations.
 
 ### Background
 
-With CTCF motif integration, the early timepoint now shows comparable "Other" percentages to late:
+The early timepoint previously showed a high "Other" proportion due to missing CTCF data. With the integration of both CTCF ChIP-seq (adult) and CTCF DNA motifs, the classification is now comparable to late:
 
-| Anchor Type | Early (ChIP + Motif) | Late (ChIP + Motif) |
-|-------------|----------------------|---------------------|
-| CTCF_Site   | ~30% | ~24% |
+| Anchor Type | Early (ChIP+Motif) | Late (ChIP+Motif) |
+|-------------|-------------------|-------------------|
+| CTCF_Site   | ~30% | ~28% |
 | Other       | **~6-7%** | **~9%** |
 
-**Key change:** CTCF_Site classification now uses BOTH adult CTCF ChIP-seq AND CTCF DNA motif data. This captures potential CTCF sites even without timepoint-specific ChIP-seq.
+**Key change:** CTCF_Site classification now uses `CTCF ChIP+ OR CTCF motif+`, which captures potential CTCF binding sites even without timepoint-specific ChIP-seq data.
 
 ### Usage
 
@@ -441,19 +442,19 @@ Rscript scripts/extract_other_up_loops.R
 ### Key Findings (Early Timepoint)
 
 - **16 out of 73 up loops (22%)** have at least one "Other" anchor
-  - 2 loops with both anchors "Other"
-  - 14 loops with single anchor "Other"
-- Only **17 unique "Other" anchors** remain (vs 87 before motif integration)
-- These are truly unmarked regions - no histone marks, no CTCF ChIP, no CTCF motif
+  - 2 with both anchors "Other"
+  - 14 with single anchor "Other"
+- Only **17 unique "Other" anchors** remain after CTCF motif integration
+- chr8:71.2-71.8Mb region has several significant loops (now mostly classified as CTCF_Site)
 
 ### Top Significant "Other" Up Loops
 
-| Loop ID | Coordinates | logFC | FDR | Genes |
-|---------|-------------|-------|-----|-------|
-| loop_17936 | chr8:71.19Mb ↔ 71.81Mb | +1.01 | 2.56e-05 | Haus8 - Zfp709 |
-| loop_4918 | chr8:49.80Mb ↔ 57.30Mb | +1.76 | 7.59e-04 | Gm2516 - Hand2 |
-| loop_6571 | chr4:32.70Mb ↔ 34.63Mb | +0.51 | 4.70e-03 | Mdn1 - Rars2 |
-| loop_4307 | chr8:71.14Mb ↔ 71.83Mb | +0.58 | 5.35e-03 | 1700026F02Rik - Zfp709 |
+| Loop ID | Coordinates | logFC | FDR | Loop Type | Genes |
+|---------|-------------|-------|-----|-----------|-------|
+| loop_17936 | chr8:71.19Mb ↔ 71.81Mb | +1.01 | 2.56e-05 | CTCF_Site-Other | Haus8 - Zfp709 |
+| loop_4918 | chr8:49.80Mb ↔ 57.30Mb | +1.76 | 7.59e-04 | Repressed_Promoter-Other | Gm2516 - Hand2 |
+| loop_6571 | chr4:32.70Mb ↔ 34.62Mb | +0.51 | 4.70e-03 | CTCF_Site-Other | Mdn1 - Rars2 |
+| loop_4307 | chr8:71.14Mb ↔ 71.83Mb | +0.58 | 5.35e-03 | Other-Other | 1700026F02Rik - Zfp709 |
 
 ### Output Files
 
@@ -464,6 +465,7 @@ Located in `loop_annotation_extended/early/`:
 | `other_category_up_loops.tsv` | Main table with 16 loops, ranked by FDR |
 | `other_up_loops_with_genes.tsv` | Full annotation with all original columns |
 | `other_up_loops_summary.txt` | Summary statistics |
+| `other_anchors.bed` | 17 unique "Other" anchors for further analysis |
 
 ### Output Columns
 
@@ -474,91 +476,73 @@ anchor1_type, anchor2_type, loop_type
 other_category (both_other or single_other)
 anchor1_nearest_gene, anchor1_gene_distance
 anchor2_nearest_gene, anchor2_gene_distance
-anchor1_overlaps_CTCF, anchor2_overlaps_CTCF
+anchor1_overlaps_CTCF, anchor2_overlaps_CTCF (validation)
 loop_distance, resolution_kb
 ```
 
 ### Notes
 
-- With CTCF motif integration, "Other" now truly means unmarked regions (no histone marks, no CTCF evidence)
-- The remaining 16 "Other" up loops represent potential novel structural elements or regions with marks below detection threshold
-- Most former "Other" anchors are now classified as CTCF_Site due to motif overlap
+- With CTCF ChIP + motif integration, "Other" is now ~6-7% (comparable to late ~9%)
+- The remaining 16 "Other" up loops (22% of up loops) represent truly unmarked regions
+- Most of the chr8:71.2-71.8Mb cluster is now classified as CTCF_Site (motif+)
+- Only 2 loops have both anchors as "Other" - the rest have one classified anchor
 
 ---
 
-## CTCF Motif Validation Pipeline
+## CTCF Motif Integration
 
 ### Purpose
 
-Since the early timepoint lacks CTCF ChIP-seq data, ~36.5% of anchors are classified as "Other" (vs 9.3% in late). To validate whether these "Other" anchors are likely CTCF-mediated, we check for CTCF DNA binding motifs using HOMER's pre-computed genome-wide motif scan.
+The early timepoint originally lacked CTCF ChIP-seq data, resulting in ~37% "Other" anchors. To address this, we integrated CTCF DNA motif data directly into the classification:
 
-### Method
+**CTCF_Site = (CTCF ChIP+ OR CTCF motif+)**
 
-Instead of running HOMER on-the-fly, we use a pre-computed file containing all known motif locations in mm10:
-- **Source:** `homer.KnownMotifs.mm10.191020.bed.gz` (4GB, ~131k CTCF motifs)
-- **Filter:** Canonical `CTCF(Zf)` motif only (exclude Satellite variants)
-- **Tool:** `bedtools intersect` to count motifs per anchor
+This approach uses two complementary data sources:
+1. **CTCF ChIP-seq** (adult cerebellum, Bing Ren lab) - 32,487 peaks
+2. **CTCF DNA motifs** (HOMER pre-computed) - 114,081 motifs
 
-This approach is:
-- Faster than running HOMER
-- Reproducible (same pre-computed data)
-- Biologically equivalent (same PWM-based motif detection)
+### Biological Rationale
 
-### Usage
+- CTCF is a largely constitutive architectural protein
+- ~70-80% of CTCF binding sites are conserved across developmental stages
+- The DNA-binding motif is highly conserved (CTCF zinc finger domain)
+- Using both ChIP and motif captures:
+  - Sites bound in adult (ChIP+)
+  - Potential sites with canonical motif (motif+)
 
-**On HPC (single command):**
+### Data Sources
+
+**CTCF ChIP-seq:**
+- File: `CTCF.bed` (32,487 peaks)
+- Source: Bing Ren lab, adult mouse cerebellum
+
+**CTCF Motifs:**
+- File: `ctcf_motifs_mm10.bed` (114,081 motifs)
+- Source: HOMER pre-computed genome-wide motif scan
+- Filter: Canonical `CTCF(Zf)` only (excludes Satellite variants)
+
+### Results After Integration
+
+| Metric | Before (ChIP only) | After (ChIP+Motif) |
+|--------|-------------------|-------------------|
+| CTCF_Site (Anchor1) | 12.1% | **30.9%** |
+| CTCF_Site (Anchor2) | 11.5% | **28.5%** |
+| Other (Anchor1) | 24.8% | **6.1%** |
+| Other (Anchor2) | 24.2% | **7.3%** |
+| "Other" up loops | 48 | **16** |
+| Unique "Other" anchors | 64 | **17** |
+
+### Generating the Motif File (HPC)
+
+If you need to regenerate `ctcf_motifs_mm10.bed`:
+
 ```bash
-cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks
 sbatch scripts/ctcf_motif_analysis.sb
 ```
 
-This master script runs 4 steps:
-1. Verify input files exist
-2. Extract canonical CTCF(Zf) motifs from pre-computed file
-3. Run bedtools intersect to count motifs per anchor
-4. Run R integration script to generate concordance matrix
-
-### Prerequisites
-
-Before running the pipeline, generate the "Other" anchors BED file:
-```bash
-cd peaks/
-Rscript scripts/extract_other_anchors.R
-```
-
-This creates `loop_annotation_extended/early/other_anchors.bed` (87 unique anchors).
-
-### Output Files
-
-Located in `loop_annotation_extended/early/`:
-
-| File | Description |
-|------|-------------|
-| `anchors_ctcf_motif_count.bed` | bedtools output with motif counts per anchor |
-| `ctcf_motif_validation.txt` | Concordance matrix and interpretation |
-| `other_category_up_loops.tsv` | Updated with `has_CTCF_motif` columns |
-
-### Concordance Matrix
-
-The analysis compares two approaches for identifying CTCF sites:
-
-|                     | Late CTCF ChIP+ | Late CTCF ChIP- |
-|---------------------|-----------------|-----------------|
-| **CTCF Motif+**     | Strong CTCF     | Motif only      |
-| **CTCF Motif-**     | Non-canonical   | True "Other"    |
-
-**Interpretation:**
-- **Motif+ ChIP+**: Strong evidence for CTCF site
-- **Motif+ ChIP-**: Motif present but no late ChIP binding (may be early-specific)
-- **Motif- ChIP+**: ChIP binding without canonical motif (indirect recruitment)
-- **Motif- ChIP-**: True "Other" - structural loop without CTCF
-
-### Expected Results
-
-Based on CTCF biology:
-- **50-70%** of "Other" anchors should contain ≥1 CTCF motif
-- **High concordance** between motif+ and late ChIP+ (~70-80% agreement)
-- Remaining **true "Other"** anchors may represent cohesin-only loops or novel structural elements
+This extracts canonical CTCF(Zf) motifs from HOMER's pre-computed file:
+- Source: `/expanse/lustre/projects/csd940/ctea/homer/homer.KnownMotifs.mm10.191020.bed.gz`
+- Output: `ctcf_motifs_mm10.bed` (114,081 motifs)
 
 ---
 
@@ -578,11 +562,12 @@ Based on CTCF biology:
 
 1. **Bivalent count:** Should be a subset of H3K4me3 peaks
 2. **Active_Promoter < H3K4me3:** Not all H3K4me3 peaks are near TSS
-3. **Other not too high:** >50% "Other" may indicate missing peak files
+3. **Other not too high:** >15% "Other" may indicate missing CTCF motif file
 4. **Anchor1 ≈ Anchor2:** Similar distributions expected
+5. **CTCF_Site ~25-35%:** With ChIP+motif integration, expect substantial CTCF classification
 
 ---
 
-**Last Updated:** January 13, 2026
+**Last Updated:** January 14, 2026
 
 **Author:** Zakir Alibhai
