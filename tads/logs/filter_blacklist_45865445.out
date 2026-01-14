@@ -1,0 +1,125 @@
+=========================================
+TADCompare Pipeline - Step 5: Blacklist Filtering
+=========================================
+Job ID: 45865445
+Node: exp-9-24
+Start time: Tue Jan 13 17:05:49 PST 2026
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
+Blacklist file: /expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed
+
+Blacklist file stats:
+254 /expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed
+
+Running blacklist filtering...
+
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Warning message:
+package ‘rtracklayer’ was built under R version 4.4.3 
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:GenomicRanges’:
+
+    intersect, setdiff, union
+
+The following object is masked from ‘package:GenomeInfoDb’:
+
+    intersect
+
+The following objects are masked from ‘package:IRanges’:
+
+    collapse, desc, intersect, setdiff, slice, union
+
+The following objects are masked from ‘package:S4Vectors’:
+
+    first, intersect, rename, setdiff, setequal, union
+
+The following objects are masked from ‘package:BiocGenerics’:
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Warning message:
+package ‘dplyr’ was built under R version 4.4.3 
+=== TADCompare Blacklist Filtering ===
+Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads 
+Blacklist file: /expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed 
+Resolution: 25000 bp
+Timepoints: early, late 
+
+Loading blacklist regions...
+  Loaded 255 blacklist regions
+  Total blacklisted bases: 2142082 bp
+
+Processing early timepoint...
+  Loaded 8584 boundaries
+  Removed 17 boundaries ( 0.2 %)
+  Remaining 8567 boundaries
+  Saved filtered results to: tadcompare_final_filtered.tsv 
+  Saved removed boundaries to: blacklist_removed_boundaries.tsv 
+  Saved summary to: blacklist_filter_summary.txt 
+
+Processing late timepoint...
+  Loaded 8264 boundaries
+  Removed 21 boundaries ( 0.3 %)
+  Remaining 8243 boundaries
+  Saved filtered results to: tadcompare_final_filtered.tsv 
+  Saved removed boundaries to: blacklist_removed_boundaries.tsv 
+  Saved summary to: blacklist_filter_summary.txt 
+
+=== Final Summary ===
+early: 8584 -> 8567 boundaries (removed 17, 0.2%)
+late: 8264 -> 8243 boundaries (removed 21, 0.3%)
+
+Done!
+
+=========================================
+Filtering complete!
+Exit code: 0
+End time: Tue Jan 13 17:06:02 PST 2026
+=========================================
