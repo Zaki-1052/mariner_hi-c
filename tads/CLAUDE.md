@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Organism: Mouse (mm10 genome)
 - Conditions: Control vs BAP1-KO mutant
 - Replicates: 3 biological replicates per condition
-- Resolution: 25kb
+- Resolution: 10kb
 - Timepoint: Late (250402)
 
 ## Running the Pipeline
@@ -88,7 +88,7 @@ Rscript scripts/04_analyze_shifts.R
 ```
 region_i    region_j    counts
 0           0           1023
-0           25000       45
+0           10000       45
 ```
 
 ## File Paths (HPC - Expanse)
@@ -118,7 +118,7 @@ results/
 
 All R scripts define paths and parameters at the top:
 ```r
-RESOLUTION <- 25000
+RESOLUTION <- 10000
 BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
 CHROMOSOMES <- paste0("chr", 1:19)  # Autosomes only, excludes chrX
 ```
@@ -178,7 +178,7 @@ Scripts use emoji indicators for status:
 
 1. **Exclude chrX**: All chromosome lists exclude sex chromosomes (autosomes 1-19 only)
 
-2. **Resolution is 25kb**: Not 40kb as mentioned in context doc - implementation uses 25kb
+2. **Resolution is 10kb**: Higher resolution for fine-grained boundary detection
 
 3. **Matrix format**: TADCompare accepts sparse 3-column format (region_i, region_j, counts)
 

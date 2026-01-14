@@ -22,7 +22,7 @@ if (!TIMEPOINT %in% c("late", "early")) {
 cat("Timepoint:", TIMEPOINT, "\n\n")
 
 # === Configuration ===
-RESOLUTION <- 25000
+RESOLUTION <- 10000
 BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
 INPUT_DIR <- file.path(BASE_DIR, "data", TIMEPOINT, "extracted/replicates")
 OUTPUT_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "consensus")
@@ -53,7 +53,7 @@ load_sparse_matrix <- function(filepath) {
 run_consensus_chr <- function(chrom, condition, rep_names) {
     # Load all replicate matrices for this chromosome
     matrices <- lapply(rep_names, function(rep) {
-        filepath <- file.path(INPUT_DIR, paste0(rep, ".", chrom, ".25kb.txt"))
+        filepath <- file.path(INPUT_DIR, paste0(rep, ".", chrom, ".10kb.txt"))
         load_sparse_matrix(filepath)
     })
     names(matrices) <- rep_names

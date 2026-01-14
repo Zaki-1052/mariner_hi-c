@@ -11,29 +11,44 @@ library(readr)
 # Configuration
 # =============================================================================
 
-RESOLUTION <- 25000
+RESOLUTION <- 10000
 TIMEPOINTS <- c("early", "late")
 BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
-BLACKLIST_FILE <- "/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed"
+
+# Two blacklist files: lab-specific and ENCODE standard (union both)
+BLACKLIST_LAB <- file.path(BASE_DIR, "250123blacklist.bed")
+BLACKLIST_ENCODE <- file.path(BASE_DIR, "mm10-blacklist.v2.bed")
 
 cat("=== TADCompare Blacklist Filtering ===\n")
 cat("Base directory:", BASE_DIR, "\n")
-cat("Blacklist file:", BLACKLIST_FILE, "\n")
+cat("Lab blacklist:", BLACKLIST_LAB, "\n")
+cat("ENCODE blacklist:", BLACKLIST_ENCODE, "\n")
 cat("Resolution:", RESOLUTION, "bp\n")
 cat("Timepoints:", paste(TIMEPOINTS, collapse = ", "), "\n\n")
 
 # =============================================================================
-# Load blacklist
+# Load and union blacklists
 # =============================================================================
 
-if (!file.exists(BLACKLIST_FILE)) {
-  stop("Blacklist file not found: ", BLACKLIST_FILE,
-       "\nIf running locally, update BLACKLIST_FILE path or copy file locally.")
+# Check files exist
+if (!file.exists(BLACKLIST_LAB)) {
+  stop("Lab blacklist file not found: ", BLACKLIST_LAB)
+}
+if (!file.exists(BLACKLIST_ENCODE)) {
+  stop("ENCODE blacklist file not found: ", BLACKLIST_ENCODE)
 }
 
 cat("Loading blacklist regions...\n")
-blacklist <- import.bed(BLACKLIST_FILE)
-cat("  Loaded", length(blacklist), "blacklist regions\n")
+
+# Load both blacklists
+blacklist_lab <- import.bed(BLACKLIST_LAB)
+blacklist_encode <- import.bed(BLACKLIST_ENCODE)
+cat("  Lab blacklist:", length(blacklist_lab), "regions\n")
+cat("  ENCODE blacklist:", length(blacklist_encode), "regions\n")
+
+# Create union (merge overlapping regions from both)
+blacklist <- reduce(c(blacklist_lab, blacklist_encode))
+cat("  Combined union:", length(blacklist), "regions (after merging overlaps)\n")
 cat("  Total blacklisted bases:", sum(width(blacklist)), "bp\n\n")
 
 # =============================================================================
@@ -148,7 +163,9 @@ for (timepoint in TIMEPOINTS) {
 "Blacklist Filtering Summary - %s timepoint
 ==========================================
 Date: %s
-Blacklist file: %s
+Lab blacklist: %s (%d regions)
+ENCODE blacklist: %s (%d regions)
+Combined union: %d regions (after merging overlaps)
 Resolution: %d bp
 Overlap threshold: Any overlap (conservative)
 
@@ -185,7 +202,9 @@ Removed boundaries: %s
 ",
     timepoint,
     format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-    BLACKLIST_FILE,
+    BLACKLIST_LAB, length(blacklist_lab),
+    BLACKLIST_ENCODE, length(blacklist_encode),
+    length(blacklist),
     RESOLUTION,
     n_before, n_removed, 100 * n_removed / n_before, n_after,
     n_diff_before, n_diff_removed,

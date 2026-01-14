@@ -1,6 +1,6 @@
 # 02_run_tadcompare.R
 # TADCompare differential boundary analysis: Control vs BAP1-KO mutant
-# Uses merged contact matrices at 25kb resolution
+# Uses merged contact matrices at 10kb resolution
 # Usage: Rscript scripts/02_run_tadcompare.R [timepoint]
 #   timepoint: "late" (default) or "early"
 
@@ -22,7 +22,7 @@ if (!TIMEPOINT %in% c("late", "early")) {
 cat("Timepoint:", TIMEPOINT, "\n\n")
 
 # === Configuration ===
-RESOLUTION <- 25000
+RESOLUTION <- 10000
 BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
 INPUT_DIR <- file.path(BASE_DIR, "data", TIMEPOINT, "extracted/merged")
 OUTPUT_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "tadcompare")
@@ -47,8 +47,8 @@ run_tadcompare_chr <- function(chrom) {
     cat("Processing", chrom, "...\n")
     
     # Input file paths
-    ctrl_file <- file.path(INPUT_DIR, paste0("ctrl_merged.", chrom, ".25kb.txt"))
-    mut_file <- file.path(INPUT_DIR, paste0("mut_merged.", chrom, ".25kb.txt"))
+    ctrl_file <- file.path(INPUT_DIR, paste0("ctrl_merged.", chrom, ".10kb.txt"))
+    mut_file <- file.path(INPUT_DIR, paste0("mut_merged.", chrom, ".10kb.txt"))
     
     # Check files exist
     if (!file.exists(ctrl_file)) {

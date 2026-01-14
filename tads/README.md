@@ -137,18 +137,18 @@ sbatch scripts/06_visualizations.sb
 - Location: `/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/{timepoint}/`
 
 **Process:**
-1. Extract observed contacts at 25kb resolution
+1. Extract observed contacts at 10kb resolution
 2. Use NONE normalization (TADCompare handles internally)
 3. Process all 19 autosomes (chr1-chr19, excludes chrX)
 4. Generate sparse 3-column format (region_i, region_j, counts)
 
 **Output:** `data/{timepoint}/extracted/`
-- `merged/ctrl_merged.chr{N}.25kb.txt` - Merged control matrices
-- `merged/mut_merged.chr{N}.25kb.txt` - Merged mutant matrices
-- `replicates/{sample}.chr{N}.25kb.txt` - Individual replicate matrices
+- `merged/ctrl_merged.chr{N}.10kb.txt` - Merged control matrices
+- `merged/mut_merged.chr{N}.10kb.txt` - Merged mutant matrices
+- `replicates/{sample}.chr{N}.10kb.txt` - Individual replicate matrices
 
 **Key Parameters:**
-- Resolution: 25kb
+- Resolution: 10kb
 - Normalization: NONE (raw observed)
 - Chromosomes: chr1-chr19 (autosomes only)
 
@@ -247,7 +247,7 @@ sbatch scripts/06_visualizations.sb
 **Shift Distance Interpretation:**
 - Distance in bp/kb from control boundary to nearest mutant boundary (or vice versa)
 - Relevant for "Shifted" type boundaries
-- Median shift distances typically 25-50kb (1-2 resolution bins)
+- Median shift distances typically 10-20kb (1-2 resolution bins)
 
 ---
 
@@ -259,11 +259,13 @@ sbatch scripts/06_visualizations.sb
 
 **Input:**
 - Final annotated boundaries from Step 4
-- mm10 blacklist BED file: `/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed`
+- Two blacklist BED files (combined as union):
+  - `250123blacklist.bed` - Lab-specific blacklist (254 regions)
+  - `mm10-blacklist.v2.bed` - ENCODE mm10 standard blacklist (3,435 regions)
 
 **Process:**
-1. Load blacklist regions as GRanges
-2. Convert boundary coordinates to genomic bins (25kb resolution)
+1. Load both blacklist files as GRanges and create union
+2. Convert boundary coordinates to genomic bins (10kb resolution)
 3. Remove any boundary where the bin overlaps blacklist (conservative: any overlap)
 4. Save filtered results and removed boundaries separately
 
@@ -279,8 +281,10 @@ sbatch scripts/06_visualizations.sb
 
 **Key Configuration:**
 ```r
-RESOLUTION <- 25000
-BLACKLIST_FILE <- "/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed"
+RESOLUTION <- 10000
+# Two blacklist files are loaded and combined (union):
+BLACKLIST_LAB <- file.path(BASE_DIR, "250123blacklist.bed")      # Lab-specific (254 regions)
+BLACKLIST_ENCODE <- file.path(BASE_DIR, "mm10-blacklist.v2.bed") # ENCODE mm10 (3,435 regions)
 ```
 
 ---
@@ -394,7 +398,7 @@ tads/
 All scripts use consistent settings defined at the top:
 
 ```r
-RESOLUTION <- 25000              # 25kb resolution
+RESOLUTION <- 10000              # 10kb resolution
 CHROMOSOMES <- paste0("chr", 1:19)  # Autosomes only, excludes chrX
 ```
 
@@ -413,13 +417,16 @@ BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
 └── mut_M1.hic, mut_M2.hic, mut_M3.hic       # Mutant replicates
 ```
 
-### Blacklist File
+### Blacklist Files
 
-```
-/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed
-```
+Two blacklist files in the repository are combined (union) for filtering:
 
-Used in Step 5 to filter boundaries in repetitive/poorly mappable regions. Standard mm10 blacklist format (BED).
+| File | Regions | Description |
+|------|---------|-------------|
+| `250123blacklist.bed` | 254 | Lab-specific blacklist for problematic regions |
+| `mm10-blacklist.v2.bed` | 3,435 | ENCODE mm10 standard blacklist (Low Mappability + High Signal) |
+
+Used in Step 5 to filter boundaries in repetitive/poorly mappable regions. Any boundary overlapping either blacklist is removed.
 
 ### ChIP-seq Peak Files
 
@@ -461,7 +468,7 @@ Located in `../peaks/`:
 ### After Step 4 (Shift Distances)
 
 - [ ] Shift distances calculated for all "Shifted" boundaries
-- [ ] Median shift ~25-50kb (1-2 resolution bins)
+- [ ] Median shift ~10-20kb (1-2 resolution bins)
 - [ ] Final annotated file contains all expected columns
 
 ### After Step 5 (Blacklist Filtering)
@@ -631,7 +638,7 @@ install.packages(c(
 
 1. **Exclude chrX**: All chromosome lists exclude sex chromosomes (autosomes 1-19 only)
 
-2. **Resolution is 25kb**: Standard for TAD-level analysis, matches TADCompare recommendations
+2. **Resolution is 10kb**: Higher resolution for fine-grained boundary detection
 
 3. **Matrix format**: TADCompare accepts sparse 3-column format (region_i, region_j, counts) and converts internally
 
