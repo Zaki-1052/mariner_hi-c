@@ -13,21 +13,8 @@ library(readr)
 
 RESOLUTION <- 25000
 TIMEPOINTS <- c("early", "late")
-
-# Detect environment and set paths
-if (Sys.info()["nodename"] == "login01" || grepl("expanse", Sys.info()["nodename"])) {
-  # HPC (Expanse)
-  BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
-  BLACKLIST_FILE <- "/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed"
-} else {
-  # Local development
-  BASE_DIR <- dirname(dirname(normalizePath(sys.frame(1)$ofile, mustWork = FALSE)))
-  if (is.na(BASE_DIR) || BASE_DIR == "") {
-    BASE_DIR <- getwd()
-  }
-  # Local blacklist path - user should update if different
-  BLACKLIST_FILE <- "/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed"
-}
+BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+BLACKLIST_FILE <- "/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed"
 
 cat("=== TADCompare Blacklist Filtering ===\n")
 cat("Base directory:", BASE_DIR, "\n")
