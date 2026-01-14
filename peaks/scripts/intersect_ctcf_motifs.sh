@@ -1,0 +1,95 @@
+#!/bin/bash
+# peaks/scripts/intersect_ctcf_motifs.sh
+# Count CTCF motif occurrences in each "Other" anchor using bedtools
+# Run on HPC after extract_ctcf_motifs.sh
+
+set -euo pipefail
+
+# =============================================================================
+# Configuration
+# =============================================================================
+
+PEAKS_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks"
+
+# Input files
+ANCHORS_BED="${PEAKS_DIR}/loop_annotation_extended/early/other_anchors.bed"
+CTCF_MOTIFS="${PEAKS_DIR}/ctcf_motifs_mm10.bed"
+
+# Output file
+OUTPUT_FILE="${PEAKS_DIR}/loop_annotation_extended/early/anchors_ctcf_motif_count.bed"
+
+# =============================================================================
+# Main
+# =============================================================================
+
+echo "=== Intersecting Anchors with CTCF Motifs ==="
+echo "Date: $(date)"
+echo ""
+
+# Verify inputs exist
+if [[ ! -f "${ANCHORS_BED}" ]]; then
+    echo "ERROR: Anchors BED file not found: ${ANCHORS_BED}"
+    echo "Run extract_other_anchors.R first to generate it."
+    exit 1
+fi
+
+if [[ ! -f "${CTCF_MOTIFS}" ]]; then
+    echo "ERROR: CTCF motifs file not found: ${CTCF_MOTIFS}"
+    echo "Run extract_ctcf_motifs.sh first to generate it."
+    exit 1
+fi
+
+echo "Anchors BED: ${ANCHORS_BED}"
+echo "CTCF motifs: ${CTCF_MOTIFS}"
+echo "Output: ${OUTPUT_FILE}"
+echo ""
+
+# Count input sizes
+N_ANCHORS=$(wc -l < "${ANCHORS_BED}")
+N_MOTIFS=$(wc -l < "${CTCF_MOTIFS}")
+echo "Input anchors: ${N_ANCHORS}"
+echo "CTCF motifs: ${N_MOTIFS}"
+echo ""
+
+# Run bedtools intersect with -c to count overlaps
+# Output format: original BED columns + count of overlapping CTCF motifs
+echo "Running bedtools intersect..."
+
+bedtools intersect \
+    -a "${ANCHORS_BED}" \
+    -b "${CTCF_MOTIFS}" \
+    -c \
+    > "${OUTPUT_FILE}"
+
+# Verify output
+N_OUTPUT=$(wc -l < "${OUTPUT_FILE}")
+echo ""
+echo "Output rows: ${N_OUTPUT}"
+
+# Summary statistics
+echo ""
+echo "=== Summary ==="
+
+# Count anchors with/without CTCF motifs
+# Last column is the count
+N_WITH_MOTIF=$(awk '$NF > 0' "${OUTPUT_FILE}" | wc -l)
+N_WITHOUT_MOTIF=$(awk '$NF == 0' "${OUTPUT_FILE}" | wc -l)
+
+echo "Anchors with CTCF motif(s): ${N_WITH_MOTIF} ($(echo "scale=1; ${N_WITH_MOTIF} * 100 / ${N_ANCHORS}" | bc)%)"
+echo "Anchors without CTCF motif: ${N_WITHOUT_MOTIF} ($(echo "scale=1; ${N_WITHOUT_MOTIF} * 100 / ${N_ANCHORS}" | bc)%)"
+
+# Distribution of motif counts
+echo ""
+echo "Motif count distribution:"
+awk '{print $NF}' "${OUTPUT_FILE}" | sort -n | uniq -c | sort -k2 -n
+
+# Preview
+echo ""
+echo "Preview (first 10 lines):"
+head -10 "${OUTPUT_FILE}"
+
+echo ""
+echo "=== DONE ==="
+echo "Output file: ${OUTPUT_FILE}"
+echo ""
+echo "Next step: Copy results to local and run annotate_ctcf_motifs.R"
