@@ -1,0 +1,131 @@
+=========================================
+CTCF Motif Analysis Pipeline
+=========================================
+Job ID: 45863828
+Node: exp-9-24
+Start time: Tue Jan 13 16:43:27 PST 2026
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+/home/zalibhai/.conda/envs/mariner_env/bin/bedtools
+bedtools v2.31.1
+
+Configuration:
+  Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks
+  Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/loop_annotation_extended/early
+
+=========================================
+Step 1: Verify input files
+=========================================
+
+HOMER motifs file: /expanse/lustre/projects/csd940/ctea/homer/homer.KnownMotifs.mm10.191020.bed.gz
+  Size: 4.0G
+Anchors BED file: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/loop_annotation_extended/early/other_anchors.bed
+  Lines: 87
+
+=========================================
+Step 2: Extract canonical CTCF motifs
+=========================================
+
+Extracting CTCF(Zf) motifs (excluding Satellite variants)...
+Extracted 114081 canonical CTCF motifs
+
+Preview (first 5 lines):
+chr1	3028715	3028734	CTCF(Zf)	10	+
+chr1	3071559	3071578	CTCF(Zf)	10	+
+chr1	3143842	3143861	CTCF(Zf)	9	-
+chr1	3196484	3196503	CTCF(Zf)	10	+
+chr1	3286903	3286922	CTCF(Zf)	9	-
+
+=========================================
+Step 3: Intersect anchors with CTCF motifs
+=========================================
+
+Input anchors: 87
+CTCF motifs: 114081
+
+Running bedtools intersect...
+Output rows: 87
+
+Anchors with CTCF motif(s): 67 (77.0%)
+Anchors without CTCF motif: 20 (22.9%)
+
+Motif count distribution:
+     20 0
+     41 1
+     19 2
+      7 3
+
+=========================================
+Step 4: R integration and concordance matrix
+=========================================
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+=== Integrating CTCF Motif Results ===
+
+Loading bedtools intersection output...
+  Loaded 87 anchors with CTCF motif counts
+  Anchors with CTCF motif: 67 / 87 (77.0%)
+
+=== Loading Mapping and Loop Data ===
+  Anchor mapping entries: 102
+  Existing loop annotations: 60
+
+=== Joining Motif Results with Loop Data ===
+  Mapped entries: 102
+
+=== Aggregating Motif Info per Loop ===
+  Loops with motif info: 60
+
+=== Merging with Existing Loop Annotations ===
+  Updated loops: 60
+
+=== Building Concordance Matrix ===
+
+Concordance Matrix (all 'Other' anchors):
+# A tibble: 2 × 3
+  motif_status `ChIP+` `ChIP-`
+  <chr>          <int>   <int>
+1 Motif+            23      57
+2 Motif-             4      18
+
+=== Summary Statistics ===
+Total 'Other' anchors: 102
+  CTCF motif+ (in silico): 80 (78.4%)
+  Late CTCF ChIP+: 27 (26.5%)
+  Both motif+ and ChIP+: 23 (22.5%)
+  Either motif+ or ChIP+: 84 (82.4%)
+  Neither (true 'Other'): 18 (17.6%)
+
+=== Saving Updated Files ===
+  Updated: loop_annotation_extended/early/other_category_up_loops.tsv
+  Saved: loop_annotation_extended/early/ctcf_motif_validation.txt
+
+=== Appending to Summary File ===
+  Appended motif section to: loop_annotation_extended/early/other_up_loops_summary.txt
+
+=== DONE ===
+
+=========================================
+Output files generated:
+=========================================
+
+CTCF motifs file:
+-rw-r--r-- 1 zalibhai csd940 4.1M Jan 13 16:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/ctcf_motifs_mm10.bed
+
+Bedtools intersection output:
+-rw-r--r-- 1 zalibhai csd940 4.6K Jan 13 16:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/loop_annotation_extended/early/anchors_ctcf_motif_count.bed
+
+R script outputs:
+-rw-r--r-- 1 zalibhai csd940 2.5K Jan 13 16:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/loop_annotation_extended/early/ctcf_motif_validation.txt
+-rw-r--r-- 1 zalibhai csd940 13K Jan 13 16:45 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/loop_annotation_extended/early/other_category_up_loops.tsv
+
+=========================================
+CTCF motif analysis completed successfully
+
+End time: Tue Jan 13 16:45:32 PST 2026
+=========================================

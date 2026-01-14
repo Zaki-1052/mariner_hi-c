@@ -1,0 +1,65 @@
+
+================================================================================
+CTCF MOTIF VALIDATION FOR EARLY 'OTHER' ANCHORS
+Generated: 2026-01-13 16:45:32.572857
+================================================================================
+
+OVERVIEW
+--------
+This analysis validates early timepoint 'Other' category anchors by checking
+for CTCF DNA binding motifs. Since the early timepoint lacks CTCF ChIP-seq
+data, many potential CTCF sites are classified as 'Other'.
+
+We compare two approaches:
+1. CTCF motif presence (from HOMER pre-computed genome-wide motif scan)
+2. Late timepoint CTCF ChIP-seq overlap (proxy)
+
+METHOD
+------
+- CTCF motifs extracted from: homer.KnownMotifs.mm10.191020.bed.gz
+- Used canonical CTCF(Zf) motif only (excluded Satellite variants)
+- bedtools intersect to count motifs per anchor
+
+RESULTS SUMMARY
+---------------
+Total 'Other' anchors analyzed: 102
+
+                          Count       Percent
+CTCF motif+ (in silico):     80         78.4%
+Late CTCF ChIP+:             27         26.5%
+Both motif+ AND ChIP+:       23         22.5%
+Either motif+ OR ChIP+:      84         82.4%
+Neither (true 'Other'):      18         17.6%
+
+CONCORDANCE MATRIX
+------------------
+                    Late CTCF ChIP+    Late CTCF ChIP-
+CTCF Motif+              23                  57
+CTCF Motif-              4                  18
+
+INTERPRETATION
+--------------
+- 82.4% of 'Other' anchors have CTCF evidence (motif or ChIP)
+- 17.6% are truly unmarked structural elements (neither motif nor ChIP)
+
+Categories:
+- Motif+ ChIP+ : Strong CTCF site (motif present, ChIP binding confirmed)
+- Motif+ ChIP- : Motif present but no late ChIP binding
+                 (may be timepoint-specific or weak binding)
+- Motif- ChIP+ : ChIP binding without canonical motif
+                 (non-canonical binding or indirect recruitment)
+- Motif- ChIP- : True 'Other' - structural loop without CTCF
+
+BIOLOGICAL NOTES
+----------------
+- High Motif+ ChIP- may indicate early-specific CTCF binding not present in late
+- Motif- ChIP+ anchors may use non-canonical CTCF binding or cohesin recruitment
+- True 'Other' anchors may represent cohesin-only loops or novel structural elements
+
+FILES GENERATED
+---------------
+- loop_annotation_extended/early/ctcf_motif_validation.txt (this report)
+- loop_annotation_extended/early/other_category_up_loops.tsv (updated with motif columns)
+
+================================================================================
+
