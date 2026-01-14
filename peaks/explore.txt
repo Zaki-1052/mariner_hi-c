@@ -1,0 +1,167 @@
+   EXPLORATION REPORT: Peaks Directory Analysis
+   =============================================
+
+   ## 1. CURRENT "OTHER" CATEGORY ANALYSIS
+
+   ### Anchor Format (from extract_other_up_loops.R)
+   - **Input format**: TSV with genomic coordinates (chr1, start1, end1, chr2, start2, end2)
+   - **Anchor representation**: GRanges objects from GenomicRanges package
+   - **Classification columns**:
+     - anchor1_type_extended / anchor2_type_extended
+     - 8-category system: Active_Promoter, Repressed_Promoter, Bivalent_Promoter, Polycomb, Active_Enhancer,
+   Poised_Enhancer, CTCF_Site, Other
+     - loop_type_extended: Concatenation of anchor types (e.g., "Other-Other", "Promoter-Other")
+
+   ### Current CTCF Validation Approach
+   - **Method**: Direct bedtools-style overlap checking using GenomicRanges::countOverlaps()
+   - **CTCF data format**: narrowPeak format (chr, start, end, + additional columns)
+     - File: peaks/CTCF.bed (32,487 peaks from Bing Ren lab)
+     - Applied to BOTH early and late timepoints (late has explicit CTCF ChIP-seq)
+     - For early: acts as "late CTCF projection" to estimate which "Other" anchors might be CTCF-mediated
+   - **Validation result**: ~27-28% of early "Other" anchors overlap CTCF peaks
+   - **Code pattern** (from extract_other_up_loops.R):
+     ```r
+     check_ctcf_overlap <- function(chr, start, end, ctcf_gr) {
+       anchor_gr <- GRanges(seqnames = chr, ranges = IRanges(start = start, end = end))
+       overlaps <- countOverlaps(anchor_gr, ctcf_gr)
+       return(overlaps > 0)
+     }
+     ```
+
+   ## 2. EXISTING MOTIF ANALYSIS INFRASTRUCTURE
+
+   ### HOMER / MEME-Suite Tools
+   - **Status**: NO existing motif analysis in peaks/ or main scripts/
+   - **References found**:
+     - stripes/CLAUDE.md mentions "Anchor overlaps occupied CTCF motif" (Quagga paper context)
+     - docs/volcano_plots.md mentions HOMER's getDiffExpression.pl for TAD/compartment analysis
+     - No FIMO, HOMER findMotifs, or MEME-suite integration currently present
+   - **Infrastructure**: Zero motif-finding capability deployed
+
+   ### CTCF Motif Data
+   - **Current approach**: Using ChIP-seq peaks directly (CTCF.bed - 32,487 peaks)
+   - **No motif files**: No JASPAR, HOCOMOCO, or custom CTCF motif PWM files in codebase
+   - **No motif scanning**: No FIMO/MEME output files or motif position weight matrices
+
+   ## 3. ATAC-seq REFERENCES
+
+   ### Availability Status
+   - **ATAC-seq data**: NOT available for this project
+   - **References**:
+     - docs/edgeR.md mentions "Comparison with other genomics data: ATAC-seq, RNA-seq, ChIP-seq" (aspirational)
+     - stripes/CLAUDE.md: "CTCF Cut&Run is in progress... but not yet available"
+     - No ATAC-seq files or analyses in any directory
+   - **Alternative**: ChIP-seq data for H3K27ac, H3K27me3, H3K4me1, H3K4me3 available (histone marks as chromatin
+   accessibility proxy)
+
+   ## 4. EARLY TIMEPOINT OUTPUT FILE STRUCTURE
+
+   ### Input Data
+   - File: loop_annotation_extended/early/extended_characterized_loops.tsv
+   - **165 loops total** (73 up, 92 down)
+   - Columns include:
+     - Genomic: chr1, start1, end1, chr2, start2, end2
+     - Statistics: logFC, logCPM, FDR, PValue
+     - ChIP-seq overlaps: anchor1_H3K27ac_overlap, anchor1_H3K27me3_overlap, anchor1_H3K4me1_overlap,
+   anchor1_H3K4me3_overlap, anchor1_Bivalent_Promoter_overlap (and anchor2 variants)
+     - Classification: anchor1_type_extended, anchor2_type_extended, loop_type_extended
+     - TSS distance: anchor1_distance_to_tss_ext, anchor2_distance_to_tss_ext
+     - NO CTCF_overlap columns in early dataset
+
+   ### Output Files (Generated 2026-01-13)
+   Located in: `loop_annotation_extended/early/`
+
+   1. **other_category_up_loops.tsv** (60 loops)
+      - Main table for PI review
+      - Columns: loop_id, anchor1_coords, anchor2_coords, logFC, FDR, category
+      - anchor1_type, anchor2_type, loop_type, other_category
+      - anchor1_nearest_gene, anchor1_gene_distance
+      - anchor2_nearest_gene, anchor2_gene_distance
+      - anchor1_overlaps_CTCF, anchor2_overlaps_CTCF (NEW validation columns)
+      - loop_distance, resolution_kb
+
+   2. **other_up_loops_with_genes.tsv** (60 loops, full annotation)
+      - Includes all original columns plus gene annotations
+
+   3. **other_up_loops_summary.txt** (Summary report)
+      - Contains statistics and biological interpretation
+      - Key findings:
+        * 60/73 up loops (82%) have at least one "Other" anchor
+        * 15/92 down loops (16%) have "Other" anchors
+        * ~27% of "Other" anchors overlap CTCF peaks
+
+   ## 5. TOOLS & SCRIPTS IN CODEBASE
+
+   ### Existing Analysis Scripts (peaks/):
+   - **annotate_loops_extended.R** - ChIP-seq overlap annotation (8 categories)
+   - **extract_other_up_loops.R** - "Other" category extraction with CTCF validation [NEW]
+   - **beds/** directory - 15 BED files (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent for early/late)
+
+   ### Parent Scripts (scripts/):
+   - **33 R/Python/Shell scripts total**
+   - Notable: downstream_analysis.R, qc.R, visualizations.R, convert_final_bedpe.sh
+   - No motif analysis scripts
+
+   ### Documentation:
+   - **docs/other-category.txt** - Slack conversation transcript of analysis workflow
+   - **peaks/README.md** - Comprehensive documentation with updated "Other" category section
+   - **CLAUDE.md files** - Project context and guidelines
+
+   ## 6. CRITICAL FINDINGS
+
+   ### Data Limitations for Motif Analysis
+   1. **No CTCF motif data**: Only ChIP-seq peaks available (CTCF.bed)
+   2. **No sequence extraction**: Would need to extract sequences from mm10 at anchor coordinates
+   3. **No motif tools integrated**: Would need FIMO/MEME-suite setup
+   4. **Data gaps**: Early timepoint has NO CTCF ChIP-seq at all
+
+   ### Current Anchor Classification
+   - **"Other" category definition**: Anchors with NO overlaps to ANY ChIP-seq peaks
+     - NOT H3K27ac, NOT H3K27me3, NOT H3K4me1, NOT H3K4me3, NOT Bivalent
+     - May include CTCF-mediated sites (only detectable via CTCF.bed overlap)
+     - May include truly unmarked regions
+
+   ### CTCF Validation Results
+   - **Early timepoint "Other" anchors**:
+     - 54 anchors classified as anchor1=Other
+     - 48 anchors classified as anchor2=Other
+     - **15/54 (27.8%) anchor1 overlap CTCF peaks**
+     - **12/48 (25.0%) anchor2 overlap CTCF peaks**
+
+   ### Temporal Comparison
+   | Metric | Early (no CTCF data) | Late (with CTCF) |
+   |--------|---------------------|------------------|
+   | "Other" anchors | 36.5% | 9.3% |
+   | CTCF_Site anchors | 0% (unavailable) | 24.0% |
+   | Total loops | 165 | 2,910 |
+   | Up loops | 73 | ~1,400 |
+   | Up loops with "Other" | 60 (82%) | ~240 (17%) |
+
+   ---
+
+   ## DELIVERABLE: Data Format & Infrastructure Summary
+
+   ### Current Anchor Format for Motif Work
+   ```
+   Loop anchors represented as:
+   - GRanges object: seqnames (chr), ranges (IRanges with start, end)
+   - Coordinates: 1-based (R standard) in data, 0-based in BED files
+   - Additional metadata: loop_id, logFC, FDR, ChIP-seq overlaps, nearest_gene
+
+   For motif analysis would need:
+   - Sequence extraction: mm10 FASTA + coordinate lookup
+   - PWM: JASPAR/HOCOMOCO CTCF matrices
+   - Tool: FIMO for position scanning
+   ```
+
+   ### Existing CTCF Data Points
+   - **CTCF.bed**: 32,487 peaks, narrowPeak format
+   - **Late ChIP-seq CTCF**: Implicit in late annotation (CTCF_Site classification)
+   - **Early CTCF**: None available; using late peaks as proxy (~27% validation)
+
+   ### Missing Infrastructure
+   1. Motif PWM files (CTCF or others)
+   2. Sequence extraction pipeline
+   3. FIMO/MEME-suite integration
+   4. Motif database setup (JASPAR, HOCOMOCO)
+   5. ATAC-seq chromatin accessibility data
