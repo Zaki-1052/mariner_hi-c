@@ -100,9 +100,8 @@ Loop types are named by combining anchor types in hierarchy order:
 ```
 peaks/
 ├── CTCF.bed                           # CTCF peaks (32,487) - Bing Ren lab
-├── annotate_loops_extended.R          # Main annotation script
 ├── README.md                          # This file
-├── beds/                              # Standardized peak files
+├── beds/                              # Standardized ChIP-seq peak files
 │   ├── H3K27acCerebellumEarly2.bed
 │   ├── H3K27acCerebellumLate2.bed
 │   ├── H3K27me3CerebellumEarly1.bed
@@ -114,6 +113,12 @@ peaks/
 │   ├── Bivalent_Cerebellum_Early.bed  # 931 peaks
 │   ├── Bivalent_Cerebellum_Late.bed   # 318 peaks
 │   └── Bivalent_Consensus_Late.bed    # 688 peaks
+├── scripts/                           # All analysis scripts
+│   ├── annotate_loops_extended.R      # Main 8-category annotation
+│   ├── extract_other_anchors.R        # Extract "Other" anchors to BED
+│   ├── extract_other_up_loops.R       # Analyze "Other" up loops
+│   ├── annotate_ctcf_motifs.R         # Integrate CTCF motif results
+│   └── ctcf_motif_analysis.sb         # SLURM: Full CTCF motif pipeline
 ├── loop_annotation_extended/          # Output directories
 │   ├── early/                         # Early timepoint results
 │   ├── late/                          # Late timepoint results
@@ -181,16 +186,16 @@ PEAK_FILES <- list(
 cd peaks/
 
 # Run both early and late timepoints (default)
-Rscript annotate_loops_extended.R
+Rscript scripts/annotate_loops_extended.R
 
 # Run specific timepoint
-Rscript annotate_loops_extended.R --timepoint early
-Rscript annotate_loops_extended.R --timepoint late
-Rscript annotate_loops_extended.R --timepoint late_consensus
-Rscript annotate_loops_extended.R --timepoint early_p12ctrl
+Rscript scripts/annotate_loops_extended.R --timepoint early
+Rscript scripts/annotate_loops_extended.R --timepoint late
+Rscript scripts/annotate_loops_extended.R --timepoint late_consensus
+Rscript scripts/annotate_loops_extended.R --timepoint early_p12ctrl
 
 # Run all 4 timepoints for full comparison
-Rscript annotate_loops_extended.R --all
+Rscript scripts/annotate_loops_extended.R --all
 ```
 
 ### Command-Line Options
@@ -395,10 +400,15 @@ Rscript scripts/annotate_loops_extended.R --timepoint late
 
 ## Related Scripts
 
-- **`generate_bivalent_peaks.sb`** - Creates bivalent BED files from H3K4me3 + H3K27me3
-- **`generate_consensus_h3k4me3_peaks.sb`** - Creates consensus H3K4me3 from 4 replicates
-- **`downstream_analysis.R`** - Basic loop annotation (4-category system)
-- **`extract_other_up_loops.R`** - Extracts and analyzes "Other" category up loops (see below)
+All scripts are located in `peaks/scripts/`:
+
+| Script | Purpose |
+|--------|---------|
+| `annotate_loops_extended.R` | Main 8-category chromatin state annotation |
+| `extract_other_up_loops.R` | Extract and analyze "Other" category up loops |
+| `extract_other_anchors.R` | Extract "Other" anchors to BED for motif analysis |
+| `annotate_ctcf_motifs.R` | Integrate CTCF motif counts with loop annotations |
+| `ctcf_motif_analysis.sb` | SLURM: Full CTCF motif validation pipeline |
 
 ---
 
@@ -423,7 +433,7 @@ The early timepoint shows a striking difference in "Other" classification compar
 
 ```bash
 cd peaks/
-Rscript extract_other_up_loops.R
+Rscript scripts/extract_other_up_loops.R
 ```
 
 ### Key Findings (Early Timepoint)
@@ -473,6 +483,82 @@ loop_distance, resolution_kb
 
 ---
 
+## CTCF Motif Validation Pipeline
+
+### Purpose
+
+Since the early timepoint lacks CTCF ChIP-seq data, ~36.5% of anchors are classified as "Other" (vs 9.3% in late). To validate whether these "Other" anchors are likely CTCF-mediated, we check for CTCF DNA binding motifs using HOMER's pre-computed genome-wide motif scan.
+
+### Method
+
+Instead of running HOMER on-the-fly, we use a pre-computed file containing all known motif locations in mm10:
+- **Source:** `homer.KnownMotifs.mm10.191020.bed.gz` (4GB, ~131k CTCF motifs)
+- **Filter:** Canonical `CTCF(Zf)` motif only (exclude Satellite variants)
+- **Tool:** `bedtools intersect` to count motifs per anchor
+
+This approach is:
+- Faster than running HOMER
+- Reproducible (same pre-computed data)
+- Biologically equivalent (same PWM-based motif detection)
+
+### Usage
+
+**On HPC (single command):**
+```bash
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks
+sbatch scripts/ctcf_motif_analysis.sb
+```
+
+This master script runs 4 steps:
+1. Verify input files exist
+2. Extract canonical CTCF(Zf) motifs from pre-computed file
+3. Run bedtools intersect to count motifs per anchor
+4. Run R integration script to generate concordance matrix
+
+### Prerequisites
+
+Before running the pipeline, generate the "Other" anchors BED file:
+```bash
+cd peaks/
+Rscript scripts/extract_other_anchors.R
+```
+
+This creates `loop_annotation_extended/early/other_anchors.bed` (87 unique anchors).
+
+### Output Files
+
+Located in `loop_annotation_extended/early/`:
+
+| File | Description |
+|------|-------------|
+| `anchors_ctcf_motif_count.bed` | bedtools output with motif counts per anchor |
+| `ctcf_motif_validation.txt` | Concordance matrix and interpretation |
+| `other_category_up_loops.tsv` | Updated with `has_CTCF_motif` columns |
+
+### Concordance Matrix
+
+The analysis compares two approaches for identifying CTCF sites:
+
+|                     | Late CTCF ChIP+ | Late CTCF ChIP- |
+|---------------------|-----------------|-----------------|
+| **CTCF Motif+**     | Strong CTCF     | Motif only      |
+| **CTCF Motif-**     | Non-canonical   | True "Other"    |
+
+**Interpretation:**
+- **Motif+ ChIP+**: Strong evidence for CTCF site
+- **Motif+ ChIP-**: Motif present but no late ChIP binding (may be early-specific)
+- **Motif- ChIP+**: ChIP binding without canonical motif (indirect recruitment)
+- **Motif- ChIP-**: True "Other" - structural loop without CTCF
+
+### Expected Results
+
+Based on CTCF biology:
+- **50-70%** of "Other" anchors should contain ≥1 CTCF motif
+- **High concordance** between motif+ and late ChIP+ (~70-80% agreement)
+- Remaining **true "Other"** anchors may represent cohesin-only loops or novel structural elements
+
+---
+
 ## Quality Control
 
 ### Expected Peak Counts (Late Timepoint)
@@ -494,6 +580,6 @@ loop_distance, resolution_kb
 
 ---
 
-**Last Updated:** January 12, 2026
+**Last Updated:** January 13, 2026
 
 **Author:** Zakir Alibhai
