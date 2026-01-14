@@ -45,7 +45,9 @@ Input: .hic contact matrices (merged + individual replicates)
   |
 [4] 04_analyze_shifts.R     -> Calculate shift distances using bedtools closest
   |
-[5] tad_visualizations.R    -> Generate 40+ publication-quality plots
+[5] 05_filter_blacklist.R   -> Remove boundaries in blacklisted (repetitive) regions
+  |
+[6] tad_visualizations.R    -> Generate 40+ publication-quality plots
   |
 Output: Differential boundaries with classifications, annotations, and visualizations
 ```
@@ -103,7 +105,10 @@ for TIMEPOINT in late early; do
   # Step 4: Post-processing (shift distances via bedtools)
   sbatch scripts/04_postprocess.sb  # Runs bedtools closest + R script
 
-  # Step 5: Visualizations
+  # Step 5: Blacklist filtering (remove repetitive/problematic regions)
+  sbatch scripts/05_filter_blacklist.sb
+
+  # Step 6: Visualizations
   Rscript scripts/tad_visualizations.R --timepoint ${TIMEPOINT}
 done
 ```
@@ -115,7 +120,8 @@ sbatch scripts/01_extract_matrices.sb
 sbatch scripts/02_run_tadcompare.sb
 sbatch scripts/03_run_consensus.sb
 sbatch scripts/04_postprocess.sb
-sbatch scripts/05_visualizations.sb
+sbatch scripts/05_filter_blacklist.sb
+sbatch scripts/06_visualizations.sb
 ```
 
 ---
@@ -245,7 +251,41 @@ sbatch scripts/05_visualizations.sb
 
 ---
 
-### Step 5: Visualizations (`tad_visualizations.R`)
+### Step 5: Blacklist Filtering (`05_filter_blacklist.R`)
+
+**Purpose:** Remove boundaries in blacklisted genomic regions (repetitive sequences, poorly mappable areas) that can produce spurious differential signals.
+
+**Background:** TADCompare does not have native blacklist support. High-differential boundaries often fall in sparse, repetitive regions that cannot be accurately aligned. Post-filtering removes these artifacts.
+
+**Input:**
+- Final annotated boundaries from Step 4
+- mm10 blacklist BED file: `/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed`
+
+**Process:**
+1. Load blacklist regions as GRanges
+2. Convert boundary coordinates to genomic bins (25kb resolution)
+3. Remove any boundary where the bin overlaps blacklist (conservative: any overlap)
+4. Save filtered results and removed boundaries separately
+
+**Output:** `results/{timepoint}/final/`
+- `tadcompare_final_filtered.tsv` - Filtered results (use this for downstream analysis)
+- `blacklist_removed_boundaries.tsv` - Removed boundaries for inspection
+- `blacklist_filter_summary.txt` - Summary statistics
+
+**Filtering Statistics (typical):**
+- ~1-3% of boundaries removed (varies by blacklist coverage)
+- Disproportionately affects high Gap_Score boundaries in sparse regions
+- Chromosomes with more repetitive content (e.g., chr4, chr9) may have more removals
+
+**Key Configuration:**
+```r
+RESOLUTION <- 25000
+BLACKLIST_FILE <- "/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed"
+```
+
+---
+
+### Step 6: Visualizations (`tad_visualizations.R`)
 
 **Purpose:** Generate publication-quality figures, ChIP-seq annotations, and functional enrichment.
 
@@ -307,13 +347,16 @@ tads/
 │   │   │   ├── consensus_mutant.tsv
 │   │   │   ├── high_confidence_differential.tsv
 │   │   │   └── consensus_summary.txt
-│   │   └── final/               # Step 4: Final annotated results
+│   │   └── final/               # Step 4-5: Final annotated + filtered results
 │   │       ├── tadcompare_final_annotated.tsv
+│   │       ├── tadcompare_final_filtered.tsv      # Step 5: Blacklist-filtered
+│   │       ├── blacklist_removed_boundaries.tsv   # Step 5: Removed for inspection
+│   │       ├── blacklist_filter_summary.txt       # Step 5: Filter statistics
 │   │       └── analysis_summary.txt
 │   │
 │   ├── late/                    # Same structure as early
 │   │
-│   └── visualizations/          # Step 5: All plots
+│   └── visualizations/          # Step 6: All plots
 │       ├── early/               # 9 subdirectories
 │       └── late/                # 9 subdirectories
 │
@@ -326,7 +369,9 @@ tads/
 │   ├── 03_run_consensus.sb
 │   ├── 04_analyze_shifts.R
 │   ├── 04_postprocess.sb
-│   ├── 05_visualizations.sb
+│   ├── 05_filter_blacklist.R      # Blacklist filtering
+│   ├── 05_filter_blacklist.sb     # SLURM wrapper
+│   ├── 06_visualizations.sb
 │   ├── run_early_pipeline.sb
 │   ├── run_pipeline.sh
 │   └── tad_visualizations.R
@@ -367,6 +412,14 @@ BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
 ├── ctrl_M1.hic, ctrl_M2.hic, ctrl_M3.hic    # Control replicates
 └── mut_M1.hic, mut_M2.hic, mut_M3.hic       # Mutant replicates
 ```
+
+### Blacklist File
+
+```
+/expanse/lustre/projects/csd940/ctea/HiC/dchic/250123blacklist.bed
+```
+
+Used in Step 5 to filter boundaries in repetitive/poorly mappable regions. Standard mm10 blacklist format (BED).
 
 ### ChIP-seq Peak Files
 
@@ -411,7 +464,15 @@ Located in `../peaks/`:
 - [ ] Median shift ~25-50kb (1-2 resolution bins)
 - [ ] Final annotated file contains all expected columns
 
-### After Step 5 (Visualizations)
+### After Step 5 (Blacklist Filtering)
+
+- [ ] `tadcompare_final_filtered.tsv` generated for each timepoint
+- [ ] ~1-3% of boundaries removed (check summary file)
+- [ ] High Gap_Score boundaries in sparse regions removed
+- [ ] `blacklist_removed_boundaries.tsv` available for inspection
+- [ ] No biologically important loci inadvertently removed
+
+### After Step 6 (Visualizations)
 
 - [ ] All 9 subdirectories contain expected plots
 - [ ] GO/KEGG enrichment completed (or noted if insufficient genes)
@@ -590,7 +651,8 @@ SLURM logs are stored in `logs/`:
 | `tadcompare_*.out` | Step 2 | TADCompare differential analysis |
 | `consensus_*.out` | Step 3 | ConsensusTADs robustness |
 | `postprocess_*.out` | Step 4 | Shift distance calculations |
-| `visualizations_*.out` | Step 5 | Plot generation |
+| `filter_blacklist_*.out` | Step 5 | Blacklist region filtering |
+| `visualizations_*.out` | Step 6 | Plot generation |
 | `early_pipeline_*.out` | Combined | Early timepoint full pipeline |
 
 Example log locations from actual runs:
