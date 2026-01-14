@@ -1,0 +1,177 @@
+#!/bin/bash
+#SBATCH --job-name=ctcf_motif_analysis
+#SBATCH --output=logs/ctcf_motif_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+# ctcf_motif_analysis.sb
+# Validate early timepoint "Other" anchors using CTCF motif data
+# Steps: Extract CTCF motifs -> bedtools intersect -> R integration
+
+echo "========================================="
+echo "CTCF Motif Analysis Pipeline"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which R
+R --version | head -1
+which bedtools
+bedtools --version
+echo ""
+
+# === Configuration ===
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks"
+SCRIPTS_DIR="${BASE_DIR}/scripts"
+OUTPUT_DIR="${BASE_DIR}/loop_annotation_extended/early"
+
+# Input files
+HOMER_MOTIFS="/expanse/lustre/projects/csd940/ctea/homer/homer.KnownMotifs.mm10.191020.bed.gz"
+ANCHORS_BED="${OUTPUT_DIR}/other_anchors.bed"
+
+# Intermediate/output files
+CTCF_MOTIFS="${BASE_DIR}/ctcf_motifs_mm10.bed"
+CTCF_COUNTS="${OUTPUT_DIR}/anchors_ctcf_motif_count.bed"
+
+echo "Configuration:"
+echo "  Base directory: ${BASE_DIR}"
+echo "  Output directory: ${OUTPUT_DIR}"
+echo ""
+
+# === Create directories ===
+mkdir -p "${BASE_DIR}/logs"
+mkdir -p "${OUTPUT_DIR}"
+
+# === Step 1: Verify input files ===
+echo "========================================="
+echo "Step 1: Verify input files"
+echo "========================================="
+echo ""
+
+if [ ! -f "${HOMER_MOTIFS}" ]; then
+    echo "ERROR: HOMER motifs file not found: ${HOMER_MOTIFS}"
+    exit 1
+fi
+echo "HOMER motifs file: ${HOMER_MOTIFS}"
+echo "  Size: $(ls -lh ${HOMER_MOTIFS} | awk '{print $5}')"
+
+if [ ! -f "${ANCHORS_BED}" ]; then
+    echo "ERROR: Anchors BED file not found: ${ANCHORS_BED}"
+    echo "Please run extract_other_anchors.R first to generate it."
+    exit 1
+fi
+echo "Anchors BED file: ${ANCHORS_BED}"
+echo "  Lines: $(wc -l < ${ANCHORS_BED})"
+echo ""
+
+# === Step 2: Extract canonical CTCF motifs ===
+echo "========================================="
+echo "Step 2: Extract canonical CTCF motifs"
+echo "========================================="
+echo ""
+
+echo "Extracting CTCF(Zf) motifs (excluding Satellite variants)..."
+
+zcat "${HOMER_MOTIFS}" \
+    | grep "CTCF(Zf)" \
+    | grep -v "Satellite" \
+    > "${CTCF_MOTIFS}"
+
+N_MOTIFS=$(wc -l < "${CTCF_MOTIFS}")
+echo "Extracted ${N_MOTIFS} canonical CTCF motifs"
+echo ""
+
+echo "Preview (first 5 lines):"
+head -5 "${CTCF_MOTIFS}"
+echo ""
+
+# === Step 3: bedtools intersect ===
+echo "========================================="
+echo "Step 3: Intersect anchors with CTCF motifs"
+echo "========================================="
+echo ""
+
+N_ANCHORS=$(wc -l < "${ANCHORS_BED}")
+echo "Input anchors: ${N_ANCHORS}"
+echo "CTCF motifs: ${N_MOTIFS}"
+echo ""
+
+echo "Running bedtools intersect..."
+
+bedtools intersect \
+    -a "${ANCHORS_BED}" \
+    -b "${CTCF_MOTIFS}" \
+    -c \
+    > "${CTCF_COUNTS}"
+
+N_OUTPUT=$(wc -l < "${CTCF_COUNTS}")
+echo "Output rows: ${N_OUTPUT}"
+echo ""
+
+# Summary statistics
+N_WITH_MOTIF=$(awk '$NF > 0' "${CTCF_COUNTS}" | wc -l)
+N_WITHOUT_MOTIF=$(awk '$NF == 0' "${CTCF_COUNTS}" | wc -l)
+
+echo "Anchors with CTCF motif(s): ${N_WITH_MOTIF} ($(echo "scale=1; ${N_WITH_MOTIF} * 100 / ${N_ANCHORS}" | bc)%)"
+echo "Anchors without CTCF motif: ${N_WITHOUT_MOTIF} ($(echo "scale=1; ${N_WITHOUT_MOTIF} * 100 / ${N_ANCHORS}" | bc)%)"
+echo ""
+
+echo "Motif count distribution:"
+awk '{print $NF}' "${CTCF_COUNTS}" | sort -n | uniq -c | sort -k2 -n
+echo ""
+
+# === Step 4: R integration ===
+echo "========================================="
+echo "Step 4: R integration and concordance matrix"
+echo "========================================="
+echo ""
+
+cd "${BASE_DIR}"
+Rscript "${SCRIPTS_DIR}/annotate_ctcf_motifs.R"
+
+R_EXIT=$?
+
+# === Summary ===
+echo ""
+echo "========================================="
+echo "Output files generated:"
+echo "========================================="
+
+echo ""
+echo "CTCF motifs file:"
+ls -lh "${CTCF_MOTIFS}" 2>/dev/null || echo "  (not found)"
+
+echo ""
+echo "Bedtools intersection output:"
+ls -lh "${CTCF_COUNTS}" 2>/dev/null || echo "  (not found)"
+
+echo ""
+echo "R script outputs:"
+ls -lh "${OUTPUT_DIR}/ctcf_motif_validation.txt" 2>/dev/null || echo "  Validation report: (not found)"
+ls -lh "${OUTPUT_DIR}/other_category_up_loops.tsv" 2>/dev/null || echo "  Updated loops file: (not found)"
+
+echo ""
+echo "========================================="
+if [ ${R_EXIT} -eq 0 ]; then
+    echo "CTCF motif analysis completed successfully"
+else
+    echo "CTCF motif analysis failed with exit code ${R_EXIT}"
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="
+
+exit ${R_EXIT}
