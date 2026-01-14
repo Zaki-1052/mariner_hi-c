@@ -72,56 +72,88 @@ Timepoints:
 
 ### Single-Command Execution (Recommended)
 
+The master script `run_pipeline.sh` handles all 6 steps including matrix extraction:
+
 ```bash
 # On SDSC Expanse HPC
 cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
+
+# Full pipeline (both timepoints, all 6 steps)
 ./scripts/run_pipeline.sh all
+
+# Single timepoint only
+./scripts/run_pipeline.sh late
+./scripts/run_pipeline.sh early
+
+# Force re-run (ignore existing outputs)
+./scripts/run_pipeline.sh all --force
 ```
 
-**Expected runtime:** ~2-4 hours (both timepoints, all phases + visualization)
+**Expected runtime:** ~3-5 hours (both timepoints, all phases including extraction at 10kb)
 
 **Output:** Differential TAD boundaries for early and late timepoints with all annotations and visualizations.
 
-### Step-by-Step Execution
+### Run Specific Steps
 
-For manual control or debugging:
+```bash
+# Run individual steps (processes both timepoints)
+./scripts/run_pipeline.sh 1       # Matrix extraction only
+./scripts/run_pipeline.sh 2       # TADCompare only
+./scripts/run_pipeline.sh 3       # ConsensusTADs only
+./scripts/run_pipeline.sh 4       # Post-processing only
+./scripts/run_pipeline.sh 5       # Blacklist filtering only
+./scripts/run_pipeline.sh 6       # Visualizations only
+
+# Shorthand for extraction
+./scripts/run_pipeline.sh extract
+```
+
+### Pipeline Features
+
+- **Automatic SLURM detection**: Uses `sbatch` on HPC, runs directly otherwise
+- **Smart skipping**: Checks if outputs exist before running (use `--force` to override)
+- **Both timepoints**: Processes `late` and `early` in sequence
+- **10kb resolution**: All steps configured for 10kb resolution
+
+### Manual Step-by-Step Execution
+
+For debugging or custom workflows:
 
 ```bash
 cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
 
-# Process each timepoint
-for TIMEPOINT in late early; do
-  echo "Processing ${TIMEPOINT}..."
+# Process a single timepoint manually
+TIMEPOINT="late"
 
-  # Step 1: Extract matrices from .hic files
-  sbatch scripts/01_extract_matrices.sb  # Adjust for timepoint
+# Step 1: Extract matrices from .hic files
+sbatch scripts/01_extract_matrices.sb ${TIMEPOINT}
 
-  # Step 2: TADCompare differential analysis
-  Rscript scripts/02_run_tadcompare.R ${TIMEPOINT}
+# Step 2: TADCompare differential analysis
+Rscript scripts/02_run_tadcompare.R ${TIMEPOINT}
 
-  # Step 3: ConsensusTADs robustness check
-  Rscript scripts/03_run_consensus.R ${TIMEPOINT}
+# Step 3: ConsensusTADs robustness check
+Rscript scripts/03_run_consensus.R ${TIMEPOINT}
 
-  # Step 4: Post-processing (shift distances via bedtools)
-  sbatch scripts/04_postprocess.sb  # Runs bedtools closest + R script
+# Step 4: Post-processing (shift distances via bedtools)
+sbatch scripts/04_postprocess.sb ${TIMEPOINT}
 
-  # Step 5: Blacklist filtering (remove repetitive/problematic regions)
-  sbatch scripts/05_filter_blacklist.sb
+# Step 5: Blacklist filtering (processes both timepoints)
+Rscript scripts/05_filter_blacklist.R
 
-  # Step 6: Visualizations
-  Rscript scripts/tad_visualizations.R --timepoint ${TIMEPOINT}
-done
+# Step 6: Visualizations
+Rscript scripts/tad_visualizations.R --timepoint ${TIMEPOINT}
 ```
 
 ### Direct SLURM Submission
 
 ```bash
-sbatch scripts/01_extract_matrices.sb
-sbatch scripts/02_run_tadcompare.sb
-sbatch scripts/03_run_consensus.sb
-sbatch scripts/04_postprocess.sb
+# With timepoint argument
+sbatch scripts/01_extract_matrices.sb late
+sbatch scripts/02_run_tadcompare.sb late
+sbatch scripts/03_run_consensus.sb late
+sbatch scripts/04_postprocess.sb late
 sbatch scripts/05_filter_blacklist.sb
-sbatch scripts/06_visualizations.sb
+sbatch scripts/06_visualizations.sb late
 ```
 
 ---

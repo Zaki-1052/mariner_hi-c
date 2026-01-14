@@ -25,54 +25,67 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # From tads/ directory on Expanse
-./scripts/run_pipeline.sh all
+./scripts/run_pipeline.sh all           # Full pipeline, both timepoints
+./scripts/run_pipeline.sh late          # Full pipeline, late timepoint only
+./scripts/run_pipeline.sh early         # Full pipeline, early timepoint only
+./scripts/run_pipeline.sh all --force   # Force re-run (ignore existing outputs)
 
-# Or individual steps:
-./scripts/run_pipeline.sh 1  # Extract matrices from .hic files
-./scripts/run_pipeline.sh 2  # Run TADCompare differential analysis
-./scripts/run_pipeline.sh 3  # ConsensusTADs robustness check
-./scripts/run_pipeline.sh 4  # Post-processing (shift distances)
+# Or individual steps (processes both timepoints):
+./scripts/run_pipeline.sh 1             # Matrix extraction
+./scripts/run_pipeline.sh 2             # TADCompare differential analysis
+./scripts/run_pipeline.sh 3             # ConsensusTADs robustness check
+./scripts/run_pipeline.sh 4             # Post-processing (shift distances)
+./scripts/run_pipeline.sh 5             # Blacklist filtering
+./scripts/run_pipeline.sh 6             # Visualizations
+./scripts/run_pipeline.sh extract       # Shorthand for step 1
 ```
+
+**Pipeline features:**
+- Automatic SLURM detection (uses sbatch on HPC, runs directly otherwise)
+- Smart skipping (checks if outputs exist, use `--force` to override)
+- Processes both timepoints in sequence
 
 ### Direct SLURM Submission
 
 ```bash
-sbatch scripts/01_extract_matrices.sb
-sbatch scripts/02_run_tadcompare.sb
-sbatch scripts/03_run_consensus.sb
-sbatch scripts/04_postprocess.sb
-sbatch scripts/05_visualizations.sb
-```
-
-### Running Visualizations Locally
-
-```bash
-cd /path/to/tads
-Rscript scripts/tad_visualizations.R --timepoint late
+# With timepoint argument
+sbatch scripts/01_extract_matrices.sb late
+sbatch scripts/02_run_tadcompare.sb late
+sbatch scripts/03_run_consensus.sb late
+sbatch scripts/04_postprocess.sb late
+sbatch scripts/05_filter_blacklist.sb
+sbatch scripts/06_visualizations.sb late
 ```
 
 ### Running Individual R Scripts
 
 ```bash
-# TADCompare analysis
-Rscript scripts/02_run_tadcompare.R
+# TADCompare analysis (specify timepoint)
+Rscript scripts/02_run_tadcompare.R late
 
 # ConsensusTADs robustness
-Rscript scripts/03_run_consensus.R
+Rscript scripts/03_run_consensus.R late
 
 # Shift distance analysis
-Rscript scripts/04_analyze_shifts.R
+Rscript scripts/04_analyze_shifts.R late
+
+# Blacklist filtering (processes both timepoints)
+Rscript scripts/05_filter_blacklist.R
+
+# Visualizations
+Rscript scripts/tad_visualizations.R --timepoint late
 ```
 
-## Pipeline Architecture: 5-Step Workflow
+## Pipeline Architecture: 6-Step Workflow
 
 | Step | Script | Purpose | Key Output |
 |------|--------|---------|------------|
-| 1 | `01_extract_matrices.sb` | Extract sparse contact matrices from .hic files | `data/extracted/merged/*.txt`, `data/extracted/replicates/*.txt` |
-| 2 | `02_run_tadcompare.R` | Differential boundary detection (merged ctrl vs mut) | `results/tadcompare/tadcompare_all_boundaries.tsv` |
-| 3 | `03_run_consensus.R` | Replicate robustness assessment | `results/consensus/tadcompare_with_robustness.tsv` |
-| 4 | `04_analyze_shifts.R` | Calculate shift distances for shifted boundaries | `results/final/tadcompare_final_annotated.tsv` |
-| 5 | `tad_visualizations.R` | Generate 40+ publication plots | `results/visualizations/late/` |
+| 1 | `01_extract_matrices.sb` | Extract sparse contact matrices from .hic files | `data/{tp}/extracted/merged/*.10kb.txt` |
+| 2 | `02_run_tadcompare.R` | Differential boundary detection (merged ctrl vs mut) | `results/{tp}/tadcompare/tadcompare_all_boundaries.tsv` |
+| 3 | `03_run_consensus.R` | Replicate robustness assessment | `results/{tp}/consensus/tadcompare_with_robustness.tsv` |
+| 4 | `04_analyze_shifts.R` | Calculate shift distances for shifted boundaries | `results/{tp}/final/tadcompare_final_annotated.tsv` |
+| 5 | `05_filter_blacklist.R` | Remove boundaries in blacklisted regions | `results/{tp}/final/tadcompare_final_filtered.tsv` |
+| 6 | `tad_visualizations.R` | Generate 40+ publication plots | `results/visualizations/{tp}/` |
 
 ## Key Data Structures
 
