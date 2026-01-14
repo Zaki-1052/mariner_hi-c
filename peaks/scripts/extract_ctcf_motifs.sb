@@ -1,9 +1,16 @@
 #!/bin/bash
-# peaks/scripts/extract_ctcf_motifs.sh
-# Extract canonical CTCF motifs from HOMER pre-computed genome-wide motif file
-# Run on HPC where the file is located
+#SBATCH --job-name=ctcf_motif
+#SBATCH --output=logs/ctcf_motif_%j.out
+#SBATCH --time=01:00:00
+#SBATCH --mem=16G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=shared
+#SBATCH --account=csd940
 
-set -euo pipefail
+# peaks/scripts/extract_ctcf_motifs.sb
+# Extract canonical CTCF motifs from HOMER pre-computed genome-wide motif file
 
 # =============================================================================
 # Configuration

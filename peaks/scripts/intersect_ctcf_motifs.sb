@@ -1,9 +1,16 @@
 #!/bin/bash
-# peaks/scripts/intersect_ctcf_motifs.sh
-# Count CTCF motif occurrences in each "Other" anchor using bedtools
-# Run on HPC after extract_ctcf_motifs.sh
+#SBATCH --job-name=ctcf_motif
+#SBATCH --output=logs/ctcf_motif_%j.out
+#SBATCH --time=01:00:00
+#SBATCH --mem=16G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=shared
+#SBATCH --account=csd940
 
-set -euo pipefail
+# peaks/scripts/intersect_ctcf_motifs.sb
+# Count CTCF motif occurrences in each "Other" anchor using bedtools
 
 # =============================================================================
 # Configuration
@@ -35,7 +42,7 @@ fi
 
 if [[ ! -f "${CTCF_MOTIFS}" ]]; then
     echo "ERROR: CTCF motifs file not found: ${CTCF_MOTIFS}"
-    echo "Run extract_ctcf_motifs.sh first to generate it."
+    echo "Run extract_ctcf_motifs.sb first to generate it."
     exit 1
 fi
 
