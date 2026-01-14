@@ -1,0 +1,147 @@
+#!/bin/bash
+#SBATCH --job-name=ctcf_motif
+#SBATCH --output=logs/ctcf_motif_%j.out
+#SBATCH --time=01:00:00
+#SBATCH --mem=16G
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=shared
+#SBATCH --account=csd940
+
+module reset
+source activate homer1
+mkdir -p logs
+
+# =============================================================================
+# CTCF Motif Scanning for Early "Other" Anchors
+# Uses HOMER to scan for CTCF motifs in anchor regions
+# =============================================================================
+
+# Configuration - Update these paths for your environment
+PEAKS_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks"
+INPUT_BED="${PEAKS_DIR}/loop_annotation_extended/early/other_anchors.bed"
+OUTPUT_DIR="${PEAKS_DIR}/loop_annotation_extended/early"
+
+# HOMER paths - adjust if needed
+# HOMER should be in PATH after module load or conda activation
+# The built-in CTCF motif is at: $HOMER_PATH/motifs/ctcf.motif
+
+echo "=== CTCF Motif Scanning with HOMER ==="
+echo "Date: $(date)"
+echo "Job ID: ${SLURM_JOB_ID:-local}"
+echo ""
+
+# Create logs directory if needed
+mkdir -p "${PEAKS_DIR}/logs"
+
+# Verify input file exists
+if [[ ! -f "${INPUT_BED}" ]]; then
+    echo "ERROR: Input BED file not found: ${INPUT_BED}"
+    echo "Run extract_other_anchors.R first to generate the BED file."
+    exit 1
+fi
+
+echo "Input BED: ${INPUT_BED}"
+echo "Output directory: ${OUTPUT_DIR}"
+echo ""
+
+# Count input regions
+N_REGIONS=$(wc -l < "${INPUT_BED}")
+echo "Input regions: ${N_REGIONS}"
+echo ""
+
+# =============================================================================
+# Method 1: annotatePeaks.pl - Scan for specific CTCF motif occurrences
+# =============================================================================
+
+echo "=== Method 1: annotatePeaks.pl (CTCF motif counts per region) ==="
+
+ANNOTATE_OUTPUT="${OUTPUT_DIR}/homer_ctcf_annotate.txt"
+
+# annotatePeaks.pl with -m option scans for motif occurrences
+# -nmotifs reports the number of motif occurrences per region
+# Using HOMER's built-in CTCF motif
+
+annotatePeaks.pl \
+    "${INPUT_BED}" \
+    mm10 \
+    -m ctcf \
+    -nmotifs \
+    -cpu 4 \
+    > "${ANNOTATE_OUTPUT}" 2> "${OUTPUT_DIR}/homer_annotate.log"
+
+echo "  Output: ${ANNOTATE_OUTPUT}"
+echo ""
+
+# =============================================================================
+# Method 2: findMotifsGenome.pl - De novo + known motif enrichment
+# =============================================================================
+
+echo "=== Method 2: findMotifsGenome.pl (motif enrichment analysis) ==="
+
+MOTIF_DIR="${OUTPUT_DIR}/motif_analysis"
+
+# Move old output if exists (HOMER requires clean directory)
+if [[ -d "${MOTIF_DIR}" ]]; then
+    BACKUP_DIR="${MOTIF_DIR}_backup_$(date +%Y%m%d_%H%M%S)"
+    echo "Moving existing output to: ${BACKUP_DIR}"
+    mv "${MOTIF_DIR}" "${BACKUP_DIR}"
+fi
+
+# findMotifsGenome.pl performs:
+# 1. De novo motif discovery
+# 2. Known motif enrichment (including CTCF)
+# -size given: use exact region coordinates (don't resize)
+# -mask: mask repeats
+
+findMotifsGenome.pl \
+    "${INPUT_BED}" \
+    mm10 \
+    "${MOTIF_DIR}" \
+    -size given \
+    -mask \
+    -p 4 \
+    2> "${OUTPUT_DIR}/homer_findmotifs.log"
+
+echo "  Output directory: ${MOTIF_DIR}"
+echo ""
+
+# =============================================================================
+# Summary
+# =============================================================================
+
+echo "=== Summary ==="
+echo ""
+
+# Check annotatePeaks output
+if [[ -f "${ANNOTATE_OUTPUT}" ]]; then
+    N_LINES=$(wc -l < "${ANNOTATE_OUTPUT}")
+    echo "annotatePeaks.pl output: ${N_LINES} lines"
+
+    # Preview first few lines (header + data)
+    echo ""
+    echo "Preview (first 5 lines):"
+    head -5 "${ANNOTATE_OUTPUT}"
+fi
+
+echo ""
+
+# Check findMotifsGenome output
+if [[ -d "${MOTIF_DIR}" ]]; then
+    echo "findMotifsGenome.pl output:"
+    ls -la "${MOTIF_DIR}"/*.html 2>/dev/null || echo "  (no HTML files yet)"
+
+    # Check if CTCF was found in known motifs
+    if [[ -f "${MOTIF_DIR}/knownResults.txt" ]]; then
+        echo ""
+        echo "CTCF in known motifs:"
+        grep -i "ctcf" "${MOTIF_DIR}/knownResults.txt" | head -3 || echo "  CTCF not found in top results"
+    fi
+fi
+
+echo ""
+echo "=== DONE ==="
+echo "Date: $(date)"
+echo ""
+echo "Next step: Run annotate_ctcf_motifs.R to integrate results"
