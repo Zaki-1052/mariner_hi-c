@@ -21,7 +21,7 @@ if (!TIMEPOINT %in% c("late", "early")) {
 cat("Timepoint:", TIMEPOINT, "\n\n")
 
 # === Configuration ===
-RESOLUTION <- 25000
+RESOLUTION <- 10000
 BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
 TMP_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "final/tmp")
 FINAL_DIR <- file.path(BASE_DIR, "results", TIMEPOINT, "final")

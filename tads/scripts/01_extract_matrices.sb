@@ -11,7 +11,7 @@
 
 # 01_extract_matrices.sb
 # Extract sparse contact matrices from .hic files for TADCompare analysis
-# Control vs BAP1-KO mutant, 25kb resolution
+# Control vs BAP1-KO mutant, 10kb resolution
 # Usage: bash scripts/01_extract_matrices.sb [timepoint]
 #   timepoint: "late" (250402, default) or "early" (250831)
 
@@ -44,7 +44,7 @@ esac
 echo "Timepoint: ${TIMEPOINT} (HIC date: ${HIC_DATE})"
 echo ""
 
-RESOLUTION=25000
+RESOLUTION=10000
 HIC_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/${HIC_DATE}"
 BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
 OUT_MERGED="${BASE_DIR}/data/${TIMEPOINT}/extracted/merged"
@@ -103,7 +103,7 @@ for sample in "${MERGED_FILES[@]}"; do
     echo "Processing ${sample}.hic ..."
     
     for chrom in "${CHROMOSOMES[@]}"; do
-        output="${OUT_MERGED}/${sample}.${chrom}.25kb.txt"
+        output="${OUT_MERGED}/${sample}.${chrom}.10kb.txt"
         TOTAL_EXTRACTIONS=$((TOTAL_EXTRACTIONS + 1))
         
         if extract_contacts "${hic_path}" "${chrom}" "${output}"; then
@@ -133,7 +133,7 @@ for sample in "${REPLICATE_FILES[@]}"; do
     echo "Processing ${sample}.hic ..."
     
     for chrom in "${CHROMOSOMES[@]}"; do
-        output="${OUT_REPS}/${sample}.${chrom}.25kb.txt"
+        output="${OUT_REPS}/${sample}.${chrom}.10kb.txt"
         TOTAL_EXTRACTIONS=$((TOTAL_EXTRACTIONS + 1))
         
         if extract_contacts "${hic_path}" "${chrom}" "${output}"; then
