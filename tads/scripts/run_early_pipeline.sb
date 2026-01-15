@@ -4,9 +4,9 @@
 #SBATCH --partition=shared
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=32G
-#SBATCH --time=06:00:00
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=100G
+#SBATCH --time=20:00:00
 #SBATCH --account=csd940
 
 # run_early_pipeline.sb
@@ -20,7 +20,8 @@
 #   2. Run TADCompare differential analysis
 #   3. Run ConsensusTADs robustness check
 #   4. Post-processing (shift distances with bedtools)
-#   5. Generate visualizations
+#   5. Blacklist filtering
+#   6. Generate visualizations
 
 set -e  # Exit on any error
 
@@ -61,7 +62,7 @@ echo ""
 # =========================================
 echo ""
 echo "========================================="
-echo "Step 1/5: Extract Matrices"
+echo "Step 1/6: Extract Matrices"
 echo "========================================="
 echo "Start: $(date)"
 echo ""
@@ -79,7 +80,7 @@ echo "..."
 # =========================================
 echo ""
 echo "========================================="
-echo "Step 2/5: Run TADCompare"
+echo "Step 2/6: Run TADCompare"
 echo "========================================="
 echo "Start: $(date)"
 echo ""
@@ -96,7 +97,7 @@ ls -lh "results/${TIMEPOINT}/tadcompare/"
 # =========================================
 echo ""
 echo "========================================="
-echo "Step 3/5: Run ConsensusTADs"
+echo "Step 3/6: Run ConsensusTADs"
 echo "========================================="
 echo "Start: $(date)"
 echo ""
@@ -113,7 +114,7 @@ ls -lh "results/${TIMEPOINT}/consensus/"
 # =========================================
 echo ""
 echo "========================================="
-echo "Step 4/5: Post-processing"
+echo "Step 4/6: Post-processing"
 echo "========================================="
 echo "Start: $(date)"
 echo ""
@@ -126,11 +127,28 @@ echo "Output:"
 ls -lh "results/${TIMEPOINT}/final/"
 
 # =========================================
-# Step 5: Generate visualizations
+# Step 5: Blacklist filtering
 # =========================================
 echo ""
 echo "========================================="
-echo "Step 5/5: Visualizations"
+echo "Step 5/6: Blacklist Filtering"
+echo "========================================="
+echo "Start: $(date)"
+echo ""
+
+Rscript scripts/05_filter_blacklist.R
+
+echo ""
+echo "Step 5 complete: $(date)"
+echo "Output:"
+ls -lh "results/${TIMEPOINT}/final/"*filtered* 2>/dev/null || echo "  (checking for filtered files...)"
+
+# =========================================
+# Step 6: Generate visualizations
+# =========================================
+echo ""
+echo "========================================="
+echo "Step 6/6: Visualizations"
 echo "========================================="
 echo "Start: $(date)"
 echo ""
@@ -138,7 +156,7 @@ echo ""
 Rscript scripts/tad_visualizations.R --timepoint "${TIMEPOINT}"
 
 echo ""
-echo "Step 5 complete: $(date)"
+echo "Step 6 complete: $(date)"
 echo "Visualizations:"
 find "results/visualizations/${TIMEPOINT}" -name "*.pdf" | wc -l
 echo " PDF files generated"
