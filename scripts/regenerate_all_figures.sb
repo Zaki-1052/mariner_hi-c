@@ -41,25 +41,27 @@ echo ""
 mkdir -p logs
 
 # =============================================================================
-# SCRIPTS READY FOR MULTI-FORMAT OUTPUT (8 scripts modified)
+# ALL SCRIPTS NOW OUTPUT MULTI-FORMAT (PDF + SVG + JPEG)
 # =============================================================================
-# These scripts have been updated to output PDF + SVG + JPEG automatically:
-#   1. scripts/visualizations.R          - 10 plots
-#   2. scripts/tad_volcano_plot.R        - 2 plots (relaxed + standard)
+# Main Pipeline Scripts:
+#   1. scripts/visualizations.R           - 10 plots
+#   2. scripts/tad_volcano_plot.R         - 2 plots (relaxed + standard)
 #   3. scripts/compartment_volcano_plot.R - 2 plots (relaxed + standard)
-#   4. scripts/apa_analysis.R            - 5 plots per loop set
-#   5. scripts/downstream_analysis.R     - 4 plots
-#   6. scripts/loop_distance_analysis.R  - 9 plots
-#   7. scripts/annotate_loops_extended.R - 3 plots
+#   4. scripts/apa_analysis.R             - 5 plots per loop set
+#   5. scripts/downstream_analysis.R      - 4 plots
+#   6. scripts/loop_distance_analysis.R   - 9 plots
+#   7. scripts/annotate_loops_extended.R  - 3 plots
+#   8. scripts/qc-val.R                   - 9 plots (base R + pheatmap)
+#   9. scripts/edgeR.R                    - 7 plots (base R + edgeR)
+#  10. scripts/compare_resolutions.R      - 5 plots (Venn + ggplot2)
 #
-# SCRIPTS STILL USING PDF-ONLY OUTPUT (need manual modification):
-#   - scripts/qc-val.R                   - 9 plots (base R + pheatmap)
-#   - scripts/edgeR.R                    - 7 plots (base R + edgeR)
-#   - scripts/compare_resolutions.R      - 5 plots (base R)
-#   - stripes/scripts/stripe_visualizations.R   - 9 plots (ggsave)
-#   - stripes/scripts/phase3_edgeR.R            - 5 plots (base R)
-#   - tads/scripts/tad_visualizations.R         - 21 plots (ggsave)
-#   - peaks/scripts/annotate_loops_extended.R   - 3 plots (ggsave)
+# Secondary Analysis Scripts:
+#  11. stripes/scripts/stripe_visualizations.R  - 9 plots
+#  12. stripes/scripts/phase3_edgeR.R           - 5 plots
+#  13. tads/scripts/tad_visualizations.R        - 18+ plots
+#  14. peaks/scripts/annotate_loops_extended.R  - 3 plots
+#
+# Total: ~90+ plots with native multi-format output
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -107,34 +109,30 @@ for RES in 5000 10000 25000; do
 done
 
 # -----------------------------------------------------------------------------
-# SECTION 2: PDF-ONLY SCRIPTS (Not yet converted)
-# These still output PDF only - SVG/JPEG conversion needed separately
+# SECTION 2: QC AND DIFFERENTIAL ANALYSIS SCRIPTS
+# Now output PDF + SVG + JPEG automatically
 # -----------------------------------------------------------------------------
 
 echo ""
-echo "=== Section 2: PDF-Only Scripts (Not Yet Converted) ==="
-echo "These scripts still output PDF only."
-echo "To get SVG/JPEG, either:"
-echo "  1. Modify the scripts (see pattern in visualizations.R)"
-echo "  2. Use ImageMagick to convert PDFs after generation"
+echo "=== Section 2: QC and Differential Analysis Scripts ==="
 echo ""
 
 # QC validation plots (per resolution)
-echo "Running: qc-val.R (PDF only)"
+echo "Running: qc-val.R"
 for RES in 5000 10000 25000; do
     echo "  Resolution: ${RES}bp"
     Rscript scripts/qc-val.R $RES 2>&1 | tee -a logs/qc_${RES}.log || true
 done
 
 # edgeR differential analysis plots (per resolution)
-echo "Running: edgeR.R (PDF only)"
+echo "Running: edgeR.R"
 for RES in 5000 10000 25000; do
     echo "  Resolution: ${RES}bp"
     Rscript scripts/edgeR.R $RES 2>&1 | tee -a logs/edgeR_${RES}.log || true
 done
 
 # Resolution comparison plots
-echo "Running: compare_resolutions.R (PDF only)"
+echo "Running: compare_resolutions.R"
 Rscript scripts/compare_resolutions.R 2>&1 | tee -a logs/compare_res.log || true
 
 # -----------------------------------------------------------------------------
@@ -146,14 +144,14 @@ echo "=== Section 3: Stripes Analysis ==="
 echo ""
 
 if [ -d "stripes/scripts" ]; then
-    # edgeR for stripes (PDF only)
-    echo "Running: stripes/phase3_edgeR.R (PDF only)"
+    # edgeR for stripes
+    echo "Running: stripes/phase3_edgeR.R"
     for TIMEPOINT in early late; do
         Rscript stripes/scripts/phase3_edgeR.R $TIMEPOINT 2>&1 | tee -a logs/stripes_edgeR_${TIMEPOINT}.log || true
     done
 
-    # Stripe visualizations (PDF only - needs conversion)
-    echo "Running: stripes/stripe_visualizations.R (PDF only)"
+    # Stripe visualizations
+    echo "Running: stripes/stripe_visualizations.R"
     Rscript stripes/scripts/stripe_visualizations.R 2>&1 | tee -a logs/stripe_viz.log || true
 fi
 
@@ -166,7 +164,7 @@ echo "=== Section 4: TAD Analysis ==="
 echo ""
 
 if [ -d "tads/scripts" ]; then
-    echo "Running: tads/tad_visualizations.R (PDF only)"
+    echo "Running: tads/tad_visualizations.R"
     for TIMEPOINT in early late; do
         Rscript tads/scripts/tad_visualizations.R $TIMEPOINT 2>&1 | tee -a logs/tad_viz_${TIMEPOINT}.log || true
     done
@@ -181,45 +179,41 @@ echo "=== Section 5: Peaks Analysis ==="
 echo ""
 
 if [ -d "peaks/scripts" ]; then
-    echo "Running: peaks/annotate_loops_extended.R (PDF only)"
+    echo "Running: peaks/annotate_loops_extended.R"
     for VARIANT in late early; do
         Rscript peaks/scripts/annotate_loops_extended.R --timepoint $VARIANT 2>&1 | tee -a logs/peaks_${VARIANT}.log || true
     done
 fi
 
 # =============================================================================
-# POST-PROCESSING: Convert remaining PDFs to SVG/JPEG
+# POST-PROCESSING: Optional Conversion for Legacy PDFs
 # =============================================================================
+# Note: All scripts now output PDF + SVG + JPEG natively.
+# This section is only needed for legacy PDFs that were created before
+# the multi-format conversion.
 
 echo ""
-echo "=== Post-Processing: PDF Conversion ==="
+echo "=== Post-Processing: Checking for Legacy PDFs ==="
 echo ""
 
-# Check if ImageMagick is available for PDF conversion
+# Check if ImageMagick is available for converting any legacy PDFs
 if command -v convert &> /dev/null; then
-    echo "ImageMagick available. Converting PDF-only outputs to JPEG..."
-
     # Find PDFs without corresponding JPEGs and convert them
+    legacy_count=0
     find . -name "*.pdf" -type f | while read pdf; do
         jpg="${pdf%.pdf}.jpg"
-        svg="${pdf%.pdf}.svg"
-
         # Convert to JPEG if not exists
         if [ ! -f "$jpg" ]; then
             convert -density 300 "$pdf" -quality 95 "$jpg" 2>/dev/null && \
-                echo "  Converted: $(basename $pdf) -> jpg" || true
+                echo "  Converted legacy: $(basename $pdf) -> jpg" && \
+                legacy_count=$((legacy_count + 1)) || true
         fi
-
-        # Note: PDF to SVG conversion quality is poor, skipping
-        # Native SVG from R is much better
     done
+    if [ "$legacy_count" -eq 0 ]; then
+        echo "No legacy PDFs found - all outputs have native multi-format versions."
+    fi
 else
-    echo "ImageMagick not found. To convert remaining PDFs:"
-    echo "  brew install imagemagick  # macOS"
-    echo "  apt-get install imagemagick  # Ubuntu"
-    echo ""
-    echo "Then run:"
-    echo "  find . -name '*.pdf' -exec convert -density 300 {} -quality 95 {}.jpg \\;"
+    echo "ImageMagick not found (optional - only needed for legacy PDFs)."
 fi
 
 # =============================================================================
@@ -239,24 +233,13 @@ echo "  SVGs: $(find . -name '*.svg' -type f 2>/dev/null | wc -l | tr -d ' ')"
 echo "  JPEGs: $(find . -name '*.jpg' -type f 2>/dev/null | wc -l | tr -d ' ')"
 
 echo ""
-echo "Scripts with native multi-format output (PDF+SVG+JPEG):"
-echo "  - visualizations.R"
-echo "  - tad_volcano_plot.R"
-echo "  - compartment_volcano_plot.R"
-echo "  - apa_analysis.R"
-echo "  - downstream_analysis.R"
-echo "  - loop_distance_analysis.R"
-echo "  - annotate_loops_extended.R"
-
-echo ""
-echo "Scripts still PDF-only (need manual modification or ImageMagick conversion):"
-echo "  - qc-val.R"
-echo "  - edgeR.R"
-echo "  - compare_resolutions.R"
-echo "  - stripes/stripe_visualizations.R"
-echo "  - stripes/phase3_edgeR.R"
-echo "  - tads/tad_visualizations.R"
-echo "  - peaks/annotate_loops_extended.R"
+echo "All scripts now output native multi-format (PDF+SVG+JPEG):"
+echo "  Main pipeline: visualizations.R, tad_volcano_plot.R, compartment_volcano_plot.R,"
+echo "                 apa_analysis.R, downstream_analysis.R, loop_distance_analysis.R,"
+echo "                 annotate_loops_extended.R, qc-val.R, edgeR.R, compare_resolutions.R"
+echo "  Stripes:       stripe_visualizations.R, phase3_edgeR.R"
+echo "  TADs:          tad_visualizations.R"
+echo "  Peaks:         annotate_loops_extended.R"
 
 echo ""
 echo "Done!"

@@ -21,6 +21,7 @@ suppressPackageStartupMessages({
   library(pheatmap)
   library(patchwork)
   library(yaml)
+  library(svglite)  # For SVG output
 })
 
 # Load paths configuration and set working directory
@@ -30,6 +31,17 @@ setwd(config$project$base_dir)
 # Create output directory
 output_dir <- "outputs/resolution_comparison"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Helper function for multi-format output (PDF + SVG + JPEG)
+save_multiformat <- function(plot_code, base_path, width, height, dpi = 300) {
+  pdf(paste0(base_path, ".pdf"), width = width, height = height)
+  tryCatch(eval(plot_code), finally = dev.off())
+  svglite(paste0(base_path, ".svg"), width = width, height = height)
+  tryCatch(eval(plot_code), finally = dev.off())
+  jpeg(paste0(base_path, ".jpg"), width = width * dpi, height = height * dpi, res = dpi, quality = 95)
+  tryCatch(eval(plot_code), finally = dev.off())
+  cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", basename(base_path)))
+}
 
 # =============================================================================
 # SECTION 1: LOAD RESULTS FROM ALL RESOLUTIONS
@@ -441,7 +453,6 @@ cat("-------------------------------------\n\n")
 
 # 1. Bar plot of differential loop counts by resolution (standard vs stringent)
 cat("Creating differential loop count plot... ")
-pdf(file.path(output_dir, "differential_loops_by_resolution.pdf"), width = 10, height = 6)
 
 # Prepare data for standard thresholds
 summary_standard <- summary_stats %>%
@@ -453,7 +464,7 @@ summary_standard <- summary_stats %>%
     threshold = "Standard (FDR < 0.05)"
   )
 
-# Prepare data for stringent thresholds (if available)
+# Prepare data for stringent thresholds (if available) and create plot
 if (any(!is.na(summary_stats$final_loops))) {
   summary_final <- summary_stats %>%
     select(resolution_kb, final_up, final_down) %>%
@@ -468,7 +479,7 @@ if (any(!is.na(summary_stats$final_loops))) {
   # Combine
   plot_data <- rbind(summary_standard, summary_final)
 
-  ggplot(plot_data, aes(x = factor(resolution_kb), y = count, fill = interaction(direction, threshold))) +
+  p_diff_loops <- ggplot(plot_data, aes(x = factor(resolution_kb), y = count, fill = interaction(direction, threshold))) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
     scale_fill_manual(
       name = "Threshold & Direction",
@@ -497,7 +508,7 @@ if (any(!is.na(summary_stats$final_loops))) {
     )
 } else {
   # Only standard thresholds available
-  ggplot(summary_standard, aes(x = factor(resolution_kb), y = count, fill = direction)) +
+  p_diff_loops <- ggplot(summary_standard, aes(x = factor(resolution_kb), y = count, fill = direction)) +
     geom_bar(stat = "identity", position = "dodge") +
     scale_fill_manual(values = c("Up" = "#d73027", "Down" = "#4575b4")) +
     labs(
@@ -513,13 +524,12 @@ if (any(!is.na(summary_stats$final_loops))) {
     )
 }
 
-dev.off()
-cat("✓\n")
+save_multiformat(quote(print(p_diff_loops)),
+  file.path(output_dir, "differential_loops_by_resolution"), width = 10, height = 6)
 
 # 1b. Filtering cascade plot (if final results available)
 if (any(!is.na(summary_stats$final_loops))) {
   cat("Creating filtering cascade plot... ")
-  pdf(file.path(output_dir, "filtering_cascade_by_resolution.pdf"), width = 10, height = 6)
 
   cascade_data <- summary_stats %>%
     filter(!is.na(final_loops)) %>%
@@ -532,7 +542,7 @@ if (any(!is.na(summary_stats$final_loops))) {
                     labels = c("Total Tested", "Significant\n(FDR < 0.05)", "Final\n(|logFC| > 0.3, FDR < 0.03)"))
     )
 
-  ggplot(cascade_data, aes(x = stage, y = count, fill = factor(resolution_kb), group = factor(resolution_kb))) +
+  p_cascade <- ggplot(cascade_data, aes(x = stage, y = count, fill = factor(resolution_kb), group = factor(resolution_kb))) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
     geom_line(aes(color = factor(resolution_kb)), position = position_dodge(width = 0.9), size = 1) +
     geom_point(aes(color = factor(resolution_kb)), position = position_dodge(width = 0.9), size = 3) +
@@ -550,8 +560,8 @@ if (any(!is.na(summary_stats$final_loops))) {
       axis.text.x = element_text(size = 10)
     )
 
-  dev.off()
-  cat("✓\n")
+  save_multiformat(quote(print(p_cascade)),
+    file.path(output_dir, "filtering_cascade_by_resolution"), width = 10, height = 6)
 }
 
 # 2. Fold-change correlation scatter plots
@@ -576,9 +586,7 @@ if ("5000" %in% names(results_list) && "10000" %in% names(results_list)) {
       )
     )
 
-  pdf(file.path(output_dir, "foldchange_correlation_5kb_vs_10kb.pdf"), width = 8, height = 7)
-
-  ggplot(plot_data, aes(x = fc_5kb, y = fc_10kb, color = status)) +
+  p_fc_corr <- ggplot(plot_data, aes(x = fc_5kb, y = fc_10kb, color = status)) +
     geom_point(alpha = 0.5, size = 1) +
     geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray40") +
     scale_color_manual(values = c(
@@ -603,8 +611,8 @@ if ("5000" %in% names(results_list) && "10000" %in% names(results_list)) {
       legend.position = "right"
     )
 
-  dev.off()
-  cat("✓\n")
+  save_multiformat(quote(print(p_fc_corr)),
+    file.path(output_dir, "foldchange_correlation_5kb_vs_10kb"), width = 8, height = 7)
 }
 
 # 3. Venn diagram (if 3 resolutions available)
@@ -630,26 +638,22 @@ if (length(results_list) == 3) {
     "25kb" = set_25kb
   )
 
-  pdf(file.path(output_dir, "venn_diagram_differential_loops.pdf"), width = 8, height = 8)
-
-  venn.plot <- venn.diagram(
-    x = venn_list,
-    filename = NULL,
-    category.names = c("5kb", "10kb", "25kb"),
-    col = "transparent",
-    fill = c("#d73027", "#4575b4", "#1b7837"),
-    alpha = 0.5,
-    cex = 1.5,
-    cat.cex = 1.5,
-    cat.fontface = "bold",
-    main = "Differential Loops Across Resolutions",
-    main.cex = 1.8
-  )
-
-  grid.draw(venn.plot)
-
-  dev.off()
-  cat("✓\n")
+  save_multiformat(quote({
+    venn.plot <- venn.diagram(
+      x = venn_list,
+      filename = NULL,
+      category.names = c("5kb", "10kb", "25kb"),
+      col = "transparent",
+      fill = c("#d73027", "#4575b4", "#1b7837"),
+      alpha = 0.5,
+      cex = 1.5,
+      cat.cex = 1.5,
+      cat.fontface = "bold",
+      main = "Differential Loops Across Resolutions",
+      main.cex = 1.8
+    )
+    grid.draw(venn.plot)
+  }), file.path(output_dir, "venn_diagram_differential_loops"), width = 8, height = 8)
 }
 
 # 4. Venn diagram for FINAL RESULTS (stringent thresholds)
@@ -677,26 +681,22 @@ if (length(final_coords_list) >= 3 && "5000" %in% names(final_coords_list) &&
     "25kb" = set_25kb_final
   )
 
-  pdf(file.path(output_dir, "venn_diagram_final_loops.pdf"), width = 8, height = 8)
-
-  venn.plot.final <- venn.diagram(
-    x = venn_list_final,
-    filename = NULL,
-    category.names = c("5kb", "10kb", "25kb"),
-    col = "transparent",
-    fill = c("#d73027", "#4575b4", "#1b7837"),
-    alpha = 0.5,
-    cex = 1.5,
-    cat.cex = 1.5,
-    cat.fontface = "bold",
-    main = "Final Loops Across Resolutions\n(|logFC| > 0.3, FDR < 0.03)",
-    main.cex = 1.5
-  )
-
-  grid.draw(venn.plot.final)
-
-  dev.off()
-  cat("✓\n")
+  save_multiformat(quote({
+    venn.plot.final <- venn.diagram(
+      x = venn_list_final,
+      filename = NULL,
+      category.names = c("5kb", "10kb", "25kb"),
+      col = "transparent",
+      fill = c("#d73027", "#4575b4", "#1b7837"),
+      alpha = 0.5,
+      cex = 1.5,
+      cat.cex = 1.5,
+      cat.fontface = "bold",
+      main = "Final Loops Across Resolutions\n(|logFC| > 0.3, FDR < 0.03)",
+      main.cex = 1.5
+    )
+    grid.draw(venn.plot.final)
+  }), file.path(output_dir, "venn_diagram_final_loops"), width = 8, height = 8)
 }
 
 cat("\n✓ All visualizations generated\n\n")
