@@ -72,21 +72,18 @@ Timepoints:
 
 ### Single-Command Execution (Recommended)
 
-The master script `run_pipeline.sh` handles all 6 steps including matrix extraction:
+The master script `submit_pipeline.sh` handles all 6 steps using SLURM job dependencies:
 
 ```bash
 # On SDSC Expanse HPC
 cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
 
 # Full pipeline (both timepoints, all 6 steps)
-./scripts/run_pipeline.sh all
+./scripts/submit_pipeline.sh all
 
 # Single timepoint only
-./scripts/run_pipeline.sh late
-./scripts/run_pipeline.sh early
-
-# Force re-run (ignore existing outputs)
-./scripts/run_pipeline.sh all --force
+./scripts/submit_pipeline.sh late
+./scripts/submit_pipeline.sh early
 ```
 
 **Expected runtime:** ~3-5 hours (both timepoints, all phases including extraction at 10kb)
@@ -97,23 +94,27 @@ cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
 
 ```bash
 # Run individual steps (processes both timepoints)
-./scripts/run_pipeline.sh 1       # Matrix extraction only
-./scripts/run_pipeline.sh 2       # TADCompare only
-./scripts/run_pipeline.sh 3       # ConsensusTADs only
-./scripts/run_pipeline.sh 4       # Post-processing only
-./scripts/run_pipeline.sh 5       # Blacklist filtering only
-./scripts/run_pipeline.sh 6       # Visualizations only
-
-# Shorthand for extraction
-./scripts/run_pipeline.sh extract
+./scripts/submit_pipeline.sh 1    # Matrix extraction only
+./scripts/submit_pipeline.sh 2    # TADCompare only
+./scripts/submit_pipeline.sh 3    # ConsensusTADs only
+./scripts/submit_pipeline.sh 4    # Post-processing only
+./scripts/submit_pipeline.sh 5    # Blacklist filtering only
+./scripts/submit_pipeline.sh 6    # Visualizations only
 ```
 
 ### Pipeline Features
 
-- **Automatic SLURM detection**: Uses `sbatch` on HPC, runs directly otherwise
-- **Smart skipping**: Checks if outputs exist before running (use `--force` to override)
-- **Both timepoints**: Processes `late` and `early` in sequence
+- **SLURM job dependencies**: Uses `--dependency=afterok:JOBID` to chain jobs
+- **Exits immediately**: Submits all jobs at once - no active terminal required
+- **Always re-runs**: No output checking - use step numbers to run specific steps
 - **10kb resolution**: All steps configured for 10kb resolution
+
+**Dependency chain:**
+```
+late:  1 → 2 → 3 → 4 ─┐
+                      ├→ 5 (blacklist) → 6 (viz late)
+early: 1 → 2 → 3 → 4 ─┘                 → 6 (viz early)
+```
 
 ### Manual Step-by-Step Execution
 
@@ -144,16 +145,16 @@ Rscript scripts/05_filter_blacklist.R
 Rscript scripts/tad_visualizations.R --timepoint ${TIMEPOINT}
 ```
 
-### Direct SLURM Submission
+### Direct SLURM Submission (Manual)
 
 ```bash
-# With timepoint argument
+# With timepoint argument (no dependency handling - manual ordering)
 sbatch scripts/01_extract_matrices.sb late
 sbatch scripts/02_run_tadcompare.sb late
 sbatch scripts/03_run_consensus.sb late
 sbatch scripts/04_postprocess.sb late
 sbatch scripts/05_filter_blacklist.sb
-sbatch scripts/06_visualizations.sb late
+sbatch scripts/05_visualizations.sb late
 ```
 
 ---
@@ -407,9 +408,10 @@ tads/
 │   ├── 04_postprocess.sb
 │   ├── 05_filter_blacklist.R      # Blacklist filtering
 │   ├── 05_filter_blacklist.sb     # SLURM wrapper
-│   ├── 06_visualizations.sb
+│   ├── 05_visualizations.sb
 │   ├── run_early_pipeline.sb
-│   ├── run_pipeline.sh
+│   ├── run_pipeline.sh            # Legacy (requires active terminal)
+│   ├── submit_pipeline.sh         # Recommended (SLURM dependencies)
 │   └── tad_visualizations.R
 │
 ├── logs/                        # SLURM output logs

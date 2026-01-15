@@ -21,31 +21,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Running the Pipeline
 
-### Full Pipeline (HPC with SLURM)
+### Full Pipeline (HPC with SLURM) - Recommended
 
 ```bash
 # From tads/ directory on Expanse
-./scripts/run_pipeline.sh all           # Full pipeline, both timepoints
-./scripts/run_pipeline.sh late          # Full pipeline, late timepoint only
-./scripts/run_pipeline.sh early         # Full pipeline, early timepoint only
-./scripts/run_pipeline.sh all --force   # Force re-run (ignore existing outputs)
+./scripts/submit_pipeline.sh all        # Full pipeline, both timepoints
+./scripts/submit_pipeline.sh late       # Full pipeline, late timepoint only
+./scripts/submit_pipeline.sh early      # Full pipeline, early timepoint only
 
 # Or individual steps (processes both timepoints):
-./scripts/run_pipeline.sh 1             # Matrix extraction
-./scripts/run_pipeline.sh 2             # TADCompare differential analysis
-./scripts/run_pipeline.sh 3             # ConsensusTADs robustness check
-./scripts/run_pipeline.sh 4             # Post-processing (shift distances)
-./scripts/run_pipeline.sh 5             # Blacklist filtering
-./scripts/run_pipeline.sh 6             # Visualizations
-./scripts/run_pipeline.sh extract       # Shorthand for step 1
+./scripts/submit_pipeline.sh 1          # Matrix extraction
+./scripts/submit_pipeline.sh 2          # TADCompare differential analysis
+./scripts/submit_pipeline.sh 3          # ConsensusTADs robustness check
+./scripts/submit_pipeline.sh 4          # Post-processing (shift distances)
+./scripts/submit_pipeline.sh 5          # Blacklist filtering
+./scripts/submit_pipeline.sh 6          # Visualizations
 ```
 
 **Pipeline features:**
-- Automatic SLURM detection (uses sbatch on HPC, runs directly otherwise)
-- Smart skipping (checks if outputs exist, use `--force` to override)
-- Processes both timepoints in sequence
+- Uses SLURM job dependencies (`--dependency=afterok:JOBID`)
+- Submits all jobs at once and exits immediately (no active terminal required)
+- Always re-runs (no output checking) - use step numbers to run specific steps
 
-### Direct SLURM Submission
+**Dependency chain:**
+```
+late:  1 → 2 → 3 → 4 ─┐
+                      ├→ 5 (blacklist) → 6 (viz late)
+early: 1 → 2 → 3 → 4 ─┘                 → 6 (viz early)
+```
+
+### Direct SLURM Submission (Manual)
 
 ```bash
 # With timepoint argument
@@ -54,7 +59,7 @@ sbatch scripts/02_run_tadcompare.sb late
 sbatch scripts/03_run_consensus.sb late
 sbatch scripts/04_postprocess.sb late
 sbatch scripts/05_filter_blacklist.sb
-sbatch scripts/06_visualizations.sb late
+sbatch scripts/05_visualizations.sb late
 ```
 
 ### Running Individual R Scripts
