@@ -12,12 +12,20 @@
 # =============================================================================
 #
 # USAGE:
-#   sbatch scripts/regenerate_all_figures.sb              # Run all
-#   bash scripts/regenerate_all_figures.sb                # Local execution
+#   bash scripts/regenerate_all_figures.sb              # Run BOTH timepoints
+#   bash scripts/regenerate_all_figures.sb late         # Run LATE only
+#   bash scripts/regenerate_all_figures.sb early        # Run EARLY only
+#   sbatch scripts/regenerate_all_figures.sb            # SLURM submission
 #
 # PREREQUISITES:
 #   - R packages: svglite (install.packages("svglite"))
 #   - All input data files exist in expected locations
+#
+# OUTPUT DIRECTORIES:
+#   The script automatically creates symlinks to save figures alongside
+#   existing results:
+#     - LATE:  25042-late_outputs/
+#     - EARLY: 250831-early_outputs/
 #
 # =============================================================================
 
@@ -29,16 +37,140 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$BASE_DIR"
 
+# Create logs directory
+mkdir -p logs
+
+# =============================================================================
+# TIMEPOINT CONFIGURATION
+# =============================================================================
+
+# Map timepoint names to output directories
+declare -A OUTPUT_DIRS
+OUTPUT_DIRS["late"]="25042-late_outputs"
+OUTPUT_DIRS["early"]="250831-early_outputs"
+
+# Parse command line argument
+TIMEPOINT_ARG="${1:-both}"
+
+# Determine which timepoints to run
+if [ "$TIMEPOINT_ARG" = "both" ]; then
+    TIMEPOINTS=("late" "early")
+elif [ "$TIMEPOINT_ARG" = "late" ] || [ "$TIMEPOINT_ARG" = "early" ]; then
+    TIMEPOINTS=("$TIMEPOINT_ARG")
+else
+    echo "ERROR: Invalid argument '$TIMEPOINT_ARG'"
+    echo "Usage: $0 [late|early|both]"
+    exit 1
+fi
+
 echo "=========================================="
 echo "Multi-Format Figure Regeneration"
 echo "PDF + SVG + JPEG Output"
 echo "=========================================="
 echo "Working directory: $BASE_DIR"
+echo "Timepoints to process: ${TIMEPOINTS[*]}"
 echo "Start time: $(date)"
 echo ""
 
-# Create logs directory
-mkdir -p logs
+# =============================================================================
+# FUNCTION: Setup output symlink for a timepoint
+# =============================================================================
+setup_output_symlink() {
+    local timepoint=$1
+    local output_dir="${OUTPUT_DIRS[$timepoint]}"
+
+    if [ ! -d "$output_dir" ]; then
+        echo "WARNING: Output directory '$output_dir' does not exist for timepoint '$timepoint'"
+        return 1
+    fi
+
+    # Remove existing symlink or directory named 'outputs' if it's a symlink
+    if [ -L "outputs" ]; then
+        rm outputs
+    elif [ -d "outputs" ] && [ ! -L "outputs" ]; then
+        echo "WARNING: 'outputs' exists as a real directory, not a symlink."
+        echo "  Skipping symlink creation to avoid data loss."
+        echo "  Please manually remove or rename 'outputs/' if you want automatic symlink setup."
+        return 1
+    fi
+
+    # Create symlink
+    ln -sfn "$output_dir" outputs
+    echo "  Symlink created: outputs -> $output_dir"
+    return 0
+}
+
+# =============================================================================
+# FUNCTION: Run all visualizations for a single timepoint
+# =============================================================================
+run_for_timepoint() {
+    local TP=$1
+
+    echo ""
+    echo "=========================================="
+    echo "Processing: $TP timepoint"
+    echo "=========================================="
+
+    # Setup symlink: outputs -> {timepoint}_outputs/
+    if ! setup_output_symlink "$TP"; then
+        echo "ERROR: Failed to setup symlink for $TP. Skipping."
+        return 1
+    fi
+
+    # --- Section 1: Multi-Format Ready Scripts ---
+    echo ""
+    echo "=== Section 1: Multi-Format Ready Scripts ($TP) ==="
+
+    echo "Running: visualizations.R"
+    Rscript scripts/visualizations.R --skip-apa 2>&1 | tee -a logs/visualizations_${TP}.log || echo "  Warning: visualizations.R had errors"
+
+    echo "Running: tad_volcano_plot.R"
+    if [ -f "tad_analysis/Bap1.diff.tad.txt" ]; then
+        Rscript scripts/tad_volcano_plot.R tad_analysis/Bap1.diff.tad.txt --output outputs/tad_analysis/ 2>&1 | tee -a logs/tad_volcano_${TP}.log || true
+    fi
+
+    echo "Running: compartment_volcano_plot.R"
+    if [ -f "tad_analysis/diffcompartments.txt" ]; then
+        Rscript scripts/compartment_volcano_plot.R tad_analysis/diffcompartments.txt --output outputs/compartment_analysis/ 2>&1 | tee -a logs/compartment_volcano_${TP}.log || true
+    fi
+
+    echo "Running: downstream_analysis.R"
+    Rscript scripts/downstream_analysis.R 2>&1 | tee -a logs/downstream_${TP}.log || echo "  Warning: downstream_analysis.R had errors"
+
+    echo "Running: loop_distance_analysis.R"
+    Rscript scripts/loop_distance_analysis.R 2>&1 | tee -a logs/loop_distance_${TP}.log || echo "  Warning: loop_distance_analysis.R had errors"
+
+    echo "Running: annotate_loops_extended.R --timepoint $TP"
+    Rscript scripts/annotate_loops_extended.R --timepoint $TP 2>&1 | tee -a logs/annotate_${TP}.log || true
+
+    echo "Running: apa_analysis.R (all resolutions)"
+    for RES in 5000 10000 25000; do
+        echo "  Resolution: ${RES}bp"
+        Rscript scripts/apa_analysis.R --resolution $RES 2>&1 | tee -a logs/apa_${RES}_${TP}.log || true
+    done
+
+    # --- Section 2: QC and Differential Analysis ---
+    echo ""
+    echo "=== Section 2: QC and Differential Analysis ($TP) ==="
+
+    echo "Running: qc-val.R"
+    for RES in 5000 10000 25000; do
+        echo "  Resolution: ${RES}bp"
+        Rscript scripts/qc-val.R $RES 2>&1 | tee -a logs/qc_${RES}_${TP}.log || true
+    done
+
+    echo "Running: edgeR.R"
+    for RES in 5000 10000 25000; do
+        echo "  Resolution: ${RES}bp"
+        Rscript scripts/edgeR.R $RES 2>&1 | tee -a logs/edgeR_${RES}_${TP}.log || true
+    done
+
+    echo "Running: compare_resolutions.R"
+    Rscript scripts/compare_resolutions.R 2>&1 | tee -a logs/compare_res_${TP}.log || true
+
+    echo ""
+    echo "=== Completed $TP timepoint ==="
+}
 
 # =============================================================================
 # ALL SCRIPTS NOW OUTPUT MULTI-FORMAT (PDF + SVG + JPEG)
@@ -64,79 +196,16 @@ mkdir -p logs
 # Total: ~90+ plots with native multi-format output
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# SECTION 1: MULTI-FORMAT READY SCRIPTS
-# Run these to generate PDF + SVG + JPEG automatically
-# -----------------------------------------------------------------------------
+# =============================================================================
+# MAIN EXECUTION: Run for each timepoint
+# =============================================================================
 
-echo ""
-echo "=== Section 1: Multi-Format Ready Scripts ==="
-echo ""
-
-# Visualizations (main publication figures)
-echo "Running: visualizations.R"
-Rscript scripts/visualizations.R --skip-apa 2>&1 | tee -a logs/visualizations.log || echo "  Warning: visualizations.R had errors"
-
-# TAD/Compartment volcano plots
-echo "Running: tad_volcano_plot.R"
-if [ -f "tad_analysis/Bap1.diff.tad.txt" ]; then
-    Rscript scripts/tad_volcano_plot.R tad_analysis/Bap1.diff.tad.txt --output outputs/tad_analysis/ 2>&1 | tee -a logs/tad_volcano.log || true
-fi
-
-echo "Running: compartment_volcano_plot.R"
-if [ -f "tad_analysis/diffcompartments.txt" ]; then
-    Rscript scripts/compartment_volcano_plot.R tad_analysis/diffcompartments.txt --output outputs/compartment_analysis/ 2>&1 | tee -a logs/compartment_volcano.log || true
-fi
-
-# Downstream analysis (merged loops visualization)
-echo "Running: downstream_analysis.R"
-Rscript scripts/downstream_analysis.R 2>&1 | tee -a logs/downstream.log || echo "  Warning: downstream_analysis.R had errors"
-
-# Loop distance analysis (extended visualizations)
-echo "Running: loop_distance_analysis.R"
-Rscript scripts/loop_distance_analysis.R 2>&1 | tee -a logs/loop_distance.log || echo "  Warning: loop_distance_analysis.R had errors"
-
-# Extended annotation plots
-echo "Running: annotate_loops_extended.R (both timepoints)"
-Rscript scripts/annotate_loops_extended.R --timepoint early 2>&1 | tee -a logs/annotate_early.log || true
-Rscript scripts/annotate_loops_extended.R --timepoint late 2>&1 | tee -a logs/annotate_late.log || true
-
-# APA analysis (per resolution - time intensive)
-echo "Running: apa_analysis.R (all resolutions)"
-for RES in 5000 10000 25000; do
-    echo "  Resolution: ${RES}bp"
-    Rscript scripts/apa_analysis.R --resolution $RES 2>&1 | tee -a logs/apa_${RES}.log || true
+for TP in "${TIMEPOINTS[@]}"; do
+    run_for_timepoint "$TP"
 done
 
 # -----------------------------------------------------------------------------
-# SECTION 2: QC AND DIFFERENTIAL ANALYSIS SCRIPTS
-# Now output PDF + SVG + JPEG automatically
-# -----------------------------------------------------------------------------
-
-echo ""
-echo "=== Section 2: QC and Differential Analysis Scripts ==="
-echo ""
-
-# QC validation plots (per resolution)
-echo "Running: qc-val.R"
-for RES in 5000 10000 25000; do
-    echo "  Resolution: ${RES}bp"
-    Rscript scripts/qc-val.R $RES 2>&1 | tee -a logs/qc_${RES}.log || true
-done
-
-# edgeR differential analysis plots (per resolution)
-echo "Running: edgeR.R"
-for RES in 5000 10000 25000; do
-    echo "  Resolution: ${RES}bp"
-    Rscript scripts/edgeR.R $RES 2>&1 | tee -a logs/edgeR_${RES}.log || true
-done
-
-# Resolution comparison plots
-echo "Running: compare_resolutions.R"
-Rscript scripts/compare_resolutions.R 2>&1 | tee -a logs/compare_res.log || true
-
-# -----------------------------------------------------------------------------
-# SECTION 3: STRIPES ANALYSIS
+# SECTION 3: STRIPES ANALYSIS (runs once - has its own output directories)
 # -----------------------------------------------------------------------------
 
 echo ""
@@ -227,10 +296,16 @@ echo "=========================================="
 echo "End time: $(date)"
 echo ""
 
-echo "Output counts:"
-echo "  PDFs: $(find . -name '*.pdf' -type f 2>/dev/null | wc -l | tr -d ' ')"
-echo "  SVGs: $(find . -name '*.svg' -type f 2>/dev/null | wc -l | tr -d ' ')"
-echo "  JPEGs: $(find . -name '*.jpg' -type f 2>/dev/null | wc -l | tr -d ' ')"
+echo "Output counts per timepoint:"
+for TP in "${TIMEPOINTS[@]}"; do
+    output_dir="${OUTPUT_DIRS[$TP]}"
+    if [ -d "$output_dir" ]; then
+        echo "  $TP ($output_dir):"
+        echo "    PDFs: $(find "$output_dir" -name '*.pdf' -type f 2>/dev/null | wc -l | tr -d ' ')"
+        echo "    SVGs: $(find "$output_dir" -name '*.svg' -type f 2>/dev/null | wc -l | tr -d ' ')"
+        echo "    JPEGs: $(find "$output_dir" -name '*.jpg' -type f 2>/dev/null | wc -l | tr -d ' ')"
+    fi
+done
 
 echo ""
 echo "All scripts now output native multi-format (PDF+SVG+JPEG):"
