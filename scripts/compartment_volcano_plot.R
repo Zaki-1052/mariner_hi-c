@@ -143,6 +143,9 @@ suppressPackageStartupMessages({
   library(EnhancedVolcano)
 })
 
+# Load multi-format output utility for PDF + SVG + JPEG output
+source("scripts/utils/multi_format_output.R")
+
 # Create output directory
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -400,11 +403,9 @@ generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_nam
       plot.margin = margin(15, 15, 15, 15)
     )
 
-  # Save plot
-  output_plot <- file.path(output_dir,
-                           sprintf("compartment_volcano_%s.pdf", threshold_name))
-  ggsave(output_plot, p, width = plot_width, height = plot_height, dpi = 300)
-  cat(sprintf("  Saved: %s\n", output_plot))
+  # Save plot in multiple formats (PDF, SVG, JPEG)
+  output_base <- file.path(output_dir, sprintf("compartment_volcano_%s", threshold_name))
+  save_multiformat_ggplot(p, output_base, width = plot_width, height = plot_height)
 
   # Save significant regions for this threshold
   df$significant <- (df$adj_pvalue < fdr_threshold) &

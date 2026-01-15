@@ -22,6 +22,9 @@ suppressPackageStartupMessages({
   library(org.Mm.eg.db)
 })
 
+# Load multi-format output utility for PDF + SVG + JPEG output
+source("scripts/utils/multi_format_output.R")
+
 # Define color palettes (consistent with existing pipeline)
 COLORS <- list(
   down = "#d73027",      # Red for down/lost in mutant
@@ -167,8 +170,7 @@ p1_cdf <- ggplot(loops_directional, aes(x = loop_distance_kb, color = direction_
     panel.grid.minor = element_blank()
   )
 
-ggsave(file.path(OUTPUT_DIR, "01_distance_cdf_by_direction.pdf"),
-       p1_cdf, width = 8, height = 6)
+save_multiformat_ggplot(p1_cdf, file.path(OUTPUT_DIR, "01_distance_cdf_by_direction"), width = 8, height = 6)
 cat("Saved: 01_distance_cdf_by_direction.pdf\n")
 
 # ==============================================================================
@@ -234,8 +236,7 @@ p2_bar <- ggplot(category_summary,
     axis.text.x = element_text(size = 11)
   )
 
-ggsave(file.path(OUTPUT_DIR, "02_distance_category_barplot.pdf"),
-       p2_bar, width = 9, height = 7)
+save_multiformat_ggplot(p2_bar, file.path(OUTPUT_DIR, "02_distance_category_barplot"), width = 9, height = 7)
 cat("Saved: 02_distance_category_barplot.pdf\n")
 
 # ==============================================================================
@@ -282,8 +283,7 @@ p3_density <- ggplot(loops_directional, aes(x = loop_distance_kb, fill = directi
     panel.grid.minor = element_blank()
   )
 
-ggsave(file.path(OUTPUT_DIR, "03_distance_density_overlay.pdf"),
-       p3_density, width = 8, height = 6)
+save_multiformat_ggplot(p3_density, file.path(OUTPUT_DIR, "03_distance_density_overlay"), width = 8, height = 6)
 cat("Saved: 03_distance_density_overlay.pdf\n")
 
 # ==============================================================================
@@ -324,8 +324,7 @@ p4_scatter <- ggplot(loops_directional,
     panel.grid.minor = element_blank()
   )
 
-ggsave(file.path(OUTPUT_DIR, "04_logfc_vs_distance_scatter.pdf"),
-       p4_scatter, width = 8, height = 6)
+save_multiformat_ggplot(p4_scatter, file.path(OUTPUT_DIR, "04_logfc_vs_distance_scatter"), width = 8, height = 6)
 cat("Saved: 04_logfc_vs_distance_scatter.pdf\n")
 
 # ==============================================================================
@@ -374,8 +373,7 @@ p5_volcano <- ggplot(loops_directional,
     panel.grid.minor = element_blank()
   )
 
-ggsave(file.path(OUTPUT_DIR, "05_distance_stratified_volcano.pdf"),
-       p5_volcano, width = 10, height = 8)
+save_multiformat_ggplot(p5_volcano, file.path(OUTPUT_DIR, "05_distance_stratified_volcano"), width = 10, height = 8)
 cat("Saved: 05_distance_stratified_volcano.pdf\n")
 
 # ==============================================================================
@@ -429,8 +427,7 @@ p6_heatmap <- ggplot(looptype_distance,
     panel.grid = element_blank()
   )
 
-ggsave(file.path(OUTPUT_DIR, "06_looptype_distance_heatmap.pdf"),
-       p6_heatmap, width = 9, height = 8)
+save_multiformat_ggplot(p6_heatmap, file.path(OUTPUT_DIR, "06_looptype_distance_heatmap"), width = 9, height = 8)
 cat("Saved: 06_looptype_distance_heatmap.pdf\n")
 
 # ==============================================================================
@@ -522,8 +519,7 @@ p7_combined <- p7a / p7b +
     )
   )
 
-ggsave(file.path(OUTPUT_DIR, "07_chipseq_distance_analysis.pdf"),
-       p7_combined, width = 11, height = 10)
+save_multiformat_ggplot(p7_combined, file.path(OUTPUT_DIR, "07_chipseq_distance_analysis"), width = 11, height = 10)
 cat("Saved: 07_chipseq_distance_analysis.pdf\n")
 
 # ==============================================================================
@@ -641,8 +637,7 @@ tryCatch({
       ) +
       guides(color = "none")
 
-    ggsave(file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short.pdf"),
-           p8_go, width = 14, height = 8)
+    save_multiformat_ggplot(p8_go, file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short"), width = 14, height = 8)
     cat("Saved: 08_go_comparison_long_vs_short.pdf\n")
   } else {
     cat("Insufficient GO terms for comparison plot\n")
@@ -654,8 +649,7 @@ tryCatch({
       theme_void() +
       labs(title = "GO Enrichment Analysis")
 
-    ggsave(file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short.pdf"),
-           p8_placeholder, width = 10, height = 6)
+    save_multiformat_ggplot(p8_placeholder, file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short"), width = 10, height = 6)
   }
 
 }, error = function(e) {
@@ -670,8 +664,7 @@ tryCatch({
     theme_void() +
     labs(title = "GO Enrichment Analysis")
 
-  ggsave(file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short.pdf"),
-         p8_error, width = 10, height = 6)
+  save_multiformat_ggplot(p8_error, file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short"), width = 10, height = 6)
 })
 
 # ==============================================================================
@@ -796,8 +789,7 @@ p9_combined <- (p9a | p9b) / (p9c | p9d) / p_legend +
     )
   )
 
-ggsave(file.path(OUTPUT_DIR, "09_loop_rewriting_summary.pdf"),
-       p9_combined, width = 11, height = 10)
+save_multiformat_ggplot(p9_combined, file.path(OUTPUT_DIR, "09_loop_rewriting_summary"), width = 11, height = 10)
 cat("Saved: 09_loop_rewriting_summary.pdf\n")
 
 # ==============================================================================

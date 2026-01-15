@@ -37,6 +37,9 @@ suppressPackageStartupMessages({
   library(yaml)
 })
 
+# Load multi-format output utility for PDF + SVG + JPEG output
+source("scripts/utils/multi_format_output.R")
+
 # Load paths configuration
 cat("Loading paths configuration...\n")
 config <- yaml::read_yaml("config/paths_config.yaml")
@@ -1118,8 +1121,7 @@ p1 <- ggplot(merged_loops_df, aes(x = loop_distance / 1e6)) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
-ggsave(file.path(output_dir, "plots", "distance_distribution.pdf"), p1, width = 8, height = 6)
-cat("  ✓ Distance distribution plot saved\n")
+save_multiformat_ggplot(p1, file.path(output_dir, "plots", "distance_distribution"), width = 8, height = 6)
 
 # Plot 2: Chromosome distribution
 chr_counts <- merged_loops_df %>%
@@ -1140,8 +1142,7 @@ p2 <- ggplot(chr_counts, aes(x = reorder(anchor1_chr, -n), y = n)) +
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-ggsave(file.path(output_dir, "plots", "chromosome_distribution.pdf"), p2, width = 10, height = 6)
-cat("  ✓ Chromosome distribution plot saved\n")
+save_multiformat_ggplot(p2, file.path(output_dir, "plots", "chromosome_distribution"), width = 10, height = 6)
 
 # Plot 3: Gene proximity distribution
 gene_proximity_df <- data.frame(
@@ -1163,8 +1164,7 @@ p3 <- ggplot(gene_proximity_df, aes(x = distance_to_tss / 1000, fill = anchor)) 
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
-ggsave(file.path(output_dir, "plots", "gene_proximity_distribution.pdf"), p3, width = 8, height = 6)
-cat("  ✓ Gene proximity distribution plot saved\n")
+save_multiformat_ggplot(p3, file.path(output_dir, "plots", "gene_proximity_distribution"), width = 8, height = 6)
 
 # Plot 4: Loop type classification
 loop_type_counts <- merged_loops_df %>%
@@ -1186,8 +1186,8 @@ p4 <- ggplot(loop_type_counts, aes(x = loop_type, y = n, fill = direction)) +
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-ggsave(file.path(output_dir, "plots", "loop_type_classification.pdf"), p4, width = 8, height = 6)
-cat("  ✓ Loop type classification plot saved\n\n")
+save_multiformat_ggplot(p4, file.path(output_dir, "plots", "loop_type_classification"), width = 8, height = 6)
+cat("\n")
 
 # =============================================================================
 # SECTION 5: EXPORT TO MULTIPLE FORMATS
