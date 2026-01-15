@@ -255,6 +255,92 @@ if [ -d "peaks/scripts" ]; then
 fi
 
 # =============================================================================
+# POST-PROCESSING: Organize Figures into Nested Folders
+# =============================================================================
+# Structure: {figure_name}/pdfs/{figure_name}.pdf
+#            {figure_name}/jpgs/{figure_name}.jpg
+#            {figure_name}/svgs/{figure_name}.svg
+
+organize_figures() {
+    local search_dir=$1
+    local organized_count=0
+
+    echo "  Organizing figures in: $search_dir"
+
+    # Find all PDFs and organize related files
+    find "$search_dir" -maxdepth 1 -name "*.pdf" -type f 2>/dev/null | while read pdf_file; do
+        local dir_path=$(dirname "$pdf_file")
+        local base_name=$(basename "$pdf_file" .pdf)
+        local figure_dir="${dir_path}/${base_name}"
+
+        # Skip if already organized (file is in a pdfs/ subfolder)
+        if [[ "$dir_path" == */pdfs ]]; then
+            continue
+        fi
+
+        # Check if corresponding files exist
+        local jpg_file="${dir_path}/${base_name}.jpg"
+        local svg_file="${dir_path}/${base_name}.svg"
+
+        # Only organize if at least PDF exists (which it does if we're here)
+        # Create figure directory and subdirectories
+        mkdir -p "${figure_dir}/pdfs"
+        mkdir -p "${figure_dir}/jpgs"
+        mkdir -p "${figure_dir}/svgs"
+
+        # Move files to their respective subdirectories
+        mv "$pdf_file" "${figure_dir}/pdfs/" 2>/dev/null && \
+            echo "    Moved: ${base_name}.pdf -> ${base_name}/pdfs/"
+
+        if [ -f "$jpg_file" ]; then
+            mv "$jpg_file" "${figure_dir}/jpgs/" 2>/dev/null && \
+                echo "    Moved: ${base_name}.jpg -> ${base_name}/jpgs/"
+        fi
+
+        if [ -f "$svg_file" ]; then
+            mv "$svg_file" "${figure_dir}/svgs/" 2>/dev/null && \
+                echo "    Moved: ${base_name}.svg -> ${base_name}/svgs/"
+        fi
+
+        organized_count=$((organized_count + 1))
+    done
+
+    echo "  Organized $organized_count figure(s) in $search_dir"
+}
+
+echo ""
+echo "=== Post-Processing: Organizing Figures into Nested Folders ==="
+echo ""
+
+# Organize figures in each output directory
+for TP in "${TIMEPOINTS[@]}"; do
+    output_dir="${OUTPUT_DIRS[$TP]}"
+    if [ -d "$output_dir" ]; then
+        echo "Processing $TP outputs ($output_dir)..."
+
+        # Find all subdirectories that contain figures and organize them
+        find "$output_dir" -type d | while read subdir; do
+            # Check if directory contains PDFs at this level
+            if ls "$subdir"/*.pdf 1>/dev/null 2>&1; then
+                organize_figures "$subdir"
+            fi
+        done
+    fi
+done
+
+# Also organize stripes, tads, and peaks output directories
+for analysis_dir in "stripes/results" "tads/results" "peaks/results"; do
+    if [ -d "$analysis_dir" ]; then
+        echo "Processing $analysis_dir..."
+        find "$analysis_dir" -type d | while read subdir; do
+            if ls "$subdir"/*.pdf 1>/dev/null 2>&1; then
+                organize_figures "$subdir"
+            fi
+        done
+    fi
+done
+
+# =============================================================================
 # POST-PROCESSING: Optional Conversion for Legacy PDFs
 # =============================================================================
 # Note: All scripts now output PDF + SVG + JPEG natively.
@@ -270,6 +356,10 @@ if command -v convert &> /dev/null; then
     # Find PDFs without corresponding JPEGs and convert them
     legacy_count=0
     find . -name "*.pdf" -type f | while read pdf; do
+        # Skip already-organized files
+        if [[ "$pdf" == */pdfs/* ]]; then
+            continue
+        fi
         jpg="${pdf%.pdf}.jpg"
         # Convert to JPEG if not exists
         if [ ! -f "$jpg" ]; then
