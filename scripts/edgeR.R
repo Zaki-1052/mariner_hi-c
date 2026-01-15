@@ -28,7 +28,22 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(dplyr)
   library(tibble)
+  library(svglite)  # For SVG output
 })
+
+# Helper function to save plots in multiple formats (PDF, SVG, JPEG)
+save_multiformat <- function(plot_code, base_path, width, height, dpi = 300) {
+  # PDF
+  pdf(paste0(base_path, ".pdf"), width = width, height = height)
+  tryCatch(eval(plot_code), finally = dev.off())
+  # SVG
+  svglite(paste0(base_path, ".svg"), width = width, height = height)
+  tryCatch(eval(plot_code), finally = dev.off())
+  # JPEG
+  jpeg(paste0(base_path, ".jpg"), width = width * dpi, height = height * dpi, res = dpi, quality = 95)
+  tryCatch(eval(plot_code), finally = dev.off())
+  cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", basename(base_path)))
+}
 
 # Load configuration
 cat("Loading configuration...\n")
@@ -279,29 +294,26 @@ cat("   - Effective library sizes: ctrl =",
 
 cat("\nGenerating MDS plot for sample QC...\n")
 
-pdf(file.path(config$paths$output$plots, "mds_plot.pdf"),
-    width = 8, height = 6)
+save_multiformat(quote({
+  # MDS plot colored by group
+  plotMDS(
+    y,
+    col = c(rep("blue", 3), rep("red", 3)),
+    pch = 16,
+    cex = 2,
+    main = "MDS Plot - Sample Relationships",
+    labels = y$samples$sample_name
+  )
 
-# MDS plot colored by group
-plotMDS(
-  y,
-  col = c(rep("blue", 3), rep("red", 3)),
-  pch = 16,
-  cex = 2,
-  main = "MDS Plot - Sample Relationships",
-  labels = y$samples$sample_name
-)
-
-legend(
-  "topright",
-  legend = c("Control", "Mutant"),
-  col = c("blue", "red"),
-  pch = 16,
-  pt.cex = 2,
-  bty = "n"
-)
-
-dev.off()
+  legend(
+    "topright",
+    legend = c("Control", "Mutant"),
+    col = c("blue", "red"),
+    pch = 16,
+    pt.cex = 2,
+    bty = "n"
+  )
+}), file.path(config$paths$output$plots, "mds_plot"), width = 8, height = 6)
 
 cat("   ✓ MDS plot saved\n")
 cat("   - Check plot to verify:\n")
@@ -337,10 +349,9 @@ cat(sprintf("     - Median tagwise BCV: %.3f\n\n",
 
 # Plot BCV
 cat("   Generating BCV plot...\n")
-pdf(file.path(config$paths$output$plots, "bcv_plot.pdf"),
-    width = 8, height = 6)
-plotBCV(y, main = "Biological Coefficient of Variation")
-dev.off()
+save_multiformat(quote({
+  plotBCV(y, main = "Biological Coefficient of Variation")
+}), file.path(config$paths$output$plots, "bcv_plot"), width = 8, height = 6)
 cat("   ✓ BCV plot saved\n\n")
 
 # =============================================================================
@@ -363,10 +374,9 @@ cat(sprintf("     - Residual df: %d\n", min(fit$df.residual)))
 
 # Plot QL dispersions
 cat("\n   Generating QL dispersion plot...\n")
-pdf(file.path(config$paths$output$plots, "ql_dispersion_plot.pdf"),
-    width = 8, height = 6)
-plotQLDisp(fit, main = "Quasi-Likelihood Dispersions")
-dev.off()
+save_multiformat(quote({
+  plotQLDisp(fit, main = "Quasi-Likelihood Dispersions")
+}), file.path(config$paths$output$plots, "ql_dispersion_plot"), width = 8, height = 6)
 cat("   ✓ QL dispersion plot saved\n\n")
 
 # =============================================================================
@@ -530,113 +540,103 @@ results$plot_color[results$significant & results$logFC < 0] <- config$visualizat
 
 # 1. MA Plot
 cat("   - Creating MA plot... ")
-pdf(file.path(config$paths$output$plots, "ma_plot_primary.pdf"),
-    width = config$visualization$width, 
-    height = config$visualization$height)
+save_multiformat(quote({
+  par(mar = c(5, 5, 4, 2))
+  plot(
+    results$logCPM,
+    results$logFC,
+    pch = 16,
+    cex = config$visualization$ma_plot$point_size,
+    col = adjustcolor(results$plot_color, alpha.f = config$visualization$ma_plot$alpha),
+    xlab = "Average log2 CPM",
+    ylab = "log2 Fold Change (Mutant / Control)",
+    main = paste0("MA Plot (BCV = ", config$statistics$primary_bcv, ")")
+  )
 
-par(mar = c(5, 5, 4, 2))
-plot(
-  results$logCPM,
-  results$logFC,
-  pch = 16,
-  cex = config$visualization$ma_plot$point_size,
-  col = adjustcolor(results$plot_color, alpha.f = config$visualization$ma_plot$alpha),
-  xlab = "Average log2 CPM",
-  ylab = "log2 Fold Change (Mutant / Control)",
-  main = paste0("MA Plot (BCV = ", config$statistics$primary_bcv, ")")
-)
+  # Add reference lines
+  abline(h = 0, col = "black", lty = 2, lwd = 1.5)
+  abline(h = config$visualization$ma_plot$fc_lines, col = "gray40", lty = 2, lwd = 1)
 
-# Add reference lines
-abline(h = 0, col = "black", lty = 2, lwd = 1.5)
-abline(h = config$visualization$ma_plot$fc_lines, col = "gray40", lty = 2, lwd = 1)
-
-# Add legend
-legend(
-  "topright",
-  legend = c(
-    paste0("Up in mutant (n=", sum(results$direction == "up_in_mutant"), ")"),
-    paste0("Down in mutant (n=", sum(results$direction == "down_in_mutant"), ")"),
-    "Not significant"
-  ),
-  col = c(
-    config$visualization$colors$significant_up,
-    config$visualization$colors$significant_down,
-    config$visualization$colors$non_significant
-  ),
-  pch = 16,
-  pt.cex = 1.5,
-  bty = "n"
-)
-
-dev.off()
+  # Add legend
+  legend(
+    "topright",
+    legend = c(
+      paste0("Up in mutant (n=", sum(results$direction == "up_in_mutant"), ")"),
+      paste0("Down in mutant (n=", sum(results$direction == "down_in_mutant"), ")"),
+      "Not significant"
+    ),
+    col = c(
+      config$visualization$colors$significant_up,
+      config$visualization$colors$significant_down,
+      config$visualization$colors$non_significant
+    ),
+    pch = 16,
+    pt.cex = 1.5,
+    bty = "n"
+  )
+}), file.path(config$paths$output$plots, "ma_plot_primary"),
+   width = config$visualization$width, height = config$visualization$height)
 cat("✓\n")
 
 # 2. Volcano Plot
 cat("   - Creating volcano plot... ")
-pdf(file.path(config$paths$output$plots, "volcano_plot_primary.pdf"),
-    width = config$visualization$width,
-    height = config$visualization$height)
-
-par(mar = c(5, 5, 4, 2))
-plot(
-  results$logFC,
-  -log10(results$PValue),
-  pch = 16,
-  cex = config$visualization$volcano_plot$point_size,
-  col = adjustcolor(results$plot_color, alpha.f = config$visualization$volcano_plot$alpha),
-  xlab = "log2 Fold Change (Mutant / Control)",
-  ylab = "-log10(P-value)",
-  main = paste0("Volcano Plot (BCV = ", config$statistics$primary_bcv, ")")
-)
-
-# Add reference lines
-abline(v = 0, col = "black", lty = 2, lwd = 1.5)
-abline(v = c(-1, 1), col = "gray40", lty = 2, lwd = 1)
-abline(h = -log10(config$statistics$fdr_primary), col = "red", lty = 2, lwd = 1.5)
-
-# Label top differential loops
-top_indices <- order(results$PValue)[1:min(config$visualization$volcano_plot$label_top_n, sum(results$significant))]
-if (length(top_indices) > 0) {
-  text(
-    results$logFC[top_indices],
-    -log10(results$PValue[top_indices]),
-    labels = results$loop_id[top_indices],
-    cex = 0.6,
-    pos = 3
+save_multiformat(quote({
+  par(mar = c(5, 5, 4, 2))
+  plot(
+    results$logFC,
+    -log10(results$PValue),
+    pch = 16,
+    cex = config$visualization$volcano_plot$point_size,
+    col = adjustcolor(results$plot_color, alpha.f = config$visualization$volcano_plot$alpha),
+    xlab = "log2 Fold Change (Mutant / Control)",
+    ylab = "-log10(P-value)",
+    main = paste0("Volcano Plot (BCV = ", config$statistics$primary_bcv, ")")
   )
-}
 
-# Add legend
-legend(
-  "topright",
-  legend = c(
-    paste0("Up in mutant (n=", sum(results$direction == "up_in_mutant"), ")"),
-    paste0("Down in mutant (n=", sum(results$direction == "down_in_mutant"), ")"),
-    paste0("FDR < ", config$statistics$fdr_primary)
-  ),
-  col = c(
-    config$visualization$colors$significant_up,
-    config$visualization$colors$significant_down,
-    "red"
-  ),
-  lty = c(NA, NA, 2),
-  pch = c(16, 16, NA),
-  pt.cex = 1.5,
-  lwd = 1.5,
-  bty = "n"
-)
+  # Add reference lines
+  abline(v = 0, col = "black", lty = 2, lwd = 1.5)
+  abline(v = c(-1, 1), col = "gray40", lty = 2, lwd = 1)
+  abline(h = -log10(config$statistics$fdr_primary), col = "red", lty = 2, lwd = 1.5)
 
-dev.off()
+  # Label top differential loops
+  top_indices <- order(results$PValue)[1:min(config$visualization$volcano_plot$label_top_n, sum(results$significant))]
+  if (length(top_indices) > 0) {
+    text(
+      results$logFC[top_indices],
+      -log10(results$PValue[top_indices]),
+      labels = results$loop_id[top_indices],
+      cex = 0.6,
+      pos = 3
+    )
+  }
+
+  # Add legend
+  legend(
+    "topright",
+    legend = c(
+      paste0("Up in mutant (n=", sum(results$direction == "up_in_mutant"), ")"),
+      paste0("Down in mutant (n=", sum(results$direction == "down_in_mutant"), ")"),
+      paste0("FDR < ", config$statistics$fdr_primary)
+    ),
+    col = c(
+      config$visualization$colors$significant_up,
+      config$visualization$colors$significant_down,
+      "red"
+    ),
+    lty = c(NA, NA, 2),
+    pch = c(16, 16, NA),
+    pt.cex = 1.5,
+    lwd = 1.5,
+    bty = "n"
+  )
+}), file.path(config$paths$output$plots, "volcano_plot_primary"),
+   width = config$visualization$width, height = config$visualization$height)
 cat("✓\n")
 
 # 3. decideTests Summary Plot
 cat("   - Creating results summary plot... ")
-pdf(file.path(config$paths$output$plots, "results_summary.pdf"),
-    width = 8, height = 6)
 
-par(mar = c(5, 5, 4, 2))
-
-# Create summary barplot
+# Create summary barplot data
 summary_counts <- c(
   n_up,
   n_down,
@@ -653,76 +653,77 @@ names_labels <- c(
   "Weak"
 )
 
-barplot(
-  summary_counts,
-  names.arg = names_labels,
-  col = c(config$visualization$colors$significant_up,
-          config$visualization$colors$significant_down,
-          "darkgreen", "forestgreen", "lightgreen"),
-  ylab = "Number of Loops",
-  main = sprintf("Differential Loop Summary (FDR < %.2f)", config$statistics$fdr_primary),
-  las = 1,
-  ylim = c(0, max(summary_counts) * 1.2)
-)
+save_multiformat(quote({
+  par(mar = c(5, 5, 4, 2))
 
-# Add counts on top of bars
-text(
-  x = seq_along(summary_counts) * 1.2 - 0.5,
-  y = summary_counts + max(summary_counts) * 0.05,
-  labels = summary_counts,
-  cex = 1.2
-)
+  barplot(
+    summary_counts,
+    names.arg = names_labels,
+    col = c(config$visualization$colors$significant_up,
+            config$visualization$colors$significant_down,
+            "darkgreen", "forestgreen", "lightgreen"),
+    ylab = "Number of Loops",
+    main = sprintf("Differential Loop Summary (FDR < %.2f)", config$statistics$fdr_primary),
+    las = 1,
+    ylim = c(0, max(summary_counts) * 1.2)
+  )
 
-dev.off()
+  # Add counts on top of bars
+  text(
+    x = seq_along(summary_counts) * 1.2 - 0.5,
+    y = summary_counts + max(summary_counts) * 0.05,
+    labels = summary_counts,
+    cex = 1.2
+  )
+}), file.path(config$paths$output$plots, "results_summary"), width = 8, height = 6)
 cat("✓\n")
 
 # 4. Shifted Loop Enrichment Plot (if shift data available)
 if (!is.null(shift_status) && !is.null(fisher_result)) {
   cat("   - Creating shifted loop enrichment plot... ")
-  pdf(file.path(config$paths$output$plots, "shifted_loop_enrichment.pdf"),
-      width = 8, height = 6)
 
-  par(mar = c(5, 5, 4, 2))
   prop_data <- c(
     100 * shifted_sig / shifted_tested,
     100 * nonshifted_sig / nonshifted_tested
   )
 
-  barplot(
-    prop_data,
-    names.arg = c("Shifted Loops", "Non-shifted Loops"),
-    col = c(config$visualization$colors$shifted_loops, "gray70"),
-    ylab = "% Significant (FDR < 0.05)",
-    main = "Differential Loop Rate by Shift Status",
-    ylim = c(0, max(prop_data) * 1.2),
-    las = 1
-  )
+  save_multiformat(quote({
+    par(mar = c(5, 5, 4, 2))
 
-  # Add text labels
-  text(
-    x = c(0.7, 1.9),
-    y = prop_data + max(prop_data) * 0.05,
-    labels = paste0(
-      round(prop_data, 1), "%\n(",
-      c(shifted_sig, nonshifted_sig), "/",
-      c(shifted_tested, nonshifted_tested), ")"
-    ),
-    cex = 0.9
-  )
+    barplot(
+      prop_data,
+      names.arg = c("Shifted Loops", "Non-shifted Loops"),
+      col = c(config$visualization$colors$shifted_loops, "gray70"),
+      ylab = "% Significant (FDR < 0.05)",
+      main = "Differential Loop Rate by Shift Status",
+      ylim = c(0, max(prop_data) * 1.2),
+      las = 1
+    )
 
-  # Add Fisher's test result
-  text(
-    x = 1.3,
-    y = max(prop_data) * 1.1,
-    labels = paste0(
-      "Fisher's exact test\n",
-      "OR = ", round(fisher_result$estimate, 2),
-      ", p = ", format.pval(fisher_result$p.value, digits = 2)
-    ),
-    cex = 0.8
-  )
+    # Add text labels
+    text(
+      x = c(0.7, 1.9),
+      y = prop_data + max(prop_data) * 0.05,
+      labels = paste0(
+        round(prop_data, 1), "%\n(",
+        c(shifted_sig, nonshifted_sig), "/",
+        c(shifted_tested, nonshifted_tested), ")"
+      ),
+      cex = 0.9
+    )
 
-  dev.off()
+    # Add Fisher's test result
+    text(
+      x = 1.3,
+      y = max(prop_data) * 1.1,
+      labels = paste0(
+        "Fisher's exact test\n",
+        "OR = ", round(fisher_result$estimate, 2),
+        ", p = ", format.pval(fisher_result$p.value, digits = 2)
+      ),
+      cex = 0.8
+    )
+  }), file.path(config$paths$output$plots, "shifted_loop_enrichment"), width = 8, height = 6)
   cat("✓\n")
 } else {
   cat("   - Skipping shifted loop enrichment plot (no shift data)\n")
