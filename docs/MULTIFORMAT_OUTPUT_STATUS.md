@@ -84,13 +84,24 @@ install.packages("svglite")
 
 ## Running Regeneration
 
+The script automatically creates symlinks to the correct output directories for each timepoint.
+
 ```bash
+# Run for late timepoint only (saves to 25042-late_outputs/)
+bash scripts/regenerate_all_figures.sb late
+
+# Run for early timepoint only (saves to 250831-early_outputs/)
+bash scripts/regenerate_all_figures.sb early
+
+# Run for both timepoints sequentially (default)
+bash scripts/regenerate_all_figures.sb
+bash scripts/regenerate_all_figures.sb both
+
 # On HPC with SLURM
 sbatch scripts/regenerate_all_figures.sb
-
-# Locally
-bash scripts/regenerate_all_figures.sb
 ```
+
+**How it works:** The script creates a symlink (`outputs -> {timepoint}_outputs/`) before running each batch of visualization scripts, ensuring SVG/JPEG files are saved alongside existing PDFs in the correct directories.
 
 ---
 
