@@ -1,0 +1,262 @@
+#!/bin/bash
+#SBATCH --job-name=regen_figs
+#SBATCH --time=08:00:00
+#SBATCH --mem=128G
+#SBATCH --cpus-per-task=16
+#SBATCH --output=logs/regenerate_figures_%j.out
+#SBATCH --error=logs/regenerate_figures_%j.err
+
+# =============================================================================
+# Multi-Format Figure Regeneration Script
+# Outputs: PDF (original) + SVG (Illustrator) + JPEG (Google Slides)
+# =============================================================================
+#
+# USAGE:
+#   sbatch scripts/regenerate_all_figures.sb              # Run all
+#   bash scripts/regenerate_all_figures.sb                # Local execution
+#
+# PREREQUISITES:
+#   - R packages: svglite (install.packages("svglite"))
+#   - All input data files exist in expected locations
+#
+# =============================================================================
+
+source ~/.bashrc
+conda activate mariner_env
+
+# Set base directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(dirname "$SCRIPT_DIR")"
+cd "$BASE_DIR"
+
+echo "=========================================="
+echo "Multi-Format Figure Regeneration"
+echo "PDF + SVG + JPEG Output"
+echo "=========================================="
+echo "Working directory: $BASE_DIR"
+echo "Start time: $(date)"
+echo ""
+
+# Create logs directory
+mkdir -p logs
+
+# =============================================================================
+# SCRIPTS READY FOR MULTI-FORMAT OUTPUT (8 scripts modified)
+# =============================================================================
+# These scripts have been updated to output PDF + SVG + JPEG automatically:
+#   1. scripts/visualizations.R          - 10 plots
+#   2. scripts/tad_volcano_plot.R        - 2 plots (relaxed + standard)
+#   3. scripts/compartment_volcano_plot.R - 2 plots (relaxed + standard)
+#   4. scripts/apa_analysis.R            - 5 plots per loop set
+#   5. scripts/downstream_analysis.R     - 4 plots
+#   6. scripts/loop_distance_analysis.R  - 9 plots
+#   7. scripts/annotate_loops_extended.R - 3 plots
+#
+# SCRIPTS STILL USING PDF-ONLY OUTPUT (need manual modification):
+#   - scripts/qc-val.R                   - 9 plots (base R + pheatmap)
+#   - scripts/edgeR.R                    - 7 plots (base R + edgeR)
+#   - scripts/compare_resolutions.R      - 5 plots (base R)
+#   - stripes/scripts/stripe_visualizations.R   - 9 plots (ggsave)
+#   - stripes/scripts/phase3_edgeR.R            - 5 plots (base R)
+#   - tads/scripts/tad_visualizations.R         - 21 plots (ggsave)
+#   - peaks/scripts/annotate_loops_extended.R   - 3 plots (ggsave)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# SECTION 1: MULTI-FORMAT READY SCRIPTS
+# Run these to generate PDF + SVG + JPEG automatically
+# -----------------------------------------------------------------------------
+
+echo ""
+echo "=== Section 1: Multi-Format Ready Scripts ==="
+echo ""
+
+# Visualizations (main publication figures)
+echo "Running: visualizations.R"
+Rscript scripts/visualizations.R --skip-apa 2>&1 | tee -a logs/visualizations.log || echo "  Warning: visualizations.R had errors"
+
+# TAD/Compartment volcano plots
+echo "Running: tad_volcano_plot.R"
+if [ -f "tad_analysis/Bap1.diff.tad.txt" ]; then
+    Rscript scripts/tad_volcano_plot.R tad_analysis/Bap1.diff.tad.txt --output outputs/tad_analysis/ 2>&1 | tee -a logs/tad_volcano.log || true
+fi
+
+echo "Running: compartment_volcano_plot.R"
+if [ -f "tad_analysis/diffcompartments.txt" ]; then
+    Rscript scripts/compartment_volcano_plot.R tad_analysis/diffcompartments.txt --output outputs/compartment_analysis/ 2>&1 | tee -a logs/compartment_volcano.log || true
+fi
+
+# Downstream analysis (merged loops visualization)
+echo "Running: downstream_analysis.R"
+Rscript scripts/downstream_analysis.R 2>&1 | tee -a logs/downstream.log || echo "  Warning: downstream_analysis.R had errors"
+
+# Loop distance analysis (extended visualizations)
+echo "Running: loop_distance_analysis.R"
+Rscript scripts/loop_distance_analysis.R 2>&1 | tee -a logs/loop_distance.log || echo "  Warning: loop_distance_analysis.R had errors"
+
+# Extended annotation plots
+echo "Running: annotate_loops_extended.R (both timepoints)"
+Rscript scripts/annotate_loops_extended.R --timepoint early 2>&1 | tee -a logs/annotate_early.log || true
+Rscript scripts/annotate_loops_extended.R --timepoint late 2>&1 | tee -a logs/annotate_late.log || true
+
+# APA analysis (per resolution - time intensive)
+echo "Running: apa_analysis.R (all resolutions)"
+for RES in 5000 10000 25000; do
+    echo "  Resolution: ${RES}bp"
+    Rscript scripts/apa_analysis.R --resolution $RES 2>&1 | tee -a logs/apa_${RES}.log || true
+done
+
+# -----------------------------------------------------------------------------
+# SECTION 2: PDF-ONLY SCRIPTS (Not yet converted)
+# These still output PDF only - SVG/JPEG conversion needed separately
+# -----------------------------------------------------------------------------
+
+echo ""
+echo "=== Section 2: PDF-Only Scripts (Not Yet Converted) ==="
+echo "These scripts still output PDF only."
+echo "To get SVG/JPEG, either:"
+echo "  1. Modify the scripts (see pattern in visualizations.R)"
+echo "  2. Use ImageMagick to convert PDFs after generation"
+echo ""
+
+# QC validation plots (per resolution)
+echo "Running: qc-val.R (PDF only)"
+for RES in 5000 10000 25000; do
+    echo "  Resolution: ${RES}bp"
+    Rscript scripts/qc-val.R $RES 2>&1 | tee -a logs/qc_${RES}.log || true
+done
+
+# edgeR differential analysis plots (per resolution)
+echo "Running: edgeR.R (PDF only)"
+for RES in 5000 10000 25000; do
+    echo "  Resolution: ${RES}bp"
+    Rscript scripts/edgeR.R $RES 2>&1 | tee -a logs/edgeR_${RES}.log || true
+done
+
+# Resolution comparison plots
+echo "Running: compare_resolutions.R (PDF only)"
+Rscript scripts/compare_resolutions.R 2>&1 | tee -a logs/compare_res.log || true
+
+# -----------------------------------------------------------------------------
+# SECTION 3: STRIPES ANALYSIS
+# -----------------------------------------------------------------------------
+
+echo ""
+echo "=== Section 3: Stripes Analysis ==="
+echo ""
+
+if [ -d "stripes/scripts" ]; then
+    # edgeR for stripes (PDF only)
+    echo "Running: stripes/phase3_edgeR.R (PDF only)"
+    for TIMEPOINT in early late; do
+        Rscript stripes/scripts/phase3_edgeR.R $TIMEPOINT 2>&1 | tee -a logs/stripes_edgeR_${TIMEPOINT}.log || true
+    done
+
+    # Stripe visualizations (PDF only - needs conversion)
+    echo "Running: stripes/stripe_visualizations.R (PDF only)"
+    Rscript stripes/scripts/stripe_visualizations.R 2>&1 | tee -a logs/stripe_viz.log || true
+fi
+
+# -----------------------------------------------------------------------------
+# SECTION 4: TAD ANALYSIS
+# -----------------------------------------------------------------------------
+
+echo ""
+echo "=== Section 4: TAD Analysis ==="
+echo ""
+
+if [ -d "tads/scripts" ]; then
+    echo "Running: tads/tad_visualizations.R (PDF only)"
+    for TIMEPOINT in early late; do
+        Rscript tads/scripts/tad_visualizations.R $TIMEPOINT 2>&1 | tee -a logs/tad_viz_${TIMEPOINT}.log || true
+    done
+fi
+
+# -----------------------------------------------------------------------------
+# SECTION 5: PEAKS ANALYSIS
+# -----------------------------------------------------------------------------
+
+echo ""
+echo "=== Section 5: Peaks Analysis ==="
+echo ""
+
+if [ -d "peaks/scripts" ]; then
+    echo "Running: peaks/annotate_loops_extended.R (PDF only)"
+    for VARIANT in late early; do
+        Rscript peaks/scripts/annotate_loops_extended.R --timepoint $VARIANT 2>&1 | tee -a logs/peaks_${VARIANT}.log || true
+    done
+fi
+
+# =============================================================================
+# POST-PROCESSING: Convert remaining PDFs to SVG/JPEG
+# =============================================================================
+
+echo ""
+echo "=== Post-Processing: PDF Conversion ==="
+echo ""
+
+# Check if ImageMagick is available for PDF conversion
+if command -v convert &> /dev/null; then
+    echo "ImageMagick available. Converting PDF-only outputs to JPEG..."
+
+    # Find PDFs without corresponding JPEGs and convert them
+    find . -name "*.pdf" -type f | while read pdf; do
+        jpg="${pdf%.pdf}.jpg"
+        svg="${pdf%.pdf}.svg"
+
+        # Convert to JPEG if not exists
+        if [ ! -f "$jpg" ]; then
+            convert -density 300 "$pdf" -quality 95 "$jpg" 2>/dev/null && \
+                echo "  Converted: $(basename $pdf) -> jpg" || true
+        fi
+
+        # Note: PDF to SVG conversion quality is poor, skipping
+        # Native SVG from R is much better
+    done
+else
+    echo "ImageMagick not found. To convert remaining PDFs:"
+    echo "  brew install imagemagick  # macOS"
+    echo "  apt-get install imagemagick  # Ubuntu"
+    echo ""
+    echo "Then run:"
+    echo "  find . -name '*.pdf' -exec convert -density 300 {} -quality 95 {}.jpg \\;"
+fi
+
+# =============================================================================
+# SUMMARY
+# =============================================================================
+
+echo ""
+echo "=========================================="
+echo "Figure Regeneration Complete"
+echo "=========================================="
+echo "End time: $(date)"
+echo ""
+
+echo "Output counts:"
+echo "  PDFs: $(find . -name '*.pdf' -type f 2>/dev/null | wc -l | tr -d ' ')"
+echo "  SVGs: $(find . -name '*.svg' -type f 2>/dev/null | wc -l | tr -d ' ')"
+echo "  JPEGs: $(find . -name '*.jpg' -type f 2>/dev/null | wc -l | tr -d ' ')"
+
+echo ""
+echo "Scripts with native multi-format output (PDF+SVG+JPEG):"
+echo "  - visualizations.R"
+echo "  - tad_volcano_plot.R"
+echo "  - compartment_volcano_plot.R"
+echo "  - apa_analysis.R"
+echo "  - downstream_analysis.R"
+echo "  - loop_distance_analysis.R"
+echo "  - annotate_loops_extended.R"
+
+echo ""
+echo "Scripts still PDF-only (need manual modification or ImageMagick conversion):"
+echo "  - qc-val.R"
+echo "  - edgeR.R"
+echo "  - compare_resolutions.R"
+echo "  - stripes/stripe_visualizations.R"
+echo "  - stripes/phase3_edgeR.R"
+echo "  - tads/tad_visualizations.R"
+echo "  - peaks/annotate_loops_extended.R"
+
+echo ""
+echo "Done!"

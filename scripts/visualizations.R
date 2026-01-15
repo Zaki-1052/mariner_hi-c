@@ -83,6 +83,9 @@ suppressPackageStartupMessages({
 
 cat("✓ Packages loaded\n\n")
 
+# Load multi-format output utility for PDF + SVG + JPEG output
+source("scripts/utils/multi_format_output.R")
+
 # Load paths configuration and set working directory
 config <- yaml::read_yaml("config/paths_config.yaml")
 base_dir <- config$project$base_dir
@@ -253,9 +256,11 @@ create_publication_volcano <- function(results_file, output_path, title_suffix =
       plot.margin = margin(15, 15, 15, 15)
     )
 
-  # Save plot
-  ggsave(output_path, p, width = 10, height = 8, dpi = 300)
-  cat(sprintf("  ✓ Saved: %s\n\n", output_path))
+  # Save plot in multiple formats (PDF, SVG, JPEG)
+  # Remove .pdf extension if present for base_path
+  base_path <- sub("\\.pdf$", "", output_path)
+  save_multiformat_ggplot(p, base_path, width = 10, height = 8)
+  cat(sprintf("  ✓ Saved: %s.{pdf,svg,jpg}\n\n", basename(base_path)))
 
   return(p)
 }
@@ -555,8 +560,7 @@ p_features <- ggplot(feature_summary, aes(x = category, y = percentage, fill = f
   ) +
   coord_flip()
 
-ggsave(file.path(output_dir, "features", "feature_distribution.pdf"), p_features, width = 10, height = 6)
-cat("  ✓ Saved: feature_distribution.pdf\n\n")
+save_multiformat_ggplot(p_features, file.path(output_dir, "features", "feature_distribution"), width = 10, height = 6)
 
 cat("✓ Section 2 complete: Feature distribution analyzed\n\n")
 
@@ -637,8 +641,7 @@ if (!is.null(go_bp) && nrow(go_bp@compareClusterResult) > 0) {
   p_go_bp <- dotplot(go_bp, showCategory = 20) +
     labs(title = "GO Biological Process Enrichment") +
     theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-  ggsave(file.path(output_dir, "enrichment", "go_bp_dotplot.pdf"), p_go_bp, width = 12, height = 10)
-  cat("    ✓ Saved: go_bp_dotplot.pdf\n")
+  save_multiformat_ggplot(p_go_bp, file.path(output_dir, "enrichment", "go_bp_dotplot"), width = 12, height = 10)
 } else {
   cat("    ⚠ No significant GO BP terms found\n")
 }
@@ -659,8 +662,7 @@ if (!is.null(go_cc) && nrow(go_cc@compareClusterResult) > 0) {
   p_go_cc <- dotplot(go_cc, showCategory = 15) +
     labs(title = "GO Cellular Component Enrichment") +
     theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-  ggsave(file.path(output_dir, "enrichment", "go_cc_dotplot.pdf"), p_go_cc, width = 10, height = 8)
-  cat("    ✓ Saved: go_cc_dotplot.pdf\n")
+  save_multiformat_ggplot(p_go_cc, file.path(output_dir, "enrichment", "go_cc_dotplot"), width = 10, height = 8)
 } else {
   cat("    ⚠ No significant GO CC terms found\n")
 }
@@ -681,8 +683,7 @@ if (!is.null(go_mf) && nrow(go_mf@compareClusterResult) > 0) {
   p_go_mf <- dotplot(go_mf, showCategory = 15) +
     labs(title = "GO Molecular Function Enrichment") +
     theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-  ggsave(file.path(output_dir, "enrichment", "go_mf_dotplot.pdf"), p_go_mf, width = 10, height = 8)
-  cat("    ✓ Saved: go_mf_dotplot.pdf\n")
+  save_multiformat_ggplot(p_go_mf, file.path(output_dir, "enrichment", "go_mf_dotplot"), width = 10, height = 8)
 } else {
   cat("    ⚠ No significant GO MF terms found\n")
 }
@@ -702,8 +703,7 @@ if (!is.null(kegg) && nrow(kegg@compareClusterResult) > 0) {
   p_kegg <- dotplot(kegg, showCategory = 20) +
     labs(title = "KEGG Pathway Enrichment") +
     theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-  ggsave(file.path(output_dir, "enrichment", "kegg_dotplot.pdf"), p_kegg, width = 12, height = 10)
-  cat("    ✓ Saved: kegg_dotplot.pdf\n")
+  save_multiformat_ggplot(p_kegg, file.path(output_dir, "enrichment", "kegg_dotplot"), width = 12, height = 10)
 } else {
   cat("    ⚠ No significant KEGG pathways found\n")
 }
@@ -796,9 +796,7 @@ p_down_pie <- loop_type_summary %>%
 # Combine plots
 p_combined <- p_up_pie | p_down_pie
 
-ggsave(file.path(output_dir, "loop_classification", "loop_type_classification.pdf"),
-       p_combined, width = 14, height = 6)
-cat("  ✓ Saved: loop_type_classification.pdf\n")
+save_multiformat_ggplot(p_combined, file.path(output_dir, "loop_classification", "loop_type_classification"), width = 14, height = 6)
 
 # Save loop type summary table
 write.table(loop_type_summary,
@@ -869,9 +867,7 @@ p_strip <- ggplot(length_df, aes(x = length_kb, y = direction_label, color = dir
     legend.position = "none"
   )
 
-ggsave(file.path(output_dir, "loop_classification", "loop_length_distribution_strip.pdf"),
-       p_strip, width = 10, height = 5)
-cat("  ✓ Saved: loop_length_distribution_strip.pdf\n")
+save_multiformat_ggplot(p_strip, file.path(output_dir, "loop_classification", "loop_length_distribution_strip"), width = 10, height = 5)
 
 # 2. Violin plot
 p_violin <- ggplot(length_df, aes(x = direction_label, y = length_kb, fill = direction_label)) +
@@ -892,9 +888,7 @@ p_violin <- ggplot(length_df, aes(x = direction_label, y = length_kb, fill = dir
     legend.position = "none"
   )
 
-ggsave(file.path(output_dir, "loop_classification", "loop_length_distribution_violin.pdf"),
-       p_violin, width = 8, height = 6)
-cat("  ✓ Saved: loop_length_distribution_violin.pdf\n")
+save_multiformat_ggplot(p_violin, file.path(output_dir, "loop_classification", "loop_length_distribution_violin"), width = 8, height = 6)
 
 # 3. Histogram
 p_hist <- ggplot(length_df, aes(x = length_kb, fill = direction_label)) +
@@ -914,9 +908,7 @@ p_hist <- ggplot(length_df, aes(x = length_kb, fill = direction_label)) +
   ) +
   facet_wrap(~direction_label, ncol = 1)
 
-ggsave(file.path(output_dir, "loop_classification", "loop_length_distribution_histogram.pdf"),
-                     p_hist, width = 10, height = 8)
-cat("  ✓ Saved: loop_length_distribution_histogram.pdf\n")
+save_multiformat_ggplot(p_hist, file.path(output_dir, "loop_classification", "loop_length_distribution_histogram"), width = 10, height = 8)
 
 # Save statistics
 length_stats <- data.frame(

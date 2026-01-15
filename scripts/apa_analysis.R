@@ -37,6 +37,9 @@ suppressPackageStartupMessages({
   library(yaml)
 })
 
+# Load multi-format output utility for PDF + SVG + JPEG output
+source("scripts/utils/multi_format_output.R")
+
 # Load paths configuration
 cat("\nLoading paths configuration...\n")
 config <- yaml::read_yaml("config/paths_config.yaml")
@@ -637,22 +640,19 @@ run_apa_for_loop_set <- function(resolution, loops_gi, loop_set_name, direction,
 
   p_ctrl <- plot_apa_heatmap(agg_matrices, "Control", ctrl_indices, resolution)
   if (!is.null(p_ctrl)) {
-    ggsave(file.path(output_dir, "aggregate_heatmap_ctrl.pdf"),
-           p_ctrl, width = 6, height = 5)
+    save_multiformat_ggplot(p_ctrl, file.path(output_dir, "aggregate_heatmap_ctrl"), width = 6, height = 5)
   }
 
   # 4b. Mutant aggregate heatmap
   p_mut <- plot_apa_heatmap(agg_matrices, "BAP1-KO", mut_indices, resolution)
   if (!is.null(p_mut)) {
-    ggsave(file.path(output_dir, "aggregate_heatmap_mut.pdf"),
-           p_mut, width = 6, height = 5)
+    save_multiformat_ggplot(p_mut, file.path(output_dir, "aggregate_heatmap_mut"), width = 6, height = 5)
   }
 
   # 4c. Difference heatmap
   p_diff <- plot_difference_heatmap(agg_matrices, ctrl_indices, mut_indices, resolution)
   if (!is.null(p_diff)) {
-    ggsave(file.path(output_dir, "difference_heatmap.pdf"),
-           p_diff, width = 6, height = 5)
+    save_multiformat_ggplot(p_diff, file.path(output_dir, "difference_heatmap"), width = 6, height = 5)
   }
 
   # 4d. Enrichment box plot
@@ -660,8 +660,7 @@ run_apa_for_loop_set <- function(resolution, loops_gi, loop_set_name, direction,
   enrichment_result <- plot_enrichment_comparison(enrichment_df, direction_label)
 
   if (!is.null(enrichment_result)) {
-    ggsave(file.path(output_dir, "enrichment_boxplot.pdf"),
-           enrichment_result$plot, width = 6, height = 5)
+    save_multiformat_ggplot(enrichment_result$plot, file.path(output_dir, "enrichment_boxplot"), width = 6, height = 5)
 
     # Save statistical test results
     test_file <- file.path(output_dir, "statistical_tests.tsv")
@@ -680,8 +679,7 @@ run_apa_for_loop_set <- function(resolution, loops_gi, loop_set_name, direction,
   # 4e. Per-replicate heatmaps
   p_replicates <- plot_replicate_heatmaps(agg_matrices, resolution, names(hic_files))
   if (!is.null(p_replicates)) {
-    ggsave(file.path(output_dir, "replicate_heatmaps.pdf"),
-           p_replicates, width = 12, height = 8)
+    save_multiformat_ggplot(p_replicates, file.path(output_dir, "replicate_heatmaps"), width = 12, height = 8)
   }
 
   cat(sprintf("  ✓ All outputs saved to: %s\n", output_dir))

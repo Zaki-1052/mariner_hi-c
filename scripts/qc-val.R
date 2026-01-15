@@ -23,6 +23,21 @@ library(viridis)
 library(patchwork)
 library(scales)
 library(yaml)
+library(svglite)  # For SVG output
+
+# Helper function to save plots in multiple formats (PDF, SVG, JPEG)
+save_multiformat <- function(plot_code, base_path, width, height, dpi = 300) {
+  # PDF
+  pdf(paste0(base_path, ".pdf"), width = width, height = height)
+  tryCatch(eval(plot_code), finally = dev.off())
+  # SVG
+  svglite(paste0(base_path, ".svg"), width = width, height = height)
+  tryCatch(eval(plot_code), finally = dev.off())
+  # JPEG
+  jpeg(paste0(base_path, ".jpg"), width = width * dpi, height = height * dpi, res = dpi, quality = 95)
+  tryCatch(eval(plot_code), finally = dev.off())
+  cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", basename(base_path)))
+}
 
 # Load paths configuration and set working directory
 config <- yaml::read_yaml("config/paths_config.yaml")
@@ -265,49 +280,42 @@ if (n_samples == 2) {
 cat("\n")
 
 # Visualization: Correlation heatmap
-pdf(file.path(qc_dir, "01_sample_correlation.pdf"), width = 6, height = 5)
-pheatmap(cor_matrix,
+save_multiformat(
+  quote(pheatmap(cor_matrix,
          display_numbers = TRUE,
          number_format = "%.3f",
          color = viridis(100),
          main = "Sample Correlation\n(Pearson on raw counts)",
          fontsize_number = 14,
          cellwidth = 80,
-         cellheight = 80)
-dev.off()
+         cellheight = 80)),
+  file.path(qc_dir, "01_sample_correlation"), width = 6, height = 5)
 
 # Visualization: Scatter plot with marginal distributions
-pdf(file.path(qc_dir, "02_sample_scatter.pdf"), width = 8, height = 8)
-par(mar = c(5, 5, 4, 2))
-
-# Log transform for visualization (add 1 to handle zeros)
+# Pre-compute values needed for plot
 log_counts <- log2(counts_matrix + 1)
-
-# Main scatter plot
-plot(log_counts[,1], log_counts[,2],
-     xlab = "Control [log2(count + 1)]",
-     ylab = "Mutant [log2(count + 1)]",
-     main = sprintf("Sample Correlation\nr = %.3f", cor_value),
-     pch = 16,
-     col = rgb(0, 0, 0, 0.3),
-     cex = 0.5)
-
-# Add diagonal line (perfect correlation)
-abline(a = 0, b = 1, col = "red", lwd = 2, lty = 2)
-
-# Add regression line
 fit <- lm(log_counts[,2] ~ log_counts[,1])
-abline(fit, col = "blue", lwd = 2)
 
-# Add legend
-legend("topleft", 
-       legend = c("y = x (perfect correlation)", 
-                  sprintf("Linear fit (slope = %.3f)", coef(fit)[2])),
-       col = c("red", "blue"),
-       lty = c(2, 1),
-       lwd = 2)
-
-dev.off()
+save_multiformat(
+  quote({
+    par(mar = c(5, 5, 4, 2))
+    plot(log_counts[,1], log_counts[,2],
+         xlab = "Control [log2(count + 1)]",
+         ylab = "Mutant [log2(count + 1)]",
+         main = sprintf("Sample Correlation\nr = %.3f", cor_value),
+         pch = 16,
+         col = rgb(0, 0, 0, 0.3),
+         cex = 0.5)
+    abline(a = 0, b = 1, col = "red", lwd = 2, lty = 2)
+    abline(fit, col = "blue", lwd = 2)
+    legend("topleft",
+           legend = c("y = x (perfect correlation)",
+                      sprintf("Linear fit (slope = %.3f)", coef(fit)[2])),
+           col = c("red", "blue"),
+           lty = c(2, 1),
+           lwd = 2)
+  }),
+  file.path(qc_dir, "02_sample_scatter"), width = 8, height = 8)
 
 # Visualization: Distribution comparison
 pdf(file.path(qc_dir, "03_count_distributions.pdf"), width = 12, height = 8)
