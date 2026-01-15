@@ -25,35 +25,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # From tads/ directory on Expanse
-./scripts/submit_pipeline.sh all        # Full pipeline, both timepoints
-./scripts/submit_pipeline.sh late       # Full pipeline, late timepoint only
-./scripts/submit_pipeline.sh early      # Full pipeline, early timepoint only
-
-# Or individual steps (processes both timepoints):
-./scripts/submit_pipeline.sh 1          # Matrix extraction
-./scripts/submit_pipeline.sh 2          # TADCompare differential analysis
-./scripts/submit_pipeline.sh 3          # ConsensusTADs robustness check
-./scripts/submit_pipeline.sh 4          # Post-processing (shift distances)
-./scripts/submit_pipeline.sh 5          # Blacklist filtering
-./scripts/submit_pipeline.sh 6          # Visualizations
+sbatch scripts/run_full_pipeline.sb
 ```
 
-**Pipeline features:**
-- Uses SLURM job dependencies (`--dependency=afterok:JOBID`)
-- Submits all jobs at once and exits immediately (no active terminal required)
-- Always re-runs (no output checking) - use step numbers to run specific steps
+This runs the complete pipeline for **both timepoints** (late and early) in a single SLURM job:
+- All 6 steps run sequentially within one job
+- No active terminal required - submit and disconnect
+- 28-hour time limit, 32GB memory
+- Always re-runs (no output checking)
 
-**Dependency chain:**
+**Execution order:**
 ```
-late:  1 → 2 → 3 → 4 ─┐
-                      ├→ 5 (blacklist) → 6 (viz late)
-early: 1 → 2 → 3 → 4 ─┘                 → 6 (viz early)
+late steps 1-4 → early steps 1-4 → blacklist (both) → viz late → viz early
 ```
 
 ### Direct SLURM Submission (Manual)
 
 ```bash
-# With timepoint argument
+# With timepoint argument (run steps individually)
 sbatch scripts/01_extract_matrices.sb late
 sbatch scripts/02_run_tadcompare.sb late
 sbatch scripts/03_run_consensus.sb late
