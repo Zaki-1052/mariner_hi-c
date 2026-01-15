@@ -74,6 +74,10 @@ suppressPackageStartupMessages({
 
 cat("Packages loaded\n\n")
 
+# Load multi-format output utility
+# Note: path is relative to base_dir (mariner_hi-c/)
+source(file.path(dirname(getwd()), "scripts/utils/multi_format_output.R"))
+
 # Define base directories
 # Script is run from tads/ directory via: cd tads && Rscript scripts/tad_visualizations.R
 tads_dir <- getwd()  # Should be tads/
@@ -245,9 +249,9 @@ p_gap_dist <- ggplot(tad_df, aes(x = diff_category, y = Gap_Score, fill = diff_c
   theme_tad() +
   theme(legend.position = "none")
 
-ggsave(file.path(output_base, "overview", "gap_score_distribution.pdf"),
-       p_gap_dist, width = 8, height = 6)
-cat("  Saved: gap_score_distribution.pdf\n")
+save_multiformat_ggplot(p_gap_dist,
+                        file.path(output_base, "overview", "gap_score_distribution"),
+                        width = 8, height = 6)
 
 # 1.2 TAD Score Scatter Plot (MA-plot style)
 cat("Creating TAD Score scatter plot...\n")
@@ -265,9 +269,9 @@ p_scatter <- ggplot(tad_df, aes(x = TAD_Score1, y = TAD_Score2, color = Type)) +
   coord_fixed(ratio = 1) +
   theme_tad()
 
-ggsave(file.path(output_base, "overview", "tad_score_scatter.pdf"),
-       p_scatter, width = 10, height = 8)
-cat("  Saved: tad_score_scatter.pdf\n")
+save_multiformat_ggplot(p_scatter,
+                        file.path(output_base, "overview", "tad_score_scatter"),
+                        width = 10, height = 8)
 
 # 1.3 Gap Score vs TAD Score Difference (Volcano-like)
 cat("Creating differential landscape plot...\n")
@@ -286,9 +290,9 @@ p_landscape <- ggplot(tad_df %>% filter(!is.na(Enriched_In)),
   ) +
   theme_tad()
 
-ggsave(file.path(output_base, "overview", "differential_landscape.pdf"),
-       p_landscape, width = 10, height = 7)
-cat("  Saved: differential_landscape.pdf\n\n")
+save_multiformat_ggplot(p_landscape,
+                        file.path(output_base, "overview", "differential_landscape"),
+                        width = 10, height = 7)
 
 cat("Section 1 complete: Overview plots generated\n\n")
 
@@ -352,9 +356,9 @@ p_pie_diff <- ggplot(type_summary_diff, aes(x = "", y = n, fill = Type)) +
             position = position_stack(vjust = 0.5), size = 3)
 
 p_pie_combined <- p_pie_all | p_pie_diff
-ggsave(file.path(output_base, "classification", "boundary_type_pie.pdf"),
-       p_pie_combined, width = 12, height = 5)
-cat("  Saved: boundary_type_pie.pdf\n")
+save_multiformat_ggplot(p_pie_combined,
+                        file.path(output_base, "classification", "boundary_type_pie"),
+                        width = 12, height = 5)
 
 # 2.2 Boundary Type by Chromosome
 cat("Creating boundary type by chromosome plot...\n")
@@ -377,9 +381,9 @@ p_chr_type <- ggplot(chr_type_summary, aes(x = chr, y = n, fill = Type)) +
   theme_tad() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(file.path(output_base, "classification", "boundary_type_by_chromosome.pdf"),
-       p_chr_type, width = 14, height = 6)
-cat("  Saved: boundary_type_by_chromosome.pdf\n")
+save_multiformat_ggplot(p_chr_type,
+                        file.path(output_base, "classification", "boundary_type_by_chromosome"),
+                        width = 14, height = 6)
 
 # 2.3 Enrichment Direction by Type
 cat("Creating enrichment direction by type plot...\n")
@@ -402,9 +406,9 @@ p_enrich_type <- ggplot(enrichment_by_type, aes(x = Type, y = n, fill = Enriched
   theme_tad() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(file.path(output_base, "classification", "enrichment_direction_by_type.pdf"),
-       p_enrich_type, width = 10, height = 6)
-cat("  Saved: enrichment_direction_by_type.pdf\n\n")
+save_multiformat_ggplot(p_enrich_type,
+                        file.path(output_base, "classification", "enrichment_direction_by_type"),
+                        width = 10, height = 6)
 
 cat("Section 2 complete: Boundary type classification plots generated\n\n")
 
@@ -454,9 +458,9 @@ if (n_shifted_valid > 0) {
     ) +
     theme_tad()
 
-  ggsave(file.path(output_base, "shift_analysis", "shift_distance_histogram.pdf"),
-         p_shift_hist, width = 10, height = 6)
-  cat("  Saved: shift_distance_histogram.pdf\n")
+  save_multiformat_ggplot(p_shift_hist,
+                          file.path(output_base, "shift_analysis", "shift_distance_histogram"),
+                          width = 10, height = 6)
 
   # 3.2 Shift Distance Violin Plot
   cat("Creating shift distance violin plot...\n")
@@ -476,9 +480,9 @@ if (n_shifted_valid > 0) {
     theme_tad() +
     theme(legend.position = "none")
 
-  ggsave(file.path(output_base, "shift_analysis", "shift_distance_violin.pdf"),
-         p_shift_violin, width = 8, height = 6)
-  cat("  Saved: shift_distance_violin.pdf\n")
+  save_multiformat_ggplot(p_shift_violin,
+                          file.path(output_base, "shift_analysis", "shift_distance_violin"),
+                          width = 8, height = 6)
 
   # 3.3 Shift Distance vs Gap Score
   cat("Creating shift vs Gap Score scatter...\n")
@@ -496,9 +500,9 @@ if (n_shifted_valid > 0) {
     ) +
     theme_tad()
 
-  ggsave(file.path(output_base, "shift_analysis", "shift_vs_gap_score.pdf"),
-         p_shift_gap, width = 10, height = 7)
-  cat("  Saved: shift_vs_gap_score.pdf\n")
+  save_multiformat_ggplot(p_shift_gap,
+                          file.path(output_base, "shift_analysis", "shift_vs_gap_score"),
+                          width = 10, height = 7)
 
 } else {
   cat("  No shifted boundaries with valid distance data. Skipping shift analysis plots.\n")
@@ -537,9 +541,9 @@ p_robust_heatmap <- ggplot(robust_diff_summary, aes(x = robustness, y = diff_cat
     panel.grid = element_blank()
   )
 
-ggsave(file.path(output_base, "robustness", "robustness_differential_heatmap.pdf"),
-       p_robust_heatmap, width = 10, height = 6)
-cat("  Saved: robustness_differential_heatmap.pdf\n")
+save_multiformat_ggplot(p_robust_heatmap,
+                        file.path(output_base, "robustness", "robustness_differential_heatmap"),
+                        width = 10, height = 6)
 
 # 4.2 Robustness by Boundary Type
 cat("Creating robustness by type plot...\n")
@@ -563,9 +567,9 @@ p_robust_type <- ggplot(robust_type_summary, aes(x = Type, y = percentage, fill 
   theme_tad() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(file.path(output_base, "robustness", "robustness_by_type.pdf"),
-       p_robust_type, width = 10, height = 6)
-cat("  Saved: robustness_by_type.pdf\n\n")
+save_multiformat_ggplot(p_robust_type,
+                        file.path(output_base, "robustness", "robustness_by_type"),
+                        width = 10, height = 6)
 
 cat("Section 4 complete: Robustness analysis plots generated\n\n")
 
@@ -606,9 +610,9 @@ p_chr_diff <- ggplot(chr_diff_summary, aes(x = chr, y = pct_diff)) +
   theme_tad() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(file.path(output_base, "chromosome", "per_chromosome_differential.pdf"),
-       p_chr_diff, width = 12, height = 6)
-cat("  Saved: per_chromosome_differential.pdf\n\n")
+save_multiformat_ggplot(p_chr_diff,
+                        file.path(output_base, "chromosome", "per_chromosome_differential"),
+                        width = 12, height = 6)
 
 cat("Section 5 complete: Chromosome-level analysis plots generated\n\n")
 
@@ -759,9 +763,9 @@ p_anchor_class <- ggplot(anchor_by_diff, aes(x = diff_category, y = percentage, 
   ) +
   theme_tad()
 
-ggsave(file.path(output_base, "chipseq", "anchor_classification.pdf"),
-       p_anchor_class, width = 10, height = 6)
-cat("  Saved: anchor_classification.pdf\n")
+save_multiformat_ggplot(p_anchor_class,
+                        file.path(output_base, "chipseq", "anchor_classification"),
+                        width = 10, height = 6)
 
 # 6.2 ChIP-seq Overlap Heatmap by Boundary Type
 cat("Creating ChIP-seq overlap heatmap...\n")
@@ -801,9 +805,9 @@ p_chip_heatmap <- ggplot(chip_overlap_summary, aes(x = Mark, y = Type, fill = Pe
   theme_tad() +
   theme(panel.grid = element_blank())
 
-ggsave(file.path(output_base, "chipseq", "chipseq_overlap_heatmap.pdf"),
-       p_chip_heatmap, width = 8, height = 6)
-cat("  Saved: chipseq_overlap_heatmap.pdf\n")
+save_multiformat_ggplot(p_chip_heatmap,
+                        file.path(output_base, "chipseq", "chipseq_overlap_heatmap"),
+                        width = 8, height = 6)
 
 # 6.3 ChIP-seq Overlap by Enrichment Direction
 cat("Creating ChIP-seq by enrichment direction plot...\n")
@@ -832,9 +836,9 @@ p_chip_enrich <- ggplot(chip_by_enrich, aes(x = Mark, y = Percentage, fill = Enr
   ) +
   theme_tad()
 
-ggsave(file.path(output_base, "chipseq", "chipseq_by_enrichment_direction.pdf"),
-       p_chip_enrich, width = 10, height = 6)
-cat("  Saved: chipseq_by_enrichment_direction.pdf\n\n")
+save_multiformat_ggplot(p_chip_enrich,
+                        file.path(output_base, "chipseq", "chipseq_by_enrichment_direction"),
+                        width = 10, height = 6)
 
 cat("Section 6 complete: ChIP-seq integration plots generated\n\n")
 
@@ -931,9 +935,9 @@ if (length(gene_list) > 0) {
     p_go_bp <- dotplot(go_bp, showCategory = 15) +
       labs(title = "GO Biological Process Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    ggsave(file.path(output_base, "enrichment", "go_bp_dotplot.pdf"),
-           p_go_bp, width = 12, height = 10)
-    cat("  Saved: go_bp_dotplot.pdf\n")
+    save_multiformat_ggplot(p_go_bp,
+                            file.path(output_base, "enrichment", "go_bp_dotplot"),
+                            width = 12, height = 10)
   } else {
     cat("  No significant GO BP terms found\n")
   }
@@ -959,9 +963,9 @@ if (length(gene_list) > 0) {
     p_go_cc <- dotplot(go_cc, showCategory = 15) +
       labs(title = "GO Cellular Component Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    ggsave(file.path(output_base, "enrichment", "go_cc_dotplot.pdf"),
-           p_go_cc, width = 10, height = 8)
-    cat("  Saved: go_cc_dotplot.pdf\n")
+    save_multiformat_ggplot(p_go_cc,
+                            file.path(output_base, "enrichment", "go_cc_dotplot"),
+                            width = 10, height = 8)
   } else {
     cat("  No significant GO CC terms found\n")
   }
@@ -987,9 +991,9 @@ if (length(gene_list) > 0) {
     p_go_mf <- dotplot(go_mf, showCategory = 15) +
       labs(title = "GO Molecular Function Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    ggsave(file.path(output_base, "enrichment", "go_mf_dotplot.pdf"),
-           p_go_mf, width = 10, height = 8)
-    cat("  Saved: go_mf_dotplot.pdf\n")
+    save_multiformat_ggplot(p_go_mf,
+                            file.path(output_base, "enrichment", "go_mf_dotplot"),
+                            width = 10, height = 8)
   } else {
     cat("  No significant GO MF terms found\n")
   }
@@ -1014,9 +1018,9 @@ if (length(gene_list) > 0) {
     p_kegg <- dotplot(kegg, showCategory = 15) +
       labs(title = "KEGG Pathway Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    ggsave(file.path(output_base, "enrichment", "kegg_dotplot.pdf"),
-           p_kegg, width = 12, height = 10)
-    cat("  Saved: kegg_dotplot.pdf\n")
+    save_multiformat_ggplot(p_kegg,
+                            file.path(output_base, "enrichment", "kegg_dotplot"),
+                            width = 12, height = 10)
   } else {
     cat("  No significant KEGG pathways found\n")
   }
@@ -1092,9 +1096,9 @@ if (nrow(regional_df) > 0) {
     ) +
     theme_tad()
 
-  ggsave(file.path(output_base, "syt1_nav3_focus", "syt1_nav3_regional_overview.pdf"),
-         p_regional, width = 12, height = 6)
-  cat("  Saved: syt1_nav3_regional_overview.pdf\n")
+  save_multiformat_ggplot(p_regional,
+                          file.path(output_base, "syt1_nav3_focus", "syt1_nav3_regional_overview"),
+                          width = 12, height = 6)
 
   # 8.2 Regional Statistics Table
   regional_stats <- regional_df %>%
