@@ -51,6 +51,10 @@ suppressPackageStartupMessages({
   library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 })
 
+# Load multi-format output utility
+# Note: script runs from peaks/ directory, so path goes up one level
+source("../scripts/utils/multi_format_output.R")
+
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
@@ -862,9 +866,8 @@ create_loop_type_piechart_comparison <- function(loops_df, output_dir) {
       )
     )
 
-  output_file <- file.path(output_dir, "plots", "loop_type_piechart_comparison.pdf")
-  ggsave(output_file, p_combined, width = 14, height = 12)
-  cat(sprintf("    Saved: %s\n", output_file))
+  output_file <- file.path(output_dir, "plots", "loop_type_piechart_comparison")
+  save_multiformat_ggplot(p_combined, output_file, width = 14, height = 12)
 }
 
 #' Create anchor type distribution bar chart
@@ -914,9 +917,8 @@ create_anchor_type_barplot <- function(loops_df, output_dir) {
       legend.position = "right"
     )
 
-  output_file <- file.path(output_dir, "plots", "anchor_type_distribution.pdf")
-  ggsave(output_file, p, width = 10, height = 6)
-  cat(sprintf("    Saved: %s\n", output_file))
+  output_file <- file.path(output_dir, "plots", "anchor_type_distribution")
+  save_multiformat_ggplot(p, output_file, width = 10, height = 6)
 }
 
 #' Create loop type by direction bar chart
@@ -967,9 +969,8 @@ create_loop_type_direction_barplot <- function(loops_df, output_dir) {
     ) +
     coord_flip()
 
-  output_file <- file.path(output_dir, "plots", "loop_type_by_direction.pdf")
-  ggsave(output_file, p, width = 10, height = 10)
-  cat(sprintf("    Saved: %s\n", output_file))
+  output_file <- file.path(output_dir, "plots", "loop_type_by_direction")
+  save_multiformat_ggplot(p, output_file, width = 10, height = 10)
 }
 
 # =============================================================================

@@ -50,6 +50,9 @@ suppressPackageStartupMessages({
 
 cat("Packages loaded\n\n")
 
+# Load multi-format output utility
+source("scripts/utils/multi_format_output.R")
+
 # Load configuration
 config_path <- "config/stripe_config.yaml"
 if (!file.exists(config_path)) {
@@ -270,9 +273,10 @@ create_stripe_volcano <- function(stripes_df, timepoint_name, output_path) {
       panel.border = element_rect(color = "black", fill = NA, linewidth = 0.5)
     )
 
-  # Save plot
-  ggsave(output_path, p, width = 10, height = 8, dpi = 300)
-  cat(sprintf("  Saved: %s\n", basename(output_path)))
+  # Save plot (multi-format: PDF + SVG + JPEG)
+  # Remove .pdf extension if present for base_path
+  base_path <- sub("\\.pdf$", "", output_path)
+  save_multiformat_ggplot(p, base_path, width = 10, height = 8)
 
   return(p)
 }
@@ -301,9 +305,8 @@ if (length(volcano_plots) == 2 && !any(sapply(volcano_plots, is.null))) {
       )
     )
 
-  combined_output <- file.path(output_base, "combined", "volcano_combined.pdf")
-  ggsave(combined_output, combined_volcano, width = 18, height = 8, dpi = 300)
-  cat(sprintf("  Saved: %s\n", basename(combined_output)))
+  combined_output <- file.path(output_base, "combined", "volcano_combined")
+  save_multiformat_ggplot(combined_volcano, combined_output, width = 18, height = 8)
 }
 
 cat("\nSection 2 complete: Volcano plots generated\n")
@@ -432,10 +435,9 @@ analyze_length_distribution <- function(stripes_df, timepoint_name, output_dir) 
       theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
     )
 
-  # Save
-  output_file <- file.path(output_dir, sprintf("length_distribution_%s.pdf", timepoint_name))
-  ggsave(output_file, combined, width = 14, height = 12, dpi = 300)
-  cat(sprintf("  Saved: %s\n", basename(output_file)))
+  # Save (multi-format: PDF + SVG + JPEG)
+  output_file <- file.path(output_dir, sprintf("length_distribution_%s", timepoint_name))
+  save_multiformat_ggplot(combined, output_file, width = 14, height = 12)
 
   # Save statistics
   stats_file <- file.path(output_dir, sprintf("length_statistics_%s.tsv", timepoint_name))
@@ -493,9 +495,8 @@ if (length(stripes_list) == 2) {
       strip.text = element_text(size = 12, face = "bold")
     )
 
-  combined_output <- file.path(output_base, "combined", "length_comparison.pdf")
-  ggsave(combined_output, p_comparison, width = 12, height = 6, dpi = 300)
-  cat(sprintf("  Saved: %s\n", basename(combined_output)))
+  combined_output <- file.path(output_base, "combined", "length_comparison")
+  save_multiformat_ggplot(p_comparison, combined_output, width = 12, height = 6)
 }
 
 cat("\nSection 3 complete: Length distribution analyzed\n")
@@ -768,10 +769,9 @@ create_anchor_plots <- function(stripes_df, timepoint_name, output_dir) {
       theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
     )
 
-  # Save
-  output_file <- file.path(output_dir, sprintf("anchor_classification_%s.pdf", timepoint_name))
-  ggsave(output_file, combined, width = 14, height = 10, dpi = 300)
-  cat(sprintf("  Saved: %s\n", basename(output_file)))
+  # Save (multi-format: PDF + SVG + JPEG)
+  output_file <- file.path(output_dir, sprintf("anchor_classification_%s", timepoint_name))
+  save_multiformat_ggplot(combined, output_file, width = 14, height = 10)
 
   return(combined)
 }
@@ -1207,9 +1207,9 @@ run_stripe_enrichment <- function(stripes_df, timepoint_name, output_dir) {
     p_go_bp <- dotplot(go_bp, showCategory = 20) +
       labs(title = sprintf("GO Biological Process: %s Stripes", tools::toTitleCase(timepoint_name))) +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    ggsave(file.path(output_dir, sprintf("go_bp_dotplot_%s.pdf", timepoint_name)),
-           p_go_bp, width = 12, height = 10)
-    cat("    Saved: go_bp_dotplot.pdf\n")
+    save_multiformat_ggplot(p_go_bp,
+                            file.path(output_dir, sprintf("go_bp_dotplot_%s", timepoint_name)),
+                            width = 12, height = 10)
     results$go_bp <- go_bp
   } else {
     cat("    No significant GO BP terms found\n")
@@ -1236,9 +1236,9 @@ run_stripe_enrichment <- function(stripes_df, timepoint_name, output_dir) {
     p_go_cc <- dotplot(go_cc, showCategory = 15) +
       labs(title = sprintf("GO Cellular Component: %s Stripes", tools::toTitleCase(timepoint_name))) +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    ggsave(file.path(output_dir, sprintf("go_cc_dotplot_%s.pdf", timepoint_name)),
-           p_go_cc, width = 10, height = 8)
-    cat("    Saved: go_cc_dotplot.pdf\n")
+    save_multiformat_ggplot(p_go_cc,
+                            file.path(output_dir, sprintf("go_cc_dotplot_%s", timepoint_name)),
+                            width = 10, height = 8)
     results$go_cc <- go_cc
   } else {
     cat("    No significant GO CC terms found\n")
@@ -1265,9 +1265,9 @@ run_stripe_enrichment <- function(stripes_df, timepoint_name, output_dir) {
     p_go_mf <- dotplot(go_mf, showCategory = 15) +
       labs(title = sprintf("GO Molecular Function: %s Stripes", tools::toTitleCase(timepoint_name))) +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    ggsave(file.path(output_dir, sprintf("go_mf_dotplot_%s.pdf", timepoint_name)),
-           p_go_mf, width = 10, height = 8)
-    cat("    Saved: go_mf_dotplot.pdf\n")
+    save_multiformat_ggplot(p_go_mf,
+                            file.path(output_dir, sprintf("go_mf_dotplot_%s", timepoint_name)),
+                            width = 10, height = 8)
     results$go_mf <- go_mf
   } else {
     cat("    No significant GO MF terms found\n")
@@ -1293,9 +1293,9 @@ run_stripe_enrichment <- function(stripes_df, timepoint_name, output_dir) {
     p_kegg <- dotplot(kegg, showCategory = 20) +
       labs(title = sprintf("KEGG Pathways: %s Stripes", tools::toTitleCase(timepoint_name))) +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-    ggsave(file.path(output_dir, sprintf("kegg_dotplot_%s.pdf", timepoint_name)),
-           p_kegg, width = 12, height = 10)
-    cat("    Saved: kegg_dotplot.pdf\n")
+    save_multiformat_ggplot(p_kegg,
+                            file.path(output_dir, sprintf("kegg_dotplot_%s", timepoint_name)),
+                            width = 12, height = 10)
     results$kegg <- kegg
   } else {
     cat("    No significant KEGG pathways found\n")
