@@ -13,7 +13,22 @@ suppressPackageStartupMessages({
   library(yaml)
   library(ggplot2)
   library(dplyr)
+  library(svglite)  # For SVG output
 })
+
+# Helper function to save plots in multiple formats (PDF, SVG, JPEG)
+save_multiformat <- function(plot_code, base_path, width, height, dpi = 300) {
+  # PDF
+  pdf(paste0(base_path, ".pdf"), width = width, height = height)
+  tryCatch(eval(plot_code), finally = dev.off())
+  # SVG
+  svglite(paste0(base_path, ".svg"), width = width, height = height)
+  tryCatch(eval(plot_code), finally = dev.off())
+  # JPEG
+  jpeg(paste0(base_path, ".jpg"), width = width * dpi, height = height * dpi, res = dpi, quality = 95)
+  tryCatch(eval(plot_code), finally = dev.off())
+  cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", basename(base_path)))
+}
 
 # ==============================================================================
 # PARSE ARGUMENTS
@@ -200,28 +215,25 @@ for (i in 1:ncol(dge)) {
 # ==============================================================================
 cat("\n=== Generating MDS Plot ===\n")
 
-pdf(file.path(plots_dir, "mds_plot.pdf"), width = 8, height = 6)
+save_multiformat(quote({
+  plotMDS(
+    dge,
+    col = c(rep("blue", 3), rep("red", 3)),
+    pch = 16,
+    cex = 2,
+    main = sprintf("MDS Plot - Stripe Quantification (%s)", TIMEPOINT),
+    labels = dge$samples$sample_name
+  )
 
-plotMDS(
-  dge,
-  col = c(rep("blue", 3), rep("red", 3)),
-  pch = 16,
-  cex = 2,
-  main = sprintf("MDS Plot - Stripe Quantification (%s)", TIMEPOINT),
-  labels = dge$samples$sample_name
-)
-
-legend(
-  "topright",
-  legend = c("Control", "BAP1-KO"),
-  col = c("blue", "red"),
-  pch = 16,
-  pt.cex = 2,
-  bty = "n"
-)
-
-dev.off()
-cat("  Saved: mds_plot.pdf\n")
+  legend(
+    "topright",
+    legend = c("Control", "BAP1-KO"),
+    col = c("blue", "red"),
+    pch = 16,
+    pt.cex = 2,
+    bty = "n"
+  )
+}), file.path(plots_dir, "mds_plot"), width = 8, height = 6)
 
 # ==============================================================================
 # DISPERSION ESTIMATION
@@ -248,10 +260,9 @@ cat(sprintf("  Median tagwise BCV: %.3f\n",
             median(sqrt(dge$tagwise.dispersion))))
 
 # BCV plot
-pdf(file.path(plots_dir, "bcv_plot.pdf"), width = 8, height = 6)
-plotBCV(dge, main = sprintf("BCV Plot - Stripes (%s)", TIMEPOINT))
-dev.off()
-cat("  Saved: bcv_plot.pdf\n")
+save_multiformat(quote({
+  plotBCV(dge, main = sprintf("BCV Plot - Stripes (%s)", TIMEPOINT))
+}), file.path(plots_dir, "bcv_plot"), width = 8, height = 6)
 
 # ==============================================================================
 # QUASI-LIKELIHOOD GLM FIT
@@ -263,10 +274,9 @@ fit <- glmQLFit(dge, design, robust = config$edger$robust_dispersion)
 cat(sprintf("  Residual df: %d\n", min(fit$df.residual)))
 
 # QL dispersion plot
-pdf(file.path(plots_dir, "ql_dispersion_plot.pdf"), width = 8, height = 6)
-plotQLDisp(fit, main = sprintf("QL Dispersion - Stripes (%s)", TIMEPOINT))
-dev.off()
-cat("  Saved: ql_dispersion_plot.pdf\n")
+save_multiformat(quote({
+  plotQLDisp(fit, main = sprintf("QL Dispersion - Stripes (%s)", TIMEPOINT))
+}), file.path(plots_dir, "ql_dispersion_plot"), width = 8, height = 6)
 
 # ==============================================================================
 # DIFFERENTIAL TESTING
@@ -310,90 +320,84 @@ results$plot_color <- "gray60"
 results$plot_color[results$significant_FDR05 & results$logFC > 0] <- "firebrick3"
 results$plot_color[results$significant_FDR05 & results$logFC < 0] <- "steelblue3"
 
-pdf(file.path(plots_dir, "volcano_plot.pdf"), width = 10, height = 8)
+save_multiformat(quote({
+  par(mar = c(5, 5, 4, 2))
+  plot(
+    results$logFC,
+    -log10(results$PValue),
+    pch = 16,
+    cex = 0.8,
+    col = adjustcolor(results$plot_color, alpha.f = 0.7),
+    xlab = "log2 Fold Change (Mutant / Control)",
+    ylab = "-log10(P-value)",
+    main = sprintf("Volcano Plot - Differential Stripes (%s)\n%d significant (FDR < %.2f)",
+                   TIMEPOINT, n_sig, config$edger$fdr_primary)
+  )
 
-par(mar = c(5, 5, 4, 2))
-plot(
-  results$logFC,
-  -log10(results$PValue),
-  pch = 16,
-  cex = 0.8,
-  col = adjustcolor(results$plot_color, alpha.f = 0.7),
-  xlab = "log2 Fold Change (Mutant / Control)",
-  ylab = "-log10(P-value)",
-  main = sprintf("Volcano Plot - Differential Stripes (%s)\n%d significant (FDR < %.2f)",
-                 TIMEPOINT, n_sig, config$edger$fdr_primary)
-)
+  abline(h = 0, col = "black", lty = 2)
+  abline(v = 0, col = "black", lty = 2)
+  abline(v = c(-0.3, 0.3), col = "gray40", lty = 3)
 
-abline(h = 0, col = "black", lty = 2)
-abline(v = 0, col = "black", lty = 2)
-abline(v = c(-0.3, 0.3), col = "gray40", lty = 3)
+  # Highlight by source
+  points(
+    results$logFC[results$source == "control_only"],
+    -log10(results$PValue[results$source == "control_only"]),
+    pch = 1, cex = 1.2, col = "blue"
+  )
+  points(
+    results$logFC[results$source == "mutant_only"],
+    -log10(results$PValue[results$source == "mutant_only"]),
+    pch = 1, cex = 1.2, col = "red"
+  )
 
-# Highlight by source
-points(
-  results$logFC[results$source == "control_only"],
-  -log10(results$PValue[results$source == "control_only"]),
-  pch = 1, cex = 1.2, col = "blue"
-)
-points(
-  results$logFC[results$source == "mutant_only"],
-  -log10(results$PValue[results$source == "mutant_only"]),
-  pch = 1, cex = 1.2, col = "red"
-)
-
-legend(
-  "topright",
-  legend = c(
-    sprintf("Up in mutant (%d)", n_up),
-    sprintf("Down in mutant (%d)", n_down),
-    "Not significant",
-    "Control-only source",
-    "Mutant-only source"
-  ),
-  col = c("firebrick3", "steelblue3", "gray60", "blue", "red"),
-  pch = c(16, 16, 16, 1, 1),
-  pt.cex = 1.5,
-  bty = "n"
-)
-
-dev.off()
-cat("  Saved: volcano_plot.pdf\n")
+  legend(
+    "topright",
+    legend = c(
+      sprintf("Up in mutant (%d)", n_up),
+      sprintf("Down in mutant (%d)", n_down),
+      "Not significant",
+      "Control-only source",
+      "Mutant-only source"
+    ),
+    col = c("firebrick3", "steelblue3", "gray60", "blue", "red"),
+    pch = c(16, 16, 16, 1, 1),
+    pt.cex = 1.5,
+    bty = "n"
+  )
+}), file.path(plots_dir, "volcano_plot"), width = 10, height = 8)
 
 # ==============================================================================
 # MA PLOT
 # ==============================================================================
-pdf(file.path(plots_dir, "ma_plot.pdf"), width = 10, height = 8)
+save_multiformat(quote({
+  par(mar = c(5, 5, 4, 2))
+  plot(
+    results$logCPM,
+    results$logFC,
+    pch = 16,
+    cex = 0.8,
+    col = adjustcolor(results$plot_color, alpha.f = 0.7),
+    xlab = "Average log2 CPM",
+    ylab = "log2 Fold Change (Mutant / Control)",
+    main = sprintf("MA Plot - Differential Stripes (%s)", TIMEPOINT)
+  )
 
-par(mar = c(5, 5, 4, 2))
-plot(
-  results$logCPM,
-  results$logFC,
-  pch = 16,
-  cex = 0.8,
-  col = adjustcolor(results$plot_color, alpha.f = 0.7),
-  xlab = "Average log2 CPM",
-  ylab = "log2 Fold Change (Mutant / Control)",
-  main = sprintf("MA Plot - Differential Stripes (%s)", TIMEPOINT)
-)
+  abline(h = 0, col = "black", lty = 2)
+  abline(h = c(-0.3, 0.3), col = "gray40", lty = 3)
 
-abline(h = 0, col = "black", lty = 2)
-abline(h = c(-0.3, 0.3), col = "gray40", lty = 3)
-
-legend(
-  "topright",
-  legend = c(
-    sprintf("Up in mutant (%d)", n_up),
-    sprintf("Down in mutant (%d)", n_down),
-    "Not significant"
-  ),
-  col = c("firebrick3", "steelblue3", "gray60"),
-  pch = 16,
-  pt.cex = 1.5,
-  bty = "n"
-)
-
-dev.off()
-cat("  Saved: ma_plot.pdf\n")
+  legend(
+    "topright",
+    legend = c(
+      sprintf("Up in mutant (%d)", n_up),
+      sprintf("Down in mutant (%d)", n_down),
+      "Not significant"
+    ),
+    col = c("firebrick3", "steelblue3", "gray60"),
+    pch = 16,
+    pt.cex = 1.5,
+    bty = "n"
+  )
+}), file.path(plots_dir, "ma_plot"), width = 10, height = 8)
 
 # ==============================================================================
 # SAVE OUTPUTS

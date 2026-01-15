@@ -318,8 +318,6 @@ save_multiformat(
   file.path(qc_dir, "02_sample_scatter"), width = 8, height = 8)
 
 # Visualization: Distribution comparison
-pdf(file.path(qc_dir, "03_count_distributions.pdf"), width = 12, height = 8)
-
 counts_long <- counts_matrix %>%
   as.data.frame() %>%
   mutate(loop_id = 1:n()) %>%
@@ -374,10 +372,10 @@ p4 <- ggplot(counts_long, aes(x = Count + 1, color = Sample)) +
   theme(legend.position = "top",
         plot.title = element_text(hjust = 0.5, face = "bold"))
 
-# Combine plots
-(p1 | p2) / (p3 | p4)
-
-dev.off()
+# Combine and save in multiple formats
+p_combined <- (p1 | p2) / (p3 | p4)
+save_multiformat(quote(print(p_combined)),
+  file.path(qc_dir, "03_count_distributions"), width = 12, height = 8)
 
 cat("Sample-level QC plots saved to:", qc_dir, "\n\n")
 
@@ -421,8 +419,6 @@ qc_report$ma_stats <- list(
 )
 
 # Visualization: MA plot
-pdf(file.path(qc_dir, "04_ma_plot.pdf"), width = 10, height = 8)
-
 ma_data <- data.frame(A = A, M = M)
 
 # Color by magnitude of change
@@ -432,7 +428,7 @@ ma_data$color <- case_when(
   TRUE ~ "Small change (|M| ≤ 1)"
 )
 
-ggplot(ma_data, aes(x = A, y = M, color = color)) +
+p_ma <- ggplot(ma_data, aes(x = A, y = M, color = color)) +
   geom_point(alpha = 0.5, size = 1) +
   geom_hline(yintercept = 0, color = "black", linetype = "solid", size = 0.5) +
   geom_hline(yintercept = c(-1, 1), color = "blue", linetype = "dashed", size = 0.5) +
@@ -450,7 +446,8 @@ ggplot(ma_data, aes(x = A, y = M, color = color)) +
         plot.title = element_text(hjust = 0.5, face = "bold"),
         plot.subtitle = element_text(hjust = 0.5))
 
-dev.off()
+save_multiformat(quote(print(p_ma)),
+  file.path(qc_dir, "04_ma_plot"), width = 10, height = 8)
 
 # Variance analysis - coefficient of variation
 cat("Loop Variability Analysis:\n")
@@ -479,22 +476,20 @@ top_n <- 50
 top_variable_idx <- order(loop_cv, decreasing = TRUE, na.last = TRUE)[1:top_n]
 
 # Visualization: Heatmap of top variable loops
-pdf(file.path(qc_dir, "05_variable_loops_heatmap.pdf"), width = 8, height = 10)
-
 counts_scaled <- t(scale(t(counts_matrix[top_variable_idx, ])))
 
-pheatmap(counts_scaled,
-         cluster_rows = TRUE,
-         cluster_cols = TRUE,
-         clustering_distance_rows = "euclidean",
-         clustering_distance_cols = "euclidean",
-         color = colorRampPalette(c("blue", "white", "red"))(100),
-         main = sprintf("Top %d Most Variable Loops\n(Z-score scaled)", top_n),
-         labels_col = c("Control", "Mutant"),
-         show_rownames = FALSE,
-         fontsize = 10)
-
-dev.off()
+save_multiformat(quote({
+  pheatmap(counts_scaled,
+           cluster_rows = TRUE,
+           cluster_cols = TRUE,
+           clustering_distance_rows = "euclidean",
+           clustering_distance_cols = "euclidean",
+           color = colorRampPalette(c("blue", "white", "red"))(100),
+           main = sprintf("Top %d Most Variable Loops\n(Z-score scaled)", top_n),
+           labels_col = c("Control", "Mutant"),
+           show_rownames = FALSE,
+           fontsize = 10)
+}), file.path(qc_dir, "05_variable_loops_heatmap"), width = 8, height = 10)
 
 cat("Loop-level QC plots saved\n\n")
 
@@ -577,13 +572,11 @@ qc_report$distance_stats <- list(
 )
 
 # Visualization: Chromosome distribution
-pdf(file.path(qc_dir, "06_chromosome_distribution.pdf"), width = 12, height = 6)
-
 # Reorder chromosomes naturally
 chr_order <- gtools::mixedsort(unique(chr_summary$chr))
 chr_summary$chr <- factor(chr_summary$chr, levels = chr_order)
 
-ggplot(chr_summary, aes(x = chr, y = n_loops)) +
+p_chr <- ggplot(chr_summary, aes(x = chr, y = n_loops)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = 0.8) +
   geom_text(aes(label = n_loops), vjust = -0.5, size = 3) +
   theme_minimal(base_size = 12) +
@@ -593,17 +586,16 @@ ggplot(chr_summary, aes(x = chr, y = n_loops)) +
        x = "Chromosome",
        y = "Number of Loops")
 
-dev.off()
+save_multiformat(quote(print(p_chr)),
+  file.path(qc_dir, "06_chromosome_distribution"), width = 12, height = 6)
 
 # Visualization: Distance decay
-pdf(file.path(qc_dir, "07_distance_decay.pdf"), width = 12, height = 8)
-
 distance_data <- loop_coords %>%
   filter(!is.na(distance)) %>%
   mutate(distance_mb = distance / 1e6)
 
 # Panel 1: Total signal vs distance
-p1 <- ggplot(distance_data, aes(x = distance_mb, y = total_count)) +
+p1_dist <- ggplot(distance_data, aes(x = distance_mb, y = total_count)) +
   geom_point(alpha = 0.3, size = 1) +
   geom_smooth(method = "loess", color = "red", se = TRUE) +
   scale_x_log10(labels = comma) +
@@ -615,7 +607,7 @@ p1 <- ggplot(distance_data, aes(x = distance_mb, y = total_count)) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 # Panel 2: Control signal vs distance
-p2 <- ggplot(distance_data, aes(x = distance_mb, y = ctrl_count)) +
+p2_dist <- ggplot(distance_data, aes(x = distance_mb, y = ctrl_count)) +
   geom_point(alpha = 0.3, size = 1, color = "#377EB8") +
   geom_smooth(method = "loess", color = "darkblue", se = TRUE) +
   scale_x_log10(labels = comma) +
@@ -627,7 +619,7 @@ p2 <- ggplot(distance_data, aes(x = distance_mb, y = ctrl_count)) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 # Panel 3: Mutant signal vs distance
-p3 <- ggplot(distance_data, aes(x = distance_mb, y = mut_count)) +
+p3_dist <- ggplot(distance_data, aes(x = distance_mb, y = mut_count)) +
   geom_point(alpha = 0.3, size = 1, color = "#E41A1C") +
   geom_smooth(method = "loess", color = "darkred", se = TRUE) +
   scale_x_log10(labels = comma) +
@@ -639,7 +631,7 @@ p3 <- ggplot(distance_data, aes(x = distance_mb, y = mut_count)) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 # Panel 4: Log2FC vs distance
-p4 <- ggplot(distance_data, aes(x = distance_mb, y = log2FC)) +
+p4_dist <- ggplot(distance_data, aes(x = distance_mb, y = log2FC)) +
   geom_point(alpha = 0.3, size = 1) +
   geom_smooth(method = "loess", color = "purple", se = TRUE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
@@ -650,9 +642,9 @@ p4 <- ggplot(distance_data, aes(x = distance_mb, y = log2FC)) +
        y = "Log2 Fold Change (mut/ctrl)") +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
-(p1 | p2) / (p3 | p4)
-
-dev.off()
+p_decay <- (p1_dist | p2_dist) / (p3_dist | p4_dist)
+save_multiformat(quote(print(p_decay)),
+  file.path(qc_dir, "07_distance_decay"), width = 12, height = 8)
 
 cat("Spatial analysis plots saved\n\n")
 
@@ -832,60 +824,58 @@ cat(sprintf("  ✓ Shift summary table saved to: %s\n\n", shift_summary_file))
 cat("Per-loop shift status extraction complete\n\n")
 
 # Visualize example matrices (top 6 by total signal)
-pdf(file.path(qc_dir, "08_example_matrices.pdf"), width = 14, height = 10)
-
 top_signal_idx <- order(rowSums(counts_matrix), decreasing = TRUE)[1:6]
 
-par(mfrow = c(3, 4), mar = c(2, 2, 3, 2))
+save_multiformat(quote({
+  par(mfrow = c(3, 4), mar = c(2, 2, 3, 2))
 
-for (i in 1:6) {
-  loop_id <- top_signal_idx[i]
+  for (i in 1:6) {
+    loop_id <- top_signal_idx[i]
 
-  # Extract matrices (average across replicates if n=6)
-  if (n_samples == 6) {
-    # Materialize HDF5 slice first
-    ctrl_slice <- as.array(count_array[, , loop_id, 1:3])
-    mut_slice <- as.array(count_array[, , loop_id, 4:6])
+    # Extract matrices (average across replicates if n=6)
+    if (n_samples == 6) {
+      # Materialize HDF5 slice first
+      ctrl_slice <- as.array(count_array[, , loop_id, 1:3])
+      mut_slice <- as.array(count_array[, , loop_id, 4:6])
 
-    ctrl_mat <- apply(ctrl_slice, c(1, 2), mean, na.rm = TRUE)
-    mut_mat <- apply(mut_slice, c(1, 2), mean, na.rm = TRUE)
-  } else {
-    ctrl_mat <- as.matrix(count_array[, , loop_id, 1])
-    mut_mat <- as.matrix(count_array[, , loop_id, 2])
-  }
-  
-  # Plot control matrix
-  image(1:5, 1:5, ctrl_mat,
-        col = viridis(100),
-        main = sprintf("Loop %d - Control\nSum=%.0f", loop_id, sum(ctrl_mat)),
-        xlab = "", ylab = "", axes = FALSE)
-  axis(1, at = 1:5, labels = 1:5)
-  axis(2, at = 1:5, labels = 1:5)
-  
-  # Add text values
-  for (row in 1:5) {
-    for (col in 1:5) {
-      text(col, row, round(ctrl_mat[row, col], 1), col = "white", cex = 0.8)
+      ctrl_mat <- apply(ctrl_slice, c(1, 2), mean, na.rm = TRUE)
+      mut_mat <- apply(mut_slice, c(1, 2), mean, na.rm = TRUE)
+    } else {
+      ctrl_mat <- as.matrix(count_array[, , loop_id, 1])
+      mut_mat <- as.matrix(count_array[, , loop_id, 2])
+    }
+
+    # Plot control matrix
+    image(1:5, 1:5, ctrl_mat,
+          col = viridis(100),
+          main = sprintf("Loop %d - Control\nSum=%.0f", loop_id, sum(ctrl_mat)),
+          xlab = "", ylab = "", axes = FALSE)
+    axis(1, at = 1:5, labels = 1:5)
+    axis(2, at = 1:5, labels = 1:5)
+
+    # Add text values
+    for (row in 1:5) {
+      for (col in 1:5) {
+        text(col, row, round(ctrl_mat[row, col], 1), col = "white", cex = 0.8)
+      }
+    }
+
+    # Plot mutant matrix
+    image(1:5, 1:5, mut_mat,
+          col = viridis(100),
+          main = sprintf("Loop %d - Mutant\nSum=%.0f", loop_id, sum(mut_mat)),
+          xlab = "", ylab = "", axes = FALSE)
+    axis(1, at = 1:5, labels = 1:5)
+    axis(2, at = 1:5, labels = 1:5)
+
+    # Add text values
+    for (row in 1:5) {
+      for (col in 1:5) {
+        text(col, row, round(mut_mat[row, col], 1), col = "white", cex = 0.8)
+      }
     }
   }
-  
-  # Plot mutant matrix
-  image(1:5, 1:5, mut_mat,
-        col = viridis(100),
-        main = sprintf("Loop %d - Mutant\nSum=%.0f", loop_id, sum(mut_mat)),
-        xlab = "", ylab = "", axes = FALSE)
-  axis(1, at = 1:5, labels = 1:5)
-  axis(2, at = 1:5, labels = 1:5)
-  
-  # Add text values
-  for (row in 1:5) {
-    for (col in 1:5) {
-      text(col, row, round(mut_mat[row, col], 1), col = "white", cex = 0.8)
-    }
-  }
-}
-
-dev.off()
+}), file.path(qc_dir, "08_example_matrices"), width = 14, height = 10)
 
 cat("Matrix inspection plots saved\n\n")
 
@@ -983,65 +973,63 @@ if (!is.null(all_strategies) &&
   cat("\n")
   
   # Visualization: Strategy comparison
-  pdf(file.path(qc_dir, "09_strategy_comparison.pdf"), width = 12, height = 10)
-  
-  par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
-  
-  # Control: sum vs weighted
-  plot(log2(ctrl_strategies$sum + 1), log2(ctrl_strategies$weighted + 1),
-       xlab = "Sum Aggregation [log2(count+1)]",
-       ylab = "Weighted Aggregation [log2(count+1)]",
-       main = sprintf("Control: Sum vs Weighted\nr = %.3f", cor_strategies_ctrl[1,2]),
-       pch = 16, col = rgb(0, 0, 1, 0.3), cex = 0.5)
-  abline(a = 0, b = 1, col = "red", lwd = 2, lty = 2)
-  fit <- lm(log2(ctrl_strategies$weighted + 1) ~ log2(ctrl_strategies$sum + 1))
-  abline(fit, col = "blue", lwd = 2)
-  legend("topleft", 
-         legend = c("y = x", sprintf("Linear fit (slope=%.3f)", coef(fit)[2])),
-         col = c("red", "blue"), lty = c(2, 1), lwd = 2, cex = 0.8)
-  
-  # Mutant: sum vs weighted
-  plot(log2(mut_strategies$sum + 1), log2(mut_strategies$weighted + 1),
-       xlab = "Sum Aggregation [log2(count+1)]",
-       ylab = "Weighted Aggregation [log2(count+1)]",
-       main = sprintf("Mutant: Sum vs Weighted\nr = %.3f", cor_strategies_mut[1,2]),
-       pch = 16, col = rgb(1, 0, 0, 0.3), cex = 0.5)
-  abline(a = 0, b = 1, col = "red", lwd = 2, lty = 2)
-  fit <- lm(log2(mut_strategies$weighted + 1) ~ log2(mut_strategies$sum + 1))
-  abline(fit, col = "blue", lwd = 2)
-  legend("topleft", 
-         legend = c("y = x", sprintf("Linear fit (slope=%.3f)", coef(fit)[2])),
-         col = c("red", "blue"), lty = c(2, 1), lwd = 2, cex = 0.8)
-  
-  # Ratio plots: weighted/sum
+  # Pre-compute ratios for use in the plotting expression
   ctrl_ratio <- ctrl_strategies$weighted / ctrl_strategies$sum
   mut_ratio <- mut_strategies$weighted / mut_strategies$sum
-  
-  # Control ratio distribution
-  hist(ctrl_ratio[is.finite(ctrl_ratio)], 
-       breaks = 50,
-       col = rgb(0, 0, 1, 0.5),
-       xlab = "Weighted / Sum Ratio",
-       main = "Control: Strategy Ratio Distribution",
-       xlim = c(0, quantile(ctrl_ratio, 0.99, na.rm = TRUE)))
-  abline(v = median(ctrl_ratio, na.rm = TRUE), col = "red", lwd = 2, lty = 2)
-  legend("topright", 
-         legend = sprintf("Median = %.3f", median(ctrl_ratio, na.rm = TRUE)),
-         col = "red", lty = 2, lwd = 2, cex = 0.8)
-  
-  # Mutant ratio distribution
-  hist(mut_ratio[is.finite(mut_ratio)], 
-       breaks = 50,
-       col = rgb(1, 0, 0, 0.5),
-       xlab = "Weighted / Sum Ratio",
-       main = "Mutant: Strategy Ratio Distribution",
-       xlim = c(0, quantile(mut_ratio, 0.99, na.rm = TRUE)))
-  abline(v = median(mut_ratio, na.rm = TRUE), col = "red", lwd = 2, lty = 2)
-  legend("topright", 
-         legend = sprintf("Median = %.3f", median(mut_ratio, na.rm = TRUE)),
-         col = "red", lty = 2, lwd = 2, cex = 0.8)
-  
-  dev.off()
+
+  save_multiformat(quote({
+    par(mfrow = c(2, 2), mar = c(4, 4, 3, 2))
+
+    # Control: sum vs weighted
+    plot(log2(ctrl_strategies$sum + 1), log2(ctrl_strategies$weighted + 1),
+         xlab = "Sum Aggregation [log2(count+1)]",
+         ylab = "Weighted Aggregation [log2(count+1)]",
+         main = sprintf("Control: Sum vs Weighted\nr = %.3f", cor_strategies_ctrl[1,2]),
+         pch = 16, col = rgb(0, 0, 1, 0.3), cex = 0.5)
+    abline(a = 0, b = 1, col = "red", lwd = 2, lty = 2)
+    fit <- lm(log2(ctrl_strategies$weighted + 1) ~ log2(ctrl_strategies$sum + 1))
+    abline(fit, col = "blue", lwd = 2)
+    legend("topleft",
+           legend = c("y = x", sprintf("Linear fit (slope=%.3f)", coef(fit)[2])),
+           col = c("red", "blue"), lty = c(2, 1), lwd = 2, cex = 0.8)
+
+    # Mutant: sum vs weighted
+    plot(log2(mut_strategies$sum + 1), log2(mut_strategies$weighted + 1),
+         xlab = "Sum Aggregation [log2(count+1)]",
+         ylab = "Weighted Aggregation [log2(count+1)]",
+         main = sprintf("Mutant: Sum vs Weighted\nr = %.3f", cor_strategies_mut[1,2]),
+         pch = 16, col = rgb(1, 0, 0, 0.3), cex = 0.5)
+    abline(a = 0, b = 1, col = "red", lwd = 2, lty = 2)
+    fit <- lm(log2(mut_strategies$weighted + 1) ~ log2(mut_strategies$sum + 1))
+    abline(fit, col = "blue", lwd = 2)
+    legend("topleft",
+           legend = c("y = x", sprintf("Linear fit (slope=%.3f)", coef(fit)[2])),
+           col = c("red", "blue"), lty = c(2, 1), lwd = 2, cex = 0.8)
+
+    # Control ratio distribution
+    hist(ctrl_ratio[is.finite(ctrl_ratio)],
+         breaks = 50,
+         col = rgb(0, 0, 1, 0.5),
+         xlab = "Weighted / Sum Ratio",
+         main = "Control: Strategy Ratio Distribution",
+         xlim = c(0, quantile(ctrl_ratio, 0.99, na.rm = TRUE)))
+    abline(v = median(ctrl_ratio, na.rm = TRUE), col = "red", lwd = 2, lty = 2)
+    legend("topright",
+           legend = sprintf("Median = %.3f", median(ctrl_ratio, na.rm = TRUE)),
+           col = "red", lty = 2, lwd = 2, cex = 0.8)
+
+    # Mutant ratio distribution
+    hist(mut_ratio[is.finite(mut_ratio)],
+         breaks = 50,
+         col = rgb(1, 0, 0, 0.5),
+         xlab = "Weighted / Sum Ratio",
+         main = "Mutant: Strategy Ratio Distribution",
+         xlim = c(0, quantile(mut_ratio, 0.99, na.rm = TRUE)))
+    abline(v = median(mut_ratio, na.rm = TRUE), col = "red", lwd = 2, lty = 2)
+    legend("topright",
+           legend = sprintf("Median = %.3f", median(mut_ratio, na.rm = TRUE)),
+           col = "red", lty = 2, lwd = 2, cex = 0.8)
+  }), file.path(qc_dir, "09_strategy_comparison"), width = 12, height = 10)
   
   # Interpretation
   cat("Strategy Interpretation:\n")
