@@ -1,0 +1,176 @@
+#!/bin/bash
+#SBATCH --job-name=tad_full_pipeline
+#SBATCH --output=logs/full_pipeline_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=28:00:00
+#SBATCH --account=csd940
+
+# run_full_pipeline.sb
+# Complete TADCompare pipeline for BOTH timepoints in a single SLURM job
+# Runs all 6 steps sequentially: extract → tadcompare → consensus → postprocess → blacklist → visualize
+#
+# Usage: sbatch scripts/run_full_pipeline.sb
+
+#set -e  # Exit immediately on any error
+
+echo "============================================================"
+echo "TADCompare Full Pipeline - Both Timepoints"
+echo "============================================================"
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "============================================================"
+echo ""
+
+# === Environment Setup ===
+source ~/.bashrc
+conda activate mariner_env
+
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+cd "${BASE_DIR}"
+
+echo "Working directory: ${BASE_DIR}"
+echo ""
+
+# === Environment Verification ===
+echo "Environment check:"
+echo "  R: $(which R)"
+echo "  Rscript: $(which Rscript)"
+echo "  straw: $(which straw)"
+echo "  bedtools: $(which bedtools)"
+echo ""
+
+# Create logs directory
+mkdir -p logs
+
+# =============================================================================
+# Function: Run all steps 1-4 for a single timepoint
+# =============================================================================
+run_timepoint_steps_1_to_4() {
+    local TP=$1
+
+    echo ""
+    echo "============================================================"
+    echo "PROCESSING TIMEPOINT: ${TP}"
+    echo "============================================================"
+    echo ""
+
+    # --- Step 1: Matrix Extraction ---
+    echo "------------------------------------------------------------"
+    echo "[${TP}] Step 1/6: Matrix Extraction"
+    echo "------------------------------------------------------------"
+    bash scripts/01_extract_matrices.sb "${TP}"
+    echo ""
+    echo "✅ [${TP}] Step 1 complete: Matrix extraction"
+    echo ""
+
+    # --- Step 2: TADCompare Differential Analysis ---
+    echo "------------------------------------------------------------"
+    echo "[${TP}] Step 2/6: TADCompare Differential Analysis"
+    echo "------------------------------------------------------------"
+    Rscript scripts/02_run_tadcompare.R "${TP}"
+    echo ""
+    echo "✅ [${TP}] Step 2 complete: TADCompare"
+    echo ""
+
+    # --- Step 3: ConsensusTADs Robustness ---
+    echo "------------------------------------------------------------"
+    echo "[${TP}] Step 3/6: ConsensusTADs Robustness Assessment"
+    echo "------------------------------------------------------------"
+    Rscript scripts/03_run_consensus.R "${TP}"
+    echo ""
+    echo "✅ [${TP}] Step 3 complete: ConsensusTADs"
+    echo ""
+
+    # --- Step 4: Post-processing (Shift Distances) ---
+    echo "------------------------------------------------------------"
+    echo "[${TP}] Step 4/6: Post-processing (Shift Distances)"
+    echo "------------------------------------------------------------"
+    bash scripts/04_postprocess.sb "${TP}"
+    echo ""
+    echo "✅ [${TP}] Step 4 complete: Post-processing"
+    echo ""
+}
+
+# =============================================================================
+# Run Pipeline
+# =============================================================================
+
+# Process late timepoint (steps 1-4)
+run_timepoint_steps_1_to_4 "late"
+
+# Process early timepoint (steps 1-4)
+run_timepoint_steps_1_to_4 "early"
+
+# --- Step 5: Blacklist Filtering (processes BOTH timepoints) ---
+echo ""
+echo "============================================================"
+echo "Step 5/6: Blacklist Filtering (Both Timepoints)"
+echo "============================================================"
+Rscript scripts/05_filter_blacklist.R
+echo ""
+echo "✅ Step 5 complete: Blacklist filtering"
+echo ""
+
+# --- Step 6: Visualizations ---
+echo "============================================================"
+echo "Step 6/6: Visualizations"
+echo "============================================================"
+
+echo ""
+echo "[late] Generating visualizations..."
+Rscript scripts/tad_visualizations.R --timepoint late
+echo "✅ [late] Visualizations complete"
+echo ""
+
+echo "[early] Generating visualizations..."
+Rscript scripts/tad_visualizations.R --timepoint early
+echo "✅ [early] Visualizations complete"
+echo ""
+
+# =============================================================================
+# Final Summary
+# =============================================================================
+echo ""
+echo "============================================================"
+echo "PIPELINE COMPLETE"
+echo "============================================================"
+echo "End time: $(date)"
+echo ""
+
+echo "Output verification:"
+echo ""
+
+echo "Late timepoint:"
+if [ -f "results/late/final/tadcompare_final_filtered.tsv" ]; then
+    echo "  ✅ results/late/final/tadcompare_final_filtered.tsv"
+    wc -l results/late/final/tadcompare_final_filtered.tsv
+else
+    echo "  ❌ results/late/final/tadcompare_final_filtered.tsv NOT FOUND"
+fi
+
+echo ""
+echo "Early timepoint:"
+if [ -f "results/early/final/tadcompare_final_filtered.tsv" ]; then
+    echo "  ✅ results/early/final/tadcompare_final_filtered.tsv"
+    wc -l results/early/final/tadcompare_final_filtered.tsv
+else
+    echo "  ❌ results/early/final/tadcompare_final_filtered.tsv NOT FOUND"
+fi
+
+echo ""
+echo "Visualizations:"
+for tp in late early; do
+    viz_count=$(find "results/visualizations/${tp}" -name "*.pdf" 2>/dev/null | wc -l)
+    echo "  ${tp}: ${viz_count} PDF files generated"
+done
+
+echo ""
+echo "============================================================"
+echo "All done!"
+echo "============================================================"
+echo "End time: $(date)"
