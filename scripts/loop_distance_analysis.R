@@ -2,6 +2,12 @@
 # Loop Distance Shift Analysis for BAP1-KO "Loop Rewriting" Phenomenon
 # Generates publication-quality visualizations demonstrating that BAP1-KO mutants
 # lose long-range loops and gain shorter loops
+#
+# Usage:
+#   Rscript scripts/loop_distance_analysis.R                    # Default: late
+#   Rscript scripts/loop_distance_analysis.R --timepoint late   # Late timepoint
+#   Rscript scripts/loop_distance_analysis.R --timepoint early  # Early timepoint
+#   Rscript scripts/loop_distance_analysis.R --timepoint both   # Run both
 
 # ==============================================================================
 # SECTION 1: SETUP AND CONFIGURATION
@@ -25,10 +31,64 @@ suppressPackageStartupMessages({
 # Load multi-format output utility for PDF + SVG + JPEG output
 source("scripts/utils/multi_format_output.R")
 
+# ==============================================================================
+# TIMEPOINT CONFIGURATION
+# ==============================================================================
+
+# Input files by timepoint
+INPUT_FILES <- list(
+  late = "25042-late_outputs/merged_loops/characterized_loops.tsv",
+  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"
+)
+
+# Output directories by timepoint (standalone, not via symlink)
+OUTPUT_DIRS <- list(
+  late = "output/loops_visualization_extended/late",
+  early = "output/loops_visualization_extended/early"
+)
+
+# Parse command line arguments
+parse_arguments <- function() {
+  args <- commandArgs(trailingOnly = TRUE)
+  timepoint <- "late"  # Default
+
+  i <- 1
+  while (i <= length(args)) {
+    if (args[i] == "--timepoint" && i < length(args)) {
+      timepoint <- args[i + 1]
+      i <- i + 2
+    } else if (args[i] %in% c("--help", "-h")) {
+      cat("Usage: Rscript scripts/loop_distance_analysis.R [OPTIONS]\n\n")
+      cat("Options:\n")
+      cat("  --timepoint TP  Timepoint: 'early', 'late', or 'both' (default: late)\n")
+      cat("  --help, -h      Show this help message\n\n")
+      quit(save = "no", status = 0)
+    } else {
+      i <- i + 1
+    }
+  }
+
+  if (!timepoint %in% c("early", "late", "both")) {
+    stop("ERROR: timepoint must be 'early', 'late', or 'both'")
+  }
+
+  return(timepoint)
+}
+
+TIMEPOINT_ARG <- parse_arguments()
+
+# Determine which timepoints to process
+if (TIMEPOINT_ARG == "both") {
+  TIMEPOINTS_TO_RUN <- c("late", "early")
+} else {
+  TIMEPOINTS_TO_RUN <- TIMEPOINT_ARG
+}
+
+cat("Timepoint(s) to process:", paste(TIMEPOINTS_TO_RUN, collapse = ", "), "\n\n")
+
 # Define color palettes (consistent with existing pipeline)
 COLORS <- list(
   down = "#d73027",      # Red for down/lost in mutant
-
   up = "#4575b4",        # Blue for up/gained in mutant
   down_light = "#f4a582",
   up_light = "#92c5de",
@@ -45,23 +105,34 @@ DIRECTION_LABELS <- c(
 # Distance category order
 DISTANCE_ORDER <- c("<100kb", "100-500kb", "500kb-1Mb", ">1Mb")
 
-# Output directory (standalone, not via symlink)
-OUTPUT_DIR <- "output/loops_visualization_extended"
-dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
+# ==============================================================================
+# MAIN ANALYSIS FUNCTION
+# ==============================================================================
 
-cat("Output directory:", OUTPUT_DIR, "\n\n")
+run_distance_analysis <- function(timepoint) {
+  cat("\n")
+  cat("============================================================\n")
+  cat(sprintf("Processing %s timepoint\n", toupper(timepoint)))
+  cat("============================================================\n\n")
+
+  # Set paths for this timepoint
+  input_file <- INPUT_FILES[[timepoint]]
+  OUTPUT_DIR <- OUTPUT_DIRS[[timepoint]]
+  dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
+
+  cat("Input file:", input_file, "\n")
+  cat("Output directory:", OUTPUT_DIR, "\n\n")
+
+  # Validate input file exists
+  if (!file.exists(input_file)) {
+    stop(sprintf("ERROR: Input file not found: %s\nRun downstream_analysis.R first.", input_file))
+  }
 
 # ==============================================================================
 # SECTION 2: DATA LOADING AND PREPROCESSING
 # ==============================================================================
 
 cat("=== Loading Data ===\n")
-
-# Load characterized loops
-input_file <- "25042-late_outputs/merged_loops/characterized_loops.tsv"
-if (!file.exists(input_file)) {
-  input_file <- "outputs/merged_loops/characterized_loops.tsv"
-}
 
 loops <- read_tsv(input_file, show_col_types = FALSE)
 cat("Loaded", nrow(loops), "differential loops\n")
@@ -870,7 +941,7 @@ cat("Saved: distance_shift_statistics.txt\n")
 # COMPLETION
 # ==============================================================================
 
-cat("\n=== Analysis Complete ===\n")
+cat("\n=== Analysis Complete for", toupper(timepoint), "===\n")
 cat("Output directory:", OUTPUT_DIR, "\n")
 cat("Files generated:\n")
 cat("  - 01_distance_cdf_by_direction.pdf\n")
@@ -886,4 +957,24 @@ cat("  - distance_shift_summary.tsv\n")
 cat("  - distance_shift_statistics.txt\n")
 cat("  - go_long_lost_loops.tsv (if GO enrichment succeeded)\n")
 cat("  - go_short_gained_loops.tsv (if GO enrichment succeeded)\n")
+
+}  # End of run_distance_analysis function
+
+# ==============================================================================
+# MAIN EXECUTION
+# ==============================================================================
+
+for (tp in TIMEPOINTS_TO_RUN) {
+  tryCatch({
+    run_distance_analysis(tp)
+  }, error = function(e) {
+    cat(sprintf("\nERROR processing %s timepoint: %s\n", tp, e$message))
+  })
+}
+
+cat("\n=== All timepoints complete ===\n")
+cat("Output directories:\n")
+for (tp in TIMEPOINTS_TO_RUN) {
+  cat(sprintf("  - %s\n", OUTPUT_DIRS[[tp]]))
+}
 cat("\nEnd time:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
