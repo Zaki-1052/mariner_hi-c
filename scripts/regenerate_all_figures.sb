@@ -1,10 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=regen_figs
+#SBATCH --output=logs/regen_figs_%j.out
 #SBATCH --time=08:00:00
 #SBATCH --mem=128G
 #SBATCH --cpus-per-task=16
-#SBATCH --output=logs/regenerate_figures_%j.out
-#SBATCH --error=logs/regenerate_figures_%j.err
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --account=csd940
 
 # =============================================================================
 # Multi-Format Figure Regeneration Script
