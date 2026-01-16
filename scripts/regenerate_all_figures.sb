@@ -8,7 +8,6 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --account=csd940
-#SBATCH --chdir=/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
 
 # =============================================================================
 # Multi-Format Figure Regeneration Script
@@ -33,13 +32,12 @@
 #
 # =============================================================================
 
+# Set base directory (hardcoded for SLURM compatibility)
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+cd "$BASE_DIR" || { echo "ERROR: Cannot cd to $BASE_DIR"; exit 1; }
+
 source ~/.bashrc
 conda activate mariner_env
-
-# Set base directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$(dirname "$SCRIPT_DIR")"
-cd "$BASE_DIR"
 
 # Create logs directory
 mkdir -p logs
