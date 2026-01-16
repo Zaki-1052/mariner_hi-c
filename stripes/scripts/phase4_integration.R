@@ -37,7 +37,7 @@ cat("========================================\n\n")
 # ==============================================================================
 cat("Loading configuration...\n")
 
-config_file <- "config/stripe_config.yaml"
+config_file <- "stripes/config/stripe_config.yaml"
 if (!file.exists(config_file)) {
   stop(sprintf("Config file not found: %s", config_file))
 }
