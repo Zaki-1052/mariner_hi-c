@@ -54,9 +54,9 @@ cat("========================================\n\n")
 # ==============================================================================
 cat("Loading configuration...\n")
 
-config_file <- "config/stripe_config.yaml"
+config_file <- "stripes/config/stripe_config.yaml"
 if (!file.exists(config_file)) {
-  stop(sprintf("Config file not found: %s\n  Run from project base directory",
+  stop(sprintf("Config file not found: %s\n  Run from mariner_hi-c/ base directory",
                config_file))
 }
 

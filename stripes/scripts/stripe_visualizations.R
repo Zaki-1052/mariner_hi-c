@@ -54,7 +54,7 @@ cat("Packages loaded\n\n")
 source("scripts/utils/multi_format_output.R")
 
 # Load configuration
-config_path <- "config/stripe_config.yaml"
+config_path <- "stripes/config/stripe_config.yaml"
 if (!file.exists(config_path)) {
   stop("ERROR: Configuration file not found: ", config_path)
 }

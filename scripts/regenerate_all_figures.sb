@@ -237,7 +237,7 @@ echo ""
 if [ -d "tads/scripts" ]; then
     echo "Running: tads/tad_visualizations.R"
     for TIMEPOINT in early late; do
-        Rscript tads/scripts/tad_visualizations.R $TIMEPOINT 2>&1 | tee -a logs/tad_viz_${TIMEPOINT}.log || true
+        (cd tads && Rscript scripts/tad_visualizations.R --timepoint $TIMEPOINT) 2>&1 | tee -a logs/tad_viz_${TIMEPOINT}.log || true
     done
 fi
 
@@ -252,7 +252,7 @@ echo ""
 if [ -d "peaks/scripts" ]; then
     echo "Running: peaks/annotate_loops_extended.R"
     for VARIANT in late early; do
-        Rscript peaks/scripts/annotate_loops_extended.R --timepoint $VARIANT 2>&1 | tee -a logs/peaks_${VARIANT}.log || true
+        (cd peaks && Rscript scripts/annotate_loops_extended.R --timepoint $VARIANT) 2>&1 | tee -a logs/peaks_${VARIANT}.log || true
     done
 fi
 
