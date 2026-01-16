@@ -45,8 +45,8 @@ DIRECTION_LABELS <- c(
 # Distance category order
 DISTANCE_ORDER <- c("<100kb", "100-500kb", "500kb-1Mb", ">1Mb")
 
-# Output directory
-OUTPUT_DIR <- "outputs/loops_visualization_extended"
+# Output directory (standalone, not via symlink)
+OUTPUT_DIR <- "output/loops_visualization_extended"
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 cat("Output directory:", OUTPUT_DIR, "\n\n")
