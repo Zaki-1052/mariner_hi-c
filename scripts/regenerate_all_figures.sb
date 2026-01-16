@@ -139,8 +139,8 @@ run_for_timepoint() {
     echo "Running: downstream_analysis.R"
     Rscript scripts/downstream_analysis.R 2>&1 | tee -a logs/downstream_${TP}.log || echo "  Warning: downstream_analysis.R had errors"
 
-    echo "Running: loop_distance_analysis.R"
-    Rscript scripts/loop_distance_analysis.R 2>&1 | tee -a logs/loop_distance_${TP}.log || echo "  Warning: loop_distance_analysis.R had errors"
+    echo "Running: loop_distance_analysis.R --timepoint $TP"
+    Rscript scripts/loop_distance_analysis.R --timepoint $TP 2>&1 | tee -a logs/loop_distance_${TP}.log || echo "  Warning: loop_distance_analysis.R had errors"
 
     echo "Running: annotate_loops_extended.R --timepoint $TP"
     Rscript scripts/annotate_loops_extended.R --timepoint $TP 2>&1 | tee -a logs/annotate_${TP}.log || true
