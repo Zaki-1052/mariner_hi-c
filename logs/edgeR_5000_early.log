@@ -1,0 +1,187 @@
+
+========================================
+edgeR Differential Loop Analysis
+RESOLUTION: 5000 bp (5 kb)
+========================================
+
+Loading required libraries...
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘matrixStats’ was built under R version 4.4.3 
+3: package ‘dplyr’ was built under R version 4.4.3 
+4: package ‘tibble’ was built under R version 4.4.3 
+Loading configuration...
+Creating output directories...
+
+Setup complete
+   - Config loaded from: config/edgeR_config.yaml
+   - Output directory:  outputs/edgeR_results_res_5kb 
+   - Random seed:  42 
+
+Loading input data...
+   - Loading count matrix... (16350 loops × 6 samples)
+   - Loading loop coordinates... (16350 genomic positions)
+   - Loading QC summary... (shift data for 16350 loops)
+
+Validating data integrity...
+   ✓ Data integrity checks passed
+
+Creating genomic annotations...
+   ✓ Created annotation for 16350 loops
+   - Columns: loop_id, chr1, start1, end1, chr2, start2, end2, coord_string, shift_status 
+   - Shifted loops:9940(60.8%)
+
+Creating DGEList object...
+   ✓ DGEList created
+   - Total samples: 6 
+   - Groups: ctrl, mut 
+   - Replicates per group: n = 3 
+
+   Per-sample library sizes:
+     ctrl_M1 (ctrl): 3854428
+     ctrl_M2 (ctrl): 3099205
+     ctrl_M3 (ctrl): 3109733
+     mut_M1 (mut): 3417018
+     mut_M2 (mut): 3857126
+     mut_M3 (mut): 3582984
+
+   Median library size by group:
+     ctrl: 3109733
+     mut: 3582984
+
+Filtering low-count loops...
+   - Filtering with min.count = 5 
+   - Before filtering: 16350 loops
+   - Loops passing filter: 16350 
+   - Loops filtered out:0(0%)
+   After filtering: 16350 loops retained
+   - New library sizes: ctrl = 3854428 , mut = 3099205 
+
+Performing TMM normalization...
+   ✓ Normalization complete
+   - Method: TMM 
+   - Normalization factors: ctrl = 0.999 , mut = 0.9985 
+   - Effective library sizes: ctrl = 3850745 , mut = 3094560 
+
+Generating MDS plot for sample QC...
+  Saved: mds_plot.{pdf,svg,jpg}
+   ✓ MDS plot saved
+   - Check plot to verify:
+     • Replicates cluster by condition
+     • No obvious outliers
+     • Clear separation between groups
+
+Estimating dispersions from biological replicates...
+   Design matrix:
+     - Intercept: Baseline (control) level
+     - MutantEffect: Difference (mutant - control)
+
+   Estimating common, trended, and tagwise dispersions...
+   ✓ Dispersion estimation complete
+     - Common dispersion: 0.0020 (BCV = 0.045)
+     - Tagwise dispersion range: 0.0001 - 0.4204
+     - Median tagwise BCV: 0.035
+
+   Generating BCV plot...
+  Saved: bcv_plot.{pdf,svg,jpg}
+   ✓ BCV plot saved
+
+Fitting quasi-likelihood GLM...
+   Method: glmQLFit with robust=TRUE
+   Benefits:
+     • Accounts for gene-specific variability
+     • More rigorous error rate control
+     • Robust to outliers
+
+   ✓ QL fit complete
+     - Residual df: 4
+
+   Generating QL dispersion plot...
+  Saved: ql_dispersion_plot.{pdf,svg,jpg}
+   ✓ QL dispersion plot saved
+
+Testing for differential loops...
+   Test: Mutant effect (coefficient 2)
+   Method: Quasi-likelihood F-test
+
+   ✓ Testing complete
+
+=== Differential Loop Results ===
+   Significant loops (FDR < 0.05): 6 (0.0%)
+     - Up in mutant: 5
+     - Down in mutant: 1
+
+   By effect size:
+     - Strong (|logFC| > 1): 2
+     - Moderate (|logFC| > 0.5): 4
+     - Weak: 0
+
+   Trending (FDR < 0.10): 25
+
+Analyzing shifted loop enrichment...
+   - Shifted loops tested: 9940 
+   - Shifted loops significant:3(0%)
+   - Non-shifted loops tested: 6410 
+   - Non-shifted loops significant:3(0%)
+   - Fisher's exact test p-value: 0.685 
+   - Odds ratio: 0.645 
+
+Computing summary statistics...
+   ✓ Summary statistics computed
+
+Generating visualizations...
+   - Creating MA plot...   Saved: ma_plot_primary.{pdf,svg,jpg}
+✓
+   - Creating volcano plot...   Saved: volcano_plot_primary.{pdf,svg,jpg}
+✓
+   - Creating results summary plot...   Saved: results_summary.{pdf,svg,jpg}
+✓
+   - Creating shifted loop enrichment plot...   Saved: shifted_loop_enrichment.{pdf,svg,jpg}
+✓
+
+   All plots generated
+
+Saving results...
+   ✓ DGEList object saved
+   ✓ Primary results saved (TSV)
+   ✓ Primary results saved (RDS)
+   ✓ Significant loops saved (6 loops)
+   ✓ Top 100 by effect size saved
+   ✓ Final results saved (|logFC| > 0.3, FDR < 0.03): 6 loops
+   ✓ decideTests summary saved
+   ✓ Summary statistics saved
+   ✓ Session info saved
+
+========================================
+REPLICATE-AWARE ANALYSIS COMPLETE
+========================================
+
+Experimental Design:
+   - Samples: 6 (3 ctrl + 3 mut)
+   - Method: Quasi-likelihood GLM with robust estimation
+   - Estimated BCV: 0.045 
+
+Key Results:
+   - Loops tested: 16350 
+   - Significant (FDR < 0.05):6(0%)
+   - Up in mutant: 5 
+   - Down in mutant: 1 
+   - Strong differential (|logFC| > 1): 2 
+
+Improvement over merged analysis:
+   - Previous (merged, n=1): 2 significant loops
+   - Current (replicates, n=3): 6 significant loops
+   - Fold improvement: 3 ×
+
+Output Files:
+   Primary results: outputs/edgeR_results_res_5kb/primary_analysis 
+   Plots: outputs/edgeR_results_res_5kb/plots 
+   Logs: outputs/edgeR_results_res_5kb/logs 
+
+Next Steps:
+   1. Review MDS plot to confirm replicate quality
+   2. Check BCV and QL dispersion plots
+   3. Examine MA and volcano plots for biological patterns
+   4. Compare with Hiccups differential results (38,593 loops)
+
+Analysis log saved to: outputs/edgeR_results_res_5kb/logs/analysis_log.txt 

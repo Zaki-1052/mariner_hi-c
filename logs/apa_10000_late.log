@@ -1,0 +1,140 @@
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+5: package ‘dplyr’ was built under R version 4.4.3 
+6: package ‘yaml’ was built under R version 4.4.3 
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+
+Loading paths configuration...
+
+========================================
+Aggregate Peak Analysis (APA) Pipeline
+========================================
+
+Resolutions to process: 10 kb
+Loop sets: both
+Output directory: outputs/apa_results
+
+  ✓ All .hic files found
+  ✓ Using normalization: VC
+
+
+========================================
+Resolution: 10kb
+========================================
+
+## Processing MERGED loops ##
+  Total merged loops: 2910 (up: 1723, down: 1187)
+
+--- Processing: merged_loops up-regulated loops at 10kb ---
+  Loop count: 1723
+  Extracting matrices: 1723 loops × 6 samples
+  Buffer: 5 bins (110kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_10kb/apa_matrices.h5
+  Aggregating: 1723 loops × 6 samples → 11×11 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 1723 loops
+  ⚠ Flagged 173 outlier enrichment scores (>3 SD)
+  ✓ Enrichment calculation complete
+    Mean enrichment: 3.16 (range: 0.00 - 35.11)
+  ✓ Saved: outputs/apa_results/res_10kb/merged_loops/up_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  Saved: aggregate_heatmap_ctrl.{pdf,svg,jpg}
+  Saved: aggregate_heatmap_mut.{pdf,svg,jpg}
+  Saved: difference_heatmap.{pdf,svg,jpg}
+  Saved: enrichment_boxplot.{pdf,svg,jpg}
+  ✓ Statistical test: p = 1.36e-02
+  Saved: replicate_heatmaps.{pdf,svg,jpg}
+  ✓ All outputs saved to: outputs/apa_results/res_10kb/merged_loops/up_loops
+
+--- Processing: merged_loops down-regulated loops at 10kb ---
+  Loop count: 1187
+  Extracting matrices: 1187 loops × 6 samples
+  Buffer: 5 bins (110kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_10kb/apa_matrices.h5
+  Aggregating: 1187 loops × 6 samples → 11×11 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 1187 loops
+  ⚠ Flagged 130 outlier enrichment scores (>3 SD)
+  ✓ Enrichment calculation complete
+    Mean enrichment: 3.09 (range: 0.00 - 50.07)
+  ✓ Saved: outputs/apa_results/res_10kb/merged_loops/down_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  Saved: aggregate_heatmap_ctrl.{pdf,svg,jpg}
+  Saved: aggregate_heatmap_mut.{pdf,svg,jpg}
+  Saved: difference_heatmap.{pdf,svg,jpg}
+  Saved: enrichment_boxplot.{pdf,svg,jpg}
+  ✓ Statistical test: p = 5.01e-03
+  Saved: replicate_heatmaps.{pdf,svg,jpg}
+  ✓ All outputs saved to: outputs/apa_results/res_10kb/merged_loops/down_loops
+
+## Processing RESOLUTION-SPECIFIC loops ##
+  Matched 22632 loops from GI (22639) to results (22632)
+  Significant loops: 3981 (up: 2240, down: 1741)
+
+--- Processing: resolution_specific up-regulated loops at 10kb ---
+  Loop count: 2240
+  Extracting matrices: 2240 loops × 6 samples
+  Buffer: 5 bins (110kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_10kb/apa_matrices.h5
+  Aggregating: 2240 loops × 6 samples → 1×1 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 2240 loops
+  ✓ Enrichment calculation complete
+    Mean enrichment: 1.00 (range: 1.00 - 1.00)
+  ✓ Saved: outputs/apa_results/res_10kb/resolution_specific/up_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  Saved: aggregate_heatmap_ctrl.{pdf,svg,jpg}
+  Saved: aggregate_heatmap_mut.{pdf,svg,jpg}
+  Saved: difference_heatmap.{pdf,svg,jpg}
+  Saved: enrichment_boxplot.{pdf,svg,jpg}
+  ✓ Statistical test: p = NaN
+  Saved: replicate_heatmaps.{pdf,svg,jpg}
+  ✓ All outputs saved to: outputs/apa_results/res_10kb/resolution_specific/up_loops
+
+--- Processing: resolution_specific down-regulated loops at 10kb ---
+  Loop count: 1741
+  Extracting matrices: 1741 loops × 6 samples
+  Buffer: 5 bins (110kb window)
+  ✓ Extraction complete: outputs/apa_results/temp_hdf5_res_10kb/apa_matrices.h5
+  Aggregating: 1741 loops × 6 samples → 1×1 matrix per sample
+  ✓ Aggregation complete using mean
+  Calculating P2LL enrichment scores for 1741 loops
+  ✓ Enrichment calculation complete
+    Mean enrichment: 1.00 (range: 1.00 - 1.00)
+  ✓ Saved: outputs/apa_results/res_10kb/resolution_specific/down_loops/enrichment_scores.tsv
+
+  Generating visualizations...
+  Saved: aggregate_heatmap_ctrl.{pdf,svg,jpg}
+  Saved: aggregate_heatmap_mut.{pdf,svg,jpg}
+  Saved: difference_heatmap.{pdf,svg,jpg}
+  Saved: enrichment_boxplot.{pdf,svg,jpg}
+  ✓ Statistical test: p = NaN
+  Saved: replicate_heatmaps.{pdf,svg,jpg}
+  ✓ All outputs saved to: outputs/apa_results/res_10kb/resolution_specific/down_loops
+
+========================================
+APA Analysis Complete
+========================================
+Successful analyses: 4 / 4
+Results directory: outputs/apa_results
+
+✓ Summary saved: outputs/apa_results/summary_report.txt
+
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = 1.36e-02, Cliff's Δ = 0.028' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = 5.01e-03, Cliff's Δ = -0.039' in 'mbcsToSbcs': for Δ (U+0394)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = NaN, Cliff's Δ = 0.000' in 'mbcsToSbcs': for Δ (U+0394)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Wilcoxon p = NaN, Cliff's Δ = 0.000' in 'mbcsToSbcs': for Δ (U+0394)

@@ -1,0 +1,178 @@
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘rtracklayer’ was built under R version 4.4.3 
+3: package ‘tibble’ was built under R version 4.4.3 
+4: package ‘dplyr’ was built under R version 4.4.3 
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+
+
+============================================================
+Processing LATE timepoint
+(Using Cerebellum H3K4me3: 6581 peaks, bivalent: 318 peaks)
+============================================================
+
+
+========================================
+Extended Loop Anchor Annotation (LATE)
+========================================
+
+Configuration:
+  Timepoint:      late
+  Input file:     ../25042-late_outputs/merged_loops/non_redundant_loops.tsv
+  Output dir:     loop_annotation_extended/late
+  TSS threshold:  2000 bp
+
+Step 1: Loading input data...
+  Loaded 2910 loops
+  Up in mutant: 1723
+  Down in mutant: 1187
+
+Step 2: Loading ChIP-seq peak files (late timepoint)...
+  Loading H3K27ac peaks from: beds/H3K27acCerebellumLate2.bed
+    Loaded 15105 peaks
+  Loading H3K27me3 peaks from: beds/H3K27me3CerebellumLate1.bed
+    Loaded 15809 peaks
+  Loading H3K4me1 peaks from: beds/H3K4me1CerebellumLate1.bed
+    Loaded 113781 peaks
+  Loading H3K4me3 peaks from: beds/H3K4me3CerebellumLate2.bed
+    Loaded 6581 peaks
+  Loading Bivalent (K4me3+K27me3) peaks from: beds/Bivalent_Cerebellum_Late.bed
+    Loaded 318 peaks
+  Loading CTCF peaks from: CTCF.bed
+    Loaded 32487 peaks
+  Loading CTCF_motif peaks from: ctcf_motifs_mm10.bed
+    Loaded 114081 peaks
+
+Step 3: Creating anchor GRanges...
+  Anchor1: 2910 regions
+  Anchor2: 2910 regions
+
+Step 4: Computing TSS distances...
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Loaded 24528 genes
+
+Step 5: Annotating ChIP-seq overlaps...
+  Anchor1 overlaps:
+    H3K27ac+:  607 (20.9%)
+    H3K27me3+: 765 (26.3%)
+    H3K4me1+:  1805 (62.0%)
+    H3K4me3+:  397 (13.6%)
+    Bivalent_Promoter:  52 (1.8%)
+    CTCF+:     1961 (67.4%)
+    CTCF_motif+: 2073 (71.2%)
+  Anchor2 overlaps:
+    H3K27ac+:  643 (22.1%)
+    H3K27me3+: 784 (26.9%)
+    H3K4me1+:  1798 (61.8%)
+    H3K4me3+:  386 (13.3%)
+    Bivalent_Promoter:  48 (1.6%)
+    CTCF+:     1964 (67.5%)
+    CTCF_motif+: 2112 (72.6%)
+
+Step 6: Classifying anchor types (8 categories)...
+  CTCF classification: Using ChIP-seq (late timepoint)
+
+  Anchor1 type distribution:
+    Active_Promoter     :   253 (8.7%)
+    Repressed_Promoter  :   268 (9.2%)
+    Bivalent_Promoter   :    25 (0.9%)
+    Polycomb            :   467 (16.0%)
+    Active_Enhancer     :   314 (10.8%)
+    Poised_Enhancer     :   616 (21.2%)
+    CTCF_Site           :   703 (24.2%)
+    Other               :   264 (9.1%)
+
+  Anchor2 type distribution:
+    Active_Promoter     :   257 (8.8%)
+    Repressed_Promoter  :   292 (10.0%)
+    Bivalent_Promoter   :    24 (0.8%)
+    Polycomb            :   461 (15.8%)
+    Active_Enhancer     :   349 (12.0%)
+    Poised_Enhancer     :   556 (19.1%)
+    CTCF_Site           :   695 (23.9%)
+    Other               :   276 (9.5%)
+
+Step 7: Classifying loop types (36 combinations)...
+
+  Loop type distribution:
+    Poised_Enhancer-CTCF_Site          :   295 (10.1%)
+    CTCF_Site-CTCF_Site                :   266 (9.1%)
+    Polycomb-CTCF_Site                 :   175 (6.0%)
+    Polycomb-Polycomb                  :   175 (6.0%)
+    CTCF_Site-Other                    :   173 (5.9%)
+    Repressed_Promoter-Polycomb        :   172 (5.9%)
+    Active_Enhancer-Poised_Enhancer    :   162 (5.6%)
+    Poised_Enhancer-Poised_Enhancer    :   148 (5.1%)
+    Active_Enhancer-Active_Enhancer    :   142 (4.9%)
+    Polycomb-Poised_Enhancer           :   128 (4.4%)
+    Active_Promoter-Active_Enhancer    :   119 (4.1%)
+    Repressed_Promoter-CTCF_Site       :   116 (4.0%)
+    Active_Promoter-Poised_Enhancer    :   103 (3.5%)
+    Poised_Enhancer-Other              :    91 (3.1%)
+    Active_Promoter-Active_Promoter    :    78 (2.7%)
+    Repressed_Promoter-Poised_Enhancer :    76 (2.6%)
+    Repressed_Promoter-Repressed_Promoter:    64 (2.2%)
+    Polycomb-Other                     :    62 (2.1%)
+    Active_Promoter-CTCF_Site          :    53 (1.8%)
+    Other-Other                        :    52 (1.8%)
+    Active_Enhancer-CTCF_Site          :    46 (1.6%)
+    Repressed_Promoter-Other           :    41 (1.4%)
+    Active_Promoter-Other              :    35 (1.2%)
+    Active_Enhancer-Other              :    29 (1.0%)
+    Active_Promoter-Polycomb           :    22 (0.8%)
+    Bivalent_Promoter-Poised_Enhancer  :    21 (0.7%)
+    Active_Promoter-Repressed_Promoter :    19 (0.7%)
+    Polycomb-Active_Enhancer           :    12 (0.4%)
+    Bivalent_Promoter-CTCF_Site        :     8 (0.3%)
+    Bivalent_Promoter-Polycomb         :     7 (0.2%)
+    Repressed_Promoter-Active_Enhancer :     7 (0.2%)
+    Bivalent_Promoter-Other            :     5 (0.2%)
+    Bivalent_Promoter-Active_Enhancer  :     4 (0.1%)
+    Active_Promoter-Bivalent_Promoter  :     3 (0.1%)
+    Repressed_Promoter-Bivalent_Promoter:     1 (0.0%)
+
+Step 8: Adding annotations to data.frame...
+  Added columns:
+    - anchor1/2_H3K27ac_overlap
+    - anchor1/2_H3K27me3_overlap
+    - anchor1/2_H3K4me1_overlap
+    - anchor1/2_H3K4me3_overlap
+    - anchor1/2_Bivalent_Promoter_overlap
+    - anchor1/2_CTCF_overlap
+    - anchor1/2_CTCF_motif_overlap
+    - anchor1/2_distance_to_tss_ext
+    - anchor1/2_type_extended
+    - loop_type_extended
+
+Step 9: Saving annotated data...
+  Saved: loop_annotation_extended/late/extended_characterized_loops.tsv
+  Saved: loop_annotation_extended/late/anchor_type_summary.tsv
+  Saved: loop_annotation_extended/late/loop_type_summary.tsv
+
+Step 10: Generating visualizations...
+  Creating side-by-side pie charts...
+  Saved: loop_type_piechart_comparison.{pdf,svg,jpg}
+  Creating anchor type bar chart...
+  Saved: anchor_type_distribution.{pdf,svg,jpg}
+  Creating loop type by direction bar chart...
+  Saved: loop_type_by_direction.{pdf,svg,jpg}
+
+Step 11: Saving summary statistics...
+  Saved: loop_annotation_extended/late/summary_statistics.txt
+
+========================================
+Annotation Complete
+========================================
+
+
+
+All timepoints processed successfully.
+Output directories:
+  - loop_annotation_extended/late

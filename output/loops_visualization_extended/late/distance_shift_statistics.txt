@@ -1,0 +1,76 @@
+=== LOOP DISTANCE SHIFT ANALYSIS: STATISTICAL SUMMARY ===
+Generated: 2026-01-16 16:01:08 
+
+--- DATA OVERVIEW ---
+Total differential loops: 2910 
+Lost in BAP1-KO (down_in_mutant): 1187 
+Gained in BAP1-KO (up_in_mutant): 1723 
+
+--- MEDIAN DISTANCES ---
+Lost loops median: 625 kb
+Gained loops median: 320 kb
+Ratio (lost/gained): 1.953 
+
+--- STATISTICAL TESTS ---
+
+Kolmogorov-Smirnov Test (distribution difference):
+
+	Asymptotic two-sample Kolmogorov-Smirnov test
+
+data:  lost_loops$loop_distance and gained_loops$loop_distance
+D = 0.27913, p-value < 2.2e-16
+alternative hypothesis: two-sided
+
+
+Wilcoxon Rank-Sum Test (median difference):
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  lost_loops$loop_distance and gained_loops$loop_distance
+W = 1356071, p-value < 2.2e-16
+alternative hypothesis: true location shift is not equal to 0
+
+
+Chi-Square Test (distance category independence):
+
+	Pearson's Chi-squared test
+
+data:  contingency_table
+X-squared = 294.94, df = 3, p-value < 2.2e-16
+
+
+Spearman Correlation (distance vs logFC):
+
+	Spearman's rank correlation rho
+
+data:  loops_directional$loop_distance and loops_directional$logFC
+S = 5.111e+09, p-value < 2.2e-16
+alternative hypothesis: true rho is not equal to 0
+sample estimates:
+       rho 
+-0.2444534 
+
+
+--- DISTANCE CATEGORY BREAKDOWN ---
+ distance_category count_down_in_mutant count_up_in_mutant
+            <100kb                   96                206
+         100-500kb                  419               1012
+         500kb-1Mb                  259                324
+              >1Mb                  413                181
+ percentage_down_in_mutant percentage_up_in_mutant lost_gained_ratio
+                      8.09                   11.96             0.466
+                     35.30                   58.73             0.414
+                     21.82                   18.80             0.799
+                     34.79                   10.50             2.282
+ fold_enrichment_loss
+                0.676
+                0.601
+                1.161
+                3.313
+
+--- KEY FINDINGS ---
+1. Long loops (>1Mb) are preferentially LOST in BAP1-KO:
+   -  % of lost loops vs  % of gained loops
+2. Short loops (<100kb) are preferentially GAINED in BAP1-KO:
+3. Negative Spearman correlation confirms: longer loops tend to decrease
+4. This supports the 'loop rewriting' hypothesis
