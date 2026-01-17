@@ -1,0 +1,103 @@
+=== Loop Distance Shift Analysis ===
+Start time: 2026-01-16 23:02:26 
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Timepoint(s) to process: early 
+
+
+============================================================
+Processing EARLY timepoint
+============================================================
+
+Input file: 250831-early_outputs/merged_loops/characterized_loops.tsv 
+Output directory: output/loops_visualization_extended/early 
+
+=== Loading Data ===
+Loaded 165 differential loops
+Directional loops: 165 
+  - Lost (down_in_mutant): 92 
+  - Gained (up_in_mutant): 73 
+
+=== Running Statistical Tests ===
+KS test p-value: 6.59e-07 
+Wilcoxon test p-value: 1.22e-07 
+Chi-square test p-value: 1.16e-06 
+Spearman correlation (distance vs logFC): -0.526 
+  p-value: 3.83e-13 
+
+Median loop distance:
+  - Lost loops: 3875 kb
+  - Gained loops: 700 kb
+  - Ratio (lost/gained): 5.54 
+
+=== Generating Figure 1: CDF Plot ===
+  Saved: 01_distance_cdf_by_direction.{pdf,svg,jpg}
+Saved: 01_distance_cdf_by_direction.pdf
+=== Generating Figure 2: Distance Category Bar Chart ===
+  Saved: 02_distance_category_barplot.{pdf,svg,jpg}
+Saved: 02_distance_category_barplot.pdf
+=== Generating Figure 3: Density Plot ===
+  Saved: 03_distance_density_overlay.{pdf,svg,jpg}
+Saved: 03_distance_density_overlay.pdf
+=== Generating Figure 4: LogFC vs Distance Scatter ===
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 04_logfc_vs_distance_scatter.{pdf,svg,jpg}
+Saved: 04_logfc_vs_distance_scatter.pdf
+=== Generating Figure 5: Distance-Stratified Volcano ===
+  Saved: 05_distance_stratified_volcano.{pdf,svg,jpg}
+Saved: 05_distance_stratified_volcano.pdf
+=== Generating Figure 6: Loop Type x Distance Heatmap ===
+  Saved: 06_looptype_distance_heatmap.{pdf,svg,jpg}
+Saved: 06_looptype_distance_heatmap.pdf
+=== Generating Figure 7: ChIP-seq x Distance Analysis ===
+  Saved: 07_chipseq_distance_analysis.{pdf,svg,jpg}
+Saved: 07_chipseq_distance_analysis.pdf
+=== Generating Figure 8: GO Enrichment Comparison ===
+Long lost loop genes: 88 
+Short gained loop genes: 30 
+Valid Entrez IDs - Long lost: 88 , Short gained: 30 
+Saved GO results for long lost loops
+Insufficient GO terms for comparison plot
+  Saved: 08_go_comparison_long_vs_short.{pdf,svg,jpg}
+=== Generating Figure 9: Combined Summary Figure ===
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 09_loop_rewriting_summary.{pdf,svg,jpg}
+Saved: 09_loop_rewriting_summary.pdf
+
+=== Exporting Summary Statistics ===
+Saved: distance_shift_summary.tsv
+Saved: distance_shift_statistics.txt
+
+=== Analysis Complete for EARLY ===
+Output directory: output/loops_visualization_extended/early 
+Files generated:
+  - 01_distance_cdf_by_direction.pdf
+  - 02_distance_category_barplot.pdf
+  - 03_distance_density_overlay.pdf
+  - 04_logfc_vs_distance_scatter.pdf
+  - 05_distance_stratified_volcano.pdf
+  - 06_looptype_distance_heatmap.pdf
+  - 07_chipseq_distance_analysis.pdf
+  - 08_go_comparison_long_vs_short.pdf
+  - 09_loop_rewriting_summary.pdf
+  - distance_shift_summary.tsv
+  - distance_shift_statistics.txt
+  - go_long_lost_loops.tsv (if GO enrichment succeeded)
+  - go_short_gained_loops.tsv (if GO enrichment succeeded)
+There were 12 warnings (use warnings() to see them)
+
+=== All timepoints complete ===
+Output directories:
+  - output/loops_visualization_extended/early
+
+End time: 2026-01-16 23:03:24 

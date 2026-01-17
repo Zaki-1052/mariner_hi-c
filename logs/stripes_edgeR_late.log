@@ -1,0 +1,103 @@
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Phase 3: edgeR Differential Analysis
+Timepoint: late
+========================================
+
+Loading configuration...
+  Config: stripes/config/stripe_config.yaml
+  Input: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late
+  Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/edgeR_results
+
+=== Loading Data ===
+  Count matrix: 200 stripes x 6 samples
+  Stripe metadata: 200 stripes
+
+=== Creating Annotations ===
+  Annotation created for 200 stripes
+
+=== Creating DGEList ===
+  DGEList created: 200 stripes x 6 samples
+  Groups: ctrl, mut
+  Replicates per group: n = 3
+
+  Library sizes:
+    ctrl_M1 (ctrl): 19532
+    ctrl_M2 (ctrl): 27970
+    ctrl_M3 (ctrl): 26900
+    mut_M1 (mut): 24074
+    mut_M2 (mut): 24287
+    mut_M3 (mut): 22065
+
+=== Filtering ===
+  SKIPPING low-count filtering (per design decision)
+  Retaining ALL 200 stripes for analysis
+  Rationale: Small feature set (~150-300 stripes)
+
+=== Normalization ===
+  Method: TMM
+  Normalization factors:
+    ctrl_M1: 1.0042
+    ctrl_M2: 1.0003
+    ctrl_M3: 1.0039
+    mut_M1: 0.9946
+    mut_M2: 1.0045
+    mut_M3: 0.9926
+
+=== Generating MDS Plot ===
+  Saved: mds_plot.{pdf,svg,jpg}
+
+=== Dispersion Estimation ===
+  Design matrix:
+    - Intercept: Baseline (control)
+    - MutantEffect: Difference (mutant - control)
+
+  Common dispersion: 0.0038
+  Common BCV: 0.062
+  Tagwise BCV range: 0.027 - 0.384
+  Median tagwise BCV: 0.067
+  Saved: bcv_plot.{pdf,svg,jpg}
+
+=== Quasi-Likelihood GLM ===
+  Residual df: 4
+  Saved: ql_dispersion_plot.{pdf,svg,jpg}
+
+=== Differential Testing ===
+  Test: Mutant effect (positive logFC = higher in mutant)
+
+  Results (FDR < 0.05):
+    Significant: 0 / 200 (0.0%)
+    Up in mutant: 0
+    Down in mutant: 0
+
+  Exploratory (FDR < 0.10): 1
+
+=== Generating Volcano Plot ===
+  Saved: volcano_plot.{pdf,svg,jpg}
+  Saved: ma_plot.{pdf,svg,jpg}
+
+=== Saving Outputs ===
+  Saved: 03_dge_object.rds
+  Saved: 03_fit_object.rds
+  Saved: 03_all_results.tsv/rds
+  Saved: 03_significant_FDR05.tsv (0 stripes)
+  Saved: 03_summary.txt
+
+=================================
+Phase 3 Complete
+=================================
+
+Timepoint: late
+Stripes analyzed: 200
+Significant (FDR < 0.05): 0 (0.0%)
+  Up in mutant: 0
+  Down in mutant: 0
+Common BCV: 0.062
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/outputs/late/edgeR_results
+
+Next: Rscript scripts/phase4_integration.R late
+

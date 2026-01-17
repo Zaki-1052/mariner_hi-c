@@ -1,0 +1,160 @@
+
+========================================
+Multi-Resolution Comparison Analysis
+========================================
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘matrixStats’ was built under R version 4.4.3 
+4: package ‘futile.logger’ was built under R version 4.4.3 
+5: package ‘yaml’ was built under R version 4.4.3 
+SECTION 1: Loading Results
+---------------------------
+Loading 5kb results... ✓ 17982 loops (+ 1120 final)
+Loading 10kb results... ✓ 22632 loops (+ 1532 final)
+Loading 25kb results... ✓ 20398 loops (+ 1189 final)
+
+✓ Loaded results from 3 resolutions
+✓ Loaded final results (stringent) from 3 resolutions
+
+Creating filtered coordinate lists for final results...
+Loading required package: mariner
+  5kb: 1120 final loops matched to coordinates
+  10kb: 1532 final loops matched to coordinates
+  25kb: 1189 final loops matched to coordinates
+
+SECTION 2: Basic Statistics
+----------------------------
+
+Standard thresholds (FDR < 0.05):
+  resolution_kb total_loops significant_fdr05 pct_significant up_in_mutant
+1             5       17982              1766        9.820932         1127
+2            10       22632              3981       17.590138         2240
+3            25       20398              4774       23.404255         2512
+  down_in_mutant
+1            639
+2           1741
+3           2262
+
+Stringent thresholds (|logFC| > 0.3, FDR < 0.03):
+  resolution_kb final_loops pct_final final_up final_down median_logFC_final
+1             5        1120  6.228451      779        341          0.4449989
+2            10        1532  6.769176      953        579          0.3998335
+3            25        1189  5.829003      660        529          0.3733227
+
+✓ Summary statistics saved
+
+SECTION 3: Loop Overlap Analysis
+---------------------------------
+
+Matching loops across resolutions (10kb tolerance)...
+
+Loop overlap matrix (all loops):
+       5kb  10kb  25kb
+5kb  17982 14075  3540
+10kb 14024 22632  6697
+25kb  3442  6545 20398
+
+✓ Overlap analysis complete (all loops)
+
+Matching final loops across resolutions (10kb tolerance)...
+
+Loop overlap matrix (final/stringent results only):
+      5kb 10kb 25kb
+5kb  1120  629   81
+10kb  633 1532  277
+25kb   81  271 1189
+
+✓ Overlap analysis complete (final results)
+
+SECTION 4: Differential Concordance
+------------------------------------
+
+Analyzing concordance of differential calls...
+
+5kb vs 10kb:
+  Matched loops: 14075
+  Both significant: 315 (2.2%)
+  Concordant direction: 187 (59.4% of both-sig)
+  Fold-change correlation: 0.063
+
+5kb vs 25kb:
+  Matched loops: 3540
+  Both significant: 111 (3.1%)
+  Concordant direction: 56 (50.5% of both-sig)
+  Fold-change correlation: -0.003
+
+10kb vs 25kb:
+  Matched loops: 6697
+  Both significant: 309 (4.6%)
+  Concordant direction: 158 (51.1% of both-sig)
+  Fold-change correlation: 0.031
+
+✓ Concordance analysis complete
+
+SECTION 5: Generating Visualizations
+-------------------------------------
+
+Creating differential loop count plot...   Saved: differential_loops_by_resolution.{pdf,svg,jpg}
+Creating filtering cascade plot...   Saved: filtering_cascade_by_resolution.{pdf,svg,jpg}
+Warning message:
+Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead. 
+Creating fold-change correlation plots...   Saved: foldchange_correlation_5kb_vs_10kb.{pdf,svg,jpg}
+Warning messages:
+1: Removed 4 rows containing missing values or values outside the scale range
+(`geom_point()`). 
+2: Removed 4 rows containing missing values or values outside the scale range
+(`geom_point()`). 
+3: Removed 4 rows containing missing values or values outside the scale range
+(`geom_point()`). 
+Creating Venn diagram...   Saved: venn_diagram_differential_loops.{pdf,svg,jpg}
+Creating Venn diagram for final results...   Saved: venn_diagram_final_loops.{pdf,svg,jpg}
+
+✓ All visualizations generated
+
+========================================
+MULTI-RESOLUTION ANALYSIS COMPLETE
+========================================
+
+Output directory: outputs/resolution_comparison/
+
+Files generated:
+  1. summary_statistics_by_resolution.tsv
+     → Loop counts and significance rates (standard + stringent)
+
+  2. loop_overlap_matrix.tsv
+     → Overlap counts between resolutions (all loops)
+
+  3. loop_overlap_matrix_final.tsv
+     → Overlap counts between resolutions (final/stringent loops only)
+
+  4. differential_loops_by_resolution.pdf
+     → Bar plot comparing standard vs stringent thresholds
+
+  5. filtering_cascade_by_resolution.pdf
+     → Filtering progression from total to final results
+
+  6. foldchange_correlation_*.pdf
+     → Scatter plots of fold-change concordance
+
+  7. venn_diagram_differential_loops.pdf
+     → Venn diagram of shared differential loops (standard FDR < 0.05)
+
+  8. venn_diagram_final_loops.pdf
+     → Venn diagram of shared final loops (|logFC| > 0.3, FDR < 0.03)
+
+Key findings:
+
+Standard thresholds (FDR < 0.05):
+  5kb: 1766 differential loops (9.8%)
+  10kb: 3981 differential loops (17.6%)
+  25kb: 4774 differential loops (23.4%)
+
+Stringent thresholds (|logFC| > 0.3, FDR < 0.03):
+  5kb: 1120 loops (6.2% of total, 63.4% of standard significant)
+  10kb: 1532 loops (6.8% of total, 38.5% of standard significant)
+  25kb: 1189 loops (5.8% of total, 24.9% of standard significant)
+
+========================================

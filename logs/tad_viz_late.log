@@ -1,0 +1,285 @@
+
+========================================
+TADCompare Visualization Analysis
+========================================
+
+Configuration:
+  Timepoint: late
+
+Loading required packages...
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘rtracklayer’ was built under R version 4.4.3 
+Packages loaded
+
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+  Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads
+  Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+ChIP-seq files:
+  H3K27ac:  220310index25H3K27acLatePeakRegions.bed
+  H3K27me3: 220310index29H3K27me3LatePeakRegions.bed
+  H3K4me1:  K4me1_aligned_reads_peaks.broadPeak-filtered.bed
+Output directory: results/visualizations/late
+
+========================================
+Loading Input Data
+========================================
+
+Loaded TADCompare results: 23496 boundaries
+  Total boundaries: 23496
+  Differential: 4822 (20.5%)
+  Shifted: 1000 (4.3%)
+
+========================================
+SECTION 1: Overview Plots
+========================================
+
+Creating Gap Score distribution plot...
+  Saved: gap_score_distribution.{pdf,svg,jpg}
+Creating TAD Score scatter plot...
+  Saved: tad_score_scatter.{pdf,svg,jpg}
+Creating differential landscape plot...
+  Saved: differential_landscape.{pdf,svg,jpg}
+Section 1 complete: Overview plots generated
+
+========================================
+SECTION 2: Boundary Type Classification
+========================================
+
+Creating boundary type pie charts...
+  Saved: boundary_type_pie.{pdf,svg,jpg}
+Creating boundary type by chromosome plot...
+  Saved: boundary_type_by_chromosome.{pdf,svg,jpg}
+Creating enrichment direction by type plot...
+  Saved: enrichment_direction_by_type.{pdf,svg,jpg}
+Section 2 complete: Boundary type classification plots generated
+
+========================================
+SECTION 3: Shift Distance Analysis
+========================================
+
+Shifted boundaries with distance data: 1000
+  Median shift: 0.0 kb
+  Mean shift: 6.2 kb
+  Range: 0.0 - 40.0 kb
+Creating shift distance histogram...
+  Saved: shift_distance_histogram.{pdf,svg,jpg}
+Creating shift distance violin plot...
+  Saved: shift_distance_violin.{pdf,svg,jpg}
+Creating shift vs Gap Score scatter...
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: shift_vs_gap_score.{pdf,svg,jpg}
+
+Section 3 complete: Shift distance analysis plots generated
+
+========================================
+SECTION 4: Robustness Analysis
+========================================
+
+Creating robustness x differential heatmap...
+  Saved: robustness_differential_heatmap.{pdf,svg,jpg}
+Creating robustness by type plot...
+  Saved: robustness_by_type.{pdf,svg,jpg}
+Section 4 complete: Robustness analysis plots generated
+
+========================================
+SECTION 5: Chromosome-Level Analysis
+========================================
+
+Creating per-chromosome differential percentage plot...
+  Saved: per_chromosome_differential.{pdf,svg,jpg}
+Section 5 complete: Chromosome-level analysis plots generated
+
+========================================
+SECTION 6: ChIP-seq Integration
+========================================
+
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+Loaded 24528 TSS positions from mm10
+Warning message:
+In load_peaks(h3k27ac_path, "H3K27ac") :
+  Peak file not found: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/220310index25H3K27acLatePeakRegions.bed
+Warning message:
+In load_peaks(h3k27me3_path, "H3K27me3") :
+  Peak file not found: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/220310index29H3K27me3LatePeakRegions.bed
+Warning message:
+In load_peaks(h3k4me1_path, "H3K4me1") :
+  Peak file not found: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/K4me1_aligned_reads_peaks.broadPeak-filtered.bed
+Computing distance to nearest TSS...
+Computing ChIP-seq overlaps...
+Classifying boundary types...
+  Note: Poised_Enhancer classification unavailable (no H3K4me1 data)
+
+Anchor type distribution:
+  Other: 23496 (100.0%)
+
+Creating anchor classification plot...
+  Saved: anchor_classification.{pdf,svg,jpg}
+Creating ChIP-seq overlap heatmap...
+  Saved: chipseq_overlap_heatmap.{pdf,svg,jpg}
+Creating ChIP-seq by enrichment direction plot...
+  Saved: chipseq_by_enrichment_direction.{pdf,svg,jpg}
+Section 6 complete: ChIP-seq integration plots generated
+
+========================================
+SECTION 7: Gene Enrichment Analysis
+========================================
+
+Control-enriched differential boundaries: 2237
+Mutant-enriched differential boundaries: 2585
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Genes near control-enriched boundaries: 1251
+  Genes near mutant-enriched boundaries: 1489
+'select()' returned 1:1 mapping between keys and columns
+  Saved: boundary_genes.tsv
+
+Running GO Biological Process enrichment...
+  Saved: go_bp_dotplot.{pdf,svg,jpg}
+Running GO Cellular Component enrichment...
+  Saved: go_cc_dotplot.{pdf,svg,jpg}
+Running GO Molecular Function enrichment...
+  Saved: go_mf_dotplot.{pdf,svg,jpg}
+Running KEGG pathway enrichment...
+  Saved: kegg_dotplot.{pdf,svg,jpg}
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+
+Section 7 complete: Gene enrichment analysis done
+
+========================================
+SECTION 8: syt1/nav3 Locus Focus (chr10)
+========================================
+
+Boundaries in syt1/nav3 region (chr10:107000000-111000000): 51
+  Differential: 17 (33.3%)
+  Shifted: 6 (11.8%)
+Creating syt1/nav3 regional overview...
+  Saved: syt1_nav3_regional_overview.{pdf,svg,jpg}
+  Saved: syt1_nav3_statistics.tsv
+
+Section 8 complete: syt1/nav3 locus focus done
+
+========================================
+SECTION 9: Final Summary
+========================================
+
+Summary saved: results/visualizations/late/summary/visualization_summary.txt
+
+==========================================
+TADCompare VISUALIZATION ANALYSIS SUMMARY
+==========================================
+Generated: 2026-01-17 02:53:40.712409
+Timepoint: late
+Output directory: results/visualizations/late
+
+--- DATA OVERVIEW ---
+Total TAD boundaries: 23496
+Differential boundaries: 4822 (20.5%)
+Shifted boundaries: 1000 (4.3%)
+
+--- BOUNDARY TYPE DISTRIBUTION ---
+  Non-Differential: 18655 (79.4%)
+  Strength Change: 1416 (6.0%)
+  Complex: 922 (3.9%)
+  Shifted: 1000 (4.3%)
+  Merge: 838 (3.6%)
+  Split: 640 (2.7%)
+
+--- ROBUSTNESS DISTRIBUTION ---
+  Both: 3024 (12.9%)
+  Control_only: 1535 (6.5%)
+  Mutant_only: 1408 (6.0%)
+  Neither: 17529 (74.6%)
+
+--- ENRICHMENT DIRECTION (Differential Only) ---
+  Control-enriched: 2233 (46.4%)
+  Mutant-enriched: 2583 (53.6%)
+
+--- SHIFT DISTANCE STATISTICS ---
+  Median: 0.0 kb
+  Mean: 6.2 kb
+  SD: 9.9 kb
+  Range: 0.0 - 40.0 kb
+
+--- ANCHOR TYPE DISTRIBUTION ---
+  Other: 23496 (100.0%)
+
+==========================================
+OUTPUT FILES GENERATED
+==========================================
+
+Overview:
+  - gap_score_distribution.pdf
+  - tad_score_scatter.pdf
+  - differential_landscape.pdf
+
+Classification:
+  - boundary_type_pie.pdf
+  - boundary_type_by_chromosome.pdf
+  - enrichment_direction_by_type.pdf
+
+Shift Analysis:
+  - shift_distance_histogram.pdf
+  - shift_distance_violin.pdf
+  - shift_vs_gap_score.pdf
+
+Robustness:
+  - robustness_differential_heatmap.pdf
+  - robustness_by_type.pdf
+
+Chromosome:
+  - per_chromosome_differential.pdf
+
+ChIP-seq:
+  - anchor_classification.pdf
+  - chipseq_overlap_heatmap.pdf
+  - chipseq_by_enrichment_direction.pdf
+
+Enrichment:
+  - go_bp_dotplot.pdf
+  - go_cc_dotplot.pdf
+  - go_mf_dotplot.pdf
+  - kegg_dotplot.pdf
+  - boundary_genes.tsv
+
+syt1/nav3 Focus:
+  - syt1_nav3_regional_overview.pdf
+  - syt1_nav3_statistics.tsv
+
+Summary:
+  - visualization_summary.txt
+
+==========================================
+
+========================================
+TADCompare VISUALIZATION ANALYSIS COMPLETE
+========================================
+
+Output directory: results/visualizations/late
+
+All visualizations have been generated successfully!
+

@@ -1,0 +1,149 @@
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘rtracklayer’ was built under R version 4.4.3 
+3: package ‘tibble’ was built under R version 4.4.3 
+4: package ‘dplyr’ was built under R version 4.4.3 
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+
+
+============================================================
+Processing EARLY timepoint
+(Using Cerebellum peaks: H3K27ac 18178, H3K27me3 12473)
+============================================================
+
+
+========================================
+Extended Loop Anchor Annotation (EARLY)
+========================================
+
+Configuration:
+  Timepoint:      early
+  Input file:     250831-early_outputs/merged_loops/non_redundant_loops.tsv
+  Output dir:     outputs/loop_annotation_extended/early
+  TSS threshold:  2000 bp
+
+Step 1: Loading input data...
+  Loaded 165 loops
+  Up in mutant: 73
+  Down in mutant: 92
+
+Step 2: Loading ChIP-seq peak files (early timepoint)...
+  Loading H3K27ac peaks from: peaks/beds/H3K27acCerebellumEarly2.bed
+    Loaded 18178 peaks
+  Loading H3K27me3 peaks from: peaks/beds/H3K27me3CerebellumEarly1.bed
+    Loaded 12473 peaks
+  Loading H3K4me1 peaks from: peaks/beds/H3K4me1CerebellumEarly1.bed
+    Loaded 93859 peaks
+  Loading H3K4me3 peaks from: peaks/beds/H3K4me3CerebellumEarly2.bed
+    Loaded 10370 peaks
+  Loading Bivalent (K4me3+K27me3) peaks from: peaks/beds/Bivalent_Cerebellum_Early.bed
+    Loaded 931 peaks
+
+Step 3: Creating anchor GRanges...
+  Anchor1: 165 regions
+  Anchor2: 165 regions
+
+Step 4: Computing TSS distances...
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Loaded 24528 genes
+
+Step 5: Annotating ChIP-seq overlaps...
+  Anchor1 overlaps:
+    H3K27ac+:  12 (7.3%)
+    H3K27me3+: 82 (49.7%)
+    H3K4me1+:  95 (57.6%)
+    H3K4me3+:  11 (6.7%)
+    Bivalent_Promoter:  5 (3.0%)
+  Anchor2 overlaps:
+    H3K27ac+:  17 (10.3%)
+    H3K27me3+: 81 (49.1%)
+    H3K4me1+:  94 (57.0%)
+    H3K4me3+:  16 (9.7%)
+    Bivalent_Promoter:  5 (3.0%)
+
+Step 6: Classifying anchor types (7 categories)...
+
+  Anchor1 type distribution:
+    Active_Promoter     :     3 (1.8%)
+    Repressed_Promoter  :    60 (36.4%)
+    Bivalent_Promoter   :     2 (1.2%)
+    Polycomb            :    18 (10.9%)
+    Active_Enhancer     :     7 (4.2%)
+    Poised_Enhancer     :    14 (8.5%)
+    Other               :    61 (37.0%)
+
+  Anchor2 type distribution:
+    Active_Promoter     :    11 (6.7%)
+    Repressed_Promoter  :    58 (35.2%)
+    Bivalent_Promoter   :     1 (0.6%)
+    Polycomb            :    21 (12.7%)
+    Active_Enhancer     :     5 (3.0%)
+    Poised_Enhancer     :    10 (6.1%)
+    Other               :    59 (35.8%)
+
+Step 7: Classifying loop types (28 combinations)...
+
+  Loop type distribution:
+    Repressed_Promoter-Repressed_Promoter:    46 (27.9%)
+    Other-Other                        :    45 (27.3%)
+    Repressed_Promoter-Polycomb        :    18 (10.9%)
+    Poised_Enhancer-Other              :     9 (5.5%)
+    Polycomb-Other                     :     7 (4.2%)
+    Polycomb-Poised_Enhancer           :     5 (3.0%)
+    Repressed_Promoter-Other           :     5 (3.0%)
+    Active_Enhancer-Other              :     4 (2.4%)
+    Active_Promoter-Active_Enhancer    :     4 (2.4%)
+    Polycomb-Polycomb                  :     4 (2.4%)
+    Active_Promoter-Other              :     3 (1.8%)
+    Poised_Enhancer-Poised_Enhancer    :     3 (1.8%)
+    Active_Enhancer-Active_Enhancer    :     2 (1.2%)
+    Active_Promoter-Active_Promoter    :     2 (1.2%)
+    Active_Promoter-Poised_Enhancer    :     2 (1.2%)
+    Bivalent_Promoter-Other            :     2 (1.2%)
+    Repressed_Promoter-Poised_Enhancer :     2 (1.2%)
+    Active_Promoter-Polycomb           :     1 (0.6%)
+    Repressed_Promoter-Bivalent_Promoter:     1 (0.6%)
+
+Step 8: Adding annotations to data.frame...
+  Added columns:
+    - anchor1/2_H3K27ac_overlap
+    - anchor1/2_H3K27me3_overlap
+    - anchor1/2_H3K4me1_overlap
+    - anchor1/2_H3K4me3_overlap
+    - anchor1/2_Bivalent_Promoter_overlap
+    - anchor1/2_distance_to_tss_ext
+    - anchor1/2_type_extended
+    - loop_type_extended
+
+Step 9: Saving annotated data...
+  Saved: outputs/loop_annotation_extended/early/extended_characterized_loops.tsv
+  Saved: outputs/loop_annotation_extended/early/anchor_type_summary.tsv
+  Saved: outputs/loop_annotation_extended/early/loop_type_summary.tsv
+
+Step 10: Generating visualizations...
+  Creating side-by-side pie charts...
+  Saved: loop_type_piechart_comparison.{pdf,svg,jpg}
+  Creating anchor type bar chart...
+  Saved: anchor_type_distribution.{pdf,svg,jpg}
+  Creating loop type by direction bar chart...
+  Saved: loop_type_by_direction.{pdf,svg,jpg}
+
+Step 11: Saving summary statistics...
+  Saved: outputs/loop_annotation_extended/early/summary_statistics.txt
+
+========================================
+Annotation Complete
+========================================
+
+
+
+All timepoints processed successfully.
+Output directories:
+  - outputs/loop_annotation_extended/early
