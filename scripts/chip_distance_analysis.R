@@ -29,6 +29,7 @@ suppressPackageStartupMessages({
   library(patchwork)
   library(scales)
   library(RColorBrewer)
+  library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 })
 
 # Load multi-format output utility
@@ -50,14 +51,36 @@ CHIP_PEAK_FILES <- list(
     H3K27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",
     H3K27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",
     H3K4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",
-    H3K4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed"
+    H3K4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed",
+    ctcf     = "peaks/CTCF.bed",
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
   ),
   late = list(
     H3K27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",
     H3K27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",
     H3K4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",
-    H3K4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed"
+    H3K4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed",
+    ctcf     = "peaks/CTCF.bed",
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
   )
+)
+
+# Anchor type order and colors (from annotate_loops_extended.R)
+ANCHOR_TYPE_ORDER <- c("Active_Promoter", "Repressed_Promoter", "Bivalent_Promoter",
+                       "Polycomb", "Active_Enhancer", "Poised_Enhancer",
+                       "CTCF_Site", "Other")
+
+ANCHOR_COLORS <- c(
+  "Active_Promoter" = "#e41a1c",
+  "Repressed_Promoter" = "#756bb1",
+  "Bivalent_Promoter" = "#984ea3",
+  "Polycomb" = "#4daf4a",
+  "Active_Enhancer" = "#377eb8",
+  "Poised_Enhancer" = "#ff7f00",
+  "CTCF_Site" = "#a65628",
+  "Other" = "#999999"
 )
 
 # Output directories by timepoint
@@ -153,15 +176,105 @@ assign_distance_category <- function(distance) {
       include.lowest = TRUE)
 }
 
-#' Compute ChIP-seq overlaps for anchor GRanges
-compute_chip_overlaps <- function(anchor_gr, chip_peaks_list) {
+#' Compute ChIP-seq overlaps for anchor GRanges (extended for 8-category system)
+compute_chip_overlaps <- function(anchor_gr, chip_peaks_list, ctcf_motif_gr = NULL) {
   overlaps <- data.frame(
     H3K27ac_overlap = countOverlaps(anchor_gr, chip_peaks_list$H3K27ac) > 0,
     H3K27me3_overlap = countOverlaps(anchor_gr, chip_peaks_list$H3K27me3) > 0,
     H3K4me1_overlap = countOverlaps(anchor_gr, chip_peaks_list$H3K4me1) > 0,
-    H3K4me3_overlap = countOverlaps(anchor_gr, chip_peaks_list$H3K4me3) > 0
+    H3K4me3_overlap = countOverlaps(anchor_gr, chip_peaks_list$H3K4me3) > 0,
+    bivalent_overlap = countOverlaps(anchor_gr, chip_peaks_list$bivalent) > 0,
+    ctcf_overlap = countOverlaps(anchor_gr, chip_peaks_list$ctcf) > 0
   )
+  # Add CTCF motif overlap if provided
+  if (!is.null(ctcf_motif_gr)) {
+    overlaps$ctcf_motif_overlap <- countOverlaps(anchor_gr, ctcf_motif_gr) > 0
+  } else {
+    overlaps$ctcf_motif_overlap <- FALSE
+  }
   return(overlaps)
+}
+
+#' Classify anchor type with 8-category chromatin state system
+#' (Priority order from annotate_loops_extended.R)
+#'
+#' Priority order:
+#'   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
+#'   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND ≤2kb from TSS
+#'   3. Bivalent_Promoter:  Overlaps pre-computed K4me3+K27me3 intersection
+#'   4. Polycomb:           H3K27me3+ AND >2kb from TSS
+#'   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS
+#'   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+#'   7. CTCF_Site:          CTCF+ (ChIP for late, motif for early)
+#'   8. Other:              Default (no marks)
+#'
+#' @param overlaps data.frame with overlap columns
+#' @param distance_to_tss Numeric vector of distances to nearest TSS
+#' @param tss_threshold Distance threshold for promoter (default 2000bp)
+#' @param use_motif_for_ctcf Use CTCF motif instead of ChIP (for early timepoint)
+#' @return Character vector with anchor types
+classify_anchor_type_extended <- function(overlaps, distance_to_tss,
+                                          tss_threshold = 2000,
+                                          use_motif_for_ctcf = FALSE) {
+  n <- nrow(overlaps)
+  anchor_type <- rep("Other", n)
+
+  # Extract overlap columns
+  h3k27ac <- overlaps$H3K27ac_overlap
+  h3k27me3 <- overlaps$H3K27me3_overlap
+  h3k4me1 <- overlaps$H3K4me1_overlap
+  h3k4me3 <- overlaps$H3K4me3_overlap
+  bivalent <- overlaps$bivalent_overlap
+  ctcf <- overlaps$ctcf_overlap
+  ctcf_motif <- overlaps$ctcf_motif_overlap
+
+  # 1. Active_Promoter: H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
+  is_active_promoter <- h3k4me3 & !h3k27me3 &
+    !is.na(distance_to_tss) & distance_to_tss <= tss_threshold
+  anchor_type[is_active_promoter] <- "Active_Promoter"
+
+  # 2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND ≤2kb from TSS
+  is_repressed_promoter <- !is_active_promoter &
+    h3k27me3 & !h3k27ac &
+    !is.na(distance_to_tss) & distance_to_tss <= tss_threshold
+  anchor_type[is_repressed_promoter] <- "Repressed_Promoter"
+
+  # 3. Bivalent_Promoter: K4me3+K27me3 overlap (not already classified)
+  is_bivalent <- !is_active_promoter & !is_repressed_promoter & bivalent
+  anchor_type[is_bivalent] <- "Bivalent_Promoter"
+
+  # 4. Polycomb: H3K27me3+ AND >2kb from TSS
+  is_polycomb <- !is_active_promoter & !is_repressed_promoter & !is_bivalent &
+    h3k27me3 & (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
+  anchor_type[is_polycomb] <- "Polycomb"
+
+  # 5. Active_Enhancer: H3K27ac+ AND >2kb from TSS
+  is_active_enhancer <- !is_active_promoter & !is_repressed_promoter &
+    !is_bivalent & !is_polycomb &
+    h3k27ac & (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
+  anchor_type[is_active_enhancer] <- "Active_Enhancer"
+
+  # 6. Poised_Enhancer: H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+  is_poised_enhancer <- !is_active_promoter & !is_repressed_promoter &
+    !is_bivalent & !is_polycomb & !is_active_enhancer &
+    h3k4me1 & !h3k27ac & !h3k27me3 &
+    (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
+  anchor_type[is_poised_enhancer] <- "Poised_Enhancer"
+
+  # 7. CTCF_Site: Use motif for early, ChIP for late
+  if (use_motif_for_ctcf) {
+    is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
+      !is_bivalent & !is_polycomb & !is_active_enhancer &
+      !is_poised_enhancer & ctcf_motif
+  } else {
+    is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
+      !is_bivalent & !is_polycomb & !is_active_enhancer &
+      !is_poised_enhancer & ctcf
+  }
+  anchor_type[is_ctcf_site] <- "CTCF_Site"
+
+  # 8. Other: Default (no marks)
+  return(anchor_type)
 }
 
 # ==============================================================================
@@ -250,8 +363,16 @@ run_chip_distance_analysis <- function(timepoint) {
     H3K27ac = load_chip_peaks(chip_files$H3K27ac, "H3K27ac"),
     H3K27me3 = load_chip_peaks(chip_files$H3K27me3, "H3K27me3"),
     H3K4me1 = load_chip_peaks(chip_files$H3K4me1, "H3K4me1"),
-    H3K4me3 = load_chip_peaks(chip_files$H3K4me3, "H3K4me3")
+    H3K4me3 = load_chip_peaks(chip_files$H3K4me3, "H3K4me3"),
+    bivalent = load_chip_peaks(chip_files$bivalent, "Bivalent (K4me3+K27me3)"),
+    ctcf = load_chip_peaks(chip_files$ctcf, "CTCF")
   )
+
+  # Load CTCF motifs if available (for early timepoint validation)
+  ctcf_motif_gr <- NULL
+  if (!is.null(chip_files$ctcf_motif) && file.exists(chip_files$ctcf_motif)) {
+    ctcf_motif_gr <- load_chip_peaks(chip_files$ctcf_motif, "CTCF_motif")
+  }
   cat("\n")
 
   # ==========================================================================
@@ -271,9 +392,9 @@ run_chip_distance_analysis <- function(timepoint) {
     ranges = IRanges(start = loops_directional$start2, end = loops_directional$end2)
   )
 
-  # Compute overlaps for both anchors
-  anchor1_overlaps <- compute_chip_overlaps(anchor1_gr, chip_peaks)
-  anchor2_overlaps <- compute_chip_overlaps(anchor2_gr, chip_peaks)
+  # Compute overlaps for both anchors (extended for 8-category system)
+  anchor1_overlaps <- compute_chip_overlaps(anchor1_gr, chip_peaks, ctcf_motif_gr)
+  anchor2_overlaps <- compute_chip_overlaps(anchor2_gr, chip_peaks, ctcf_motif_gr)
 
   # Add overlap columns to dataframe
   loops_directional <- loops_directional %>%
@@ -309,6 +430,71 @@ run_chip_distance_analysis <- function(timepoint) {
   cat(sprintf("  H3K4me3:  %d loops (%.1f%%)\n\n",
               sum(loops_directional$has_H3K4me3),
               100 * mean(loops_directional$has_H3K4me3)))
+
+  # ==========================================================================
+  # SECTION 4b: TSS DISTANCE AND ANCHOR TYPE CLASSIFICATION
+  # ==========================================================================
+
+  cat("=== Step 3b: Computing TSS Distances and Anchor Types ===\n")
+
+  # Load TxDb for TSS annotations
+  txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
+  genes <- genes(txdb)
+  tss_gr <- resize(genes, width = 1, fix = "start")
+  cat(sprintf("  Loaded %d genes for TSS distance computation\n", length(genes)))
+
+  # Compute TSS distance for each anchor
+  nearest1 <- distanceToNearest(anchor1_gr, tss_gr)
+  anchor1_distance_to_tss <- rep(NA_real_, length(anchor1_gr))
+  if (length(nearest1) > 0) {
+    anchor1_distance_to_tss[queryHits(nearest1)] <- mcols(nearest1)$distance
+  }
+
+  nearest2 <- distanceToNearest(anchor2_gr, tss_gr)
+  anchor2_distance_to_tss <- rep(NA_real_, length(anchor2_gr))
+  if (length(nearest2) > 0) {
+    anchor2_distance_to_tss[queryHits(nearest2)] <- mcols(nearest2)$distance
+  }
+
+  # Classify anchor types using 8-category system
+  # Early timepoints use CTCF motif, late timepoints use CTCF ChIP
+  use_motif_for_ctcf <- timepoint == "early"
+  if (use_motif_for_ctcf) {
+    cat("  CTCF classification: Using motif (early timepoint)\n")
+  } else {
+    cat("  CTCF classification: Using ChIP-seq (late timepoint)\n")
+  }
+
+  anchor1_type <- classify_anchor_type_extended(
+    anchor1_overlaps, anchor1_distance_to_tss,
+    tss_threshold = 2000, use_motif_for_ctcf = use_motif_for_ctcf
+  )
+
+  anchor2_type <- classify_anchor_type_extended(
+    anchor2_overlaps, anchor2_distance_to_tss,
+    tss_threshold = 2000, use_motif_for_ctcf = use_motif_for_ctcf
+  )
+
+  # Add anchor types to dataframe
+  loops_directional <- loops_directional %>%
+    mutate(
+      anchor1_distance_to_tss = anchor1_distance_to_tss,
+      anchor2_distance_to_tss = anchor2_distance_to_tss,
+      anchor1_type = anchor1_type,
+      anchor2_type = anchor2_type
+    )
+
+  # Print anchor type distribution
+  cat("\n  Anchor type distribution (8-category system):\n")
+  for (type in ANCHOR_TYPE_ORDER) {
+    n1 <- sum(anchor1_type == type)
+    n2 <- sum(anchor2_type == type)
+    pct1 <- 100 * n1 / length(anchor1_type)
+    pct2 <- 100 * n2 / length(anchor2_type)
+    cat(sprintf("    %-20s: Anchor1 %5d (%.1f%%), Anchor2 %5d (%.1f%%)\n",
+                type, n1, pct1, n2, pct2))
+  }
+  cat("\n")
 
   # ==========================================================================
   # SECTION 5: STATISTICAL TESTS
@@ -383,6 +569,7 @@ run_chip_distance_analysis <- function(timepoint) {
     facet_wrap(~direction_label) +
     scale_fill_manual(values = c("H3K27ac" = "#e41a1c", "H3K27me3" = "#377eb8"),
                       name = "Histone Mark") +
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
     labs(
       title = "H3K27ac vs H3K27me3 Overlap by Distance",
       x = "Distance Category",
@@ -405,6 +592,7 @@ run_chip_distance_analysis <- function(timepoint) {
     scale_fill_manual(values = c("H3K27ac" = "#e41a1c", "H3K27me3" = "#377eb8",
                                  "H3K4me1" = "#4daf4a", "H3K4me3" = "#984ea3"),
                       name = "Histone Mark") +
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
     labs(
       title = "All ChIP-seq Marks Overlap by Distance",
       x = "Distance Category",
@@ -469,6 +657,7 @@ run_chip_distance_analysis <- function(timepoint) {
       name = "Histone Mark",
       labels = c("H3K27ac (Active)", "H3K27me3 (Repressive)")
     ) +
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
     labs(
       title = "ChIP-seq Mark Enrichment Trend by Loop Distance",
       subtitle = sprintf("Hypothesis: H3K27ac decreases, H3K27me3 increases with distance\n(%s timepoint, n = %d loops)",
@@ -476,7 +665,7 @@ run_chip_distance_analysis <- function(timepoint) {
       x = "Loop Distance Category",
       y = "% Loops with Mark at Anchor"
     ) +
-    annotate("text", x = 3.5, y = max(distance_focus$percentage) * 0.95,
+    annotate("text", x = 3.5, y = 90,
              label = sprintf("H3K27ac trend: p = %.2e\nH3K27me3 trend: p = %.2e",
                             coef_h3k27ac["Pr(>|z|)"], coef_h3k27me3["Pr(>|z|)"]),
              hjust = 0.5, size = 3.5, fontface = "italic") +
@@ -546,6 +735,7 @@ run_chip_distance_analysis <- function(timepoint) {
       values = c("H3K27ac" = "#e41a1c", "H3K27me3" = "#377eb8"),
       name = ""
     ) +
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
     labs(title = "A. Mark Trend by Distance", x = "", y = "% Loops") +
     theme_minimal(base_size = 10) +
     theme(
@@ -562,6 +752,7 @@ run_chip_distance_analysis <- function(timepoint) {
     geom_bar(stat = "identity", position = position_dodge(width = 0.8),
              width = 0.7, color = "black", linewidth = 0.2) +
     scale_fill_manual(values = c("H3K27ac" = "#e41a1c", "H3K27me3" = "#377eb8"), name = "") +
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
     labs(title = "B. Lost Loops", x = "", y = "% Loops") +
     theme_minimal(base_size = 10) +
     theme(
@@ -578,6 +769,7 @@ run_chip_distance_analysis <- function(timepoint) {
     geom_bar(stat = "identity", position = position_dodge(width = 0.8),
              width = 0.7, color = "black", linewidth = 0.2) +
     scale_fill_manual(values = c("H3K27ac" = "#e41a1c", "H3K27me3" = "#377eb8"), name = "") +
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
     labs(title = "C. Gained Loops", x = "", y = "% Loops") +
     theme_minimal(base_size = 10) +
     theme(
@@ -631,6 +823,113 @@ Conclusion:\n
 
   save_multiformat_ggplot(p4_combined, file.path(OUTPUT_DIR, "04_mark_comparison_summary"),
                           width = 12, height = 9)
+
+  # ==========================================================================
+  # FIGURE 5: Anchor Type Distribution by Distance (8-Category System)
+  # ==========================================================================
+
+  cat("Creating Figure 5: Anchor Type Distribution by Distance...\n")
+
+  # Prepare anchor type data by combining anchor1 and anchor2
+  anchor_type_data <- bind_rows(
+    loops_directional %>%
+      dplyr::select(direction_label, distance_category, anchor_type = anchor1_type) %>%
+      dplyr::mutate(anchor = "Anchor 1"),
+    loops_directional %>%
+      dplyr::select(direction_label, distance_category, anchor_type = anchor2_type) %>%
+      dplyr::mutate(anchor = "Anchor 2")
+  )
+
+  # Summarize anchor types by distance category and direction
+  anchor_type_summary <- anchor_type_data %>%
+    group_by(direction_label, distance_category, anchor_type) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    group_by(direction_label, distance_category) %>%
+    mutate(percentage = 100 * count / sum(count)) %>%
+    ungroup()
+
+  # Set factor levels for proper ordering
+  anchor_type_summary$anchor_type <- factor(
+    anchor_type_summary$anchor_type, levels = ANCHOR_TYPE_ORDER
+  )
+
+  # Panel A: Stacked bar chart by distance and direction
+  p5a <- ggplot(anchor_type_summary,
+                aes(x = distance_category, y = percentage, fill = anchor_type)) +
+    geom_bar(stat = "identity", position = "stack",
+             color = "white", linewidth = 0.2) +
+    facet_wrap(~direction_label) +
+    scale_fill_manual(values = ANCHOR_COLORS, name = "Anchor Type") +
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
+    labs(
+      title = "Anchor Type Distribution by Loop Distance",
+      subtitle = sprintf("%s timepoint: 8-category chromatin state classification",
+                        toupper(timepoint)),
+      x = "Loop Distance Category",
+      y = "% of Anchors"
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 10, color = "grey40"),
+      strip.text = element_text(face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "right"
+    )
+
+  # Panel B: Grouped bar for specific anchor types by distance
+  # Focus on key regulatory categories
+  key_types <- c("Active_Promoter", "Active_Enhancer", "Polycomb", "CTCF_Site")
+  anchor_type_key <- anchor_type_summary %>%
+    filter(anchor_type %in% key_types)
+
+  p5b <- ggplot(anchor_type_key,
+                aes(x = distance_category, y = percentage, fill = anchor_type)) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.8),
+             width = 0.7, color = "black", linewidth = 0.2) +
+    facet_wrap(~direction_label) +
+    scale_fill_manual(values = ANCHOR_COLORS[key_types], name = "Anchor Type") +
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
+    labs(
+      title = "Key Regulatory Anchor Types by Distance",
+      subtitle = "Focus on Active Promoter, Active Enhancer, Polycomb, CTCF",
+      x = "Loop Distance Category",
+      y = "% of Anchors"
+    ) +
+    theme_minimal(base_size = 11) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 12),
+      plot.subtitle = element_text(hjust = 0.5, size = 9, color = "grey40"),
+      strip.text = element_text(face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "right"
+    )
+
+  # Combine panels
+  p5_combined <- p5a / p5b +
+    plot_annotation(
+      title = "Anchor Chromatin State Classification by Loop Distance",
+      subtitle = sprintf("%s timepoint: Using proper 8-category system from annotate_loops_extended.R",
+                        toupper(timepoint)),
+      theme = theme(
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+        plot.subtitle = element_text(hjust = 0.5, size = 11, color = "grey40")
+      )
+    )
+
+  save_multiformat_ggplot(p5_combined, file.path(OUTPUT_DIR, "05_anchor_type_by_distance"),
+                          width = 12, height = 12)
+
+  # Also save anchor type summary table
+  anchor_type_summary_wide <- anchor_type_summary %>%
+    pivot_wider(
+      names_from = anchor_type,
+      values_from = c(count, percentage),
+      values_fill = 0
+    )
+  write_tsv(anchor_type_summary_wide,
+            file.path(OUTPUT_DIR, "anchor_type_distance_summary.tsv"))
+  cat("Saved: anchor_type_distance_summary.tsv\n")
 
   # ==========================================================================
   # SECTION 6: EXPORT RESULTS
@@ -720,8 +1019,10 @@ Conclusion:\n
   cat("  - 02_mark_trend_lineplot.{pdf,svg,jpg}\n")
   cat("  - 03_mark_distance_heatmap.{pdf,svg,jpg}\n")
   cat("  - 04_mark_comparison_summary.{pdf,svg,jpg}\n")
+  cat("  - 05_anchor_type_by_distance.{pdf,svg,jpg}\n")
   cat("  - chip_distance_summary.tsv\n")
   cat("  - chip_distance_direction_summary.tsv\n")
+  cat("  - anchor_type_distance_summary.tsv\n")
   cat("  - loops_with_chip_overlaps.tsv\n")
   cat("  - chip_distance_statistics.txt\n\n")
 
