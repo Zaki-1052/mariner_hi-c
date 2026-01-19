@@ -1,0 +1,147 @@
+#!/bin/bash
+#SBATCH --job-name=postprocess_beds
+#SBATCH --output=logs/postprocess_beds_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=4G
+#SBATCH --time=00:30:00
+#SBATCH --account=csd940
+
+# 07_postprocess_beds.sb
+# Clean up BED files: rename Matrix 1/2 to Control/Mutant, add headers
+# Usage: bash scripts/07_postprocess_beds.sb [timepoint]
+#   timepoint: "late" (default), "early", or "both"
+
+TIMEPOINT="${1:-both}"
+
+echo "========================================="
+echo "TADCompare Pipeline - Post-process BED Files"
+echo "========================================="
+echo "Job ID: ${SLURM_JOB_ID:-local}"
+echo "Node: ${HOSTNAME}"
+echo "Timepoint: ${TIMEPOINT}"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# === Configuration ===
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+
+# === Header definitions ===
+# 12-column BED (tadcompare, consensus)
+HEADER_12="chr\tstart\tend\tname\tscore\tstrand\tGap_Score\tTAD_Score1\tTAD_Score2\tDifferential\tEnriched_In\tType"
+
+# 13-column BED (final - includes shift_distance_kb)
+HEADER_13="chr\tstart\tend\tname\tscore\tstrand\tGap_Score\tTAD_Score1\tTAD_Score2\tDifferential\tEnriched_In\tType\tshift_distance_kb"
+
+# === Functions ===
+process_bed_file() {
+    local file="$1"
+    local header="$2"
+    local backup="${file}.bak"
+
+    if [ ! -f "$file" ]; then
+        echo "  SKIP: $file (not found)"
+        return
+    fi
+
+    echo "  Processing: $(basename $file)"
+
+    # Create backup
+    cp "$file" "$backup"
+
+    # Replace Matrix 1 -> Control, Matrix 2 -> Mutant, then add header
+    sed -e 's/Matrix 1/Control/g' -e 's/Matrix 2/Mutant/g' "$backup" | \
+        (echo -e "$header"; cat) > "$file"
+
+    # Cleanup backup
+    rm "$backup"
+}
+
+process_timepoint() {
+    local tp="$1"
+    echo ""
+    echo "=========================================
+Processing timepoint: ${tp}
+========================================="
+
+    RESULTS_DIR="${BASE_DIR}/results/${tp}"
+
+    # Check if results exist
+    if [ ! -d "$RESULTS_DIR" ]; then
+        echo "  ERROR: Results directory not found: $RESULTS_DIR"
+        return 1
+    fi
+
+    # --- tadcompare/ directory (12 columns) ---
+    echo ""
+    echo ">>> tadcompare/ BED files (12 columns):"
+    for bed in "${RESULTS_DIR}/tadcompare/"*.bed; do
+        process_bed_file "$bed" "$HEADER_12"
+    done
+
+    # --- consensus/ directory (12 columns) ---
+    echo ""
+    echo ">>> consensus/ BED files (12 columns):"
+    for bed in "${RESULTS_DIR}/consensus/"*.bed; do
+        process_bed_file "$bed" "$HEADER_12"
+    done
+
+    # --- final/ directory (13 columns - has shift_distance_kb) ---
+    echo ""
+    echo ">>> final/ BED files (13 columns):"
+    for bed in "${RESULTS_DIR}/final/"*.bed; do
+        process_bed_file "$bed" "$HEADER_13"
+    done
+
+    echo ""
+    echo "✓ Timepoint ${tp} complete"
+}
+
+# === Main ===
+case "$TIMEPOINT" in
+    late)
+        process_timepoint "late"
+        ;;
+    early)
+        process_timepoint "early"
+        ;;
+    both)
+        process_timepoint "late"
+        process_timepoint "early"
+        ;;
+    *)
+        echo "ERROR: Unknown timepoint '$TIMEPOINT'. Use 'late', 'early', or 'both'."
+        exit 1
+        ;;
+esac
+
+# === Verify ===
+echo ""
+echo "========================================="
+echo "Verification (first 2 lines of each):"
+echo "========================================="
+
+for tp in late early; do
+    if [ "$TIMEPOINT" != "both" ] && [ "$TIMEPOINT" != "$tp" ]; then
+        continue
+    fi
+
+    echo ""
+    echo "--- ${tp} ---"
+    for bed in "${BASE_DIR}/results/${tp}/"*/*.bed; do
+        if [ -f "$bed" ]; then
+            echo ""
+            echo "$(basename $bed):"
+            head -2 "$bed"
+        fi
+    done
+done
+
+echo ""
+echo "========================================="
+echo "✅ BED file post-processing complete"
+echo "End time: $(date)"
+echo "========================================="
