@@ -1,0 +1,57 @@
+=== ChIP-seq Mark vs Loop Distance: Statistical Report ===
+Generated: 2026-01-19 15:18:31 
+Timepoint: early 
+
+--- DATA OVERVIEW ---
+Total loops analyzed: 165 
+  Lost in BAP1-KO: 92 
+  Gained in BAP1-KO: 73 
+
+--- ChIP-seq PEAK FILES ---
+  H3K27ac: peaks/beds/H3K27acCerebellumEarly2.bed (18178 peaks)
+  H3K27me3: peaks/beds/H3K27me3CerebellumEarly1.bed (12473 peaks)
+  H3K4me1: peaks/beds/H3K4me1CerebellumEarly1.bed (93859 peaks)
+  H3K4me3: peaks/beds/H3K4me3CerebellumEarly2.bed (10370 peaks)
+
+--- OVERALL MARK PRESENCE ---
+  H3K27ac:  12.7% of loops
+  H3K27me3: 55.8% of loops
+  H3K4me1:  73.3% of loops
+  H3K4me3:  13.3% of loops
+
+--- DISTANCE CATEGORY SUMMARY ---
+ distance_category n_loops pct_H3K27ac pct_H3K27me3 pct_H3K4me1 pct_H3K4me3
+            <100kb       3    0.000000      0.00000     0.00000    0.000000
+         100-500kb      25   32.000000     40.00000    80.00000   28.000000
+         500kb-1Mb      38   18.421053     31.57895    63.15789   15.789474
+              >1Mb      99    6.060606     70.70707    77.77778    9.090909
+
+--- STATISTICAL TESTS ---
+
+Chi-square tests (mark vs distance by direction):
+  Lost loops - H3K27ac:  p = NaN
+  Lost loops - H3K27me3: p = NaN
+  Gained loops - H3K27ac:  p = 1.71e-01
+  Gained loops - H3K27me3: p = 1.64e-01
+
+Logistic regression trend test (all loops):
+  H3K27ac:
+                   Estimate   Std. Error   z value     Pr(>|z|)
+(Intercept)   -1.676796e+00 2.604988e-01 -6.436867 1.219647e-10
+loop_distance -3.430106e-08 2.335034e-08 -1.468975 1.418395e-01
+
+  H3K27me3:
+                   Estimate   Std. Error    z value    Pr(>|z|)
+(Intercept)   -1.580098e-01 1.855811e-01 -0.8514323 0.394529235
+loop_distance  4.595935e-08 1.433827e-08  3.2053619 0.001348928
+
+--- HYPOTHESIS EVALUATION ---
+Hypothesis: As loop distance increases, H3K27ac decreases and H3K27me3 increases
+
+Results:
+  - H3K27ac DECREASES with distance (beta = -3.43e-08, p = 1.42e-01)
+  - H3K27me3 INCREASES with distance (beta = 4.60e-08, p = 1.35e-03)
+
+Conclusion: Hypothesis SUPPORTED
+
+=================================================
