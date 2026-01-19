@@ -11,21 +11,14 @@
 #   Categories are biologically defined based on histone modifications and
 #   TSS proximity.
 #
-# Anchor Categories (10 types, priority order):
-#   1. Active_Promoter:          H3K4me3+ AND NOT H3K27me3 AND <=2kb from TSS
-#   2. Repressed_Promoter:       H3K27me3+ AND NOT H3K27ac AND <=2kb from TSS
-#   3. Bivalent_Promoter:        K4me3+K27me3 overlap (pre-computed intersection)
-#   4. Polycomb:                 H3K27me3+ AND >2kb from TSS (distal repressive)
-#   5. Active_Enhancer_Proximal: H3K27ac+ AND >2kb to <=5kb from TSS
-#   6. Active_Enhancer_Distal:   H3K27ac+ AND >5kb from TSS
-#   7. Poised_Enhancer_Proximal: H3K4me1+ (NOT K27ac, NOT K27me3) AND >2kb to <=5kb
-#   8. Poised_Enhancer_Distal:   H3K4me1+ (NOT K27ac, NOT K27me3) AND >5kb
-#   9. CTCF_Site:                CTCF+ (structural/insulator elements)
-#  10. Other:                    No ChIP-seq marks / structural elements
-#
-# Note: Proximal/distal distinction based on Struhl (Nature Reviews MCB 2025):
-#   - Proximal enhancers activate directly via short-range mechanisms
-#   - Distal enhancers require looping machinery for long-range activation
+# Anchor Categories (7 types, priority order):
+#   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND <=2kb from TSS
+#   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND <=2kb from TSS
+#   3. Bivalent_Promoter:  K4me3+K27me3 overlap (pre-computed intersection)
+#   4. Polycomb:           H3K27me3+ AND >2kb from TSS (distal repressive)
+#   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS
+#   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+#   7. Other:              No ChIP-seq marks / structural elements
 #
 # Peak Files (peaks/beds/):
 #   - H3K27ac:  Early/Late cerebellum
@@ -129,29 +122,20 @@ DEFAULT_OUTPUT_DIRS <- list(
 )
 
 # Anchor type hierarchy (for consistent loop type ordering)
-# 10 categories reflecting chromatin states (proximal/distal enhancer distinction)
-# Based on Struhl (Nature Reviews MCB 2025): proximal enhancers (50-300bp) activate
-# directly, while distal enhancers (>500bp) loop to proximal enhancers
-ANCHOR_TYPE_ORDER <- c(
-  "Active_Promoter", "Repressed_Promoter", "Bivalent_Promoter",
-  "Polycomb",
-  "Active_Enhancer_Proximal", "Active_Enhancer_Distal",
-  "Poised_Enhancer_Proximal", "Poised_Enhancer_Distal",
-  "CTCF_Site", "Other"
-)
+# 8 categories reflecting chromatin states (added CTCF_Site for structural loops)
+ANCHOR_TYPE_ORDER <- c("Active_Promoter", "Repressed_Promoter", "Bivalent_Promoter",
+                       "Polycomb", "Active_Enhancer", "Poised_Enhancer", "CTCF_Site", "Other")
 
-# Color scheme for visualizations (10 categories)
+# Color scheme for visualizations
 ANCHOR_COLORS <- c(
-  "Active_Promoter" = "#e41a1c",           # Red - active transcription
-  "Repressed_Promoter" = "#756bb1",        # Purple - Polycomb-silenced promoter
-  "Bivalent_Promoter" = "#984ea3",         # Magenta - developmental poised
-  "Polycomb" = "#4daf4a",                  # Green - distal repressive
-  "Active_Enhancer_Proximal" = "#377eb8",  # Blue - proximal active enhancer
-  "Active_Enhancer_Distal" = "#a6cee3",    # Light blue - distal active enhancer
-  "Poised_Enhancer_Proximal" = "#ff7f00",  # Orange - proximal poised enhancer
-  "Poised_Enhancer_Distal" = "#fdbf6f",    # Light orange - distal poised enhancer
-  "CTCF_Site" = "#a65628",                 # Brown - structural/insulator
-  "Other" = "#999999"                      # Gray - unmarked
+  "Active_Promoter" = "#e41a1c",     # Red - active transcription
+  "Repressed_Promoter" = "#756bb1",  # Purple - Polycomb-silenced promoter
+  "Bivalent_Promoter" = "#984ea3",   # Magenta - developmental poised
+  "Polycomb" = "#4daf4a",            # Green - distal repressive
+  "Active_Enhancer" = "#377eb8",     # Blue - active enhancer
+  "Poised_Enhancer" = "#ff7f00",     # Orange - primed enhancer
+  "CTCF_Site" = "#a65628",           # Brown - structural/insulator
+  "Other" = "#999999"                # Gray - unmarked
 )
 
 # =============================================================================
@@ -218,39 +202,31 @@ annotate_chip_overlaps_extended <- function(anchor_gr, k27ac_gr, k27me3_gr,
   result
 }
 
-#' Classify anchor type with chromatin state categories (10 types)
+#' Classify anchor type with chromatin state categories (8 types)
 #'
 #' Priority order:
 #'   Active_Promoter > Repressed_Promoter > Bivalent_Promoter > Polycomb >
-#'   Active_Enhancer_Proximal > Active_Enhancer_Distal >
-#'   Poised_Enhancer_Proximal > Poised_Enhancer_Distal > CTCF_Site > Other
+#'   Active_Enhancer > Poised_Enhancer > CTCF_Site > Other
 #'
 #' Biological rationale:
 #'   - Active promoters: H3K4me3 is the canonical active promoter mark
+#'     (housekeeping genes can have H3K4me3 without H3K27ac)
 #'   - Repressed promoters: H3K27me3 at TSS indicates Polycomb silencing
 #'   - Bivalent_Promoter: K4me3+K27me3 overlap marks developmental poised domains
 #'   - Polycomb: Distal H3K27me3 regions (long-range repressive loops)
-#'   - Proximal enhancers (>2kb to <=5kb): Regulatory neighborhoods, short-range
-#'   - Distal enhancers (>5kb): Require looping machinery for activation
-#'   - CTCF sites: Structural/insulator elements
-#'
-#' Proximal/distal distinction based on Struhl (Nature Reviews MCB 2025):
-#'   - Proximal enhancers activate directly via short-range mechanisms
-#'   - Distal enhancers require looping via protein multimerization
-#'   Our thresholds (2-5kb proximal, >5kb distal) adapt this to Hi-C resolution
+#'   - Poised enhancers: H3K4me1 without repressive or active marks
+#'   - CTCF sites: Structural/insulator elements (ChIP OR motif overlap)
 #'
 #' @param h3k27ac_overlap Logical - overlaps H3K27ac peak
 #' @param h3k27me3_overlap Logical - overlaps H3K27me3 peak
 #' @param h3k4me1_overlap Logical - overlaps H3K4me1 peak
 #' @param h3k4me3_overlap Logical - overlaps H3K4me3 peak (active promoter)
-#' @param bivalent_overlap Logical - overlaps K4me3+K27me3 region
+#' @param bivalent_overlap Logical - overlaps K4me3+K27me3 region (Addison file)
 #' @param ctcf_overlap Logical - overlaps CTCF ChIP-seq peak
 #' @param ctcf_motif_overlap Logical - overlaps CTCF DNA motif
 #' @param distance_to_tss Numeric - distance to nearest TSS
 #' @param tss_threshold Numeric - promoter distance threshold (default 2000bp)
-#' @param distal_threshold Numeric - boundary between proximal/distal enhancers
-#'   (default 5000bp; proximal = >tss_threshold to <=distal_threshold)
-#' @param use_motif_for_ctcf Logical - use motif for CTCF (early) vs ChIP (late)
+#' @param use_motif_for_ctcf Logical - if TRUE, use motif for CTCF (early), else use ChIP (late)
 #' @return Character vector with anchor types
 classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
                                           h3k4me1_overlap, h3k4me3_overlap,
@@ -258,7 +234,6 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
                                           ctcf_motif_overlap,
                                           distance_to_tss,
                                           tss_threshold = 2000,
-                                          distal_threshold = 5000,
                                           use_motif_for_ctcf = FALSE) {
   n <- length(h3k27ac_overlap)
   anchor_type <- rep("Other", n)
@@ -266,80 +241,65 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
   # MAIN LOGIC
 
   # 1. Active_Promoter: H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
+  # H3K4me3 is the canonical active promoter mark; H3K27ac not required
+  # (housekeeping genes can be H3K4me3+ without K27ac)
   is_active_promoter <- h3k4me3_overlap & !h3k27me3_overlap &
                         !is.na(distance_to_tss) &
                         distance_to_tss <= tss_threshold
   anchor_type[is_active_promoter] <- "Active_Promoter"
 
   # 2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND ≤2kb from TSS
+  # Polycomb-silenced promoter near TSS
   is_repressed_promoter <- !is_active_promoter &
                            h3k27me3_overlap & !h3k27ac_overlap &
                            !is.na(distance_to_tss) &
                            distance_to_tss <= tss_threshold
   anchor_type[is_repressed_promoter] <- "Repressed_Promoter"
 
-  # 3. Bivalent_Promoter: K4me3+K27me3 overlap (not already classified)
+  # 3. Bivalent_Promoter: K4me3+K27me3 overlap (not already classified as promoter)
+  # Developmental poised domains from early timepoint (Addison file)
   is_bivalent <- !is_active_promoter & !is_repressed_promoter & bivalent_overlap
   anchor_type[is_bivalent] <- "Bivalent_Promoter"
 
   # 4. Polycomb: H3K27me3+ AND >2kb from TSS (distal repressive)
+  # Polycomb loops tend to be long-range
   is_polycomb <- !is_active_promoter & !is_repressed_promoter & !is_bivalent &
                  h3k27me3_overlap &
                  (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   anchor_type[is_polycomb] <- "Polycomb"
 
-  # 5. Active_Enhancer_Proximal: H3K27ac+ AND >2kb to <=5kb from TSS
-  is_active_enh_prox <- !is_active_promoter & !is_repressed_promoter &
+  # 5. Active_Enhancer: H3K27ac+ AND >2kb from TSS
+  is_active_enhancer <- !is_active_promoter & !is_repressed_promoter &
                         !is_bivalent & !is_polycomb &
                         h3k27ac_overlap &
-                        !is.na(distance_to_tss) &
-                        distance_to_tss > tss_threshold &
-                        distance_to_tss <= distal_threshold
-  anchor_type[is_active_enh_prox] <- "Active_Enhancer_Proximal"
+                        (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
+  anchor_type[is_active_enhancer] <- "Active_Enhancer"
 
-  # 6. Active_Enhancer_Distal: H3K27ac+ AND >5kb from TSS
-  is_active_enh_dist <- !is_active_promoter & !is_repressed_promoter &
-                        !is_bivalent & !is_polycomb &
-                        h3k27ac_overlap &
-                        (is.na(distance_to_tss) | distance_to_tss > distal_threshold)
-  anchor_type[is_active_enh_dist] <- "Active_Enhancer_Distal"
-
-  # 7. Poised_Enhancer_Proximal: H3K4me1+ (NOT K27ac/K27me3) AND >2kb to <=5kb
-  is_poised_enh_prox <- !is_active_promoter & !is_repressed_promoter &
-                        !is_bivalent & !is_polycomb &
-                        !is_active_enh_prox & !is_active_enh_dist &
+  # 6. Poised_Enhancer: H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+  # Primed enhancer without active or repressive marks
+  is_poised_enhancer <- !is_active_promoter & !is_repressed_promoter &
+                        !is_bivalent & !is_polycomb & !is_active_enhancer &
                         h3k4me1_overlap & !h3k27ac_overlap & !h3k27me3_overlap &
-                        !is.na(distance_to_tss) &
-                        distance_to_tss > tss_threshold &
-                        distance_to_tss <= distal_threshold
-  anchor_type[is_poised_enh_prox] <- "Poised_Enhancer_Proximal"
+                        (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
+  anchor_type[is_poised_enhancer] <- "Poised_Enhancer"
 
-  # 8. Poised_Enhancer_Distal: H3K4me1+ (NOT K27ac/K27me3) AND >5kb
-  is_poised_enh_dist <- !is_active_promoter & !is_repressed_promoter &
-                        !is_bivalent & !is_polycomb &
-                        !is_active_enh_prox & !is_active_enh_dist &
-                        !is_poised_enh_prox &
-                        h3k4me1_overlap & !h3k27ac_overlap & !h3k27me3_overlap &
-                        (is.na(distance_to_tss) | distance_to_tss > distal_threshold)
-  anchor_type[is_poised_enh_dist] <- "Poised_Enhancer_Distal"
-
-  # 9. CTCF_Site: Structural/insulator elements
+  # 7. CTCF_Site: Structural/insulator elements
+  # Early timepoints: Use CTCF motif only (no ChIP-seq data available)
+  # Late timepoints: Use CTCF ChIP-seq (actual binding data)
   if (use_motif_for_ctcf) {
+    # Early: motif only - indicates binding potential, not confirmed binding
     is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
-                    !is_bivalent & !is_polycomb &
-                    !is_active_enh_prox & !is_active_enh_dist &
-                    !is_poised_enh_prox & !is_poised_enh_dist &
-                    ctcf_motif_overlap
+                    !is_bivalent & !is_polycomb & !is_active_enhancer &
+                    !is_poised_enhancer & ctcf_motif_overlap
   } else {
+    # Late: ChIP only - actual CTCF binding data
     is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
-                    !is_bivalent & !is_polycomb &
-                    !is_active_enh_prox & !is_active_enh_dist &
-                    !is_poised_enh_prox & !is_poised_enh_dist &
-                    ctcf_overlap
+                    !is_bivalent & !is_polycomb & !is_active_enhancer &
+                    !is_poised_enhancer & ctcf_overlap
   }
   anchor_type[is_ctcf_site] <- "CTCF_Site"
 
-  # 10. Other: default (no ChIP-seq marks)
+  # 8. Other: default (no ChIP-seq marks - truly unmarked regions)
   return(anchor_type)
 }
 
@@ -347,7 +307,7 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
 # LOOP TYPE CLASSIFICATION
 # =============================================================================
 
-#' Classify loop type based on anchor types (up to 55 combinations with 10 types)
+#' Classify loop type based on anchor types (36 combinations)
 #'
 #' @param anchor1_type Character vector - anchor1 types
 #' @param anchor2_type Character vector - anchor2 types
@@ -417,9 +377,7 @@ annotate_loops_extended <- function(
   cat(sprintf("  Timepoint:      %s\n", timepoint))
   cat(sprintf("  Input file:     %s\n", input_file))
   cat(sprintf("  Output dir:     %s\n", output_dir))
-  cat(sprintf("  TSS threshold:  %d bp\n", tss_threshold))
-  cat(sprintf("  Distal threshold: %d bp (proximal >%d to <=%d, distal >%d)\n\n",
-              5000, tss_threshold, 5000, 5000))
+  cat(sprintf("  TSS threshold:  %d bp\n\n", tss_threshold))
 
   # Create output directory
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -558,10 +516,7 @@ annotate_loops_extended <- function(
               100 * mean(anchor2_chip$CTCF_motif_overlap)))
 
   # --- Step 6: Classify anchor types ---
-  cat("Step 6: Classifying anchor types (10 categories)...\n")
-
-  # Define distal threshold (boundary between proximal and distal enhancers)
-  distal_threshold <- 5000  # 5kb - proximal = >2kb to <=5kb, distal = >5kb
+  cat("Step 6: Classifying anchor types (8 categories)...\n")
 
   # Early timepoints use CTCF motif only (no ChIP-seq data)
   # Late timepoints use CTCF ChIP-seq (actual binding data)
@@ -582,7 +537,6 @@ annotate_loops_extended <- function(
     anchor1_chip$CTCF_motif_overlap,
     anchor1_distance_to_tss,
     tss_threshold,
-    distal_threshold,
     use_motif_for_ctcf
   )
 
@@ -596,7 +550,6 @@ annotate_loops_extended <- function(
     anchor2_chip$CTCF_motif_overlap,
     anchor2_distance_to_tss,
     tss_threshold,
-    distal_threshold,
     use_motif_for_ctcf
   )
 
@@ -604,19 +557,19 @@ annotate_loops_extended <- function(
   for (type in ANCHOR_TYPE_ORDER) {
     count <- sum(anchor1_type == type)
     pct <- 100 * mean(anchor1_type == type)
-    cat(sprintf("    %-25s: %5d (%.1f%%)\n", type, count, pct))
+    cat(sprintf("    %-20s: %5d (%.1f%%)\n", type, count, pct))
   }
 
   cat("\n  Anchor2 type distribution:\n")
   for (type in ANCHOR_TYPE_ORDER) {
     count <- sum(anchor2_type == type)
     pct <- 100 * mean(anchor2_type == type)
-    cat(sprintf("    %-25s: %5d (%.1f%%)\n", type, count, pct))
+    cat(sprintf("    %-20s: %5d (%.1f%%)\n", type, count, pct))
   }
   cat("\n")
 
   # --- Step 7: Classify loop types ---
-  cat("Step 7: Classifying loop types (up to 55 combinations)...\n")
+  cat("Step 7: Classifying loop types (36 combinations)...\n")
 
   loop_type <- classify_loop_type_extended(anchor1_type, anchor2_type)
 
@@ -741,8 +694,6 @@ annotate_loops_extended <- function(
     sprintf("Input file: %s", input_file),
     sprintf("Output dir: %s", output_dir),
     sprintf("TSS threshold: %d bp", tss_threshold),
-    sprintf("Distal threshold: %d bp (proximal >%d to <=%d, distal >%d)",
-            distal_threshold, tss_threshold, distal_threshold, distal_threshold),
     "",
     sprintf("Total loops: %d", nrow(loops_df)),
     sprintf("  Up in mutant: %d (%.1f%%)",
@@ -775,14 +726,14 @@ annotate_loops_extended <- function(
   for (type in ANCHOR_TYPE_ORDER) {
     count <- sum(anchor1_type == type)
     pct <- 100 * mean(anchor1_type == type)
-    summary_text <- c(summary_text, sprintf("    %-25s: %5d (%.1f%%)", type, count, pct))
+    summary_text <- c(summary_text, sprintf("    %-20s: %5d (%.1f%%)", type, count, pct))
   }
 
   summary_text <- c(summary_text, "  Anchor2:")
   for (type in ANCHOR_TYPE_ORDER) {
     count <- sum(anchor2_type == type)
     pct <- 100 * mean(anchor2_type == type)
-    summary_text <- c(summary_text, sprintf("    %-25s: %5d (%.1f%%)", type, count, pct))
+    summary_text <- c(summary_text, sprintf("    %-20s: %5d (%.1f%%)", type, count, pct))
   }
 
   summary_text <- c(summary_text, "", "Loop Type Distribution:")
@@ -954,7 +905,7 @@ create_anchor_type_barplot <- function(loops_df, output_dir) {
     scale_fill_manual(values = ANCHOR_COLORS, name = "Anchor Type") +
     labs(
       title = "Anchor Type Distribution by Direction",
-      subtitle = "10 categories including proximal/distal enhancer distinction",
+      subtitle = "Extended classification with Polycomb and Bivalent_Promoter categories",
       x = "Anchor",
       y = "Percentage (%)"
     ) +
@@ -1005,7 +956,7 @@ create_loop_type_direction_barplot <- function(loops_df, output_dir) {
     ) +
     labs(
       title = "Loop Type Distribution by Direction",
-      subtitle = "10 categories including proximal/distal enhancer distinction",
+      subtitle = "Extended classification with Polycomb and Bivalent_Promoter categories",
       x = "Loop Type",
       y = "Count"
     ) +
@@ -1072,8 +1023,7 @@ parse_arguments <- function() {
       cat("Description:\n")
       cat("  Annotates differential loops with chromatin state categories:\n")
       cat("    - Active_Promoter, Repressed_Promoter, Bivalent_Promoter, Polycomb,\n")
-      cat("      Active_Enhancer_Proximal/Distal, Poised_Enhancer_Proximal/Distal,\n")
-      cat("      CTCF_Site, Other\n\n")
+      cat("      Active_Enhancer, Poised_Enhancer, Other\n\n")
       cat("Output structure:\n")
       cat("  outputs/loop_annotation_extended/\n")
       cat("  ├── early/           (Early, Cerebellum peaks)\n")
