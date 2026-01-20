@@ -1,0 +1,69 @@
+============================================================
+LoopBin Pipeline Started: Tue Jan 20 01:07:59 PST 2026
+============================================================
+Working directory: /expanse/lustre/projects/csd940/zalibhai/loop-class
+mcool: /expanse/lustre/projects/csd940/zalibhai/loop-class/ctrl_merged.mcool::/resolutions/8000
+Bigwigs: H3K27ac, H3K27me3
+
+=== Step 0: Preparing clean BEDPE file ===
+  Prepared 2910 loops
+
+=== Step 1: Preprocessing bigwigs → bedgraphs ===
+  Processing H3K27ac...
+  Processing H3K27me3...
+  Bedgraph files created:
+-rw-r--r-- 1 zalibhai csd940 531236 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr10_H3K27ac8K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 538236 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr10_H3K27me38K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 494396 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr11_H3K27ac8K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 500706 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr11_H3K27me38K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 486729 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr12_H3K27ac8K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 492554 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr12_H3K27me38K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 487577 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr13_H3K27ac8K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 492778 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr13_H3K27me38K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 507223 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr14_H3K27ac8K.bedgraph
+-rw-r--r-- 1 zalibhai csd940 512259 Jan 20 01:08 /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/chr14_H3K27me38K.bedgraph
+  Total bedgraph files: 40
+
+=== Step 2: Processing input data ===
+  Combining loops + mcool + bedgraphs...
+File /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/loops_clean.bedpe detected
+
+  Processed raw data:
+total 112
+drwxr-sr-x 2 zalibhai csd940 57344 Jan 20 01:07 .
+drwxr-sr-x 3 zalibhai csd940 57344 Jan 20 01:07 ..
+
+=== Step 2b: Normalizing and creating training input ===
+  Normalized data created:
+
+=== Step 3: Pretraining autoencoder ===
+  Input: /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/processed/merged_log_data.npy
+  Pretrained model output:
+total 112
+drwxr-sr-x 2 zalibhai csd940 57344 Jan 20 01:07 .
+drwxr-sr-x 7 zalibhai csd940 57344 Jan 20 01:07 ..
+
+=== Step 4: Training VaDE model ===
+  Using pretrained model: /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/pretrain/
+seed = 73
+
+============================================================
+LoopBin Pipeline Complete: Tue Jan 20 01:08:38 PST 2026
+============================================================
+
+Output locations:
+  Bedgraphs:       /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/bedgraphs/
+  Processed data:  /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/processed/
+  Training input:  /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/processed/merged_log_data.npy
+  Pretrained:      /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/pretrain/
+  Final results:   /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/train/
+
+Key output files:
+  Cluster labels:  /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/train//labels.npy
+  Labeled loops:   /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/train//labels_loops.bedpe
+  Cluster plot:    /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/train//all_clusters.pdf
+  t-SNE plot:      /expanse/lustre/projects/csd940/zalibhai/loop-class/loopbin_output/train//tsne_perplex100.pdf
+
+total 112
+drwxr-sr-x 2 zalibhai csd940 57344 Jan 20 01:07 .
+drwxr-sr-x 7 zalibhai csd940 57344 Jan 20 01:07 ..
