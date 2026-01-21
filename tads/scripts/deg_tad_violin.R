@@ -342,7 +342,7 @@ create_violin_plot <- function(plot_data, title = "DEGs proximal to differential
     labs(
       title = title,
       x = NULL,
-      y = expression(log[2]*"FC cKO vs floxed")
+      y = expression(log[2]*"FC BAP1-KO vs WT")
     ) +
     # Theme matching SATB2 style
     theme_classic(base_size = 12) +
@@ -431,12 +431,15 @@ save_outputs <- function(plot_result, plot_data, output_dir, timepoint) {
   # Save plot in multiple formats
   pdf_file <- file.path(output_dir, sprintf("deg_tad_violin_%s.pdf", timepoint))
   svg_file <- file.path(output_dir, sprintf("deg_tad_violin_%s.svg", timepoint))
+  jpg_file <- file.path(output_dir, sprintf("deg_tad_violin_%s.jpg", timepoint))
 
   ggsave(pdf_file, plot_result$plot, width = 5, height = 6, dpi = 300)
   ggsave(svg_file, plot_result$plot, width = 5, height = 6, dpi = 300)
+  ggsave(jpg_file, plot_result$plot, width = 5, height = 6, dpi = 300)
 
   cat(sprintf("  Saved: %s\n", pdf_file))
   cat(sprintf("  Saved: %s\n", svg_file))
+  cat(sprintf("  Saved: %s\n", jpg_file))
 
   # Save gene list
   gene_file <- file.path(output_dir, sprintf("deg_boundary_genes_%s.tsv", timepoint))
