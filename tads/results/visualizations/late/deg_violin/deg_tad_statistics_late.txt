@@ -2,33 +2,42 @@
 DEG-TAD Boundary Analysis: late
 ===========================================
 
-Date: 2026-01-20 17:57:53.892333
-Proximity window: 10 kb
-DEG significance threshold: padj < 0.05
+Date: 2026-01-20 18:04:47.731456
+
+--- METHODOLOGY ---
+Gene-boundary association: GREAT-style regulatory domains
+  Basal domain: 5kb upstream, 1kb downstream of TSS
+  Max extension: 100kb (stops at neighboring gene's basal domain)
+DEG thresholds: padj < 0.05 AND |log2FC| > 0.3
+
+Boundary classification verified:
+  Matrix 1 = Control (cont_mat1 = ctrl_mat in TADCompare)
+  'Enriched_In = Matrix 1' -> 'lost' (stronger in control, weaker in mutant)
+  'Enriched_In = Matrix 2' -> 'gained' (stronger in mutant)
 
 --- GENE COUNTS ---
-Total genes near differential boundaries: 136
-  Genes near LOST boundaries: 69
-  Genes near GAINED boundaries: 67
+Total genes near differential boundaries: 323
+  Genes near LOST boundaries: 151
+  Genes near GAINED boundaries: 172
 
 --- LOG2FC STATISTICS ---
 
 LOST boundaries (Control-enriched):
-  Median log2FC: -0.584
-  Mean log2FC: -0.656
-  SD: 0.699
-  Range: [-3.101, 1.469]
+  Median log2FC: -0.573
+  Mean log2FC: -0.545
+  SD: 0.902
+  Range: [-3.439, 4.244]
 
 GAINED boundaries (Mutant-enriched):
-  Median log2FC: 0.306
-  Mean log2FC: 0.199
-  SD: 0.867
-  Range: [-1.664, 2.368]
+  Median log2FC: 0.357
+  Mean log2FC: 0.095
+  SD: 0.955
+  Range: [-2.740, 2.509]
 
 --- STATISTICAL TEST ---
 Mann-Whitney U test (Wilcoxon rank-sum):
-  W statistic: 3690
-  p-value: 2.00e-09
+  W statistic: 18173
+  p-value: 5.88e-10
   Significant (p < 0.05): YES
 
 --- INTERPRETATION ---

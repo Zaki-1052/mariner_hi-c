@@ -39,8 +39,13 @@ suppressPackageStartupMessages({
 BASE_DIR <- getwd()
 
 # Parameters
-PROXIMITY_WINDOW <- 10000  # 10kb window around boundary
-DEG_PADJ_THRESHOLD <- 0.05  # Significance threshold for DEGs
+DEG_PADJ_THRESHOLD <- 0.05      # Significance threshold for DEGs
+DEG_LFC_THRESHOLD <- 0.3        # Minimum |log2FoldChange| for DEGs
+
+# GREAT-style gene-boundary association parameters
+GREAT_UPSTREAM <- 5000          # 5kb upstream of TSS
+GREAT_DOWNSTREAM <- 1000        # 1kb downstream of TSS
+GREAT_MAX_EXTENSION <- 100000   # 100kb maximum extension
 
 # Timepoint-specific file mappings
 TIMEPOINT_CONFIG <- list(
@@ -113,12 +118,14 @@ load_rnaseq_degs <- function(rna_file) {
     stop("Expected column 'ensembl_gene_id' not found in RNA-seq file")
   }
 
-  # Filter for significant DEGs and rename column to reflect actual content
+  # Filter for significant DEGs: padj < 0.05 AND |log2FC| > 0.3
   deg_df <- rna_df %>%
     dplyr::filter(!is.na(padj) & padj < DEG_PADJ_THRESHOLD) %>%
+    dplyr::filter(abs(log2FoldChange) > DEG_LFC_THRESHOLD) %>%
     dplyr::select(gene_symbol = ensembl_gene_id, log2FoldChange, padj, baseMean)
 
-  cat(sprintf("  Loaded %d significant DEGs (padj < %g)\n", nrow(deg_df), DEG_PADJ_THRESHOLD))
+  cat(sprintf("  Loaded %d significant DEGs (padj < %g, |log2FC| > %g)\n",
+              nrow(deg_df), DEG_PADJ_THRESHOLD, DEG_LFC_THRESHOLD))
 
   return(deg_df)
 }
@@ -151,29 +158,87 @@ convert_symbols_to_entrez <- function(gene_symbols) {
   return(mapping)
 }
 
-#' Find genes within proximity window of TAD boundaries
+#' Find genes associated with TAD boundaries using GREAT-style regulatory domains
+#'
+#' GREAT association rules:
+#' - Basal domain: 5kb upstream to 1kb downstream of TSS
+#' - Extended domain: up to 100kb, but stops at nearest gene's basal domain
+#' - A boundary is associated with a gene if it falls within the gene's regulatory domain
+#'
 #' @param boundaries tibble of differential boundaries
-#' @param proximity_window Window size in bp (default 10kb)
 #' @return tibble of gene-boundary associations
-find_boundary_genes <- function(boundaries, proximity_window = PROXIMITY_WINDOW) {
-  # Create GRanges for boundaries with flanking regions
+find_boundary_genes <- function(boundaries) {
+  # Get gene information from TxDb
+  txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
+  genes_gr <- genes(txdb)
+
+  # Get TSS and strand information
+  tss_pos <- ifelse(as.character(strand(genes_gr)) == "-",
+                    end(genes_gr),
+                    start(genes_gr))
+  gene_strand <- as.character(strand(genes_gr))
+  gene_chr <- as.character(seqnames(genes_gr))
+  gene_ids <- names(genes_gr)
+
+  # Build gene info dataframe
+  gene_info <- data.frame(
+    entrez_id = gene_ids,
+    chr = gene_chr,
+    tss = tss_pos,
+    strand = gene_strand,
+    stringsAsFactors = FALSE
+  )
+
+  # Calculate GREAT-style regulatory domains for each gene
+  # Basal: 5kb upstream, 1kb downstream (relative to transcription direction)
+  # Then extend up to 100kb, stopping at neighboring gene's basal domain
+
+  gene_info <- gene_info %>%
+    dplyr::arrange(chr, tss) %>%
+    dplyr::mutate(
+      # Basal domain boundaries (strand-aware)
+      basal_start = ifelse(strand == "+", tss - GREAT_UPSTREAM, tss - GREAT_DOWNSTREAM),
+      basal_end = ifelse(strand == "+", tss + GREAT_DOWNSTREAM, tss + GREAT_UPSTREAM),
+      # Maximum possible extension
+      max_start = tss - GREAT_MAX_EXTENSION,
+      max_end = tss + GREAT_MAX_EXTENSION
+    ) %>%
+    dplyr::group_by(chr) %>%
+    dplyr::mutate(
+      # Get neighboring genes' basal domains
+      prev_basal_end = dplyr::lag(basal_end, default = -Inf),
+      next_basal_start = dplyr::lead(basal_start, default = Inf),
+      # Extended domain: extend up to max, but stop at neighbor's basal domain
+      reg_start = pmax(max_start, prev_basal_end, 1),
+      reg_end = pmin(max_end, next_basal_start)
+    ) %>%
+    dplyr::ungroup() %>%
+    # Ensure valid ranges (reg_end >= reg_start), use basal domain as fallback
+    dplyr::mutate(
+      reg_start = ifelse(reg_end < reg_start, basal_start, reg_start),
+      reg_end = ifelse(reg_end < reg_start, basal_end, reg_end),
+      # Final safety: ensure end >= start
+      reg_end = pmax(reg_end, reg_start)
+    ) %>%
+    dplyr::select(entrez_id, chr, tss, strand, reg_start, reg_end)
+
+  # Create GRanges for gene regulatory domains
+  gene_domains_gr <- GRanges(
+    seqnames = gene_info$chr,
+    ranges = IRanges(start = gene_info$reg_start, end = gene_info$reg_end),
+    entrez_id = gene_info$entrez_id
+  )
+
+  # Create GRanges for boundaries (single bp)
   boundary_gr <- GRanges(
     seqnames = boundaries$chr,
-    ranges = IRanges(
-      start = pmax(1, boundaries$Boundary - proximity_window),
-      end = boundaries$Boundary + proximity_window
-    ),
+    ranges = IRanges(start = boundaries$Boundary, end = boundaries$Boundary),
     boundary_class = boundaries$boundary_class,
     boundary_pos = boundaries$Boundary
   )
 
-  # Get gene TSS positions from TxDb
-  txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
-  genes_gr <- genes(txdb)
-  tss_gr <- resize(genes_gr, width = 1, fix = "start")
-
-  # Find overlaps between boundary windows and gene TSS
-  overlaps <- findOverlaps(boundary_gr, tss_gr, ignore.strand = TRUE)
+  # Find boundaries that fall within gene regulatory domains
+  overlaps <- findOverlaps(boundary_gr, gene_domains_gr, ignore.strand = TRUE)
 
   if (length(overlaps) == 0) {
     warning("No gene-boundary overlaps found")
@@ -187,14 +252,16 @@ find_boundary_genes <- function(boundaries, proximity_window = PROXIMITY_WINDOW)
 
   # Build gene-boundary association table
   gene_boundary_df <- tibble(
-    entrez_id = names(tss_gr)[subjectHits(overlaps)],
+    entrez_id = gene_domains_gr$entrez_id[subjectHits(overlaps)],
     boundary_class = boundary_gr$boundary_class[queryHits(overlaps)],
     boundary_pos = boundary_gr$boundary_pos[queryHits(overlaps)],
     chr = as.character(seqnames(boundary_gr)[queryHits(overlaps)])
   )
 
-  cat(sprintf("  Found %d gene-boundary associations\n", nrow(gene_boundary_df)))
+  cat(sprintf("  Found %d gene-boundary associations (GREAT-style)\n", nrow(gene_boundary_df)))
   cat(sprintf("    - Unique genes: %d\n", length(unique(gene_boundary_df$entrez_id))))
+  cat(sprintf("    - Parameters: %dkb upstream, %dkb downstream, %dkb max extension\n",
+              GREAT_UPSTREAM/1000, GREAT_DOWNSTREAM/1000, GREAT_MAX_EXTENSION/1000))
 
   return(gene_boundary_df)
 }
@@ -305,8 +372,17 @@ generate_statistics <- function(plot_data, test_result, timepoint) {
     "===========================================",
     "",
     sprintf("Date: %s", Sys.time()),
-    sprintf("Proximity window: %d kb", PROXIMITY_WINDOW / 1000),
-    sprintf("DEG significance threshold: padj < %g", DEG_PADJ_THRESHOLD),
+    "",
+    "--- METHODOLOGY ---",
+    "Gene-boundary association: GREAT-style regulatory domains",
+    sprintf("  Basal domain: %dkb upstream, %dkb downstream of TSS", GREAT_UPSTREAM/1000, GREAT_DOWNSTREAM/1000),
+    sprintf("  Max extension: %dkb (stops at neighboring gene's basal domain)", GREAT_MAX_EXTENSION/1000),
+    sprintf("DEG thresholds: padj < %g AND |log2FC| > %g", DEG_PADJ_THRESHOLD, DEG_LFC_THRESHOLD),
+    "",
+    "Boundary classification verified:",
+    "  Matrix 1 = Control (cont_mat1 = ctrl_mat in TADCompare)",
+    "  'Enriched_In = Matrix 1' -> 'lost' (stronger in control, weaker in mutant)",
+    "  'Enriched_In = Matrix 2' -> 'gained' (stronger in mutant)",
     "",
     "--- GENE COUNTS ---",
     sprintf("Total genes near differential boundaries: %d", nrow(plot_data)),
@@ -404,8 +480,8 @@ process_timepoint <- function(timepoint) {
   cat("\n[Step 3] Converting gene symbols to Entrez IDs...\n")
   id_mapping <- convert_symbols_to_entrez(deg_df$gene_symbol)
 
-  # Step 4: Find genes near boundaries
-  cat("\n[Step 4] Finding genes within %d kb of boundaries...\n", PROXIMITY_WINDOW / 1000)
+  # Step 4: Find genes associated with boundaries (GREAT-style)
+  cat("\n[Step 4] Finding genes using GREAT-style regulatory domains...\n")
   gene_boundary_df <- find_boundary_genes(boundaries)
 
   # Step 5: Merge with RNA-seq data
@@ -464,8 +540,9 @@ main <- function() {
   cat("====================================================\n")
   cat(sprintf("Base directory: %s\n", BASE_DIR))
   cat(sprintf("Timepoint: %s\n", timepoint_arg))
-  cat(sprintf("Proximity window: %d kb\n", PROXIMITY_WINDOW / 1000))
-  cat(sprintf("DEG threshold: padj < %g\n", DEG_PADJ_THRESHOLD))
+  cat(sprintf("Gene association: GREAT-style (%dkb up, %dkb down, %dkb max)\n",
+              GREAT_UPSTREAM/1000, GREAT_DOWNSTREAM/1000, GREAT_MAX_EXTENSION/1000))
+  cat(sprintf("DEG threshold: padj < %g AND |log2FC| > %g\n", DEG_PADJ_THRESHOLD, DEG_LFC_THRESHOLD))
 
   # Determine which timepoints to process
   if (tolower(timepoint_arg) == "both") {
