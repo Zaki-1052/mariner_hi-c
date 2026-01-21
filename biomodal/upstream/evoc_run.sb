@@ -1,0 +1,54 @@
+#!/bin/bash
+#SBATCH --job-name=biomodal_evoc_bap1
+#SBATCH --output=logs/biomodal_evoc_bap1_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=48:00:00
+#SBATCH --account=csd940
+
+# Create logs directory
+mkdir -p logs
+
+echo "========================================="
+echo "Duet evoC Bap1 Run"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Memory: 128GB"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate env_nf
+
+# Change to working directory
+cd /expanse/lustre/projects/csd940/zalibhai/biomodal
+
+# Create output directory if needed
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output
+
+biomodal run duet \
+  --input-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/input \
+  --output-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output \
+  --meta-file /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/input/metadata.csv \
+  --run-name evoC_Bap1_run \
+  --tag evoC_Bap1_run \
+  --mode 6bp \
+  --additional-profile deep_seq \
+  --chg-chh-contexts \
+  --quantification-output cxreport,bismark,bedmethyl,bedgraph \
+  --compute-asm \
+  --use-gvcf \
+  --reference-genome-name GRCm38 \
+  --additional-params run_by_default.fastqc.raw=true,call_somatic_variants=true \
+
+echo ""
+echo "========================================="
+echo "End time: $(date)"
+echo "========================================="
