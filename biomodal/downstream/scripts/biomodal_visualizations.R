@@ -753,6 +753,79 @@ p_region_combined <- (p_region | p_mc_hmc) / (p_context_meth | p_context_dmr) +
 save_multiformat_ggplot(p_region_combined, file.path(OUTPUT_DIR, "03_dmr_region_statistics"),
                         width = 14, height = 12)
 
+# -------------------------------------------------------------------------
+# FIGURE 3b: Direction comparison - mC vs hmC asymmetry
+# -------------------------------------------------------------------------
+cat("Creating Figure 3b: Methylation direction comparison...\n")
+
+# Calculate direction statistics for mC
+mc_sig_stats <- mc_dmr %>%
+  dplyr::filter(significant) %>%
+  dplyr::summarise(
+    Hypermethylated = sum(direction == "Hypermethylated"),
+    Hypomethylated = sum(direction == "Hypomethylated"),
+    Total = n()
+  ) %>%
+ dplyr::mutate(
+    Hyper_pct = 100 * Hypermethylated / Total,
+    Hypo_pct = 100 * Hypomethylated / Total
+  )
+
+# Calculate direction statistics for hmC
+hmc_sig_stats <- hmc_dmr %>%
+  dplyr::filter(significant) %>%
+  dplyr::summarise(
+    Increased = sum(direction == "Hypermethylated"),
+    Decreased = sum(direction == "Hypomethylated"),
+    Total = n()
+  ) %>%
+  dplyr::mutate(
+    Inc_pct = 100 * Increased / Total,
+    Dec_pct = 100 * Decreased / Total
+  )
+
+# Create data frame for plotting
+direction_data <- data.frame(
+  Modification = c("5mC", "5mC", "5hmC", "5hmC"),
+  Direction = c("Increased", "Decreased", "Increased", "Decreased"),
+  Count = c(mc_sig_stats$Hypermethylated, mc_sig_stats$Hypomethylated,
+            hmc_sig_stats$Increased, hmc_sig_stats$Decreased),
+  Percentage = c(mc_sig_stats$Hyper_pct, mc_sig_stats$Hypo_pct,
+                 hmc_sig_stats$Inc_pct, hmc_sig_stats$Dec_pct)
+)
+
+direction_data$Modification <- factor(direction_data$Modification, levels = c("5mC", "5hmC"))
+direction_data$Direction <- factor(direction_data$Direction, levels = c("Increased", "Decreased"))
+
+# Create the bar chart
+p_direction <- ggplot(direction_data, aes(x = Modification, y = Percentage, fill = Direction)) +
+ geom_bar(stat = "identity", position = "dodge", color = "black", linewidth = 0.5, width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%\n(n=%d)", Percentage, Count)),
+            position = position_dodge(width = 0.7), vjust = -0.3, size = 4, fontface = "bold") +
+  scale_fill_manual(values = c("Increased" = "#D7191C", "Decreased" = "#2C7BB6"),
+                    name = "Direction in\nBAP1-KO Mutant") +
+  scale_y_continuous(limits = c(0, 105), expand = c(0, 0)) +
+  labs(
+    title = "Asymmetric Direction of Methylation Changes",
+    subtitle = sprintf("5mC: %d significant genes | 5hmC: %d significant genes",
+                       mc_sig_stats$Total, hmc_sig_stats$Total),
+    x = "Methylation Type",
+    y = "Percentage of Significant DMRs (%)"
+  ) +
+  theme_biomodal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16)
+  ) +
+  # Add annotation for key finding
+  annotate("text", x = 1.5, y = 98,
+           label = "mC increases while hmC decreases\n= Blocked TET-mediated demethylation",
+           size = 4, fontface = "italic", color = "grey30")
+
+save_multiformat_ggplot(p_direction, file.path(OUTPUT_DIR, "03b_direction_comparison"),
+                        width = 10, height = 8)
+
 cat("Section 3 complete.\n\n")
 
 # =============================================================================
