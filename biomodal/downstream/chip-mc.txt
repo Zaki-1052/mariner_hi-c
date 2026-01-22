@@ -1,0 +1,2967 @@
+
+ ▐▛███▜▌   Claude Code v2.1.15
+▝▜█████▛▘  Opus 4.5 · Claude Max
+  ▘▘ ▝▝    ~/Documents/GitHub/mariner_hi-c
+══════════════════ Conversation compacted · ctrl+o for history ═════════════════
+
+❯ /compact 
+  ⎿  Compacted (ctrl+o to see full summary)
+  ⎿  Read scripts/utils/multi_format_output.R (272 lines)
+  ⎿  Referenced file biomodal/downstream/scripts/biomodal_visualizations.R
+  ⎿  Read biomodal/CLAUDE.md (225 lines)
+  ⎿  Referenced file biomodal/downstream/modality/outputs/analysis_summary.md
+  ⎿ Read biomodal/downstream/modality/outputs/run-2/outputs_CG/Results/BioQC_202
+    60121_170327/biological_qc_report_4_samples_20260121_170327.json (293 lines)
+
+  ⎿  Plan file referenced (~/.claude/plans/recursive-booping-crown.md)
+
+❯ examining the @biomodal/downstream/scripts/biomodal_visualizations.R -- \ 
+  \                                                                         
+  because \                                                                 
+  all the genes on that list of top hits has a bunch of epigenetic changes  
+  (increased H2AK119ub, reduced H3K27ac, reduced H3K27me1) and are sig      
+  reduced in RNAseq\                                                        
+  i would like you to add another visualization to use the @peaks/beds/ in  
+  the manner of both @scripts/annotate_loops_extended.R                     
+  @tads/scripts/tad_chip_classification.R to add visualization(s) to the    
+  existing script that shows this trend, taking in the peak files and then  
+  also showing at the categories like i did with the tads. please make a    
+  plan first                                                                
+  @biomodal/downstream/plots/visualizations/tables/summary_statistics.txt   
+  according to this and @biomodal/CLAUDE.md before proceeding to implement  
+  ⎿  Read biomodal/downstream/scripts/biomodal_visualizations.R (1304 lines)
+  ⎿  Listed directory peaks/beds/
+  ⎿  Read scripts/annotate_loops_extended.R (1005 lines)
+  ⎿  Read tads/scripts/tad_chip_classification.R (1190 lines)
+  ⎿ Read biomodal/downstream/plots/visualizations/tables/summary_statistics.txt 
+    (75 lines)
+
+  ⎿  Read biomodal/CLAUDE.md (225 lines)
+  ⎿  Loaded tads/CLAUDE.md
+
+⏺ I'll start by reading the existing plan file to understand what's there, then
+  design the new ChIP-seq integration section.
+
+⏺ Reading Plan(~/.claude/plans/recursive-booping-crown.md)
+  ⎿  Read 157 lines
+
+⏺ Now I need to understand the chromatin state classification approach better.
+  Let me also check what ChIP-seq peak files are available and look at the
+  existing implementation patterns.
+
+⏺ Bash(ls -la /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/)
+  ⎿  total 24560
+     drwxr-xr-x@ 15 zakiralibhai  staff      480 Jan 13 17:08 .
+     drwxr-xr-x@ 15 zakiralibhai  staff      480 Jan 18 19:44 ..
+     … +26 lines (ctrl+o to expand)
+
+⏺ Now let me check if there are any additional peak files I might be missing,
+  and then I'll update the plan.
+
+⏺ Bash(ls -la /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/ | head
+      -20)
+  ⎿  total 12576
+     drwxr-xr-x@ 15 zakiralibhai  staff      480 Jan 18 19:44 .
+     drwxr-xr-x@ 25 zakiralibhai  staff      800 Jan 21 12:41 ..
+     … +17 lines (ctrl+o to expand)
+
+⏺ Now I have a clear picture. Let me update the plan file with a new Section 10
+  for ChIP-seq chromatin state analysis. This will follow the patterns from
+  annotate_loops_extended.R and tad_chip_classification.R.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+       83  2. **Export top gene lists** - TSV files for downstream       
+           analysis                                                      
+       84  3. **Enrichment results export** - TSV files of enriched      
+           terms                                                         
+       85                                                                
+       86 +### SECTION 10: ChIP-seq Chromatin State Analysis (NEW)       
+       87 +                                                              
+       88 +**Purpose:** Show that differentially methylated genes have   
+          +coordinated epigenetic changes:                               
+       89 +- Increased H2AK119ub (BAP1 substrate - not directly measured 
+          + but inferred)                                                
+       90 +- Reduced H3K27ac (active enhancer/promoter mark)             
+       91 +- Reduced H3K4me1 (poised enhancer mark)                      
+       92 +                                                              
+       93 +**Data Sources:**                                             
+       94 +- ChIP-seq peaks from `peaks/beds/`:                          
+       95 +  - `H3K27acCerebellumLate2.bed` - Active enhancer/promoter   
+          +mark                                                          
+       96 +  - `H3K27me3CerebellumLate1.bed` - Polycomb repressive mark  
+       97 +  - `H3K4me1CerebellumLate1.bed` - Poised enhancer mark       
+       98 +  - `H3K4me3CerebellumLate2.bed` - Active promoter mark       
+       99 +  - `Bivalent_Cerebellum_Late.bed` - K4me3+K27me3 overlap     
+          +regions                                                       
+      100 +- Gene body DMR coordinates from modality output              
+      101 +                                                              
+      102 +**Implementation Approach (following                          
+          +annotate_loops_extended.R and tad_chip_classification.R):**   
+      103 +1. Load ChIP-seq peak BED files as GRanges                    
+      104 +2. Create GRanges from DMR gene body coordinates              
+      105 +3. Compute distance to TSS using                              
+          +TxDb.Mmusculus.UCSC.mm10.knownGene                            
+      106 +4. Compute overlaps between gene bodies and each ChIP mark    
+      107 +5. Classify genes into 7 chromatin state categories:          
+      108 +   - **Active_Promoter**: H3K4me3+ AND NOT H3K27me3 AND ≤2kb  
+          +from TSS                                                      
+      109 +   - **Repressed_Promoter**: H3K27me3+ AND NOT H3K27ac AND    
+          +≤2kb from TSS                                                 
+      110 +   - **Bivalent_Promoter**: K4me3+K27me3 overlap region       
+      111 +   - **Polycomb**: H3K27me3+ AND >2kb from TSS                
+      112 +   - **Active_Enhancer**: H3K27ac+ AND >2kb from TSS          
+      113 +   - **Poised_Enhancer**: H3K4me1+ AND NOT H3K27ac AND NOT    
+          +H3K27me3 AND >2kb                                             
+      114 +   - **Other**: No marks / unclassified                       
+      115 +                                                              
+      116 +**Visualizations:**                                           
+      117 +1. **10a_chromatin_state_distribution** - Overall chromatin   
+          +state distribution of all DMR genes                           
+      118 +   - Stacked bar chart showing % of significant mC and hmC    
+          +DMRs in each state                                            
+      119 +   - Pie chart summary                                        
+      120 +                                                              
+      121 +2. **10b_chromatin_by_methylation_direction** - Compare hyper 
+          + vs hypomethylated genes                                      
+      122 +   - Side-by-side stacked bars: Hypermethylated (mC↑) vs      
+          +Hypomethylated (mC↓) by chromatin state                       
+      123 +   - Same for hmC: Increased vs Decreased by chromatin state  
+      124 +   - Key insight: Do hypermethylated genes preferentially     
+          +have specific chromatin signatures?                           
+      125 +                                                              
+      126 +3. **10c_chip_mark_overlap_heatmap** - Per-mark overlap       
+          +percentages                                                   
+      127 +   - Heatmap showing % of DMR genes overlapping each ChIP     
+          +mark                                                          
+      128 +   - Rows: All significant, Hypermethylated, Hypomethylated   
+      129 +   - Columns: H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent   
+      130 +                                                              
+      131 +4. **10d_coordinated_genes_chromatin** - Chromatin state of   
+          +mC↑/hmC↓ coordinated genes                                    
+      132 +   - Stacked bar showing chromatin state distribution of the  
+          +2,856 coordinated genes                                       
+      133 +   - Focus on genes with both mC increase AND hmC decrease    
+      134 +                                                              
+      135 +5. **10e_top_genes_chromatin_annotation** - Top 20 genes with 
+          + chromatin marks                                              
+      136 +   - Horizontal bar chart of top 20 genes by combined effect  
+      137 +   - Annotated with chromatin state category                  
+      138 +   - Color-coded by state                                     
+      139 +                                                              
+      140 +**Color Scheme (consistent with annotate_loops_extended.R):** 
+      141 +```r                                                          
+      142 +CHROMATIN_STATE_COLORS <- c(                                  
+      143 +  "Active_Promoter" = "#e41a1c",     # Red - active           
+          +transcription                                                 
+      144 +  "Repressed_Promoter" = "#756bb1",  # Purple -               
+          +Polycomb-silenced promoter                                    
+      145 +  "Bivalent_Promoter" = "#984ea3",   # Magenta -              
+          +developmental poised                                          
+      146 +  "Polycomb" = "#4daf4a",            # Green - distal         
+          +repressive                                                    
+      147 +  "Active_Enhancer" = "#377eb8",     # Blue - active enhancer 
+      148 +  "Poised_Enhancer" = "#ff7f00",     # Orange - primed        
+          +enhancer                                                      
+      149 +  "Other" = "#999999"                # Gray - unmarked        
+      150 +)                                                             
+      151 +```                                                           
+      152 +                                                              
+      153 +**Output Files:**                                             
+      154 +- `10a_chromatin_state_distribution/` - Distribution plots    
+      155 +- `10b_chromatin_by_methylation_direction/` - Directional     
+          +comparison                                                    
+      156 +- `10c_chip_mark_overlap_heatmap/` - Overlap heatmap          
+      157 +- `10d_coordinated_genes_chromatin/` - Coordinated genes      
+          +analysis                                                      
+      158 +- `10e_top_genes_chromatin_annotation/` - Annotated top genes 
+      159 +- `tables/dmr_chromatin_state_annotation.tsv` - Full          
+          +annotation table                                              
+      160 +- `tables/chromatin_state_summary.tsv` - Summary statistics   
+      161 +                                                              
+      162 +**Biological Hypothesis to Test:**                            
+      163 +If BAP1 loss leads to increased H2AK119ub which restricts TET 
+          + access:                                                      
+      164 +- Hypermethylated genes (mC↑) may show enrichment in specific 
+          + chromatin states                                             
+      165 +- Polycomb-marked regions (H3K27me3+) may be preferentially   
+          +affected                                                      
+      166 +- Active chromatin marks (H3K27ac, H3K4me3) may be reduced in 
+          + affected genes                                               
+      167 +                                                              
+      168  ## Key Genes to Highlight (Coordinated mC↑ / hmC↓)            
+      169  | Gene | mC Change | hmC Change | q-value (mC) | q-value      
+           (hmC) |                                                       
+      170  |------|-----------|------------|--------------|------------- 
+           --|                                                           
+
+⏺ Now let me update the Output Structure and Dependencies sections to include
+  the new Section 10 outputs.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+      186  ## Output Structure                                           
+      187  ```                                                           
+      188  biomodal/downstream/plots/visualizations/                     
+      189 -├── 01_qc_overview.{pdf,svg,jpg}                              
+      190 -├── 02_sample_correlations.{pdf,svg,jpg}                      
+      191 -├── 03_dmr_region_statistics.{pdf,svg,jpg}                    
+      192 -├── 04_volcano_plots.{pdf,svg,jpg}                            
+      193 -├── 05_coordinated_changes.{pdf,svg,jpg}                      
+      194 -├── 06_top_genes.{pdf,svg,jpg}                                
+      195 -├── 07_effect_size_distributions.{pdf,svg,jpg}                
+      196 -├── 08_syt1_zbtb20_focus.{pdf,svg,jpg}                        
+      197 -├── 09_enrichment_go_bp.{pdf,svg,jpg}                         
+      198 -├── 09_enrichment_go_cc.{pdf,svg,jpg}                         
+      199 -├── 09_enrichment_go_mf.{pdf,svg,jpg}                         
+      200 -├── 09_enrichment_kegg.{pdf,svg,jpg}                          
+      189 +├── 01_qc_overview/                                           
+      190 +├── 02_sample_correlations/                                   
+      191 +├── 03_dmr_region_statistics/                                 
+      192 +├── 04_volcano_plots/                                         
+      193 +├── 05_coordinated_changes/                                   
+      194 +├── 06_top_genes/                                             
+      195 +├── 07_effect_size_distributions/                             
+      196 +├── 08_enrichment_go_bp/                                      
+      197 +├── 08_enrichment_go_cc/                                      
+      198 +├── 08_enrichment_go_mf/                                      
+      199 +├── 08_enrichment_kegg/                                       
+      200 +├── 10a_chromatin_state_distribution/       (NEW)             
+      201 +├── 10b_chromatin_by_methylation_direction/ (NEW)             
+      202 +├── 10c_chip_mark_overlap_heatmap/          (NEW)             
+      203 +├── 10d_coordinated_genes_chromatin/        (NEW)             
+      204 +├── 10e_top_genes_chromatin_annotation/     (NEW)             
+      205  └── tables/                                                   
+      206      ├── top_mc_dmrs.tsv                                       
+      207      ├── top_hmc_dmrs.tsv                                      
+     ...
+      206      ├── enrichment_go_cc.tsv                                  
+      207      ├── enrichment_go_mf.tsv                                  
+      208      ├── enrichment_kegg.tsv                                   
+      209 +    ├── dmr_chromatin_state_annotation.tsv  (NEW)             
+      210 +    ├── chromatin_state_summary.tsv         (NEW)             
+      211      └── summary_statistics.txt                                
+      212  ```                                                           
+      213                                                                
+
+⏺ Now let me update the Dependencies section to include the new packages needed
+  for ChIP-seq analysis.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+      235  - clusterProfiler, enrichplot (for GO/KEGG enrichment)        
+      236  - org.Mm.eg.db (mouse gene annotations)                       
+      237  - VennDiagram or ggVennDiagram (for overlap visualization)    
+      238 +- **GenomicRanges** (for ChIP-seq overlap analysis) - NEW     
+      239 +- **rtracklayer** (for loading BED files as GRanges) - NEW    
+      240 +- **TxDb.Mmusculus.UCSC.mm10.knownGene** (for TSS distance    
+          +calculation) - NEW                                            
+      241                                                                
+      242  ## Verification                                               
+      243  1. Run script: `Rscript                                       
+           biomodal/downstream/scripts/biomodal_visualizations.R`        
+
+⏺ Let me update the verification section to include checks for the new ChIP-seq
+  outputs.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+      241                                                                
+      242  ## Verification                                               
+      243  1. Run script: `Rscript                                       
+           biomodal/downstream/scripts/biomodal_visualizations.R`        
+      244 -2. Check all 8 PDF outputs exist                              
+      244 +2. Check all figure folders exist (01-10)                     
+      245  3. Verify Syt1 appears in volcano plots with correct values   
+      246  4. Confirm correlation heatmaps match JSON data               
+      247  5. Check summary statistics match analysis_summary.md         
+      248 +6. **NEW**: Verify chromatin state annotations in             
+          +`tables/dmr_chromatin_state_annotation.tsv`                   
+      249 +7. **NEW**: Check that 10a-10e figure folders contain         
+          +pdf/svg/jpg files                                             
+      250 +8. **NEW**: Validate chromatin state distribution shows       
+          +expected patterns for hypermethylated genes                   
+
+⏺ I have one clarification question about the ChIP-seq marks you mentioned. Let
+  me ask before finalizing the plan.
+
+⏺ User answered Claude's questions:
+  ⎿  · You mentioned 'reduced H3K27me1' but the available peak files have 
+     H3K4me1 (not H3K27me1). Did you mean H3K4me1 (poised enhancer mark), or
+      do you have H3K27me1 data somewhere else? → H3K4me1 (Recommended)
+
+⏺ The plan is now complete. Here's a summary of the new Section 10: ChIP-seq 
+  Chromatin State Analysis that will be added to biomodal_visualizations.R:
+
+  Key additions:
+  1. Load ChIP-seq peaks (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent) from
+  peaks/beds/
+  2. Classify DMR genes into 7 chromatin state categories using the same
+  approach as annotate_loops_extended.R and tad_chip_classification.R
+  3. Generate 5 new visualizations:
+    - 10a: Overall chromatin state distribution of significant DMRs
+    - 10b: Chromatin state comparison by methylation direction (hyper vs hypo)
+    - 10c: ChIP mark overlap heatmap
+    - 10d: Chromatin state of the 2,856 coordinated (mC↑/hmC↓) genes
+    - 10e: Top 20 genes annotated with chromatin state
+
+  Biological question to address:
+  Do hypermethylated genes in BAP1-KO preferentially have specific chromatin
+  signatures (e.g., enrichment in Polycomb/H3K27me3 marked regions)?
+
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/recursive-booping-crown.md · /plan to 
+     edit
+     Biomodal DUET evoC Visualization Plan
+
+     Overview
+
+     Create a comprehensive R visualization script for the biomodal
+     differential methylation (5mC and 5hmC) analysis between BAP1-KO mutant
+      and wildtype control mice.
+
+     Key Findings to Visualize
+
+     - Primary affected regions: Gene bodies (NOT promoters or CpG islands)
+     - Coordinated pattern: 5mC increase + 5hmC decrease at same loci
+     - Top genes: Syt1 (highest!), Zbtb20, Cntnap2, Trpm3
+     - Significant DMRs: 4,188 mC + 4,897 hmC gene body DMRs (CG context)
+     - Non-CpG methylation: No significant changes in CHG/CHH contexts
+
+     Data Sources
+
+     Primary Data Files (CG Context)
+
+     1. Gene body mC DMR: downstream/modality/outputs/run-2/outputs_CG/Resul
+     ts/gencode.vM25.mouse.genes.annotation/DMR_20260121_172049/DMR_mc_contr
+     ol__mutant_20260121_172049.bed
+     2. Gene body hmC DMR: downstream/modality/outputs/run-2/outputs_CG/Resu
+     lts/gencode.vM25.mouse.genes.annotation/DMR_20260121_172049/DMR_hmc_con
+     trol__mutant_20260121_172049.bed
+     3. Biological QC JSON:
+     downstream/modality/outputs/run-2/outputs_CG/Results/BioQC_20260121_170
+     327/biological_qc_report_4_samples_20260121_170327.json
+     4. Upstream Summary: upstream/duet-1.5.0_evoC_Bap1_run_6bp/reports/evoC
+     _Bap1_run_duet-evoC_Summary.csv
+
+     DMR BED File Format (14 columns)
+
+     - Chromosome, Start, End, num_contexts, mean_coverage
+     - mean_mod_group_1 (control), mean_mod_group_2 (mutant)
+     - mod_fold_change, mod_difference, test_statistic
+     - dmr_pvalue, dmr_qvalue, Annotation, Name (gene)
+
+     Visualization Sections (8 Sections)
+
+     SECTION 1: QC & Data Overview
+
+     1. Sequencing quality bar chart - Mapped reads, bases, duplication rate
+      by sample
+     2. Coverage distribution - Mean CpG coverage across samples
+     3. Assay performance metrics - Genetic accuracy, mC sensitivity, hmC
+     specificity
+
+     SECTION 2: Sample Correlation Analysis
+
+     1. 5mC correlation heatmap - 4x4 sample correlation matrix
+     (within-group 0.76-0.79)
+     2. 5hmC correlation heatmap - 4x4 sample correlation matrix
+     (within-group 0.48-0.51)
+     3. PCA plots - PC1 vs PC2 for mC and hmC, colored by condition
+
+     SECTION 3: DMR Statistics by Genomic Region
+
+     1. Region comparison bar chart - DMR counts: gene bodies >> shores >
+     shelves > islands > promoters > TSS
+     2. mC vs hmC DMR comparison - Side-by-side counts showing hmC has more
+     gene body DMRs
+     3. Context comparison - CG vs CHG vs CHH (showing no signal in non-CG)
+     4. CHG/CHH baseline methylation - Bar chart showing <1% baseline vs
+     ~72% CG (biologically meaningful)
+
+     SECTION 4: Volcano Plots
+
+     1. Gene body mC volcano - x=mod_difference, y=-log10(qvalue), highlight
+      top genes
+     2. Gene body hmC volcano - x=mod_difference, y=-log10(qvalue),
+     highlight top genes
+     3. Combined panel - Side-by-side mC and hmC volcanos
+     4. Label key genes: Syt1, Zbtb20, Cntnap2, Trpm3
+
+     SECTION 5: Coordinated Changes Analysis (KEY INSIGHT)
+
+     1. mC vs hmC scatter plot - For genes with both significant changes,
+     show opposite directions
+     2. Top 20 coordinated genes bar chart - Paired bars showing mC up / hmC
+      down
+     3. Syt1 locus detail (DETAILED) - Bar chart with:
+       - mC and hmC bars for control vs mutant groups
+       - Error bars (95% CI)
+       - Individual sample points overlaid (4 samples)
+       - P-values and fold-change annotations
+       - Shows +18.4% mC and -15.8% hmC coordinated change
+     4. Zbtb20 locus detail (DETAILED) - Same format as Syt1
+       - Shows +8.0% mC and -6.2% hmC coordinated change
+     5. Additional key genes panel - Cntnap2, Trpm3, Dlgap1 with same detail
+      level
+
+     SECTION 6: Top Differentially Methylated Genes
+
+     1. Top 20 mC DMRs horizontal bar chart - Sorted by q-value, colored by
+     direction
+     2. Top 20 hmC DMRs horizontal bar chart - Sorted by q-value, colored by
+      direction
+     3. Overlap analysis - Venn diagram of genes significant in both mC and
+     hmC
+
+     SECTION 7: Effect Size Distributions
+
+     1. mC difference distribution - Histogram/density of mod_difference
+     values
+     2. hmC difference distribution - Histogram/density of mod_difference
+     values
+     3. Violin plot comparison - mC vs hmC effect sizes (significant genes
+     only)
+
+     SECTION 8: GO/KEGG Enrichment Analysis
+
+     1. GO Biological Process dotplot - Enriched terms in hypermethylated
+     genes (expect neuronal/synaptic)
+     2. GO Cellular Component dotplot - Subcellular localization enrichment
+     3. GO Molecular Function dotplot - Functional enrichment
+     4. KEGG pathway dotplot - Pathway-level enrichment
+     5. Gene-pathway network - Visualization of key pathways and genes
+
+     SECTION 9: Summary Statistics
+
+     1. Summary table - Total DMRs, significant counts, key metrics
+     2. Export top gene lists - TSV files for downstream analysis
+     3. Enrichment results export - TSV files of enriched terms
+
+     SECTION 10: ChIP-seq Chromatin State Analysis (NEW)
+
+     Purpose: Show that differentially methylated genes have coordinated
+     epigenetic changes:
+     - Increased H2AK119ub (BAP1 substrate - not directly measured but
+     inferred)
+     - Reduced H3K27ac (active enhancer/promoter mark)
+     - Reduced H3K4me1 (poised enhancer mark)
+
+     Data Sources:
+     - ChIP-seq peaks from peaks/beds/:
+       - H3K27acCerebellumLate2.bed - Active enhancer/promoter mark
+       - H3K27me3CerebellumLate1.bed - Polycomb repressive mark
+       - H3K4me1CerebellumLate1.bed - Poised enhancer mark
+       - H3K4me3CerebellumLate2.bed - Active promoter mark
+       - Bivalent_Cerebellum_Late.bed - K4me3+K27me3 overlap regions
+     - Gene body DMR coordinates from modality output
+
+     Implementation Approach (following annotate_loops_extended.R and 
+     tad_chip_classification.R):
+     1. Load ChIP-seq peak BED files as GRanges
+     2. Create GRanges from DMR gene body coordinates
+     3. Compute distance to TSS using TxDb.Mmusculus.UCSC.mm10.knownGene
+     4. Compute overlaps between gene bodies and each ChIP mark
+     5. Classify genes into 7 chromatin state categories:
+       - Active_Promoter: H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
+       - Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND ≤2kb from TSS
+       - Bivalent_Promoter: K4me3+K27me3 overlap region
+       - Polycomb: H3K27me3+ AND >2kb from TSS
+       - Active_Enhancer: H3K27ac+ AND >2kb from TSS
+       - Poised_Enhancer: H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+       - Other: No marks / unclassified
+
+     Visualizations:
+     1. 10a_chromatin_state_distribution - Overall chromatin state
+     distribution of all DMR genes
+       - Stacked bar chart showing % of significant mC and hmC DMRs in each
+     state
+       - Pie chart summary
+     2. 10b_chromatin_by_methylation_direction - Compare hyper vs
+     hypomethylated genes
+       - Side-by-side stacked bars: Hypermethylated (mC↑) vs Hypomethylated
+     (mC↓) by chromatin state
+       - Same for hmC: Increased vs Decreased by chromatin state
+       - Key insight: Do hypermethylated genes preferentially have specific
+     chromatin signatures?
+     3. 10c_chip_mark_overlap_heatmap - Per-mark overlap percentages
+       - Heatmap showing % of DMR genes overlapping each ChIP mark
+       - Rows: All significant, Hypermethylated, Hypomethylated
+       - Columns: H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent
+     4. 10d_coordinated_genes_chromatin - Chromatin state of mC↑/hmC↓
+     coordinated genes
+       - Stacked bar showing chromatin state distribution of the 2,856
+     coordinated genes
+       - Focus on genes with both mC increase AND hmC decrease
+     5. 10e_top_genes_chromatin_annotation - Top 20 genes with chromatin
+     marks
+       - Horizontal bar chart of top 20 genes by combined effect
+       - Annotated with chromatin state category
+       - Color-coded by state
+
+     Color Scheme (consistent with annotate_loops_extended.R):
+     CHROMATIN_STATE_COLORS <- c(
+       "Active_Promoter" = "#e41a1c",     # Red - active transcription
+       "Repressed_Promoter" = "#756bb1",  # Purple - Polycomb-silenced 
+     promoter
+       "Bivalent_Promoter" = "#984ea3",   # Magenta - developmental poised
+       "Polycomb" = "#4daf4a",            # Green - distal repressive
+       "Active_Enhancer" = "#377eb8",     # Blue - active enhancer
+       "Poised_Enhancer" = "#ff7f00",     # Orange - primed enhancer
+       "Other" = "#999999"                # Gray - unmarked
+     )
+
+     Output Files:
+     - 10a_chromatin_state_distribution/ - Distribution plots
+     - 10b_chromatin_by_methylation_direction/ - Directional comparison
+     - 10c_chip_mark_overlap_heatmap/ - Overlap heatmap
+     - 10d_coordinated_genes_chromatin/ - Coordinated genes analysis
+     - 10e_top_genes_chromatin_annotation/ - Annotated top genes
+     - tables/dmr_chromatin_state_annotation.tsv - Full annotation table
+     - tables/chromatin_state_summary.tsv - Summary statistics
+
+     Biological Hypothesis to Test:
+     If BAP1 loss leads to increased H2AK119ub which restricts TET access:
+     - Hypermethylated genes (mC↑) may show enrichment in specific chromatin
+      states
+     - Polycomb-marked regions (H3K27me3+) may be preferentially affected
+     - Active chromatin marks (H3K27ac, H3K4me3) may be reduced in affected
+     genes
+
+     Key Genes to Highlight (Coordinated mC↑ / hmC↓)
+
+
+
+
+
+
+
+
+     ┌─────────┬───────────┬────────────┬──────────────┬───────────────┐
+     │  Gene   │ mC Change │ hmC Change │ q-value (mC) │ q-value (hmC) │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Syt1    │ +18.4%    │ -15.8%     │ <10^-300     │ <10^-300      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Zbtb20  │ +8.0%     │ -6.2%      │ 1.6e-225     │ 3.8e-181      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Trpm3   │ +8.7%     │ -5.9%      │ 2.5e-257     │ 1.8e-153      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Epha3   │ +10.4%    │ -8.6%      │ 3.1e-166     │ 6.6e-154      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Mcu     │ +14.8%    │ -10.3%     │ 7.8e-195     │ 4.2e-118      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Cntnap2 │ +2.6%     │ -4.0%      │ 1.4e-55      │ 3.9e-228      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Lpp     │ +7.6%     │ -6.0%      │ 1.4e-158     │ 3.7e-123      │
+     └─────────┴───────────┴────────────┴──────────────┴───────────────┘
+     Biological Interpretation Context
+
+     The coordinated mC increase + hmC decrease pattern suggests impaired
+     TET-mediated active demethylation:
+     5mC → (TET1/2/3) → 5hmC → 5fC → 5caC → C (unmethylated)
+     BAP1 loss → Increased H2AK119ub → Altered chromatin → TET access
+     restricted → mC accumulates, hmC depleted
+
+     Output Structure
+
+     biomodal/downstream/plots/visualizations/
+     ├── 01_qc_overview/
+     ├── 02_sample_correlations/
+     ├── 03_dmr_region_statistics/
+     ├── 04_volcano_plots/
+     ├── 05_coordinated_changes/
+     ├── 06_top_genes/
+     ├── 07_effect_size_distributions/
+     ├── 08_enrichment_go_bp/
+     ├── 08_enrichment_go_cc/
+     ├── 08_enrichment_go_mf/
+     ├── 08_enrichment_kegg/
+     ├── 10a_chromatin_state_distribution/       (NEW)
+     ├── 10b_chromatin_by_methylation_direction/ (NEW)
+     ├── 10c_chip_mark_overlap_heatmap/          (NEW)
+     ├── 10d_coordinated_genes_chromatin/        (NEW)
+     ├── 10e_top_genes_chromatin_annotation/     (NEW)
+     └── tables/
+         ├── top_mc_dmrs.tsv
+         ├── top_hmc_dmrs.tsv
+         ├── coordinated_changes.tsv
+         ├── enrichment_go_bp.tsv
+         ├── enrichment_go_cc.tsv
+         ├── enrichment_go_mf.tsv
+         ├── enrichment_kegg.tsv
+         ├── dmr_chromatin_state_annotation.tsv  (NEW)
+         ├── chromatin_state_summary.tsv         (NEW)
+         └── summary_statistics.txt
+
+     Script Design
+
+     Following patterns from existing scripts (visualizations.R,
+     tad_visualizations.R):
+     - Use source("scripts/utils/multi_format_output.R") for PDF/SVG/JPEG
+     output
+     - Use patchwork for combining plots
+     - Use ggplot2 + RColorBrewer for consistent styling
+     - Use jsonlite to parse QC JSON files
+     - Add section headers with cat() for progress tracking
+
+     Critical Files to Create
+
+     1. biomodal/downstream/scripts/biomodal_visualizations.R - Main
+     visualization script (~800-1000 lines)
+
+     Dependencies
+
+     - ggplot2, patchwork, RColorBrewer, pheatmap
+     - jsonlite (for JSON parsing)
+     - tidyverse (dplyr, tidyr, readr)
+     - scales (for number formatting)
+     - ggrepel (for non-overlapping labels on volcano plots)
+     - clusterProfiler, enrichplot (for GO/KEGG enrichment)
+     - org.Mm.eg.db (mouse gene annotations)
+     - VennDiagram or ggVennDiagram (for overlap visualization)
+     - GenomicRanges (for ChIP-seq overlap analysis) - NEW
+     - rtracklayer (for loading BED files as GRanges) - NEW
+     - TxDb.Mmusculus.UCSC.mm10.knownGene (for TSS distance calculation) -
+     NEW
+
+     Verification
+
+     1. Run script: Rscript 
+     biomodal/downstream/scripts/biomodal_visualizations.R
+     2. Check all figure folders exist (01-10)
+     3. Verify Syt1 appears in volcano plots with correct values
+     4. Confirm correlation heatmaps match JSON data
+     5. Check summary statistics match analysis_summary.md
+     6. NEW: Verify chromatin state annotations in
+     tables/dmr_chromatin_state_annotation.tsv
+     7. NEW: Check that 10a-10e figure folders contain pdf/svg/jpg files
+     8. NEW: Validate chromatin state distribution shows expected patterns
+     for hypermethylated genes
+
+⏺ Plan approved. Let me start implementing the new Section 10 for ChIP-seq
+  chromatin state analysis.
+
+⏺ Let me first read the current end of the script to see where to add the new
+  section.
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 100 lines
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 125 lines
+
+⏺ Now I understand the structure. Let me start by adding the ChIP-seq peak file
+  paths to the configuration section.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 10 lines
+      37    tss_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs 
+          _CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260 
+          121_172333/DMR_mc_control__mutant_20260121_172333.bed")        
+      38  )                                                              
+      39                                                                 
+      40 +# ChIP-seq peak file paths (from peaks/beds/)                  
+      41 +# Use Late timepoint peaks to match the adult BAP1-KO analysis 
+      42 +CHIP_PEAK_FILES <- list(                                       
+      43 +  h3k27ac  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/H3K27acCerebellumLate2.bed",                      
+      44 +  h3k27me3 = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/H3K27me3CerebellumLate1.bed",                     
+      45 +  h3k4me1  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/H3K4me1CerebellumLate1.bed",                      
+      46 +  h3k4me3  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/H3K4me3CerebellumLate2.bed",                      
+      47 +  bivalent = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/Bivalent_Cerebellum_Late.bed"                     
+      48 +)                                                              
+      49 +                                                               
+      50  # Output directory                                             
+      51  OUTPUT_DIR <- file.path(BASE_DIR, "plots/visualizations")      
+      52  TABLES_DIR <- file.path(OUTPUT_DIR, "tables")                  
+
+⏺ Now let me add the chromatin state colors and order.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 17 lines
+      75    significant = c("Significant" = "#E41A1C", "Not Significant" 
+           = "grey70")                                                   
+      76  )                                                              
+      77                                                                 
+      78 +# Chromatin state classification (consistent with              
+         +annotate_loops_extended.R)                                     
+      79 +CHROMATIN_STATE_ORDER <- c("Active_Promoter",                  
+         +"Repressed_Promoter", "Bivalent_Promoter",                     
+      80 +                           "Polycomb", "Active_Enhancer",      
+         +"Poised_Enhancer", "Other")                                    
+      81 +                                                               
+      82 +CHROMATIN_STATE_COLORS <- c(                                   
+      83 +  "Active_Promoter" = "#e41a1c",     # Red - active            
+         +transcription                                                  
+      84 +  "Repressed_Promoter" = "#756bb1",  # Purple -                
+         +Polycomb-silenced promoter                                     
+      85 +  "Bivalent_Promoter" = "#984ea3",   # Magenta - developmental 
+         + poised                                                        
+      86 +  "Polycomb" = "#4daf4a",            # Green - distal          
+         +repressive                                                     
+      87 +  "Active_Enhancer" = "#377eb8",     # Blue - active enhancer  
+      88 +  "Poised_Enhancer" = "#ff7f00",     # Orange - primed         
+         +enhancer                                                       
+      89 +  "Other" = "#999999"                # Gray - unmarked         
+      90 +)                                                              
+      91 +                                                               
+      92 +# TSS threshold for promoter classification                    
+      93 +TSS_THRESHOLD <- 2000  # 2kb                                   
+      94 +                                                               
+      95  # ============================================================ 
+          =================                                              
+      96  # LOAD PACKAGES                                                
+      97  # ============================================================ 
+          =================                                              
+
+⏺ Now let me add the additional packages to the loading section.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 4 lines
+      119    library(enrichplot)                                         
+      120    library(org.Mm.eg.db)                                       
+      121    library(ggVennDiagram)                                      
+      122 +  # ChIP-seq analysis packages (Section 10)                   
+      123 +  library(GenomicRanges)                                      
+      124 +  library(rtracklayer)                                        
+      125 +  library(TxDb.Mmusculus.UCSC.mm10.knownGene)                 
+      126  })                                                            
+      127                                                                
+      128  # Source multi-format output utility                          
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 80 lines
+
+⏺ Now let me add the ChIP-seq helper functions after the existing helper
+  functions.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 117 lines
+      208  }                                                             
+      209                                                                
+      210  # =========================================================== 
+           ==================                                            
+      211 +# ChIP-seq HELPER FUNCTIONS (Section 10)                      
+      212 +# =========================================================== 
+          +==================                                            
+      213 +                                                              
+      214 +#' Load ChIP-seq peaks from BED file as GRanges               
+      215 +#' @param bed_path Path to BED file                           
+      216 +#' @param mark_name Name of the mark (for logging)            
+      217 +#' @return GRanges object                                     
+      218 +load_chip_peaks <- function(bed_path, mark_name = "ChIP") {   
+      219 +  if (!file.exists(bed_path)) {                               
+      220 +    warning(sprintf("%s BED file not found: %s", mark_name,   
+          +bed_path))                                                    
+      221 +    return(NULL)                                              
+      222 +  }                                                           
+      223 +                                                              
+      224 +  df <- read.table(bed_path, sep = "\t", header = FALSE,      
+          +stringsAsFactors = FALSE)                                     
+      225 +  gr <- GRanges(                                              
+      226 +    seqnames = df$V1,                                         
+      227 +    ranges = IRanges(start = df$V2, end = df$V3)              
+      228 +  )                                                           
+      229 +                                                              
+      230 +  cat(sprintf("  %s: %d peaks\n", mark_name, length(gr)))     
+      231 +  return(gr)                                                  
+      232 +}                                                             
+      233 +                                                              
+      234 +#' Create GRanges from DMR data frame                         
+      235 +#' @param dmr_df Data frame with chr, start, end columns      
+      236 +#' @return GRanges object                                     
+      237 +dmr_to_granges <- function(dmr_df) {                          
+      238 +  GRanges(                                                    
+      239 +    seqnames = dmr_df$chr,                                    
+      240 +    ranges = IRanges(start = dmr_df$start, end = dmr_df$end), 
+      241 +    gene = dmr_df$gene,                                       
+      242 +    mod_difference = dmr_df$mod_difference,                   
+      243 +    dmr_qvalue = dmr_df$dmr_qvalue,                           
+      244 +    significant = dmr_df$significant,                         
+      245 +    direction = dmr_df$direction                              
+      246 +  )                                                           
+      247 +}                                                             
+      248 +                                                              
+      249 +#' Compute ChIP-seq overlaps for DMR GRanges                  
+      250 +#' @param dmr_gr GRanges with DMR coordinates                 
+      251 +#' @param chip_peaks List of GRanges for each ChIP mark       
+      252 +#' @return data.frame with overlap columns                    
+      253 +compute_chip_overlaps <- function(dmr_gr, chip_peaks) {       
+      254 +  overlaps <- data.frame(                                     
+      255 +    H3K27ac_overlap = countOverlaps(dmr_gr,                   
+          +chip_peaks$h3k27ac) > 0,                                      
+      256 +    H3K27me3_overlap = countOverlaps(dmr_gr,                  
+          +chip_peaks$h3k27me3) > 0,                                     
+      257 +    H3K4me1_overlap = countOverlaps(dmr_gr,                   
+          +chip_peaks$h3k4me1) > 0,                                      
+      258 +    H3K4me3_overlap = countOverlaps(dmr_gr,                   
+          +chip_peaks$h3k4me3) > 0,                                      
+      259 +    Bivalent_overlap = countOverlaps(dmr_gr,                  
+          +chip_peaks$bivalent) > 0                                      
+      260 +  )                                                           
+      261 +  return(overlaps)                                            
+      262 +}                                                             
+      263 +                                                              
+      264 +#' Classify chromatin state using 7-category priority system  
+      265 +#'                                                            
+      266 +#' Priority order (consistent with                            
+          +annotate_loops_extended.R):                                   
+      267 +#'   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND     
+          +<=2kb from TSS                                                
+      268 +#'   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND     
+          +<=2kb from TSS                                                
+      269 +#'   3. Bivalent_Promoter:  K4me3+K27me3 overlap              
+          +(pre-computed)                                                
+      270 +#'   4. Polycomb:           H3K27me3+ AND >2kb from TSS       
+      271 +#'   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS        
+      272 +#'   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT  
+          +H3K27me3 AND >2kb                                             
+      273 +#'   7. Other:              Default (no marks)                
+      274 +#'                                                            
+      275 +#' @param overlaps data.frame with overlap columns            
+      276 +#' @param distance_to_tss Numeric vector of distances to      
+          +nearest TSS                                                   
+      277 +#' @param tss_threshold Distance threshold for promoter       
+          +(default 2000bp)                                              
+      278 +#' @return Character vector with chromatin state              
+          +classifications                                               
+      279 +classify_chromatin_state <- function(overlaps,                
+          +distance_to_tss, tss_threshold = 2000) {                      
+      280 +  n <- nrow(overlaps)                                         
+      281 +  chromatin_state <- rep("Other", n)                          
+      282 +                                                              
+      283 +  # Extract overlap columns                                   
+      284 +  h3k27ac <- overlaps$H3K27ac_overlap                         
+      285 +  h3k27me3 <- overlaps$H3K27me3_overlap                       
+      286 +  h3k4me1 <- overlaps$H3K4me1_overlap                         
+      287 +  h3k4me3 <- overlaps$H3K4me3_overlap                         
+      288 +  bivalent <- overlaps$Bivalent_overlap                       
+      289 +                                                              
+      290 +  # 1. Active_Promoter: H3K4me3+ AND NOT H3K27me3 AND <=2kb   
+          +from TSS                                                      
+      291 +  is_active_promoter <- h3k4me3 & !h3k27me3 &                 
+      292 +    !is.na(distance_to_tss) & distance_to_tss <=              
+          +tss_threshold                                                 
+      293 +  chromatin_state[is_active_promoter] <- "Active_Promoter"    
+      294 +                                                              
+      295 +  # 2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND      
+          +<=2kb from TSS                                                
+      296 +  is_repressed_promoter <- !is_active_promoter &              
+      297 +    h3k27me3 & !h3k27ac &                                     
+      298 +    !is.na(distance_to_tss) & distance_to_tss <=              
+          +tss_threshold                                                 
+      299 +  chromatin_state[is_repressed_promoter] <-                   
+          +"Repressed_Promoter"                                          
+      300 +                                                              
+      301 +  # 3. Bivalent_Promoter: K4me3+K27me3 overlap (pre-computed) 
+      302 +  is_bivalent <- !is_active_promoter & !is_repressed_promoter 
+          + & bivalent                                                   
+      303 +  chromatin_state[is_bivalent] <- "Bivalent_Promoter"         
+      304 +                                                              
+      305 +  # 4. Polycomb: H3K27me3+ AND >2kb from TSS                  
+      306 +  is_polycomb <- !is_active_promoter & !is_repressed_promoter 
+          + & !is_bivalent &                                             
+      307 +    h3k27me3 & (is.na(distance_to_tss) | distance_to_tss >    
+          +tss_threshold)                                                
+      308 +  chromatin_state[is_polycomb] <- "Polycomb"                  
+      309 +                                                              
+      310 +  # 5. Active_Enhancer: H3K27ac+ AND >2kb from TSS            
+      311 +  is_active_enhancer <- !is_active_promoter &                 
+          +!is_repressed_promoter &                                      
+      312 +    !is_bivalent & !is_polycomb &                             
+      313 +    h3k27ac & (is.na(distance_to_tss) | distance_to_tss >     
+          +tss_threshold)                                                
+      314 +  chromatin_state[is_active_enhancer] <- "Active_Enhancer"    
+      315 +                                                              
+      316 +  # 6. Poised_Enhancer: H3K4me1+ AND NOT H3K27ac AND NOT      
+          +H3K27me3 AND >2kb                                             
+      317 +  is_poised_enhancer <- !is_active_promoter &                 
+          +!is_repressed_promoter &                                      
+      318 +    !is_bivalent & !is_polycomb & !is_active_enhancer &       
+      319 +    h3k4me1 & !h3k27ac & !h3k27me3 &                          
+      320 +    (is.na(distance_to_tss) | distance_to_tss >               
+          +tss_threshold)                                                
+      321 +  chromatin_state[is_poised_enhancer] <- "Poised_Enhancer"    
+      322 +                                                              
+      323 +  # 7. Other: Default (no marks)                              
+      324 +  return(factor(chromatin_state, levels =                     
+          +CHROMATIN_STATE_ORDER))                                       
+      325 +}                                                             
+      326 +                                                              
+      327 +# =========================================================== 
+          +==================                                            
+      328  # LOAD DATA                                                   
+      329  # =========================================================== 
+           ==================                                            
+      330                                                                
+
+⏺ Now let me add Section 10 after the summary statistics section. First, let me
+  find the exact location where I need to insert it.
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 60 lines
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 18 lines
+
+⏺ Now I'll add Section 10 after the summary statistics section.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 361 lines
+      1440  # Print summary                                              
+      1441  cat(summary_text)                                            
+      1442                                                               
+      1443 +cat("Section 9 complete.\n\n")                               
+      1444 +                                                             
+      1445 +# ========================================================== 
+           +===================                                          
+      1446 +# SECTION 10: ChIP-seq CHROMATIN STATE ANALYSIS              
+      1447 +# ========================================================== 
+           +===================                                          
+      1448 +                                                             
+      1449 +cat("======================================================= 
+           +=========================\n")                                
+      1450 +cat("SECTION 10: ChIP-seq CHROMATIN STATE ANALYSIS\n")       
+      1451 +cat("======================================================= 
+           +=========================\n\n")                              
+      1452 +                                                             
+      1453 +cat("Loading ChIP-seq peak files...\n")                      
+      1454 +                                                             
+      1455 +# Load all ChIP-seq peak files                               
+      1456 +chip_peaks <- list(                                          
+      1457 +  h3k27ac = load_chip_peaks(CHIP_PEAK_FILES$h3k27ac,         
+           +"H3K27ac"),                                                  
+      1458 +  h3k27me3 = load_chip_peaks(CHIP_PEAK_FILES$h3k27me3,       
+           +"H3K27me3"),                                                 
+      1459 +  h3k4me1 = load_chip_peaks(CHIP_PEAK_FILES$h3k4me1,         
+           +"H3K4me1"),                                                  
+      1460 +  h3k4me3 = load_chip_peaks(CHIP_PEAK_FILES$h3k4me3,         
+           +"H3K4me3"),                                                  
+      1461 +  bivalent = load_chip_peaks(CHIP_PEAK_FILES$bivalent,       
+           +"Bivalent")                                                  
+      1462 +)                                                            
+      1463 +                                                             
+      1464 +# Check if all peaks loaded successfully                     
+      1465 +if (any(sapply(chip_peaks, is.null))) {                      
+      1466 +  cat("  WARNING: Some ChIP-seq peak files not found.        
+           +Skipping Section 10.\n")                                     
+      1467 +} else {                                                     
+      1468 +  cat("\nCreating GRanges from mC DMR data...\n")            
+      1469 +                                                             
+      1470 +  # Create GRanges from mC DMR data (significant genes only  
+           +for analysis)                                                
+      1471 +  mc_sig <- mc_dmr %>% dplyr::filter(significant)            
+      1472 +  mc_gr <- dmr_to_granges(mc_sig)                            
+      1473 +  cat(sprintf("  %d significant mC DMRs\n", length(mc_gr)))  
+      1474 +                                                             
+      1475 +  # Compute TSS distances                                    
+      1476 +  cat("\nComputing TSS distances...\n")                      
+      1477 +  txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene                 
+      1478 +  genes <- genes(txdb)                                       
+      1479 +  tss_gr <- resize(genes, width = 1, fix = "start")          
+      1480 +  cat(sprintf("  Loaded %d genes\n", length(genes)))         
+      1481 +                                                             
+      1482 +  nearest <- distanceToNearest(mc_gr, tss_gr)                
+      1483 +  distance_to_tss <- rep(NA_real_, length(mc_gr))            
+      1484 +  if (length(nearest) > 0) {                                 
+      1485 +    distance_to_tss[queryHits(nearest)] <-                   
+           +mcols(nearest)$distance                                      
+      1486 +  }                                                          
+      1487 +                                                             
+      1488 +  cat(sprintf("  DMRs <= 2kb from TSS: %d (%.1f%%)\n",       
+      1489 +              sum(distance_to_tss <= TSS_THRESHOLD, na.rm =  
+           +TRUE),                                                       
+      1490 +              100 * mean(distance_to_tss <= TSS_THRESHOLD,   
+           +na.rm = TRUE)))                                              
+      1491 +                                                             
+      1492 +  # Compute ChIP-seq overlaps                                
+      1493 +  cat("\nComputing ChIP-seq overlaps...\n")                  
+      1494 +  mc_overlaps <- compute_chip_overlaps(mc_gr, chip_peaks)    
+      1495 +                                                             
+      1496 +  cat("  Overlap summary:\n")                                
+      1497 +  cat(sprintf("    H3K27ac:  %d DMRs (%.1f%%)\n",            
+      1498 +              sum(mc_overlaps$H3K27ac_overlap), 100 *        
+           +mean(mc_overlaps$H3K27ac_overlap)))                          
+      1499 +  cat(sprintf("    H3K27me3: %d DMRs (%.1f%%)\n",            
+      1500 +              sum(mc_overlaps$H3K27me3_overlap), 100 *       
+           +mean(mc_overlaps$H3K27me3_overlap)))                         
+      1501 +  cat(sprintf("    H3K4me1:  %d DMRs (%.1f%%)\n",            
+      1502 +              sum(mc_overlaps$H3K4me1_overlap), 100 *        
+           +mean(mc_overlaps$H3K4me1_overlap)))                          
+      1503 +  cat(sprintf("    H3K4me3:  %d DMRs (%.1f%%)\n",            
+      1504 +              sum(mc_overlaps$H3K4me3_overlap), 100 *        
+           +mean(mc_overlaps$H3K4me3_overlap)))                          
+      1505 +  cat(sprintf("    Bivalent: %d DMRs (%.1f%%)\n",            
+      1506 +              sum(mc_overlaps$Bivalent_overlap), 100 *       
+           +mean(mc_overlaps$Bivalent_overlap)))                         
+      1507 +                                                             
+      1508 +  # Classify chromatin states                                
+      1509 +  cat("\nClassifying chromatin states (7 categories)...\n")  
+      1510 +  mc_sig$chromatin_state <-                                  
+           +classify_chromatin_state(mc_overlaps, distance_to_tss,       
+           +TSS_THRESHOLD)                                               
+      1511 +                                                             
+      1512 +  # Add overlap columns to dataframe                         
+      1513 +  mc_sig$H3K27ac_overlap <- mc_overlaps$H3K27ac_overlap      
+      1514 +  mc_sig$H3K27me3_overlap <- mc_overlaps$H3K27me3_overlap    
+      1515 +  mc_sig$H3K4me1_overlap <- mc_overlaps$H3K4me1_overlap      
+      1516 +  mc_sig$H3K4me3_overlap <- mc_overlaps$H3K4me3_overlap      
+      1517 +  mc_sig$Bivalent_overlap <- mc_overlaps$Bivalent_overlap    
+      1518 +  mc_sig$distance_to_tss <- distance_to_tss                  
+      1519 +                                                             
+      1520 +  cat("\n  Chromatin state distribution (significant mC      
+           +DMRs):\n")                                                   
+      1521 +  for (state in CHROMATIN_STATE_ORDER) {                     
+      1522 +    count <- sum(mc_sig$chromatin_state == state)            
+      1523 +    pct <- 100 * count / nrow(mc_sig)                        
+      1524 +    cat(sprintf("    %-20s: %5d (%.1f%%)\n", state, count,   
+           +pct))                                                        
+      1525 +  }                                                          
+      1526 +                                                             
+      1527 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1528 +  # FIGURE 10a: Overall chromatin state distribution         
+      1529 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1530 +  cat("\nCreating Figure 10a: Chromatin state                
+           +distribution...\n")                                          
+      1531 +                                                             
+      1532 +  state_summary <- mc_sig %>%                                
+      1533 +    group_by(chromatin_state, direction) %>%                 
+      1534 +    summarise(count = n(), .groups = "drop") %>%             
+      1535 +    group_by(direction) %>%                                  
+      1536 +    mutate(percentage = 100 * count / sum(count))            
+      1537 +                                                             
+      1538 +  # Bar chart                                                
+      1539 +  p_10a_bar <- ggplot(state_summary, aes(x =                 
+           +chromatin_state, y = percentage, fill = chromatin_state)) +  
+      1540 +    geom_bar(stat = "identity", color = "black", linewidth = 
+           + 0.3) +                                                      
+      1541 +    geom_text(aes(label = sprintf("%.1f%%", percentage)),    
+           +vjust = -0.3, size = 3) +                                    
+      1542 +    facet_wrap(~direction, ncol = 2) +                       
+      1543 +    scale_fill_manual(values = CHROMATIN_STATE_COLORS) +     
+      1544 +    scale_y_continuous(limits = c(0,                         
+           +max(state_summary$percentage) * 1.15), expand = c(0, 0)) +   
+      1545 +    labs(                                                    
+      1546 +      title = "Chromatin State Distribution of Significant   
+           +mC DMRs",                                                    
+      1547 +      subtitle = sprintf("Hypermethylated: n=%d |            
+           +Hypomethylated: n=%d",                                       
+      1548 +                         sum(mc_sig$direction ==             
+           +"Hypermethylated"),                                          
+      1549 +                         sum(mc_sig$direction ==             
+           +"Hypomethylated")),                                          
+      1550 +      x = "Chromatin State", y = "Percentage (%)"            
+      1551 +    ) +                                                      
+      1552 +    theme_biomodal() +                                       
+      1553 +    theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+      1554 +          legend.position = "none")                          
+      1555 +                                                             
+      1556 +  # Pie chart - overall                                      
+      1557 +  state_overall <- mc_sig %>%                                
+      1558 +    group_by(chromatin_state) %>%                            
+      1559 +    summarise(count = n(), .groups = "drop") %>%             
+      1560 +    mutate(percentage = 100 * count / sum(count))            
+      1561 +                                                             
+      1562 +  p_10a_pie <- ggplot(state_overall, aes(x = "", y =         
+           +percentage, fill = chromatin_state)) +                       
+      1563 +    geom_bar(stat = "identity", width = 1, color = "white",  
+           +linewidth = 0.3) +                                           
+      1564 +    coord_polar("y", start = 0) +                            
+      1565 +    scale_fill_manual(values = CHROMATIN_STATE_COLORS, name  
+           += "Chromatin State") +                                       
+      1566 +    labs(title = "Overall Distribution") +                   
+      1567 +    theme_void() +                                           
+      1568 +    theme(                                                   
+      1569 +      plot.title = element_text(hjust = 0.5, face = "bold",  
+           +size = 12),                                                  
+      1570 +      legend.position = "right"                              
+      1571 +    ) +                                                      
+      1572 +    geom_text(aes(label = ifelse(percentage > 4,             
+           +sprintf("%.1f%%", percentage), "")),                         
+      1573 +              position = position_stack(vjust = 0.5), size = 
+           + 2.5)                                                        
+      1574 +                                                             
+      1575 +  p_10a <- p_10a_bar + p_10a_pie +                           
+      1576 +    plot_layout(widths = c(2, 1)) +                          
+      1577 +    plot_annotation(                                         
+      1578 +      title = "Chromatin State Analysis of Differentially    
+           +Methylated Genes",                                           
+      1579 +      subtitle = "Based on ChIP-seq peak overlaps (Late      
+           +timepoint)",                                                 
+      1580 +      theme = theme(                                         
+      1581 +        plot.title = element_text(hjust = 0.5, face =        
+           +"bold", size = 16),                                          
+      1582 +        plot.subtitle = element_text(hjust = 0.5, size = 12, 
+           + color = "grey40")                                           
+      1583 +      )                                                      
+      1584 +    )                                                        
+      1585 +                                                             
+      1586 +  save_multiformat_ggplot(p_10a, file.path(OUTPUT_DIR,       
+           +"10a_chromatin_state_distribution"),                         
+      1587 +                          width = 14, height = 7)            
+      1588 +                                                             
+      1589 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1590 +  # FIGURE 10b: Chromatin state by methylation direction     
+           +comparison                                                   
+      1591 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1592 +  cat("Creating Figure 10b: Chromatin state by               
+           +direction...\n")                                             
+      1593 +                                                             
+      1594 +  # Stacked bar comparison                                   
+      1595 +  p_10b_stacked <- ggplot(state_summary, aes(x = direction,  
+           +y = percentage, fill = chromatin_state)) +                   
+      1596 +    geom_bar(stat = "identity", position = "stack", color =  
+           +"white", linewidth = 0.2) +                                  
+      1597 +    scale_fill_manual(values = CHROMATIN_STATE_COLORS, name  
+           += "Chromatin State") +                                       
+      1598 +    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) 
+           + +                                                           
+      1599 +    labs(                                                    
+      1600 +      title = "Chromatin State by Methylation Direction",    
+      1601 +      x = "Direction", y = "Percentage (%)"                  
+      1602 +    ) +                                                      
+      1603 +    theme_biomodal()                                         
+      1604 +                                                             
+      1605 +  # Grouped bar comparison                                   
+      1606 +  p_10b_grouped <- ggplot(state_summary, aes(x =             
+           +chromatin_state, y = percentage, fill = direction)) +        
+      1607 +    geom_bar(stat = "identity", position =                   
+           +position_dodge(width = 0.8),                                 
+      1608 +             width = 0.7, color = "black", linewidth = 0.2)  
+           ++                                                            
+      1609 +    scale_fill_manual(values = COLORS$direction, name =      
+           +"Direction") +                                               
+      1610 +    scale_y_continuous(limits = c(0,                         
+           +max(state_summary$percentage) * 1.1), expand = c(0, 0)) +    
+      1611 +    labs(                                                    
+      1612 +      title = "Comparison by Chromatin State",               
+      1613 +      subtitle = "Do hypermethylated genes have specific     
+           +chromatin signatures?",                                      
+      1614 +      x = "Chromatin State", y = "Percentage (%)"            
+      1615 +    ) +                                                      
+      1616 +    theme_biomodal() +                                       
+      1617 +    theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+      1618 +          legend.position = "top")                           
+      1619 +                                                             
+      1620 +  p_10b <- p_10b_stacked / p_10b_grouped +                   
+      1621 +    plot_annotation(                                         
+      1622 +      title = "Methylation Direction vs Chromatin State",    
+      1623 +      theme = theme(plot.title = element_text(hjust = 0.5,   
+           +face = "bold", size = 16))                                   
+      1624 +    )                                                        
+      1625 +                                                             
+      1626 +  save_multiformat_ggplot(p_10b, file.path(OUTPUT_DIR,       
+           +"10b_chromatin_by_methylation_direction"),                   
+      1627 +                          width = 12, height = 10)           
+      1628 +                                                             
+      1629 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1630 +  # FIGURE 10c: ChIP mark overlap heatmap                    
+      1631 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1632 +  cat("Creating Figure 10c: ChIP mark overlap heatmap...\n") 
+      1633 +                                                             
+      1634 +  # Calculate overlap percentages by direction               
+      1635 +  mark_overlap <- mc_sig %>%                                 
+      1636 +    group_by(direction) %>%                                  
+      1637 +    summarise(                                               
+      1638 +      H3K27ac = 100 * mean(H3K27ac_overlap),                 
+      1639 +      H3K27me3 = 100 * mean(H3K27me3_overlap),               
+      1640 +      H3K4me1 = 100 * mean(H3K4me1_overlap),                 
+      1641 +      H3K4me3 = 100 * mean(H3K4me3_overlap),                 
+      1642 +      Bivalent = 100 * mean(Bivalent_overlap),               
+      1643 +      .groups = "drop"                                       
+      1644 +    ) %>%                                                    
+      1645 +    pivot_longer(cols = -direction, names_to = "Mark",       
+           +values_to = "Percentage")                                    
+      1646 +                                                             
+      1647 +  # Add overall row                                          
+      1648 +  mark_overall <- mc_sig %>%                                 
+      1649 +    summarise(                                               
+      1650 +      H3K27ac = 100 * mean(H3K27ac_overlap),                 
+      1651 +      H3K27me3 = 100 * mean(H3K27me3_overlap),               
+      1652 +      H3K4me1 = 100 * mean(H3K4me1_overlap),                 
+      1653 +      H3K4me3 = 100 * mean(H3K4me3_overlap),                 
+      1654 +      Bivalent = 100 * mean(Bivalent_overlap)                
+      1655 +    ) %>%                                                    
+      1656 +    mutate(direction = "All Significant") %>%                
+      1657 +    pivot_longer(cols = -direction, names_to = "Mark",       
+           +values_to = "Percentage")                                    
+      1658 +                                                             
+      1659 +  mark_overlap <- bind_rows(mark_overall, mark_overlap)      
+      1660 +  mark_overlap$direction <- factor(mark_overlap$direction,   
+      1661 +                                   levels = c("All           
+           +Significant", "Hypermethylated", "Hypomethylated"))          
+      1662 +                                                             
+      1663 +  p_10c <- ggplot(mark_overlap, aes(x = Mark, y = direction, 
+           + fill = Percentage)) +                                       
+      1664 +    geom_tile(color = "white", linewidth = 0.5) +            
+      1665 +    geom_text(aes(label = sprintf("%.1f%%", Percentage)),    
+           +size = 4) +                                                  
+      1666 +    scale_fill_gradient2(low = "white", mid = "#fee090",     
+           +high = "#d73027",                                            
+      1667 +                         midpoint = 50, name = "% Overlap",  
+           +limits = c(0, 100)) +                                        
+      1668 +    labs(                                                    
+      1669 +      title = "ChIP-seq Mark Overlap at Significant mC       
+           +DMRs",                                                       
+      1670 +      subtitle = "% of DMRs overlapping each ChIP-seq mark", 
+      1671 +      x = "ChIP-seq Mark", y = ""                            
+      1672 +    ) +                                                      
+      1673 +    theme_minimal(base_size = 12) +                          
+      1674 +    theme(                                                   
+      1675 +      plot.title = element_text(hjust = 0.5, face = "bold",  
+           +size = 14),                                                  
+      1676 +      plot.subtitle = element_text(hjust = 0.5, size = 10,   
+           +color = "grey40"),                                           
+      1677 +      axis.text.x = element_text(face = "bold", size = 11),  
+      1678 +      axis.text.y = element_text(size = 11),                 
+      1679 +      panel.grid = element_blank()                           
+      1680 +    )                                                        
+      1681 +                                                             
+      1682 +  save_multiformat_ggplot(p_10c, file.path(OUTPUT_DIR,       
+           +"10c_chip_mark_overlap_heatmap"),                            
+      1683 +                          width = 10, height = 5)            
+      1684 +                                                             
+      1685 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1686 +  # FIGURE 10d: Chromatin state of coordinated genes         
+      1687 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1688 +  cat("Creating Figure 10d: Coordinated genes chromatin      
+           +state...\n")                                                 
+      1689 +                                                             
+      1690 +  # Get chromatin states for coordinated genes (mC up / hmC  
+           +down)                                                        
+      1691 +  coordinated_mc <- mc_sig %>%                               
+      1692 +    dplyr::filter(gene %in%                                  
+           +coordinated$gene[coordinated$coordinated_pattern])           
+      1693 +                                                             
+      1694 +  if (nrow(coordinated_mc) > 0) {                            
+      1695 +    coord_state_summary <- coordinated_mc %>%                
+      1696 +      group_by(chromatin_state) %>%                          
+      1697 +      summarise(count = n(), .groups = "drop") %>%           
+      1698 +      mutate(percentage = 100 * count / sum(count))          
+      1699 +                                                             
+      1700 +    p_10d_bar <- ggplot(coord_state_summary, aes(x =         
+           +chromatin_state, y = percentage, fill = chromatin_state)) +  
+      1701 +      geom_bar(stat = "identity", color = "black", linewidth 
+           + = 0.3) +                                                    
+      1702 +      geom_text(aes(label = sprintf("%.1f%%\n(n=%d)",        
+           +percentage, count)), vjust = -0.1, size = 3) +               
+      1703 +      scale_fill_manual(values = CHROMATIN_STATE_COLORS) +   
+      1704 +      scale_y_continuous(limits = c(0,                       
+           +max(coord_state_summary$percentage) * 1.2), expand = c(0,    
+           +0)) +                                                        
+      1705 +      labs(                                                  
+      1706 +        title = "Chromatin State of Coordinated mC↑/hmC↓     
+           +Genes",                                                      
+      1707 +        subtitle = sprintf("n = %d genes with coordinated    
+           +methylation changes", nrow(coordinated_mc)),                 
+      1708 +        x = "Chromatin State", y = "Percentage (%)"          
+      1709 +      ) +                                                    
+      1710 +      theme_biomodal() +                                     
+      1711 +      theme(axis.text.x = element_text(angle = 45, hjust =   
+           +1),                                                          
+      1712 +            legend.position = "none")                        
+      1713 +                                                             
+      1714 +    p_10d_pie <- ggplot(coord_state_summary, aes(x = "", y = 
+           + percentage, fill = chromatin_state)) +                      
+      1715 +      geom_bar(stat = "identity", width = 1, color =         
+           +"white", linewidth = 0.3) +                                  
+      1716 +      coord_polar("y", start = 0) +                          
+      1717 +      scale_fill_manual(values = CHROMATIN_STATE_COLORS,     
+           +name = "Chromatin State") +                                  
+      1718 +      labs(title = "Distribution") +                         
+      1719 +      theme_void() +                                         
+      1720 +      theme(                                                 
+      1721 +        plot.title = element_text(hjust = 0.5, face =        
+           +"bold", size = 12),                                          
+      1722 +        legend.position = "right"                            
+      1723 +      ) +                                                    
+      1724 +      geom_text(aes(label = ifelse(percentage > 5,           
+           +sprintf("%.0f%%", percentage), "")),                         
+      1725 +                position = position_stack(vjust = 0.5), size 
+           + = 3)                                                        
+      1726 +                                                             
+      1727 +    p_10d <- p_10d_bar + p_10d_pie +                         
+      1728 +      plot_layout(widths = c(2, 1)) +                        
+      1729 +      plot_annotation(                                       
+      1730 +        title = "Chromatin State of Genes with Coordinated   
+           +Methylation Changes",                                        
+      1731 +        subtitle = "Genes showing mC increase + hmC decrease 
+           + pattern",                                                   
+      1732 +        theme = theme(                                       
+      1733 +          plot.title = element_text(hjust = 0.5, face =      
+           +"bold", size = 16),                                          
+      1734 +          plot.subtitle = element_text(hjust = 0.5, size =   
+           +12, color = "grey40")                                        
+      1735 +        )                                                    
+      1736 +      )                                                      
+      1737 +                                                             
+      1738 +    save_multiformat_ggplot(p_10d, file.path(OUTPUT_DIR,     
+           +"10d_coordinated_genes_chromatin"),                          
+      1739 +                            width = 13, height = 6)          
+      1740 +  }                                                          
+      1741 +                                                             
+      1742 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1743 +  # FIGURE 10e: Top genes with chromatin annotations         
+      1744 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1745 +  cat("Creating Figure 10e: Top genes with chromatin         
+           +annotations...\n")                                           
+      1746 +                                                             
+      1747 +  # Get top 20 coordinated genes with chromatin state        
+      1748 +  top_coord_chrom <- coordinated %>%                         
+      1749 +    dplyr::filter(coordinated_pattern) %>%                   
+      1750 +    head(20) %>%                                             
+      1751 +    left_join(mc_sig %>% dplyr::select(gene,                 
+           +chromatin_state), by = "gene")                               
+      1752 +                                                             
+      1753 +  if (nrow(top_coord_chrom) > 0) {                           
+      1754 +    top_coord_chrom <- top_coord_chrom %>%                   
+      1755 +      mutate(gene = factor(gene, levels =                    
+           +rev(unique(gene))))                                          
+      1756 +                                                             
+      1757 +    p_10e <- ggplot(top_coord_chrom, aes(x = gene, y =       
+           +combined_effect * 100, fill = chromatin_state)) +            
+      1758 +      geom_bar(stat = "identity", width = 0.7, color =       
+           +"black", linewidth = 0.3) +                                  
+      1759 +      geom_text(aes(label = as.character(chromatin_state)),  
+      1760 +                hjust = -0.1, size = 3, color = "grey30") +  
+      1761 +      scale_fill_manual(values = CHROMATIN_STATE_COLORS,     
+           +name = "Chromatin State") +                                  
+      1762 +      coord_flip() +                                         
+      1763 +      labs(                                                  
+      1764 +        title = "Top 20 Coordinated Genes with Chromatin     
+           +State Annotation",                                           
+      1765 +        subtitle = "Sorted by combined effect (|mC change| + 
+           + |hmC change|)",                                             
+      1766 +        x = "", y = "Combined Effect (%)"                    
+      1767 +      ) +                                                    
+      1768 +      theme_biomodal() +                                     
+      1769 +      theme(legend.position = "bottom")                      
+      1770 +                                                             
+      1771 +    save_multiformat_ggplot(p_10e, file.path(OUTPUT_DIR,     
+           +"10e_top_genes_chromatin_annotation"),                       
+      1772 +                            width = 12, height = 10)         
+      1773 +  }                                                          
+      1774 +                                                             
+      1775 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1776 +  # Save chromatin state annotations                         
+      1777 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1778 +  cat("\nSaving chromatin state annotation tables...\n")     
+      1779 +                                                             
+      1780 +  # Full annotation table                                    
+      1781 +  write.table(mc_sig, file.path(TABLES_DIR,                  
+           +"dmr_chromatin_state_annotation.tsv"),                       
+      1782 +              sep = "\t", quote = FALSE, row.names = FALSE)  
+      1783 +  cat("  Saved: dmr_chromatin_state_annotation.tsv\n")       
+      1784 +                                                             
+      1785 +  # Summary table                                            
+      1786 +  chromatin_summary <- mc_sig %>%                            
+      1787 +    group_by(chromatin_state, direction) %>%                 
+      1788 +    summarise(                                               
+      1789 +      count = n(),                                           
+      1790 +      mean_mc_change = mean(mod_difference) * 100,           
+      1791 +      median_mc_change = median(mod_difference) * 100,       
+      1792 +      .groups = "drop"                                       
+      1793 +    ) %>%                                                    
+      1794 +    pivot_wider(names_from = direction,                      
+      1795 +                values_from = c(count, mean_mc_change,       
+           +median_mc_change))                                           
+      1796 +                                                             
+      1797 +  write.table(chromatin_summary, file.path(TABLES_DIR,       
+           +"chromatin_state_summary.tsv"),                              
+      1798 +              sep = "\t", quote = FALSE, row.names = FALSE)  
+      1799 +  cat("  Saved: chromatin_state_summary.tsv\n")              
+      1800 +}                                                            
+      1801 +                                                             
+      1802 +cat("\nSection 10 complete.\n\n")                            
+      1803 +                                                             
+      1804  cat("\n")                                                    
+      1805  cat("======================================================= 
+            =========================\n")                                
+      1806  cat("VISUALIZATION COMPLETE\n")                              
+
+⏺ Section 10 has been added. Let me update the todo list and run the script to
+  verify it works.
+
+⏺ Bash(Rscript                                                     timeout: 10m 
+      biomodal/downstream/scripts/biomodal_visualizations.R 2>&1)  0s
+  ⎿ =======================================================================
+    =========
+    BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+    … +421 lines (ctrl+o to expand)
+
+
+⏺ The script ran successfully. Let me verify the new Section 10 output files
+  were created.
+
+⏺ Bash(ls -la /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstr
+      eam/plots/visualizations/ | grep "10")
+  ⎿ drwxr-xr-x@  5 zakiralibhai  staff    160 Jan 21 21:23 10a_chromatin_st
+    ate_distribution
+    drwxr-xr-x@  5 zakiralibhai  staff    160 Jan 21 21:23 10b_chromatin_by
+    … +7 lines (ctrl+o to expand)
+
+
+
+⏺ Bash(ls /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/
+      plots/visualizations/tables/ | grep chromatin)
+  ⎿  chromatin_state_summary.tsv
+     dmr_chromatin_state_annotation.tsv
+
+⏺ Bash(ls /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/
+      plots/visualizations/10a_chromatin_state_distribution/)
+  ⎿  10a_chromatin_state_distribution.jpg
+     10a_chromatin_state_distribution.pdf
+     10a_chromatin_state_distribution.svg
+
+⏺ Read(biomodal/downstream/plots/visualizations/tables/chromatin_state_summary.t
+      sv)
+  ⎿  Read 9 lines
+
+⏺ All tasks completed successfully. Here's a summary of what was added:
+
+  Section 10: ChIP-seq Chromatin State Analysis
+
+  New visualizations created:
+  - 10a_chromatin_state_distribution/ - Overall chromatin state distribution
+  (bar + pie chart)
+  - 10b_chromatin_by_methylation_direction/ - Hyper vs hypomethylated comparison
+  - 10c_chip_mark_overlap_heatmap/ - ChIP mark overlap percentages
+  - 10d_coordinated_genes_chromatin/ - Chromatin state of coordinated (mC↑/hmC↓)
+   genes
+  - 10e_top_genes_chromatin_annotation/ - Top 20 genes annotated with chromatin
+  state
+
+  New data tables:
+  - dmr_chromatin_state_annotation.tsv - Full annotation of all significant DMRs
+  - chromatin_state_summary.tsv - Summary statistics by chromatin state
+
+  Key findings from the analysis:
+  ┌────────────────────┬───────────┬───────────────────────────────────────────┐
+  │  Chromatin State   │ % of DMRs │              Interpretation               │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Active_Promoter    │ 62.7%     │ H3K4me3+ genes (expected for gene bodies) │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Other              │ 27.2%     │ No strong marks                           │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Repressed_Promoter │ 8.2%      │ H3K27me3+ near TSS                        │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Bivalent_Promoter  │ 1.2%      │ Developmental poised                      │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Polycomb           │ 0.1%      │ Distal H3K27me3                           │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Active_Enhancer    │ 0.4%      │ H3K27ac+ distal                           │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Poised_Enhancer    │ 0.1%      │ H3K4me1+ only                             │
+  └────────────────────┴───────────┴───────────────────────────────────────────┘
+  ChIP mark overlaps:
+  - H3K4me1: 96.7% of DMRs (gene body mark)
+  - H3K4me3: 67.3% (active promoter mark)
+  - H3K27ac: 67.2% (active mark)
+  - H3K27me3: 12.1% (repressive mark)
+  - Bivalent: 2.1%
+
+  The high H3K4me1 overlap (96.7%) is expected for gene bodies in actively
+  transcribed regions. The chromatin state classification follows the same
+  7-category system used in annotate_loops_extended.R and
+  tad_chip_classification.R for consistency across your analyses.
+
+✻ Crunched for 7m 30s
+ ▐▛███▜▌   Claude Code v2.1.15
+▝▜█████▛▘  Opus 4.5 · Claude Max
+  ▘▘ ▝▝    ~/Documents/GitHub/mariner_hi-c
+══════════════════ Conversation compacted · ctrl+o for history ═════════════════
+
+❯ /compact 
+  ⎿  Compacted (ctrl+o to see full summary)
+  ⎿  Read scripts/utils/multi_format_output.R (272 lines)
+  ⎿  Referenced file biomodal/downstream/scripts/biomodal_visualizations.R
+  ⎿  Read biomodal/CLAUDE.md (225 lines)
+  ⎿  Referenced file biomodal/downstream/modality/outputs/analysis_summary.md
+  ⎿ Read biomodal/downstream/modality/outputs/run-2/outputs_CG/Results/BioQC_202
+    60121_170327/biological_qc_report_4_samples_20260121_170327.json (293 lines)
+
+  ⎿  Plan file referenced (~/.claude/plans/recursive-booping-crown.md)
+
+❯ examining the @biomodal/downstream/scripts/biomodal_visualizations.R -- \ 
+  \                                                                         
+  because \                                                                 
+  all the genes on that list of top hits has a bunch of epigenetic changes  
+  (increased H2AK119ub, reduced H3K27ac, reduced H3K27me1) and are sig      
+  reduced in RNAseq\                                                        
+  i would like you to add another visualization to use the @peaks/beds/ in  
+  the manner of both @scripts/annotate_loops_extended.R                     
+  @tads/scripts/tad_chip_classification.R to add visualization(s) to the    
+  existing script that shows this trend, taking in the peak files and then  
+  also showing at the categories like i did with the tads. please make a    
+  plan first                                                                
+  @biomodal/downstream/plots/visualizations/tables/summary_statistics.txt   
+  according to this and @biomodal/CLAUDE.md before proceeding to implement  
+  ⎿  Read biomodal/downstream/scripts/biomodal_visualizations.R (1304 lines)
+  ⎿  Listed directory peaks/beds/
+  ⎿  Read scripts/annotate_loops_extended.R (1005 lines)
+  ⎿  Read tads/scripts/tad_chip_classification.R (1190 lines)
+  ⎿ Read biomodal/downstream/plots/visualizations/tables/summary_statistics.txt 
+    (75 lines)
+
+  ⎿  Read biomodal/CLAUDE.md (225 lines)
+  ⎿  Loaded tads/CLAUDE.md
+
+⏺ I'll start by reading the existing plan file to understand what's there, then
+  design the new ChIP-seq integration section.
+
+⏺ Reading Plan(~/.claude/plans/recursive-booping-crown.md)
+  ⎿  Read 157 lines
+
+⏺ Now I need to understand the chromatin state classification approach better.
+  Let me also check what ChIP-seq peak files are available and look at the
+  existing implementation patterns.
+
+⏺ Bash(ls -la /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/)
+  ⎿  total 24560
+     drwxr-xr-x@ 15 zakiralibhai  staff      480 Jan 13 17:08 .
+     drwxr-xr-x@ 15 zakiralibhai  staff      480 Jan 18 19:44 ..
+     … +26 lines (ctrl+o to expand)
+
+⏺ Now let me check if there are any additional peak files I might be missing,
+  and then I'll update the plan.
+
+⏺ Bash(ls -la /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/ | head
+      -20)
+  ⎿  total 12576
+     drwxr-xr-x@ 15 zakiralibhai  staff      480 Jan 18 19:44 .
+     drwxr-xr-x@ 25 zakiralibhai  staff      800 Jan 21 12:41 ..
+     … +17 lines (ctrl+o to expand)
+
+⏺ Now I have a clear picture. Let me update the plan file with a new Section 10
+  for ChIP-seq chromatin state analysis. This will follow the patterns from
+  annotate_loops_extended.R and tad_chip_classification.R.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+       83  2. **Export top gene lists** - TSV files for downstream       
+           analysis                                                      
+       84  3. **Enrichment results export** - TSV files of enriched      
+           terms                                                         
+       85                                                                
+       86 +### SECTION 10: ChIP-seq Chromatin State Analysis (NEW)       
+       87 +                                                              
+       88 +**Purpose:** Show that differentially methylated genes have   
+          +coordinated epigenetic changes:                               
+       89 +- Increased H2AK119ub (BAP1 substrate - not directly measured 
+          + but inferred)                                                
+       90 +- Reduced H3K27ac (active enhancer/promoter mark)             
+       91 +- Reduced H3K4me1 (poised enhancer mark)                      
+       92 +                                                              
+       93 +**Data Sources:**                                             
+       94 +- ChIP-seq peaks from `peaks/beds/`:                          
+       95 +  - `H3K27acCerebellumLate2.bed` - Active enhancer/promoter   
+          +mark                                                          
+       96 +  - `H3K27me3CerebellumLate1.bed` - Polycomb repressive mark  
+       97 +  - `H3K4me1CerebellumLate1.bed` - Poised enhancer mark       
+       98 +  - `H3K4me3CerebellumLate2.bed` - Active promoter mark       
+       99 +  - `Bivalent_Cerebellum_Late.bed` - K4me3+K27me3 overlap     
+          +regions                                                       
+      100 +- Gene body DMR coordinates from modality output              
+      101 +                                                              
+      102 +**Implementation Approach (following                          
+          +annotate_loops_extended.R and tad_chip_classification.R):**   
+      103 +1. Load ChIP-seq peak BED files as GRanges                    
+      104 +2. Create GRanges from DMR gene body coordinates              
+      105 +3. Compute distance to TSS using                              
+          +TxDb.Mmusculus.UCSC.mm10.knownGene                            
+      106 +4. Compute overlaps between gene bodies and each ChIP mark    
+      107 +5. Classify genes into 7 chromatin state categories:          
+      108 +   - **Active_Promoter**: H3K4me3+ AND NOT H3K27me3 AND ≤2kb  
+          +from TSS                                                      
+      109 +   - **Repressed_Promoter**: H3K27me3+ AND NOT H3K27ac AND    
+          +≤2kb from TSS                                                 
+      110 +   - **Bivalent_Promoter**: K4me3+K27me3 overlap region       
+      111 +   - **Polycomb**: H3K27me3+ AND >2kb from TSS                
+      112 +   - **Active_Enhancer**: H3K27ac+ AND >2kb from TSS          
+      113 +   - **Poised_Enhancer**: H3K4me1+ AND NOT H3K27ac AND NOT    
+          +H3K27me3 AND >2kb                                             
+      114 +   - **Other**: No marks / unclassified                       
+      115 +                                                              
+      116 +**Visualizations:**                                           
+      117 +1. **10a_chromatin_state_distribution** - Overall chromatin   
+          +state distribution of all DMR genes                           
+      118 +   - Stacked bar chart showing % of significant mC and hmC    
+          +DMRs in each state                                            
+      119 +   - Pie chart summary                                        
+      120 +                                                              
+      121 +2. **10b_chromatin_by_methylation_direction** - Compare hyper 
+          + vs hypomethylated genes                                      
+      122 +   - Side-by-side stacked bars: Hypermethylated (mC↑) vs      
+          +Hypomethylated (mC↓) by chromatin state                       
+      123 +   - Same for hmC: Increased vs Decreased by chromatin state  
+      124 +   - Key insight: Do hypermethylated genes preferentially     
+          +have specific chromatin signatures?                           
+      125 +                                                              
+      126 +3. **10c_chip_mark_overlap_heatmap** - Per-mark overlap       
+          +percentages                                                   
+      127 +   - Heatmap showing % of DMR genes overlapping each ChIP     
+          +mark                                                          
+      128 +   - Rows: All significant, Hypermethylated, Hypomethylated   
+      129 +   - Columns: H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent   
+      130 +                                                              
+      131 +4. **10d_coordinated_genes_chromatin** - Chromatin state of   
+          +mC↑/hmC↓ coordinated genes                                    
+      132 +   - Stacked bar showing chromatin state distribution of the  
+          +2,856 coordinated genes                                       
+      133 +   - Focus on genes with both mC increase AND hmC decrease    
+      134 +                                                              
+      135 +5. **10e_top_genes_chromatin_annotation** - Top 20 genes with 
+          + chromatin marks                                              
+      136 +   - Horizontal bar chart of top 20 genes by combined effect  
+      137 +   - Annotated with chromatin state category                  
+      138 +   - Color-coded by state                                     
+      139 +                                                              
+      140 +**Color Scheme (consistent with annotate_loops_extended.R):** 
+      141 +```r                                                          
+      142 +CHROMATIN_STATE_COLORS <- c(                                  
+      143 +  "Active_Promoter" = "#e41a1c",     # Red - active           
+          +transcription                                                 
+      144 +  "Repressed_Promoter" = "#756bb1",  # Purple -               
+          +Polycomb-silenced promoter                                    
+      145 +  "Bivalent_Promoter" = "#984ea3",   # Magenta -              
+          +developmental poised                                          
+      146 +  "Polycomb" = "#4daf4a",            # Green - distal         
+          +repressive                                                    
+      147 +  "Active_Enhancer" = "#377eb8",     # Blue - active enhancer 
+      148 +  "Poised_Enhancer" = "#ff7f00",     # Orange - primed        
+          +enhancer                                                      
+      149 +  "Other" = "#999999"                # Gray - unmarked        
+      150 +)                                                             
+      151 +```                                                           
+      152 +                                                              
+      153 +**Output Files:**                                             
+      154 +- `10a_chromatin_state_distribution/` - Distribution plots    
+      155 +- `10b_chromatin_by_methylation_direction/` - Directional     
+          +comparison                                                    
+      156 +- `10c_chip_mark_overlap_heatmap/` - Overlap heatmap          
+      157 +- `10d_coordinated_genes_chromatin/` - Coordinated genes      
+          +analysis                                                      
+      158 +- `10e_top_genes_chromatin_annotation/` - Annotated top genes 
+      159 +- `tables/dmr_chromatin_state_annotation.tsv` - Full          
+          +annotation table                                              
+      160 +- `tables/chromatin_state_summary.tsv` - Summary statistics   
+      161 +                                                              
+      162 +**Biological Hypothesis to Test:**                            
+      163 +If BAP1 loss leads to increased H2AK119ub which restricts TET 
+          + access:                                                      
+      164 +- Hypermethylated genes (mC↑) may show enrichment in specific 
+          + chromatin states                                             
+      165 +- Polycomb-marked regions (H3K27me3+) may be preferentially   
+          +affected                                                      
+      166 +- Active chromatin marks (H3K27ac, H3K4me3) may be reduced in 
+          + affected genes                                               
+      167 +                                                              
+      168  ## Key Genes to Highlight (Coordinated mC↑ / hmC↓)            
+      169  | Gene | mC Change | hmC Change | q-value (mC) | q-value      
+           (hmC) |                                                       
+      170  |------|-----------|------------|--------------|------------- 
+           --|                                                           
+
+⏺ Now let me update the Output Structure and Dependencies sections to include
+  the new Section 10 outputs.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+      186  ## Output Structure                                           
+      187  ```                                                           
+      188  biomodal/downstream/plots/visualizations/                     
+      189 -├── 01_qc_overview.{pdf,svg,jpg}                              
+      190 -├── 02_sample_correlations.{pdf,svg,jpg}                      
+      191 -├── 03_dmr_region_statistics.{pdf,svg,jpg}                    
+      192 -├── 04_volcano_plots.{pdf,svg,jpg}                            
+      193 -├── 05_coordinated_changes.{pdf,svg,jpg}                      
+      194 -├── 06_top_genes.{pdf,svg,jpg}                                
+      195 -├── 07_effect_size_distributions.{pdf,svg,jpg}                
+      196 -├── 08_syt1_zbtb20_focus.{pdf,svg,jpg}                        
+      197 -├── 09_enrichment_go_bp.{pdf,svg,jpg}                         
+      198 -├── 09_enrichment_go_cc.{pdf,svg,jpg}                         
+      199 -├── 09_enrichment_go_mf.{pdf,svg,jpg}                         
+      200 -├── 09_enrichment_kegg.{pdf,svg,jpg}                          
+      189 +├── 01_qc_overview/                                           
+      190 +├── 02_sample_correlations/                                   
+      191 +├── 03_dmr_region_statistics/                                 
+      192 +├── 04_volcano_plots/                                         
+      193 +├── 05_coordinated_changes/                                   
+      194 +├── 06_top_genes/                                             
+      195 +├── 07_effect_size_distributions/                             
+      196 +├── 08_enrichment_go_bp/                                      
+      197 +├── 08_enrichment_go_cc/                                      
+      198 +├── 08_enrichment_go_mf/                                      
+      199 +├── 08_enrichment_kegg/                                       
+      200 +├── 10a_chromatin_state_distribution/       (NEW)             
+      201 +├── 10b_chromatin_by_methylation_direction/ (NEW)             
+      202 +├── 10c_chip_mark_overlap_heatmap/          (NEW)             
+      203 +├── 10d_coordinated_genes_chromatin/        (NEW)             
+      204 +├── 10e_top_genes_chromatin_annotation/     (NEW)             
+      205  └── tables/                                                   
+      206      ├── top_mc_dmrs.tsv                                       
+      207      ├── top_hmc_dmrs.tsv                                      
+     ...
+      206      ├── enrichment_go_cc.tsv                                  
+      207      ├── enrichment_go_mf.tsv                                  
+      208      ├── enrichment_kegg.tsv                                   
+      209 +    ├── dmr_chromatin_state_annotation.tsv  (NEW)             
+      210 +    ├── chromatin_state_summary.tsv         (NEW)             
+      211      └── summary_statistics.txt                                
+      212  ```                                                           
+      213                                                                
+
+⏺ Now let me update the Dependencies section to include the new packages needed
+  for ChIP-seq analysis.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+      235  - clusterProfiler, enrichplot (for GO/KEGG enrichment)        
+      236  - org.Mm.eg.db (mouse gene annotations)                       
+      237  - VennDiagram or ggVennDiagram (for overlap visualization)    
+      238 +- **GenomicRanges** (for ChIP-seq overlap analysis) - NEW     
+      239 +- **rtracklayer** (for loading BED files as GRanges) - NEW    
+      240 +- **TxDb.Mmusculus.UCSC.mm10.knownGene** (for TSS distance    
+          +calculation) - NEW                                            
+      241                                                                
+      242  ## Verification                                               
+      243  1. Run script: `Rscript                                       
+           biomodal/downstream/scripts/biomodal_visualizations.R`        
+
+⏺ Let me update the verification section to include checks for the new ChIP-seq
+  outputs.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+      241                                                                
+      242  ## Verification                                               
+      243  1. Run script: `Rscript                                       
+           biomodal/downstream/scripts/biomodal_visualizations.R`        
+      244 -2. Check all 8 PDF outputs exist                              
+      244 +2. Check all figure folders exist (01-10)                     
+      245  3. Verify Syt1 appears in volcano plots with correct values   
+      246  4. Confirm correlation heatmaps match JSON data               
+      247  5. Check summary statistics match analysis_summary.md         
+      248 +6. **NEW**: Verify chromatin state annotations in             
+          +`tables/dmr_chromatin_state_annotation.tsv`                   
+      249 +7. **NEW**: Check that 10a-10e figure folders contain         
+          +pdf/svg/jpg files                                             
+      250 +8. **NEW**: Validate chromatin state distribution shows       
+          +expected patterns for hypermethylated genes                   
+
+⏺ I have one clarification question about the ChIP-seq marks you mentioned. Let
+  me ask before finalizing the plan.
+
+⏺ User answered Claude's questions:
+  ⎿  · You mentioned 'reduced H3K27me1' but the available peak files have 
+     H3K4me1 (not H3K27me1). Did you mean H3K4me1 (poised enhancer mark), or
+      do you have H3K27me1 data somewhere else? → H3K4me1 (Recommended)
+
+⏺ The plan is now complete. Here's a summary of the new Section 10: ChIP-seq 
+  Chromatin State Analysis that will be added to biomodal_visualizations.R:
+
+  Key additions:
+  1. Load ChIP-seq peaks (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent) from
+  peaks/beds/
+  2. Classify DMR genes into 7 chromatin state categories using the same
+  approach as annotate_loops_extended.R and tad_chip_classification.R
+  3. Generate 5 new visualizations:
+    - 10a: Overall chromatin state distribution of significant DMRs
+    - 10b: Chromatin state comparison by methylation direction (hyper vs hypo)
+    - 10c: ChIP mark overlap heatmap
+    - 10d: Chromatin state of the 2,856 coordinated (mC↑/hmC↓) genes
+    - 10e: Top 20 genes annotated with chromatin state
+
+  Biological question to address:
+  Do hypermethylated genes in BAP1-KO preferentially have specific chromatin
+  signatures (e.g., enrichment in Polycomb/H3K27me3 marked regions)?
+
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/recursive-booping-crown.md · /plan to 
+     edit
+     Biomodal DUET evoC Visualization Plan
+
+     Overview
+
+     Create a comprehensive R visualization script for the biomodal
+     differential methylation (5mC and 5hmC) analysis between BAP1-KO mutant
+      and wildtype control mice.
+
+     Key Findings to Visualize
+
+     - Primary affected regions: Gene bodies (NOT promoters or CpG islands)
+     - Coordinated pattern: 5mC increase + 5hmC decrease at same loci
+     - Top genes: Syt1 (highest!), Zbtb20, Cntnap2, Trpm3
+     - Significant DMRs: 4,188 mC + 4,897 hmC gene body DMRs (CG context)
+     - Non-CpG methylation: No significant changes in CHG/CHH contexts
+
+     Data Sources
+
+     Primary Data Files (CG Context)
+
+     1. Gene body mC DMR: downstream/modality/outputs/run-2/outputs_CG/Resul
+     ts/gencode.vM25.mouse.genes.annotation/DMR_20260121_172049/DMR_mc_contr
+     ol__mutant_20260121_172049.bed
+     2. Gene body hmC DMR: downstream/modality/outputs/run-2/outputs_CG/Resu
+     lts/gencode.vM25.mouse.genes.annotation/DMR_20260121_172049/DMR_hmc_con
+     trol__mutant_20260121_172049.bed
+     3. Biological QC JSON:
+     downstream/modality/outputs/run-2/outputs_CG/Results/BioQC_20260121_170
+     327/biological_qc_report_4_samples_20260121_170327.json
+     4. Upstream Summary: upstream/duet-1.5.0_evoC_Bap1_run_6bp/reports/evoC
+     _Bap1_run_duet-evoC_Summary.csv
+
+     DMR BED File Format (14 columns)
+
+     - Chromosome, Start, End, num_contexts, mean_coverage
+     - mean_mod_group_1 (control), mean_mod_group_2 (mutant)
+     - mod_fold_change, mod_difference, test_statistic
+     - dmr_pvalue, dmr_qvalue, Annotation, Name (gene)
+
+     Visualization Sections (8 Sections)
+
+     SECTION 1: QC & Data Overview
+
+     1. Sequencing quality bar chart - Mapped reads, bases, duplication rate
+      by sample
+     2. Coverage distribution - Mean CpG coverage across samples
+     3. Assay performance metrics - Genetic accuracy, mC sensitivity, hmC
+     specificity
+
+     SECTION 2: Sample Correlation Analysis
+
+     1. 5mC correlation heatmap - 4x4 sample correlation matrix
+     (within-group 0.76-0.79)
+     2. 5hmC correlation heatmap - 4x4 sample correlation matrix
+     (within-group 0.48-0.51)
+     3. PCA plots - PC1 vs PC2 for mC and hmC, colored by condition
+
+     SECTION 3: DMR Statistics by Genomic Region
+
+     1. Region comparison bar chart - DMR counts: gene bodies >> shores >
+     shelves > islands > promoters > TSS
+     2. mC vs hmC DMR comparison - Side-by-side counts showing hmC has more
+     gene body DMRs
+     3. Context comparison - CG vs CHG vs CHH (showing no signal in non-CG)
+     4. CHG/CHH baseline methylation - Bar chart showing <1% baseline vs
+     ~72% CG (biologically meaningful)
+
+     SECTION 4: Volcano Plots
+
+     1. Gene body mC volcano - x=mod_difference, y=-log10(qvalue), highlight
+      top genes
+     2. Gene body hmC volcano - x=mod_difference, y=-log10(qvalue),
+     highlight top genes
+     3. Combined panel - Side-by-side mC and hmC volcanos
+     4. Label key genes: Syt1, Zbtb20, Cntnap2, Trpm3
+
+     SECTION 5: Coordinated Changes Analysis (KEY INSIGHT)
+
+     1. mC vs hmC scatter plot - For genes with both significant changes,
+     show opposite directions
+     2. Top 20 coordinated genes bar chart - Paired bars showing mC up / hmC
+      down
+     3. Syt1 locus detail (DETAILED) - Bar chart with:
+       - mC and hmC bars for control vs mutant groups
+       - Error bars (95% CI)
+       - Individual sample points overlaid (4 samples)
+       - P-values and fold-change annotations
+       - Shows +18.4% mC and -15.8% hmC coordinated change
+     4. Zbtb20 locus detail (DETAILED) - Same format as Syt1
+       - Shows +8.0% mC and -6.2% hmC coordinated change
+     5. Additional key genes panel - Cntnap2, Trpm3, Dlgap1 with same detail
+      level
+
+     SECTION 6: Top Differentially Methylated Genes
+
+     1. Top 20 mC DMRs horizontal bar chart - Sorted by q-value, colored by
+     direction
+     2. Top 20 hmC DMRs horizontal bar chart - Sorted by q-value, colored by
+      direction
+     3. Overlap analysis - Venn diagram of genes significant in both mC and
+     hmC
+
+     SECTION 7: Effect Size Distributions
+
+     1. mC difference distribution - Histogram/density of mod_difference
+     values
+     2. hmC difference distribution - Histogram/density of mod_difference
+     values
+     3. Violin plot comparison - mC vs hmC effect sizes (significant genes
+     only)
+
+     SECTION 8: GO/KEGG Enrichment Analysis
+
+     1. GO Biological Process dotplot - Enriched terms in hypermethylated
+     genes (expect neuronal/synaptic)
+     2. GO Cellular Component dotplot - Subcellular localization enrichment
+     3. GO Molecular Function dotplot - Functional enrichment
+     4. KEGG pathway dotplot - Pathway-level enrichment
+     5. Gene-pathway network - Visualization of key pathways and genes
+
+     SECTION 9: Summary Statistics
+
+     1. Summary table - Total DMRs, significant counts, key metrics
+     2. Export top gene lists - TSV files for downstream analysis
+     3. Enrichment results export - TSV files of enriched terms
+
+     SECTION 10: ChIP-seq Chromatin State Analysis (NEW)
+
+     Purpose: Show that differentially methylated genes have coordinated
+     epigenetic changes:
+     - Increased H2AK119ub (BAP1 substrate - not directly measured but
+     inferred)
+     - Reduced H3K27ac (active enhancer/promoter mark)
+     - Reduced H3K4me1 (poised enhancer mark)
+
+     Data Sources:
+     - ChIP-seq peaks from peaks/beds/:
+       - H3K27acCerebellumLate2.bed - Active enhancer/promoter mark
+       - H3K27me3CerebellumLate1.bed - Polycomb repressive mark
+       - H3K4me1CerebellumLate1.bed - Poised enhancer mark
+       - H3K4me3CerebellumLate2.bed - Active promoter mark
+       - Bivalent_Cerebellum_Late.bed - K4me3+K27me3 overlap regions
+     - Gene body DMR coordinates from modality output
+
+     Implementation Approach (following annotate_loops_extended.R and 
+     tad_chip_classification.R):
+     1. Load ChIP-seq peak BED files as GRanges
+     2. Create GRanges from DMR gene body coordinates
+     3. Compute distance to TSS using TxDb.Mmusculus.UCSC.mm10.knownGene
+     4. Compute overlaps between gene bodies and each ChIP mark
+     5. Classify genes into 7 chromatin state categories:
+       - Active_Promoter: H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
+       - Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND ≤2kb from TSS
+       - Bivalent_Promoter: K4me3+K27me3 overlap region
+       - Polycomb: H3K27me3+ AND >2kb from TSS
+       - Active_Enhancer: H3K27ac+ AND >2kb from TSS
+       - Poised_Enhancer: H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+       - Other: No marks / unclassified
+
+     Visualizations:
+     1. 10a_chromatin_state_distribution - Overall chromatin state
+     distribution of all DMR genes
+       - Stacked bar chart showing % of significant mC and hmC DMRs in each
+     state
+       - Pie chart summary
+     2. 10b_chromatin_by_methylation_direction - Compare hyper vs
+     hypomethylated genes
+       - Side-by-side stacked bars: Hypermethylated (mC↑) vs Hypomethylated
+     (mC↓) by chromatin state
+       - Same for hmC: Increased vs Decreased by chromatin state
+       - Key insight: Do hypermethylated genes preferentially have specific
+     chromatin signatures?
+     3. 10c_chip_mark_overlap_heatmap - Per-mark overlap percentages
+       - Heatmap showing % of DMR genes overlapping each ChIP mark
+       - Rows: All significant, Hypermethylated, Hypomethylated
+       - Columns: H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent
+     4. 10d_coordinated_genes_chromatin - Chromatin state of mC↑/hmC↓
+     coordinated genes
+       - Stacked bar showing chromatin state distribution of the 2,856
+     coordinated genes
+       - Focus on genes with both mC increase AND hmC decrease
+     5. 10e_top_genes_chromatin_annotation - Top 20 genes with chromatin
+     marks
+       - Horizontal bar chart of top 20 genes by combined effect
+       - Annotated with chromatin state category
+       - Color-coded by state
+
+     Color Scheme (consistent with annotate_loops_extended.R):
+     CHROMATIN_STATE_COLORS <- c(
+       "Active_Promoter" = "#e41a1c",     # Red - active transcription
+       "Repressed_Promoter" = "#756bb1",  # Purple - Polycomb-silenced 
+     promoter
+       "Bivalent_Promoter" = "#984ea3",   # Magenta - developmental poised
+       "Polycomb" = "#4daf4a",            # Green - distal repressive
+       "Active_Enhancer" = "#377eb8",     # Blue - active enhancer
+       "Poised_Enhancer" = "#ff7f00",     # Orange - primed enhancer
+       "Other" = "#999999"                # Gray - unmarked
+     )
+
+     Output Files:
+     - 10a_chromatin_state_distribution/ - Distribution plots
+     - 10b_chromatin_by_methylation_direction/ - Directional comparison
+     - 10c_chip_mark_overlap_heatmap/ - Overlap heatmap
+     - 10d_coordinated_genes_chromatin/ - Coordinated genes analysis
+     - 10e_top_genes_chromatin_annotation/ - Annotated top genes
+     - tables/dmr_chromatin_state_annotation.tsv - Full annotation table
+     - tables/chromatin_state_summary.tsv - Summary statistics
+
+     Biological Hypothesis to Test:
+     If BAP1 loss leads to increased H2AK119ub which restricts TET access:
+     - Hypermethylated genes (mC↑) may show enrichment in specific chromatin
+      states
+     - Polycomb-marked regions (H3K27me3+) may be preferentially affected
+     - Active chromatin marks (H3K27ac, H3K4me3) may be reduced in affected
+     genes
+
+     Key Genes to Highlight (Coordinated mC↑ / hmC↓)
+
+
+
+
+
+
+
+
+     ┌─────────┬───────────┬────────────┬──────────────┬───────────────┐
+     │  Gene   │ mC Change │ hmC Change │ q-value (mC) │ q-value (hmC) │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Syt1    │ +18.4%    │ -15.8%     │ <10^-300     │ <10^-300      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Zbtb20  │ +8.0%     │ -6.2%      │ 1.6e-225     │ 3.8e-181      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Trpm3   │ +8.7%     │ -5.9%      │ 2.5e-257     │ 1.8e-153      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Epha3   │ +10.4%    │ -8.6%      │ 3.1e-166     │ 6.6e-154      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Mcu     │ +14.8%    │ -10.3%     │ 7.8e-195     │ 4.2e-118      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Cntnap2 │ +2.6%     │ -4.0%      │ 1.4e-55      │ 3.9e-228      │
+     ├─────────┼───────────┼────────────┼──────────────┼───────────────┤
+     │ Lpp     │ +7.6%     │ -6.0%      │ 1.4e-158     │ 3.7e-123      │
+     └─────────┴───────────┴────────────┴──────────────┴───────────────┘
+     Biological Interpretation Context
+
+     The coordinated mC increase + hmC decrease pattern suggests impaired
+     TET-mediated active demethylation:
+     5mC → (TET1/2/3) → 5hmC → 5fC → 5caC → C (unmethylated)
+     BAP1 loss → Increased H2AK119ub → Altered chromatin → TET access
+     restricted → mC accumulates, hmC depleted
+
+     Output Structure
+
+     biomodal/downstream/plots/visualizations/
+     ├── 01_qc_overview/
+     ├── 02_sample_correlations/
+     ├── 03_dmr_region_statistics/
+     ├── 04_volcano_plots/
+     ├── 05_coordinated_changes/
+     ├── 06_top_genes/
+     ├── 07_effect_size_distributions/
+     ├── 08_enrichment_go_bp/
+     ├── 08_enrichment_go_cc/
+     ├── 08_enrichment_go_mf/
+     ├── 08_enrichment_kegg/
+     ├── 10a_chromatin_state_distribution/       (NEW)
+     ├── 10b_chromatin_by_methylation_direction/ (NEW)
+     ├── 10c_chip_mark_overlap_heatmap/          (NEW)
+     ├── 10d_coordinated_genes_chromatin/        (NEW)
+     ├── 10e_top_genes_chromatin_annotation/     (NEW)
+     └── tables/
+         ├── top_mc_dmrs.tsv
+         ├── top_hmc_dmrs.tsv
+         ├── coordinated_changes.tsv
+         ├── enrichment_go_bp.tsv
+         ├── enrichment_go_cc.tsv
+         ├── enrichment_go_mf.tsv
+         ├── enrichment_kegg.tsv
+         ├── dmr_chromatin_state_annotation.tsv  (NEW)
+         ├── chromatin_state_summary.tsv         (NEW)
+         └── summary_statistics.txt
+
+     Script Design
+
+     Following patterns from existing scripts (visualizations.R,
+     tad_visualizations.R):
+     - Use source("scripts/utils/multi_format_output.R") for PDF/SVG/JPEG
+     output
+     - Use patchwork for combining plots
+     - Use ggplot2 + RColorBrewer for consistent styling
+     - Use jsonlite to parse QC JSON files
+     - Add section headers with cat() for progress tracking
+
+     Critical Files to Create
+
+     1. biomodal/downstream/scripts/biomodal_visualizations.R - Main
+     visualization script (~800-1000 lines)
+
+     Dependencies
+
+     - ggplot2, patchwork, RColorBrewer, pheatmap
+     - jsonlite (for JSON parsing)
+     - tidyverse (dplyr, tidyr, readr)
+     - scales (for number formatting)
+     - ggrepel (for non-overlapping labels on volcano plots)
+     - clusterProfiler, enrichplot (for GO/KEGG enrichment)
+     - org.Mm.eg.db (mouse gene annotations)
+     - VennDiagram or ggVennDiagram (for overlap visualization)
+     - GenomicRanges (for ChIP-seq overlap analysis) - NEW
+     - rtracklayer (for loading BED files as GRanges) - NEW
+     - TxDb.Mmusculus.UCSC.mm10.knownGene (for TSS distance calculation) -
+     NEW
+
+     Verification
+
+     1. Run script: Rscript 
+     biomodal/downstream/scripts/biomodal_visualizations.R
+     2. Check all figure folders exist (01-10)
+     3. Verify Syt1 appears in volcano plots with correct values
+     4. Confirm correlation heatmaps match JSON data
+     5. Check summary statistics match analysis_summary.md
+     6. NEW: Verify chromatin state annotations in
+     tables/dmr_chromatin_state_annotation.tsv
+     7. NEW: Check that 10a-10e figure folders contain pdf/svg/jpg files
+     8. NEW: Validate chromatin state distribution shows expected patterns
+     for hypermethylated genes
+
+⏺ Plan approved. Let me start implementing the new Section 10 for ChIP-seq
+  chromatin state analysis.
+
+⏺ Let me first read the current end of the script to see where to add the new
+  section.
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 100 lines
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 125 lines
+
+⏺ Now I understand the structure. Let me start by adding the ChIP-seq peak file
+  paths to the configuration section.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 10 lines
+      37    tss_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs 
+          _CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260 
+          121_172333/DMR_mc_control__mutant_20260121_172333.bed")        
+      38  )                                                              
+      39                                                                 
+      40 +# ChIP-seq peak file paths (from peaks/beds/)                  
+      41 +# Use Late timepoint peaks to match the adult BAP1-KO analysis 
+      42 +CHIP_PEAK_FILES <- list(                                       
+      43 +  h3k27ac  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/H3K27acCerebellumLate2.bed",                      
+      44 +  h3k27me3 = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/H3K27me3CerebellumLate1.bed",                     
+      45 +  h3k4me1  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/H3K4me1CerebellumLate1.bed",                      
+      46 +  h3k4me3  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/H3K4me3CerebellumLate2.bed",                      
+      47 +  bivalent = "/Users/zakiralibhai/Documents/GitHub/mariner_hi- 
+         +c/peaks/beds/Bivalent_Cerebellum_Late.bed"                     
+      48 +)                                                              
+      49 +                                                               
+      50  # Output directory                                             
+      51  OUTPUT_DIR <- file.path(BASE_DIR, "plots/visualizations")      
+      52  TABLES_DIR <- file.path(OUTPUT_DIR, "tables")                  
+
+⏺ Now let me add the chromatin state colors and order.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 17 lines
+      75    significant = c("Significant" = "#E41A1C", "Not Significant" 
+           = "grey70")                                                   
+      76  )                                                              
+      77                                                                 
+      78 +# Chromatin state classification (consistent with              
+         +annotate_loops_extended.R)                                     
+      79 +CHROMATIN_STATE_ORDER <- c("Active_Promoter",                  
+         +"Repressed_Promoter", "Bivalent_Promoter",                     
+      80 +                           "Polycomb", "Active_Enhancer",      
+         +"Poised_Enhancer", "Other")                                    
+      81 +                                                               
+      82 +CHROMATIN_STATE_COLORS <- c(                                   
+      83 +  "Active_Promoter" = "#e41a1c",     # Red - active            
+         +transcription                                                  
+      84 +  "Repressed_Promoter" = "#756bb1",  # Purple -                
+         +Polycomb-silenced promoter                                     
+      85 +  "Bivalent_Promoter" = "#984ea3",   # Magenta - developmental 
+         + poised                                                        
+      86 +  "Polycomb" = "#4daf4a",            # Green - distal          
+         +repressive                                                     
+      87 +  "Active_Enhancer" = "#377eb8",     # Blue - active enhancer  
+      88 +  "Poised_Enhancer" = "#ff7f00",     # Orange - primed         
+         +enhancer                                                       
+      89 +  "Other" = "#999999"                # Gray - unmarked         
+      90 +)                                                              
+      91 +                                                               
+      92 +# TSS threshold for promoter classification                    
+      93 +TSS_THRESHOLD <- 2000  # 2kb                                   
+      94 +                                                               
+      95  # ============================================================ 
+          =================                                              
+      96  # LOAD PACKAGES                                                
+      97  # ============================================================ 
+          =================                                              
+
+⏺ Now let me add the additional packages to the loading section.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 4 lines
+      119    library(enrichplot)                                         
+      120    library(org.Mm.eg.db)                                       
+      121    library(ggVennDiagram)                                      
+      122 +  # ChIP-seq analysis packages (Section 10)                   
+      123 +  library(GenomicRanges)                                      
+      124 +  library(rtracklayer)                                        
+      125 +  library(TxDb.Mmusculus.UCSC.mm10.knownGene)                 
+      126  })                                                            
+      127                                                                
+      128  # Source multi-format output utility                          
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 80 lines
+
+⏺ Now let me add the ChIP-seq helper functions after the existing helper
+  functions.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 117 lines
+      208  }                                                             
+      209                                                                
+      210  # =========================================================== 
+           ==================                                            
+      211 +# ChIP-seq HELPER FUNCTIONS (Section 10)                      
+      212 +# =========================================================== 
+          +==================                                            
+      213 +                                                              
+      214 +#' Load ChIP-seq peaks from BED file as GRanges               
+      215 +#' @param bed_path Path to BED file                           
+      216 +#' @param mark_name Name of the mark (for logging)            
+      217 +#' @return GRanges object                                     
+      218 +load_chip_peaks <- function(bed_path, mark_name = "ChIP") {   
+      219 +  if (!file.exists(bed_path)) {                               
+      220 +    warning(sprintf("%s BED file not found: %s", mark_name,   
+          +bed_path))                                                    
+      221 +    return(NULL)                                              
+      222 +  }                                                           
+      223 +                                                              
+      224 +  df <- read.table(bed_path, sep = "\t", header = FALSE,      
+          +stringsAsFactors = FALSE)                                     
+      225 +  gr <- GRanges(                                              
+      226 +    seqnames = df$V1,                                         
+      227 +    ranges = IRanges(start = df$V2, end = df$V3)              
+      228 +  )                                                           
+      229 +                                                              
+      230 +  cat(sprintf("  %s: %d peaks\n", mark_name, length(gr)))     
+      231 +  return(gr)                                                  
+      232 +}                                                             
+      233 +                                                              
+      234 +#' Create GRanges from DMR data frame                         
+      235 +#' @param dmr_df Data frame with chr, start, end columns      
+      236 +#' @return GRanges object                                     
+      237 +dmr_to_granges <- function(dmr_df) {                          
+      238 +  GRanges(                                                    
+      239 +    seqnames = dmr_df$chr,                                    
+      240 +    ranges = IRanges(start = dmr_df$start, end = dmr_df$end), 
+      241 +    gene = dmr_df$gene,                                       
+      242 +    mod_difference = dmr_df$mod_difference,                   
+      243 +    dmr_qvalue = dmr_df$dmr_qvalue,                           
+      244 +    significant = dmr_df$significant,                         
+      245 +    direction = dmr_df$direction                              
+      246 +  )                                                           
+      247 +}                                                             
+      248 +                                                              
+      249 +#' Compute ChIP-seq overlaps for DMR GRanges                  
+      250 +#' @param dmr_gr GRanges with DMR coordinates                 
+      251 +#' @param chip_peaks List of GRanges for each ChIP mark       
+      252 +#' @return data.frame with overlap columns                    
+      253 +compute_chip_overlaps <- function(dmr_gr, chip_peaks) {       
+      254 +  overlaps <- data.frame(                                     
+      255 +    H3K27ac_overlap = countOverlaps(dmr_gr,                   
+          +chip_peaks$h3k27ac) > 0,                                      
+      256 +    H3K27me3_overlap = countOverlaps(dmr_gr,                  
+          +chip_peaks$h3k27me3) > 0,                                     
+      257 +    H3K4me1_overlap = countOverlaps(dmr_gr,                   
+          +chip_peaks$h3k4me1) > 0,                                      
+      258 +    H3K4me3_overlap = countOverlaps(dmr_gr,                   
+          +chip_peaks$h3k4me3) > 0,                                      
+      259 +    Bivalent_overlap = countOverlaps(dmr_gr,                  
+          +chip_peaks$bivalent) > 0                                      
+      260 +  )                                                           
+      261 +  return(overlaps)                                            
+      262 +}                                                             
+      263 +                                                              
+      264 +#' Classify chromatin state using 7-category priority system  
+      265 +#'                                                            
+      266 +#' Priority order (consistent with                            
+          +annotate_loops_extended.R):                                   
+      267 +#'   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND     
+          +<=2kb from TSS                                                
+      268 +#'   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND     
+          +<=2kb from TSS                                                
+      269 +#'   3. Bivalent_Promoter:  K4me3+K27me3 overlap              
+          +(pre-computed)                                                
+      270 +#'   4. Polycomb:           H3K27me3+ AND >2kb from TSS       
+      271 +#'   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS        
+      272 +#'   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT  
+          +H3K27me3 AND >2kb                                             
+      273 +#'   7. Other:              Default (no marks)                
+      274 +#'                                                            
+      275 +#' @param overlaps data.frame with overlap columns            
+      276 +#' @param distance_to_tss Numeric vector of distances to      
+          +nearest TSS                                                   
+      277 +#' @param tss_threshold Distance threshold for promoter       
+          +(default 2000bp)                                              
+      278 +#' @return Character vector with chromatin state              
+          +classifications                                               
+      279 +classify_chromatin_state <- function(overlaps,                
+          +distance_to_tss, tss_threshold = 2000) {                      
+      280 +  n <- nrow(overlaps)                                         
+      281 +  chromatin_state <- rep("Other", n)                          
+      282 +                                                              
+      283 +  # Extract overlap columns                                   
+      284 +  h3k27ac <- overlaps$H3K27ac_overlap                         
+      285 +  h3k27me3 <- overlaps$H3K27me3_overlap                       
+      286 +  h3k4me1 <- overlaps$H3K4me1_overlap                         
+      287 +  h3k4me3 <- overlaps$H3K4me3_overlap                         
+      288 +  bivalent <- overlaps$Bivalent_overlap                       
+      289 +                                                              
+      290 +  # 1. Active_Promoter: H3K4me3+ AND NOT H3K27me3 AND <=2kb   
+          +from TSS                                                      
+      291 +  is_active_promoter <- h3k4me3 & !h3k27me3 &                 
+      292 +    !is.na(distance_to_tss) & distance_to_tss <=              
+          +tss_threshold                                                 
+      293 +  chromatin_state[is_active_promoter] <- "Active_Promoter"    
+      294 +                                                              
+      295 +  # 2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND      
+          +<=2kb from TSS                                                
+      296 +  is_repressed_promoter <- !is_active_promoter &              
+      297 +    h3k27me3 & !h3k27ac &                                     
+      298 +    !is.na(distance_to_tss) & distance_to_tss <=              
+          +tss_threshold                                                 
+      299 +  chromatin_state[is_repressed_promoter] <-                   
+          +"Repressed_Promoter"                                          
+      300 +                                                              
+      301 +  # 3. Bivalent_Promoter: K4me3+K27me3 overlap (pre-computed) 
+      302 +  is_bivalent <- !is_active_promoter & !is_repressed_promoter 
+          + & bivalent                                                   
+      303 +  chromatin_state[is_bivalent] <- "Bivalent_Promoter"         
+      304 +                                                              
+      305 +  # 4. Polycomb: H3K27me3+ AND >2kb from TSS                  
+      306 +  is_polycomb <- !is_active_promoter & !is_repressed_promoter 
+          + & !is_bivalent &                                             
+      307 +    h3k27me3 & (is.na(distance_to_tss) | distance_to_tss >    
+          +tss_threshold)                                                
+      308 +  chromatin_state[is_polycomb] <- "Polycomb"                  
+      309 +                                                              
+      310 +  # 5. Active_Enhancer: H3K27ac+ AND >2kb from TSS            
+      311 +  is_active_enhancer <- !is_active_promoter &                 
+          +!is_repressed_promoter &                                      
+      312 +    !is_bivalent & !is_polycomb &                             
+      313 +    h3k27ac & (is.na(distance_to_tss) | distance_to_tss >     
+          +tss_threshold)                                                
+      314 +  chromatin_state[is_active_enhancer] <- "Active_Enhancer"    
+      315 +                                                              
+      316 +  # 6. Poised_Enhancer: H3K4me1+ AND NOT H3K27ac AND NOT      
+          +H3K27me3 AND >2kb                                             
+      317 +  is_poised_enhancer <- !is_active_promoter &                 
+          +!is_repressed_promoter &                                      
+      318 +    !is_bivalent & !is_polycomb & !is_active_enhancer &       
+      319 +    h3k4me1 & !h3k27ac & !h3k27me3 &                          
+      320 +    (is.na(distance_to_tss) | distance_to_tss >               
+          +tss_threshold)                                                
+      321 +  chromatin_state[is_poised_enhancer] <- "Poised_Enhancer"    
+      322 +                                                              
+      323 +  # 7. Other: Default (no marks)                              
+      324 +  return(factor(chromatin_state, levels =                     
+          +CHROMATIN_STATE_ORDER))                                       
+      325 +}                                                             
+      326 +                                                              
+      327 +# =========================================================== 
+          +==================                                            
+      328  # LOAD DATA                                                   
+      329  # =========================================================== 
+           ==================                                            
+      330                                                                
+
+⏺ Now let me add Section 10 after the summary statistics section. First, let me
+  find the exact location where I need to insert it.
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 60 lines
+
+⏺ Read(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Read 18 lines
+
+⏺ Now I'll add Section 10 after the summary statistics section.
+
+⏺ Update(biomodal/downstream/scripts/biomodal_visualizations.R)
+  ⎿  Added 361 lines
+      1440  # Print summary                                              
+      1441  cat(summary_text)                                            
+      1442                                                               
+      1443 +cat("Section 9 complete.\n\n")                               
+      1444 +                                                             
+      1445 +# ========================================================== 
+           +===================                                          
+      1446 +# SECTION 10: ChIP-seq CHROMATIN STATE ANALYSIS              
+      1447 +# ========================================================== 
+           +===================                                          
+      1448 +                                                             
+      1449 +cat("======================================================= 
+           +=========================\n")                                
+      1450 +cat("SECTION 10: ChIP-seq CHROMATIN STATE ANALYSIS\n")       
+      1451 +cat("======================================================= 
+           +=========================\n\n")                              
+      1452 +                                                             
+      1453 +cat("Loading ChIP-seq peak files...\n")                      
+      1454 +                                                             
+      1455 +# Load all ChIP-seq peak files                               
+      1456 +chip_peaks <- list(                                          
+      1457 +  h3k27ac = load_chip_peaks(CHIP_PEAK_FILES$h3k27ac,         
+           +"H3K27ac"),                                                  
+      1458 +  h3k27me3 = load_chip_peaks(CHIP_PEAK_FILES$h3k27me3,       
+           +"H3K27me3"),                                                 
+      1459 +  h3k4me1 = load_chip_peaks(CHIP_PEAK_FILES$h3k4me1,         
+           +"H3K4me1"),                                                  
+      1460 +  h3k4me3 = load_chip_peaks(CHIP_PEAK_FILES$h3k4me3,         
+           +"H3K4me3"),                                                  
+      1461 +  bivalent = load_chip_peaks(CHIP_PEAK_FILES$bivalent,       
+           +"Bivalent")                                                  
+      1462 +)                                                            
+      1463 +                                                             
+      1464 +# Check if all peaks loaded successfully                     
+      1465 +if (any(sapply(chip_peaks, is.null))) {                      
+      1466 +  cat("  WARNING: Some ChIP-seq peak files not found.        
+           +Skipping Section 10.\n")                                     
+      1467 +} else {                                                     
+      1468 +  cat("\nCreating GRanges from mC DMR data...\n")            
+      1469 +                                                             
+      1470 +  # Create GRanges from mC DMR data (significant genes only  
+           +for analysis)                                                
+      1471 +  mc_sig <- mc_dmr %>% dplyr::filter(significant)            
+      1472 +  mc_gr <- dmr_to_granges(mc_sig)                            
+      1473 +  cat(sprintf("  %d significant mC DMRs\n", length(mc_gr)))  
+      1474 +                                                             
+      1475 +  # Compute TSS distances                                    
+      1476 +  cat("\nComputing TSS distances...\n")                      
+      1477 +  txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene                 
+      1478 +  genes <- genes(txdb)                                       
+      1479 +  tss_gr <- resize(genes, width = 1, fix = "start")          
+      1480 +  cat(sprintf("  Loaded %d genes\n", length(genes)))         
+      1481 +                                                             
+      1482 +  nearest <- distanceToNearest(mc_gr, tss_gr)                
+      1483 +  distance_to_tss <- rep(NA_real_, length(mc_gr))            
+      1484 +  if (length(nearest) > 0) {                                 
+      1485 +    distance_to_tss[queryHits(nearest)] <-                   
+           +mcols(nearest)$distance                                      
+      1486 +  }                                                          
+      1487 +                                                             
+      1488 +  cat(sprintf("  DMRs <= 2kb from TSS: %d (%.1f%%)\n",       
+      1489 +              sum(distance_to_tss <= TSS_THRESHOLD, na.rm =  
+           +TRUE),                                                       
+      1490 +              100 * mean(distance_to_tss <= TSS_THRESHOLD,   
+           +na.rm = TRUE)))                                              
+      1491 +                                                             
+      1492 +  # Compute ChIP-seq overlaps                                
+      1493 +  cat("\nComputing ChIP-seq overlaps...\n")                  
+      1494 +  mc_overlaps <- compute_chip_overlaps(mc_gr, chip_peaks)    
+      1495 +                                                             
+      1496 +  cat("  Overlap summary:\n")                                
+      1497 +  cat(sprintf("    H3K27ac:  %d DMRs (%.1f%%)\n",            
+      1498 +              sum(mc_overlaps$H3K27ac_overlap), 100 *        
+           +mean(mc_overlaps$H3K27ac_overlap)))                          
+      1499 +  cat(sprintf("    H3K27me3: %d DMRs (%.1f%%)\n",            
+      1500 +              sum(mc_overlaps$H3K27me3_overlap), 100 *       
+           +mean(mc_overlaps$H3K27me3_overlap)))                         
+      1501 +  cat(sprintf("    H3K4me1:  %d DMRs (%.1f%%)\n",            
+      1502 +              sum(mc_overlaps$H3K4me1_overlap), 100 *        
+           +mean(mc_overlaps$H3K4me1_overlap)))                          
+      1503 +  cat(sprintf("    H3K4me3:  %d DMRs (%.1f%%)\n",            
+      1504 +              sum(mc_overlaps$H3K4me3_overlap), 100 *        
+           +mean(mc_overlaps$H3K4me3_overlap)))                          
+      1505 +  cat(sprintf("    Bivalent: %d DMRs (%.1f%%)\n",            
+      1506 +              sum(mc_overlaps$Bivalent_overlap), 100 *       
+           +mean(mc_overlaps$Bivalent_overlap)))                         
+      1507 +                                                             
+      1508 +  # Classify chromatin states                                
+      1509 +  cat("\nClassifying chromatin states (7 categories)...\n")  
+      1510 +  mc_sig$chromatin_state <-                                  
+           +classify_chromatin_state(mc_overlaps, distance_to_tss,       
+           +TSS_THRESHOLD)                                               
+      1511 +                                                             
+      1512 +  # Add overlap columns to dataframe                         
+      1513 +  mc_sig$H3K27ac_overlap <- mc_overlaps$H3K27ac_overlap      
+      1514 +  mc_sig$H3K27me3_overlap <- mc_overlaps$H3K27me3_overlap    
+      1515 +  mc_sig$H3K4me1_overlap <- mc_overlaps$H3K4me1_overlap      
+      1516 +  mc_sig$H3K4me3_overlap <- mc_overlaps$H3K4me3_overlap      
+      1517 +  mc_sig$Bivalent_overlap <- mc_overlaps$Bivalent_overlap    
+      1518 +  mc_sig$distance_to_tss <- distance_to_tss                  
+      1519 +                                                             
+      1520 +  cat("\n  Chromatin state distribution (significant mC      
+           +DMRs):\n")                                                   
+      1521 +  for (state in CHROMATIN_STATE_ORDER) {                     
+      1522 +    count <- sum(mc_sig$chromatin_state == state)            
+      1523 +    pct <- 100 * count / nrow(mc_sig)                        
+      1524 +    cat(sprintf("    %-20s: %5d (%.1f%%)\n", state, count,   
+           +pct))                                                        
+      1525 +  }                                                          
+      1526 +                                                             
+      1527 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1528 +  # FIGURE 10a: Overall chromatin state distribution         
+      1529 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1530 +  cat("\nCreating Figure 10a: Chromatin state                
+           +distribution...\n")                                          
+      1531 +                                                             
+      1532 +  state_summary <- mc_sig %>%                                
+      1533 +    group_by(chromatin_state, direction) %>%                 
+      1534 +    summarise(count = n(), .groups = "drop") %>%             
+      1535 +    group_by(direction) %>%                                  
+      1536 +    mutate(percentage = 100 * count / sum(count))            
+      1537 +                                                             
+      1538 +  # Bar chart                                                
+      1539 +  p_10a_bar <- ggplot(state_summary, aes(x =                 
+           +chromatin_state, y = percentage, fill = chromatin_state)) +  
+      1540 +    geom_bar(stat = "identity", color = "black", linewidth = 
+           + 0.3) +                                                      
+      1541 +    geom_text(aes(label = sprintf("%.1f%%", percentage)),    
+           +vjust = -0.3, size = 3) +                                    
+      1542 +    facet_wrap(~direction, ncol = 2) +                       
+      1543 +    scale_fill_manual(values = CHROMATIN_STATE_COLORS) +     
+      1544 +    scale_y_continuous(limits = c(0,                         
+           +max(state_summary$percentage) * 1.15), expand = c(0, 0)) +   
+      1545 +    labs(                                                    
+      1546 +      title = "Chromatin State Distribution of Significant   
+           +mC DMRs",                                                    
+      1547 +      subtitle = sprintf("Hypermethylated: n=%d |            
+           +Hypomethylated: n=%d",                                       
+      1548 +                         sum(mc_sig$direction ==             
+           +"Hypermethylated"),                                          
+      1549 +                         sum(mc_sig$direction ==             
+           +"Hypomethylated")),                                          
+      1550 +      x = "Chromatin State", y = "Percentage (%)"            
+      1551 +    ) +                                                      
+      1552 +    theme_biomodal() +                                       
+      1553 +    theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+      1554 +          legend.position = "none")                          
+      1555 +                                                             
+      1556 +  # Pie chart - overall                                      
+      1557 +  state_overall <- mc_sig %>%                                
+      1558 +    group_by(chromatin_state) %>%                            
+      1559 +    summarise(count = n(), .groups = "drop") %>%             
+      1560 +    mutate(percentage = 100 * count / sum(count))            
+      1561 +                                                             
+      1562 +  p_10a_pie <- ggplot(state_overall, aes(x = "", y =         
+           +percentage, fill = chromatin_state)) +                       
+      1563 +    geom_bar(stat = "identity", width = 1, color = "white",  
+           +linewidth = 0.3) +                                           
+      1564 +    coord_polar("y", start = 0) +                            
+      1565 +    scale_fill_manual(values = CHROMATIN_STATE_COLORS, name  
+           += "Chromatin State") +                                       
+      1566 +    labs(title = "Overall Distribution") +                   
+      1567 +    theme_void() +                                           
+      1568 +    theme(                                                   
+      1569 +      plot.title = element_text(hjust = 0.5, face = "bold",  
+           +size = 12),                                                  
+      1570 +      legend.position = "right"                              
+      1571 +    ) +                                                      
+      1572 +    geom_text(aes(label = ifelse(percentage > 4,             
+           +sprintf("%.1f%%", percentage), "")),                         
+      1573 +              position = position_stack(vjust = 0.5), size = 
+           + 2.5)                                                        
+      1574 +                                                             
+      1575 +  p_10a <- p_10a_bar + p_10a_pie +                           
+      1576 +    plot_layout(widths = c(2, 1)) +                          
+      1577 +    plot_annotation(                                         
+      1578 +      title = "Chromatin State Analysis of Differentially    
+           +Methylated Genes",                                           
+      1579 +      subtitle = "Based on ChIP-seq peak overlaps (Late      
+           +timepoint)",                                                 
+      1580 +      theme = theme(                                         
+      1581 +        plot.title = element_text(hjust = 0.5, face =        
+           +"bold", size = 16),                                          
+      1582 +        plot.subtitle = element_text(hjust = 0.5, size = 12, 
+           + color = "grey40")                                           
+      1583 +      )                                                      
+      1584 +    )                                                        
+      1585 +                                                             
+      1586 +  save_multiformat_ggplot(p_10a, file.path(OUTPUT_DIR,       
+           +"10a_chromatin_state_distribution"),                         
+      1587 +                          width = 14, height = 7)            
+      1588 +                                                             
+      1589 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1590 +  # FIGURE 10b: Chromatin state by methylation direction     
+           +comparison                                                   
+      1591 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1592 +  cat("Creating Figure 10b: Chromatin state by               
+           +direction...\n")                                             
+      1593 +                                                             
+      1594 +  # Stacked bar comparison                                   
+      1595 +  p_10b_stacked <- ggplot(state_summary, aes(x = direction,  
+           +y = percentage, fill = chromatin_state)) +                   
+      1596 +    geom_bar(stat = "identity", position = "stack", color =  
+           +"white", linewidth = 0.2) +                                  
+      1597 +    scale_fill_manual(values = CHROMATIN_STATE_COLORS, name  
+           += "Chromatin State") +                                       
+      1598 +    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) 
+           + +                                                           
+      1599 +    labs(                                                    
+      1600 +      title = "Chromatin State by Methylation Direction",    
+      1601 +      x = "Direction", y = "Percentage (%)"                  
+      1602 +    ) +                                                      
+      1603 +    theme_biomodal()                                         
+      1604 +                                                             
+      1605 +  # Grouped bar comparison                                   
+      1606 +  p_10b_grouped <- ggplot(state_summary, aes(x =             
+           +chromatin_state, y = percentage, fill = direction)) +        
+      1607 +    geom_bar(stat = "identity", position =                   
+           +position_dodge(width = 0.8),                                 
+      1608 +             width = 0.7, color = "black", linewidth = 0.2)  
+           ++                                                            
+      1609 +    scale_fill_manual(values = COLORS$direction, name =      
+           +"Direction") +                                               
+      1610 +    scale_y_continuous(limits = c(0,                         
+           +max(state_summary$percentage) * 1.1), expand = c(0, 0)) +    
+      1611 +    labs(                                                    
+      1612 +      title = "Comparison by Chromatin State",               
+      1613 +      subtitle = "Do hypermethylated genes have specific     
+           +chromatin signatures?",                                      
+      1614 +      x = "Chromatin State", y = "Percentage (%)"            
+      1615 +    ) +                                                      
+      1616 +    theme_biomodal() +                                       
+      1617 +    theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+      1618 +          legend.position = "top")                           
+      1619 +                                                             
+      1620 +  p_10b <- p_10b_stacked / p_10b_grouped +                   
+      1621 +    plot_annotation(                                         
+      1622 +      title = "Methylation Direction vs Chromatin State",    
+      1623 +      theme = theme(plot.title = element_text(hjust = 0.5,   
+           +face = "bold", size = 16))                                   
+      1624 +    )                                                        
+      1625 +                                                             
+      1626 +  save_multiformat_ggplot(p_10b, file.path(OUTPUT_DIR,       
+           +"10b_chromatin_by_methylation_direction"),                   
+      1627 +                          width = 12, height = 10)           
+      1628 +                                                             
+      1629 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1630 +  # FIGURE 10c: ChIP mark overlap heatmap                    
+      1631 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1632 +  cat("Creating Figure 10c: ChIP mark overlap heatmap...\n") 
+      1633 +                                                             
+      1634 +  # Calculate overlap percentages by direction               
+      1635 +  mark_overlap <- mc_sig %>%                                 
+      1636 +    group_by(direction) %>%                                  
+      1637 +    summarise(                                               
+      1638 +      H3K27ac = 100 * mean(H3K27ac_overlap),                 
+      1639 +      H3K27me3 = 100 * mean(H3K27me3_overlap),               
+      1640 +      H3K4me1 = 100 * mean(H3K4me1_overlap),                 
+      1641 +      H3K4me3 = 100 * mean(H3K4me3_overlap),                 
+      1642 +      Bivalent = 100 * mean(Bivalent_overlap),               
+      1643 +      .groups = "drop"                                       
+      1644 +    ) %>%                                                    
+      1645 +    pivot_longer(cols = -direction, names_to = "Mark",       
+           +values_to = "Percentage")                                    
+      1646 +                                                             
+      1647 +  # Add overall row                                          
+      1648 +  mark_overall <- mc_sig %>%                                 
+      1649 +    summarise(                                               
+      1650 +      H3K27ac = 100 * mean(H3K27ac_overlap),                 
+      1651 +      H3K27me3 = 100 * mean(H3K27me3_overlap),               
+      1652 +      H3K4me1 = 100 * mean(H3K4me1_overlap),                 
+      1653 +      H3K4me3 = 100 * mean(H3K4me3_overlap),                 
+      1654 +      Bivalent = 100 * mean(Bivalent_overlap)                
+      1655 +    ) %>%                                                    
+      1656 +    mutate(direction = "All Significant") %>%                
+      1657 +    pivot_longer(cols = -direction, names_to = "Mark",       
+           +values_to = "Percentage")                                    
+      1658 +                                                             
+      1659 +  mark_overlap <- bind_rows(mark_overall, mark_overlap)      
+      1660 +  mark_overlap$direction <- factor(mark_overlap$direction,   
+      1661 +                                   levels = c("All           
+           +Significant", "Hypermethylated", "Hypomethylated"))          
+      1662 +                                                             
+      1663 +  p_10c <- ggplot(mark_overlap, aes(x = Mark, y = direction, 
+           + fill = Percentage)) +                                       
+      1664 +    geom_tile(color = "white", linewidth = 0.5) +            
+      1665 +    geom_text(aes(label = sprintf("%.1f%%", Percentage)),    
+           +size = 4) +                                                  
+      1666 +    scale_fill_gradient2(low = "white", mid = "#fee090",     
+           +high = "#d73027",                                            
+      1667 +                         midpoint = 50, name = "% Overlap",  
+           +limits = c(0, 100)) +                                        
+      1668 +    labs(                                                    
+      1669 +      title = "ChIP-seq Mark Overlap at Significant mC       
+           +DMRs",                                                       
+      1670 +      subtitle = "% of DMRs overlapping each ChIP-seq mark", 
+      1671 +      x = "ChIP-seq Mark", y = ""                            
+      1672 +    ) +                                                      
+      1673 +    theme_minimal(base_size = 12) +                          
+      1674 +    theme(                                                   
+      1675 +      plot.title = element_text(hjust = 0.5, face = "bold",  
+           +size = 14),                                                  
+      1676 +      plot.subtitle = element_text(hjust = 0.5, size = 10,   
+           +color = "grey40"),                                           
+      1677 +      axis.text.x = element_text(face = "bold", size = 11),  
+      1678 +      axis.text.y = element_text(size = 11),                 
+      1679 +      panel.grid = element_blank()                           
+      1680 +    )                                                        
+      1681 +                                                             
+      1682 +  save_multiformat_ggplot(p_10c, file.path(OUTPUT_DIR,       
+           +"10c_chip_mark_overlap_heatmap"),                            
+      1683 +                          width = 10, height = 5)            
+      1684 +                                                             
+      1685 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1686 +  # FIGURE 10d: Chromatin state of coordinated genes         
+      1687 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1688 +  cat("Creating Figure 10d: Coordinated genes chromatin      
+           +state...\n")                                                 
+      1689 +                                                             
+      1690 +  # Get chromatin states for coordinated genes (mC up / hmC  
+           +down)                                                        
+      1691 +  coordinated_mc <- mc_sig %>%                               
+      1692 +    dplyr::filter(gene %in%                                  
+           +coordinated$gene[coordinated$coordinated_pattern])           
+      1693 +                                                             
+      1694 +  if (nrow(coordinated_mc) > 0) {                            
+      1695 +    coord_state_summary <- coordinated_mc %>%                
+      1696 +      group_by(chromatin_state) %>%                          
+      1697 +      summarise(count = n(), .groups = "drop") %>%           
+      1698 +      mutate(percentage = 100 * count / sum(count))          
+      1699 +                                                             
+      1700 +    p_10d_bar <- ggplot(coord_state_summary, aes(x =         
+           +chromatin_state, y = percentage, fill = chromatin_state)) +  
+      1701 +      geom_bar(stat = "identity", color = "black", linewidth 
+           + = 0.3) +                                                    
+      1702 +      geom_text(aes(label = sprintf("%.1f%%\n(n=%d)",        
+           +percentage, count)), vjust = -0.1, size = 3) +               
+      1703 +      scale_fill_manual(values = CHROMATIN_STATE_COLORS) +   
+      1704 +      scale_y_continuous(limits = c(0,                       
+           +max(coord_state_summary$percentage) * 1.2), expand = c(0,    
+           +0)) +                                                        
+      1705 +      labs(                                                  
+      1706 +        title = "Chromatin State of Coordinated mC↑/hmC↓     
+           +Genes",                                                      
+      1707 +        subtitle = sprintf("n = %d genes with coordinated    
+           +methylation changes", nrow(coordinated_mc)),                 
+      1708 +        x = "Chromatin State", y = "Percentage (%)"          
+      1709 +      ) +                                                    
+      1710 +      theme_biomodal() +                                     
+      1711 +      theme(axis.text.x = element_text(angle = 45, hjust =   
+           +1),                                                          
+      1712 +            legend.position = "none")                        
+      1713 +                                                             
+      1714 +    p_10d_pie <- ggplot(coord_state_summary, aes(x = "", y = 
+           + percentage, fill = chromatin_state)) +                      
+      1715 +      geom_bar(stat = "identity", width = 1, color =         
+           +"white", linewidth = 0.3) +                                  
+      1716 +      coord_polar("y", start = 0) +                          
+      1717 +      scale_fill_manual(values = CHROMATIN_STATE_COLORS,     
+           +name = "Chromatin State") +                                  
+      1718 +      labs(title = "Distribution") +                         
+      1719 +      theme_void() +                                         
+      1720 +      theme(                                                 
+      1721 +        plot.title = element_text(hjust = 0.5, face =        
+           +"bold", size = 12),                                          
+      1722 +        legend.position = "right"                            
+      1723 +      ) +                                                    
+      1724 +      geom_text(aes(label = ifelse(percentage > 5,           
+           +sprintf("%.0f%%", percentage), "")),                         
+      1725 +                position = position_stack(vjust = 0.5), size 
+           + = 3)                                                        
+      1726 +                                                             
+      1727 +    p_10d <- p_10d_bar + p_10d_pie +                         
+      1728 +      plot_layout(widths = c(2, 1)) +                        
+      1729 +      plot_annotation(                                       
+      1730 +        title = "Chromatin State of Genes with Coordinated   
+           +Methylation Changes",                                        
+      1731 +        subtitle = "Genes showing mC increase + hmC decrease 
+           + pattern",                                                   
+      1732 +        theme = theme(                                       
+      1733 +          plot.title = element_text(hjust = 0.5, face =      
+           +"bold", size = 16),                                          
+      1734 +          plot.subtitle = element_text(hjust = 0.5, size =   
+           +12, color = "grey40")                                        
+      1735 +        )                                                    
+      1736 +      )                                                      
+      1737 +                                                             
+      1738 +    save_multiformat_ggplot(p_10d, file.path(OUTPUT_DIR,     
+           +"10d_coordinated_genes_chromatin"),                          
+      1739 +                            width = 13, height = 6)          
+      1740 +  }                                                          
+      1741 +                                                             
+      1742 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1743 +  # FIGURE 10e: Top genes with chromatin annotations         
+      1744 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1745 +  cat("Creating Figure 10e: Top genes with chromatin         
+           +annotations...\n")                                           
+      1746 +                                                             
+      1747 +  # Get top 20 coordinated genes with chromatin state        
+      1748 +  top_coord_chrom <- coordinated %>%                         
+      1749 +    dplyr::filter(coordinated_pattern) %>%                   
+      1750 +    head(20) %>%                                             
+      1751 +    left_join(mc_sig %>% dplyr::select(gene,                 
+           +chromatin_state), by = "gene")                               
+      1752 +                                                             
+      1753 +  if (nrow(top_coord_chrom) > 0) {                           
+      1754 +    top_coord_chrom <- top_coord_chrom %>%                   
+      1755 +      mutate(gene = factor(gene, levels =                    
+           +rev(unique(gene))))                                          
+      1756 +                                                             
+      1757 +    p_10e <- ggplot(top_coord_chrom, aes(x = gene, y =       
+           +combined_effect * 100, fill = chromatin_state)) +            
+      1758 +      geom_bar(stat = "identity", width = 0.7, color =       
+           +"black", linewidth = 0.3) +                                  
+      1759 +      geom_text(aes(label = as.character(chromatin_state)),  
+      1760 +                hjust = -0.1, size = 3, color = "grey30") +  
+      1761 +      scale_fill_manual(values = CHROMATIN_STATE_COLORS,     
+           +name = "Chromatin State") +                                  
+      1762 +      coord_flip() +                                         
+      1763 +      labs(                                                  
+      1764 +        title = "Top 20 Coordinated Genes with Chromatin     
+           +State Annotation",                                           
+      1765 +        subtitle = "Sorted by combined effect (|mC change| + 
+           + |hmC change|)",                                             
+      1766 +        x = "", y = "Combined Effect (%)"                    
+      1767 +      ) +                                                    
+      1768 +      theme_biomodal() +                                     
+      1769 +      theme(legend.position = "bottom")                      
+      1770 +                                                             
+      1771 +    save_multiformat_ggplot(p_10e, file.path(OUTPUT_DIR,     
+           +"10e_top_genes_chromatin_annotation"),                       
+      1772 +                            width = 12, height = 10)         
+      1773 +  }                                                          
+      1774 +                                                             
+      1775 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1776 +  # Save chromatin state annotations                         
+      1777 +  # -------------------------------------------------------- 
+           +---------------                                              
+      1778 +  cat("\nSaving chromatin state annotation tables...\n")     
+      1779 +                                                             
+      1780 +  # Full annotation table                                    
+      1781 +  write.table(mc_sig, file.path(TABLES_DIR,                  
+           +"dmr_chromatin_state_annotation.tsv"),                       
+      1782 +              sep = "\t", quote = FALSE, row.names = FALSE)  
+      1783 +  cat("  Saved: dmr_chromatin_state_annotation.tsv\n")       
+      1784 +                                                             
+      1785 +  # Summary table                                            
+      1786 +  chromatin_summary <- mc_sig %>%                            
+      1787 +    group_by(chromatin_state, direction) %>%                 
+      1788 +    summarise(                                               
+      1789 +      count = n(),                                           
+      1790 +      mean_mc_change = mean(mod_difference) * 100,           
+      1791 +      median_mc_change = median(mod_difference) * 100,       
+      1792 +      .groups = "drop"                                       
+      1793 +    ) %>%                                                    
+      1794 +    pivot_wider(names_from = direction,                      
+      1795 +                values_from = c(count, mean_mc_change,       
+           +median_mc_change))                                           
+      1796 +                                                             
+      1797 +  write.table(chromatin_summary, file.path(TABLES_DIR,       
+           +"chromatin_state_summary.tsv"),                              
+      1798 +              sep = "\t", quote = FALSE, row.names = FALSE)  
+      1799 +  cat("  Saved: chromatin_state_summary.tsv\n")              
+      1800 +}                                                            
+      1801 +                                                             
+      1802 +cat("\nSection 10 complete.\n\n")                            
+      1803 +                                                             
+      1804  cat("\n")                                                    
+      1805  cat("======================================================= 
+            =========================\n")                                
+      1806  cat("VISUALIZATION COMPLETE\n")                              
+
+⏺ Section 10 has been added. Let me update the todo list and run the script to
+  verify it works.
+
+⏺ Bash(Rscript                                                     timeout: 10m 
+      biomodal/downstream/scripts/biomodal_visualizations.R 2>&1)  0s
+  ⎿ =======================================================================
+    =========
+    BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+    … +421 lines (ctrl+o to expand)
+
+
+⏺ The script ran successfully. Let me verify the new Section 10 output files
+  were created.
+
+⏺ Bash(ls -la /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstr
+      eam/plots/visualizations/ | grep "10")
+  ⎿ drwxr-xr-x@  5 zakiralibhai  staff    160 Jan 21 21:23 10a_chromatin_st
+    ate_distribution
+    drwxr-xr-x@  5 zakiralibhai  staff    160 Jan 21 21:23 10b_chromatin_by
+    … +7 lines (ctrl+o to expand)
+
+
+
+⏺ Bash(ls /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/
+      plots/visualizations/tables/ | grep chromatin)
+  ⎿  chromatin_state_summary.tsv
+     dmr_chromatin_state_annotation.tsv
+
+⏺ Bash(ls /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/
+      plots/visualizations/10a_chromatin_state_distribution/)
+  ⎿  10a_chromatin_state_distribution.jpg
+     10a_chromatin_state_distribution.pdf
+     10a_chromatin_state_distribution.svg
+
+⏺ Read(biomodal/downstream/plots/visualizations/tables/chromatin_state_summary.t
+      sv)
+  ⎿  Read 9 lines
+
+⏺ All tasks completed successfully. Here's a summary of what was added:
+
+  Section 10: ChIP-seq Chromatin State Analysis
+
+  New visualizations created:
+  - 10a_chromatin_state_distribution/ - Overall chromatin state distribution
+  (bar + pie chart)
+  - 10b_chromatin_by_methylation_direction/ - Hyper vs hypomethylated comparison
+  - 10c_chip_mark_overlap_heatmap/ - ChIP mark overlap percentages
+  - 10d_coordinated_genes_chromatin/ - Chromatin state of coordinated (mC↑/hmC↓)
+   genes
+  - 10e_top_genes_chromatin_annotation/ - Top 20 genes annotated with chromatin
+  state
+
+  New data tables:
+  - dmr_chromatin_state_annotation.tsv - Full annotation of all significant DMRs
+  - chromatin_state_summary.tsv - Summary statistics by chromatin state
+
+  Key findings from the analysis:
+  ┌────────────────────┬───────────┬───────────────────────────────────────────┐
+  │  Chromatin State   │ % of DMRs │              Interpretation               │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Active_Promoter    │ 62.7%     │ H3K4me3+ genes (expected for gene bodies) │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Other              │ 27.2%     │ No strong marks                           │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Repressed_Promoter │ 8.2%      │ H3K27me3+ near TSS                        │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Bivalent_Promoter  │ 1.2%      │ Developmental poised                      │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Polycomb           │ 0.1%      │ Distal H3K27me3                           │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Active_Enhancer    │ 0.4%      │ H3K27ac+ distal                           │
+  ├────────────────────┼───────────┼───────────────────────────────────────────┤
+  │ Poised_Enhancer    │ 0.1%      │ H3K4me1+ only                             │
+  └────────────────────┴───────────┴───────────────────────────────────────────┘
+  ChIP mark overlaps:
+  - H3K4me1: 96.7% of DMRs (gene body mark)
+  - H3K4me3: 67.3% (active promoter mark)
+  - H3K27ac: 67.2% (active mark)
+  - H3K27me3: 12.1% (repressive mark)
+  - Bivalent: 2.1%
+
+  The high H3K4me1 overlap (96.7%) is expected for gene bodies in actively
+  transcribed regions. The chromatin state classification follows the same
+  7-category system used in annotate_loops_extended.R and
+  tad_chip_classification.R for consistency across your analyses.
+
+✻ Crunched for 7m 30s
