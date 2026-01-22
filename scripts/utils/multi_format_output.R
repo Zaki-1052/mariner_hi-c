@@ -36,34 +36,50 @@ library(svglite)
 #' @param height Plot height in inches (default: 8)
 #' @param dpi DPI for JPEG output (default: 300 for print quality)
 #' @param verbose Print confirmation messages (default: TRUE)
+#' @param use_subfolders If TRUE, creates a subfolder with the figure name and puts all formats inside (default: TRUE)
 #'
 #' @return Invisibly returns the plot object
 #'
 #' @examples
 #' p <- ggplot(mtcars, aes(mpg, hp)) + geom_point()
 #' save_multiformat_ggplot(p, "outputs/my_plot", width = 8, height = 6)
-#' # Creates: my_plot.pdf, my_plot.svg, my_plot.jpg
-save_multiformat_ggplot <- function(plot, base_path, width = 10, height = 8, dpi = 300, verbose = TRUE) {
+#' # Creates: outputs/my_plot/my_plot.pdf, outputs/my_plot/my_plot.svg, outputs/my_plot/my_plot.jpg
+save_multiformat_ggplot <- function(plot, base_path, width = 10, height = 8, dpi = 300, verbose = TRUE, use_subfolders = TRUE) {
+  figure_name <- basename(base_path)
+  parent_dir <- dirname(base_path)
+
+  if (use_subfolders) {
+    # Create subfolder with figure name
+    output_dir <- file.path(parent_dir, figure_name)
+    file_prefix <- file.path(output_dir, figure_name)
+  } else {
+    output_dir <- parent_dir
+    file_prefix <- base_path
+  }
+
   # Ensure output directory exists
-  output_dir <- dirname(base_path)
   if (!dir.exists(output_dir) && output_dir != ".") {
     dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
   }
 
   # PDF (publication standard)
-  pdf_path <- paste0(base_path, ".pdf")
+  pdf_path <- paste0(file_prefix, ".pdf")
   ggplot2::ggsave(pdf_path, plot, width = width, height = height)
 
- # SVG (Illustrator-friendly with editable text)
-  svg_path <- paste0(base_path, ".svg")
+  # SVG (Illustrator-friendly with editable text)
+  svg_path <- paste0(file_prefix, ".svg")
   ggplot2::ggsave(svg_path, plot, width = width, height = height, device = svglite::svglite)
 
   # JPEG (presentations/slides)
-  jpg_path <- paste0(base_path, ".jpg")
+  jpg_path <- paste0(file_prefix, ".jpg")
   ggplot2::ggsave(jpg_path, plot, width = width, height = height, dpi = dpi, device = "jpeg")
 
   if (verbose) {
-    cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", basename(base_path)))
+    if (use_subfolders) {
+      cat(sprintf("  Saved: %s/{pdf,svg,jpg}\n", figure_name))
+    } else {
+      cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", figure_name))
+    }
   }
 
   invisible(plot)
@@ -79,6 +95,7 @@ save_multiformat_ggplot <- function(plot, base_path, width = 10, height = 8, dpi
 #' @param height Plot height in inches (default: 8)
 #' @param dpi DPI for JPEG output (default: 300)
 #' @param verbose Print confirmation messages (default: TRUE)
+#' @param use_subfolders If TRUE, creates a subfolder with the figure name (default: TRUE)
 #'
 #' @return NULL (invisibly)
 #'
@@ -91,15 +108,25 @@ save_multiformat_ggplot <- function(plot, base_path, width = 10, height = 8, dpi
 #'   "outputs/base_plot",
 #'   width = 8, height = 6
 #' )
-save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, dpi = 300, verbose = TRUE) {
+save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, dpi = 300, verbose = TRUE, use_subfolders = TRUE) {
+  figure_name <- basename(base_path)
+  parent_dir <- dirname(base_path)
+
+  if (use_subfolders) {
+    output_dir <- file.path(parent_dir, figure_name)
+    file_prefix <- file.path(output_dir, figure_name)
+  } else {
+    output_dir <- parent_dir
+    file_prefix <- base_path
+  }
+
   # Ensure output directory exists
-  output_dir <- dirname(base_path)
   if (!dir.exists(output_dir) && output_dir != ".") {
     dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
   }
 
   # PDF
-  pdf_path <- paste0(base_path, ".pdf")
+  pdf_path <- paste0(file_prefix, ".pdf")
   pdf(pdf_path, width = width, height = height)
   tryCatch({
     eval(plot_expr)
@@ -108,7 +135,7 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
   })
 
   # SVG (using svglite for better Illustrator compatibility)
-  svg_path <- paste0(base_path, ".svg")
+  svg_path <- paste0(file_prefix, ".svg")
   svglite::svglite(svg_path, width = width, height = height)
   tryCatch({
     eval(plot_expr)
@@ -117,7 +144,7 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
   })
 
   # JPEG
-  jpg_path <- paste0(base_path, ".jpg")
+  jpg_path <- paste0(file_prefix, ".jpg")
   jpeg(jpg_path, width = width * dpi, height = height * dpi, res = dpi, quality = 95)
   tryCatch({
     eval(plot_expr)
@@ -126,7 +153,11 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
   })
 
   if (verbose) {
-    cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", basename(base_path)))
+    if (use_subfolders) {
+      cat(sprintf("  Saved: %s/{pdf,svg,jpg}\n", figure_name))
+    } else {
+      cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", figure_name))
+    }
   }
 
   invisible(NULL)
@@ -144,6 +175,7 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
 #' @param height Plot height in inches (default: 10)
 #' @param dpi DPI for JPEG output (default: 300)
 #' @param verbose Print confirmation messages (default: TRUE)
+#' @param use_subfolders If TRUE, creates a subfolder with the figure name (default: TRUE)
 #'
 #' @return NULL (invisibly)
 #'
@@ -153,15 +185,25 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
 #'   "outputs/heatmap",
 #'   width = 8, height = 10
 #' )
-save_multiformat_pheatmap <- function(pheatmap_call, base_path, width = 8, height = 10, dpi = 300, verbose = TRUE) {
+save_multiformat_pheatmap <- function(pheatmap_call, base_path, width = 8, height = 10, dpi = 300, verbose = TRUE, use_subfolders = TRUE) {
+  figure_name <- basename(base_path)
+  parent_dir <- dirname(base_path)
+
+  if (use_subfolders) {
+    output_dir <- file.path(parent_dir, figure_name)
+    file_prefix <- file.path(output_dir, figure_name)
+  } else {
+    output_dir <- parent_dir
+    file_prefix <- base_path
+  }
+
   # Ensure output directory exists
-  output_dir <- dirname(base_path)
   if (!dir.exists(output_dir) && output_dir != ".") {
     dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
   }
 
   # PDF
-  pdf_path <- paste0(base_path, ".pdf")
+  pdf_path <- paste0(file_prefix, ".pdf")
   pdf(pdf_path, width = width, height = height)
   tryCatch({
     eval(pheatmap_call)
@@ -170,7 +212,7 @@ save_multiformat_pheatmap <- function(pheatmap_call, base_path, width = 8, heigh
   })
 
   # SVG
-  svg_path <- paste0(base_path, ".svg")
+  svg_path <- paste0(file_prefix, ".svg")
   svglite::svglite(svg_path, width = width, height = height)
   tryCatch({
     eval(pheatmap_call)
@@ -179,7 +221,7 @@ save_multiformat_pheatmap <- function(pheatmap_call, base_path, width = 8, heigh
   })
 
   # JPEG
-  jpg_path <- paste0(base_path, ".jpg")
+  jpg_path <- paste0(file_prefix, ".jpg")
   jpeg(jpg_path, width = width * dpi, height = height * dpi, res = dpi, quality = 95)
   tryCatch({
     eval(pheatmap_call)
@@ -188,7 +230,11 @@ save_multiformat_pheatmap <- function(pheatmap_call, base_path, width = 8, heigh
   })
 
   if (verbose) {
-    cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", basename(base_path)))
+    if (use_subfolders) {
+      cat(sprintf("  Saved: %s/{pdf,svg,jpg}\n", figure_name))
+    } else {
+      cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", figure_name))
+    }
   }
 
   invisible(NULL)
