@@ -1,0 +1,1148 @@
+=========================================
+Modality Run - CG Context
+=========================================
+Job ID: 45991006
+Node: exp-2-45
+CPUs: 16
+Memory: 128GB
+Start time: Wed Jan 21 12:26:51 PST 2026
+=========================================
+
+Using config_CG.txt
+
+Zarr=/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz
+Metadata=/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv
+Group_Column=condition
+Condition_Order=control,mutant
+Covariates=sex
+QC_Region=
+Regions_Directory=/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10
+Main_Output=/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG
+Depth_Filter=10
+Overdispersion=False
+
+=========================================
+
+
+=======================================
+STEP 0 - CONFIGURATION & INITIALISATION
+=======================================
+[INFO] 2026-01-21 12:26:52 - Starting modality XPLR Core Workflow Pipeline
+[INFO] 2026-01-21 12:26:52 - Reading configuration from ./config.txt
+
+
+>>Provided inputs
+[INFO] 2026-01-21 12:26:52 - ZARR path(s): /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz
+[INFO] 2026-01-21 12:26:52 - Metadata file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv
+[INFO] 2026-01-21 12:26:52 - Group column: condition
+[INFO] 2026-01-21 12:26:52 - Covariates: sex
+[INFO] 2026-01-21 12:26:52 - Condition order: control,mutant
+[INFO] 2026-01-21 12:26:52 - QC region: 
+[INFO] 2026-01-21 12:26:52 - Regions directory: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10
+[INFO] 2026-01-21 12:26:52 - Main output directory: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG
+[INFO] 2026-01-21 12:26:52 - Depth filter: 10
+[INFO] 2026-01-21 12:26:52 - Overdispersion correction: False
+
+
+>>Validation & directory creation
+[INFO] 2026-01-21 12:26:52 - Validating inputs...
+[INFO] 2026-01-21 12:26:52 - Identified 1 zarr path(s):
+[INFO] 2026-01-21 12:26:52 -   [1] /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz
+[INFO] 2026-01-21 12:26:52 - Processed metadata file path: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv
+[INFO] 2026-01-21 12:26:52 - Processed main output directory: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG
+[INFO] 2026-01-21 12:26:52 - Processed regions directory: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10
+[INFO] 2026-01-21 12:26:52 - Validating metadata file headers...
+[INFO] 2026-01-21 12:26:53 - Metadata validation passed
+[INFO] 2026-01-21 12:26:53 - Creating output directories under /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG...
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports
+[INFO] 2026-01-21 12:26:53 - Creating region-specific subdirectories...
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.cpg_islands.annotation
+[INFO] 2026-01-21 12:26:53 - Created region directories: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation and /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.cpg_islands.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.cpg_islands.annotation
+[INFO] 2026-01-21 12:26:53 - Created region directories: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation and /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.cpg_islands.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.cpg_shelves.annotation
+[INFO] 2026-01-21 12:26:53 - Created region directories: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation and /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.cpg_shelves.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.cpg_shores.annotation
+[INFO] 2026-01-21 12:26:53 - Created region directories: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation and /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.cpg_shores.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.genes.annotation
+[INFO] 2026-01-21 12:26:53 - Created region directories: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation and /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.genes.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.promoters.annotation
+[INFO] 2026-01-21 12:26:53 - Created region directories: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation and /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.promoters.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation
+[INFO] 2026-01-21 12:26:53 - Directory ready: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.tss_region.annotation
+[INFO] 2026-01-21 12:26:53 - Created region directories: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation and /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports/gencode.vM25.mouse.tss_region.annotation
+
+
+======================================
+STEP 1: RUNNING BIOLOGICAL QC ANALYSES
+======================================
+[INFO] 2026-01-21 12:26:53 - Running biological QC without aggregation...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:28:00[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:28:00[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v biological-qc --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results'
+timestamp=2026-01-21T12:28:00.479402
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:28:00[39m  [1m[38;5;123mRunning biological QC analysis:[39m
+[38;5;23m2026-01-21 12:28:00[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:28:00[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:28:00[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:28:00[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results[39m
+[38;5;23m2026-01-21 12:28:00[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:28:00[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:28:00[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:28:00[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:28:00[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:28:04[39m | [38;5;23mINFO[39m | Starting biological quality control process[39m
+[38;5;23m2026-01-21 12:28:15[39m | [38;5;23mINFO[39m | Computing mean coverage for each sample...[39m
+[38;5;23m2026-01-21 12:28:17[39m | [38;5;23mINFO[39m | Extracted coverage info for 4 samples[39m
+[38;5;23m2026-01-21 12:28:17[39m | [38;5;23mINFO[39m | Created sample-to-group mapping for ordering by 'condition'[39m
+[38;5;23m2026-01-21 12:28:17[39m | [38;5;23mINFO[39m | Found 5mC and 5hmC data[39m
+[38;5;23m2026-01-21 12:28:30[39m | [38;5;23mINFO[39m | Successfully extracted 5mC correlation data[39m
+[38;5;23m2026-01-21 12:28:43[39m | [38;5;23mINFO[39m | Successfully extracted 5hmC correlation data[39m
+[38;5;23m2026-01-21 12:28:43[39m | [38;5;23mINFO[39m | Found 5mC and 5hmC data[39m
+[38;5;23m2026-01-21 12:28:50[39m | [38;5;23mINFO[39m | Successfully extracted 5mC PCA data[39m
+[38;5;23m2026-01-21 12:28:55[39m | [38;5;23mINFO[39m | Successfully extracted 5hmC PCA data[39m
+[38;5;23m2026-01-21 12:28:55[39m | [38;5;23mINFO[39m | Rendering template: bio_qc_template.html[39m
+[38;5;23m2026-01-21 12:28:55[39m | [38;5;23mINFO[39m | Generated biological QC JSON report: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/BioQC_20260121_122855/biological_qc_report_4_samples_20260121_122855.json[39m
+[38;5;23m2026-01-21 12:28:55[39m | [38;5;23mINFO[39m | Generated biological QC report: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/BioQC_20260121_122855/biological_qc_report_4_samples_20260121_122855.html[39m
+[38;5;23m2026-01-21 12:28:55[39m  [1m[38;5;154mBiological QC report generated: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/BioQC_20260121_122855/biological_qc_report_4_samples_20260121_122855.html[39m
+[38;5;23m2026-01-21 12:28:55[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/BioQC_20260121_122855/modality_metadata_20260121_122855.json[39m
+[INFO] 2026-01-21 12:28:56 - Copying Biological QC HTML reports to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Reports...
+[INFO] 2026-01-21 12:28:56 - Copied 1 Biological QC HTML report(s)
+
+
+==================================================
+STEP 2: RUNNING FEATURE EXTRACTION ON REGION FILES
+==================================================
+[INFO] 2026-01-21 12:28:56 - Processing region file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed
+[INFO] 2026-01-21 12:28:56 - Running feature extraction: count total_c...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:29:00[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:29:00[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get count --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed --fields total_c --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation'
+timestamp=2026-01-21T12:29:00.376160
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:29:00[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:29:00[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:29:00[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:29:03[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:29:13[39m | [38;5;23mINFO[39m | Performing ['count'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:29:13[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:29:13[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:29:21[39m | [38;5;23mINFO[39m | Summarized over 16009 regions.[39m
+[38;5;23m2026-01-21 12:29:21[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:29:21[39m | [38;5;23mINFO[39m | Dataframe has 16009 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:29:22[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:29:22[39m | [38;5;23mINFO[39m | Exported total_c stats for count to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e67668d0>.[39m
+[38;5;23m2026-01-21 12:29:22[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:29:22[39m  16009 regions extracted.[39m
+[38;5;23m2026-01-21 12:29:22[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_122921[39m
+[38;5;23m2026-01-21 12:29:22[39m | [38;5;23mINFO[39m | No plots generated. Sample sheet / group provided but no plots requested.[39m
+[38;5;23m2026-01-21 12:29:22[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_122921/modality_metadata_20260121_122922.json[39m
+[INFO] 2026-01-21 12:29:22 - Running feature extraction: mean total_c (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:29:26[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:29:26[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get mean --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed --fields total_c --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation'
+timestamp=2026-01-21T12:29:26.543508
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:29:26[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:29:26[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:29:26[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:29:26[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:29:26[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:29:29[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:29:39[39m | [38;5;23mINFO[39m | Performing ['mean'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:29:39[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:29:39[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:29:44[39m | [38;5;23mINFO[39m | Summarized over 16009 regions.[39m
+[38;5;23m2026-01-21 12:29:44[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:29:44[39m | [38;5;23mINFO[39m | Dataframe has 16009 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:29:45[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:29:45[39m | [38;5;23mINFO[39m | Exported total_c stats for mean to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e49f9050>.[39m
+[38;5;23m2026-01-21 12:29:45[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:29:45[39m  16009 regions extracted.[39m
+[38;5;23m2026-01-21 12:29:45[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_122944[39m
+[38;5;23m2026-01-21 12:29:45[39m  Generating plots: violin, correlation[39m
+[38;5;23m2026-01-21 12:29:45[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_122944/total_c_mean_extract_report_20260121_122944.html[39m
+[38;5;23m2026-01-21 12:29:45[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_122944/total_c_mean_extract_report_20260121_122944.json[39m
+[38;5;23m2026-01-21 12:29:45[39m  [1m[38;5;154mFeature report with violin, correlation visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_122944/total_c_mean_extract_report_20260121_122944.html.[39m
+[38;5;23m2026-01-21 12:29:45[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_122944/modality_metadata_20260121_122945.json[39m
+[INFO] 2026-01-21 12:29:46 - Running feature extraction: regional-frac for mc and hmc with minimum depth 10 (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:29:50[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:29:50[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get regional-frac --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed --fields mc hmc --min-coverage 10 --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation'
+timestamp=2026-01-21T12:29:50.015313
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:29:50[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mFields[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:29:50[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:29:50[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:29:50[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:29:50[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:29:52[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:30:20[39m | [38;5;23mINFO[39m | Performing ['regional-frac'] on variables ['num_mc', 'num_hmc'] and min coverage 10.[39m
+[38;5;23m2026-01-21 12:30:20[39m | [38;5;23mINFO[39m | ['num_mc', 'num_hmc', 'num_total_c'][39m
+[38;5;23m2026-01-21 12:30:20[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:30:28[39m | [38;5;23mINFO[39m | Summarized over 16009 regions.[39m
+[38;5;23m2026-01-21 12:30:28[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:30:28[39m | [38;5;23mINFO[39m | Dataframe has 16009 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:30:28[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:30:28[39m | [38;5;23mINFO[39m | Exported mc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554dde4bf10>.[39m
+[38;5;23m2026-01-21 12:30:29[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:30:29[39m | [38;5;23mINFO[39m | Dataframe has 16009 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:30:29[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:30:29[39m | [38;5;23mINFO[39m | Exported hmc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554de042c90>.[39m
+[38;5;23m2026-01-21 12:30:29[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:30:29[39m  16009 regions extracted.[39m
+[38;5;23m2026-01-21 12:30:29[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123028[39m
+[38;5;23m2026-01-21 12:30:29[39m  Generating plots: violin, correlation[39m
+[38;5;23m2026-01-21 12:30:29[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123028/hmc-mc_regional-frac_extract_report_20260121_123028.html[39m
+[38;5;23m2026-01-21 12:30:29[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123028/hmc-mc_regional-frac_extract_report_20260121_123028.json[39m
+[38;5;23m2026-01-21 12:30:29[39m  [1m[38;5;154mFeature report with violin, correlation visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123028/hmc-mc_regional-frac_extract_report_20260121_123028.html.[39m
+[38;5;23m2026-01-21 12:30:29[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123028/modality_metadata_20260121_123029.json[39m
+[INFO] 2026-01-21 12:30:30 - Feature extraction completed for gencode.vM25.mouse.cpg_islands.annotation
+[INFO] 2026-01-21 12:30:30 - Processing region file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed.gz
+[INFO] 2026-01-21 12:30:30 - Running feature extraction: count total_c...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:30:34[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:30:34[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get count --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed.gz --fields total_c --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation'
+timestamp=2026-01-21T12:30:34.284474
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:30:34[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:30:34[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:30:34[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:30:36[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:30:47[39m | [38;5;23mINFO[39m | Performing ['count'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:30:47[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:30:47[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:30:52[39m | [38;5;23mINFO[39m | Summarized over 16009 regions.[39m
+[38;5;23m2026-01-21 12:30:52[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:30:52[39m | [38;5;23mINFO[39m | Dataframe has 16009 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:30:52[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:30:52[39m | [38;5;23mINFO[39m | Exported total_c stats for count to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e4757190>.[39m
+[38;5;23m2026-01-21 12:30:52[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:30:52[39m  16009 regions extracted.[39m
+[38;5;23m2026-01-21 12:30:52[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123052[39m
+[38;5;23m2026-01-21 12:30:52[39m | [38;5;23mINFO[39m | No plots generated. Sample sheet / group provided but no plots requested.[39m
+[38;5;23m2026-01-21 12:30:52[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123052/modality_metadata_20260121_123052.json[39m
+[INFO] 2026-01-21 12:30:53 - Running feature extraction: mean total_c (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:30:56[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:30:56[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get mean --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed.gz --fields total_c --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation'
+timestamp=2026-01-21T12:30:56.695475
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:30:56[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:30:56[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:30:56[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:30:56[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:30:56[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:30:59[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:31:09[39m | [38;5;23mINFO[39m | Performing ['mean'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:31:09[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:31:09[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:31:15[39m | [38;5;23mINFO[39m | Summarized over 16009 regions.[39m
+[38;5;23m2026-01-21 12:31:15[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:31:15[39m | [38;5;23mINFO[39m | Dataframe has 16009 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:31:15[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:31:15[39m | [38;5;23mINFO[39m | Exported total_c stats for mean to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e42fdbd0>.[39m
+[38;5;23m2026-01-21 12:31:15[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:31:15[39m  16009 regions extracted.[39m
+[38;5;23m2026-01-21 12:31:15[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123115[39m
+[38;5;23m2026-01-21 12:31:15[39m  Generating plots: violin, correlation[39m
+[38;5;23m2026-01-21 12:31:15[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123115/total_c_mean_extract_report_20260121_123115.html[39m
+[38;5;23m2026-01-21 12:31:15[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123115/total_c_mean_extract_report_20260121_123115.json[39m
+[38;5;23m2026-01-21 12:31:15[39m  [1m[38;5;154mFeature report with violin, correlation visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123115/total_c_mean_extract_report_20260121_123115.html.[39m
+[38;5;23m2026-01-21 12:31:15[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123115/modality_metadata_20260121_123115.json[39m
+[INFO] 2026-01-21 12:31:16 - Running feature extraction: regional-frac for mc and hmc with minimum depth 10 (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:31:19[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:31:19[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get regional-frac --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed.gz --fields mc hmc --min-coverage 10 --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation'
+timestamp=2026-01-21T12:31:19.591395
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:31:19[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mFields[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:31:19[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:31:19[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:31:19[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:31:19[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:31:22[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:31:50[39m | [38;5;23mINFO[39m | Performing ['regional-frac'] on variables ['num_mc', 'num_hmc'] and min coverage 10.[39m
+[38;5;23m2026-01-21 12:31:50[39m | [38;5;23mINFO[39m | ['num_mc', 'num_hmc', 'num_total_c'][39m
+[38;5;23m2026-01-21 12:31:50[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Summarized over 16009 regions.[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Dataframe has 16009 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Exported mc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e7315810>.[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Dataframe has 16009 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Exported hmc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554cc76a950>.[39m
+[38;5;23m2026-01-21 12:31:58[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:31:58[39m  16009 regions extracted.[39m
+[38;5;23m2026-01-21 12:31:58[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123158[39m
+[38;5;23m2026-01-21 12:31:58[39m  Generating plots: violin, correlation[39m
+[38;5;23m2026-01-21 12:31:59[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123158/hmc-mc_regional-frac_extract_report_20260121_123158.html[39m
+[38;5;23m2026-01-21 12:31:59[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123158/hmc-mc_regional-frac_extract_report_20260121_123158.json[39m
+[38;5;23m2026-01-21 12:31:59[39m  [1m[38;5;154mFeature report with violin, correlation visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123158/hmc-mc_regional-frac_extract_report_20260121_123158.html.[39m
+[38;5;23m2026-01-21 12:31:59[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/Extract_20260121_123158/modality_metadata_20260121_123159.json[39m
+[INFO] 2026-01-21 12:31:59 - Feature extraction completed for gencode.vM25.mouse.cpg_islands.annotation
+[INFO] 2026-01-21 12:31:59 - Processing region file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shelves.annotation.bed.gz
+[INFO] 2026-01-21 12:31:59 - Running feature extraction: count total_c...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:32:03[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:32:03[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get count --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shelves.annotation.bed.gz --fields total_c --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation'
+timestamp=2026-01-21T12:32:03.825725
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:32:03[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shelves.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:32:03[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:32:03[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:32:06[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:32:16[39m | [38;5;23mINFO[39m | Performing ['count'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:32:16[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:32:16[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:32:22[39m | [38;5;23mINFO[39m | Summarized over 29912 regions.[39m
+[38;5;23m2026-01-21 12:32:22[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:32:22[39m | [38;5;23mINFO[39m | Dataframe has 31066 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:32:22[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:32:22[39m | [38;5;23mINFO[39m | Exported total_c stats for count to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e45339d0>.[39m
+[38;5;23m2026-01-21 12:32:22[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:32:22[39m  29912 regions extracted.[39m
+[38;5;23m2026-01-21 12:32:22[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123222[39m
+[38;5;23m2026-01-21 12:32:22[39m | [38;5;23mINFO[39m | No plots generated. Sample sheet / group provided but no plots requested.[39m
+[38;5;23m2026-01-21 12:32:22[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123222/modality_metadata_20260121_123222.json[39m
+[INFO] 2026-01-21 12:32:23 - Running feature extraction: mean total_c (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:32:26[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:32:26[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get mean --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shelves.annotation.bed.gz --fields total_c --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation'
+timestamp=2026-01-21T12:32:26.502128
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:32:26[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shelves.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:32:26[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:32:26[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:32:26[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:32:26[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:32:29[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:32:39[39m | [38;5;23mINFO[39m | Performing ['mean'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:32:39[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:32:39[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:32:44[39m | [38;5;23mINFO[39m | Summarized over 29912 regions.[39m
+[38;5;23m2026-01-21 12:32:44[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:32:45[39m | [38;5;23mINFO[39m | Dataframe has 31066 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:32:45[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:32:45[39m | [38;5;23mINFO[39m | Exported total_c stats for mean to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e4706a90>.[39m
+[38;5;23m2026-01-21 12:32:45[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:32:45[39m  29912 regions extracted.[39m
+[38;5;23m2026-01-21 12:32:45[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123245[39m
+[38;5;23m2026-01-21 12:32:45[39m  Generating plots: correlation, violin[39m
+[38;5;23m2026-01-21 12:32:45[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123245/total_c_mean_extract_report_20260121_123245.html[39m
+[38;5;23m2026-01-21 12:32:45[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123245/total_c_mean_extract_report_20260121_123245.json[39m
+[38;5;23m2026-01-21 12:32:45[39m  [1m[38;5;154mFeature report with correlation, violin visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123245/total_c_mean_extract_report_20260121_123245.html.[39m
+[38;5;23m2026-01-21 12:32:45[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123245/modality_metadata_20260121_123245.json[39m
+[INFO] 2026-01-21 12:32:46 - Running feature extraction: regional-frac for mc and hmc with minimum depth 10 (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:32:49[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:32:49[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get regional-frac --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shelves.annotation.bed.gz --fields mc hmc --min-coverage 10 --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation'
+timestamp=2026-01-21T12:32:49.714128
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:32:49[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shelves.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mFields[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:32:49[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:32:49[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:32:49[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:32:49[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:32:52[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:33:20[39m | [38;5;23mINFO[39m | Performing ['regional-frac'] on variables ['num_mc', 'num_hmc'] and min coverage 10.[39m
+[38;5;23m2026-01-21 12:33:20[39m | [38;5;23mINFO[39m | ['num_mc', 'num_hmc', 'num_total_c'][39m
+[38;5;23m2026-01-21 12:33:20[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:33:28[39m | [38;5;23mINFO[39m | Summarized over 29912 regions.[39m
+[38;5;23m2026-01-21 12:33:28[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:33:28[39m | [38;5;23mINFO[39m | Dataframe has 31066 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:33:29[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:33:29[39m | [38;5;23mINFO[39m | Exported mc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x15548ca30f10>.[39m
+[38;5;23m2026-01-21 12:33:29[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:33:29[39m | [38;5;23mINFO[39m | Dataframe has 31066 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:33:30[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:33:30[39m | [38;5;23mINFO[39m | Exported hmc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x15548ca30c90>.[39m
+[38;5;23m2026-01-21 12:33:30[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:33:30[39m  29912 regions extracted.[39m
+[38;5;23m2026-01-21 12:33:30[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123328[39m
+[38;5;23m2026-01-21 12:33:30[39m  Generating plots: correlation, violin[39m
+[38;5;23m2026-01-21 12:33:31[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123328/hmc-mc_regional-frac_extract_report_20260121_123328.html[39m
+[38;5;23m2026-01-21 12:33:31[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123328/hmc-mc_regional-frac_extract_report_20260121_123328.json[39m
+[38;5;23m2026-01-21 12:33:31[39m  [1m[38;5;154mFeature report with correlation, violin visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123328/hmc-mc_regional-frac_extract_report_20260121_123328.html.[39m
+[38;5;23m2026-01-21 12:33:31[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/Extract_20260121_123328/modality_metadata_20260121_123331.json[39m
+[INFO] 2026-01-21 12:33:32 - Feature extraction completed for gencode.vM25.mouse.cpg_shelves.annotation
+[INFO] 2026-01-21 12:33:32 - Processing region file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shores.annotation.bed.gz
+[INFO] 2026-01-21 12:33:32 - Running feature extraction: count total_c...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:33:35[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:33:35[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get count --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shores.annotation.bed.gz --fields total_c --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation'
+timestamp=2026-01-21T12:33:35.918675
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:33:35[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shores.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:33:35[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:33:35[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:33:38[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:33:49[39m | [38;5;23mINFO[39m | Performing ['count'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:33:49[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:33:49[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:33:54[39m | [38;5;23mINFO[39m | Summarized over 33962 regions.[39m
+[38;5;23m2026-01-21 12:33:54[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:33:54[39m | [38;5;23mINFO[39m | Dataframe has 36866 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:33:55[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:33:55[39m | [38;5;23mINFO[39m | Exported total_c stats for count to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e5df1850>.[39m
+[38;5;23m2026-01-21 12:33:55[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:33:55[39m  33962 regions extracted.[39m
+[38;5;23m2026-01-21 12:33:55[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123354[39m
+[38;5;23m2026-01-21 12:33:55[39m | [38;5;23mINFO[39m | No plots generated. Sample sheet / group provided but no plots requested.[39m
+[38;5;23m2026-01-21 12:33:55[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123354/modality_metadata_20260121_123355.json[39m
+[INFO] 2026-01-21 12:33:55 - Running feature extraction: mean total_c (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:33:58[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:33:58[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get mean --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shores.annotation.bed.gz --fields total_c --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation'
+timestamp=2026-01-21T12:33:58.730567
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:33:58[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shores.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:33:58[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:33:58[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:33:58[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:33:58[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:34:01[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:34:11[39m | [38;5;23mINFO[39m | Performing ['mean'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:34:11[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:34:11[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:34:17[39m | [38;5;23mINFO[39m | Summarized over 33962 regions.[39m
+[38;5;23m2026-01-21 12:34:17[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:34:17[39m | [38;5;23mINFO[39m | Dataframe has 36866 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:34:17[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:34:17[39m | [38;5;23mINFO[39m | Exported total_c stats for mean to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e5f9d590>.[39m
+[38;5;23m2026-01-21 12:34:17[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:34:17[39m  33962 regions extracted.[39m
+[38;5;23m2026-01-21 12:34:17[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123417[39m
+[38;5;23m2026-01-21 12:34:17[39m  Generating plots: correlation, violin[39m
+[38;5;23m2026-01-21 12:34:18[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123417/total_c_mean_extract_report_20260121_123417.html[39m
+[38;5;23m2026-01-21 12:34:18[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123417/total_c_mean_extract_report_20260121_123417.json[39m
+[38;5;23m2026-01-21 12:34:18[39m  [1m[38;5;154mFeature report with correlation, violin visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123417/total_c_mean_extract_report_20260121_123417.html.[39m
+[38;5;23m2026-01-21 12:34:18[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123417/modality_metadata_20260121_123418.json[39m
+[INFO] 2026-01-21 12:34:19 - Running feature extraction: regional-frac for mc and hmc with minimum depth 10 (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:34:22[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:34:22[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get regional-frac --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shores.annotation.bed.gz --fields mc hmc --min-coverage 10 --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation'
+timestamp=2026-01-21T12:34:22.274652
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:34:22[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_shores.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mFields[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:34:22[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:34:22[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:34:22[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:34:22[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:34:24[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:34:53[39m | [38;5;23mINFO[39m | Performing ['regional-frac'] on variables ['num_mc', 'num_hmc'] and min coverage 10.[39m
+[38;5;23m2026-01-21 12:34:53[39m | [38;5;23mINFO[39m | ['num_mc', 'num_hmc', 'num_total_c'][39m
+[38;5;23m2026-01-21 12:34:53[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:35:01[39m | [38;5;23mINFO[39m | Summarized over 33962 regions.[39m
+[38;5;23m2026-01-21 12:35:01[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:35:01[39m | [38;5;23mINFO[39m | Dataframe has 36866 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:35:02[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:35:02[39m | [38;5;23mINFO[39m | Exported mc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554c4825090>.[39m
+[38;5;23m2026-01-21 12:35:02[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:35:02[39m | [38;5;23mINFO[39m | Dataframe has 36866 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:35:03[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:35:03[39m | [38;5;23mINFO[39m | Exported hmc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e641d190>.[39m
+[38;5;23m2026-01-21 12:35:03[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:35:03[39m  33962 regions extracted.[39m
+[38;5;23m2026-01-21 12:35:03[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123501[39m
+[38;5;23m2026-01-21 12:35:03[39m  Generating plots: correlation, violin[39m
+[38;5;23m2026-01-21 12:35:03[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123501/hmc-mc_regional-frac_extract_report_20260121_123501.html[39m
+[38;5;23m2026-01-21 12:35:04[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123501/hmc-mc_regional-frac_extract_report_20260121_123501.json[39m
+[38;5;23m2026-01-21 12:35:04[39m  [1m[38;5;154mFeature report with correlation, violin visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123501/hmc-mc_regional-frac_extract_report_20260121_123501.html.[39m
+[38;5;23m2026-01-21 12:35:04[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/Extract_20260121_123501/modality_metadata_20260121_123504.json[39m
+[INFO] 2026-01-21 12:35:04 - Feature extraction completed for gencode.vM25.mouse.cpg_shores.annotation
+[INFO] 2026-01-21 12:35:04 - Processing region file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.genes.annotation.bed.gz
+[INFO] 2026-01-21 12:35:04 - Running feature extraction: count total_c...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:35:08[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:35:08[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get count --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.genes.annotation.bed.gz --fields total_c --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation'
+timestamp=2026-01-21T12:35:08.589392
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:35:08[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.genes.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:35:08[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:35:08[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:35:11[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:35:21[39m | [38;5;23mINFO[39m | Performing ['count'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:35:21[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:35:21[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:35:27[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:35:27[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:35:27[39m | [38;5;23mINFO[39m | Dataframe has 21673 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:35:27[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:35:27[39m | [38;5;23mINFO[39m | Exported total_c stats for count to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e46b7a10>.[39m
+[38;5;23m2026-01-21 12:35:27[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:35:27[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:35:27[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123527[39m
+[38;5;23m2026-01-21 12:35:27[39m | [38;5;23mINFO[39m | No plots generated. Sample sheet / group provided but no plots requested.[39m
+[38;5;23m2026-01-21 12:35:27[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123527/modality_metadata_20260121_123527.json[39m
+[INFO] 2026-01-21 12:35:28 - Running feature extraction: mean total_c (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:35:31[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:35:31[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get mean --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.genes.annotation.bed.gz --fields total_c --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation'
+timestamp=2026-01-21T12:35:31.527084
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:35:31[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.genes.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:35:31[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:35:31[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:35:31[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:35:31[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:35:34[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:35:44[39m | [38;5;23mINFO[39m | Performing ['mean'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:35:44[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:35:44[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:35:50[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:35:50[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:35:50[39m | [38;5;23mINFO[39m | Dataframe has 21673 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:35:51[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:35:51[39m | [38;5;23mINFO[39m | Exported total_c stats for mean to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e46af910>.[39m
+[38;5;23m2026-01-21 12:35:51[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:35:51[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:35:51[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123550[39m
+[38;5;23m2026-01-21 12:35:51[39m  Generating plots: correlation, violin[39m
+[38;5;23m2026-01-21 12:35:51[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123550/total_c_mean_extract_report_20260121_123550.html[39m
+[38;5;23m2026-01-21 12:35:51[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123550/total_c_mean_extract_report_20260121_123550.json[39m
+[38;5;23m2026-01-21 12:35:51[39m  [1m[38;5;154mFeature report with correlation, violin visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123550/total_c_mean_extract_report_20260121_123550.html.[39m
+[38;5;23m2026-01-21 12:35:51[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123550/modality_metadata_20260121_123551.json[39m
+[INFO] 2026-01-21 12:35:52 - Running feature extraction: regional-frac for mc and hmc with minimum depth 10 (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:35:56[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:35:56[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get regional-frac --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.genes.annotation.bed.gz --fields mc hmc --min-coverage 10 --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation'
+timestamp=2026-01-21T12:35:56.993847
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:35:57[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.genes.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mFields[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:35:57[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:35:57[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:35:57[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:35:57[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:35:59[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:36:27[39m | [38;5;23mINFO[39m | Performing ['regional-frac'] on variables ['num_mc', 'num_hmc'] and min coverage 10.[39m
+[38;5;23m2026-01-21 12:36:27[39m | [38;5;23mINFO[39m | ['num_mc', 'num_hmc', 'num_total_c'][39m
+[38;5;23m2026-01-21 12:36:27[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:36:35[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:36:35[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:36:35[39m | [38;5;23mINFO[39m | Dataframe has 21673 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:36:36[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:36:36[39m | [38;5;23mINFO[39m | Exported mc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554dde96810>.[39m
+[38;5;23m2026-01-21 12:36:36[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:36:36[39m | [38;5;23mINFO[39m | Dataframe has 21673 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:36:37[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:36:37[39m | [38;5;23mINFO[39m | Exported hmc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e48be050>.[39m
+[38;5;23m2026-01-21 12:36:37[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:36:37[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:36:37[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123635[39m
+[38;5;23m2026-01-21 12:36:37[39m  Generating plots: correlation, violin[39m
+[38;5;23m2026-01-21 12:36:37[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123635/hmc-mc_regional-frac_extract_report_20260121_123635.html[39m
+[38;5;23m2026-01-21 12:36:37[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123635/hmc-mc_regional-frac_extract_report_20260121_123635.json[39m
+[38;5;23m2026-01-21 12:36:37[39m  [1m[38;5;154mFeature report with correlation, violin visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123635/hmc-mc_regional-frac_extract_report_20260121_123635.html.[39m
+[38;5;23m2026-01-21 12:36:37[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260121_123635/modality_metadata_20260121_123637.json[39m
+[INFO] 2026-01-21 12:36:38 - Feature extraction completed for gencode.vM25.mouse.genes.annotation
+[INFO] 2026-01-21 12:36:38 - Processing region file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.promoters.annotation.bed.gz
+[INFO] 2026-01-21 12:36:38 - Running feature extraction: count total_c...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:36:42[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:36:42[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get count --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.promoters.annotation.bed.gz --fields total_c --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation'
+timestamp=2026-01-21T12:36:42.393732
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:36:42[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.promoters.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:36:42[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:36:42[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:36:45[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:36:55[39m | [38;5;23mINFO[39m | Performing ['count'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:36:55[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:36:55[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:37:00[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:37:00[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:37:01[39m | [38;5;23mINFO[39m | Dataframe has 21703 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:37:01[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:37:01[39m | [38;5;23mINFO[39m | Exported total_c stats for count to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e4713e50>.[39m
+[38;5;23m2026-01-21 12:37:01[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:37:01[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:37:01[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123700[39m
+[38;5;23m2026-01-21 12:37:01[39m | [38;5;23mINFO[39m | No plots generated. Sample sheet / group provided but no plots requested.[39m
+[38;5;23m2026-01-21 12:37:01[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123700/modality_metadata_20260121_123701.json[39m
+[INFO] 2026-01-21 12:37:01 - Running feature extraction: mean total_c (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:37:04[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:37:04[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get mean --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.promoters.annotation.bed.gz --fields total_c --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation'
+timestamp=2026-01-21T12:37:04.888353
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:37:04[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.promoters.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:37:04[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:37:04[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:37:04[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:37:04[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:37:07[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:37:17[39m | [38;5;23mINFO[39m | Performing ['mean'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:37:17[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:37:17[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:37:23[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:37:23[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:37:23[39m | [38;5;23mINFO[39m | Dataframe has 21703 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:37:23[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:37:23[39m | [38;5;23mINFO[39m | Exported total_c stats for mean to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e499a910>.[39m
+[38;5;23m2026-01-21 12:37:23[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:37:23[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:37:23[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123723[39m
+[38;5;23m2026-01-21 12:37:23[39m  Generating plots: violin, correlation[39m
+[38;5;23m2026-01-21 12:37:23[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123723/total_c_mean_extract_report_20260121_123723.html[39m
+[38;5;23m2026-01-21 12:37:24[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123723/total_c_mean_extract_report_20260121_123723.json[39m
+[38;5;23m2026-01-21 12:37:24[39m  [1m[38;5;154mFeature report with violin, correlation visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123723/total_c_mean_extract_report_20260121_123723.html.[39m
+[38;5;23m2026-01-21 12:37:24[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123723/modality_metadata_20260121_123724.json[39m
+[INFO] 2026-01-21 12:37:24 - Running feature extraction: regional-frac for mc and hmc with minimum depth 10 (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:37:27[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:37:27[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get regional-frac --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.promoters.annotation.bed.gz --fields mc hmc --min-coverage 10 --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation'
+timestamp=2026-01-21T12:37:27.690045
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:37:27[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.promoters.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mFields[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:37:27[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:37:27[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:37:27[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:37:27[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:37:30[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:37:58[39m | [38;5;23mINFO[39m | Performing ['regional-frac'] on variables ['num_mc', 'num_hmc'] and min coverage 10.[39m
+[38;5;23m2026-01-21 12:37:58[39m | [38;5;23mINFO[39m | ['num_mc', 'num_hmc', 'num_total_c'][39m
+[38;5;23m2026-01-21 12:37:58[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:38:06[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:38:06[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:38:06[39m | [38;5;23mINFO[39m | Dataframe has 21703 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:38:07[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:38:07[39m | [38;5;23mINFO[39m | Exported mc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554b47b6f50>.[39m
+[38;5;23m2026-01-21 12:38:07[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:38:07[39m | [38;5;23mINFO[39m | Dataframe has 21703 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:38:07[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:38:07[39m | [38;5;23mINFO[39m | Exported hmc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554bc5f50d0>.[39m
+[38;5;23m2026-01-21 12:38:07[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:38:07[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:38:07[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123806[39m
+[38;5;23m2026-01-21 12:38:07[39m  Generating plots: violin, correlation[39m
+[38;5;23m2026-01-21 12:38:08[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123806/hmc-mc_regional-frac_extract_report_20260121_123806.html[39m
+[38;5;23m2026-01-21 12:38:08[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123806/hmc-mc_regional-frac_extract_report_20260121_123806.json[39m
+[38;5;23m2026-01-21 12:38:08[39m  [1m[38;5;154mFeature report with violin, correlation visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123806/hmc-mc_regional-frac_extract_report_20260121_123806.html.[39m
+[38;5;23m2026-01-21 12:38:08[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/Extract_20260121_123806/modality_metadata_20260121_123808.json[39m
+[INFO] 2026-01-21 12:38:08 - Feature extraction completed for gencode.vM25.mouse.promoters.annotation
+[INFO] 2026-01-21 12:38:08 - Processing region file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.tss_region.annotation.bed.gz
+[INFO] 2026-01-21 12:38:08 - Running feature extraction: count total_c...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:38:12[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:38:12[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get count --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.tss_region.annotation.bed.gz --fields total_c --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation'
+timestamp=2026-01-21T12:38:12.793886
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:38:12[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.tss_region.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:38:12[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:38:12[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:38:15[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:38:25[39m | [38;5;23mINFO[39m | Performing ['count'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:38:26[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:38:26[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:38:31[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:38:31[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:38:31[39m | [38;5;23mINFO[39m | Dataframe has 21705 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:38:31[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:38:31[39m | [38;5;23mINFO[39m | Exported total_c stats for count to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e443ca90>.[39m
+[38;5;23m2026-01-21 12:38:31[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:38:31[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:38:31[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123831[39m
+[38;5;23m2026-01-21 12:38:31[39m | [38;5;23mINFO[39m | No plots generated. Sample sheet / group provided but no plots requested.[39m
+[38;5;23m2026-01-21 12:38:31[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123831/modality_metadata_20260121_123831.json[39m
+[INFO] 2026-01-21 12:38:32 - Running feature extraction: mean total_c (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:38:35[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:38:35[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get mean --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.tss_region.annotation.bed.gz --fields total_c --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation'
+timestamp=2026-01-21T12:38:35.445386
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:38:35[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.tss_region.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:38:35[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:38:35[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:38:35[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:38:35[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:38:38[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:38:48[39m | [38;5;23mINFO[39m | Performing ['mean'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-01-21 12:38:48[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-01-21 12:38:48[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:38:53[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:38:53[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:38:54[39m | [38;5;23mINFO[39m | Dataframe has 21705 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:38:54[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:38:54[39m | [38;5;23mINFO[39m | Exported total_c stats for mean to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e4c59950>.[39m
+[38;5;23m2026-01-21 12:38:54[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:38:54[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:38:54[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123854[39m
+[38;5;23m2026-01-21 12:38:54[39m  Generating plots: correlation, violin[39m
+[38;5;23m2026-01-21 12:38:54[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123854/total_c_mean_extract_report_20260121_123854.html[39m
+[38;5;23m2026-01-21 12:38:54[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123854/total_c_mean_extract_report_20260121_123854.json[39m
+[38;5;23m2026-01-21 12:38:54[39m  [1m[38;5;154mFeature report with correlation, violin visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123854/total_c_mean_extract_report_20260121_123854.html.[39m
+[38;5;23m2026-01-21 12:38:54[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123854/modality_metadata_20260121_123854.json[39m
+[INFO] 2026-01-21 12:38:55 - Running feature extraction: regional-frac for mc and hmc with minimum depth 10 (plots generated automatically)...
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:38:58[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:38:58[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get regional-frac --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.tss_region.annotation.bed.gz --fields mc hmc --min-coverage 10 --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation'
+timestamp=2026-01-21T12:38:58.426894
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:38:58[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.tss_region.annotation.bed.gz[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mFields[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-01-21 12:38:58[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-01-21 12:38:58[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:38:58[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-01-21 12:38:58[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:39:01[39m | [38;5;23mINFO[39m | Merging CpG strands before extraction...[39m
+[38;5;23m2026-01-21 12:39:29[39m | [38;5;23mINFO[39m | Performing ['regional-frac'] on variables ['num_mc', 'num_hmc'] and min coverage 10.[39m
+[38;5;23m2026-01-21 12:39:29[39m | [38;5;23mINFO[39m | ['num_mc', 'num_hmc', 'num_total_c'][39m
+[38;5;23m2026-01-21 12:39:29[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-01-21 12:39:36[39m | [38;5;23mINFO[39m | Summarized over 21673 regions.[39m
+[38;5;23m2026-01-21 12:39:36[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:39:36[39m | [38;5;23mINFO[39m | Dataframe has 21705 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:39:37[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:39:37[39m | [38;5;23mINFO[39m | Exported mc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554eaa4f510>.[39m
+[38;5;23m2026-01-21 12:39:37[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-01-21 12:39:37[39m | [38;5;23mINFO[39m | Dataframe has 21705 rows, processing large dataset[39m
+[38;5;23m2026-01-21 12:39:37[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-01-21 12:39:37[39m | [38;5;23mINFO[39m | Exported hmc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1554e73741d0>.[39m
+[38;5;23m2026-01-21 12:39:37[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-01-21 12:39:37[39m  21673 regions extracted.[39m
+[38;5;23m2026-01-21 12:39:37[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123936[39m
+[38;5;23m2026-01-21 12:39:37[39m  Generating plots: correlation, violin[39m
+[38;5;23m2026-01-21 12:39:38[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123936/hmc-mc_regional-frac_extract_report_20260121_123936.html[39m
+[38;5;23m2026-01-21 12:39:38[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123936/hmc-mc_regional-frac_extract_report_20260121_123936.json[39m
+[38;5;23m2026-01-21 12:39:38[39m  [1m[38;5;154mFeature report with correlation, violin visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123936/hmc-mc_regional-frac_extract_report_20260121_123936.html.[39m
+[38;5;23m2026-01-21 12:39:38[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/Extract_20260121_123936/modality_metadata_20260121_123938.json[39m
+[INFO] 2026-01-21 12:39:39 - Feature extraction completed for gencode.vM25.mouse.tss_region.annotation
+[INFO] 2026-01-21 12:39:39 - Feature extraction HTML reports copied to region-specific directories
+
+
+===========================
+STEP 3: RUNNING DMR CALLING
+===========================
+[INFO] 2026-01-21 12:39:39 - Running DMR calling on region file: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed
+Logged in using stored credentials
+[38;5;23m2026-01-21 12:39:43[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-01-21 12:39:43[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v dmr call --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --condition-array-name condition --methylation-contexts num_mc num_hmc --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed --covariates sex --filter-context-depth 10 --condition-order control,mutant --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation'
+timestamp=2026-01-21T12:39:43.221666
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-01-21 12:39:43[39m  [1m[38;5;123mStarting differential methylation analysis:[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz'][39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mCondition Array Name[39m: condition[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mMethylation Contexts[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mCovariates[39m: ['sex'][39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mCondition Order[39m: ['control,mutant'][39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mOverdispersion[39m: False[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mStatistical Test[39m: wald[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-01-21 12:39:43[39m  [38;5;248mCompress[39m: False[39m
+[38;5;23m2026-01-21 12:39:43[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-01-21 12:39:45[39m | [38;5;23mINFO[39m | Merging CpG strands in the dataset.[39m
+[38;5;23m2026-01-21 12:39:54[39m | [38;5;23mINFO[39m | Starting DMR calling process, this could take a few minutes...[39m
+[38;5;23m2026-01-21 12:39:54[39m | [38;5;23mINFO[39m | Aligning sample sheet with dataset...[39m
+[#############                           ] | 34% Completed | 1.07 s[###############                         ] | 38% Completed | 1.17 s[#################                       ] | 42% Completed | 1.27 s[##################                      ] | 47% Completed | 1.37 s[####################                    ] | 50% Completed | 1.47 s[#####################                   ] | 54% Completed | 1.57 s[#######################                 ] | 58% Completed | 1.67 s[#########################               ] | 62% Completed | 1.77 s[##########################              ] | 66% Completed | 1.87 s[############################            ] | 70% Completed | 1.97 s[#############################           ] | 74% Completed | 2.07 s[###############################         ] | 78% Completed | 2.17 s[########################################] | 100% Completed | 2.27 s
+[38;5;23m2026-01-21 12:39:57[39m | [31mERROR[39m | [31mError calling DMRs: Conditions {'control,mutant'} not found in sample sheet[39m
+[38;5;23m2026-01-21 12:39:57[39m | [31mERROR[39m | [31mAn error occurred: unable to call DMRs: Conditions {'control,mutant'} not found in sample sheet[39m
+[38;5;23m2026-01-21 12:39:57[39m | [31mERROR[39m | [31mModality Error:  An unexpected error occurred. unable to call DMRs: Conditions {'control,mutant'} not found in sample sheet[39m
+Traceback (most recent call last):
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/application/dmr_batch_workflow.py", line 129, in run
+    condition_order_pairs = self._get_condition_pairs(group_name)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/application/dmr_batch_workflow.py", line 310, in _get_condition_pairs
+    raise ValueError(f"Conditions {missing} not found in sample sheet")
+ValueError: Conditions {'control,mutant'} not found in sample sheet
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/interface/cli/dmr_cli.py", line 119, in call
+    dmr_file_paths = batch_workflow.run(group_name=condition_array_name)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/application/dmr_batch_workflow.py", line 143, in run
+    raise ModalityError(f"unable to call DMRs: {e}") from e
+modality.shared.exceptions.ModalityError: unable to call DMRs: Conditions {'control,mutant'} not found in sample sheet
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/interface/cli/exceptions.py", line 56, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/infrastructure/auth/auth_service.py", line 128, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/interface/cli/cli.py", line 114, in main
+    cli()
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/click/core.py", line 1078, in main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/click/core.py", line 1688, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/click/core.py", line 1688, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/interface/cli/log_params.py", line 134, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zalibhai/miniforge3/envs/modality/lib/python3.11/site-packages/modality/interface/cli/dmr_cli.py", line 126, in call
+    raise ModalityError(f"{e}") from e
+modality.shared.exceptions.ModalityError: unable to call DMRs: Conditions {'control,mutant'} not found in sample sheet
+
+=========================================
+End time: Wed Jan 21 12:39:57 PST 2026
+=========================================
