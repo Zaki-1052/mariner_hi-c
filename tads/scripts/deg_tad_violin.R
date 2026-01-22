@@ -48,18 +48,22 @@ GREAT_DOWNSTREAM <- 1000        # 1kb downstream of TSS
 GREAT_MAX_EXTENSION <- 100000   # 100kb maximum extension
 
 # Timepoint-specific file mappings
+# NOTE: Early timepoint has reversed matrix labeling in TADCompare output
+# (Matrix 1/Matrix 2 meanings are flipped). We generate both versions for comparison.
 TIMEPOINT_CONFIG <- list(
   late = list(
     tad_file = file.path(BASE_DIR, "results/late/final/tadcompare_final_filtered.tsv"),
     rna_file = file.path(BASE_DIR, "adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx"),
     output_dir = file.path(BASE_DIR, "results/visualizations/late/deg_violin"),
-    label = "Late (Adult)"
+    label = "Late (Adult)",
+    flip_directions = FALSE  # Late timepoint: Matrix 1 = Control, Matrix 2 = Mutant (correct)
   ),
   early = list(
     tad_file = file.path(BASE_DIR, "results/early/final/tadcompare_final_filtered.tsv"),
     rna_file = file.path(BASE_DIR, "young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),
     output_dir = file.path(BASE_DIR, "results/visualizations/early/deg_violin"),
-    label = "Early (Young)"
+    label = "Early (Young)",
+    flip_directions = TRUE   # Early timepoint: Matrix labels reversed, need to flip lost/gained
   )
 )
 
@@ -72,8 +76,9 @@ BOUNDARY_COLORS <- c("lost" = "#4575b4", "gained" = "#e0a730")
 
 #' Load TADCompare differential boundaries
 #' @param tad_file Path to TADCompare filtered results
+#' @param flip Logical; if TRUE, flip the lost/gained mapping (for early timepoint)
 #' @return tibble of differential boundaries
-load_tad_boundaries <- function(tad_file) {
+load_tad_boundaries <- function(tad_file, flip = FALSE) {
   if (!file.exists(tad_file)) {
     stop(sprintf("TADCompare file not found: %s", tad_file))
   }
@@ -86,17 +91,25 @@ load_tad_boundaries <- function(tad_file) {
     dplyr::select(chr, Boundary, Gap_Score, Enriched_In, Type) %>%
     dplyr::mutate(
       # Map enrichment to lost/gained terminology
-      # Matrix 1 = Control-enriched = LOST in mutant
-      # Matrix 2 = Mutant-enriched = GAINED in mutant
+      # Normal (flip = FALSE): Matrix 1 = Control-enriched = LOST in mutant
+      #                        Matrix 2 = Mutant-enriched = GAINED in mutant
+      # Flipped (flip = TRUE): Matrix 1 = Mutant-enriched = GAINED in mutant
+      #                        Matrix 2 = Control-enriched = LOST in mutant
       boundary_class = case_when(
-        Enriched_In == "Matrix 1" ~ "lost",
-        Enriched_In == "Matrix 2" ~ "gained",
+        !flip & Enriched_In == "Matrix 1" ~ "lost",
+        !flip & Enriched_In == "Matrix 2" ~ "gained",
+        flip & Enriched_In == "Matrix 1" ~ "gained",
+        flip & Enriched_In == "Matrix 2" ~ "lost",
         TRUE ~ NA_character_
       )
     ) %>%
     dplyr::filter(!is.na(boundary_class))
 
-  cat(sprintf("  Loaded %d differential boundaries\n", nrow(diff_boundaries)))
+  if (flip) {
+    cat(sprintf("  Loaded %d differential boundaries (FLIPPED mapping)\n", nrow(diff_boundaries)))
+  } else {
+    cat(sprintf("  Loaded %d differential boundaries\n", nrow(diff_boundaries)))
+  }
   cat(sprintf("    - Lost (Control-enriched): %d\n", sum(diff_boundaries$boundary_class == "lost")))
   cat(sprintf("    - Gained (Mutant-enriched): %d\n", sum(diff_boundaries$boundary_class == "gained")))
 
@@ -361,14 +374,37 @@ create_violin_plot <- function(plot_data, title = "DEGs proximal to differential
 #' @param plot_data Merged DEG-boundary data
 #' @param test_result Wilcoxon test result
 #' @param timepoint Timepoint label
+#' @param flip Logical; whether directions were flipped for this analysis
 #' @return Character vector of summary lines
-generate_statistics <- function(plot_data, test_result, timepoint) {
+generate_statistics <- function(plot_data, test_result, timepoint, flip = FALSE) {
   lost_data <- plot_data %>% dplyr::filter(boundary_class == "lost")
   gained_data <- plot_data %>% dplyr::filter(boundary_class == "gained")
+
+  # Build flip status section
+  if (flip) {
+    flip_section <- c(
+      "",
+      "*** DIRECTION FLIP APPLIED ***",
+      "  This analysis uses FLIPPED lost/gained mapping.",
+      "  Early timepoint has reversed matrix labels in TADCompare.",
+      "  Flip correction: Matrix 1 -> gained, Matrix 2 -> lost",
+      ""
+    )
+  } else {
+    flip_section <- c(
+      "",
+      "Boundary classification (standard mapping):",
+      "  Matrix 1 = Control (cont_mat1 = ctrl_mat in TADCompare)",
+      "  'Enriched_In = Matrix 1' -> 'lost' (stronger in control, weaker in mutant)",
+      "  'Enriched_In = Matrix 2' -> 'gained' (stronger in mutant)",
+      ""
+    )
+  }
 
   stats_lines <- c(
     "===========================================",
     sprintf("DEG-TAD Boundary Analysis: %s", timepoint),
+    ifelse(flip, "(FLIPPED DIRECTIONS)", "(ORIGINAL DIRECTIONS)"),
     "===========================================",
     "",
     sprintf("Date: %s", Sys.time()),
@@ -378,12 +414,7 @@ generate_statistics <- function(plot_data, test_result, timepoint) {
     sprintf("  Basal domain: %dkb upstream, %dkb downstream of TSS", GREAT_UPSTREAM/1000, GREAT_DOWNSTREAM/1000),
     sprintf("  Max extension: %dkb (stops at neighboring gene's basal domain)", GREAT_MAX_EXTENSION/1000),
     sprintf("DEG thresholds: padj < %g AND |log2FC| > %g", DEG_PADJ_THRESHOLD, DEG_LFC_THRESHOLD),
-    "",
-    "Boundary classification verified:",
-    "  Matrix 1 = Control (cont_mat1 = ctrl_mat in TADCompare)",
-    "  'Enriched_In = Matrix 1' -> 'lost' (stronger in control, weaker in mutant)",
-    "  'Enriched_In = Matrix 2' -> 'gained' (stronger in mutant)",
-    "",
+    flip_section,
     "--- GENE COUNTS ---",
     sprintf("Total genes near differential boundaries: %d", nrow(plot_data)),
     sprintf("  Genes near LOST boundaries: %d", nrow(lost_data)),
@@ -424,14 +455,19 @@ generate_statistics <- function(plot_data, test_result, timepoint) {
 #' @param plot_data Merged DEG-boundary data
 #' @param output_dir Output directory
 #' @param timepoint Timepoint name
-save_outputs <- function(plot_result, plot_data, output_dir, timepoint) {
+#' @param flip Logical; whether directions were flipped
+#' @param suffix Optional suffix for filenames (e.g., "_flipped", "_original")
+save_outputs <- function(plot_result, plot_data, output_dir, timepoint, flip = FALSE, suffix = "") {
   # Create output directory
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
+  # Build filename base with optional suffix
+  base_name <- sprintf("deg_tad_violin_%s%s", timepoint, suffix)
+
   # Save plot in multiple formats
-  pdf_file <- file.path(output_dir, sprintf("deg_tad_violin_%s.pdf", timepoint))
-  svg_file <- file.path(output_dir, sprintf("deg_tad_violin_%s.svg", timepoint))
-  jpg_file <- file.path(output_dir, sprintf("deg_tad_violin_%s.jpg", timepoint))
+  pdf_file <- file.path(output_dir, sprintf("%s.pdf", base_name))
+  svg_file <- file.path(output_dir, sprintf("%s.svg", base_name))
+  jpg_file <- file.path(output_dir, sprintf("%s.jpg", base_name))
 
   ggsave(pdf_file, plot_result$plot, width = 5, height = 6, dpi = 300)
   ggsave(svg_file, plot_result$plot, width = 5, height = 6, dpi = 300)
@@ -442,13 +478,13 @@ save_outputs <- function(plot_result, plot_data, output_dir, timepoint) {
   cat(sprintf("  Saved: %s\n", jpg_file))
 
   # Save gene list
-  gene_file <- file.path(output_dir, sprintf("deg_boundary_genes_%s.tsv", timepoint))
+  gene_file <- file.path(output_dir, sprintf("deg_boundary_genes_%s%s.tsv", timepoint, suffix))
   write_tsv(plot_data, gene_file)
   cat(sprintf("  Saved: %s\n", gene_file))
 
   # Save statistics
-  stats_file <- file.path(output_dir, sprintf("deg_tad_statistics_%s.txt", timepoint))
-  stats_lines <- generate_statistics(plot_data, plot_result$test, timepoint)
+  stats_file <- file.path(output_dir, sprintf("deg_tad_statistics_%s%s.txt", timepoint, suffix))
+  stats_lines <- generate_statistics(plot_data, plot_result$test, timepoint, flip = flip)
   writeLines(stats_lines, stats_file)
   cat(sprintf("  Saved: %s\n", stats_file))
 }
@@ -471,48 +507,108 @@ process_timepoint <- function(timepoint) {
     stop(sprintf("Unknown timepoint: %s", timepoint))
   }
 
-  # Step 1: Load TAD boundaries
-  cat("\n[Step 1] Loading TAD boundaries...\n")
-  boundaries <- load_tad_boundaries(config$tad_file)
+  # Determine if we need to generate both versions (for early timepoint with flip)
+  need_both_versions <- config$flip_directions
 
-  # Step 2: Load RNA-seq DEGs
+  # Step 2: Load RNA-seq DEGs (same for both versions)
   cat("\n[Step 2] Loading RNA-seq DEGs...\n")
   deg_df <- load_rnaseq_degs(config$rna_file)
 
-  # Step 3: Convert gene symbols to Entrez IDs
+  # Step 3: Convert gene symbols to Entrez IDs (same for both versions)
   cat("\n[Step 3] Converting gene symbols to Entrez IDs...\n")
   id_mapping <- convert_symbols_to_entrez(deg_df$gene_symbol)
 
-  # Step 4: Find genes associated with boundaries (GREAT-style)
-  cat("\n[Step 4] Finding genes using GREAT-style regulatory domains...\n")
-  gene_boundary_df <- find_boundary_genes(boundaries)
+  results <- list()
 
-  # Step 5: Merge with RNA-seq data
-  cat("\n[Step 5] Merging with RNA-seq expression data...\n")
-  plot_data <- merge_deg_boundaries(gene_boundary_df, deg_df, id_mapping)
+  if (need_both_versions) {
+    # For early timepoint: generate BOTH flipped and original versions
+    for (version in c("flipped", "original")) {
+      flip <- (version == "flipped")
+      cat("\n")
+      cat(sprintf("------ Generating %s version (flip=%s) ------\n", toupper(version), flip))
 
-  # Check if we have data to plot
-  if (nrow(plot_data) == 0) {
-    warning(sprintf("No genes found near differential boundaries for %s timepoint", timepoint))
-    return(NULL)
+      # Step 1: Load TAD boundaries with appropriate flip setting
+      cat("\n[Step 1] Loading TAD boundaries...\n")
+      boundaries <- load_tad_boundaries(config$tad_file, flip = flip)
+
+      # Step 4: Find genes associated with boundaries (GREAT-style)
+      cat("\n[Step 4] Finding genes using GREAT-style regulatory domains...\n")
+      gene_boundary_df <- find_boundary_genes(boundaries)
+
+      # Step 5: Merge with RNA-seq data
+      cat("\n[Step 5] Merging with RNA-seq expression data...\n")
+      plot_data <- merge_deg_boundaries(gene_boundary_df, deg_df, id_mapping)
+
+      # Check if we have data to plot
+      if (nrow(plot_data) == 0) {
+        warning(sprintf("No genes found near differential boundaries for %s timepoint (%s version)",
+                        timepoint, version))
+        next
+      }
+
+      # Step 6: Create violin plot
+      cat("\n[Step 6] Creating violin plot...\n")
+      title_suffix <- ifelse(flip, " - FLIPPED", " - Original")
+      plot_result <- create_violin_plot(plot_data,
+                                        title = sprintf("DEGs proximal to differential\nTAD boundaries (%s)%s",
+                                                        config$label, title_suffix))
+
+      # Step 7: Save outputs with version suffix
+      cat("\n[Step 7] Saving outputs...\n")
+      suffix <- sprintf("_%s", version)
+      save_outputs(plot_result, plot_data, config$output_dir, timepoint,
+                   flip = flip, suffix = suffix)
+
+      cat("\n")
+      cat(sprintf("Completed %s timepoint (%s version)\n", timepoint, version))
+      cat(sprintf("  Mann-Whitney p-value: %.2e\n", plot_result$test$p.value))
+      cat(sprintf("  Genes near lost: %d, Genes near gained: %d\n",
+                  plot_result$n_lost, plot_result$n_gained))
+
+      results[[version]] <- plot_result
+    }
+
+    # Return the flipped version as primary (it's the corrected one)
+    return(results[["flipped"]])
+
+  } else {
+    # For late timepoint: single version (no flip needed)
+
+    # Step 1: Load TAD boundaries
+    cat("\n[Step 1] Loading TAD boundaries...\n")
+    boundaries <- load_tad_boundaries(config$tad_file, flip = FALSE)
+
+    # Step 4: Find genes associated with boundaries (GREAT-style)
+    cat("\n[Step 4] Finding genes using GREAT-style regulatory domains...\n")
+    gene_boundary_df <- find_boundary_genes(boundaries)
+
+    # Step 5: Merge with RNA-seq data
+    cat("\n[Step 5] Merging with RNA-seq expression data...\n")
+    plot_data <- merge_deg_boundaries(gene_boundary_df, deg_df, id_mapping)
+
+    # Check if we have data to plot
+    if (nrow(plot_data) == 0) {
+      warning(sprintf("No genes found near differential boundaries for %s timepoint", timepoint))
+      return(NULL)
+    }
+
+    # Step 6: Create violin plot
+    cat("\n[Step 6] Creating violin plot...\n")
+    plot_result <- create_violin_plot(plot_data,
+                                      title = sprintf("DEGs proximal to differential\nTAD boundaries (%s)", config$label))
+
+    # Step 7: Save outputs
+    cat("\n[Step 7] Saving outputs...\n")
+    save_outputs(plot_result, plot_data, config$output_dir, timepoint, flip = FALSE, suffix = "")
+
+    cat("\n")
+    cat(sprintf("Completed %s timepoint\n", timepoint))
+    cat(sprintf("  Mann-Whitney p-value: %.2e\n", plot_result$test$p.value))
+    cat(sprintf("  Genes near lost: %d, Genes near gained: %d\n",
+                plot_result$n_lost, plot_result$n_gained))
+
+    return(plot_result)
   }
-
-  # Step 6: Create violin plot
-  cat("\n[Step 6] Creating violin plot...\n")
-  plot_result <- create_violin_plot(plot_data,
-                                    title = sprintf("DEGs proximal to differential\nTAD boundaries (%s)", config$label))
-
-  # Step 7: Save outputs
-  cat("\n[Step 7] Saving outputs...\n")
-  save_outputs(plot_result, plot_data, config$output_dir, timepoint)
-
-  cat("\n")
-  cat(sprintf("Completed %s timepoint\n", timepoint))
-  cat(sprintf("  Mann-Whitney p-value: %.2e\n", plot_result$test$p.value))
-  cat(sprintf("  Genes near lost: %d, Genes near gained: %d\n",
-              plot_result$n_lost, plot_result$n_gained))
-
-  return(plot_result)
 }
 
 # ==============================================================================
