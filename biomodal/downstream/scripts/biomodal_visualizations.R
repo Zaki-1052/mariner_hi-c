@@ -40,6 +40,7 @@ DATA_PATHS <- list(
 # ChIP-seq peak file paths (from peaks/beds/)
 # Use Late timepoint peaks to match the adult BAP1-KO analysis
 CHIP_PEAK_FILES <- list(
+  ctcf     = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/CTCF.bed",
   h3k27ac  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/H3K27acCerebellumLate2.bed",
   h3k27me3 = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/H3K27me3CerebellumLate1.bed",
   h3k4me1  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/H3K4me1CerebellumLate1.bed",
@@ -252,6 +253,7 @@ dmr_to_granges <- function(dmr_df) {
 #' @return data.frame with overlap columns
 compute_chip_overlaps <- function(dmr_gr, chip_peaks) {
   overlaps <- data.frame(
+    CTCF_overlap = countOverlaps(dmr_gr, chip_peaks$ctcf) > 0,
     H3K27ac_overlap = countOverlaps(dmr_gr, chip_peaks$h3k27ac) > 0,
     H3K27me3_overlap = countOverlaps(dmr_gr, chip_peaks$h3k27me3) > 0,
     H3K4me1_overlap = countOverlaps(dmr_gr, chip_peaks$h3k4me1) > 0,
@@ -1454,6 +1456,7 @@ cat("Loading ChIP-seq peak files...\n")
 
 # Load all ChIP-seq peak files
 chip_peaks <- list(
+  ctcf = load_chip_peaks(CHIP_PEAK_FILES$ctcf, "CTCF"),
   h3k27ac = load_chip_peaks(CHIP_PEAK_FILES$h3k27ac, "H3K27ac"),
   h3k27me3 = load_chip_peaks(CHIP_PEAK_FILES$h3k27me3, "H3K27me3"),
   h3k4me1 = load_chip_peaks(CHIP_PEAK_FILES$h3k4me1, "H3K4me1"),
@@ -1494,6 +1497,8 @@ if (any(sapply(chip_peaks, is.null))) {
   mc_overlaps <- compute_chip_overlaps(mc_gr, chip_peaks)
 
   cat("  Overlap summary:\n")
+  cat(sprintf("    CTCF:     %d DMRs (%.1f%%)\n",
+              sum(mc_overlaps$CTCF_overlap), 100 * mean(mc_overlaps$CTCF_overlap)))
   cat(sprintf("    H3K27ac:  %d DMRs (%.1f%%)\n",
               sum(mc_overlaps$H3K27ac_overlap), 100 * mean(mc_overlaps$H3K27ac_overlap)))
   cat(sprintf("    H3K27me3: %d DMRs (%.1f%%)\n",
@@ -1510,6 +1515,7 @@ if (any(sapply(chip_peaks, is.null))) {
   mc_sig$chromatin_state <- classify_chromatin_state(mc_overlaps, distance_to_tss, TSS_THRESHOLD)
 
   # Add overlap columns to dataframe
+  mc_sig$CTCF_overlap <- mc_overlaps$CTCF_overlap
   mc_sig$H3K27ac_overlap <- mc_overlaps$H3K27ac_overlap
   mc_sig$H3K27me3_overlap <- mc_overlaps$H3K27me3_overlap
   mc_sig$H3K4me1_overlap <- mc_overlaps$H3K4me1_overlap
@@ -1635,6 +1641,7 @@ if (any(sapply(chip_peaks, is.null))) {
   mark_overlap <- mc_sig %>%
     group_by(direction) %>%
     summarise(
+      CTCF = 100 * mean(CTCF_overlap),
       H3K27ac = 100 * mean(H3K27ac_overlap),
       H3K27me3 = 100 * mean(H3K27me3_overlap),
       H3K4me1 = 100 * mean(H3K4me1_overlap),
@@ -1647,6 +1654,7 @@ if (any(sapply(chip_peaks, is.null))) {
   # Add overall row
   mark_overall <- mc_sig %>%
     summarise(
+      CTCF = 100 * mean(CTCF_overlap),
       H3K27ac = 100 * mean(H3K27ac_overlap),
       H3K27me3 = 100 * mean(H3K27me3_overlap),
       H3K4me1 = 100 * mean(H3K4me1_overlap),
