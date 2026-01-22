@@ -13,7 +13,13 @@ library(readr)
 
 RESOLUTION <- 10000
 TIMEPOINTS <- c("early", "late")
-BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+
+# Detect environment: use HPC path if on Expanse, otherwise use current working directory
+if (dir.exists("/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads")) {
+  BASE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads"
+} else {
+  BASE_DIR <- getwd()
+}
 
 # Two blacklist files: lab-specific and ENCODE standard (union both)
 BLACKLIST_LAB <- file.path(BASE_DIR, "250123blacklist.bed")
@@ -102,6 +108,26 @@ for (timepoint in TIMEPOINTS) {
   results <- read_tsv(input_file, show_col_types = FALSE)
   n_before <- nrow(results)
   cat("  Loaded", n_before, "boundaries\n")
+
+  # DIRECTION FIX: Early timepoint has reversed matrix labels in TADCompare input
+  # The source .hic files or extracted matrices had ctrl/mut swapped upstream
+  # Fix by swapping Enriched_In values: Matrix 1 <-> Matrix 2
+  if (timepoint == "early") {
+    cat("  Applying direction correction (early timepoint matrix labels were reversed)...\n")
+    n_matrix1_before <- sum(results$Enriched_In == "Matrix 1", na.rm = TRUE)
+    n_matrix2_before <- sum(results$Enriched_In == "Matrix 2", na.rm = TRUE)
+
+    results <- results %>%
+      mutate(
+        Enriched_In = case_when(
+          Enriched_In == "Matrix 1" ~ "Matrix 2",
+          Enriched_In == "Matrix 2" ~ "Matrix 1",
+          TRUE ~ Enriched_In
+        )
+      )
+
+    cat("    Swapped Matrix 1 (", n_matrix1_before, ") <-> Matrix 2 (", n_matrix2_before, ")\n")
+  }
 
   # Apply blacklist filter
   keep <- filter_boundaries_by_blacklist(results, blacklist, RESOLUTION)

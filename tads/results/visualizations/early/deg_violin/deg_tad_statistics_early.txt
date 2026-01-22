@@ -1,8 +1,9 @@
 ===========================================
 DEG-TAD Boundary Analysis: early
+(ORIGINAL DIRECTIONS)
 ===========================================
 
-Date: 2026-01-20 19:13:09.960469
+Date: 2026-01-21 22:08:34.677783
 
 --- METHODOLOGY ---
 Gene-boundary association: GREAT-style regulatory domains
@@ -10,36 +11,36 @@ Gene-boundary association: GREAT-style regulatory domains
   Max extension: 100kb (stops at neighboring gene's basal domain)
 DEG thresholds: padj < 0.05 AND |log2FC| > 0.3
 
-Boundary classification verified:
+Boundary classification (standard mapping):
   Matrix 1 = Control (cont_mat1 = ctrl_mat in TADCompare)
   'Enriched_In = Matrix 1' -> 'lost' (stronger in control, weaker in mutant)
   'Enriched_In = Matrix 2' -> 'gained' (stronger in mutant)
 
 --- GENE COUNTS ---
 Total genes near differential boundaries: 183
-  Genes near LOST boundaries: 70
-  Genes near GAINED boundaries: 113
+  Genes near LOST boundaries: 113
+  Genes near GAINED boundaries: 70
 
 --- LOG2FC STATISTICS ---
 
 LOST boundaries (Control-enriched):
-  Median log2FC: -0.473
-  Mean log2FC: -0.322
-  SD: 0.827
-  Range: [-1.746, 2.101]
-
-GAINED boundaries (Mutant-enriched):
   Median log2FC: -0.580
   Mean log2FC: -0.501
   SD: 0.859
   Range: [-3.000, 3.203]
 
+GAINED boundaries (Mutant-enriched):
+  Median log2FC: -0.473
+  Mean log2FC: -0.322
+  SD: 0.827
+  Range: [-1.746, 2.101]
+
 --- STATISTICAL TEST ---
 Mann-Whitney U test (Wilcoxon rank-sum):
-  W statistic: 3502
+  W statistic: 4408
   p-value: 1.93e-01
   Significant (p < 0.05): NO
 
 --- INTERPRETATION ---
-Genes near LOST boundaries do NOT show lower expression in mutant
+Genes near LOST boundaries show LOWER expression in mutant (as expected from SATB2)
 ===========================================

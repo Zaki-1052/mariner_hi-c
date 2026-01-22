@@ -48,22 +48,21 @@ GREAT_DOWNSTREAM <- 1000        # 1kb downstream of TSS
 GREAT_MAX_EXTENSION <- 100000   # 100kb maximum extension
 
 # Timepoint-specific file mappings
-# NOTE: Early timepoint has reversed matrix labeling in TADCompare output
-# (Matrix 1/Matrix 2 meanings are flipped). We generate both versions for comparison.
+# NOTE: Early timepoint direction correction is now applied upstream in 05_filter_blacklist.R
 TIMEPOINT_CONFIG <- list(
   late = list(
     tad_file = file.path(BASE_DIR, "results/late/final/tadcompare_final_filtered.tsv"),
     rna_file = file.path(BASE_DIR, "adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx"),
     output_dir = file.path(BASE_DIR, "results/visualizations/late/deg_violin"),
     label = "Late (Adult)",
-    flip_directions = FALSE  # Late timepoint: Matrix 1 = Control, Matrix 2 = Mutant (correct)
+    flip_directions = FALSE
   ),
   early = list(
     tad_file = file.path(BASE_DIR, "results/early/final/tadcompare_final_filtered.tsv"),
     rna_file = file.path(BASE_DIR, "young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),
     output_dir = file.path(BASE_DIR, "results/visualizations/early/deg_violin"),
     label = "Early (Young)",
-    flip_directions = TRUE   # Early timepoint: Matrix labels reversed, need to flip lost/gained
+    flip_directions = FALSE  # Correction now applied upstream in 05_filter_blacklist.R
   )
 )
 
