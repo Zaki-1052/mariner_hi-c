@@ -1,0 +1,79 @@
+#!/bin/bash
+#SBATCH --job-name=bedgraph_conversion
+#SBATCH --output=logs/beds_to_bg_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=24G
+#SBATCH --time=8:00:00
+#SBATCH --account=csd940
+
+# Create logs directory
+mkdir -p logs
+
+echo "========================================="
+echo "DMR BED to bedGraph Conversion"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Change to working directory
+cd /expanse/lustre/projects/csd940/zalibhai/biomodal/modality
+
+# Create output directory for bedGraph files
+BEDGRAPH_DIR="outputs/bedgraph"
+mkdir -p "${BEDGRAPH_DIR}"
+
+# Find all DMR BED files
+echo "Finding DMR BED files..."
+BED_FILES=$(find outputs -name "DMR_*.bed" -type f)
+TOTAL=$(echo "${BED_FILES}" | wc -l)
+echo "Found ${TOTAL} BED files to convert"
+echo ""
+
+# Process each BED file
+COUNT=0
+for BED in ${BED_FILES}; do
+    COUNT=$((COUNT + 1))
+
+    # Extract meaningful name from path
+    RUN=$(echo "${BED}" | grep -oP 'run-\d+')
+    CONTEXT=$(echo "${BED}" | grep -oP 'outputs_\K[^/]+')
+    REGION=$(basename $(dirname $(dirname "${BED}")) | sed 's/gencode.vM25.mouse.//' | sed 's/.annotation//')
+    BASENAME=$(basename "${BED}" .bed)
+
+    # Output bedGraph name
+    OUTNAME="${RUN}_${CONTEXT}_${REGION}_${BASENAME}"
+    BEDGRAPH="${BEDGRAPH_DIR}/${OUTNAME}.bedGraph"
+
+    echo "[${COUNT}/${TOTAL}] Processing: ${BED}"
+    echo "  Output: ${BEDGRAPH}"
+
+    # Convert BED to bedGraph
+    # Skip header, add chr prefix, extract chr/start/end/mod_difference (col 9)
+    tail -n +2 "${BED}" | \
+        awk -F'\t' '$9 != "" && $9 != "nan" && $9 != "inf" && $9 != "-inf" {
+            print "chr"$1, $2, $3, $9
+        }' OFS='\t' | \
+        sort -k1,1 -k2,2n > "${BEDGRAPH}"
+
+    if [ -s "${BEDGRAPH}" ]; then
+        echo "  Done"
+    else
+        echo "  WARNING: Empty output, skipping"
+        rm -f "${BEDGRAPH}"
+    fi
+
+    echo ""
+done
+
+echo "========================================="
+echo "Conversion complete"
+echo "bedGraph files saved to: ${BEDGRAPH_DIR}/"
+echo "Total files: $(ls -1 ${BEDGRAPH_DIR}/*.bedGraph 2>/dev/null | wc -l)"
+echo "End time: $(date)"
+echo "========================================="
