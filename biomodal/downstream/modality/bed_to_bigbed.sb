@@ -1,0 +1,130 @@
+#!/bin/bash
+#SBATCH --job-name=bigbed_conversion
+#SBATCH --output=logs/beds_to_bb_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=24G
+#SBATCH --time=8:00:00
+#SBATCH --account=csd940
+
+# Create logs directory
+mkdir -p logs
+
+echo "========================================="
+echo "DMR BED to BigBed Conversion"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# Activate conda environment
+source ~/.bashrc
+conda activate modality
+
+# Change to working directory
+cd /expanse/lustre/projects/csd940/zalibhai/biomodal/modality
+
+# Create output directory for BigBed files
+BIGBED_DIR="outputs/bigbed"
+mkdir -p "${BIGBED_DIR}"
+
+# Get mm10 chromosome sizes if not present
+CHROM_SIZES="mm10.chrom.sizes"
+if [ ! -f "${CHROM_SIZES}" ]; then
+    echo "Downloading mm10 chromosome sizes..."
+    fetchChromSizes mm10 > "${CHROM_SIZES}"
+fi
+
+# Create AutoSql file describing DMR BED format
+cat > "${BIGBED_DIR}/dmr.as" << 'EOF'
+table dmr
+"Differentially Methylated Region from modality XPLR"
+    (
+    string chrom;        "Chromosome"
+    uint chromStart;     "Start position"
+    uint chromEnd;       "End position"
+    string name;         "Annotation"
+    uint score;          "Score (scaled -log10 qvalue, 0-1000)"
+    char[1] strand;      "Strand"
+    float modDiff;       "Methylation difference (mutant - control)"
+    float qvalue;        "Adjusted p-value (FDR)"
+    float foldChange;    "Fold change"
+    )
+EOF
+
+# Find all DMR BED files
+echo "Finding DMR BED files..."
+BED_FILES=$(find outputs -name "DMR_*.bed" -type f)
+TOTAL=$(echo "${BED_FILES}" | wc -l)
+echo "Found ${TOTAL} BED files to convert"
+echo ""
+
+# Process each BED file
+COUNT=0
+for BED in ${BED_FILES}; do
+    COUNT=$((COUNT + 1))
+
+    # Extract meaningful name from path
+    RUN=$(echo "${BED}" | grep -oP 'run-\d+')
+    CONTEXT=$(echo "${BED}" | grep -oP 'outputs_\K[^/]+')
+    REGION=$(basename $(dirname $(dirname "${BED}")) | sed 's/gencode.vM25.mouse.//' | sed 's/.annotation//')
+    BASENAME=$(basename "${BED}" .bed)
+
+    # Output BigBed name
+    OUTNAME="${RUN}_${CONTEXT}_${REGION}_${BASENAME}"
+    TMPBED="${BIGBED_DIR}/${OUTNAME}.tmp.bed"
+    BIGBED="${BIGBED_DIR}/${OUTNAME}.bb"
+
+    echo "[${COUNT}/${TOTAL}] Processing: ${BED}"
+    echo "  Output: ${BIGBED}"
+
+    # Convert DMR BED to BigBed-compatible format
+    # Columns: chr, start, end, name, score, strand, modDiff, qvalue, foldChange
+    # Score = -log10(qvalue) scaled to 0-1000 for IGV color intensity
+    tail -n +2 "${BED}" | \
+        awk -F'\t' '
+        $9 != "" && $9 != "nan" && $12 != "" && $12 != "nan" {
+            # Scale -log10(qvalue) to 0-1000 score
+            qval = $12 + 0
+            if (qval <= 0) qval = 1e-10
+            score = int(-log(qval)/log(10) * 100)
+            if (score > 1000) score = 1000
+            if (score < 0) score = 0
+
+            # Handle missing/invalid fold change
+            fc = ($8 == "" || $8 == "nan" || $8 == "inf" || $8 == "-inf") ? 1 : $8
+
+            print "chr"$1, $2, $3, $13, score, ".", $9, $12, fc
+        }' OFS='\t' | \
+        sort -k1,1 -k2,2n > "${TMPBED}"
+
+    # Check if temp BED has content
+    if [ -s "${TMPBED}" ]; then
+        bedToBigBed -type=bed6+3 -as="${BIGBED_DIR}/dmr.as" "${TMPBED}" "${CHROM_SIZES}" "${BIGBED}" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            echo "  Done"
+        else
+            # Fallback: try without AutoSql (simple BED6)
+            awk -F'\t' '{print $1,$2,$3,$4,$5,$6}' OFS='\t' "${TMPBED}" > "${TMPBED}.bed6"
+            bedToBigBed "${TMPBED}.bed6" "${CHROM_SIZES}" "${BIGBED}"
+            rm -f "${TMPBED}.bed6"
+            echo "  Done (BED6 fallback)"
+        fi
+        rm -f "${TMPBED}"
+    else
+        echo "  WARNING: Empty BED, skipping"
+        rm -f "${TMPBED}"
+    fi
+
+    echo ""
+done
+
+echo "========================================="
+echo "Conversion complete"
+echo "BigBed files saved to: ${BIGBED_DIR}/"
+echo "End time: $(date)"
+echo "========================================="
