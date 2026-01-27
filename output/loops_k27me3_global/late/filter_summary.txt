@@ -1,0 +1,64 @@
+=== H3K27me3-Filtered Loop Distance Analysis (GLOBAL) Summary ===
+Generated: 2026-01-26 18:10:17 
+Timepoint: late 
+
+GLOBAL ANALYSIS: Comparing ALL loops by logFC sign
+  Ctrl-biased: logFC < 0 (higher signal in control)
+  Mut-biased:  logFC > 0 (higher signal in mutant)
+
+Input file: 25042-late_outputs/merged_loops/merged_all_results.tsv 
+ChIP-seq peaks:
+  H3K27me3: peaks/beds/H3K27me3CerebellumLate1.bed 
+  Bivalent: peaks/beds/Bivalent_Cerebellum_Late.bed 
+
+=== Subset Statistics ===
+
+--- All Loops ---
+  Total loops: 39344
+  Ctrl-biased: 20443 (52.0%)
+  Mut-biased: 18901 (48.0%)
+  Median distance (Ctrl-biased): 270.0 kb
+  Median distance (Mut-biased): 225.0 kb
+  Median ratio (Ctrl/Mut): 1.20
+  KS test p-value: 3.55e-42
+  Wilcoxon p-value: 1.13e-36
+
+--- K27me3-Anchored ---
+  Total loops: 7210
+  Ctrl-biased: 2429 (33.7%)
+  Mut-biased: 4781 (66.3%)
+  Median distance (Ctrl-biased): 460.0 kb
+  Median distance (Mut-biased): 300.0 kb
+  Median ratio (Ctrl/Mut): 1.53
+  KS test p-value: 7.14e-48
+  Wilcoxon p-value: 1.44e-70
+
+--- K27me3-K27me3 (Both) ---
+  Total loops: 1474
+  Ctrl-biased: 395 (26.8%)
+  Mut-biased: 1079 (73.2%)
+  Median distance (Ctrl-biased): 675.0 kb
+  Median distance (Mut-biased): 300.0 kb
+  Median ratio (Ctrl/Mut): 2.25
+  KS test p-value: 3.46e-31
+  Wilcoxon p-value: 2.31e-39
+
+--- Bivalent ---
+  Total loops: 795
+  Ctrl-biased: 353 (44.4%)
+  Mut-biased: 442 (55.6%)
+  Median distance (Ctrl-biased): 350.0 kb
+  Median distance (Mut-biased): 325.0 kb
+  Median ratio (Ctrl/Mut): 1.08
+  KS test p-value: 3.53e-03
+  Wilcoxon p-value: 4.13e-02
+
+=== Interpretation ===
+
+If Ctrl-biased loops (logFC < 0) have longer median distances than
+Mut-biased loops (logFC > 0), this suggests the distance shift pattern
+is visible even at a global scale across ALL loops, not just the
+significantly differential ones.
+
+This supports the hypothesis that BAP1-KO globally affects long-range
+chromatin architecture, particularly at H3K27me3-marked regions.

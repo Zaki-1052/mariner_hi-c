@@ -1,0 +1,64 @@
+=== H3K27me3-Filtered Loop Distance Analysis (GLOBAL) Summary ===
+Generated: 2026-01-26 18:12:42 
+Timepoint: early 
+
+GLOBAL ANALYSIS: Comparing ALL loops by logFC sign
+  Ctrl-biased: logFC < 0 (higher signal in control)
+  Mut-biased:  logFC > 0 (higher signal in mutant)
+
+Input file: 250831-early_outputs/merged_loops/merged_all_results.tsv 
+ChIP-seq peaks:
+  H3K27me3: peaks/beds/H3K27me3CerebellumEarly1.bed 
+  Bivalent: peaks/beds/Bivalent_Cerebellum_Early.bed 
+
+=== Subset Statistics ===
+
+--- All Loops ---
+  Total loops: 39124
+  Ctrl-biased: 20324 (51.9%)
+  Mut-biased: 18800 (48.1%)
+  Median distance (Ctrl-biased): 300.0 kb
+  Median distance (Mut-biased): 280.0 kb
+  Median ratio (Ctrl/Mut): 1.07
+  KS test p-value: 1.90e-07
+  Wilcoxon p-value: 7.29e-07
+
+--- K27me3-Anchored ---
+  Total loops: 8607
+  Ctrl-biased: 4153 (48.3%)
+  Mut-biased: 4454 (51.7%)
+  Median distance (Ctrl-biased): 425.0 kb
+  Median distance (Mut-biased): 310.0 kb
+  Median ratio (Ctrl/Mut): 1.37
+  KS test p-value: 2.63e-33
+  Wilcoxon p-value: 1.88e-36
+
+--- K27me3-K27me3 (Both) ---
+  Total loops: 1891
+  Ctrl-biased: 1031 (54.5%)
+  Mut-biased: 860 (45.5%)
+  Median distance (Ctrl-biased): 775.0 kb
+  Median distance (Mut-biased): 290.0 kb
+  Median ratio (Ctrl/Mut): 2.67
+  KS test p-value: 3.45e-57
+  Wilcoxon p-value: 2.46e-55
+
+--- Bivalent ---
+  Total loops: 2236
+  Ctrl-biased: 1233 (55.1%)
+  Mut-biased: 1003 (44.9%)
+  Median distance (Ctrl-biased): 360.0 kb
+  Median distance (Mut-biased): 340.0 kb
+  Median ratio (Ctrl/Mut): 1.06
+  KS test p-value: 2.97e-02
+  Wilcoxon p-value: 8.82e-01
+
+=== Interpretation ===
+
+If Ctrl-biased loops (logFC < 0) have longer median distances than
+Mut-biased loops (logFC > 0), this suggests the distance shift pattern
+is visible even at a global scale across ALL loops, not just the
+significantly differential ones.
+
+This supports the hypothesis that BAP1-KO globally affects long-range
+chromatin architecture, particularly at H3K27me3-marked regions.
