@@ -1,0 +1,44 @@
+===========================================
+DEG-Loop Anchor Analysis: Late (Adult)
+Analysis Type: polycomb
+===========================================
+
+Date: 2026-01-28 18:35:39.378621
+
+--- METHODOLOGY ---
+Gene-anchor association: GREAT-style regulatory domains
+  Basal domain: 5kb upstream, 1kb downstream of TSS
+  Max extension: 100kb (stops at neighboring gene's basal domain)
+DEG thresholds: padj < 0.05 AND |log2FC| > 0.3
+
+--- DIRECTION INTERPRETATION ---
+  'lost' = down_in_mutant = loop weaker in BAP1-KO
+  'gained' = up_in_mutant = loop stronger in BAP1-KO
+
+--- GENE COUNTS ---
+Total DEGs near differential anchors: 39
+  DEGs near LOST anchors: 6
+  DEGs near GAINED anchors: 33
+
+--- LOG2FC STATISTICS: LOST ANCHORS ---
+  Median log2FC: 0.543
+  Mean log2FC: 0.605
+  SD: 0.716
+  Range: [-0.398, 1.817]
+
+--- LOG2FC STATISTICS: GAINED ANCHORS ---
+  Median log2FC: 0.568
+  Mean log2FC: 0.693
+  SD: 1.106
+  Range: [-2.751, 2.448]
+
+--- STATISTICAL TEST ---
+Mann-Whitney U test (Wilcoxon rank-sum):
+  W statistic: 106
+  p-value: 8.00e-01
+  Significant (p < 0.05): NO
+
+--- INTERPRETATION ---
+Median difference (lost - gained): -0.025
+Genes near LOST anchors show LOWER expression in mutant (as expected from SATB2)
+===========================================
