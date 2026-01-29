@@ -1,0 +1,62 @@
+- default chip seeker annotations
+- differential reads - plot across gene body
+- plot around tss
+- length of gene body
+- heterochromatin 
+- h27me1 - gene body - 
+
+hic:
+-  loop switching mechanism
+- long range to short range polycomb loops
+- if happening at same sites
+- have to prove same exact sites that lost are same that gained
+- violin plot - genes around lost long range genes gained short
+- shared anchor - might change
+- are expression of those changing
+- tad boundary changing?
+- k27ac k27me3 - atac-seq
+- k27me3 forming polycomb loops - with closer contact in mutant
+- not interacting as much with closer contact
+- classify anchors - bed file 
+- long range anchors - with short range gained
+- aggregate heatmaps from that
+- polycomb story 
+- as lose k27me3 - gaining contacts - hopefully
+- characterize anchors lost vs gained
+- that are polycomb associated
+- thru the genes, heatmap
+- do cdf density - for each histone modification
+- k27ac on one site vs both sites (super enhancer)
+	- + k4me3 - enhancer+promoter loop
+- ctcf: not there anymore - losing checkpoint
+- extrusion - rad21 faulty 
+- cram in hetereochromatin
+- jesse dickson at salk - ctcf
+	- rad21 - ask for assay
+		- rao - ask about tet enzyme assay
+- rad21 likely defunct
+	- more stripe level defects 
+other idea:
+- tie enhancers to respective genes and link to expression changes
+- activity by contact model (abc model)
+- h3k27ac hi-chip - not working
+- use abc model - formula
+- enhancer gene linkages dysregulated tied to diff expressed genes
+- activity times contact 
+- contact k27ac and ub - mediated by which?
+- could classify? not e-p probably
+- repressed region
+- hyppthesis: ub is buffer to stop k27ac contact
+- once reach threshold - now forms contact 
+- correlate - enhancer gene linkage level
+- how much ubiquitinated histone 
+- for every gene - difference in enhancer promoter contacts
+- for promoter diff contact value
+- differential gene expression
+- 1st goal ^^
+- 2nd: tie change in delta contacts to ubiquitinated histone
+- super enhancers to gene due k27ac
+- find a tool for this
+- (btw rao is a hardass)
+- https://pmc.ncbi.nlm.nih.gov/articles/PMC6886585/#F3
+- 

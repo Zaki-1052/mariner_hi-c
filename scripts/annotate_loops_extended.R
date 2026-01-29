@@ -960,7 +960,7 @@ parse_arguments <- function() {
 # STANDALONE EXECUTION
 # =============================================================================
 
-if (!interactive()) {
+if (!interactive() && sys.nframe() == 0) {
   args <- parse_arguments()
 
   # Determine which timepoints to run
