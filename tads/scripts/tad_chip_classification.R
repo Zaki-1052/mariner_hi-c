@@ -184,8 +184,8 @@ compute_chip_overlaps <- function(boundary_gr, chip_peaks_list, ctcf_motif_gr = 
 #'   4. Polycomb:           H3K27me3+ AND >2kb from TSS
 #'   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS
 #'   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
-#'   7. CTCF_Site:          CTCF+ (ChIP for late, motif for early)
-#'   8. Other:              Default (no marks)
+#'   7. CTCF_Site:          CTCF motif+ (DNA motifs for all timepoints)
+#'   8. Other:              Default (no marks, no CTCF motif)
 #'
 #' @param overlaps data.frame with overlap columns
 #' @param distance_to_tss Numeric vector of distances to nearest TSS
@@ -409,13 +409,11 @@ run_tad_chip_classification <- function(timepoint) {
 
   cat("=== Step 6: Classifying Chromatin States (8 categories) ===\n")
 
-  # Early timepoints use CTCF motif, late use CTCF ChIP
-  use_motif_for_ctcf <- timepoint == "early"
-  if (use_motif_for_ctcf) {
-    cat("  CTCF classification: Using motif (early timepoint)\n")
-  } else {
-    cat("  CTCF classification: Using ChIP-seq (late timepoint)\n")
-  }
+  # Use CTCF DNA motifs for ALL timepoints for methodological consistency
+  # DNA motifs are genome-wide sequence features (not timepoint-specific)
+  # ChIP-seq overlap columns are still computed for reference/validation
+  use_motif_for_ctcf <- TRUE
+  cat("  CTCF classification: Using DNA motifs (consistent across timepoints)\n")
 
   chromatin_state <- classify_boundary_chromatin_state(
     overlaps, distance_to_tss,
@@ -1087,11 +1085,9 @@ create_statistics_report <- function(tad_df, timepoint, chip_files, output_file)
               100 * mean(tss_dist > 2000, na.rm = TRUE)))
 
   cat("--- CTCF CLASSIFICATION NOTE ---\n")
-  if (timepoint == "early") {
-    cat("  Used CTCF MOTIF for classification (early timepoint)\n")
-  } else {
-    cat("  Used CTCF ChIP-seq for classification (late timepoint)\n")
-  }
+  cat("  Used CTCF DNA MOTIFS for classification (consistent across all timepoints)\n")
+  cat("  DNA motifs are genome-wide sequence features, not timepoint-specific\n")
+  cat("  CTCF ChIP-seq overlap columns are saved for reference only\n")
   cat("\n")
 
   cat("===========================================\n")
@@ -1126,8 +1122,8 @@ parse_arguments <- function() {
       cat("  4. Polycomb           - H3K27me3+ AND >2kb TSS\n")
       cat("  5. Active_Enhancer    - H3K27ac+ AND >2kb TSS\n")
       cat("  6. Poised_Enhancer    - H3K4me1+ only AND >2kb TSS\n")
-      cat("  7. CTCF_Site          - CTCF+ (ChIP for late, motif for early)\n")
-      cat("  8. Other              - No marks\n")
+      cat("  7. CTCF_Site          - CTCF motif+ (DNA motifs for all timepoints)\n")
+      cat("  8. Other              - No marks, no CTCF motif\n")
       quit(save = "no", status = 0)
     } else {
       i <- i + 1

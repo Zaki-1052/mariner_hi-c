@@ -205,8 +205,8 @@ compute_chip_overlaps <- function(anchor_gr, chip_peaks_list, ctcf_motif_gr = NU
 #'   4. Polycomb:           H3K27me3+ AND >2kb from TSS
 #'   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS
 #'   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
-#'   7. CTCF_Site:          CTCF+ (ChIP for late, motif for early)
-#'   8. Other:              Default (no marks)
+#'   7. CTCF_Site:          CTCF motif+ (DNA motifs for all timepoints)
+#'   8. Other:              Default (no marks, no CTCF motif)
 #'
 #' @param overlaps data.frame with overlap columns
 #' @param distance_to_tss Numeric vector of distances to nearest TSS
@@ -261,19 +261,22 @@ classify_anchor_type_extended <- function(overlaps, distance_to_tss,
     (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   anchor_type[is_poised_enhancer] <- "Poised_Enhancer"
 
-  # 7. CTCF_Site: Use motif for early, ChIP for late
+  # 7. CTCF_Site: Use DNA motifs for ALL timepoints (methodological consistency)
+  # DNA motifs are genome-wide sequence features, not timepoint-specific
   if (use_motif_for_ctcf) {
+    # Motif-based: indicates CTCF binding potential based on DNA sequence
     is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
       !is_bivalent & !is_polycomb & !is_active_enhancer &
       !is_poised_enhancer & ctcf_motif
   } else {
+    # ChIP-based: actual CTCF binding (legacy option, not currently used)
     is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
       !is_bivalent & !is_polycomb & !is_active_enhancer &
       !is_poised_enhancer & ctcf
   }
   anchor_type[is_ctcf_site] <- "CTCF_Site"
 
-  # 8. Other: Default (no marks)
+  # 8. Other: Default (no marks, no CTCF motif)
   return(anchor_type)
 }
 
@@ -457,13 +460,11 @@ run_chip_distance_analysis <- function(timepoint) {
   }
 
   # Classify anchor types using 8-category system
-  # Early timepoints use CTCF motif, late timepoints use CTCF ChIP
-  use_motif_for_ctcf <- timepoint == "early"
-  if (use_motif_for_ctcf) {
-    cat("  CTCF classification: Using motif (early timepoint)\n")
-  } else {
-    cat("  CTCF classification: Using ChIP-seq (late timepoint)\n")
-  }
+  # Use CTCF DNA motifs for ALL timepoints for methodological consistency
+  # DNA motifs are genome-wide sequence features (not timepoint-specific)
+  # ChIP-seq overlap columns are still computed for reference/validation
+  use_motif_for_ctcf <- TRUE
+  cat("  CTCF classification: Using DNA motifs (consistent across timepoints)\n")
 
   anchor1_type <- classify_anchor_type_extended(
     anchor1_overlaps, anchor1_distance_to_tss,
