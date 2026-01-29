@@ -1,0 +1,75 @@
+================================================================================
+BOUNDARY-LOOP CROSS-REFERENCE ANALYSIS REPORT
+Timepoint: Early Timepoint
+Generated: 2026-01-28 19:57:19
+================================================================================
+
+1. DATA SUMMARY
+----------------
+Total differential loops: 165
+  Lost in mutant: 92
+  Gained in mutant: 73
+Median distance to nearest boundary: 74,999 bp
+
+2. DISTANCE DISTRIBUTION (Wilcoxon Test)
+-----------------------------------------
+Lost loops - median distance: 74,999 bp (n=92)
+Gained loops - median distance: 64,999 bp (n=73)
+Wilcoxon p-value: 0.7039
+Effect size (r): 0.030
+
+3. PROXIMITY ENRICHMENT (Fisher's Exact Tests)
+-----------------------------------------------
+Threshold 10kb:
+  Lost near: 35.9% (33/92)
+  Gained near: 20.5% (15/73)
+  OR = 2.15 (95% CI: 1.01-4.75), p = 0.03852*
+
+Threshold 25kb:
+  Lost near: 40.2% (37/92)
+  Gained near: 31.5% (23/73)
+  OR = 1.46 (95% CI: 0.73-2.95), p = 0.2594
+
+Threshold 50kb:
+  Lost near: 47.8% (44/92)
+  Gained near: 42.5% (31/73)
+  OR = 1.24 (95% CI: 0.64-2.42), p = 0.5312
+
+Threshold 100kb:
+  Lost near: 58.7% (54/92)
+  Gained near: 61.6% (45/73)
+  OR = 0.88 (95% CI: 0.45-1.74), p = 0.7503
+
+4. DIRECTION CONCORDANCE
+------------------------
+Contingency table:
+                boundary_enriched
+loop_direction   Matrix 1 Matrix 2
+  down_in_mutant       15       29
+  up_in_mutant         11       20
+
+Concordance rate: 46.7%
+Chi-square p-value: 1
+
+Interpretation:
+  - 'Concordant' = gained loop near mutant-enriched boundary OR
+                   lost loop near control-enriched boundary
+  - Result: Discordant direction (boundary and loop changes do not align)
+
+5. BOUNDARY TYPE ASSOCIATIONS
+-----------------------------
+Merge: OR=0.00 (0.00-3.72), p=0.1676, p_adj=0.4541 [enriched in lost]
+Strength Change: OR=0.47 (0.14-1.50), p=0.188, p_adj=0.4541 [enriched in lost]
+Complex: OR=2.16 (0.62-8.79), p=0.2725, p_adj=0.4541 [enriched in gained]
+Split: OR=1.34 (0.43-4.35), p=0.6161, p_adj=0.7702 [enriched in gained]
+Shifted: OR=1.15 (0.29-5.02), p=1, p_adj=1 [enriched in gained]
+
+Biological interpretation:
+  - Split boundaries: TAD subdivided → may disrupt existing contacts
+  - Merge boundaries: TADs fused → may create new contacts
+  - Shifted boundaries: Position moved → loop redistribution
+  - Strength Change: Boundary weakened/strengthened → subtle modulation
+
+================================================================================
+END OF REPORT
+================================================================================
