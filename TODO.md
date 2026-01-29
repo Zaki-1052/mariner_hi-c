@@ -151,7 +151,7 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 - [x] **6a. TADCompare differential boundary analysis.** -> `tads/scripts/02_run_tadcompare.R` through `05_filter_blacklist.R`
 - [x] **6b. DEG violin plot at TAD boundaries.** -> `tads/scripts/deg_tad_violin.R`
-- [ ] **6c. Cross-reference differential loops with differential TAD boundaries.** Are differential loops preferentially located near differential TAD boundaries? Overlap analysis between `characterized_loops.tsv` anchors and `tads/results/{tp}/final/tadcompare_final_filtered.tsv` boundaries.
+- [x] **6c. Cross-reference differential loops with differential TAD boundaries.** Are differential loops preferentially located near differential TAD boundaries? Overlap analysis between `characterized_loops.tsv` anchors and `tads/results/{tp}/final/tadcompare_final_filtered.tsv` boundaries. -> `tads/scripts/boundary_loop_crossref.R` (Late: 69.6% concordance, p<0.001; Merge boundaries enriched in lost loops OR=0.32, Strength Change enriched in gained loops OR=2.11)
 
 ### Existing resources
 
@@ -225,7 +225,7 @@ Based on meeting notes emphasis and data availability:
 | 4 | Per-mark CDF/density subsetting (Section 4) | Yes | **COMPLETE** (`scripts/loop_distance_mark_filtered.R` all 5 marks) |
 | 5 | ABC model / E-P linkage (Section 7) | Yes (except H2AK119ub) | No |
 | 6 | CTCF analysis (Section 5) | Yes (CTCF peaks), No (RAD21) | No |
-| 7 | TAD-loop cross-reference (Section 6) | Yes | No |
+| 7 | TAD-loop cross-reference (Section 6) | Yes | **COMPLETE** (`tads/scripts/boundary_loop_crossref.R`) |
 | 8 | H2AK119ub integration (Section 8) | No | No |
 
 ---
