@@ -1,7 +1,7 @@
 ================================================================================
 BOUNDARY-LOOP CROSS-REFERENCE ANALYSIS REPORT
 Timepoint: Late Timepoint
-Generated: 2026-01-28 19:54:32
+Generated: 2026-01-28 22:39:31
 ================================================================================
 
 1. DATA SUMMARY
@@ -40,7 +40,28 @@ Threshold 100kb:
   Gained near: 56.5% (955/1691)
   OR = 1.41 (95% CI: 1.21-1.65), p = 1.016e-05*
 
-4. DIRECTION CONCORDANCE
+4. PERMUTATION TEST (Enrichment vs Null)
+-----------------------------------------
+Number of permutations: 1000
+
+Threshold 10kb:
+  Observed proportion near boundary: 0.306
+  Null expectation (mean ± SD): 0.147 ± 0.010
+  Fold enrichment over null: 2.08
+  Permutation p-value: 0.000999*
+
+Threshold 25kb:
+  Observed proportion near boundary: 0.385
+  Null expectation (mean ± SD): 0.232 ± 0.012
+  Fold enrichment over null: 1.66
+  Permutation p-value: 0.000999*
+
+Interpretation:
+  - Fold enrichment > 1 indicates loops are closer to differential boundaries
+    than expected by chance
+  - Permutation p-value tests if observed proximity exceeds null distribution
+
+5. DIRECTION CONCORDANCE
 ------------------------
 Contingency table:
                 boundary_enriched
@@ -56,7 +77,7 @@ Interpretation:
                    lost loop near control-enriched boundary
   - Result: Concordant direction (boundary and loop changes align)
 
-5. BOUNDARY TYPE ASSOCIATIONS
+6. BOUNDARY TYPE ASSOCIATIONS
 -----------------------------
 Merge: OR=0.32 (0.24-0.43), p=4.691e-16, p_adj=2.345e-15* [enriched in lost]
 Strength Change: OR=2.11 (1.68-2.67), p=7.471e-11, p_adj=1.868e-10* [enriched in gained]

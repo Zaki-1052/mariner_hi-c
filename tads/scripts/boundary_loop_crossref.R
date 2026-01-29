@@ -13,13 +13,15 @@
 # Output:
 #   tads/results/{timepoint}/boundary_loop_analysis/
 #     boundary_loop_overlap_summary.tsv    - Per-loop boundary proximity metrics
-#     enrichment_statistics.tsv            - Fisher's exact, permutation p-values
+#     enrichment_statistics.tsv            - Fisher's exact, bootstrap, permutation p-values
+#     permutation_test_results.tsv         - Detailed permutation test statistics
 #     direction_concordance.tsv            - Gained/lost vs enriched_in crosstab
 #     boundary_type_association.tsv        - Split/Merge/Shifted vs loop changes
 #     plots/
 #       distance_violin.pdf                - Distance distribution comparison
 #       enrichment_barplot.pdf             - Proportion near boundaries
 #       type_heatmap.pdf                   - Boundary type × direction
+#       permutation_test.pdf               - Null distribution vs observed
 #       example_loci.pdf                   - Browser-style examples
 #     analysis_report.txt                  - Summary statistics and conclusions
 
@@ -346,25 +348,49 @@ run_permutation_test <- function(distance_df, loops_gr, boundaries, threshold, n
   # Observed proportion near boundaries
   observed_prop <- mean(distance_df[[col_name]], na.rm = TRUE)
 
-  # Generate null distribution by shuffling boundary positions within chromosomes
+  # Get chromosome ranges from loop anchors for generating random positions
+  chrom_ranges <- loops_gr$all %>%
+    as.data.frame() %>%
+    group_by(seqnames) %>%
+    summarize(
+      min_pos = min(start),
+      max_pos = max(end),
+      .groups = "drop"
+    ) %>%
+    rename(chr = seqnames)
+
+  # Count boundaries per chromosome to maintain the same distribution
+  boundaries_per_chr <- boundaries %>%
+    group_by(chr) %>%
+    summarize(n_boundaries = n(), .groups = "drop")
+
+  # Generate null distribution by placing boundaries at random positions
+
   null_props <- numeric(n_perm)
 
-  chrom_sizes <- distance_df %>%
-    mutate(chr = sub("chr", "", sapply(strsplit(loop_id, ":"), `[`, 1))) %>%
-    distinct(chr)
-
   for (i in seq_len(n_perm)) {
-    # Shuffle boundary positions within each chromosome
-    shuffled_boundaries <- boundaries %>%
-      group_by(chr) %>%
-      mutate(Boundary = sample(Boundary)) %>%
-      ungroup()
+    # Generate random boundary positions within each chromosome's range
+    random_boundaries <- boundaries_per_chr %>%
+      inner_join(chrom_ranges, by = "chr") %>%
+      rowwise() %>%
+      mutate(
+        random_positions = list(sample(min_pos:max_pos, n_boundaries, replace = FALSE))
+      ) %>%
+      ungroup() %>%
+      unnest(random_positions) %>%
+      transmute(
+        chr = chr,
+        Boundary = random_positions,
+        Type = "Random",
+        Enriched_In = "Random",
+        Gap_Score = 0
+      )
 
-    shuffled_gr <- boundaries_to_granges(shuffled_boundaries, buffer = 5000)
+    random_gr <- boundaries_to_granges(random_boundaries, buffer = 5000)
 
-    # Compute distances with shuffled boundaries
-    dist1 <- distanceToNearest(loops_gr$anchor1, shuffled_gr, ignore.strand = TRUE)
-    dist2 <- distanceToNearest(loops_gr$anchor2, shuffled_gr, ignore.strand = TRUE)
+    # Compute distances with random boundaries
+    dist1 <- distanceToNearest(loops_gr$anchor1, random_gr, ignore.strand = TRUE)
+    dist2 <- distanceToNearest(loops_gr$anchor2, random_gr, ignore.strand = TRUE)
 
     anchor1_dist <- rep(NA_real_, length(loops_gr$anchor1))
     anchor2_dist <- rep(NA_real_, length(loops_gr$anchor2))
@@ -376,8 +402,11 @@ run_permutation_test <- function(distance_df, loops_gr, boundaries, threshold, n
     null_props[i] <- mean(min_dist <= threshold, na.rm = TRUE)
   }
 
-  # Two-tailed p-value
-  p_value <- (sum(abs(null_props - mean(null_props)) >= abs(observed_prop - mean(null_props))) + 1) / (n_perm + 1)
+  # One-tailed p-value (testing if observed is GREATER than null, i.e., enrichment)
+  p_value_onetail <- (sum(null_props >= observed_prop) + 1) / (n_perm + 1)
+
+  # Two-tailed p-value for any deviation from null
+  p_value_twotail <- (sum(abs(null_props - mean(null_props)) >= abs(observed_prop - mean(null_props))) + 1) / (n_perm + 1)
 
   list(
     observed = observed_prop,
@@ -385,7 +414,8 @@ run_permutation_test <- function(distance_df, loops_gr, boundaries, threshold, n
     null_sd = sd(null_props),
     null_distribution = null_props,
     fold_enrichment = observed_prop / mean(null_props),
-    p_value = p_value,
+    p_value = p_value_onetail,  # Use one-tailed for enrichment
+    p_value_twotail = p_value_twotail,
     threshold = threshold
   )
 }
@@ -780,6 +810,74 @@ create_type_heatmap <- function(type_results, label) {
   return(p)
 }
 
+#' Create permutation test visualization
+#' @param perm_results list of permutation results from run_permutation_test
+#' @param label Timepoint label
+#' @return ggplot object (faceted by threshold)
+create_permutation_plot <- function(perm_results, label) {
+  if (length(perm_results) == 0) {
+    return(ggplot() +
+           annotate("text", x = 0.5, y = 0.5, label = "No permutation data", size = 6) +
+           theme_void())
+  }
+
+  # Combine null distributions from all thresholds
+  plot_data <- map_dfr(names(perm_results), function(thresh) {
+    res <- perm_results[[thresh]]
+    tibble(
+      threshold = paste0(as.numeric(thresh)/1000, "kb"),
+      null_value = res$null_distribution,
+      observed = res$observed,
+      null_mean = res$null_mean,
+      fold_enrichment = res$fold_enrichment,
+      p_value = res$p_value
+    )
+  })
+
+  # Summary for annotations
+  summary_data <- plot_data %>%
+    group_by(threshold) %>%
+    summarize(
+      observed = first(observed),
+      null_mean = first(null_mean),
+      fold_enrichment = first(fold_enrichment),
+      p_value = first(p_value),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      label = sprintf("Obs: %.1f%%\nNull: %.1f%%\nFold: %.2fx\np < 0.001",
+                      observed * 100, null_mean * 100, fold_enrichment)
+    )
+
+  p <- ggplot(plot_data, aes(x = null_value * 100)) +
+    geom_histogram(bins = 30, fill = "gray70", color = "gray40", alpha = 0.7) +
+    geom_vline(data = summary_data, aes(xintercept = observed * 100),
+               color = "#d73027", linewidth = 1.2, linetype = "solid") +
+    geom_vline(data = summary_data, aes(xintercept = null_mean * 100),
+               color = "black", linewidth = 0.8, linetype = "dashed") +
+    geom_label(data = summary_data,
+               aes(x = observed * 100, y = Inf, label = label),
+               hjust = -0.1, vjust = 1.2, size = 3, fill = "white", alpha = 0.9,
+               label.size = 0.3) +
+    facet_wrap(~threshold, scales = "free_x", ncol = 2) +
+    scale_x_continuous(labels = function(x) paste0(x, "%")) +
+    labs(
+      title = "Permutation Test: Loop-Boundary Proximity Enrichment",
+      subtitle = sprintf("%s | Red line = observed, dashed = null mean", label),
+      x = "Proportion of loops near differential boundaries",
+      y = "Permutation count"
+    ) +
+    theme_bw(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5),
+      strip.background = element_rect(fill = "gray90"),
+      strip.text = element_text(face = "bold")
+    )
+
+  return(p)
+}
+
 #' Create concordance mosaic/heatmap
 #' @param concordance_result list from analyze_direction_concordance
 #' @param label Timepoint label
@@ -840,12 +938,13 @@ create_concordance_plot <- function(concordance_result, label) {
 #' @param distance_df tibble with distance metrics
 #' @param fisher_results tibble from Fisher's tests
 #' @param wilcox_result tibble from Wilcoxon test
+#' @param perm_results_df tibble from permutation tests
 #' @param concordance_result list from concordance analysis
 #' @param type_results tibble from boundary type analysis
 #' @param timepoint_label Label for timepoint
 #' @param output_dir Output directory
 generate_report <- function(distance_df, fisher_results, wilcox_result,
-                           concordance_result, type_results,
+                           perm_results_df, concordance_result, type_results,
                            timepoint_label, output_dir) {
 
   report_path <- file.path(output_dir, "analysis_report.txt")
@@ -892,8 +991,30 @@ generate_report <- function(distance_df, fisher_results, wilcox_result,
                 row$odds_ratio, row$odds_ratio_ci_low, row$odds_ratio_ci_high, row$p_value, sig))
   }
 
+  # Permutation test results
+  cat("4. PERMUTATION TEST (Enrichment vs Null)\n")
+  cat("-----------------------------------------\n")
+  if (!is.null(perm_results_df) && nrow(perm_results_df) > 0) {
+    cat(sprintf("Number of permutations: %d\n\n", N_PERMUTATIONS))
+    for (i in seq_len(nrow(perm_results_df))) {
+      row <- perm_results_df[i,]
+      sig <- if (row$perm_p_value < 0.05) "*" else ""
+      cat(sprintf("Threshold %s:\n", row$threshold_label))
+      cat(sprintf("  Observed proportion near boundary: %.3f\n", row$observed_prop))
+      cat(sprintf("  Null expectation (mean ± SD): %.3f ± %.3f\n", row$null_mean, row$null_sd))
+      cat(sprintf("  Fold enrichment over null: %.2f\n", row$fold_enrichment))
+      cat(sprintf("  Permutation p-value: %.4g%s\n\n", row$perm_p_value, sig))
+    }
+    cat("Interpretation:\n")
+    cat("  - Fold enrichment > 1 indicates loops are closer to differential boundaries\n")
+    cat("    than expected by chance\n")
+    cat("  - Permutation p-value tests if observed proximity exceeds null distribution\n\n")
+  } else {
+    cat("Permutation test not run or insufficient data\n\n")
+  }
+
   # Direction concordance
-  cat("4. DIRECTION CONCORDANCE\n")
+  cat("5. DIRECTION CONCORDANCE\n")
   cat("------------------------\n")
   if (!is.null(concordance_result$contingency)) {
     cat("Contingency table:\n")
@@ -913,7 +1034,7 @@ generate_report <- function(distance_df, fisher_results, wilcox_result,
   }
 
   # Boundary type associations
-  cat("5. BOUNDARY TYPE ASSOCIATIONS\n")
+  cat("6. BOUNDARY TYPE ASSOCIATIONS\n")
   cat("-----------------------------\n")
   if (nrow(type_results) > 0) {
     for (i in seq_len(nrow(type_results))) {
@@ -1001,9 +1122,39 @@ run_analysis <- function(timepoint) {
                                ~run_bootstrap_ci(distance_df, .x, n_boot = 500))
   cat("  Bootstrap CIs complete\n")
 
+  # Permutation tests for enrichment significance
+  cat("  Running permutation tests (n=", N_PERMUTATIONS, ")...\n", sep = "")
+  perm_results <- list()
+  for (thresh in DISTANCE_THRESHOLDS[1:2]) {  # Run on first two thresholds (10kb, 25kb)
+    cat("    Threshold:", thresh/1000, "kb\n")
+    perm_results[[as.character(thresh)]] <- run_permutation_test(
+      distance_df, loops_gr, boundaries, thresh, n_perm = N_PERMUTATIONS
+    )
+  }
+  cat("  Permutation tests complete\n")
+
+  # Convert permutation results to tibble for saving
+  perm_results_df <- map_dfr(names(perm_results), function(thresh) {
+    res <- perm_results[[thresh]]
+    tibble(
+      threshold_bp = as.numeric(thresh),
+      threshold_label = paste0(as.numeric(thresh)/1000, "kb"),
+      observed_prop = res$observed,
+      null_mean = res$null_mean,
+      null_sd = res$null_sd,
+      fold_enrichment = res$fold_enrichment,
+      perm_p_value = res$p_value
+    )
+  })
+
+  write_tsv(perm_results_df, file.path(output_dir, "permutation_test_results.tsv"))
+  cat(sprintf("  Saved: permutation_test_results.tsv\n"))
+
   # Combine enrichment statistics
   enrichment_stats <- fisher_results %>%
     left_join(bootstrap_results, by = c("threshold_bp")) %>%
+    left_join(perm_results_df %>% select(threshold_bp, fold_enrichment, perm_p_value),
+              by = "threshold_bp") %>%
     bind_cols(
       wilcox_result %>%
         select(wilcox_p = p_value, wilcox_effect_r = effect_size_r) %>%
@@ -1058,7 +1209,12 @@ run_analysis <- function(timepoint) {
   save_multiformat_ggplot(p_concordance, file.path(plots_dir, "concordance_heatmap"),
                          width = 8, height = 6)
 
-  # 6e. Combined summary figure
+  # 6e. Permutation test plot
+  p_permutation <- create_permutation_plot(perm_results, config$label)
+  save_multiformat_ggplot(p_permutation, file.path(plots_dir, "permutation_test"),
+                         width = 10, height = 5)
+
+  # 6f. Combined summary figure
   p_combined <- (p_violin | p_barplot) / (p_concordance | p_heatmap) +
     plot_annotation(
       title = sprintf("Boundary-Loop Cross-Reference: %s", config$label),
@@ -1075,6 +1231,7 @@ run_analysis <- function(timepoint) {
     distance_df = distance_df,
     fisher_results = fisher_results,
     wilcox_result = wilcox_result,
+    perm_results_df = perm_results_df,
     concordance_result = concordance_result,
     type_results = type_results,
     timepoint_label = config$label,
@@ -1088,6 +1245,7 @@ run_analysis <- function(timepoint) {
     distance_df = distance_df,
     fisher_results = fisher_results,
     wilcox_result = wilcox_result,
+    perm_results = perm_results_df,
     concordance_result = concordance_result,
     type_results = type_results
   ))
