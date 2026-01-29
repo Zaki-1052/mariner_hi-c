@@ -44,13 +44,14 @@ source("scripts/utils/multi_format_output.R")
 cat("Loading paths configuration...\n")
 config <- yaml::read_yaml("config/paths_config.yaml")
 
-# Source the ChIP-seq-based annotation script
-source("scripts/annotate_loop_anchors.R")
+# Source the extended ChIP-seq annotation script (7-category system, 5 marks)
+source("scripts/annotate_loops_extended.R")
 
 # Parse command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
 gtf_file <- NULL
 tolerance_kb <- 10
+chip_timepoint <- "late"  # Default: late timepoint peaks from peaks/beds/
 
 if (length(args) > 0) {
   for (i in seq_along(args)) {
@@ -58,12 +59,19 @@ if (length(args) > 0) {
       gtf_file <- args[i + 1]
     } else if (args[i] == "--tolerance" && i < length(args)) {
       tolerance_kb <- as.numeric(args[i + 1])
+    } else if (args[i] == "--timepoint" && i < length(args)) {
+      chip_timepoint <- args[i + 1]
+      if (!chip_timepoint %in% names(PEAK_FILES)) {
+        stop(sprintf("Unknown timepoint: %s. Available: %s",
+                     chip_timepoint, paste(names(PEAK_FILES), collapse = ", ")))
+      }
     }
   }
 }
 
 cat(sprintf("Configuration:\n"))
 cat(sprintf("  Overlap tolerance: %d kb\n", tolerance_kb))
+cat(sprintf("  ChIP-seq timepoint: %s\n", chip_timepoint))
 if (!is.null(gtf_file)) {
   cat(sprintf("  GTF file: %s\n", gtf_file))
 } else {
@@ -999,23 +1007,63 @@ for (i in 1:nrow(merged_loops_df)) {
   }
 }
 
-# --- PROPER ChIP-seq-BASED CLASSIFICATION ---
-# Use the new annotation function with actual H3K27ac and H3K4me1 ChIP-seq data
-cat("\n  Applying ChIP-seq-based anchor classification...\n")
+# --- EXTENDED ChIP-seq-BASED CLASSIFICATION (7 categories, 5 marks) ---
+# Uses annotate_loops_extended.R functions with timepoint-specific peaks from peaks/beds/
+cat(sprintf("\n  Applying extended ChIP-seq anchor classification (%s timepoint)...\n", chip_timepoint))
 
-# Get ChIP-seq file paths from config (P12 early timepoint)
-h3k27ac_path <- config$chipseq_peaks$h3k27ac_p12
-h3k4me1_path <- config$chipseq_peaks$h3k4me1
+peak_files <- PEAK_FILES[[chip_timepoint]]
+cat(sprintf("    H3K27ac:  %s\n", peak_files$h3k27ac))
+cat(sprintf("    H3K27me3: %s\n", peak_files$h3k27me3))
+cat(sprintf("    H3K4me1:  %s\n", peak_files$h3k4me1))
+cat(sprintf("    H3K4me3:  %s\n", peak_files$h3k4me3))
+cat(sprintf("    Bivalent: %s\n", peak_files$bivalent))
 
-cat(sprintf("    H3K27ac peaks (P12): %s\n", h3k27ac_path))
-cat(sprintf("    H3K4me1 peaks: %s\n", h3k4me1_path))
+k27ac_gr  <- load_chip_peaks(peak_files$h3k27ac,  "H3K27ac")
+k27me3_gr <- load_chip_peaks(peak_files$h3k27me3, "H3K27me3")
+k4me1_gr  <- load_chip_peaks(peak_files$h3k4me1,  "H3K4me1")
+k4me3_gr  <- load_chip_peaks(peak_files$h3k4me3,  "H3K4me3")
+bivalent_gr <- load_chip_peaks(peak_files$bivalent, "Bivalent")
 
-merged_loops_df <- annotate_loops_dataframe(
-  loops_df = merged_loops_df,
-  k27ac_path = h3k27ac_path,
-  k4me1_path = h3k4me1_path,
-  tss_threshold = 2000
+# Compute overlaps for both anchors
+anchor1_chip <- annotate_chip_overlaps_extended(anchor1_gr, k27ac_gr, k27me3_gr,
+                                                 k4me1_gr, k4me3_gr, bivalent_gr)
+anchor2_chip <- annotate_chip_overlaps_extended(anchor2_gr, k27ac_gr, k27me3_gr,
+                                                 k4me1_gr, k4me3_gr, bivalent_gr)
+
+# Classify anchor types (7 categories)
+anchor1_type <- classify_anchor_type_extended(
+  anchor1_chip$H3K27ac_overlap, anchor1_chip$H3K27me3_overlap,
+  anchor1_chip$H3K4me1_overlap, anchor1_chip$H3K4me3_overlap,
+  anchor1_chip$Bivalent_Promoter_overlap,
+  merged_loops_df$anchor1_distance_to_tss, tss_threshold = 2000
 )
+anchor2_type <- classify_anchor_type_extended(
+  anchor2_chip$H3K27ac_overlap, anchor2_chip$H3K27me3_overlap,
+  anchor2_chip$H3K4me1_overlap, anchor2_chip$H3K4me3_overlap,
+  anchor2_chip$Bivalent_Promoter_overlap,
+  merged_loops_df$anchor2_distance_to_tss, tss_threshold = 2000
+)
+
+# Classify loop types and add all columns
+loop_type <- classify_loop_type_extended(anchor1_type, anchor2_type)
+
+merged_loops_df$anchor1_H3K27ac_overlap  <- anchor1_chip$H3K27ac_overlap
+merged_loops_df$anchor1_H3K4me1_overlap  <- anchor1_chip$H3K4me1_overlap
+merged_loops_df$anchor1_type             <- anchor1_type
+merged_loops_df$anchor1_is_promoter      <- anchor1_type == "Active_Promoter"
+merged_loops_df$anchor2_H3K27ac_overlap  <- anchor2_chip$H3K27ac_overlap
+merged_loops_df$anchor2_H3K4me1_overlap  <- anchor2_chip$H3K4me1_overlap
+merged_loops_df$anchor2_type             <- anchor2_type
+merged_loops_df$anchor2_is_promoter      <- anchor2_type == "Active_Promoter"
+merged_loops_df$loop_type                <- loop_type
+
+# New mark columns (not present in old 2-mark annotation)
+merged_loops_df$anchor1_H3K27me3_overlap          <- anchor1_chip$H3K27me3_overlap
+merged_loops_df$anchor2_H3K27me3_overlap          <- anchor2_chip$H3K27me3_overlap
+merged_loops_df$anchor1_H3K4me3_overlap           <- anchor1_chip$H3K4me3_overlap
+merged_loops_df$anchor2_H3K4me3_overlap           <- anchor2_chip$H3K4me3_overlap
+merged_loops_df$anchor1_Bivalent_Promoter_overlap <- anchor1_chip$Bivalent_Promoter_overlap
+merged_loops_df$anchor2_Bivalent_Promoter_overlap <- anchor2_chip$Bivalent_Promoter_overlap
 
 cat(sprintf("\n  Gene annotation complete\n"))
 cat(sprintf("  Loops with genes near both anchors: %d (%.1f%%)\n",

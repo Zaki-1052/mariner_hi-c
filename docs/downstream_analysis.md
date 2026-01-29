@@ -45,9 +45,12 @@ outputs/res_25kb/03_binned.rds
 - **TxDb.Mmusculus.UCSC.mm10.knownGene** - Gene models
 - **org.Mm.eg.db** - Gene symbol mappings
 
-**ChIP-seq Peaks (optional but recommended):**
-- `220310index25H3K27acLatePeakRegions.bed` - H3K27ac (active enhancers/promoters)
-- `K4me1_aligned_reads_peaks.broadPeak-filtered.bed` - H3K4me1 (all enhancers)
+**ChIP-seq Peaks (from `peaks/beds/`, timepoint-specific):**
+- `H3K27ac{Tissue}{Timepoint}{Rep}.bed` - H3K27ac (active enhancers/promoters)
+- `H3K27me3{Tissue}{Timepoint}{Rep}.bed` - H3K27me3 (Polycomb repression)
+- `H3K4me1{Tissue}{Timepoint}{Rep}.bed` - H3K4me1 (poised enhancers)
+- `H3K4me3{Tissue}{Timepoint}{Rep}.bed` - H3K4me3 (active promoters)
+- `Bivalent_{Tissue}_{Timepoint}.bed` - K4me3+K27me3 overlap (developmental poised)
 
 ### Data Structure
 

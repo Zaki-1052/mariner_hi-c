@@ -472,12 +472,12 @@ Used in Step 5 to filter boundaries in repetitive/poorly mappable regions. Any b
 
 ### ChIP-seq Peak Files
 
-Located in `../peaks/`:
+Located in `../peaks/beds/`:
 
 | Timepoint | H3K27ac | H3K27me3 | H3K4me1 |
 |-----------|---------|----------|---------|
-| Early | P12_ctrl_H3K27ac_early_peaks.bed | P12_ctrl_H3K27me3_early_peaks.bed | N/A |
-| Late | 220310index25H3K27acLatePeakRegions.bed | 220310index29H3K27me3LatePeakRegions.bed | K4me1_aligned_reads_peaks.broadPeak-filtered.bed |
+| Early | H3K27acCerebellumEarly2.bed | H3K27me3CerebellumEarly1.bed | H3K4me1CerebellumEarly1.bed |
+| Late | H3K27acCerebellumLate2.bed | H3K27me3CerebellumLate1.bed | H3K4me1CerebellumLate1.bed |
 
 ### SLURM Configuration
 
