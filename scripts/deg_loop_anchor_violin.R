@@ -25,6 +25,7 @@
 
 suppressPackageStartupMessages({
   library(tidyverse)
+  library(stringr)  # For loop type classification
   library(readxl)
   library(GenomicRanges)
   library(IRanges)
@@ -51,6 +52,10 @@ GREAT_MAX_EXTENSION <- 100000   # 100kb maximum extension
 
 # Distance thresholds for stratification
 SHORT_RANGE_THRESHOLD <- 500000  # 500kb boundary for short vs long range
+
+# Permutation testing parameters
+N_PERMUTATIONS <- 1000
+PERMUTATION_SEED <- 42  # For reproducibility
 
 # Timepoint-specific file mappings
 TIMEPOINT_CONFIG <- list(
@@ -85,6 +90,34 @@ CHROMATIN_COLORS <- c(
 # ==============================================================================
 # 3. HELPER FUNCTIONS
 # ==============================================================================
+
+#' Save a plot in multiple formats to a named subfolder
+#' @param plot ggplot object
+#' @param output_dir Base output directory
+#' @param plot_name Name of the plot (used as folder name and file basename)
+#' @param width Plot width in inches
+#' @param height Plot height in inches
+#' @param dpi Resolution for raster output
+#' @return Invisible list of saved file paths
+save_plot_multiformat <- function(plot, output_dir, plot_name, width = 7, height = 6, dpi = 300) {
+  # Create subfolder for this plot
+  plot_dir <- file.path(output_dir, plot_name)
+  dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
+
+  # Define file paths
+  pdf_file <- file.path(plot_dir, sprintf("%s.pdf", plot_name))
+  svg_file <- file.path(plot_dir, sprintf("%s.svg", plot_name))
+  jpg_file <- file.path(plot_dir, sprintf("%s.jpg", plot_name))
+
+  # Save in all formats
+  ggsave(pdf_file, plot, width = width, height = height, dpi = dpi)
+  ggsave(svg_file, plot, width = width, height = height, dpi = dpi)
+  ggsave(jpg_file, plot, width = width, height = height, dpi = dpi)
+
+  cat(sprintf("  Saved: %s/\n", plot_dir))
+
+  invisible(list(pdf = pdf_file, svg = svg_file, jpg = jpg_file, dir = plot_dir))
+}
 
 #' Load characterized loops from differential analysis
 #' @param loops_file Path to characterized_loops.tsv
@@ -227,12 +260,12 @@ calculate_great_domains <- function() {
 #' @param loops_df Differential loops tibble
 #' @return GRanges with anchor coordinates and metadata
 extract_loop_anchors <- function(loops_df) {
-  # Extract anchor 1
+  # Extract anchor 1 (include loop_type and rename logFC to logFC_loop)
   anchor1 <- loops_df %>%
     dplyr::select(
       loop_id, chr = chr1, start = start1, end = end1,
-      direction, logFC, FDR, loop_distance, distance_category,
-      anchor_type = anchor1_type
+      direction, logFC_loop = logFC, FDR, loop_distance, distance_category,
+      anchor_type = anchor1_type, loop_type
     ) %>%
     dplyr::mutate(anchor_num = 1)
 
@@ -240,8 +273,8 @@ extract_loop_anchors <- function(loops_df) {
   anchor2 <- loops_df %>%
     dplyr::select(
       loop_id, chr = chr2, start = start2, end = end2,
-      direction, logFC, FDR, loop_distance, distance_category,
-      anchor_type = anchor2_type
+      direction, logFC_loop = logFC, FDR, loop_distance, distance_category,
+      anchor_type = anchor2_type, loop_type
     ) %>%
     dplyr::mutate(anchor_num = 2)
 
@@ -279,7 +312,7 @@ associate_anchors_with_genes <- function(anchors_df, gene_domains) {
     entrez_id = gene_domains$entrez_id
   )
 
-  # Create GRanges for anchors (use midpoint for association)
+  # Create GRanges for anchors (include loop_type and logFC_loop)
   anchor_gr <- GRanges(
     seqnames = anchors_df$chr,
     ranges = IRanges(start = anchors_df$start, end = anchors_df$end),
@@ -287,7 +320,9 @@ associate_anchors_with_genes <- function(anchors_df, gene_domains) {
     boundary_class = anchors_df$boundary_class,
     anchor_type = anchors_df$anchor_type,
     loop_distance = anchors_df$loop_distance,
-    distance_class = anchors_df$distance_class
+    distance_class = anchors_df$distance_class,
+    loop_type = anchors_df$loop_type,
+    logFC_loop = anchors_df$logFC_loop
   )
 
   # Find anchors that fall within gene regulatory domains
@@ -302,7 +337,9 @@ associate_anchors_with_genes <- function(anchors_df, gene_domains) {
       anchor_type = character(),
       loop_distance = numeric(),
       distance_class = character(),
-      chr = character()
+      chr = character(),
+      loop_type = character(),
+      logFC_loop = numeric()
     ))
   }
 
@@ -314,7 +351,9 @@ associate_anchors_with_genes <- function(anchors_df, gene_domains) {
     anchor_type = anchor_gr$anchor_type[queryHits(overlaps)],
     loop_distance = anchor_gr$loop_distance[queryHits(overlaps)],
     distance_class = anchor_gr$distance_class[queryHits(overlaps)],
-    chr = as.character(seqnames(anchor_gr)[queryHits(overlaps)])
+    chr = as.character(seqnames(anchor_gr)[queryHits(overlaps)]),
+    loop_type = anchor_gr$loop_type[queryHits(overlaps)],
+    logFC_loop = anchor_gr$logFC_loop[queryHits(overlaps)]
   )
 
   cat(sprintf("  Found %d gene-anchor associations (GREAT-style)\n", nrow(anchor_gene_df)))
@@ -335,11 +374,12 @@ merge_deg_anchors <- function(anchor_gene_df, deg_df, id_mapping) {
   deg_with_entrez <- deg_df %>%
     dplyr::inner_join(id_mapping, by = c("gene_symbol" = "SYMBOL"))
 
-  # Merge with anchor-gene associations
+  # Merge with anchor-gene associations (include loop_type and logFC_loop)
   plot_data <- anchor_gene_df %>%
     dplyr::inner_join(deg_with_entrez, by = c("entrez_id" = "ENTREZID")) %>%
     dplyr::select(entrez_id, symbol = gene_symbol, boundary_class, log2FoldChange, padj,
-                  chr, anchor_id, anchor_type, loop_distance, distance_class) %>%
+                  chr, anchor_id, anchor_type, loop_distance, distance_class,
+                  loop_type, logFC_loop) %>%
     # For genes near multiple anchors, keep distinct genes per boundary class
     dplyr::distinct(entrez_id, boundary_class, .keep_all = TRUE)
 
@@ -421,12 +461,18 @@ create_violin_plot <- function(plot_data, title = "DEGs proximal to differential
   y_min <- min(plot_data$log2FoldChange, na.rm = TRUE)
   y_range <- y_max - y_min
 
+  # Create x-axis labels with sample sizes
+  x_labels <- sapply(names(n_per_group), function(g) {
+    sprintf("%s\n(n=%d)", g, n_per_group[g])
+  })
+
   # Create plot
   p <- ggplot(plot_data, aes(x = .data[[group_col]], y = log2FoldChange, fill = .data[[group_col]])) +
     geom_violin(alpha = 0.7, trim = FALSE, color = "black", linewidth = 0.5) +
     geom_boxplot(width = 0.15, fill = "white", outlier.shape = NA, color = "black", linewidth = 0.5) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "gray40", linewidth = 0.5) +
     scale_fill_manual(values = colors) +
+    scale_x_discrete(labels = x_labels) +
     annotate("text", x = (length(groups) + 1) / 2, y = y_max + y_range * 0.12,
              label = p_formatted, size = 4, fontface = "plain") +
     labs(
@@ -553,24 +599,24 @@ generate_statistics <- function(plot_data, test_result, timepoint, analysis_type
 save_outputs <- function(plot_result, plot_data, output_dir, base_name, timepoint, analysis_type = "basic") {
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-  # Save plot in multiple formats
-  pdf_file <- file.path(output_dir, sprintf("%s.pdf", base_name))
-  svg_file <- file.path(output_dir, sprintf("%s.svg", base_name))
-  jpg_file <- file.path(output_dir, sprintf("%s.jpg", base_name))
+  # Save plot in multiple formats to subfolder
+  save_plot_multiformat(plot_result$plot, output_dir, base_name, width = 5, height = 6)
 
-  ggsave(pdf_file, plot_result$plot, width = 5, height = 6, dpi = 300)
-  ggsave(svg_file, plot_result$plot, width = 5, height = 6, dpi = 300)
-  ggsave(jpg_file, plot_result$plot, width = 5, height = 6, dpi = 300)
+  # Create tables directory for data files
+  tables_dir <- file.path(output_dir, "tables")
+  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
 
-  cat(sprintf("  Saved: %s\n", pdf_file))
-
-  # Save gene list
-  gene_file <- file.path(output_dir, sprintf("%s_genes.tsv", base_name))
+  # Save gene list to tables directory
+  gene_file <- file.path(tables_dir, sprintf("%s_genes.tsv", base_name))
   write_tsv(plot_data, gene_file)
   cat(sprintf("  Saved: %s\n", gene_file))
 
-  # Save statistics
-  stats_file <- file.path(output_dir, sprintf("%s_statistics.txt", base_name))
+  # Create statistics directory for stats files
+  stats_dir <- file.path(output_dir, "statistics")
+  dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
+
+  # Save statistics to statistics directory
+  stats_file <- file.path(stats_dir, sprintf("%s_statistics.txt", base_name))
   stats_lines <- generate_statistics(plot_data, plot_result$test, timepoint, analysis_type)
   writeLines(stats_lines, stats_file)
   cat(sprintf("  Saved: %s\n", stats_file))
@@ -688,6 +734,12 @@ run_distance_stratified_analysis <- function(plot_data, output_dir, timepoint) {
     levels = c("Lost Short-range", "Lost Long-range", "Gained Short-range", "Gained Long-range")
   )
 
+  # Create x-axis labels with sample sizes
+  category_n <- stratified_data %>%
+    dplyr::count(stratified_category) %>%
+    dplyr::mutate(label = sprintf("%s\n(n=%d)", stratified_category, n))
+  x_labels_dist <- setNames(category_n$label, category_n$stratified_category)
+
   # Perform Kruskal-Wallis test
   kw_test <- kruskal.test(log2FoldChange ~ stratified_category, data = stratified_data)
 
@@ -717,6 +769,7 @@ run_distance_stratified_analysis <- function(plot_data, output_dir, timepoint) {
     geom_boxplot(width = 0.15, fill = "white", outlier.shape = NA, color = "black", linewidth = 0.5) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "gray40", linewidth = 0.5) +
     scale_fill_manual(values = stratified_colors) +
+    scale_x_discrete(labels = x_labels_dist) +
     annotate("text", x = 2.5, y = y_max + y_range * 0.1,
              label = sprintf("Kruskal-Wallis %s", p_formatted), size = 3.5) +
     labs(
@@ -736,24 +789,21 @@ run_distance_stratified_analysis <- function(plot_data, output_dir, timepoint) {
       panel.grid = element_blank()
     )
 
-  # Save plot
+  # Save plot to subfolder
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  pdf_file <- file.path(output_dir, "deg_loop_violin_distance_2x2_stratified.pdf")
-  svg_file <- file.path(output_dir, "deg_loop_violin_distance_2x2_stratified.svg")
-  jpg_file <- file.path(output_dir, "deg_loop_violin_distance_2x2_stratified.jpg")
+  save_plot_multiformat(p, output_dir, "deg_loop_violin_distance_2x2_stratified", width = 8, height = 6)
 
-  ggsave(pdf_file, p, width = 8, height = 6, dpi = 300)
-  ggsave(svg_file, p, width = 8, height = 6, dpi = 300)
-  ggsave(jpg_file, p, width = 8, height = 6, dpi = 300)
-  cat(sprintf("  Saved: %s\n", pdf_file))
-
-  # Save gene list
-  gene_file <- file.path(output_dir, "deg_loop_distance_stratified_genes.tsv")
+  # Save gene list to tables directory
+  tables_dir <- file.path(output_dir, "tables")
+  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
+  gene_file <- file.path(tables_dir, "deg_loop_distance_stratified_genes.tsv")
   write_tsv(stratified_data, gene_file)
   cat(sprintf("  Saved: %s\n", gene_file))
 
   # Save statistics with pairwise comparisons
-  stats_file <- file.path(output_dir, "deg_loop_violin_distance_statistics.txt")
+  stats_dir <- file.path(output_dir, "statistics")
+  dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
+  stats_file <- file.path(stats_dir, "deg_loop_violin_distance_statistics.txt")
   stats_lines <- c(
     "===========================================",
     sprintf("Distance-Stratified DEG Analysis: %s", timepoint),
@@ -865,6 +915,14 @@ run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint) {
   chromatin_data <- plot_data %>%
     dplyr::filter(anchor_type %in% valid_states)
 
+  # Calculate n per state for facet labels
+  state_n <- chromatin_data %>%
+    dplyr::group_by(anchor_type, boundary_class) %>%
+    dplyr::summarize(n = n(), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = boundary_class, values_from = n, values_fill = 0) %>%
+    dplyr::mutate(facet_label = sprintf("%s\n(lost=%d, gained=%d)", anchor_type, lost, gained))
+  facet_labels <- setNames(state_n$facet_label, state_n$anchor_type)
+
   # Calculate median log2FC per state and direction
   state_summary <- chromatin_data %>%
     dplyr::group_by(anchor_type, boundary_class) %>%
@@ -875,12 +933,13 @@ run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint) {
       .groups = "drop"
     )
 
-  # Create faceted plot
+  # Create faceted plot with sample sizes in strip labels
   p <- ggplot(chromatin_data, aes(x = boundary_class, y = log2FoldChange, fill = boundary_class)) +
     geom_violin(alpha = 0.7, trim = FALSE, color = "black", linewidth = 0.3) +
     geom_boxplot(width = 0.2, fill = "white", outlier.shape = NA, color = "black", linewidth = 0.3) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "gray40", linewidth = 0.5) +
-    facet_wrap(~ anchor_type, scales = "free_y", ncol = 3) +
+    facet_wrap(~ anchor_type, scales = "free_y", ncol = 3,
+               labeller = labeller(anchor_type = facet_labels)) +
     scale_fill_manual(values = DIRECTION_COLORS) +
     labs(
       title = sprintf("DEGs by Anchor Chromatin State (%s)", timepoint),
@@ -890,30 +949,27 @@ run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint) {
     theme_classic(base_size = 11) +
     theme(
       plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-      strip.text = element_text(face = "bold", size = 10),
+      strip.text = element_text(face = "bold", size = 9),
       strip.background = element_rect(fill = "gray90", color = NA),
       axis.text = element_text(size = 9, color = "black"),
       legend.position = "none",
       panel.grid = element_blank()
     )
 
-  # Save plot
+  # Save plot to subfolder
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  pdf_file <- file.path(output_dir, "deg_loop_anchor_violin_by_chromatin_state.pdf")
-  svg_file <- file.path(output_dir, "deg_loop_anchor_violin_by_chromatin_state.svg")
-  jpg_file <- file.path(output_dir, "deg_loop_anchor_violin_by_chromatin_state.jpg")
 
   # Adjust width based on number of panels
   n_panels <- length(valid_states)
   plot_width <- min(12, max(6, n_panels * 3))
 
-  ggsave(pdf_file, p, width = plot_width, height = 6, dpi = 300)
-  ggsave(svg_file, p, width = plot_width, height = 6, dpi = 300)
-  ggsave(jpg_file, p, width = plot_width, height = 6, dpi = 300)
-  cat(sprintf("  Saved: %s\n", pdf_file))
+  save_plot_multiformat(p, output_dir, "deg_loop_anchor_violin_by_chromatin_state",
+                        width = plot_width, height = 6)
 
-  # Save summary
-  summary_file <- file.path(output_dir, "deg_loop_chromatin_state_summary.tsv")
+  # Save summary to tables directory
+  tables_dir <- file.path(output_dir, "tables")
+  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
+  summary_file <- file.path(tables_dir, "deg_loop_chromatin_state_summary.tsv")
   write_tsv(state_summary, summary_file)
   cat(sprintf("  Saved: %s\n", summary_file))
 
@@ -935,11 +991,464 @@ run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint) {
       significant = p_adj < 0.05
     )
 
-  tests_file <- file.path(output_dir, "deg_loop_chromatin_state_tests.tsv")
+  tests_file <- file.path(tables_dir, "deg_loop_chromatin_state_tests.tsv")
   write_tsv(state_tests, tests_file)
   cat(sprintf("  Saved: %s\n", tests_file))
 
   return(list(plot = p, summary = state_summary, tests = state_tests))
+}
+
+#' Task 2e: Permutation test for statistical robustness
+#' @param plot_data Merged DEG-anchor data
+#' @param output_dir Output directory
+#' @param timepoint Timepoint label
+#' @param n_permutations Number of permutations (default: N_PERMUTATIONS config)
+run_permutation_test <- function(plot_data, output_dir, timepoint, n_permutations = N_PERMUTATIONS) {
+  cat("\n=== Task 2e: Permutation Testing ===\n")
+
+  # Check data requirements
+  lost_data <- plot_data %>% dplyr::filter(boundary_class == "lost")
+  gained_data <- plot_data %>% dplyr::filter(boundary_class == "gained")
+
+  if (nrow(lost_data) < 5 || nrow(gained_data) < 5) {
+    cat("  Insufficient data for permutation testing, skipping...\n")
+    return(NULL)
+  }
+
+  set.seed(PERMUTATION_SEED)
+
+  # Calculate observed statistic
+  observed_stat <- median(lost_data$log2FoldChange) - median(gained_data$log2FoldChange)
+
+  cat(sprintf("  Observed median difference (lost - gained): %.3f\n", observed_stat))
+  cat(sprintf("  Running %d permutations...\n", n_permutations))
+
+  # Permutation test
+  perm_stats <- replicate(n_permutations, {
+    shuffled <- plot_data
+    shuffled$boundary_class <- sample(shuffled$boundary_class)
+    lost_perm <- shuffled %>% dplyr::filter(boundary_class == "lost")
+    gained_perm <- shuffled %>% dplyr::filter(boundary_class == "gained")
+    median(lost_perm$log2FoldChange) - median(gained_perm$log2FoldChange)
+  })
+
+  # Calculate empirical p-value (two-tailed)
+  emp_p_value <- mean(abs(perm_stats) >= abs(observed_stat))
+
+  # Calculate 95% CI of null distribution
+  null_ci <- quantile(perm_stats, c(0.025, 0.975))
+
+  cat(sprintf("  Empirical p-value: %.4f\n", emp_p_value))
+  cat(sprintf("  Null distribution 95%% CI: [%.3f, %.3f]\n", null_ci[1], null_ci[2]))
+
+  # Create histogram plot
+  perm_df <- tibble(stat = perm_stats)
+
+  p <- ggplot(perm_df, aes(x = stat)) +
+    geom_histogram(bins = 50, fill = "gray70", color = "black", alpha = 0.7) +
+    geom_vline(xintercept = observed_stat, color = "#d62728", linewidth = 1.5, linetype = "solid") +
+    geom_vline(xintercept = null_ci, color = "gray40", linewidth = 0.8, linetype = "dashed") +
+    annotate("text", x = observed_stat, y = Inf, vjust = -0.5,
+             label = sprintf("Observed = %.3f", observed_stat),
+             color = "#d62728", fontface = "bold", size = 4) +
+    annotate("text", x = mean(null_ci), y = Inf, vjust = 2,
+             label = sprintf("Empirical p = %.4f", emp_p_value),
+             color = "black", size = 4) +
+    labs(
+      title = sprintf("Permutation Test (%s)", timepoint),
+      subtitle = sprintf("n = %d permutations", n_permutations),
+      x = "Median difference (lost - gained log2FC)",
+      y = "Frequency"
+    ) +
+    theme_classic(base_size = 12) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      plot.subtitle = element_text(hjust = 0.5)
+    )
+
+  # Save outputs
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+
+  # Save plot to subfolder
+  save_plot_multiformat(p, output_dir, "deg_loop_permutation_test", width = 7, height = 5)
+
+  # Save statistics to statistics directory
+  stats_dir <- file.path(output_dir, "statistics")
+  dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
+  stats_file <- file.path(stats_dir, "deg_loop_permutation_statistics.txt")
+  stats_lines <- c(
+    "===========================================",
+    sprintf("Permutation Test Results: %s", timepoint),
+    "===========================================",
+    "",
+    sprintf("Date: %s", Sys.time()),
+    sprintf("Number of permutations: %d", n_permutations),
+    sprintf("Random seed: %d", PERMUTATION_SEED),
+    "",
+    "--- OBSERVED DATA ---",
+    sprintf("  DEGs near lost anchors: n = %d, median log2FC = %.3f",
+            nrow(lost_data), median(lost_data$log2FoldChange)),
+    sprintf("  DEGs near gained anchors: n = %d, median log2FC = %.3f",
+            nrow(gained_data), median(gained_data$log2FoldChange)),
+    sprintf("  Observed difference: %.3f", observed_stat),
+    "",
+    "--- PERMUTATION RESULTS ---",
+    sprintf("  Null distribution mean: %.3f", mean(perm_stats)),
+    sprintf("  Null distribution SD: %.3f", sd(perm_stats)),
+    sprintf("  Null distribution 95%% CI: [%.3f, %.3f]", null_ci[1], null_ci[2]),
+    sprintf("  Empirical p-value (two-tailed): %.4f", emp_p_value),
+    "",
+    "--- INTERPRETATION ---",
+    sprintf("  Significant (p < 0.05): %s", ifelse(emp_p_value < 0.05, "YES", "NO")),
+    ifelse(emp_p_value < 0.05,
+           "  The observed difference is unlikely to occur by chance.",
+           "  The observed difference could plausibly occur by chance."),
+    "==========================================="
+  )
+  writeLines(stats_lines, stats_file)
+  cat(sprintf("  Saved: %s\n", stats_file))
+
+  return(list(
+    plot = p,
+    observed = observed_stat,
+    permutation_distribution = perm_stats,
+    emp_p_value = emp_p_value,
+    null_ci = null_ci
+  ))
+}
+
+#' Classify loop type into biological categories
+#' @param loop_type Vector of loop type strings
+#' @return Vector of simplified categories
+classify_loop_type <- function(loop_type) {
+  dplyr::case_when(
+    stringr::str_detect(loop_type, "Active_Promoter.*(Enhancer|Poised_Enhancer)") |
+      stringr::str_detect(loop_type, "(Enhancer|Poised_Enhancer).*Active_Promoter") ~ "P-E",
+    stringr::str_detect(loop_type, "(Active_Enhancer|Poised_Enhancer).*(Active_Enhancer|Poised_Enhancer)") ~ "E-E",
+    stringr::str_detect(loop_type, "Promoter.*Promoter") ~ "P-P",
+    stringr::str_detect(loop_type, "Polycomb") ~ "Polycomb",
+    TRUE ~ "Other"
+  )
+}
+
+#' Task 2f: Loop type stratified analysis
+#' @param plot_data Merged DEG-anchor data with loop_type
+#' @param output_dir Output directory
+#' @param timepoint Timepoint label
+run_loop_type_analysis <- function(plot_data, output_dir, timepoint) {
+  cat("\n=== Task 2f: Loop Type Analysis (P-E, E-E, P-P, Polycomb) ===\n")
+
+  # Check if loop_type column exists
+  if (!"loop_type" %in% colnames(plot_data)) {
+    cat("  loop_type column not found, skipping...\n")
+    return(NULL)
+  }
+
+  # Classify loop types
+  loop_type_data <- plot_data %>%
+    dplyr::mutate(loop_category = classify_loop_type(loop_type))
+
+  # Count per category
+  category_counts <- loop_type_data %>%
+    dplyr::group_by(loop_category, boundary_class) %>%
+    dplyr::summarize(n = n(), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = boundary_class, values_from = n, values_fill = 0)
+
+  cat("  Loop type counts:\n")
+  print(category_counts)
+
+  # Filter for categories with sufficient data (at least 3 in each direction)
+  valid_categories <- loop_type_data %>%
+    dplyr::group_by(loop_category, boundary_class) %>%
+    dplyr::summarize(n = n(), .groups = "drop") %>%
+    dplyr::group_by(loop_category) %>%
+    dplyr::filter(all(n >= 3)) %>%
+    dplyr::pull(loop_category) %>%
+    unique()
+
+  if (length(valid_categories) < 1) {
+    cat("  No loop type categories have sufficient data for comparison, skipping...\n")
+    return(NULL)
+  }
+
+  cat(sprintf("  Categories with sufficient data: %s\n", paste(valid_categories, collapse = ", ")))
+
+  # Filter data
+  filtered_data <- loop_type_data %>%
+    dplyr::filter(loop_category %in% valid_categories)
+
+  # Order categories logically
+  category_order <- c("P-E", "E-E", "P-P", "Polycomb", "Other")
+  filtered_data$loop_category <- factor(filtered_data$loop_category,
+                                         levels = intersect(category_order, valid_categories))
+
+  # Calculate n per category for facet labels
+  loop_cat_n <- filtered_data %>%
+    dplyr::group_by(loop_category, boundary_class) %>%
+    dplyr::summarize(n = n(), .groups = "drop") %>%
+    tidyr::pivot_wider(names_from = boundary_class, values_from = n, values_fill = 0) %>%
+    dplyr::mutate(facet_label = sprintf("%s\n(lost=%d, gained=%d)", loop_category, lost, gained))
+  loop_facet_labels <- setNames(loop_cat_n$facet_label, loop_cat_n$loop_category)
+
+  # Calculate summary statistics
+  type_summary <- filtered_data %>%
+    dplyr::group_by(loop_category, boundary_class) %>%
+    dplyr::summarize(
+      n = n(),
+      median_log2FC = median(log2FoldChange),
+      mean_log2FC = mean(log2FoldChange),
+      sd_log2FC = sd(log2FoldChange),
+      .groups = "drop"
+    )
+
+  # Create faceted violin plot with sample sizes in strip labels
+  p <- ggplot(filtered_data, aes(x = boundary_class, y = log2FoldChange, fill = boundary_class)) +
+    geom_violin(alpha = 0.7, trim = FALSE, color = "black", linewidth = 0.3) +
+    geom_boxplot(width = 0.2, fill = "white", outlier.shape = NA, color = "black", linewidth = 0.3) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "gray40", linewidth = 0.5) +
+    facet_wrap(~ loop_category, scales = "free_y", ncol = 3,
+               labeller = labeller(loop_category = loop_facet_labels)) +
+    scale_fill_manual(values = DIRECTION_COLORS) +
+    labs(
+      title = sprintf("DEGs by Loop Type Category (%s)", timepoint),
+      subtitle = "P-E = Promoter-Enhancer, E-E = Enhancer-Enhancer, P-P = Promoter-Promoter",
+      x = NULL,
+      y = expression(log[2]*"FC BAP1-KO vs WT")
+    ) +
+    theme_classic(base_size = 11) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 9),
+      strip.text = element_text(face = "bold", size = 9),
+      strip.background = element_rect(fill = "gray90", color = NA),
+      axis.text = element_text(size = 9, color = "black"),
+      legend.position = "none",
+      panel.grid = element_blank()
+    )
+
+  # Save outputs
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+
+  n_panels <- length(valid_categories)
+  plot_width <- min(12, max(6, n_panels * 3))
+
+  # Save plot to subfolder
+  save_plot_multiformat(p, output_dir, "deg_loop_violin_by_loop_type",
+                        width = plot_width, height = 6)
+
+  # Save summary to tables directory
+  tables_dir <- file.path(output_dir, "tables")
+  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
+  summary_file <- file.path(tables_dir, "deg_loop_type_summary.tsv")
+  write_tsv(type_summary, summary_file)
+  cat(sprintf("  Saved: %s\n", summary_file))
+
+  # Per-category Wilcoxon tests
+  type_tests <- filtered_data %>%
+    dplyr::group_by(loop_category) %>%
+    dplyr::summarize(
+      n_lost = sum(boundary_class == "lost"),
+      n_gained = sum(boundary_class == "gained"),
+      median_lost = median(log2FoldChange[boundary_class == "lost"]),
+      median_gained = median(log2FoldChange[boundary_class == "gained"]),
+      p_value = tryCatch({
+        wilcox.test(log2FoldChange ~ boundary_class, data = pick(everything()))$p.value
+      }, error = function(e) NA_real_),
+      .groups = "drop"
+    ) %>%
+    dplyr::mutate(
+      p_adj = p.adjust(p_value, method = "BH"),
+      significant = p_adj < 0.05
+    )
+
+  tests_file <- file.path(tables_dir, "deg_loop_type_tests.tsv")
+  write_tsv(type_tests, tests_file)
+  cat(sprintf("  Saved: %s\n", tests_file))
+
+  return(list(plot = p, summary = type_summary, tests = type_tests))
+}
+
+#' Task 2g: Correlation between loop strength and gene expression
+#' @param plot_data Merged DEG-anchor data with logFC_loop
+#' @param output_dir Output directory
+#' @param timepoint Timepoint label
+run_correlation_analysis <- function(plot_data, output_dir, timepoint) {
+  cat("\n=== Task 2g: Loop-Expression Correlation Analysis ===\n")
+
+  # Check if logFC_loop column exists
+  if (!"logFC_loop" %in% colnames(plot_data)) {
+    cat("  logFC_loop column not found, skipping...\n")
+    return(NULL)
+  }
+
+  # Remove NA values
+  corr_data <- plot_data %>%
+    dplyr::filter(!is.na(logFC_loop) & !is.na(log2FoldChange))
+
+  if (nrow(corr_data) < 10) {
+    cat("  Insufficient data for correlation analysis, skipping...\n")
+    return(NULL)
+  }
+
+  cat(sprintf("  Analyzing %d gene-loop pairs\n", nrow(corr_data)))
+
+  # Calculate correlations
+  pearson_test <- cor.test(corr_data$logFC_loop, corr_data$log2FoldChange, method = "pearson")
+  spearman_test <- cor.test(corr_data$logFC_loop, corr_data$log2FoldChange, method = "spearman")
+
+  # Linear regression
+  lm_fit <- lm(log2FoldChange ~ logFC_loop, data = corr_data)
+  lm_summary <- summary(lm_fit)
+
+  cat(sprintf("  Pearson r = %.3f (p = %.2e)\n", pearson_test$estimate, pearson_test$p.value))
+  cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", spearman_test$estimate, spearman_test$p.value))
+
+  # Create main scatter plot
+  corr_label <- sprintf("Pearson r = %.3f (p = %.2e)\nSpearman rho = %.3f",
+                        pearson_test$estimate, pearson_test$p.value, spearman_test$estimate)
+
+  p1 <- ggplot(corr_data, aes(x = logFC_loop, y = log2FoldChange, color = boundary_class)) +
+    geom_point(alpha = 0.6, size = 2) +
+    geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 1, linetype = "dashed") +
+    geom_hline(yintercept = 0, linetype = "dotted", color = "gray50") +
+    geom_vline(xintercept = 0, linetype = "dotted", color = "gray50") +
+    scale_color_manual(values = DIRECTION_COLORS, labels = c("lost" = "Lost", "gained" = "Gained")) +
+    annotate("text", x = min(corr_data$logFC_loop), y = max(corr_data$log2FoldChange),
+             hjust = 0, vjust = 1, label = corr_label, size = 3.5) +
+    labs(
+      title = sprintf("Loop Strength vs Gene Expression (%s)", timepoint),
+      x = expression("Loop "*log[2]*"FC (BAP1-KO vs WT)"),
+      y = expression("Gene "*log[2]*"FC (BAP1-KO vs WT)"),
+      color = "Loop Direction"
+    ) +
+    theme_classic(base_size = 12) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      legend.position = "bottom"
+    )
+
+  # Create split plot by direction
+  # Calculate per-direction correlations
+  lost_corr <- corr_data %>% dplyr::filter(boundary_class == "lost")
+  gained_corr <- corr_data %>% dplyr::filter(boundary_class == "gained")
+
+  lost_pearson <- if (nrow(lost_corr) >= 5) {
+    ct <- cor.test(lost_corr$logFC_loop, lost_corr$log2FoldChange, method = "pearson")
+    sprintf("r = %.3f", ct$estimate)
+  } else { "n < 5" }
+
+  gained_pearson <- if (nrow(gained_corr) >= 5) {
+    ct <- cor.test(gained_corr$logFC_loop, gained_corr$log2FoldChange, method = "pearson")
+    sprintf("r = %.3f", ct$estimate)
+  } else { "n < 5" }
+
+  # Add correlation annotations to faceted plot
+  corr_data$corr_label <- ifelse(corr_data$boundary_class == "lost",
+                                  paste("Lost:", lost_pearson),
+                                  paste("Gained:", gained_pearson))
+
+  p2 <- ggplot(corr_data, aes(x = logFC_loop, y = log2FoldChange)) +
+    geom_point(aes(color = boundary_class), alpha = 0.6, size = 2) +
+    geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.8) +
+    geom_hline(yintercept = 0, linetype = "dotted", color = "gray50") +
+    geom_vline(xintercept = 0, linetype = "dotted", color = "gray50") +
+    facet_wrap(~ boundary_class, scales = "free", labeller = labeller(
+      boundary_class = c("lost" = sprintf("Lost (n=%d)", nrow(lost_corr)),
+                         "gained" = sprintf("Gained (n=%d)", nrow(gained_corr)))
+    )) +
+    scale_color_manual(values = DIRECTION_COLORS) +
+    labs(
+      title = sprintf("Loop-Expression Correlation by Direction (%s)", timepoint),
+      x = expression("Loop "*log[2]*"FC"),
+      y = expression("Gene "*log[2]*"FC")
+    ) +
+    theme_classic(base_size = 11) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      strip.text = element_text(face = "bold"),
+      strip.background = element_rect(fill = "gray90", color = NA),
+      legend.position = "none"
+    )
+
+  # Save outputs
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+
+  # Save main correlation plot to subfolder
+  save_plot_multiformat(p1, output_dir, "deg_loop_expression_correlation", width = 7, height = 6)
+
+  # Save split correlation plot to subfolder
+  save_plot_multiformat(p2, output_dir, "deg_loop_expression_correlation_by_direction", width = 10, height = 5)
+
+  # Save statistics to statistics directory
+  stats_dir <- file.path(output_dir, "statistics")
+  dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
+  stats_file <- file.path(stats_dir, "deg_loop_correlation_statistics.txt")
+  stats_lines <- c(
+    "===========================================",
+    sprintf("Loop-Expression Correlation Analysis: %s", timepoint),
+    "===========================================",
+    "",
+    sprintf("Date: %s", Sys.time()),
+    sprintf("Number of gene-loop pairs: %d", nrow(corr_data)),
+    "",
+    "--- OVERALL CORRELATION ---",
+    sprintf("  Pearson r: %.4f", pearson_test$estimate),
+    sprintf("  Pearson p-value: %.2e", pearson_test$p.value),
+    sprintf("  Pearson 95%% CI: [%.4f, %.4f]", pearson_test$conf.int[1], pearson_test$conf.int[2]),
+    "",
+    sprintf("  Spearman rho: %.4f", spearman_test$estimate),
+    sprintf("  Spearman p-value: %.2e", spearman_test$p.value),
+    "",
+    "--- LINEAR REGRESSION ---",
+    sprintf("  Slope: %.4f", lm_fit$coefficients[2]),
+    sprintf("  Intercept: %.4f", lm_fit$coefficients[1]),
+    sprintf("  R-squared: %.4f", lm_summary$r.squared),
+    sprintf("  Adjusted R-squared: %.4f", lm_summary$adj.r.squared),
+    sprintf("  Slope p-value: %.2e", lm_summary$coefficients[2, 4]),
+    ""
+  )
+
+  # Add per-direction correlations
+  if (nrow(lost_corr) >= 5) {
+    lost_ct <- cor.test(lost_corr$logFC_loop, lost_corr$log2FoldChange, method = "pearson")
+    stats_lines <- c(stats_lines,
+      "--- LOST LOOPS ONLY ---",
+      sprintf("  n = %d", nrow(lost_corr)),
+      sprintf("  Pearson r: %.4f", lost_ct$estimate),
+      sprintf("  Pearson p-value: %.2e", lost_ct$p.value),
+      ""
+    )
+  }
+
+  if (nrow(gained_corr) >= 5) {
+    gained_ct <- cor.test(gained_corr$logFC_loop, gained_corr$log2FoldChange, method = "pearson")
+    stats_lines <- c(stats_lines,
+      "--- GAINED LOOPS ONLY ---",
+      sprintf("  n = %d", nrow(gained_corr)),
+      sprintf("  Pearson r: %.4f", gained_ct$estimate),
+      sprintf("  Pearson p-value: %.2e", gained_ct$p.value),
+      ""
+    )
+  }
+
+  stats_lines <- c(stats_lines,
+    "--- INTERPRETATION ---",
+    "  Positive correlation: Stronger loop changes associated with larger expression changes",
+    "  Expected: Gained loops (positive logFC) -> upregulated genes (positive log2FC)",
+    "            Lost loops (negative logFC) -> downregulated genes (negative log2FC)",
+    "==========================================="
+  )
+
+  writeLines(stats_lines, stats_file)
+  cat(sprintf("  Saved: %s\n", stats_file))
+
+  return(list(
+    plot_main = p1,
+    plot_split = p2,
+    pearson = pearson_test,
+    spearman = spearman_test,
+    lm_fit = lm_fit
+  ))
 }
 
 # ==============================================================================
@@ -995,9 +1504,11 @@ process_timepoint <- function(timepoint) {
     return(NULL)
   }
 
-  # Save complete merged dataset
-  full_output_file <- file.path(config$output_dir, "deg_anchor_genes.tsv")
+  # Save complete merged dataset to tables directory
   dir.create(config$output_dir, recursive = TRUE, showWarnings = FALSE)
+  tables_dir <- file.path(config$output_dir, "tables")
+  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
+  full_output_file <- file.path(tables_dir, "deg_anchor_genes.tsv")
   write_tsv(plot_data, full_output_file)
   cat(sprintf("\n[Saved] Complete gene list: %s\n", full_output_file))
 
@@ -1017,6 +1528,15 @@ process_timepoint <- function(timepoint) {
 
   # Task 2d extended: All chromatin states
   results$chromatin_states <- run_chromatin_state_analysis(plot_data, config$output_dir, config$label)
+
+  # Task 2e: Permutation testing for statistical robustness
+  results$permutation <- run_permutation_test(plot_data, config$output_dir, config$label)
+
+  # Task 2f: Loop type analysis (P-E, E-E, P-P, Polycomb)
+  results$loop_type <- run_loop_type_analysis(plot_data, config$output_dir, config$label)
+
+  # Task 2g: Correlation between loop strength and gene expression
+  results$correlation <- run_correlation_analysis(plot_data, config$output_dir, config$label)
 
   cat("\n")
   cat(sprintf("Completed %s timepoint\n", timepoint))
