@@ -1,0 +1,52 @@
+=== Enhancer-Promoter Loop Distance Analysis Summary ===
+Generated: 2026-01-28 19:27:15 
+Timepoint: early 
+
+Input file: peaks/loop_annotation_extended/early/extended_characterized_loops.tsv 
+
+=== Filter Definitions ===
+
+Lenient E-P filter:
+  (anchor1_H3K27ac+ AND anchor2_H3K4me3+) OR
+  (anchor1_H3K4me3+ AND anchor2_H3K27ac+)
+
+Classified E-P filter:
+  loop_type_extended contains 'Active_Enhancer' AND 'Active_Promoter'
+  (Active_Enhancer = K27ac+ AND >2kb from TSS)
+  (Active_Promoter = K4me3+ AND NOT K27me3 AND <=2kb from TSS)
+
+=== Subset Statistics ===
+
+--- All Loops ---
+  Total loops: 165
+  Lost in BAP1-KO: 92 (55.8%)
+  Gained in BAP1-KO: 73 (44.2%)
+  Median distance (Lost): 3875.0 kb
+  Median distance (Gained): 700.0 kb
+  Median ratio (Lost/Gained): 5.54
+  KS test p-value: 6.59e-07
+  Wilcoxon p-value: 1.22e-07
+
+--- Lenient E-P ---
+  Total loops: 7
+  Lost in BAP1-KO: 5 (71.4%)
+  Gained in BAP1-KO: 2 (28.6%)
+  (Insufficient data for statistical comparison)
+
+--- Classified E-P ---
+  Total loops: 4
+  Lost in BAP1-KO: 2 (50.0%)
+  Gained in BAP1-KO: 2 (50.0%)
+  (Insufficient data for statistical comparison)
+
+=== ChIP-seq Mark Overlap Breakdown ===
+
+Anchor1 H3K27ac+: 12 / 165 (7.3%)
+Anchor2 H3K27ac+: 17 / 165 (10.3%)
+Anchor1 H3K4me3+: 11 / 165 (6.7%)
+Anchor2 H3K4me3+: 16 / 165 (9.7%)
+
+=== Loop Type Breakdown (Classified E-P) ===
+
+               loop_type_extended down_in_mutant up_in_mutant
+1 Active_Promoter-Active_Enhancer              2            2

@@ -101,7 +101,7 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 - [x] **4a. CDF/density by H3K27me3.** One anchor vs both anchors. -> `scripts/loop_distance_k27me3_filtered.R`
 - [~] **4b. CDF/density by H3K27ac.** One anchor (enhancer-only loop) vs both anchors (super-enhancer loop). Existing `chip_distance_analysis.R` does trends but not separate CDF/density plots per mark subset.
-- [ ] **4c. CDF/density for H3K27ac + H3K4me3 (enhancer-promoter loops).** Filter to loops where one anchor is H3K27ac+ (enhancer) and the other is H3K4me3+ (promoter). Compare lost vs gained distance distributions.
+- [x] **4c. CDF/density for H3K27ac + H3K4me3 (enhancer-promoter loops).** Filter to loops where one anchor is H3K27ac+ (enhancer) and the other is H3K4me3+ (promoter). Compare lost vs gained distance distributions. -> `scripts/loop_distance_ep_filtered.R`
 - [ ] **4d. CDF/density for each individual histone modification separately.** Repeat the K27me3-filtered analysis pattern for H3K27ac, H3K4me1, H3K4me3, Bivalent marks.
 
 ### Existing resources
