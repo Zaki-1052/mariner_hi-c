@@ -42,8 +42,8 @@ Classification follows strict priority - earlier categories take precedence:
 | 4 | Polycomb | H3K27me3+ AND >2kb from TSS |
 | 5 | Active_Enhancer | H3K27ac+ AND >2kb from TSS |
 | 6 | Poised_Enhancer | H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb |
-| 7 | CTCF_Site | CTCF+ AND not classified above |
-| 8 | Other | Default (no marks) |
+| 7 | CTCF_Site | CTCF motif+ AND not classified above (motifs used for all timepoints) |
+| 8 | Other | Default (no marks, no CTCF motif) |
 
 Loop types are 36 combinations of anchor types (e.g., `Active_Promoter-Active_Enhancer`).
 
@@ -55,7 +55,8 @@ Loop types are 36 combinations of anchor types (e.g., `Active_Promoter-Active_En
 - `H3K4me1{Tissue}{Timepoint}{Rep}.bed` - Enhancer mark
 - `H3K4me3{Tissue}{Timepoint}{Rep}.bed` - Active promoter mark
 - `Bivalent_{Tissue}_{Timepoint}.bed` - Pre-computed K4me3+K27me3 overlap
-- `../CTCF.bed` - Structural/insulator sites (32,487 peaks)
+- `../ctcf_motifs_mm10.bed` - CTCF DNA motifs (114,081) - used for classification
+- `../CTCF.bed` - CTCF ChIP-seq peaks (32,487) - saved for reference only
 
 **Generate bivalent files:**
 ```bash
@@ -122,6 +123,7 @@ PEAK_FILES <- list(
 
 ## Known Caveats
 
-- **Early timepoint lacks CTCF data** - "Other" category is ~36.5% (vs 9.3% in late)
-- ~27% of early "Other" anchors overlap late CTCF peaks (validation)
-- 82% of early up loops have "Other" anchors (structural/CTCF-mediated)
+- **CTCF uses DNA motifs, not ChIP-seq** - CTCF_Site classification based on sequence motifs (binding potential), not actual binding
+- CTCF ChIP-seq overlap columns are saved for reference but not used for classification
+- DNA motifs are ~3.5x more numerous than ChIP peaks (114K vs 32K); 81% of motifs are not bound in adult cerebellum
+- ~35% of ChIP peaks have no canonical motif (indirect/non-canonical binding)

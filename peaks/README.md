@@ -493,56 +493,50 @@ loop_distance, resolution_kb
 
 ---
 
-## Timepoint-Aware CTCF Classification
+## CTCF Classification (Motif-Based)
 
-### Purpose
+### Approach
 
-The early timepoint lacks CTCF ChIP-seq data. Rather than using adult CTCF ChIP-seq (which mixes data sources), we use **timepoint-aware classification**:
+**CTCF_Site classification uses DNA motifs for ALL timepoints.** This ensures methodological consistency across early vs late comparisons.
 
-- **Early**: CTCF motif+ (indicates binding potential)
-- **Late**: CTCF ChIP+ (actual binding data)
+- **Both Early and Late**: Use `ctcf_motifs_mm10.bed` (114,081 motifs)
+- CTCF ChIP-seq overlap is still computed and saved for reference/validation
 
-Per grad student guidance: *"I would do either/or, not and. so just motif. Be sure to specify CTCF motif, not site b/c we don't actually know if a CTCF is bound there."*
+### Rationale
 
-### Biological Rationale
+DNA motifs are **genome-wide sequence features** - they represent where CTCF *could* bind based on DNA sequence, not where it *is* bound in a specific tissue/stage.
 
-- Using adult CTCF ChIP-seq for early timepoint mixes developmental stages
-- Motif-only is more conservative - indicates where CTCF *could* bind, not where it *does* bind
-- Late timepoint has actual CTCF ChIP-seq data, so use that directly
-- The ~28% of "Other" anchors that overlap CTCF ChIP-seq are sites with ChIP evidence but no motif - correctly excluded from CTCF_Site for early
+| Data Type | Timepoint-Specific? | Comparison Validity |
+|-----------|--------------------|--------------------|
+| **DNA motifs** | NO - genome sequence is constant | Consistent across timepoints |
+| **ChIP-seq** | YES - varies by tissue/stage | Inconsistent if mixed |
+
+**Key statistics comparing methods:**
+
+| Metric | CTCF.bed (ChIP-seq) | ctcf_motifs_mm10.bed (Motifs) |
+|--------|---------------------|-------------------------------|
+| Count | 32,487 peaks | 114,081 motifs |
+| Mean width | 201 bp | 19 bp |
+| Overlap | 64.8% of ChIP peaks contain motif | 19.0% of motifs in ChIP peaks |
+
+Using motifs for both timepoints ensures:
+1. **Methodological consistency** - same annotation method for early vs late
+2. **Conservative approach** - indicates binding potential, not confirmed binding
+3. **No mixing of developmental stages** - avoids using adult ChIP for early tissue
 
 ### Data Sources
 
-**CTCF ChIP-seq (for late only):**
-
-- File: `CTCF.bed` (32,487 peaks)
-- Source: Bing Ren lab, adult mouse cerebellum
-
-**CTCF Motifs (for early only):**
+**CTCF Motifs (used for classification):**
 
 - File: `ctcf_motifs_mm10.bed` (114,081 motifs)
 - Source: HOMER pre-computed genome-wide motif scan
 - Filter: Canonical `CTCF(Zf)` only (excludes Satellite variants)
 
-### Results by Timepoint
+**CTCF ChIP-seq (saved for reference only):**
 
-| Metric | Early (Motif Only) | Late (ChIP Only) |
-|--------|-------------------|------------------|
-| CTCF_Site (Anchor1) | 28.5% | ~24% |
-| CTCF_Site (Anchor2) | 27.9% | ~24% |
-| Other (Anchor1) | 8.5% | ~9% |
-| Other (Anchor2) | 7.9% | ~9% |
-| "Other" up loops | 20 | - |
-| Unique "Other" anchors | 20 | - |
-
-### CTCF Overlap Validation
-
-For early timepoint "Other" anchors, we validated overlap with CTCF ChIP-seq:
-
-- **Anchor1 "Other" overlapping CTCF ChIP**: 4/14 (28.6%)
-- **Anchor2 "Other" overlapping CTCF ChIP**: 0/8 (0.0%)
-
-These are sites with ChIP evidence but no motif - correctly classified as "Other" under motif-only early classification.
+- File: `CTCF.bed` (32,487 peaks)
+- Source: Bing Ren lab, adult mouse cerebellum
+- Note: Overlap columns (`anchor1_CTCF_overlap`, etc.) still computed
 
 ### Generating the Motif File (HPC)
 
@@ -575,12 +569,12 @@ This extracts canonical CTCF(Zf) motifs from HOMER's pre-computed file:
 
 1. **Bivalent count:** Should be a subset of H3K4me3 peaks
 2. **Active_Promoter < H3K4me3:** Not all H3K4me3 peaks are near TSS
-3. **Other ~8-10%:** Reasonable for both early (motif) and late (ChIP)
+3. **Other ~8-10%:** Reasonable for both timepoints (motif-based CTCF)
 4. **Anchor1 ≈ Anchor2:** Similar distributions expected
-5. **CTCF_Site ~25-30%:** Timepoint-aware (motif for early, ChIP for late)
+5. **CTCF_Site ~25-30%:** Consistent across timepoints (both use motifs)
 
 ---
 
-**Last Updated:** January 14, 2026
+**Last Updated:** January 28, 2026
 
 **Author:** Zakir Alibhai
