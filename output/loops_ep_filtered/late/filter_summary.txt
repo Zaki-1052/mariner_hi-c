@@ -1,0 +1,60 @@
+=== Enhancer-Promoter Loop Distance Analysis Summary ===
+Generated: 2026-01-28 19:27:15 
+Timepoint: late 
+
+Input file: peaks/loop_annotation_extended/late/extended_characterized_loops.tsv 
+
+=== Filter Definitions ===
+
+Lenient E-P filter:
+  (anchor1_H3K27ac+ AND anchor2_H3K4me3+) OR
+  (anchor1_H3K4me3+ AND anchor2_H3K27ac+)
+
+Classified E-P filter:
+  loop_type_extended contains 'Active_Enhancer' AND 'Active_Promoter'
+  (Active_Enhancer = K27ac+ AND >2kb from TSS)
+  (Active_Promoter = K4me3+ AND NOT K27me3 AND <=2kb from TSS)
+
+=== Subset Statistics ===
+
+--- All Loops ---
+  Total loops: 2910
+  Lost in BAP1-KO: 1187 (40.8%)
+  Gained in BAP1-KO: 1723 (59.2%)
+  Median distance (Lost): 625.0 kb
+  Median distance (Gained): 320.0 kb
+  Median ratio (Lost/Gained): 1.95
+  KS test p-value: 5.49e-48
+  Wilcoxon p-value: 1.12e-50
+
+--- Lenient E-P ---
+  Total loops: 280
+  Lost in BAP1-KO: 247 (88.2%)
+  Gained in BAP1-KO: 33 (11.8%)
+  Median distance (Lost): 480.0 kb
+  Median distance (Gained): 450.0 kb
+  Median ratio (Lost/Gained): 1.07
+  KS test p-value: 6.42e-01
+  Wilcoxon p-value: 7.44e-01
+
+--- Classified E-P ---
+  Total loops: 119
+  Lost in BAP1-KO: 106 (89.1%)
+  Gained in BAP1-KO: 13 (10.9%)
+  Median distance (Lost): 440.0 kb
+  Median distance (Gained): 255.0 kb
+  Median ratio (Lost/Gained): 1.73
+  KS test p-value: 1.87e-01
+  Wilcoxon p-value: 3.01e-01
+
+=== ChIP-seq Mark Overlap Breakdown ===
+
+Anchor1 H3K27ac+: 607 / 2910 (20.9%)
+Anchor2 H3K27ac+: 643 / 2910 (22.1%)
+Anchor1 H3K4me3+: 397 / 2910 (13.6%)
+Anchor2 H3K4me3+: 386 / 2910 (13.3%)
+
+=== Loop Type Breakdown (Classified E-P) ===
+
+               loop_type_extended down_in_mutant up_in_mutant
+1 Active_Promoter-Active_Enhancer            106           13
