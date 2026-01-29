@@ -75,9 +75,10 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 - [x] **3a. CDF and density plots filtered by H3K27me3 overlap.** Three subsets: K27me3-anchored (at least one anchor), K27me3-both (both anchors), bivalent. -> `scripts/loop_distance_k27me3_filtered.R`
 - [x] **3b. ChIP-seq mark trends across loop distance.** H3K27ac decreasing, H3K27me3 increasing with distance. -> `scripts/chip_distance_analysis.R`
-- [~] **3c. Polycomb-specific shared anchor analysis.** Among shared anchors (task 1a), filter to those classified as "Polycomb" or "Repressed_Promoter" in extended annotation. Show that these are the anchors driving the switching.
+- [x] **3c. Polycomb-specific shared anchor analysis.** Among shared anchors (task 1a), filter to those classified as "Polycomb" or "Repressed_Promoter" in extended annotation. Show that these are the anchors driving the switching. -> `scripts/polycomb_shared_anchor_analysis.R`, outputs in `output/shared_anchor_analysis/{early,late}/polycomb_specific/`
 - [ ] **3d. APA heatmaps for Polycomb-anchored loops.** Aggregate contact signal at Polycomb-classified loop anchors, split by lost vs gained.
 - [ ] **3e. Gene body heatmap for Polycomb-associated loops.** For genes at Polycomb anchors that switch from long to short loops, show a heatmap of ChIP-seq signal (H3K27me3) across the gene body.
+- [ ] **3f. Assess differential H3K27me3/H2AK119ub at Polycomb shared anchors.** Determine whether K27me3 and/or H2AK119ub signal is changing within the Polycomb-anchored shared anchor regions identified in 3c. Two approaches: (1) Overlap with diffbind differential peaks (caveat: summit=400bp may miss broader K27me3 domains → expect false negatives), (2) Aggregate ChIP-seq signal heatmaps at shared anchors (preferred for broader marks). Input: differential peaks from diffbind in `peaks/new/`.
 
 ### Existing resources
 
@@ -88,6 +89,9 @@ Reference: `CT-meeting-3.md` (meeting notes)
 - **Bivalent peak files:** `peaks/beds/Bivalent_Cerebellum_Late.bed`, `peaks/beds/Bivalent_Cerebellum_Early.bed`
 - **Extended annotation with Polycomb category:** `scripts/annotate_loops_extended.R` (classifies anchors as Polycomb when H3K27me3+ and >2kb from TSS)
 - **APA pipeline:** `scripts/apa_analysis.R`
+- **Polycomb shared anchor analysis:** `scripts/polycomb_shared_anchor_analysis.R` -> `output/shared_anchor_analysis/{early,late}/polycomb_specific/`
+- **Differential H3K27me3 peaks (diffbind, summit=400bp):** `peaks/new/adult_K27me3_down.bed`, `peaks/new/adult_K27me3_up.bed` (late), `peaks/new/P12_H3K27me3_down.bed`, `peaks/new/P12_H3K27me3_up.bed` (early)
+- **Differential H2AK119ub peaks (diffbind, summit=400bp):** `peaks/new/H2AK119ub_down.bed`, `peaks/new/H2AK119ub_up.bed`
 
 ---
 
@@ -202,13 +206,13 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 ### Tasks
 
-- [ ] **8a. Obtain H2AK119ub ChIP-seq data.** Not currently in repo.
-- [ ] **8b. (Once data obtained) Overlap H2AK119ub with loop anchors.** Classify anchors by ubiquitination status.
+- [x] **8a. Obtain H2AK119ub ChIP-seq data.** Differential peaks now available in `peaks/new/`.
+- [ ] **8b. Overlap H2AK119ub with loop anchors.** Classify anchors by ubiquitination status. Use differential peaks from diffbind (up/down in mutant).
 - [ ] **8c. Correlate delta E-P contacts with ubiquitination levels.** Test hypothesis that ubiquitination buffers H3K27ac-mediated contact formation.
 
 ### Existing resources
 
-- **H2AK119ub data:** NOT AVAILABLE - need to generate or obtain
+- **H2AK119ub differential peaks (diffbind):** `peaks/new/H2AK119ub_down.bed`, `peaks/new/H2AK119ub_up.bed` (summit=400bp, may underestimate broader domains)
 - **Framework for ChIP overlap:** `scripts/annotate_loops_extended.R` (can add H2AK119ub as additional mark)
 
 ---
@@ -221,12 +225,12 @@ Based on meeting notes emphasis and data availability:
 |----------|----------|----------------|----------------|
 | 1 | Shared anchor / loop switching (Section 1) | Yes | **COMPLETE** (`scripts/shared_anchor_analysis.R`, `scripts/apa_shared_anchors.R`) |
 | 2 | RNA-seq integration with loops (Section 2) | Yes | No (TAD version exists as template) |
-| 3 | Polycomb loop story completion (Section 3) | Yes | Partially |
+| 3 | Polycomb loop story completion (Section 3) | Yes | Partially (3c done: `scripts/polycomb_shared_anchor_analysis.R`, 3f pending) |
 | 4 | Per-mark CDF/density subsetting (Section 4) | Yes | **COMPLETE** (`scripts/loop_distance_mark_filtered.R` all 5 marks) |
-| 5 | ABC model / E-P linkage (Section 7) | Yes (except H2AK119ub) | No |
+| 5 | ABC model / E-P linkage (Section 7) | Yes | No |
 | 6 | CTCF analysis (Section 5) | Yes (CTCF peaks), No (RAD21) | No |
 | 7 | TAD-loop cross-reference (Section 6) | Yes | **COMPLETE** (`tads/scripts/boundary_loop_crossref.R`) |
-| 8 | H2AK119ub integration (Section 8) | No | No |
+| 8 | H2AK119ub integration (Section 8) | Yes (differential peaks in `peaks/new/`) | No |
 
 ---
 
@@ -250,6 +254,16 @@ Based on meeting notes emphasis and data availability:
 | Bivalent | `peaks/beds/Bivalent_Cerebellum_Late.bed` | `peaks/beds/Bivalent_Cerebellum_Early.bed` |
 | CTCF | `peaks/CTCF.bed` (Late only) | `peaks/ctcf_motifs_mm10.bed` (motif-based) |
 
+### Differential ChIP-seq peaks (diffbind, summit=400bp)
+
+| Mark | Down in mutant | Up in mutant |
+|------|----------------|--------------|
+| H3K27me3 (Late/Adult) | `peaks/new/adult_K27me3_down.bed` | `peaks/new/adult_K27me3_up.bed` |
+| H3K27me3 (Early/P12) | `peaks/new/P12_H3K27me3_down.bed` | `peaks/new/P12_H3K27me3_up.bed` |
+| H2AK119ub | `peaks/new/H2AK119ub_down.bed` | `peaks/new/H2AK119ub_up.bed` |
+
+**Note:** Summit width of 400bp may underestimate broader H3K27me3/H2AK119ub domains. Consider aggregate signal heatmaps for these marks.
+
 ### RNA-seq
 
 | Timepoint | File | Key columns |
@@ -265,5 +279,6 @@ Based on meeting notes emphasis and data availability:
 | CDF + density + statistical tests | `scripts/loop_distance_k27me3_filtered.R` | Sections 4b-4d |
 | Generalized mark-filtered analysis | `scripts/loop_distance_mark_filtered.R` | Any ChIP mark filtering |
 | Extended anchor classification | `scripts/annotate_loops_extended.R` | Sections 1b, 3c |
+| Polycomb-specific shared anchor | `scripts/polycomb_shared_anchor_analysis.R` | Section 3c, 3f |
 | APA heatmaps | `scripts/apa_analysis.R` | Sections 1d, 3d |
 | Multi-format output | `scripts/utils/multi_format_output.R` | All new scripts |
