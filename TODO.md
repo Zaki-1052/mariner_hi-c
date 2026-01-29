@@ -20,11 +20,11 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 ### Tasks
 
-- [ ] **1a. Identify shared anchors between lost and gained loops.** For each anchor coordinate (with some tolerance window, e.g. 10kb), find anchors that appear in both a `down_in_mutant` loop AND an `up_in_mutant` loop. These are candidate "switching" anchors.
-- [ ] **1b. Characterize shared anchors vs non-shared anchors.** Compare chromatin state (Polycomb, Active_Promoter, etc.), distance properties, and ChIP-seq marks between shared and non-shared anchors.
-- [ ] **1c. Show that lost loops at shared anchors are longer than gained loops at the same anchors.** Paired analysis: for each shared anchor, compare the distance of the lost loop vs the gained loop.
-- [ ] **1d. Generate aggregate heatmaps (APA) for shared-anchor loop subsets.** Separate APA for: (a) lost long-range loops at shared anchors, (b) gained short-range loops at shared anchors.
-- [ ] **1e. Violin plot: expression of genes near shared anchors.** For genes proximal to shared anchors, show log2FC distribution (from RNA-seq) split by whether the anchor lost a long-range loop vs gained a short-range loop.
+- [x] **1a. Identify shared anchors between lost and gained loops.** For each anchor coordinate (with some tolerance window, e.g. 10kb), find anchors that appear in both a `down_in_mutant` loop AND an `up_in_mutant` loop. These are candidate "switching" anchors. -> `scripts/shared_anchor_analysis.R` (212 shared anchors identified)
+- [x] **1b. Characterize shared anchors vs non-shared anchors.** Compare chromatin state (Polycomb, Active_Promoter, etc.), distance properties, and ChIP-seq marks between shared and non-shared anchors. -> `output/shared_anchor_analysis/{early,late}/` (Chi-square p=3.28e-31)
+- [x] **1c. Show that lost loops at shared anchors are longer than gained loops at the same anchors.** Paired analysis: for each shared anchor, compare the distance of the lost loop vs the gained loop. -> Paired Wilcoxon p=1.17e-20, median lost=1.15Mb, median gained=340kb
+- [x] **1d. Generate aggregate heatmaps (APA) for shared-anchor loop subsets.** Separate APA for: (a) lost long-range loops at shared anchors, (b) gained short-range loops at shared anchors. -> `scripts/apa_shared_anchors.R`, `scripts/apa_shared_anchors.sb`
+- [x] **1e. Violin plot: expression of genes near shared anchors.** For genes proximal to shared anchors, show log2FC distribution (from RNA-seq) split by whether the anchor lost a long-range loop vs gained a short-range loop. -> `output/shared_anchor_analysis/{early,late}/plots/`
 
 ### Existing resources
 
@@ -219,7 +219,7 @@ Based on meeting notes emphasis and data availability:
 
 | Priority | Analysis | Data Available? | Script Exists? |
 |----------|----------|----------------|----------------|
-| 1 | Shared anchor / loop switching (Section 1) | Yes | No |
+| 1 | Shared anchor / loop switching (Section 1) | Yes | **COMPLETE** (`scripts/shared_anchor_analysis.R`, `scripts/apa_shared_anchors.R`) |
 | 2 | RNA-seq integration with loops (Section 2) | Yes | No (TAD version exists as template) |
 | 3 | Polycomb loop story completion (Section 3) | Yes | Partially |
 | 4 | Per-mark CDF/density subsetting (Section 4) | Yes | Partially (K27me3 done, others not) |
