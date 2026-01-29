@@ -125,8 +125,8 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 ### Tasks
 
-- [ ] **5a. CTCF overlap analysis at lost vs gained loop anchors.** Are lost loops more likely to have CTCF at their anchors? Are gained loops CTCF-depleted?
-- [ ] **5b. CDF/density for CTCF-anchored loops.** Filter to loops with CTCF at anchors, compare lost vs gained distance distributions.
+- [x] **5a. CTCF overlap analysis at lost vs gained loop anchors.** Are lost loops more likely to have CTCF at their anchors? Are gained loops CTCF-depleted? -> `scripts/loop_distance_mark_filtered.R --marks ctcf` outputs in `output/loops_mark_filtered/late/ctcf/`
+- [x] **5b. CDF/density for CTCF-anchored loops.** Filter to loops with CTCF at anchors, compare lost vs gained distance distributions. -> `output/loops_mark_filtered/late/ctcf/` (one-anchor and both-anchor filters)
 - [ ] **5c. Cross-reference with stripe analysis.** Do regions with lost CTCF-anchored loops show stripe defects? Stripe pipeline already exists.
 - [ ] **5d. Obtain RAD21 ChIP-seq data.** No RAD21 data currently in repo. Need to request assay or find public data.
 - [ ] **5e. (If RAD21 data obtained) Overlap RAD21 with loop anchors and TAD boundaries.**
@@ -136,6 +136,7 @@ Reference: `CT-meeting-3.md` (meeting notes)
 - **CTCF ChIP-seq peaks:** `peaks/CTCF.bed` (32,487 peaks, Late timepoint)
 - **CTCF motif predictions:** `peaks/ctcf_motifs_mm10.bed` (genome-wide motif scan)
 - **Extended annotation already includes CTCF:** `scripts/annotate_loops_extended.R` has CTCF_Site category (8-category version in `peaks/loop_annotation_extended/`)
+- **CTCF loop distance analysis:** `output/loops_mark_filtered/late/ctcf/` (CDF/density plots for one-anchor and both-anchor CTCF loops)
 - **Stripe pipeline:** `stripes/scripts/phase1_detection.R` through `phase4_integration.R`, with outputs in `stripes/outputs/{early,late}/`
 - **RAD21 data:** NOT AVAILABLE - need to request (meeting note: "rad21 - ask for assay", "rao - ask about tet enzyme assay")
 
@@ -155,13 +156,15 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 - [x] **6a. TADCompare differential boundary analysis.** -> `tads/scripts/02_run_tadcompare.R` through `05_filter_blacklist.R`
 - [x] **6b. DEG violin plot at TAD boundaries.** -> `tads/scripts/deg_tad_violin.R`
-- [x] **6c. Cross-reference differential loops with differential TAD boundaries.** Are differential loops preferentially located near differential TAD boundaries? Overlap analysis between `characterized_loops.tsv` anchors and `tads/results/{tp}/final/tadcompare_final_filtered.tsv` boundaries. -> `tads/scripts/boundary_loop_crossref.R` (Late: 69.6% concordance, p<0.001; Merge boundaries enriched in lost loops OR=0.32, Strength Change enriched in gained loops OR=2.11)
+- [~] **6c. Cross-reference differential loops with differential TAD boundaries.** Are differential loops preferentially located near differential TAD boundaries? Overlap analysis between `characterized_loops.tsv` anchors and `tads/results/{tp}/final/tadcompare_final_filtered.tsv` boundaries. -> `tads/scripts/boundary_loop_crossref.R` (Late: 69.6% concordance, p<0.001; Merge boundaries enriched in lost loops OR=0.32, Strength Change enriched in gained loops OR=2.11). **Permutation test needs redo with regioneR/regioneReloaded.**
+- [ ] **6d. Proper permutation analysis for boundary-loop enrichment.** Redo permutation testing using regioneR/regioneReloaded (Bioconductor). Current implementation is basic; proper approach shuffles one BED file across genome ≥1000 times (10,000 for final), measures overlap, builds null distribution. Consider restricting background set if asking about co-enrichment of specific chromatin features (e.g., euchromatin-associated markers → restrict to euchromatin).
 
 ### Existing resources
 
 - **TAD results:** `tads/results/{early,late}/final/tadcompare_final_filtered.tsv` (differential boundaries with Enriched_In, Type, Gap_Score)
 - **TAD visualization:** `tads/scripts/tad_visualizations.R` (40+ plots across 9 subdirectories)
 - **Loop data:** `25042-late_outputs/merged_loops/characterized_loops.tsv`, `250831-early_outputs/merged_loops/characterized_loops.tsv`
+- **Permutation analysis reference:** regioneReloaded vignette (https://www.bioconductor.org/packages/release/bioc/vignettes/regioneReloaded/inst/doc/regioneReloaded.html) - provides nice visuals for group BED file comparisons
 
 ---
 
@@ -195,7 +198,7 @@ Reference: `CT-meeting-3.md` (meeting notes)
 - Meeting notes distinguish two goals:
   - **1st goal:** Link change in E-P contacts to differentially expressed genes
   - **2nd goal:** Tie change in delta contacts to ubiquitinated histone (H2AK119ub)
-- H2AK119ub ChIP-seq data is NOT currently available in the repo
+- **H2AK119ub ChIP-seq data now available:** Differential peaks from diffbind in `peaks/new/` (up/down in mutant)
 - Meeting hypothesis: "ub is buffer to stop k27ac contact" - once ubiquitination threshold is reached, contacts form
 
 ---
@@ -225,11 +228,11 @@ Based on meeting notes emphasis and data availability:
 |----------|----------|----------------|----------------|
 | 1 | Shared anchor / loop switching (Section 1) | Yes | **COMPLETE** (`scripts/shared_anchor_analysis.R`, `scripts/apa_shared_anchors.R`) |
 | 2 | RNA-seq integration with loops (Section 2) | Yes | No (TAD version exists as template) |
-| 3 | Polycomb loop story completion (Section 3) | Yes | Partially (3c done: `scripts/polycomb_shared_anchor_analysis.R`, 3f pending) |
-| 4 | Per-mark CDF/density subsetting (Section 4) | Yes | **COMPLETE** (`scripts/loop_distance_mark_filtered.R` all 5 marks) |
-| 5 | ABC model / E-P linkage (Section 7) | Yes | No |
-| 6 | CTCF analysis (Section 5) | Yes (CTCF peaks), No (RAD21) | No |
-| 7 | TAD-loop cross-reference (Section 6) | Yes | **COMPLETE** (`tads/scripts/boundary_loop_crossref.R`) |
+| 3 | Polycomb loop story completion (Section 3) | Yes | Partially (3c done: `scripts/polycomb_shared_anchor_analysis.R`, 3d-3f pending) |
+| 4 | Per-mark CDF/density subsetting (Section 4) | Yes | **COMPLETE** (`scripts/loop_distance_mark_filtered.R` all 5 marks + CTCF) |
+| 5 | CTCF analysis (Section 5) | Yes (CTCF peaks), No (RAD21) | Partially (5a-5b done, 5c-5e pending) |
+| 6 | TAD-loop cross-reference (Section 6) | Yes | Partially (permutation needs redo with regioneR/regioneReloaded) |
+| 7 | ABC model / E-P linkage (Section 7) | Yes (H2AK119ub now available) | No |
 | 8 | H2AK119ub integration (Section 8) | Yes (differential peaks in `peaks/new/`) | No |
 
 ---
@@ -282,3 +285,12 @@ Based on meeting notes emphasis and data availability:
 | Polycomb-specific shared anchor | `scripts/polycomb_shared_anchor_analysis.R` | Section 3c, 3f |
 | APA heatmaps | `scripts/apa_analysis.R` | Sections 1d, 3d |
 | Multi-format output | `scripts/utils/multi_format_output.R` | All new scripts |
+| Permutation analysis (proper) | regioneR/regioneReloaded (Bioconductor) | Section 6d, any enrichment testing |
+
+### Permutation Analysis Best Practices (regioneR/regioneReloaded)
+
+- Shuffle one BED file across genome N times (≥1000 for exploratory, 10,000 for final publication)
+- Measure overlap between shuffled and target BED file each iteration
+- Build null distribution, compare actual overlap
+- **Background restriction:** If asking about co-enrichment of euchromatin-associated markers, restrict background to euchromatin regions (same logic for heterochromatin, etc.)
+- regioneReloaded vignette: https://www.bioconductor.org/packages/release/bioc/vignettes/regioneReloaded/inst/doc/regioneReloaded.html

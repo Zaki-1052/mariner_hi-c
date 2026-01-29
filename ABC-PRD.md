@@ -121,15 +121,58 @@ Steps:
 
 The ABC model has no built-in differential analysis. Predictions must be run separately per condition, then integrated.
 
+### Critical: Consensus Enhancer Universe (NOT Cell-Type Specific)
+
+**IMPORTANT:** Many papers use ABC to define cell-type specific enhancers by calling separate enhancer sets per condition. **This is NOT what we want.** Defining separate enhancers between ctrl and mut would confound differential analysis.
+
+**Correct approach:**
+1. Define a **consensus enhancer universe** shared across conditions
+2. Use merged ATAC-seq peakset as candidate enhancers
+3. Filter to elements within 5-100 kb (or up to 200 kb) of gene TSSs
+4. Quantify enhancer activity using H3K27ac & ATAC-seq signal per condition
+5. Run ABC with this fixed enhancer set for both WT and KO
+
+This ensures we're comparing the same genomic elements across conditions.
+
+### Recommended Workflow (CCBB Integration Approach)
+
 ```
-1. MACS2 → Call H3K27ac peaks per condition
-2. ABC Model → Generate enhancer-gene predictions per condition
-3. DiffBind → Identify differential H3K27ac regions
-4. Custom integration →
+1. Define consensus enhancer universe
+   - Merge ATAC-seq peaks across all samples
+   - Filter to regions within 5-200 kb of gene TSSs
+   - Cap to top 100-150k enhancers by H3K27ac activity (if runtime/compute issues)
+
+2. Run ABC separately per condition
+   - Input: ATAC + H3K27ac + Hi-C for WT
+   - Input: ATAC + H3K27ac + Hi-C for KO
+   - Use same consensus enhancer set for both
+
+3. Filter ABC predictions
+   - Keep links with ABC ≥ 0.02 per condition
+
+4. Compute delta ABC
+   - ΔABC = ABC_KO - ABC_WT for each enhancer-gene pair
+
+5. Integrate with RNA-seq
+   - Join ΔABC with gene log2FC from RNA-seq
+   - Summarize directional concordance (ΔABC↑ + log2FC↑, etc.)
+
+6. Aggregate to gene level
+   - Strongest link per gene (max |ΔABC|)
+   - Total ABC per gene (sum of all links)
+   - Number of perturbed links per gene
+```
+
+### Alternative Workflow (Original - Modified)
+
+```
+1. DiffBind → Identify differential H3K27ac regions (for downstream interpretation)
+2. ABC Model → Generate enhancer-gene predictions per condition (using consensus enhancer set)
+3. Custom integration →
    - Calculate ΔABC scores between conditions
    - Intersect with DiffBind differential peaks
    - Correlate enhancer logFC with target gene logFC from RNA-seq
-5. Filter → Prioritize concordant enhancer-gene pairs
+4. Filter → Prioritize concordant enhancer-gene pairs
 ```
 
 ### Differential Analysis Tools (if needed)
