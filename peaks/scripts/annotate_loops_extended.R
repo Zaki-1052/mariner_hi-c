@@ -11,14 +11,21 @@
 #   Categories are biologically defined based on histone modifications and
 #   TSS proximity.
 #
-# Anchor Categories (7 types, priority order):
+# Anchor Categories (8 types, priority order):
 #   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND <=2kb from TSS
 #   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND <=2kb from TSS
 #   3. Bivalent_Promoter:  K4me3+K27me3 overlap (pre-computed intersection)
 #   4. Polycomb:           H3K27me3+ AND >2kb from TSS (distal repressive)
 #   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS
 #   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
-#   7. Other:              No ChIP-seq marks / structural elements
+#   7. CTCF_Site:          CTCF DNA motif+ (genome-wide, not timepoint-specific)
+#   8. Other:              No ChIP-seq marks / no CTCF motif
+#
+# CTCF Classification Note:
+#   CTCF_Site uses DNA motifs (ctcf_motifs_mm10.bed) for ALL timepoints.
+#   This ensures methodological consistency - DNA motifs are static genome
+#   features, unlike ChIP-seq which is tissue/timepoint-specific.
+#   ChIP-seq overlap is still computed and saved for reference.
 #
 # Peak Files (peaks/beds/):
 #   - H3K27ac:  Early/Late cerebellum
@@ -215,7 +222,7 @@ annotate_chip_overlaps_extended <- function(anchor_gr, k27ac_gr, k27me3_gr,
 #'   - Bivalent_Promoter: K4me3+K27me3 overlap marks developmental poised domains
 #'   - Polycomb: Distal H3K27me3 regions (long-range repressive loops)
 #'   - Poised enhancers: H3K4me1 without repressive or active marks
-#'   - CTCF sites: Structural/insulator elements (ChIP OR motif overlap)
+#'   - CTCF sites: Structural/insulator elements (DNA motif for all timepoints)
 #'
 #' @param h3k27ac_overlap Logical - overlaps H3K27ac peak
 #' @param h3k27me3_overlap Logical - overlaps H3K27me3 peak
@@ -284,15 +291,16 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
   anchor_type[is_poised_enhancer] <- "Poised_Enhancer"
 
   # 7. CTCF_Site: Structural/insulator elements
-  # Early timepoints: Use CTCF motif only (no ChIP-seq data available)
-  # Late timepoints: Use CTCF ChIP-seq (actual binding data)
+  # Use DNA motifs for ALL timepoints (methodological consistency)
+  # DNA motifs are genome-wide sequence features, not timepoint-specific
+  # ChIP-seq varies by tissue/stage; motifs provide consistent annotation
   if (use_motif_for_ctcf) {
-    # Early: motif only - indicates binding potential, not confirmed binding
+    # Motif-based: indicates CTCF binding potential based on DNA sequence
     is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
                     !is_bivalent & !is_polycomb & !is_active_enhancer &
                     !is_poised_enhancer & ctcf_motif_overlap
   } else {
-    # Late: ChIP only - actual CTCF binding data
+    # ChIP-based: actual CTCF binding (legacy option, not currently used)
     is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
                     !is_bivalent & !is_polycomb & !is_active_enhancer &
                     !is_poised_enhancer & ctcf_overlap
@@ -518,14 +526,13 @@ annotate_loops_extended <- function(
   # --- Step 6: Classify anchor types ---
   cat("Step 6: Classifying anchor types (8 categories)...\n")
 
-  # Early timepoints use CTCF motif only (no ChIP-seq data)
-  # Late timepoints use CTCF ChIP-seq (actual binding data)
-  use_motif_for_ctcf <- timepoint %in% c("early", "early_p12ctrl")
-  if (use_motif_for_ctcf) {
-    cat("  CTCF classification: Using motif only (early timepoint)\n")
-  } else {
-    cat("  CTCF classification: Using ChIP-seq (late timepoint)\n")
-  }
+  # Use CTCF DNA motifs for ALL timepoints for methodological consistency
+
+  # DNA motifs are genome-wide sequence features (not timepoint-specific)
+  # This ensures comparable CTCF_Site classification across early vs late
+  # ChIP-seq overlap columns are still computed for reference/validation
+  use_motif_for_ctcf <- TRUE
+  cat("  CTCF classification: Using DNA motifs (consistent across timepoints)\n")
 
   anchor1_type <- classify_anchor_type_extended(
     anchor1_chip$H3K27ac_overlap,
