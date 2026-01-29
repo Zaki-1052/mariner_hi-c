@@ -7,7 +7,7 @@
 #   - One-anchor: at least one anchor overlaps the mark
 #   - Both-anchors: both anchors overlap the mark (e.g., super-enhancer for H3K27ac)
 #
-# Supported marks: H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent
+# Supported marks: H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent, CTCF
 #
 # Usage:
 #   Rscript scripts/loop_distance_mark_filtered.R                          # All marks, late
@@ -79,6 +79,13 @@ MARK_CONFIG <- list(
     display_name = "Bivalent",
     biological_role = "Bivalent Promoter (K4me3+K27me3)",
     dir_name = "bivalent"
+  ),
+  CTCF = list(
+    col1 = "anchor1_CTCF_overlap",
+    col2 = "anchor2_CTCF_overlap",
+    display_name = "CTCF",
+    biological_role = "CTCF/Cohesin Anchor (Loop Extrusion)",
+    dir_name = "ctcf"
   )
 )
 
@@ -130,7 +137,7 @@ parse_arguments <- function() {
       cat("Options:\n")
       cat("  --timepoint TP   Timepoint: 'early', 'late', or 'both' (default: late)\n")
       cat("  --marks MARKS    Marks to analyze: 'all' or comma-separated list\n")
-      cat("                   Available: H3K27ac,H3K27me3,H3K4me1,H3K4me3,Bivalent\n")
+      cat("                   Available: H3K27ac,H3K27me3,H3K4me1,H3K4me3,Bivalent,CTCF\n")
       cat("                   (default: all)\n")
       cat("  --help, -h       Show this help message\n\n")
       cat("Output:\n")
@@ -495,6 +502,7 @@ run_mark_analysis <- function(timepoint, mark_name, mark_config, loops_direction
                          "H3K4me1" = "Enhancer-Enhancer",
                          "H3K4me3" = "Promoter-Promoter",
                          "Bivalent" = "Bivalent-Bivalent",
+                         "CTCF" = "CTCF-CTCF",
                          "Both Anchors")
 
     subset_name_both <- sprintf("%s Loops (Both Anchors = %s)",
