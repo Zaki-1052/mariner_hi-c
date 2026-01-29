@@ -53,7 +53,10 @@ Conda/mamba environment creation (~15 minutes with mamba). Dependencies include 
 - `peaks/beds/H3K27acCerebellumEarly2.bed`
 
 ### ATAC-seq Data
-- Available as up/down BED files (will need conversion to tagAlign format for ABC input)
+- Differential peaks available as up/down BED files
+- **Consensus ATAC bed files:** Challana to provide (intersect across replicates, merge across genotype)
+- Individual peak files on instance: `/data2/rs_256/Func_annotation_v2/subtracted_bedfiles`
+- Will need conversion to tagAlign format for ABC input
 
 ### Loop Contact Data
 - `characterized_loops.tsv`
@@ -127,10 +130,11 @@ The ABC model has no built-in differential analysis. Predictions must be run sep
 
 **Correct approach:**
 1. Define a **consensus enhancer universe** shared across conditions
-2. Use merged ATAC-seq peakset as candidate enhancers
+2. Generate ATAC-seq consensus: **intersect across replicates, merge across genotype**
+   - Double-check that intersecting with a particular sample isn't removing too many peaks
 3. Filter to elements within 5-100 kb (or up to 200 kb) of gene TSSs
-4. Quantify enhancer activity using H3K27ac & ATAC-seq signal per condition
-5. Run ABC with this fixed enhancer set for both WT and KO
+4. Quantify enhancer **activity using H3K27ac AND ATAC-seq signal** per condition
+5. Run ABC with this fixed enhancer set for both WT and KO, contact from Hi-C
 
 This ensures we're comparing the same genomic elements across conditions.
 
@@ -138,14 +142,19 @@ This ensures we're comparing the same genomic elements across conditions.
 
 ```
 1. Define consensus enhancer universe
-   - Merge ATAC-seq peaks across all samples
+   - Intersect ATAC-seq peaks across replicates (within each genotype)
+   - Merge across genotypes (WT ∪ KO)
+   - QC: Check that intersecting doesn't remove too many peaks from any sample
    - Filter to regions within 5-200 kb of gene TSSs
    - Cap to top 100-150k enhancers by H3K27ac activity (if runtime/compute issues)
+   - Note: Challana will provide ATAC bed files
 
 2. Run ABC separately per condition
-   - Input: ATAC + H3K27ac + Hi-C for WT
-   - Input: ATAC + H3K27ac + Hi-C for KO
-   - Use same consensus enhancer set for both
+   - Input: Consensus ATAC set + H3K27ac + Hi-C for WT
+   - Input: Consensus ATAC set + H3K27ac + Hi-C for KO
+   - Activity = H3K27ac signal AND ATAC signal
+   - Contact = Hi-C
+   - Use same consensus enhancer set for both conditions
 
 3. Filter ABC predictions
    - Keep links with ABC ≥ 0.02 per condition
@@ -161,6 +170,8 @@ This ensures we're comparing the same genomic elements across conditions.
    - Strongest link per gene (max |ΔABC|)
    - Total ABC per gene (sum of all links)
    - Number of perturbed links per gene
+
+7. (Later) Correlate with H2AK119ub - interpret results first before proceeding
 ```
 
 ### Alternative Workflow (Original - Modified)
