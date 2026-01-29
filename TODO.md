@@ -100,9 +100,9 @@ Reference: `CT-meeting-3.md` (meeting notes)
 ### Tasks
 
 - [x] **4a. CDF/density by H3K27me3.** One anchor vs both anchors. -> `scripts/loop_distance_k27me3_filtered.R`
-- [~] **4b. CDF/density by H3K27ac.** One anchor (enhancer-only loop) vs both anchors (super-enhancer loop). Existing `chip_distance_analysis.R` does trends but not separate CDF/density plots per mark subset.
+- [x] **4b. CDF/density by H3K27ac.** One anchor (enhancer-only loop) vs both anchors (super-enhancer loop). -> `scripts/loop_distance_mark_filtered.R --marks H3K27ac` (92% of super-enhancer loops are lost in BAP1-KO)
 - [x] **4c. CDF/density for H3K27ac + H3K4me3 (enhancer-promoter loops).** Filter to loops where one anchor is H3K27ac+ (enhancer) and the other is H3K4me3+ (promoter). Compare lost vs gained distance distributions. -> `scripts/loop_distance_ep_filtered.R`
-- [ ] **4d. CDF/density for each individual histone modification separately.** Repeat the K27me3-filtered analysis pattern for H3K27ac, H3K4me1, H3K4me3, Bivalent marks.
+- [x] **4d. CDF/density for each individual histone modification separately.** All 5 marks (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent) with one-anchor and both-anchor filters. -> `scripts/loop_distance_mark_filtered.R --marks all --timepoint both` outputs in `output/loops_mark_filtered/{early,late}/{mark}/`
 
 ### Existing resources
 
@@ -222,7 +222,7 @@ Based on meeting notes emphasis and data availability:
 | 1 | Shared anchor / loop switching (Section 1) | Yes | **COMPLETE** (`scripts/shared_anchor_analysis.R`, `scripts/apa_shared_anchors.R`) |
 | 2 | RNA-seq integration with loops (Section 2) | Yes | No (TAD version exists as template) |
 | 3 | Polycomb loop story completion (Section 3) | Yes | Partially |
-| 4 | Per-mark CDF/density subsetting (Section 4) | Yes | Partially (K27me3 done, others not) |
+| 4 | Per-mark CDF/density subsetting (Section 4) | Yes | **COMPLETE** (`scripts/loop_distance_mark_filtered.R` all 5 marks) |
 | 5 | ABC model / E-P linkage (Section 7) | Yes (except H2AK119ub) | No |
 | 6 | CTCF analysis (Section 5) | Yes (CTCF peaks), No (RAD21) | No |
 | 7 | TAD-loop cross-reference (Section 6) | Yes | No |
@@ -263,6 +263,7 @@ Based on meeting notes emphasis and data availability:
 |---------|--------|-------------|
 | GREAT-style gene association + violin plot | `tads/scripts/deg_tad_violin.R` | Sections 1e, 2b |
 | CDF + density + statistical tests | `scripts/loop_distance_k27me3_filtered.R` | Sections 4b-4d |
+| Generalized mark-filtered analysis | `scripts/loop_distance_mark_filtered.R` | Any ChIP mark filtering |
 | Extended anchor classification | `scripts/annotate_loops_extended.R` | Sections 1b, 3c |
 | APA heatmaps | `scripts/apa_analysis.R` | Sections 1d, 3d |
 | Multi-format output | `scripts/utils/multi_format_output.R` | All new scripts |
