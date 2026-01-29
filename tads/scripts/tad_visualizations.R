@@ -91,18 +91,18 @@ cat(sprintf("  Base directory: %s\n", base_dir))
 input_file <- file.path("results", timepoint, "final/tadcompare_final_annotated.tsv")
 output_base <- file.path("results/visualizations", timepoint)
 
-# ChIP-seq peak paths (in parent directory peaks/)
-# Timepoint-specific: late has H3K4me1, early does not
-peaks_dir <- file.path(base_dir, "peaks")
+# ChIP-seq peak paths (in parent directory peaks/beds/)
+# Timepoint-specific Cerebellum peaks (standardized)
+peaks_dir <- file.path(base_dir, "peaks", "beds")
 
 if (timepoint == "late") {
-  h3k27ac_path <- file.path(peaks_dir, "220310index25H3K27acLatePeakRegions.bed")
-  h3k27me3_path <- file.path(peaks_dir, "220310index29H3K27me3LatePeakRegions.bed")
-  h3k4me1_path <- file.path(peaks_dir, "K4me1_aligned_reads_peaks.broadPeak-filtered.bed")
+  h3k27ac_path <- file.path(peaks_dir, "H3K27acCerebellumLate2.bed")
+  h3k27me3_path <- file.path(peaks_dir, "H3K27me3CerebellumLate1.bed")
+  h3k4me1_path <- file.path(peaks_dir, "H3K4me1CerebellumLate1.bed")
 } else if (timepoint == "early") {
-  h3k27ac_path <- file.path(peaks_dir, "P12_ctrl_H3K27ac_early_peaks.bed")
-  h3k27me3_path <- file.path(peaks_dir, "P12_ctrl_H3K27me3_early_peaks.bed")
-  h3k4me1_path <- NULL  # Not available for early timepoint
+  h3k27ac_path <- file.path(peaks_dir, "H3K27acCerebellumEarly2.bed")
+  h3k27me3_path <- file.path(peaks_dir, "H3K27me3CerebellumEarly1.bed")
+  h3k4me1_path <- file.path(peaks_dir, "H3K4me1CerebellumEarly1.bed")
 } else {
   stop(sprintf("Unknown timepoint: %s. Use 'late' or 'early'.", timepoint))
 }

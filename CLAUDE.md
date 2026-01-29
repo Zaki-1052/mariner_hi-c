@@ -92,7 +92,7 @@ The pipeline follows a sequential workflow across three resolutions (5kb, 10kb, 
 **Input data (configured in individual scripts):**
 - HiCCUPS loop calls: `/expanse/lustre/projects/csd940/ctea/nf-hic/juicer_frompre/hiccups_results/{sample}/postprocessed_pixels_{RES}.bedpe`
 - Hi-C matrices: `/expanse/lustre/projects/csd940/ctea/nf-hic/juicerpre/{sample}.hic`
-- ChIP-seq peaks: `220310index25H3K27acLatePeakRegions.bed`, `K4me1_aligned_reads_peaks.broadPeak-filtered.bed`
+- ChIP-seq peaks: `peaks/beds/` directory (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent per timepoint)
 
 **Output structure:**
 - Per-resolution intermediate: `outputs/res_{RES}kb/`
@@ -256,29 +256,26 @@ merged <- reduce(c(gi_list[[1]], gi_list[[2]], gi_list[[3]]),
                  min.gapwidth = 10000)
 ```
 
-### 5. ChIP-seq Based Anchor Classification
+### 5. ChIP-seq Based Anchor Classification (7 Categories)
 
-downstream_analysis.R implements biological annotation:
+`annotate_loops_extended.R` implements chromatin state annotation using 5 histone
+marks from timepoint-specific peak files in `peaks/beds/`:
 
 ```r
-# Load ChIP-seq peaks
-h3k27ac <- import.bed("220310index25H3K27acLatePeakRegions.bed")
-h3k4me1 <- import.bed("K4me1_aligned_reads_peaks.broadPeak-filtered.bed")
+# Peak files loaded per timepoint (early/late) from PEAK_FILES config
+# H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent (K4me3+K27me3)
 
-# Classify each anchor
-classify_anchor <- function(anchor, tss_gr, h3k27ac, h3k4me1) {
-  dist_to_tss <- distanceToNearest(anchor, tss_gr)
-  has_h3k27ac <- countOverlaps(anchor, h3k27ac) > 0
-  has_h3k4me1 <- countOverlaps(anchor, h3k4me1) > 0
+# 7-category priority-based classification:
+#   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND <=2kb from TSS
+#   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND <=2kb from TSS
+#   3. Bivalent_Promoter:  K4me3+K27me3 overlap (pre-computed intersection)
+#   4. Polycomb:           H3K27me3+ AND >2kb from TSS (distal repressive)
+#   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS
+#   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+#   7. Other:              No ChIP-seq marks / structural elements
 
-  if (has_h3k27ac & dist_to_tss <= 2000) return("Promoter")
-  if (has_h3k27ac & dist_to_tss > 2000) return("Active_Enhancer")
-  if (has_h3k4me1 & !has_h3k27ac) return("Poised_Enhancer")
-  return("Other")
-}
-
-# Apply to both anchors → 10 loop type categories
-# (Promoter-Promoter, Promoter-Enhancer, Enhancer-Enhancer, etc.)
+# Apply to both anchors → up to 28 loop type combinations
+# (Active_Promoter-Active_Enhancer, Polycomb-Polycomb, etc.)
 ```
 
 ## Common Tasks
@@ -403,8 +400,8 @@ See `R_PACKAGES.md` for complete list and installation instructions.
 
 **This pipeline identifies:**
 - Differential loops between BAP1-KO and wildtype
-- Loop types: Promoter-Promoter, Promoter-Enhancer, Enhancer-Enhancer
-- Enrichment at gene regulatory elements (H3K27ac, H3K4me1 marks)
+- Loop types based on 7 anchor categories (Active_Promoter, Repressed_Promoter, Bivalent_Promoter, Polycomb, Active_Enhancer, Poised_Enhancer, Other)
+- Enrichment at gene regulatory elements (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent marks)
 - Functional enrichment (GO/KEGG pathways)
 
 **Key effect sizes:**
