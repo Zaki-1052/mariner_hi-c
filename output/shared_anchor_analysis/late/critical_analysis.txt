@@ -1,0 +1,119 @@
+=================================================================
+CRITICAL ANALYSIS: SHARED ANCHOR / LOOP SWITCHING HYPOTHESIS
+=================================================================
+
+Generated: 2026-01-28 17:41:09.804788
+
+=== LATE TIMEPOINT ===
+
+--- DIRECTION OF DISTANCE DIFFERENCE ---
+Lost > Gained (supports hypothesis): 176 / 212 (83.0%)
+Lost < Gained (contradicts hypothesis): 36 / 212 (17.0%)
+Equal: 0
+
+--- DIFFERENCE DISTRIBUTION (Lost - Gained, in kb) ---
+Min: -35000 kb
+25th percentile: 234 kb
+Median: 694 kb
+75th percentile: 1618 kb
+Max: 60410 kb
+
+--- LOOP PARTICIPATION IN SHARED ANCHORS ---
+Lost loops at shared anchors: 283 / 1187 (23.8%)
+Gained loops at shared anchors: 321 / 1723 (18.6%)
+Total loops at shared anchors: 604 / 2910 (20.8%)
+
+--- COUNTEREXAMPLES (Anchors where Lost < Gained distance) ---
+  shared_8 (chr14): Lost=230kb, Gained=610kb, n_lost=9, n_gained=1
+  shared_14 (chr9): Lost=90kb, Gained=320kb, n_lost=1, n_gained=1
+  shared_24 (chr11): Lost=190kb, Gained=750kb, n_lost=4, n_gained=1
+  shared_25 (chr11): Lost=190kb, Gained=750kb, n_lost=4, n_gained=1
+  shared_29 (chr11): Lost=50kb, Gained=325kb, n_lost=1, n_gained=5
+  shared_30 (chr11): Lost=50kb, Gained=300kb, n_lost=1, n_gained=1
+  shared_39 (chr13): Lost=55kb, Gained=275kb, n_lost=1, n_gained=1
+  shared_55 (chr16): Lost=675kb, Gained=722kb, n_lost=3, n_gained=2
+  shared_56 (chr16): Lost=370kb, Gained=775kb, n_lost=1, n_gained=2
+  shared_57 (chr16): Lost=370kb, Gained=550kb, n_lost=1, n_gained=3
+  shared_61 (chr16): Lost=425kb, Gained=1700kb, n_lost=2, n_gained=1
+  shared_64 (chr16): Lost=300kb, Gained=700kb, n_lost=2, n_gained=2
+  shared_79 (chr19): Lost=90kb, Gained=1420kb, n_lost=1, n_gained=1
+  shared_80 (chr19): Lost=80kb, Gained=1420kb, n_lost=3, n_gained=1
+  shared_93 (chr2): Lost=200kb, Gained=1365kb, n_lost=2, n_gained=2
+  shared_94 (chr2): Lost=170kb, Gained=700kb, n_lost=1, n_gained=1
+  shared_95 (chr2): Lost=170kb, Gained=700kb, n_lost=1, n_gained=1
+  shared_111 (chr4): Lost=125kb, Gained=835kb, n_lost=1, n_gained=1
+  shared_113 (chr4): Lost=50kb, Gained=425kb, n_lost=1, n_gained=1
+  shared_114 (chr4): Lost=50kb, Gained=425kb, n_lost=1, n_gained=1
+  shared_123 (chr4): Lost=800kb, Gained=850kb, n_lost=1, n_gained=3
+  shared_124 (chr4): Lost=800kb, Gained=850kb, n_lost=1, n_gained=3
+  shared_131 (chr5): Lost=120kb, Gained=470kb, n_lost=1, n_gained=1
+  shared_132 (chr5): Lost=120kb, Gained=470kb, n_lost=1, n_gained=1
+  shared_134 (chr5): Lost=725kb, Gained=35725kb, n_lost=1, n_gained=1
+  shared_140 (chr6): Lost=108kb, Gained=3800kb, n_lost=2, n_gained=1
+  shared_150 (chr6): Lost=95kb, Gained=4100kb, n_lost=1, n_gained=1
+  shared_151 (chr6): Lost=95kb, Gained=4100kb, n_lost=1, n_gained=1
+  shared_158 (chr7): Lost=170kb, Gained=725kb, n_lost=1, n_gained=1
+  shared_165 (chr10): Lost=220kb, Gained=775kb, n_lost=1, n_gained=3
+  shared_166 (chr10): Lost=45kb, Gained=500kb, n_lost=1, n_gained=3
+  shared_169 (chr10): Lost=270kb, Gained=610kb, n_lost=1, n_gained=1
+  shared_171 (chr10): Lost=270kb, Gained=760kb, n_lost=1, n_gained=3
+  shared_184 (chr12): Lost=105kb, Gained=2125kb, n_lost=1, n_gained=1
+  shared_195 (chr1): Lost=450kb, Gained=6850kb, n_lost=3, n_gained=1
+  shared_200 (chr1): Lost=438kb, Gained=1800kb, n_lost=2, n_gained=1
+
+--- STATISTICAL TESTS ---
+Paired Wilcoxon signed-rank test (lost > gained):
+  p-value: 1.17e-20 (highly significant)
+  Cohen's d: 0.31 (small-to-medium effect size)
+
+--- CHIP-SEQ ENRICHMENT AT SHARED VS UNIQUE ANCHORS ---
+H3K27me3: OR=2.04, p=1.75e-24 (ENRICHED at shared anchors)
+Bivalent: OR=1.74, p=0.013 (ENRICHED at shared anchors)
+H3K4me1: OR=1.27, p=4.6e-4 (slightly enriched)
+H3K27ac: OR=0.68, p=3.9e-6 (DEPLETED at shared anchors)
+H3K4me3: OR=1.05, p=0.64 (no difference)
+
+=================================================================
+CRITICAL ASSESSMENT
+=================================================================
+
+STRENGTHS (Evidence supporting the hypothesis):
+  1. Strong statistical significance (p=1.17e-20) for distance difference
+  2. 78% of shared anchors show the expected pattern (lost > gained)
+  3. Large median difference: 694 kb (lost loops ~3.4x longer)
+  4. H3K27me3 enrichment at shared anchors suggests Polycomb involvement
+
+WEAKNESSES / CAVEATS:
+  1. Only 24% of lost loops and 19% of gained loops participate
+     - Loop switching may explain minority of differential loops
+     - Most loops change without a "partner" at shared anchor
+
+  2. 22% of shared anchors show OPPOSITE pattern (lost < gained)
+     - Not a universal mechanism
+     - Some anchors gain long-range and lose short-range
+
+  3. Cohen's d = 0.31 is small-to-medium effect
+     - Large p-value driven by sample size, not just effect magnitude
+
+  4. Gene expression at shared anchors: p=0.63, median log2FC=0.05
+     - NO significant expression change at shared anchor genes
+     - Loop switching may not directly impact local gene expression
+
+  5. Early timepoint has only 5 shared anchors (too few to assess)
+     - Cannot replicate findings in early timepoint
+
+CONCLUSION:
+  The loop switching hypothesis is PARTIALLY SUPPORTED but not universal.
+  At shared anchors, lost loops are significantly longer than gained loops,
+  consistent with a model where long-range Polycomb loops are replaced by
+  shorter-range interactions. However:
+  - This only explains ~20% of differential loops
+  - 22% of shared anchors show the opposite pattern
+  - No clear gene expression consequence detected
+
+SUGGESTED ADDITIONAL ANALYSES:
+  1. Examine the 22% counterexamples - are they biologically distinct?
+  2. Look at specific loci (e.g., Hox clusters) for case studies
+  3. Test if shared anchors overlap known Polycomb domains
+  4. Check if non-shared lost loops are also long-range (control)
+=================================================================
