@@ -236,10 +236,8 @@ Based on meeting notes emphasis and data availability:
 
 | Timepoint | File | Key columns |
 |-----------|------|-------------|
-| Late | `25042-late_outputs/merged_loops/characterized_loops.tsv` | 51 cols: coordinates, logFC, FDR, direction, distance, ChIP overlaps, gene annotations, loop_type |
-| Early | `250831-early_outputs/merged_loops/characterized_loops.tsv` | Same schema |
-| Late extended | `outputs/loop_annotation_extended/late/extended_characterized_loops.tsv` | Adds H3K27me3, H3K4me3, Bivalent, Polycomb classification |
-| Early extended | `outputs/loop_annotation_extended/early/extended_characterized_loops.tsv` | Same |
+| Late | `25042-late_outputs/merged_loops/characterized_loops.tsv` | 57 cols: coordinates, logFC, FDR, direction, distance, 5-mark ChIP overlaps (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent), 7-category anchor_type, gene annotations, loop_type |
+| Early | `250831-early_outputs/merged_loops/characterized_loops.tsv` | Same schema (57 cols) |
 
 ### ChIP-seq peaks
 
