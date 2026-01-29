@@ -1,0 +1,100 @@
+===============================================================
+POLYCOMB-SPECIFIC SHARED ANCHOR ANALYSIS
+===============================================================
+
+Generated: 2026-01-28 19:09:12 
+Timepoint: late 
+Polycomb types: Polycomb, Repressed_Promoter 
+
+--- INPUT FILES ---
+Shared loops: output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv 
+Background: 25042-late_outputs/merged_loops/characterized_loops.tsv 
+
+--- LOOP COUNTS ---
+Total directional loops at shared anchors: 604
+  - Lost (down_in_mutant): 283
+  - Gained (up_in_mutant): 321
+
+Polycomb-anchored: 312 (51.7%)
+  - Lost: 131
+  - Gained: 181
+Both anchors Polycomb: 141
+
+Non-Polycomb: 292 (48.3%)
+  - Lost: 152
+  - Gained: 140
+
+--- DISTANCE STATISTICS ---
+
+--- All Shared ---
+  n = 604 (Lost: 283, Gained: 321)
+  Median distance (Lost): 1250 kb (1.25 Mb)
+  Median distance (Gained): 370 kb (0.37 Mb)
+  Median ratio (Lost/Gained): 3.38x
+  Wilcoxon p (lost > gained): 2.11e-32
+  KS test p: 3.51e-28 (D = 0.461)
+
+--- Polycomb-Anchored ---
+  n = 312 (Lost: 131, Gained: 181)
+  Median distance (Lost): 1730 kb (1.73 Mb)
+  Median distance (Gained): 370 kb (0.37 Mb)
+  Median ratio (Lost/Gained): 4.68x
+  Wilcoxon p (lost > gained): 9.63e-36
+  KS test p: 6.01e-34 (D = 0.713)
+
+--- Non-Polycomb ---
+  n = 292 (Lost: 152, Gained: 140)
+  Median distance (Lost): 685 kb (0.69 Mb)
+  Median distance (Gained): 360 kb (0.36 Mb)
+  Median ratio (Lost/Gained): 1.90x
+  Wilcoxon p (lost > gained): 2.15e-07
+  KS test p: 5.50e-05 (D = 0.268)
+
+--- Both-Polycomb ---
+  n = 141 (Lost: 76, Gained: 65)
+  Median distance (Lost): 3100 kb (3.10 Mb)
+  Median distance (Gained): 360 kb (0.36 Mb)
+  Median ratio (Lost/Gained): 8.61x
+  Wilcoxon p (lost > gained): 1.44e-20
+  KS test p: 4.88e-24 (D = 0.816)
+
+--- INTERACTION TEST ---
+Method: Two-way ANOVA (log10 distance)
+Interaction p-value: 0.0000
+Rank-based interaction p: 0.0000
+Interpretation: Significant interaction: Distance difference between lost/gained is larger at Polycomb anchors
+
+--- POLYCOMB ENRICHMENT ---
+Odds Ratio: 2.15 (95% CI: 1.79 - 2.59)
+Fisher p-value: 1.68e-16
+Shared anchors: 51.7% Polycomb-anchored
+Background: 33.2% Polycomb-anchored
+
+--- KEY FINDINGS ---
+1. Distance ratio at Polycomb anchors: 4.68x (Lost/Gained)
+2. Distance ratio at non-Polycomb anchors: 1.90x (Lost/Gained)
+3. Ratio amplification: 2.46x larger at Polycomb
+4. Significant interaction confirms Polycomb anchors drive the loop switching pattern
+
+--- OUTPUT FILES ---
+Tables:  output/shared_anchor_analysis/late/polycomb_specific/tables 
+  - polycomb_shared_loops.tsv
+  - both_polycomb_shared_loops.tsv
+  - distance_statistics.tsv
+  - interaction_test.tsv
+  - enrichment_statistics.tsv
+
+Plots:  output/shared_anchor_analysis/late/polycomb_specific/plots 
+  - 01_cdf_polycomb_anchored
+  - 01_cdf_non_polycomb_anchored
+  - 01_cdf_comparison_faceted
+  - 02_density_polycomb_anchored
+  - 02_density_non_polycomb_anchored
+  - 03_anchor_type_distribution
+  - 03_polycomb_enrichment_dotplot
+  - 04_distance_violin_interaction
+  - 05_summary_panel
+
+===============================================================
+END REPORT
+===============================================================
