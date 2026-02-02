@@ -78,10 +78,10 @@ Reference: `CT-meeting-3.md` (meeting notes)
 - [x] **3c. Polycomb-specific shared anchor analysis.** Among shared anchors (task 1a), filter to those classified as "Polycomb" or "Repressed_Promoter" in extended annotation. Show that these are the anchors driving the switching. -> `scripts/polycomb_shared_anchor_analysis.R`, outputs in `output/shared_anchor_analysis/{early,late}/polycomb_specific/`
 - [ ] **3d. APA heatmaps for Polycomb-anchored loops.** Aggregate contact signal at Polycomb-classified loop anchors, split by lost vs gained.
 - [ ] **3e. Gene body heatmap for Polycomb-associated loops.** For genes at Polycomb anchors that switch from long to short loops, show a heatmap of ChIP-seq signal (H3K27me3) across the gene body.
-- [ ] **3f. Assess differential H3K27me3/H2AK119ub at Polycomb shared anchors.** Determine whether K27me3 and/or H2AK119ub signal is changing within the Polycomb-anchored shared anchor regions identified in 3c.
+- [x] **3f. Assess differential H3K27me3/H2AK119ub at Polycomb shared anchors.** -> `scripts/diff_chip_polycomb_enrichment.R`, `output/diff_chip_polycomb_enrichment/` Determine whether K27me3 and/or H2AK119ub signal is changing within the Polycomb-anchored shared anchor regions identified in 3c.
   - **Initial check (easy):** Overlap diffbind differential peak regions with: (a) long-range lost loops, (b) gained short-range loops, (c) unchanged loops. Caveat: summit=400bp may miss broader domains → expect false negatives, but worth a shot.
-  - **Follow-up:** Aggregate ChIP-seq signal heatmaps at shared anchors using bigWigs (preferred for visualizing broader marks).
   - **Input:** Differential peaks from diffbind in `peaks/new/`. Individual peak files also on instance at `/data2/rs_256/Func_annotation_v2/subtracted_bedfiles`. BigWigs in `heatmaps/` for aggregate heatmaps/visualization.
+- [ ] **3g. Aggregate ChIP-seq signal heatmaps at loop anchors.** Follow-up to 3f using bigWigs (preferred for visualizing broader H3K27me3/H2AK119ub domains beyond 400bp summits).
 
 ### Existing resources
 

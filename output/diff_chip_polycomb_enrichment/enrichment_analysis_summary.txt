@@ -1,0 +1,84 @@
+=
+                                                                               
+Task 3f: Differential H3K27me3/H2AK119ub Overlap with Loop Categories
+=
+                                                                               
+
+Analysis Date: 2026-02-01 20:37:39.752047
+
+INPUT FILES:
+-------------
+All loops: 25042-late_outputs/merged_loops/merged_all_results.tsv (39344 loops)
+Polycomb shared: output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv (312 loops)
+
+Differential Peak Files:
+  K27me3_down: 1563 peaks
+  K27me3_up: 1373 peaks
+  H2AK119ub_down: 1250 peaks
+  H2AK119ub_up: 6164 peaks
+
+ANALYSIS PARAMETERS:
+--------------------
+Distance threshold for long/short range: 500000 bp
+FDR threshold for unchanged loops: 0.10
+
+LOOP CATEGORY DISTRIBUTION - ALL LOOPS:
+---------------------------------------
+  long_range_lost: 1558 (4.0%)
+  short_range_gained: 3115 (7.9%)
+  unchanged: 28507 (72.5%)
+  other_differential: 6164 (15.7%)
+
+LOOP CATEGORY DISTRIBUTION - POLYCOMB SHARED:
+---------------------------------------------
+  long_range_lost: 121 (38.8%)
+  short_range_gained: 111 (35.6%)
+  unchanged: 0 (0.0%)
+  other_differential: 80 (25.6%)
+
+SIGNIFICANT ENRICHMENTS (FDR < 0.05) - ALL LOOPS:
+-------------------------------------------------
+  K27me3_down at short_range_gained vs unchanged: OR=8.78, FDR=6.86e-102 (enriched)
+  H2AK119ub_up at long_range_lost vs short_range_gained: OR=4.87, FDR=1.86e-90 (enriched)
+  H2AK119ub_up at short_range_gained vs unchanged: OR=0.45, FDR=1.73e-45 (depleted)
+  H2AK119ub_up at long_range_lost vs unchanged: OR=2.18, FDR=3.42e-41 (enriched)
+  H2AK119ub_down at short_range_gained vs unchanged: OR=3.20, FDR=4.46e-41 (enriched)
+  K27me3_up at long_range_lost vs short_range_gained: OR=5.05, FDR=2.85e-28 (enriched)
+  K27me3_up at long_range_lost vs unchanged: OR=3.18, FDR=3.58e-28 (enriched)
+  K27me3_down at long_range_lost vs short_range_gained: OR=0.28, FDR=4.33e-15 (depleted)
+  H2AK119ub_down at long_range_lost vs unchanged: OR=2.08, FDR=5.42e-08 (enriched)
+  K27me3_down at long_range_lost vs unchanged: OR=2.42, FDR=1.64e-05 (enriched)
+  K27me3_up at short_range_gained vs unchanged: OR=0.63, FDR=2.55e-04 (depleted)
+  H2AK119ub_down at long_range_lost vs short_range_gained: OR=0.65, FDR=1.13e-03 (depleted)
+
+SIGNIFICANT ENRICHMENTS (FDR < 0.05) - POLYCOMB SHARED:
+-------------------------------------------------------
+  H2AK119ub_down at long_range_lost vs short_range_gained: OR=3.92, FDR=2.42e-03 (enriched)
+
+BIOLOGICAL INTERPRETATION:
+--------------------------
+Expected patterns for BAP1-KO (if hypothesis holds):
+  - K27me3_down enriched at long-range lost loops (losing repression)
+  - H2AK119ub_down enriched at long-range lost loops (losing ubiquitination)
+
+CAVEATS:
+--------
+  - 400bp summit width from DiffBind may underestimate broader H3K27me3/H2AK119ub domains
+  - Expected false negatives due to narrow peak calls
+  - H2AK119ub files are not timepoint-specific
+  - Follow-up bigWig heatmap analysis recommended for broader domain visualization
+
+OUTPUT FILES:
+-------------
+  tables/overlap_summary_all_loops.tsv
+  tables/overlap_summary_polycomb_shared.tsv
+  tables/enrichment_tests_all_loops.tsv
+  tables/enrichment_tests_polycomb_shared.tsv
+  tables/all_loops_with_diff_chip_overlap.tsv
+  tables/polycomb_loops_with_diff_chip_overlap.tsv
+  plots/01_overlap_barplot_all_loops/{pdf,svg,jpg}
+  plots/01_overlap_barplot_polycomb_shared/{pdf,svg,jpg}
+  plots/02_enrichment_dotplot_all_loops/{pdf,svg,jpg}
+  plots/02_enrichment_dotplot_polycomb_shared/{pdf,svg,jpg}
+  plots/03_heatmap_overlap_all_loops/{pdf,svg,jpg}
+  plots/03_heatmap_overlap_polycomb_shared/{pdf,svg,jpg}
