@@ -160,7 +160,7 @@ Reference: `CT-meeting-3.md` (meeting notes)
 - [x] **6a. TADCompare differential boundary analysis.** -> `tads/scripts/02_run_tadcompare.R` through `05_filter_blacklist.R`
 - [x] **6b. DEG violin plot at TAD boundaries.** -> `tads/scripts/deg_tad_violin.R`
 - [~] **6c. Cross-reference differential loops with differential TAD boundaries.** Are differential loops preferentially located near differential TAD boundaries? Overlap analysis between `characterized_loops.tsv` anchors and `tads/results/{tp}/final/tadcompare_final_filtered.tsv` boundaries. -> `tads/scripts/boundary_loop_crossref.R` (Late: 69.6% concordance, p<0.001; Merge boundaries enriched in lost loops OR=0.32, Strength Change enriched in gained loops OR=2.11). **Permutation test needs redo with regioneR/regioneReloaded.**
-- [ ] **6d. Proper permutation analysis for boundary-loop enrichment.** Redo permutation testing using regioneR/regioneReloaded (Bioconductor). Current implementation is basic; proper approach shuffles one BED file across genome ≥1000 times (10,000 for final), measures overlap, builds null distribution. Consider restricting background set if asking about co-enrichment of specific chromatin features (e.g., euchromatin-associated markers → restrict to euchromatin).
+- [x] **6d. Proper permutation analysis for boundary-loop enrichment.** *(CTea handling)* Redo permutation testing using regioneR/regioneReloaded (Bioconductor). Current implementation is basic; proper approach shuffles one BED file across genome ≥1000 times (10,000 for final), measures overlap, builds null distribution. Consider restricting background set if asking about co-enrichment of specific chromatin features (e.g., euchromatin-associated markers → restrict to euchromatin).
 
 ### Existing resources
 
