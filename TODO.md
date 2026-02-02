@@ -130,7 +130,7 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 - [x] **5a. CTCF overlap analysis at lost vs gained loop anchors.** Are lost loops more likely to have CTCF at their anchors? Are gained loops CTCF-depleted? -> `scripts/loop_distance_mark_filtered.R --marks ctcf` outputs in `output/loops_mark_filtered/late/ctcf/`
 - [x] **5b. CDF/density for CTCF-anchored loops.** Filter to loops with CTCF at anchors, compare lost vs gained distance distributions. -> `output/loops_mark_filtered/late/ctcf/` (one-anchor and both-anchor filters)
-- [ ] **5c. Cross-reference with stripe analysis.** Do regions with lost CTCF-anchored loops show stripe defects? Stripe pipeline already exists.
+- [x] **5c. Cross-reference with stripe analysis.** Do regions with lost CTCF-anchored loops show stripe defects? -> `scripts/ctcf_stripe_crossref.R`, `output/ctcf_stripe_crossref/{early,late}/` (Late: 17/890 CTCF loops at lost stripes, Fisher's p=1.0, OR=1.14; no significant enrichment - loop loss and stripe defects appear independent)
 - [ ] **5d. Obtain RAD21 ChIP-seq data.** No RAD21 data currently in repo. Need to request assay or find public data.
 - [ ] **5e. (If RAD21 data obtained) Overlap RAD21 with loop anchors and TAD boundaries.**
 
