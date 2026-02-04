@@ -477,6 +477,34 @@ plot_enrichment_comparison <- function(enrichment_df, loop_type, expected_higher
   ))
 }
 
+#' Validate loop resolutions and report statistics
+#' Detects mixed-resolution loops that require normalization via assignToBins()
+#' @param loops GInteractions object
+#' @param name Character label for logging
+#' @return TRUE if valid (>0 loops), FALSE otherwise
+validate_loop_resolutions <- function(loops, name) {
+  if (length(loops) == 0) {
+    cat(sprintf("  Warning: No loops in %s\n", name))
+    return(FALSE)
+  }
+
+  # Check anchor widths to detect mixed resolutions
+  widths1 <- width(anchors(loops, type = "first"))
+  widths2 <- width(anchors(loops, type = "second"))
+  unique_widths <- unique(c(widths1, widths2))
+
+  if (length(unique_widths) > 1) {
+    cat(sprintf("  Note: Mixed resolutions detected in %s\n", name))
+    cat(sprintf("    Unique anchor widths: %s bp\n",
+                paste(sort(unique_widths), collapse = ", ")))
+    cat(sprintf("    Will normalize to target resolution (%d bp) via assignToBins()\n", RESOLUTION))
+  } else {
+    cat(sprintf("  Anchor width: %d bp (single resolution)\n", unique_widths[1]))
+  }
+
+  return(TRUE)
+}
+
 #' Run complete APA analysis for a loop subset
 run_apa_analysis <- function(loops, subset_name, output_dir, hic_files,
                               norm_method, expected_enriched = "ctrl") {
@@ -497,15 +525,35 @@ run_apa_analysis <- function(loops, subset_name, output_dir, hic_files,
     return(FALSE)
   }
 
-  # Step 1: Prepare loops with buffer for matrix extraction
-  cat("\n  Step 1: Preparing loops for matrix extraction...\n")
-  loops_buffered <- pixelsToMatrices(
+  # Step 1: Normalize loops to target resolution (fixes mixed-resolution input)
+  # This is CRITICAL: input loops from shared_anchor_analysis.R may have mixed
+  # resolutions (e.g., 10kb and 25kb) because they originate from multi-resolution
+  # edgeR analysis. pixelsToMatrices() requires uniform anchor widths.
+  cat("\n  Step 1: Normalizing loops to target resolution...\n")
+  loops_binned <- assignToBins(
     x = loops,
+    binSize = RESOLUTION,
+    pos1 = "center",
+    pos2 = "center"
+  )
+  cat(sprintf("    Binned %d loops to %d bp resolution\n", length(loops_binned), RESOLUTION))
+
+  # Validate post-binning loop count
+  if (length(loops_binned) < 10) {
+    cat(sprintf("  Skipping: Only %d loops after binning (minimum 10 required)\n",
+                length(loops_binned)))
+    return(FALSE)
+  }
+
+  # Step 2: Prepare loops with buffer for matrix extraction
+  cat("\n  Step 2: Preparing loops with buffer for matrix extraction...\n")
+  loops_buffered <- pixelsToMatrices(
+    x = loops_binned,
     buffer = BUFFER_BINS
   )
 
-  # Step 2: Extract matrices
-  cat("\n  Step 2: Extracting Hi-C matrices...\n")
+  # Step 3: Extract matrices
+  cat("\n  Step 3: Extracting Hi-C matrices...\n")
   pixels <- extract_apa_matrices(
     loops_buffered,
     hic_files,
@@ -521,8 +569,8 @@ run_apa_analysis <- function(loops, subset_name, output_dir, hic_files,
     return(FALSE)
   }
 
-  # Step 3: Aggregate matrices
-  cat("\n  Step 3: Aggregating matrices...\n")
+  # Step 4: Aggregate matrices
+  cat("\n  Step 4: Aggregating matrices...\n")
   agg_matrices <- aggregate_apa_matrices(pixels, method = "mean")
 
   if (is.null(agg_matrices)) {
@@ -530,8 +578,8 @@ run_apa_analysis <- function(loops, subset_name, output_dir, hic_files,
     return(FALSE)
   }
 
-  # Step 4: Calculate enrichment scores
-  cat("\n  Step 4: Calculating enrichment scores...\n")
+  # Step 5: Calculate enrichment scores
+  cat("\n  Step 5: Calculating enrichment scores...\n")
   enrichment_df <- calculate_enrichment_scores(pixels, names(hic_files), GROUPS)
 
   if (!is.null(enrichment_df)) {
@@ -540,24 +588,24 @@ run_apa_analysis <- function(loops, subset_name, output_dir, hic_files,
     cat(sprintf("  Saved: %s\n", enrichment_file))
   }
 
-  # Step 5: Generate visualizations
-  cat("\n  Step 5: Generating visualizations...\n")
+  # Step 6: Generate visualizations
+  cat("\n  Step 6: Generating visualizations...\n")
 
-  # 5a. Control aggregate heatmap
+  # 6a. Control aggregate heatmap
   p_ctrl <- plot_apa_heatmap(agg_matrices, "Control", CTRL_INDICES, RESOLUTION)
   if (!is.null(p_ctrl)) {
     save_multiformat_ggplot(p_ctrl, file.path(subset_output_dir, "aggregate_heatmap_ctrl"),
                             width = 6, height = 5)
   }
 
-  # 5b. Mutant aggregate heatmap
+  # 6b. Mutant aggregate heatmap
   p_mut <- plot_apa_heatmap(agg_matrices, "BAP1-KO (Mutant)", MUT_INDICES, RESOLUTION)
   if (!is.null(p_mut)) {
     save_multiformat_ggplot(p_mut, file.path(subset_output_dir, "aggregate_heatmap_mut"),
                             width = 6, height = 5)
   }
 
-  # 5c. Difference heatmap
+  # 6c. Difference heatmap
   p_diff <- plot_difference_heatmap(agg_matrices, CTRL_INDICES, MUT_INDICES, RESOLUTION,
                                      title = "Difference: BAP1-KO - Control")
   if (!is.null(p_diff)) {
@@ -565,7 +613,7 @@ run_apa_analysis <- function(loops, subset_name, output_dir, hic_files,
                             width = 6, height = 5)
   }
 
-  # 5d. Enrichment comparison box plot
+  # 6d. Enrichment comparison box plot
   loop_type_label <- gsub("_", " ", subset_name)
   loop_type_label <- tools::toTitleCase(loop_type_label)
 
@@ -653,6 +701,7 @@ main <- function() {
 
   loops_lost <- readRDS(INPUT_FILES$lost_longrange)
   cat(sprintf("Loaded %d loops from %s\n", length(loops_lost), INPUT_FILES$lost_longrange))
+  validate_loop_resolutions(loops_lost, "lost_longrange")
 
   total_analyses <- total_analyses + 1
   if (run_apa_analysis(loops_lost, "lost_longrange", OUTPUT_DIR, HIC_FILES,
@@ -673,6 +722,7 @@ main <- function() {
 
   loops_gained <- readRDS(INPUT_FILES$gained_shortrange)
   cat(sprintf("Loaded %d loops from %s\n", length(loops_gained), INPUT_FILES$gained_shortrange))
+  validate_loop_resolutions(loops_gained, "gained_shortrange")
 
   total_analyses <- total_analyses + 1
   if (run_apa_analysis(loops_gained, "gained_shortrange", OUTPUT_DIR, HIC_FILES,
