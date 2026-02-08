@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#\!/usr/bin/env bash
 # biomodal/downstream/scripts/viz_sections/run_all_sections.sh
 # Run all visualization section scripts sequentially
 # Usage: cd downstream/ && bash scripts/viz_sections/run_all_sections.sh
