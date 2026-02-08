@@ -6,25 +6,8 @@
 # CONFIGURATION
 # =============================================================================
 
-# Base paths - determine script location
-get_script_dir <- function() {
-  # Try multiple methods to find script directory
-  args <- commandArgs(trailingOnly = FALSE)
-  file_arg <- grep("--file=", args, value = TRUE)
-  if (length(file_arg) > 0) {
-    return(dirname(normalizePath(sub("--file=", "", file_arg))))
-  }
-  # Fallback to known path
-  return("/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/scripts")
-}
-
-SCRIPT_DIR <- get_script_dir()
-BASE_DIR <- normalizePath(file.path(SCRIPT_DIR, ".."), mustWork = FALSE)
-
-# If sourced from viz_sections/, adjust BASE_DIR
-if (grepl("viz_sections", SCRIPT_DIR)) {
-  BASE_DIR <- normalizePath(file.path(SCRIPT_DIR, "../.."), mustWork = FALSE)
-}
+# Base paths - run from downstream/ directory
+BASE_DIR <- getwd()
 
 # Data file paths
 DATA_PATHS <- list(

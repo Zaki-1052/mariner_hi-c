@@ -2,19 +2,8 @@
 # Section 7: Effect Size Distributions
 # Standalone script - sources shared config for all dependencies and data
 
-# Source shared config (handles both Rscript and source())
-local({
-  script_dir <- NULL
-  args <- commandArgs(trailingOnly = FALSE)
-  f <- grep("--file=", args, value = TRUE)
-  if (length(f) > 0) script_dir <- dirname(normalizePath(sub("--file=", "", f)))
-  if (is.null(script_dir)) for (i in seq_len(sys.nframe())) {
-    fi <- sys.frame(i)$ofile
-    if (!is.null(fi)) { script_dir <- dirname(normalizePath(fi)); break }
-  }
-  if (is.null(script_dir)) script_dir <- "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/scripts/viz_sections"
-  source(file.path(script_dir, "_shared_config.R"))
-})
+# Run from downstream/ directory
+source("scripts/viz_sections/_shared_config.R")
 
 # =============================================================================
 # SECTION 7: EFFECT SIZE DISTRIBUTIONS
