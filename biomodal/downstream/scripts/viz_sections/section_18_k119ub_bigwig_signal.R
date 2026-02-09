@@ -96,8 +96,10 @@ all_groups$met_group <- factor(all_groups$met_group,
 cat("\n--- FIGURE 18a: K119ub Signal Distribution ---\n\n")
 
 # Pivot to long format for paired violin: ctrl vs mut
+# Deduplicate first (gene symbols can map to multiple entrez IDs)
 signal_long <- all_groups %>%
   dplyr::filter(!is.na(gb_ctrl_signal)) %>%
+  distinct(gene, met_group, .keep_all = TRUE) %>%
   dplyr::select(gene, met_group, gb_ctrl_signal, gb_mut_signal) %>%
   pivot_longer(cols = c(gb_ctrl_signal, gb_mut_signal),
                names_to = "condition", values_to = "signal") %>%
@@ -107,19 +109,23 @@ signal_long <- all_groups %>%
   )
 
 # Wilcoxon signed-rank test per group (paired ctrl vs mut)
-wilcox_paired <- signal_long %>%
-  pivot_wider(names_from = condition, values_from = signal) %>%
+# Use all_groups directly (already has both columns) — deduplicate to one row per gene
+wilcox_paired <- all_groups %>%
+  dplyr::filter(!is.na(gb_ctrl_signal) & !is.na(gb_mut_signal) &
+                gb_ctrl_signal > 0 & gb_mut_signal > 0) %>%
+  distinct(gene, met_group, .keep_all = TRUE) %>%
   group_by(met_group) %>%
   summarise(
     p_value = tryCatch(
-      wilcox.test(Mutant, Control, paired = TRUE)$p.value,
+      wilcox.test(gb_mut_signal, gb_ctrl_signal, paired = TRUE)$p.value,
       error = function(e) NA_real_
     ),
     n = n(),
     .groups = "drop"
   ) %>%
-  mutate(p_label = ifelse(p_value < 0.001, sprintf("p=%.1e", p_value),
-                          sprintf("p=%.3f", p_value)))
+  mutate(p_label = ifelse(is.na(p_value), "NA",
+                          ifelse(p_value < 0.001, sprintf("p=%.1e", p_value),
+                                 sprintf("p=%.3f", p_value))))
 
 # Y position for annotation
 max_signal <- quantile(signal_long$signal[signal_long$signal > 0], 0.99, na.rm = TRUE)
@@ -452,7 +458,7 @@ cat("1. Wilcoxon rank-sum: each group's log2FC vs All DMR Genes\n")
 for (grp in c("mC Up", "mC Down", "hmC Down", "hmC Up")) {
   grp_fc <- fc_combined$gb_log2fc[fc_combined$met_group == grp]
   w <- wilcox.test(grp_fc, bg_fc)
-  cat(sprintf("   %-10s: W=%d, p=%s\n", grp, w$statistic,
+  cat(sprintf("   %-10s: W=%.0f, p=%s\n", grp, w$statistic,
               ifelse(w$p.value < 0.001, sprintf("%.2e", w$p.value),
                      sprintf("%.4f", w$p.value))))
 }
@@ -461,7 +467,7 @@ cat("\n2. One-sample Wilcoxon: each group's log2FC != 0\n")
 for (grp in c("mC Up", "mC Down", "hmC Down", "hmC Up", "All DMR Genes")) {
   grp_fc <- fc_combined$gb_log2fc[fc_combined$met_group == grp]
   w <- wilcox.test(grp_fc, mu = 0)
-  cat(sprintf("   %-14s: V=%d, p=%s, median=%+.4f\n", grp, w$statistic,
+  cat(sprintf("   %-14s: V=%.0f, p=%s, median=%+.4f\n", grp, w$statistic,
               ifelse(w$p.value < 0.001, sprintf("%.2e", w$p.value),
                      sprintf("%.4f", w$p.value)),
               median(grp_fc)))
