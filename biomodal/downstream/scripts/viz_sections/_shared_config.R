@@ -49,6 +49,12 @@ ATAC_FILES <- list(
   consensus_mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/consensus_mutant.bed"
 )
 
+# H2AK119ub condition-specific peak files (from peaks/intersect/)
+K119UB_FILES <- list(
+  ctrl = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P51_K119ub_ctrl_intersect.bed",
+  mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P51_K119ub_mut_intersect.bed"
+)
+
 # Hi-C loop annotation files (from mariner pipeline)
 LOOP_FILES <- list(
   late = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"
@@ -81,7 +87,9 @@ COLORS <- list(
   methylation = c("5mC" = "#E41A1C", "5hmC" = "#377EB8"),
   significant = c("Significant" = "#E41A1C", "Not Significant" = "grey70"),
   mecp2 = c("MeCP2 Up" = "#D95F02", "MeCP2 Down" = "#7570B3", "Not Significant" = "grey70"),
-  atac = c("ATAC Up" = "#E6AB02", "ATAC Down" = "#66A61E", "Not Significant" = "grey70")
+  atac = c("ATAC Up" = "#E6AB02", "ATAC Down" = "#66A61E", "Not Significant" = "grey70"),
+  k119ub = c("K119ub Gained" = "#756BB1", "K119ub Lost" = "#74C476",
+             "Shared" = "grey70", "Not Significant" = "grey70")
 )
 
 # Chromatin state classification (consistent with annotate_loops_extended.R)
