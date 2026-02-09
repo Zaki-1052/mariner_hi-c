@@ -49,6 +49,11 @@ ATAC_FILES <- list(
   consensus_mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/consensus_mutant.bed"
 )
 
+# Hi-C loop annotation files (from mariner pipeline)
+LOOP_FILES <- list(
+  late = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"
+)
+
 # Output directory
 OUTPUT_DIR <- file.path(BASE_DIR, "plots/visualizations")
 TABLES_DIR <- file.path(OUTPUT_DIR, "tables")
