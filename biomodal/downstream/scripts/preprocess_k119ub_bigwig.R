@@ -137,7 +137,9 @@ compute_mean_signal <- function(bw_path, regions, label) {
   cov <- coverage(bw, weight = "score")
 
   # Extract views for each region and compute means
-  v <- Views(cov, split(ranges(regions), seqnames(regions)))
+  ranges_by_chr <- split(ranges(regions), seqnames(regions))
+  shared_chrs <- intersect(names(cov), names(ranges_by_chr))
+  v <- Views(cov[shared_chrs], ranges_by_chr[shared_chrs])
   means <- viewMeans(v)
 
   # Flatten from RleViewsList to numeric vector aligned to regions
