@@ -34,6 +34,13 @@ CHIP_PEAK_FILES <- list(
   bivalent = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/Bivalent_Cerebellum_Late.bed"
 )
 
+# MeCP2 differential binding files (from peaks/mecp2/)
+MECP2_FILES <- list(
+  annotated = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/mecp2/MeCP2_annotated.txt",
+  up   = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/mecp2/MeCP2_up.bed",
+  down = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/mecp2/MeCP2_down.bed"
+)
+
 # Output directory
 OUTPUT_DIR <- file.path(BASE_DIR, "plots/visualizations")
 TABLES_DIR <- file.path(OUTPUT_DIR, "tables")
@@ -59,7 +66,8 @@ COLORS <- list(
   sex = c("Female" = "#E377C2", "Male" = "#17BECF"),
   direction = c("Hypermethylated" = "#D7191C", "Hypomethylated" = "#2C7BB6"),
   methylation = c("5mC" = "#E41A1C", "5hmC" = "#377EB8"),
-  significant = c("Significant" = "#E41A1C", "Not Significant" = "grey70")
+  significant = c("Significant" = "#E41A1C", "Not Significant" = "grey70"),
+  mecp2 = c("MeCP2 Up" = "#D95F02", "MeCP2 Down" = "#7570B3", "Not Significant" = "grey70")
 )
 
 # Chromatin state classification (consistent with annotate_loops_extended.R)
