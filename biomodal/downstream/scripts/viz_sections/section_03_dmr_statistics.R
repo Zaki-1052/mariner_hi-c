@@ -43,6 +43,7 @@ p_region <- ggplot(region_stats, aes(x = Region, y = Significant, fill = Region)
   geom_bar(stat = "identity", width = 0.7) +
   geom_text(aes(label = sprintf("%d\n(%.1f%%)", Significant, Percentage)),
             vjust = -0.3, size = 3.5) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   scale_fill_brewer(palette = "Set2") +
   labs(
     title = "Significant mC DMRs by Genomic Region (CG Context)",
@@ -71,6 +72,7 @@ p_mc_hmc <- ggplot(mc_hmc_compare, aes(x = Type, y = Significant, fill = Type)) 
   geom_bar(stat = "identity", width = 0.6) +
   geom_text(aes(label = sprintf("%d\n(%.1f%%)", Significant, Percentage)),
             vjust = -0.3, size = 4) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   scale_fill_manual(values = COLORS$methylation) +
   labs(
     title = "Gene Body DMRs: 5mC vs 5hmC",
