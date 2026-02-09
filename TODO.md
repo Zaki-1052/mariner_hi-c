@@ -297,3 +297,24 @@ Based on meeting notes emphasis and data availability:
 - Build null distribution, compare actual overlap
 - **Background restriction:** If asking about co-enrichment of euchromatin-associated markers, restrict background to euchromatin regions (same logic for heterochromatin, etc.)
 - regioneReloaded vignette: https://www.bioconductor.org/packages/release/bioc/vignettes/regioneReloaded/inst/doc/regioneReloaded.html
+
+---
+
+## 9. Biomodal Section 13 Follow-Up: ATAC Chromatin State + Loop Anchor Accessibility
+
+**Context:** Section 13 (`biomodal/downstream/scripts/viz_sections/section_13_atac_chromatin_and_loops.R`) established that ATAC Up peaks are enriched at Polycomb/Repressed_Promoter regions while ATAC Down peaks concentrate at Active_Enhancer/H3K27ac regions. Loop-ATAC concordance is 39.5% overall, with Active_Enhancer-Active_Enhancer loops showing 80% concordance.
+
+### Tasks
+
+- [ ] **9a. Anchor-level (unpooled) ATAC overlap rates.** Show ATAC overlap separately for anchor1 vs anchor2 instead of pooling. Confirms whether the concordance signal is symmetric or driven by one anchor position.
+- [ ] **9b. Test Polycomb-enriched ATAC Up peaks at DMR hypermethylated regions.** Section 13a showed ATAC Up peaks are unexpectedly enriched at Polycomb regions (12.7% vs 0.5%). Section 12 showed hypomethylated DMRs overlap ATAC Up (50.5%). Overlap the Polycomb-classified ATAC Up peaks with hypermethylated DMRs to test whether the Polycomb accessibility gain is linked to methylation changes.
+- [ ] **9c. Permutation test for loop anchor ATAC enrichment vs genomic background.** Current ATAC overlap rates at loop anchors (32.6% ATAC Up, 14.0% ATAC Down) lack a null comparison. Shuffle ATAC peaks across the genome (regioneR) and compare observed vs expected overlap at loop anchors to confirm the concordance is above chance.
+
+### Existing resources
+
+- **Section 13 script:** `biomodal/downstream/scripts/viz_sections/section_13_atac_chromatin_and_loops.R`
+- **Section 13 outputs:** `biomodal/downstream/plots/visualizations/13{a-f}_*/`, tables in `tables/atac_chromatin_*.tsv`, `tables/loop_anchor_*.tsv`, `tables/loop_atac_*.tsv`
+- **ATAC peaks:** `peaks/atac_seq/ATAC_up.bed` (7,620), `peaks/atac_seq/ATAC_down.bed` (3,744)
+- **Loop annotations:** `peaks/loop_annotation_extended/late/extended_characterized_loops.tsv` (2,910 loops, pre-computed 8-category anchor types)
+- **DMR data:** loaded via `_shared_config.R` (`mc_dmr`, `hmc_dmr`)
+- **Permutation framework:** regioneR/regioneReloaded (see Section 6d best practices)
