@@ -41,6 +41,14 @@ MECP2_FILES <- list(
   down = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/mecp2/MeCP2_down.bed"
 )
 
+# ATAC-seq differential and consensus peak files (from peaks/atac_seq/)
+ATAC_FILES <- list(
+  up   = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/ATAC_up.bed",
+  down = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/ATAC_down.bed",
+  consensus_ctrl = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/consensus_control.bed",
+  consensus_mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/consensus_mutant.bed"
+)
+
 # Output directory
 OUTPUT_DIR <- file.path(BASE_DIR, "plots/visualizations")
 TABLES_DIR <- file.path(OUTPUT_DIR, "tables")
@@ -67,7 +75,8 @@ COLORS <- list(
   direction = c("Hypermethylated" = "#D7191C", "Hypomethylated" = "#2C7BB6"),
   methylation = c("5mC" = "#E41A1C", "5hmC" = "#377EB8"),
   significant = c("Significant" = "#E41A1C", "Not Significant" = "grey70"),
-  mecp2 = c("MeCP2 Up" = "#D95F02", "MeCP2 Down" = "#7570B3", "Not Significant" = "grey70")
+  mecp2 = c("MeCP2 Up" = "#D95F02", "MeCP2 Down" = "#7570B3", "Not Significant" = "grey70"),
+  atac = c("ATAC Up" = "#E6AB02", "ATAC Down" = "#66A61E", "Not Significant" = "grey70")
 )
 
 # Chromatin state classification (consistent with annotate_loops_extended.R)
