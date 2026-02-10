@@ -61,8 +61,7 @@ INPUT_FILES <- list(
   shared_anchors   = "output/shared_anchor_analysis/late/tables/shared_anchors.tsv",
   shared_loops     = "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv",
   polycomb_shared  = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv",
-  # K119ub signal: gene-level proxy now; swap to "data/k119ub_anchor_signal.tsv" after HPC run
-  signal           = "biomodal/downstream/data/k119ub_gene_signal.tsv"
+  signal           = "data/k119ub_anchor_signal.tsv"
 )
 
 PEAK_FILES <- list(
@@ -746,20 +745,21 @@ run_analysis <- function() {
   cat("SECTION D: Continuous Signal Correlation\n")
   cat("============================================================\n")
 
-  # Join K119ub signal to loop anchors via nearest gene (Entrez ID)
-  gene_fc <- signal_data %>%
-    filter(gb_signal_class == "quantifiable") %>%
-    mutate(entrez_id = as.character(entrez_id)) %>%
-    select(entrez_id, gb_log2fc) %>%
-    distinct(entrez_id, .keep_all = TRUE)
+  # Join K119ub anchor signal by coordinate match (chr:start-end)
+  anchor_fc <- signal_data %>%
+    filter(signal_class == "quantifiable") %>%
+    select(anchor_id, log2fc) %>%
+    distinct(anchor_id, .keep_all = TRUE)
 
   diff_with_signal <- diff_directional %>%
-    mutate(anchor1_nearest_gene = as.character(anchor1_nearest_gene),
-           anchor2_nearest_gene = as.character(anchor2_nearest_gene)) %>%
-    left_join(gene_fc %>% rename(anchor1_k119ub_fc = gb_log2fc),
-              by = c("anchor1_nearest_gene" = "entrez_id")) %>%
-    left_join(gene_fc %>% rename(anchor2_k119ub_fc = gb_log2fc),
-              by = c("anchor2_nearest_gene" = "entrez_id"))
+    mutate(
+      anchor1_id = paste0(anchor1_chr, ":", anchor1_start, "-", anchor1_end),
+      anchor2_id = paste0(anchor2_chr, ":", anchor2_start, "-", anchor2_end)
+    ) %>%
+    left_join(anchor_fc %>% rename(anchor1_k119ub_fc = log2fc),
+              by = c("anchor1_id" = "anchor_id")) %>%
+    left_join(anchor_fc %>% rename(anchor2_k119ub_fc = log2fc),
+              by = c("anchor2_id" = "anchor_id"))
 
   diff_with_signal$mean_anchor_k119ub_fc <- rowMeans(
     cbind(diff_with_signal$anchor1_k119ub_fc, diff_with_signal$anchor2_k119ub_fc),
