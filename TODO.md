@@ -213,8 +213,8 @@ Reference: `CT-meeting-3.md` (meeting notes)
 ### Tasks
 
 - [x] **8a. Obtain H2AK119ub ChIP-seq data.** Differential peaks now available in `peaks/new/`.
-- [ ] **8b. Overlap H2AK119ub with loop anchors.** Classify anchors by ubiquitination status. Use differential peaks from diffbind (up/down in mutant).
-- [ ] **8c. Correlate delta E-P contacts with ubiquitination levels.** Test hypothesis that ubiquitination buffers H3K27ac-mediated contact formation.
+- [x] **8b. Overlap H2AK119ub with loop anchors.** Classify anchors by ubiquitination status. Use differential peaks from diffbind (up/down in mutant). CDF/density distance plots by K119ub status, enrichment by chromatin state & distance. See `scripts/h2ak119ub_loop_integration.R` Sections A-C.
+- [x] **8c. Correlate delta E-P contacts with ubiquitination levels.** Test hypothesis that ubiquitination buffers H3K27ac-mediated contact formation. Continuous signal correlation (gene proxy or anchor bigwig), logistic regression, shared anchor K119ub analysis. See `scripts/h2ak119ub_loop_integration.R` Sections D-E. HPC preprocessing: `scripts/preprocess_k119ub_anchor_signal.R`.
 
 ### Existing resources
 

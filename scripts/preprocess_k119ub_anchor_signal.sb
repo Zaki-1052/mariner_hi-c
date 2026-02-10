@@ -1,0 +1,82 @@
+#!/bin/bash
+#SBATCH --job-name=k119ub_anchor
+#SBATCH --output=logs/k119ub_anchor_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+echo "========================================="
+echo "K119ub Anchor Signal Preprocessing"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+# Configuration
+SCRIPT_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/scripts"
+CTRL_BW="/expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_ctrl_merged.bw"
+MUT_BW="/expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_mut_merged.bw"
+LOOPS="25042-late_outputs/merged_loops/characterized_loops.tsv"
+OUTPUT="data/k119ub_anchor_signal.tsv"
+
+echo "Configuration:"
+echo "  Script: ${SCRIPT_DIR}/preprocess_k119ub_anchor_signal.R"
+echo "  Ctrl bigwig: ${CTRL_BW}"
+echo "  Mut bigwig:  ${MUT_BW}"
+echo "  Loops:       ${LOOPS}"
+echo "  Output:      ${OUTPUT}"
+echo ""
+
+# Validate inputs
+for f in "${CTRL_BW}" "${MUT_BW}"; do
+    if [ ! -f "${f}" ]; then
+        echo "ERROR: File not found: ${f}"
+        exit 1
+    fi
+done
+
+echo "Environment check:"
+which Rscript
+Rscript --version
+echo ""
+
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+
+Rscript "${SCRIPT_DIR}/preprocess_k119ub_anchor_signal.R" \
+    --ctrl "${CTRL_BW}" \
+    --mut "${MUT_BW}" \
+    --loops "${LOOPS}" \
+    --output "${OUTPUT}"
+
+EXIT_CODE=$?
+
+if [ ${EXIT_CODE} -eq 0 ]; then
+    echo ""
+    echo "========================================="
+    echo "Preprocessing complete!"
+    echo "========================================="
+    echo ""
+    echo "Output: $(pwd)/${OUTPUT}"
+    echo "Lines:  $(wc -l < ${OUTPUT})"
+    echo ""
+    echo "Next steps:"
+    echo "  scp expanse:$(pwd)/${OUTPUT} data/"
+    echo "  Rscript scripts/h2ak119ub_loop_integration.R"
+else
+    echo ""
+    echo "Preprocessing failed with exit code ${EXIT_CODE}"
+    exit ${EXIT_CODE}
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="
