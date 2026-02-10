@@ -112,8 +112,8 @@ anchor_gr <- GRanges(
   ranges = IRanges(start = all_anchors$start, end = all_anchors$end)
 )
 
-# Filter to standard chromosomes
-std_chroms <- paste0("chr", c(1:19, "X", "Y"))
+# Filter to standard chromosomes (chr1-19, chrX; chrY absent in loop data)
+std_chroms <- intersect(paste0("chr", c(1:19, "X")), seqlevels(anchor_gr))
 anchor_gr <- keepSeqlevels(anchor_gr, std_chroms, pruning.mode = "coarse")
 cat(sprintf("  After filtering to standard chroms: %d anchors\n", length(anchor_gr)))
 
