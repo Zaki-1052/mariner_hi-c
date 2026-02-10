@@ -61,8 +61,8 @@ INPUT_FILES <- list(
   shared_anchors   = "output/shared_anchor_analysis/late/tables/shared_anchors.tsv",
   shared_loops     = "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv",
   polycomb_shared  = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv",
-  anchor_signal    = "data/k119ub_anchor_signal.tsv",
-  gene_signal      = "biomodal/downstream/data/k119ub_gene_signal.tsv"
+  # K119ub signal: gene-level proxy now; swap to "data/k119ub_anchor_signal.tsv" after HPC run
+  signal           = "biomodal/downstream/data/k119ub_gene_signal.tsv"
 )
 
 PEAK_FILES <- list(
@@ -358,27 +358,13 @@ run_analysis <- function() {
   cat(sprintf("    Shared anchors: %d, Shared loops: %d, Polycomb shared: %d\n",
               nrow(shared_anchors), nrow(shared_loops), nrow(polycomb_shared)))
 
-  # Signal data (primary: anchor bigwig; fallback: gene proxy)
-  has_anchor_signal <- file.exists(INPUT_FILES$anchor_signal)
-  has_gene_signal   <- file.exists(INPUT_FILES$gene_signal)
-
-  anchor_signal <- NULL
-  gene_signal   <- NULL
-
-  if (has_anchor_signal) {
-    cat("  Loading anchor-level K119ub signal (bigwig-derived)...\n")
-    anchor_signal <- read.table(INPUT_FILES$anchor_signal, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-    cat(sprintf("    Anchor signal: %d anchors\n", nrow(anchor_signal)))
-  } else {
-    cat("  NOTE: Anchor signal not found (data/k119ub_anchor_signal.tsv).\n")
-    cat("        Run preprocess_k119ub_anchor_signal.R on HPC first.\n")
+  # Signal data for Section D
+  cat("  Loading K119ub signal data...\n")
+  if (!file.exists(INPUT_FILES$signal)) {
+    stop(sprintf("K119ub signal file not found: %s", INPUT_FILES$signal))
   }
-
-  if (has_gene_signal) {
-    cat("  Loading gene-level K119ub signal (proxy)...\n")
-    gene_signal <- read.table(INPUT_FILES$gene_signal, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-    cat(sprintf("    Gene signal: %d genes\n", nrow(gene_signal)))
-  }
+  signal_data <- read.table(INPUT_FILES$signal, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+  cat(sprintf("    Signal data: %d rows from %s\n", nrow(signal_data), INPUT_FILES$signal))
 
   # ==========================================================================
   # SECTION A: ANCHOR-LEVEL K119UB ANNOTATION
@@ -760,66 +746,30 @@ run_analysis <- function() {
   cat("SECTION D: Continuous Signal Correlation\n")
   cat("============================================================\n")
 
-  # Determine signal source
-  signal_source <- "none"
-  diff_with_signal <- diff_directional
+  # Join K119ub signal to loop anchors via nearest gene (Entrez ID)
+  gene_fc <- signal_data %>%
+    filter(gb_signal_class == "quantifiable") %>%
+    mutate(entrez_id = as.character(entrez_id)) %>%
+    select(entrez_id, gb_log2fc) %>%
+    distinct(entrez_id, .keep_all = TRUE)
 
-  if (has_anchor_signal && !is.null(anchor_signal)) {
-    cat("\n  Using anchor-level bigwig signal (primary).\n")
-    signal_source <- "anchor_bigwig"
+  diff_with_signal <- diff_directional %>%
+    mutate(anchor1_nearest_gene = as.character(anchor1_nearest_gene),
+           anchor2_nearest_gene = as.character(anchor2_nearest_gene)) %>%
+    left_join(gene_fc %>% rename(anchor1_k119ub_fc = gb_log2fc),
+              by = c("anchor1_nearest_gene" = "entrez_id")) %>%
+    left_join(gene_fc %>% rename(anchor2_k119ub_fc = gb_log2fc),
+              by = c("anchor2_nearest_gene" = "entrez_id"))
 
-    # Match anchor signal to loop anchors by coordinate
-    anchor_signal$anchor_key <- paste0(anchor_signal$chr, ":", anchor_signal$start, "-", anchor_signal$end)
+  diff_with_signal$mean_anchor_k119ub_fc <- rowMeans(
+    cbind(diff_with_signal$anchor1_k119ub_fc, diff_with_signal$anchor2_k119ub_fc),
+    na.rm = TRUE
+  )
 
-    diff_with_signal <- diff_with_signal %>%
-      mutate(
-        anchor1_key = paste0(anchor1_chr, ":", anchor1_start, "-", anchor1_end),
-        anchor2_key = paste0(anchor2_chr, ":", anchor2_start, "-", anchor2_end)
-      )
-
-    diff_with_signal <- diff_with_signal %>%
-      left_join(anchor_signal %>% select(anchor_key, log2fc, signal_class) %>%
-                  rename(anchor1_k119ub_fc = log2fc, anchor1_signal_class = signal_class),
-                by = c("anchor1_key" = "anchor_key")) %>%
-      left_join(anchor_signal %>% select(anchor_key, log2fc, signal_class) %>%
-                  rename(anchor2_k119ub_fc = log2fc, anchor2_signal_class = signal_class),
-                by = c("anchor2_key" = "anchor_key"))
-
-    diff_with_signal$mean_anchor_k119ub_fc <- rowMeans(
-      cbind(diff_with_signal$anchor1_k119ub_fc, diff_with_signal$anchor2_k119ub_fc),
-      na.rm = TRUE
-    )
-
-  } else if (has_gene_signal && !is.null(gene_signal)) {
-    cat("\n  Using gene-level K119ub signal (proxy via nearest gene).\n")
-    cat("  NOTE: For better resolution, run preprocess_k119ub_anchor_signal.R on HPC.\n")
-    signal_source <- "gene_proxy"
-
-    # Join gene body log2FC by anchor nearest gene symbol
-    gene_fc <- gene_signal %>%
-      filter(gb_signal_class == "quantifiable") %>%
-      select(symbol, gb_log2fc) %>%
-      distinct(symbol, .keep_all = TRUE)
-
-    diff_with_signal <- diff_with_signal %>%
-      left_join(gene_fc %>% rename(anchor1_k119ub_fc = gb_log2fc),
-                by = c("anchor1_nearest_gene" = "symbol")) %>%
-      left_join(gene_fc %>% rename(anchor2_k119ub_fc = gb_log2fc),
-                by = c("anchor2_nearest_gene" = "symbol"))
-
-    diff_with_signal$mean_anchor_k119ub_fc <- rowMeans(
-      cbind(diff_with_signal$anchor1_k119ub_fc, diff_with_signal$anchor2_k119ub_fc),
-      na.rm = TRUE
-    )
-  } else {
-    cat("\n  WARNING: No K119ub signal data available. Skipping Section D.\n")
-  }
-
-  # Proceed with signal-based analyses
   corr_results <- tibble()
   logistic_results <- tibble()
 
-  if (signal_source != "none") {
+  {
     # Filter to loops with quantifiable signal
     sig_loops <- diff_with_signal %>%
       filter(!is.na(mean_anchor_k119ub_fc) & is.finite(mean_anchor_k119ub_fc))
@@ -859,7 +809,7 @@ run_analysis <- function() {
                             name = "Anchor Type") +
         annotate("text", x = Inf, y = Inf,
                  label = sprintf("Spearman rho = %.3f\np = %.2e\nn = %d (%s)",
-                                 rho$estimate, rho$p.value, nrow(sig_loops), signal_source),
+                                 rho$estimate, rho$p.value, nrow(sig_loops), INPUT_FILES$signal),
                  hjust = 1.1, vjust = 1.5, size = 4) +
         labs(title = "Loop Contact Change vs K119ub Signal Change",
              subtitle = "BAP1-KO: H2AK119ub accumulation at anchors vs loop strength",
@@ -1005,7 +955,7 @@ run_analysis <- function() {
         logistic_results <- as_tibble(logistic_summary$coefficients, rownames = "term")
         colnames(logistic_results) <- c("term", "estimate", "std_error", "z_value", "p_value")
         logistic_results$odds_ratio <- exp(logistic_results$estimate)
-        logistic_results$signal_source <- signal_source
+        logistic_results$signal_file <- INPUT_FILES$signal
 
         write.table(logistic_results, file.path(tables_dir, "logistic_regression_results.tsv"),
                     sep = "\t", quote = FALSE, row.names = FALSE)
@@ -1253,7 +1203,7 @@ run_analysis <- function() {
     "H2AK119ub Loop Integration Analysis Summary",
     "================================================================================",
     sprintf("Date: %s", Sys.time()),
-    sprintf("Signal source: %s", signal_source),
+    sprintf("Signal source: %s", INPUT_FILES$signal),
     "",
     "INPUT FILES:",
     sprintf("  All loops: %s (%d)", INPUT_FILES$all_loops, nrow(all_loops)),
@@ -1315,7 +1265,7 @@ run_analysis <- function() {
   summary_lines <- c(summary_lines, "",
     "SECTION D: Continuous Signal Correlation",
     "----------------------------------------",
-    sprintf("  Signal source: %s", signal_source)
+    sprintf("  Signal source: %s", INPUT_FILES$signal)
   )
 
   if (nrow(corr_results) > 0) {
@@ -1390,7 +1340,7 @@ run_analysis <- function() {
     corr_results = corr_results,
     logistic_results = logistic_results,
     shared_comparison = shared_comparison,
-    signal_source = signal_source
+    signal_file = INPUT_FILES$signal
   ))
 }
 
