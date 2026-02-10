@@ -1,0 +1,83 @@
+================================================================================
+H2AK119ub Loop Integration Analysis Summary
+================================================================================
+Date: 2026-02-10 05:52:25.848469
+Signal source: biomodal/downstream/data/k119ub_gene_signal.tsv
+
+INPUT FILES:
+  All loops: 25042-late_outputs/merged_loops/merged_all_results.tsv (39344)
+  Differential loops: 25042-late_outputs/merged_loops/characterized_loops.tsv (2910)
+  Shared anchors: 212, Shared loops: 604, Polycomb shared: 312
+
+PEAK FILES:
+  K119ub_up: 6164 peaks
+  K119ub_down: 1250 peaks
+  K119ub_ctrl: 20592 peaks
+  K119ub_mut: 20399 peaks
+
+SECTION A: K119ub Annotation
+----------------------------
+  both: 47 (0.1%)
+  gained_ub: 8224 (20.9%)
+  lost_ub: 1110 (2.8%)
+  neither: 29963 (76.2%)
+
+SECTION B: Distance Analysis
+----------------------------
+  K119ub_up_one: n=673 (Lost:456, Gained:217), Med Lost=495 kb, Med Gained=475 kb, KS p=6.74e-02
+  K119ub_up_both: n=176 (Lost:140, Gained:36), Med Lost=388 kb, Med Gained=500 kb, KS p=5.32e-01
+  K119ub_down_one: n=159 (Lost:63, Gained:96), Med Lost=2950 kb, Med Gained=230 kb, KS p=1.26e-20
+  K119ub_down_both: n=11 (Lost:9, Gained:2), Med Lost=7600 kb, Med Gained=110 kb, KS p=3.64e-02
+
+SECTION C: Enrichment Testing
+-----------------------------
+  Global tests: 12 (11 significant)
+  Chromatin-state tests: 14 (7 significant)
+  Distance-stratified tests: 8
+
+  Significant global enrichments:
+    K119ub_up_either: long_range_lost vs short_range_gained, OR=4.87, FDR=3.73e-90
+    K119ub_up_either: short_range_gained vs unchanged, OR=0.45, FDR=2.60e-45
+    K119ub_up_either: long_range_lost vs unchanged, OR=2.18, FDR=4.56e-41
+    K119ub_down_either: short_range_gained vs unchanged, OR=3.20, FDR=5.57e-41
+    K119ub_ctrl_either: short_range_gained vs unchanged, OR=1.58, FDR=1.39e-33
+    K119ub_mut_either: long_range_lost vs unchanged, OR=1.69, FDR=1.60e-22
+    K119ub_mut_either: long_range_lost vs short_range_gained, OR=1.72, FDR=1.90e-17
+    K119ub_down_either: long_range_lost vs unchanged, OR=2.08, FDR=6.09e-08
+    K119ub_ctrl_either: long_range_lost vs unchanged, OR=1.29, FDR=1.83e-06
+    K119ub_ctrl_either: long_range_lost vs short_range_gained, OR=0.81, FDR=1.05e-03
+
+SECTION D: Continuous Signal Correlation
+----------------------------------------
+  Signal source: biomodal/downstream/data/k119ub_gene_signal.tsv
+  Active: rho=-0.115, p=1.64e-03, n=742
+  Other: rho=-0.004, p=9.03e-01, n=1011
+  Polycomb/Repressive: rho=0.089, p=3.03e-03, n=1110
+
+  Logistic regression: P(lost) ~ K119ub_fc + log(distance)
+    K119ub_fc coefficient: 1.4975 (p = 5.0574e-30, OR = 4.470)
+    Interpretation: Higher K119ub change -> more likely LOST (supports buffer hypothesis)
+
+SECTION E: Shared Anchor K119ub
+-------------------------------
+  Shared anchors: 212
+  K119ub_up: shared=12.7% vs non-shared=13.3%, OR=0.95, FDR=7.685e-01
+  K119ub_down: shared=5.9% vs non-shared=2.4%, OR=2.54, FDR=1.954e-04
+  K119ub_ctrl: shared=50.1% vs non-shared=29.4%, OR=2.41, FDR=2.490e-17
+  K119ub_mut: shared=51.7% vs non-shared=35.0%, OR=1.99, FDR=2.201e-11
+
+================================================================================
+OUTPUT FILES:
+  tables/loops_with_k119ub_annotation.tsv
+  tables/distance_stats_by_k119ub.tsv
+  tables/enrichment_global.tsv
+  tables/enrichment_by_chromatin_state.tsv
+  tables/enrichment_by_distance.tsv
+  tables/correlation_results.tsv
+  tables/logistic_regression_results.tsv
+  tables/shared_anchor_k119ub_comparison.tsv
+  plots/01-08: CDF/density plots
+  plots/09-11: Enrichment plots
+  plots/12-15: Correlation plots
+  plots/16-19: Shared anchor plots
+================================================================================
