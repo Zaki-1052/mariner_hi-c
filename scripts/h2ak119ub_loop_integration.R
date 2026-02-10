@@ -909,9 +909,9 @@ run_analysis <- function() {
 
         if (nrow(dist_corrs) > 0) {
           corr_mat <- dist_corrs %>%
+            select(-n) %>%
             pivot_wider(names_from = anchor_group, values_from = spearman_rho) %>%
             column_to_rownames("dist_bin") %>%
-            select(-n) %>%
             as.matrix()
 
           heatmap_dir_15 <- file.path(plots_dir, "15_correlation_summary_heatmap")
