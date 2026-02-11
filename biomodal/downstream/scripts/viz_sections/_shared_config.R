@@ -55,6 +55,12 @@ K119UB_FILES <- list(
   mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P51_K119ub_mut_intersect.bed"
 )
 
+# H3K27ac condition-specific peak files (from peaks/intersect/)
+H3K27AC_FILES <- list(
+  ctrl = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P60_K27ac_ctrl_intersect.bed",
+  mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P60_K27ac_mut_intersect.bed"
+)
+
 # Hi-C loop annotation files (from mariner pipeline)
 LOOP_FILES <- list(
   late = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"
@@ -89,7 +95,9 @@ COLORS <- list(
   mecp2 = c("MeCP2 Up" = "#D95F02", "MeCP2 Down" = "#7570B3", "Not Significant" = "grey70"),
   atac = c("ATAC Up" = "#E6AB02", "ATAC Down" = "#66A61E", "Not Significant" = "grey70"),
   k119ub = c("K119ub Gained" = "#756BB1", "K119ub Lost" = "#74C476",
-             "Shared" = "grey70", "Not Significant" = "grey70")
+             "Shared" = "grey70", "Not Significant" = "grey70"),
+  h3k27ac = c("H3K27ac Gained" = "#FF7F00", "H3K27ac Lost" = "#1F78B4",
+              "Shared" = "grey70", "Not Significant" = "grey70")
 )
 
 # Chromatin state classification (consistent with annotate_loops_extended.R)
