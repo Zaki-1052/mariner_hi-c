@@ -24,8 +24,12 @@ p_hist_mc <- ggplot(mc_dmr, aes(x = mod_difference * 100, fill = significant)) +
                     name = "") +
   labs(
     title = "5mC Effect Size Distribution",
-    subtitle = sprintf("Mean change: %+.2f%% (significant genes)",
-                       mean(mc_dmr$mod_difference[mc_dmr$significant]) * 100),
+    subtitle = sprintf("Net mean: %+.2f%% (all %d sig.) | Hyper-only: %+.2f%% (n=%d, %.0f%%)",
+                       mean(mc_dmr$mod_difference[mc_dmr$significant]) * 100,
+                       sum(mc_dmr$significant),
+                       mean(mc_dmr$mod_difference[mc_dmr$significant & mc_dmr$mod_difference > 0]) * 100,
+                       sum(mc_dmr$significant & mc_dmr$mod_difference > 0),
+                       100 * sum(mc_dmr$significant & mc_dmr$mod_difference > 0) / sum(mc_dmr$significant)),
     x = "5mC Change (Mutant - Control, %)", y = "Count"
   ) +
   theme_biomodal()
@@ -39,8 +43,12 @@ p_hist_hmc <- ggplot(hmc_dmr, aes(x = mod_difference * 100, fill = significant))
                     name = "") +
   labs(
     title = "5hmC Effect Size Distribution",
-    subtitle = sprintf("Mean change: %+.2f%% (significant genes)",
-                       mean(hmc_dmr$mod_difference[hmc_dmr$significant]) * 100),
+    subtitle = sprintf("Net mean: %+.2f%% (all %d sig.) | Hypo-only: %+.2f%% (n=%d, %.0f%%)",
+                       mean(hmc_dmr$mod_difference[hmc_dmr$significant]) * 100,
+                       sum(hmc_dmr$significant),
+                       mean(hmc_dmr$mod_difference[hmc_dmr$significant & hmc_dmr$mod_difference < 0]) * 100,
+                       sum(hmc_dmr$significant & hmc_dmr$mod_difference < 0),
+                       100 * sum(hmc_dmr$significant & hmc_dmr$mod_difference < 0) / sum(hmc_dmr$significant)),
     x = "5hmC Change (Mutant - Control, %)", y = "Count"
   ) +
   theme_biomodal()
