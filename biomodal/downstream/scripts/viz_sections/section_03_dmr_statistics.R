@@ -193,7 +193,7 @@ p_direction <- ggplot(direction_data, aes(x = Modification, y = Percentage, fill
   ) +
   # Add annotation for key finding
   annotate("text", x = 1.5, y = 98,
-           label = "mC increases while hmC decreases\n= Blocked TET-mediated demethylation",
+           label = "mC increases while hmC decreases",
            size = 4, fontface = "italic", color = "grey30")
 
 save_multiformat_ggplot(p_direction, file.path(OUTPUT_DIR, "03b_direction_comparison"),
