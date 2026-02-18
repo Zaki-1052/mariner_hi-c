@@ -1,18 +1,18 @@
 #!/bin/bash
-#SBATCH --job-name=mariner_multiRes
-#SBATCH --output=logs/mariner_multiResF_%j.out
+#SBATCH --job-name=abc_delta
+#SBATCH --output=logs/abc_delta_%j.out
 #SBATCH --partition=shared
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=12
 #SBATCH --mem=64G
-#SBATCH --time=18:00:00
+#SBATCH --time=16:00:00
 #SBATCH --account=csd940
 # scripts/convert_final_bedpe.sh
 # Convert final_results.tsv files to BEDPE format
 # Creates resolution-specific files plus a merged union
 
-set -e  # Exit on error
+#set -e  # Exit on error
 
 echo "======================================"
 echo "Final Results BEDPE Conversion"
@@ -21,14 +21,14 @@ echo "Started: $(date)"
 echo ""
 
 source ~/.bashrc
-conda activate mariner_env
+conda activate abc-env
 
 
 # Change to working directory
-cd /expanse/lustre/projects/csd940/zalibhai/mariner
+cd /expanse/lustre/projects/csd940/zalibhai/abc
 
 # Check if Python script exists
-SCRIPT="scripts/convert_final_bedpe.py"
+SCRIPT="scripts/step6_delta_abc.py"
 if [ ! -f "$SCRIPT" ]; then
     echo "ERROR: Python script not found: $SCRIPT"
     exit 1
