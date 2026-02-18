@@ -1,0 +1,649 @@
+#!/bin/bash
+#SBATCH --job-name=abc_qc_full
+#SBATCH --output=logs/qc_full_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+# Step 5.5: Comprehensive ABC QC
+#
+# Combines all QC checks from step5_qc.sb (with fixes) plus diagnostics:
+#   - Column header inspection
+#   - ABC.Score distribution (fixed column detection)
+#   - Enhancers per gene, per-chromosome distribution
+#   - Per-gene ABC.Score sum (single-pass, fixed column detection)
+#   - Self-promoter analysis (counts, sum decomposition)
+#   - Gene annotation biotype composition
+#   - Sample gene inspection near TSS
+#
+# All column detection uses grep -P "^ABC\.Score$" to avoid matching
+# ABC.Score.Numerator. All per-gene sum checks use single-pass awk
+# to avoid timeout from repeated zcat decompression.
+#
+# Depends on: Step 4 (ABC pipeline run) completed for both biosamples
+# Outputs: diagnostic text only (no files written)
+
+conda activate abc-env
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/abc/logs
+source ~/.bashrc
+
+ABC_DIR="/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction"
+REF_DIR="/expanse/lustre/projects/csd940/zalibhai/abc/reference"
+GENES_BED="${REF_DIR}/mm10_genes.bed"
+TSS_BED="${REF_DIR}/mm10_tss.bed"
+BLACKLIST="${REF_DIR}/mm10_merged_blacklist.bed"
+UBIQ_GENES="${REF_DIR}/mm10_ubiquitous_genes.tsv"
+
+echo "################################################################"
+echo "# ABC Model — Comprehensive QC Report"
+echo "# Generated: $(date)"
+echo "# Host: $(hostname)"
+echo "################################################################"
+
+# ===================================================================
+# SECTION 1: Reference File Inventory
+# ===================================================================
+echo ""
+echo "================================================================"
+echo "SECTION 1: Reference File Inventory"
+echo "================================================================"
+
+echo ""
+echo "--- Gene Annotation ---"
+echo "  Path: ${GENES_BED}"
+if [ -f "${GENES_BED}" ]; then
+  N_GENES_REF=$(tail -n +2 "${GENES_BED}" | wc -l)
+  echo "  Genes: ${N_GENES_REF}"
+  echo "  Biotype distribution:"
+  tail -n +2 "${GENES_BED}" | cut -f8 | sort | uniq -c | sort -rn | while read count biotype; do
+    printf "    %-25s %s\n" "${biotype}" "${count}"
+  done
+  echo "  Pseudogene check: $(tail -n +2 "${GENES_BED}" | cut -f8 | grep -c 'pseudogene' || true) entries (expect 0)"
+  echo "  Small RNA check:  $(tail -n +2 "${GENES_BED}" | cut -f8 | grep -cE 'snoRNA|snRNA|miRNA|rRNA' || true) entries (expect 0)"
+  echo "  Chromosomes: $(tail -n +2 "${GENES_BED}" | cut -f1 | sort -u | tr '\n' ' ')"
+  echo "  Column count: $(tail -n +2 "${GENES_BED}" | head -1 | awk -F'\t' '{print NF}') (expect 8)"
+  echo "  Header: $(head -1 "${GENES_BED}")"
+  echo "  First entry: $(tail -n +2 "${GENES_BED}" | head -1)"
+else
+  echo "  ERROR: File not found"
+fi
+
+echo ""
+echo "--- TSS Annotation ---"
+echo "  Path: ${TSS_BED}"
+if [ -f "${TSS_BED}" ]; then
+  N_TSS_REF=$(tail -n +2 "${TSS_BED}" | wc -l)
+  echo "  TSS regions: ${N_TSS_REF} (should match gene count: ${N_GENES_REF:-unknown})"
+  echo "  Column count: $(tail -n +2 "${TSS_BED}" | head -1 | awk -F'\t' '{print NF}') (expect 8)"
+  echo "  TSS widths: $(tail -n +2 "${TSS_BED}" | awk -F'\t' '{print $3-$2}' | sort -n | uniq -c | awk '{printf "%dbp(%d) ", $2, $1}')"
+else
+  echo "  ERROR: File not found"
+fi
+
+echo ""
+echo "--- Blacklist ---"
+echo "  Path: ${BLACKLIST}"
+if [ -f "${BLACKLIST}" ]; then
+  echo "  Regions: $(wc -l < "${BLACKLIST}")"
+  echo "  Column count: $(head -1 "${BLACKLIST}" | awk -F'\t' '{print NF}') (expect 3)"
+else
+  echo "  ERROR: File not found"
+fi
+
+echo ""
+echo "--- Ubiquitous Genes ---"
+echo "  Path: ${UBIQ_GENES}"
+if [ -f "${UBIQ_GENES}" ]; then
+  echo "  Gene count: $(wc -l < "${UBIQ_GENES}")"
+  echo "  Spot-check: $(head -5 "${UBIQ_GENES}" | tr '\n' ', ')"
+  for g in Actb Gapdh Rpl13a; do
+    if grep -qw "${g}" "${UBIQ_GENES}"; then
+      echo "    ${g}: FOUND"
+    else
+      echo "    ${g}: not in list"
+    fi
+  done
+else
+  echo "  ERROR: File not found"
+fi
+
+echo ""
+echo "--- Consensus Peaks ---"
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  NP="${ABC_DIR}/results/${BIOSAMPLE}/Peaks/macs2_peaks.narrowPeak"
+  echo "  ${BIOSAMPLE}: ${NP}"
+  if [ -f "${NP}" ]; then
+    echo "    Peaks: $(wc -l < "${NP}"), columns: $(head -1 "${NP}" | awk -F'\t' '{print NF}') (expect 10)"
+  else
+    echo "    ERROR: File not found"
+  fi
+done
+
+echo ""
+echo "--- Config ---"
+echo "  config.yaml: ${ABC_DIR}/config/config.yaml"
+echo "  Key params:"
+grep -E "genome_size|use_qnorm|threshold|biosamplesTable" "${ABC_DIR}/config/config.yaml" 2>/dev/null | while read line; do
+  echo "    ${line}"
+done
+
+# ===================================================================
+# SECTION 2: Column Headers
+# ===================================================================
+echo ""
+echo "================================================================"
+echo "SECTION 2: Column Headers (AllPutative)"
+echo "================================================================"
+
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  ALLPUT="${ABC_DIR}/results/${BIOSAMPLE}/Predictions/EnhancerPredictionsAllPutative.tsv.gz"
+  echo ""
+  echo "--- ${BIOSAMPLE} ---"
+  echo "  File: ${ALLPUT}"
+  if [ -f "${ALLPUT}" ]; then
+    zcat "${ALLPUT}" | head -1 | tr '\t' '\n' | cat -n
+  else
+    echo "  ERROR: File not found"
+  fi
+done
+
+echo ""
+echo "--- Column identity check ---"
+WT_HEADER=$(zcat "${ABC_DIR}/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz" | head -1)
+KO_HEADER=$(zcat "${ABC_DIR}/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz" | head -1)
+if [ "${WT_HEADER}" = "${KO_HEADER}" ]; then
+  echo "  WT and KO headers: IDENTICAL"
+else
+  echo "  ERROR: WT and KO headers DIFFER"
+  diff <(echo "${WT_HEADER}" | tr '\t' '\n') <(echo "${KO_HEADER}" | tr '\t' '\n')
+fi
+
+echo ""
+echo "--- Sample data rows (WT, first 3) ---"
+zcat "${ABC_DIR}/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz" | head -4
+
+echo ""
+echo "--- Thresholded file listing ---"
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  echo "  ${BIOSAMPLE}:"
+  ls -lh "${ABC_DIR}/results/${BIOSAMPLE}/Predictions/EnhancerPredictions"*.tsv* 2>/dev/null | while read line; do
+    echo "    ${line}"
+  done
+done
+
+echo ""
+echo "--- Thresholded file headers ---"
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  for f in "${ABC_DIR}/results/${BIOSAMPLE}/Predictions/EnhancerPredictions"*.tsv; do
+    if [ -f "$f" ]; then
+      echo "  $(basename "$f"):"
+      head -1 "$f" | tr '\t' '\n' | cat -n
+      echo ""
+    fi
+  done
+done
+
+# ===================================================================
+# SECTION 3: Per-Biosample Statistics (Thresholded)
+# ===================================================================
+echo ""
+echo "================================================================"
+echo "SECTION 3: Per-Biosample Statistics"
+echo "================================================================"
+
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  echo ""
+  echo "========================================"
+  echo "=== ${BIOSAMPLE} ==="
+  echo "========================================"
+  PRED="${ABC_DIR}/results/${BIOSAMPLE}/Predictions"
+
+  # --- Find thresholded Full file ---
+  THRESH_FILE=$(ls "${PRED}"/EnhancerPredictionsFull_threshold*.tsv 2>/dev/null | head -1)
+  if [ -z "${THRESH_FILE}" ]; then
+    echo "ERROR: No thresholded prediction file found in ${PRED}"
+    continue
+  fi
+  echo "Thresholded file: ${THRESH_FILE}"
+
+  N_PAIRS=$(tail -n +2 "${THRESH_FILE}" | wc -l)
+  echo "E-G pairs (thresholded): ${N_PAIRS}"
+
+  # --- Detect columns (with exact match to avoid ABC.Score.Numerator) ---
+  ABC_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -nP "^ABC\.Score$" | head -1 | cut -d: -f1)
+  GENE_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -nP "^TargetGene$" | head -1 | cut -d: -f1)
+  CHR_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -nP "^chr$" | head -1 | cut -d: -f1)
+  SP_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -nP "^isSelfPromoter$" | head -1 | cut -d: -f1)
+  DIST_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -nP "^distance$" | head -1 | cut -d: -f1)
+  CLASS_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -nP "^class$" | head -1 | cut -d: -f1)
+  NUMER_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -nP "^ABC\.Score\.Numerator$" | head -1 | cut -d: -f1)
+
+  echo ""
+  echo "--- Detected Columns ---"
+  echo "  ABC.Score:           col ${ABC_COL}"
+  echo "  ABC.Score.Numerator: col ${NUMER_COL}"
+  echo "  TargetGene:          col ${GENE_COL}"
+  echo "  chr:                 col ${CHR_COL}"
+  echo "  isSelfPromoter:      col ${SP_COL}"
+  echo "  distance:            col ${DIST_COL}"
+  echo "  class:               col ${CLASS_COL}"
+
+  # --- ABC.Score Distribution ---
+  echo ""
+  echo "--- ABC.Score Distribution (col ${ABC_COL}) ---"
+  if [ -n "${ABC_COL}" ]; then
+    tail -n +2 "${THRESH_FILE}" | cut -f"${ABC_COL}" | sort -g | awk '
+      NR==1{min=$1} {sum+=$1; vals[NR]=$1}
+      END{
+        printf "  n=%d  min=%.4f  Q25=%.4f  median=%.4f  Q75=%.4f  max=%.4f  mean=%.6f\n",
+          NR, min, vals[int(NR*0.25)], vals[int(NR*0.5)], vals[int(NR*0.75)], vals[NR], sum/NR
+      }'
+  else
+    echo "  ERROR: ABC.Score column not detected"
+  fi
+
+  # --- Self-Promoter Breakdown ---
+  echo ""
+  echo "--- Self-Promoter Breakdown ---"
+  if [ -n "${SP_COL}" ]; then
+    N_SP_TRUE=$(tail -n +2 "${THRESH_FILE}" | cut -f"${SP_COL}" | grep -c "True" || true)
+    N_SP_FALSE=$(tail -n +2 "${THRESH_FILE}" | cut -f"${SP_COL}" | grep -c "False" || true)
+    echo "  isSelfPromoter=True:  ${N_SP_TRUE}"
+    echo "  isSelfPromoter=False: ${N_SP_FALSE}"
+    echo "  Distal E-G pairs:    ${N_SP_FALSE}"
+
+    # ABC.Score distribution for distal-only
+    echo ""
+    echo "--- ABC.Score Distribution (distal only, isSelfPromoter=False) ---"
+    tail -n +2 "${THRESH_FILE}" | awk -F'\t' -v sp="${SP_COL}" '$sp == "False"' \
+      | cut -f"${ABC_COL}" | sort -g | awk '
+      NR==1{min=$1} {sum+=$1; vals[NR]=$1}
+      END{
+        if(NR>0) printf "  n=%d  min=%.4f  median=%.4f  max=%.4f  mean=%.6f\n",
+          NR, min, vals[int(NR*0.5)], vals[NR], sum/NR
+      }'
+  else
+    echo "  ERROR: isSelfPromoter column not detected"
+  fi
+
+  # --- Element Class Distribution ---
+  echo ""
+  echo "--- Element Class Distribution ---"
+  if [ -n "${CLASS_COL}" ]; then
+    tail -n +2 "${THRESH_FILE}" | cut -f"${CLASS_COL}" | sort | uniq -c | sort -rn
+  fi
+
+  # --- Enhancers per Gene ---
+  echo ""
+  echo "--- Enhancers per Gene ---"
+  if [ -n "${GENE_COL}" ]; then
+    N_GENES=$(tail -n +2 "${THRESH_FILE}" | cut -f"${GENE_COL}" | sort -u | wc -l)
+    echo "  Unique genes with predictions: ${N_GENES}"
+    echo "  Mean enhancers per gene (all): $(echo "scale=2; ${N_PAIRS} / ${N_GENES}" | bc)"
+    if [ -n "${SP_COL}" ]; then
+      echo "  Mean distal enhancers per gene: $(echo "scale=2; ${N_SP_FALSE} / ${N_GENES}" | bc)"
+    fi
+
+    echo "  Top 10 genes by enhancer count:"
+    tail -n +2 "${THRESH_FILE}" | cut -f"${GENE_COL}" | sort | uniq -c | sort -rn | head -10
+
+    echo "  Enhancer count distribution:"
+    tail -n +2 "${THRESH_FILE}" | cut -f"${GENE_COL}" | sort | uniq -c | awk '{print $1}' | sort -n | awk '
+      {vals[NR]=$1; sum+=$1}
+      END{
+        printf "    min=%d  Q25=%d  median=%d  Q75=%d  max=%d  mean=%.1f\n",
+          vals[1], vals[int(NR*0.25)], vals[int(NR*0.5)], vals[int(NR*0.75)], vals[NR], sum/NR
+      }'
+  fi
+
+  # --- Distance Distribution ---
+  echo ""
+  echo "--- Distance Distribution (distal elements only) ---"
+  if [ -n "${DIST_COL}" ] && [ -n "${SP_COL}" ]; then
+    tail -n +2 "${THRESH_FILE}" | awk -F'\t' -v sp="${SP_COL}" -v dist="${DIST_COL}" \
+      '$sp == "False" {print $dist}' | sort -g | awk '
+      NR==1{min=$1} {sum+=$1; vals[NR]=$1}
+      END{
+        if(NR>0) printf "  n=%d  min=%.0f  median=%.0f  Q75=%.0f  max=%.0f  mean=%.0f\n",
+          NR, min, vals[int(NR*0.5)], vals[int(NR*0.75)], vals[NR], sum/NR
+      }'
+  fi
+
+  # --- Per-Chromosome E-G Pairs ---
+  echo ""
+  echo "--- Per-Chromosome E-G Pairs ---"
+  if [ -n "${CHR_COL}" ]; then
+    tail -n +2 "${THRESH_FILE}" | cut -f"${CHR_COL}" | sort -V | uniq -c | awk '{printf "  %-6s %s\n", $2, $1}'
+    N_CHROMS=$(tail -n +2 "${THRESH_FILE}" | cut -f"${CHR_COL}" | sort -u | wc -l)
+    echo "  Total chromosomes: ${N_CHROMS} (expect 20: chr1-19 + chrX)"
+  fi
+
+  # --- QC Metrics ---
+  echo ""
+  echo "--- QC Metrics Files ---"
+  METRICS="${ABC_DIR}/results/${BIOSAMPLE}/Metrics"
+  if [ -d "${METRICS}" ]; then
+    ls -lh "${METRICS}/" 2>/dev/null
+  else
+    echo "  Metrics directory not found"
+  fi
+
+done
+
+# ===================================================================
+# SECTION 4: Per-Gene ABC.Score Sum Validation (Single-Pass)
+# ===================================================================
+echo ""
+echo "================================================================"
+echo "SECTION 4: Per-Gene ABC.Score Sum Validation"
+echo "================================================================"
+echo ""
+echo "Expected: per-gene sums ~1.0 for non-self-promoter entries"
+echo "          per-gene sums ~2.0 including forced self-promoters (by design)"
+echo ""
+
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  ALLPUT="${ABC_DIR}/results/${BIOSAMPLE}/Predictions/EnhancerPredictionsAllPutative.tsv.gz"
+  echo "--- ${BIOSAMPLE} ---"
+  echo "  File: ${ALLPUT}"
+
+  if [ ! -f "${ALLPUT}" ]; then
+    echo "  ERROR: File not found"
+    continue
+  fi
+
+  # Single-pass: compute per-gene sums (all entries and excluding self-promoter)
+  # Also detect column positions from header
+  zcat "${ALLPUT}" | awk -F'\t' '
+    NR==1 {
+      for(i=1; i<=NF; i++) {
+        if($i == "TargetGene") tg=i
+        if($i == "isSelfPromoter") sp=i
+      }
+      # Find ABC.Score by exact match (not ABC.Score.Numerator)
+      for(i=1; i<=NF; i++) {
+        if($i == "ABC.Score") abc=i
+      }
+      printf "  Detected columns: TargetGene=%d, ABC.Score=%d, isSelfPromoter=%d\n", tg, abc, sp
+      next
+    }
+    {
+      sum_all[$tg] += $abc
+      n_all[$tg]++
+      if ($sp == "True") {
+        sp_count[$tg]++
+        sp_sum[$tg] += $abc
+      } else {
+        sum_nosp[$tg] += $abc
+        n_nosp[$tg]++
+      }
+    }
+    END {
+      ng_all = 0; s_all = 0; s_nosp = 0
+      ng_bad_all = 0; ng_bad_nosp = 0
+      # Self-promoter count distribution
+      sp0 = 0; sp1 = 0; sp2 = 0; sp3plus = 0
+
+      for (g in sum_all) {
+        ng_all++
+        s_all += sum_all[g]
+        s_nosp += (g in sum_nosp ? sum_nosp[g] : 0)
+
+        if (sum_all[g] < 0.95 || sum_all[g] > 1.05) ng_bad_all++
+        nosp_val = (g in sum_nosp ? sum_nosp[g] : 0)
+        if (nosp_val < 0.90 || nosp_val > 1.05) ng_bad_nosp++
+
+        sc = (g in sp_count ? sp_count[g] : 0)
+        if (sc == 0) sp0++
+        else if (sc == 1) sp1++
+        else if (sc == 2) sp2++
+        else sp3plus++
+      }
+
+      printf "\n"
+      printf "  Total genes in AllPutative: %d\n", ng_all
+      printf "\n"
+      printf "  --- Per-gene sum (ALL entries, including forced self-promoters) ---\n"
+      printf "  Mean per-gene sum: %.6f (expect ~2.0 due to forced self-promoter)\n", s_all/ng_all
+      printf "  Genes outside [0.95, 1.05]: %d / %d (%.1f%%)\n", ng_bad_all, ng_all, 100*ng_bad_all/ng_all
+      printf "\n"
+      printf "  --- Per-gene sum (EXCLUDING isSelfPromoter=True) ---\n"
+      printf "  Mean per-gene sum: %.6f (expect ~0.85-0.90)\n", s_nosp/ng_all
+      printf "  Genes outside [0.90, 1.05]: %d / %d (%.1f%%)\n", ng_bad_nosp, ng_all, 100*ng_bad_nosp/ng_all
+      printf "\n"
+      printf "  --- Self-promoter entry counts ---\n"
+      printf "  Genes with 0 self-promoter entries: %d\n", sp0
+      printf "  Genes with 1 self-promoter entry:   %d (normal)\n", sp1
+      printf "  Genes with 2 self-promoter entries:  %d (check for annotation overlap)\n", sp2
+      printf "  Genes with 3+ self-promoter entries: %d\n", sp3plus
+      printf "\n"
+
+      # Print sample genes spanning different sum ranges
+      printf "  --- Sample genes ---\n"
+      i = 0
+      for (g in sum_all) {
+        i++
+        if (i % int(ng_all/8) == 1) {
+          sc = (g in sp_count ? sp_count[g] : 0)
+          nosp_val = (g in sum_nosp ? sum_nosp[g] : 0)
+          printf "    %s: sum_all=%.4f  sum_distal=%.4f  n_elements=%d  n_self_promoter=%d\n",
+            g, sum_all[g], nosp_val, n_all[g], sc
+        }
+      }
+    }
+  '
+  echo ""
+done
+
+# ===================================================================
+# SECTION 5: Cross-Condition Comparison
+# ===================================================================
+echo ""
+echo "================================================================"
+echo "SECTION 5: Cross-Condition Comparison"
+echo "================================================================"
+
+WT_THRESH=$(ls "${ABC_DIR}/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold"*.tsv 2>/dev/null | head -1)
+KO_THRESH=$(ls "${ABC_DIR}/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold"*.tsv 2>/dev/null | head -1)
+
+if [ -n "${WT_THRESH}" ] && [ -n "${KO_THRESH}" ]; then
+  WT_GENE_COL=$(head -1 "${WT_THRESH}" | tr '\t' '\n' | grep -nP "^TargetGene$" | head -1 | cut -d: -f1)
+  KO_GENE_COL=$(head -1 "${KO_THRESH}" | tr '\t' '\n' | grep -nP "^TargetGene$" | head -1 | cut -d: -f1)
+
+  WT_GENES_FILE=$(mktemp)
+  KO_GENES_FILE=$(mktemp)
+  tail -n +2 "${WT_THRESH}" | cut -f"${WT_GENE_COL}" | sort -u > "${WT_GENES_FILE}"
+  tail -n +2 "${KO_THRESH}" | cut -f"${KO_GENE_COL}" | sort -u > "${KO_GENES_FILE}"
+
+  N_WT=$(wc -l < "${WT_GENES_FILE}")
+  N_KO=$(wc -l < "${KO_GENES_FILE}")
+  N_BOTH=$(comm -12 "${WT_GENES_FILE}" "${KO_GENES_FILE}" | wc -l)
+  N_WT_ONLY=$(comm -23 "${WT_GENES_FILE}" "${KO_GENES_FILE}" | wc -l)
+  N_KO_ONLY=$(comm -13 "${WT_GENES_FILE}" "${KO_GENES_FILE}" | wc -l)
+
+  echo ""
+  echo "--- Gene Overlap ---"
+  echo "  WT unique genes:        ${N_WT}"
+  echo "  KO unique genes:        ${N_KO}"
+  echo "  Genes in both:          ${N_BOTH} ($(echo "scale=1; 100 * ${N_BOTH} / ${N_WT}" | bc)% of WT)"
+  echo "  WT-only genes:          ${N_WT_ONLY}"
+  echo "  KO-only genes:          ${N_KO_ONLY}"
+
+  if [ "${N_WT_ONLY}" -gt 0 ]; then
+    echo "  WT-only examples:       $(comm -23 "${WT_GENES_FILE}" "${KO_GENES_FILE}" | head -5 | tr '\n' ', ')"
+  fi
+  if [ "${N_KO_ONLY}" -gt 0 ]; then
+    echo "  KO-only examples:       $(comm -13 "${WT_GENES_FILE}" "${KO_GENES_FILE}" | head -5 | tr '\n' ', ')"
+  fi
+
+  rm -f "${WT_GENES_FILE}" "${KO_GENES_FILE}"
+
+  # E-G pair counts comparison
+  WT_SP_COL=$(head -1 "${WT_THRESH}" | tr '\t' '\n' | grep -nP "^isSelfPromoter$" | head -1 | cut -d: -f1)
+  N_WT_ALL=$(tail -n +2 "${WT_THRESH}" | wc -l)
+  N_KO_ALL=$(tail -n +2 "${KO_THRESH}" | wc -l)
+  N_WT_DISTAL=$(tail -n +2 "${WT_THRESH}" | cut -f"${WT_SP_COL}" | grep -c "False" || true)
+  N_KO_DISTAL=$(tail -n +2 "${KO_THRESH}" | cut -f"${WT_SP_COL}" | grep -c "False" || true)
+
+  echo ""
+  echo "--- E-G Pair Counts ---"
+  echo "  WT total:  ${N_WT_ALL}    (distal: ${N_WT_DISTAL})"
+  echo "  KO total:  ${N_KO_ALL}    (distal: ${N_KO_DISTAL})"
+  PCT_DIFF=$(echo "scale=1; 100 * (${N_KO_ALL} - ${N_WT_ALL}) / ${N_WT_ALL}" | bc)
+  echo "  Difference: ${PCT_DIFF}% (KO vs WT)"
+fi
+
+# ===================================================================
+# SECTION 6: Spot-Check Known Genes
+# ===================================================================
+echo ""
+echo "================================================================"
+echo "SECTION 6: Spot-Check Known Genes"
+echo "================================================================"
+echo ""
+echo "Checking biologically relevant genes in WT predictions..."
+echo "(Bap1=knocked out gene, Atoh1/Neurod1=cerebellum TFs, Actb=housekeeping)"
+
+WT_ALLPUT="${ABC_DIR}/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz"
+
+for GENE in Bap1 Atoh1 Neurod1 Pax6 Actb Gapdh; do
+  echo ""
+  echo "  --- ${GENE} ---"
+  zcat "${WT_ALLPUT}" | awk -F'\t' -v gene="${GENE}" '
+    NR==1 {
+      for(i=1;i<=NF;i++) {
+        if($i=="TargetGene") tg=i
+        if($i=="ABC.Score") abc=i
+        if($i=="isSelfPromoter") sp=i
+        if($i=="distance") dist=i
+        if($i=="class") cl=i
+        if($i=="hic_contact") hic=i
+      }
+      next
+    }
+    $tg == gene {
+      n++
+      sum += $abc
+      if ($sp == "True") n_sp++
+      else {
+        n_distal++
+        if ($abc >= 0.02) n_thresh++
+      }
+      if ($abc > max_abc) { max_abc = $abc; max_dist = $dist; max_class = $cl }
+    }
+    END {
+      if (n > 0) {
+        printf "    Total elements within 5Mb: %d\n", n
+        printf "    Self-promoter entries: %d\n", n_sp+0
+        printf "    Distal elements (all): %d\n", n_distal+0
+        printf "    Distal elements (ABC >= 0.02): %d\n", n_thresh+0
+        printf "    Sum ABC.Score: %.4f\n", sum
+        printf "    Strongest element: ABC=%.4f, dist=%.0f, class=%s\n", max_abc, max_dist, max_class
+      } else {
+        printf "    NOT FOUND in predictions\n"
+      }
+    }
+  '
+done
+
+# ===================================================================
+# SECTION 7: Summary and Readiness Check
+# ===================================================================
+echo ""
+echo "================================================================"
+echo "SECTION 7: Summary and Readiness Check"
+echo "================================================================"
+echo ""
+
+PASS=0
+WARN=0
+FAIL=0
+
+check() {
+  local label="$1"
+  local status="$2"  # PASS, WARN, FAIL
+  local msg="$3"
+  if [ "${status}" = "PASS" ]; then
+    echo "  [PASS] ${label}: ${msg}"
+    PASS=$((PASS+1))
+  elif [ "${status}" = "WARN" ]; then
+    echo "  [WARN] ${label}: ${msg}"
+    WARN=$((WARN+1))
+  else
+    echo "  [FAIL] ${label}: ${msg}"
+    FAIL=$((FAIL+1))
+  fi
+}
+
+# Reference files exist
+for f in "${GENES_BED}" "${TSS_BED}" "${BLACKLIST}" "${UBIQ_GENES}"; do
+  if [ -f "$f" ]; then
+    check "$(basename $f)" "PASS" "exists"
+  else
+    check "$(basename $f)" "FAIL" "not found"
+  fi
+done
+
+# Gene annotation biotype
+N_PSEUDO_CHECK=$(tail -n +2 "${GENES_BED}" | cut -f8 | grep -c 'pseudogene' || true)
+if [ "${N_PSEUDO_CHECK}" -eq 0 ]; then
+  check "Biotype filter" "PASS" "0 pseudogenes in annotation"
+else
+  check "Biotype filter" "FAIL" "${N_PSEUDO_CHECK} pseudogenes found"
+fi
+
+# Predictions exist for both
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  ALLPUT="${ABC_DIR}/results/${BIOSAMPLE}/Predictions/EnhancerPredictionsAllPutative.tsv.gz"
+  THRESH=$(ls "${ABC_DIR}/results/${BIOSAMPLE}/Predictions/EnhancerPredictionsFull_threshold"*.tsv 2>/dev/null | head -1)
+  if [ -f "${ALLPUT}" ] && [ -n "${THRESH}" ]; then
+    check "${BIOSAMPLE} predictions" "PASS" "AllPutative and thresholded files exist"
+  else
+    check "${BIOSAMPLE} predictions" "FAIL" "missing prediction files"
+  fi
+done
+
+# Column headers match
+if [ "${WT_HEADER}" = "${KO_HEADER}" ]; then
+  check "Column headers" "PASS" "identical between WT and KO"
+else
+  check "Column headers" "FAIL" "headers differ"
+fi
+
+# Chromosome count
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  THRESH=$(ls "${ABC_DIR}/results/${BIOSAMPLE}/Predictions/EnhancerPredictionsFull_threshold"*.tsv 2>/dev/null | head -1)
+  if [ -n "${THRESH}" ]; then
+    NC=$(tail -n +2 "${THRESH}" | cut -f1 | sort -u | wc -l)
+    if [ "${NC}" -eq 20 ]; then
+      check "${BIOSAMPLE} chromosomes" "PASS" "${NC} chromosomes"
+    else
+      check "${BIOSAMPLE} chromosomes" "WARN" "${NC} chromosomes (expect 20)"
+    fi
+  fi
+done
+
+echo ""
+echo "  Results: ${PASS} PASS, ${WARN} WARN, ${FAIL} FAIL"
+echo ""
+if [ "${FAIL}" -gt 0 ]; then
+  echo "  *** FAILURES DETECTED — do not proceed to Step 6 ***"
+else
+  echo "  Ready to proceed to Step 6 (delta ABC computation)"
+  echo "  Confirmed column names for Steps 6-8:"
+  echo "    ENHANCER_COLS = [\"chr\", \"start\", \"end\"]"
+  echo "    GENE_COL = \"TargetGene\""
+  echo "    ABC_SCORE_COL = \"ABC.Score\""
+  echo "    UNNORM_COL = \"ABC.Score.Numerator\""
+  echo "    SELF_PROMOTER_COL = \"isSelfPromoter\""
+  echo "    Filter: isSelfPromoter == False for delta ABC"
+fi
+
+echo ""
+echo "################################################################"
+echo "# QC Report Complete: $(date)"
+echo "################################################################"

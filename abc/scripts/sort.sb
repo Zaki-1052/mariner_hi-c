@@ -1,0 +1,66 @@
+#!/bin/bash
+#SBATCH --job-name=abc_fix_sort
+#SBATCH --output=logs/abc_fix_sort_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=03:00:00
+#SBATCH --account=csd940
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/abc/logs
+source ~/.bashrc
+conda activate abc-env
+
+INPUT_DIR="/expanse/lustre/projects/csd940/zalibhai/abc/input"
+CHROM_SIZES="/expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes"
+
+for CONDITION in ctrl mut; do
+  BGZ="${INPUT_DIR}/${CONDITION}_ATAC.tagAlign.bgz"
+  RESORTED="${INPUT_DIR}/${CONDITION}_ATAC.tagAlign.resorted.bgz"
+
+  echo "=== Re-sorting ${CONDITION} by chrom.sizes order ==="
+
+  # Extract each chromosome in chrom.sizes order via tabix
+  # This skips _random/_Un scaffolds automatically (not in chrom.sizes)
+  # and uses minimal memory since it processes one chrom at a time
+  while read chr size; do
+    tabix "${BGZ}" "${chr}" 2>/dev/null
+  done < "${CHROM_SIZES}" \
+    | bgzip -c -@ 4 \
+    > "${RESORTED}"
+
+  tabix -p bed "${RESORTED}"
+
+  N_ORIG=$(zcat "${BGZ}" | wc -l)
+  N_NEW=$(zcat "${RESORTED}" | wc -l)
+  # Count reads on _random scaffolds (will be dropped — that's expected)
+  N_RANDOM=$(zcat "${BGZ}" | grep -c "_")
+  N_EXPECTED=$((N_ORIG - N_RANDOM))
+
+  echo "  Original total:    ${N_ORIG}"
+  echo "  On _random scaffs: ${N_RANDOM}"
+  echo "  Expected after:    ${N_EXPECTED}"
+  echo "  Resorted:          ${N_NEW}"
+
+  if [ "${N_NEW}" -ne "${N_EXPECTED}" ]; then
+    echo "WARNING: Count mismatch (diff=$((N_EXPECTED - N_NEW)))"
+  fi
+
+  echo "  New chrom order:"
+  zcat "${RESORTED}" | cut -f1 | uniq | head -10
+
+  mv "${BGZ}" "${BGZ}.lexsorted.bak"
+  mv "${BGZ}.tbi" "${BGZ}.tbi.lexsorted.bak" 2>/dev/null
+  mv "${RESORTED}" "${BGZ}"
+  mv "${RESORTED}.tbi" "${BGZ}.tbi"
+
+  echo "  Done."
+  echo ""
+done
+
+echo "Now clean and re-run:"
+echo "  cd /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction"
+echo "  rm -rf results/WT_cerebellum/Neighborhoods results/KO_cerebellum/Neighborhoods"
+echo "  rm -f results/*/processed_genes_file.bed"

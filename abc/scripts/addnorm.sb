@@ -1,0 +1,35 @@
+#!/bin/bash
+#SBATCH --job-name=abc_addnorm
+#SBATCH --output=logs/abc_addnorm_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/abc/logs
+source ~/.bashrc
+module reset
+module load singularitypro
+
+CONDITION="${1:?Usage: sbatch addnorm.sb [ctrl|mut]}"
+HIC_FILE="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402/${CONDITION}_merged.hic"
+
+if [ ! -f "${HIC_FILE}" ]; then
+  echo "ERROR: ${HIC_FILE} not found"
+  exit 1
+fi
+
+CONTAINER="/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif"
+
+echo "addNorm on: ${HIC_FILE}"
+echo "Start: $(date)"
+
+singularity exec --bind /scratch,/expanse "${CONTAINER}" \
+  java -Djava.awt.headless=true -Xmx56g -jar /opt/scripts/common/juicer_tools.jar addNorm \
+  "${HIC_FILE}"
+
+echo "Exit code: $?"
+echo "Done: $(date)"

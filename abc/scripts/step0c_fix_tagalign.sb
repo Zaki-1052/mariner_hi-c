@@ -1,0 +1,97 @@
+#!/bin/bash
+#SBATCH --job-name=abc_fix_tagalign
+#SBATCH --output=logs/abc_fix_tagalign_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/abc/logs
+source ~/.bashrc
+conda activate abc-env
+
+INPUT_DIR="/expanse/lustre/projects/csd940/zalibhai/abc/input"
+
+# Expected read counts from verification (for validation)
+declare -A EXPECTED_COUNTS
+EXPECTED_COUNTS[ctrl]=246139345
+EXPECTED_COUNTS[mut]=242032436
+
+for CONDITION in ctrl mut; do
+  ORIG="${INPUT_DIR}/${CONDITION}_ATAC.tagAlign.gz"
+  BGZIP="${INPUT_DIR}/${CONDITION}_ATAC.tagAlign.bgz"
+  TBI="${BGZIP}.tbi"
+
+  echo "=== Processing ${CONDITION} ==="
+
+  if [ ! -f "${ORIG}" ]; then
+    echo "ERROR: ${ORIG} not found"
+    exit 1
+  fi
+
+  # Skip if already done
+  if [ -f "${TBI}" ]; then
+    echo "  ${BGZIP} and index already exist. Validating..."
+    tabix -l "${BGZIP}" > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      echo "  Valid. Skipping."
+      continue
+    else
+      echo "  Index invalid. Regenerating..."
+    fi
+  fi
+
+  # Sort lexicographically (required for tabix) and bgzip
+  # TagAligns are already lexicographically sorted (verified: chr1, chr10, chr11...)
+  # But re-sort to be safe — sort is idempotent
+  echo "  Decompressing, sorting, and bgzipping..."
+  echo "  (This will take several minutes for ~245M reads)"
+  
+  zcat "${ORIG}" \
+    | sort -k1,1 -k2,2n -S 12G --parallel=4 \
+    | bgzip -c -@ 4 \
+    > "${BGZIP}"
+
+  echo "  Creating tabix index..."
+  tabix -p bed "${BGZIP}"
+
+  if [ ! -f "${TBI}" ]; then
+    echo "ERROR: Tabix index creation failed for ${BGZIP}"
+    exit 1
+  fi
+
+  # Validate read count matches original
+  echo "  Validating read count..."
+  N_NEW=$(zcat "${BGZIP}" | wc -l)
+  N_EXPECTED=${EXPECTED_COUNTS[${CONDITION}]}
+  echo "  Original: ${N_EXPECTED} reads"
+  echo "  New:      ${N_NEW} reads"
+  
+  if [ "${N_NEW}" -ne "${N_EXPECTED}" ]; then
+    echo "ERROR: Read count mismatch! Expected ${N_EXPECTED}, got ${N_NEW}"
+    exit 1
+  fi
+
+  # Quick tabix query validation
+  N_CHR1=$(tabix "${BGZIP}" chr1:3000000-4000000 | wc -l)
+  echo "  Tabix validation: ${N_CHR1} reads in chr1:3-4Mb"
+  
+  if [ "${N_CHR1}" -eq 0 ]; then
+    echo "ERROR: Tabix query returned 0 reads. Index may be corrupt."
+    exit 1
+  fi
+
+  echo "  Done."
+  echo ""
+done
+
+echo "TagAlign conversion complete."
+echo ""
+echo "Files for ABC config (use these paths):"
+echo "  WT ATAC: ${INPUT_DIR}/ctrl_ATAC.tagAlign.bgz"
+echo "  KO ATAC: ${INPUT_DIR}/mut_ATAC.tagAlign.bgz"
+echo ""
+echo "IMPORTANT: config-biosamples-mm10.tsv must reference .bgz files, not .gz"

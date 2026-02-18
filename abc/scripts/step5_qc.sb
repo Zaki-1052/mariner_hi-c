@@ -1,0 +1,123 @@
+#!/bin/bash
+#SBATCH --job-name=abc_qc
+#SBATCH --output=logs/qc_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+ABC_DIR="/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction"
+
+# ===== CRITICAL: Inspect column headers =====
+# This determines ALL column names for Steps 6-8
+echo "=== COLUMN HEADERS (AllPutative) ==="
+echo "--- WT ---"
+zcat "${ABC_DIR}/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz" \
+  | head -1 | tr '\t' '\n' | cat -n
+
+echo ""
+echo "--- KO (verify identical) ---"
+zcat "${ABC_DIR}/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz" \
+  | head -1 | tr '\t' '\n' | cat -n
+
+echo ""
+echo "=== SAMPLE DATA ROWS (first 3) ==="
+zcat "${ABC_DIR}/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz" \
+  | head -4
+
+echo ""
+echo "=== THRESHOLDED FILE HEADERS ==="
+head -1 "${ABC_DIR}/results/WT_cerebellum/Predictions/EnhancerPredictions"*.tsv 2>/dev/null
+
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  echo ""
+  echo "========================================"
+  echo "=== ${BIOSAMPLE} ==="
+  echo "========================================"
+  PRED="${ABC_DIR}/results/${BIOSAMPLE}/Predictions"
+  
+  # Find the thresholded file
+  THRESH_FILE=$(ls "${PRED}"/EnhancerPredictionsFull_threshold*.tsv 2>/dev/null | head -1)
+  if [ -z "${THRESH_FILE}" ]; then
+    echo "ERROR: No thresholded prediction file found"
+    continue
+  fi
+  
+  echo "Thresholded file: $(basename "${THRESH_FILE}")"
+  N_PAIRS=$(tail -n +2 "${THRESH_FILE}" | wc -l)
+  echo "E-G pairs: ${N_PAIRS}"
+  
+  # ABC score distribution
+  echo ""
+  echo "--- ABC Score Distribution ---"
+  # Need to find the ABC.Score column number from header
+  ABC_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -nP "^ABC\.Score$" | head -1 | cut -d: -f1)
+  echo "ABC.Score is column ${ABC_COL}"
+  
+  if [ -n "${ABC_COL}" ]; then
+    tail -n +2 "${THRESH_FILE}" | cut -f"${ABC_COL}" | sort -g | awk '
+      NR==1{min=$1} {sum+=$1; vals[NR]=$1}
+      END{
+        printf "  n=%d min=%.4f median=%.4f max=%.4f mean=%.4f\n",
+          NR, min, vals[int(NR/2)], vals[NR], sum/NR
+      }'
+  fi
+
+  # Enhancers per gene
+  echo ""
+  echo "--- Enhancers per Gene ---"
+  GENE_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -n "TargetGene" | head -1 | cut -d: -f1)
+  echo "TargetGene is column ${GENE_COL}"
+  
+  if [ -n "${GENE_COL}" ]; then
+    N_GENES=$(tail -n +2 "${THRESH_FILE}" | cut -f"${GENE_COL}" | sort -u | wc -l)
+    echo "  Unique genes with predictions: ${N_GENES}"
+    echo "  Mean enhancers per gene: $(echo "scale=1; ${N_PAIRS} / ${N_GENES}" | bc)"
+    
+    echo "  Top 5 genes by enhancer count:"
+    tail -n +2 "${THRESH_FILE}" | cut -f"${GENE_COL}" | sort | uniq -c | sort -rn | head -5
+  fi
+  
+  # Per-chromosome distribution (check for missing chromosomes)
+  echo ""
+  echo "--- Per-Chromosome E-G Pairs ---"
+  CHR_COL=$(head -1 "${THRESH_FILE}" | tr '\t' '\n' | grep -n "^chr$" | head -1 | cut -d: -f1)
+  if [ -n "${CHR_COL}" ]; then
+    tail -n +2 "${THRESH_FILE}" | cut -f"${CHR_COL}" | sort | uniq -c | sort -k2 -V
+  else
+    echo "  (chr column not found — check header)"
+  fi
+  
+  # Check ABC scores sum to ~1 per gene (sample 5 genes)
+  echo ""
+  echo "--- ABC Score Sum per Gene (AllPutative, sample 5 genes) ---"
+  ALLPUT="${PRED}/EnhancerPredictionsAllPutative.tsv.gz"
+  if [ -f "${ALLPUT}" ]; then
+    ALLPUT_GENE_COL=$(zcat "${ALLPUT}" | head -1 | tr '\t' '\n' | grep -n "TargetGene" | head -1 | cut -d: -f1)
+    ALLPUT_ABC_COL=$(zcat "${ALLPUT}" | head -1 | tr '\t' '\n' | grep -n "ABC.Score" | head -1 | cut -d: -f1)
+    
+    # Get 5 random genes that have predictions
+    SAMPLE_GENES=$(zcat "${ALLPUT}" | tail -n +2 | cut -f"${ALLPUT_GENE_COL}" | sort -u | shuf | head -5)
+    for g in ${SAMPLE_GENES}; do
+      SUM=$(zcat "${ALLPUT}" | awk -F'\t' -v col="${ALLPUT_ABC_COL}" -v gene="$g" -v gcol="${ALLPUT_GENE_COL}" \
+        'NR>1 && $gcol == gene {sum += $col} END {printf "%.4f", sum}')
+      N=$(zcat "${ALLPUT}" | awk -F'\t' -v gene="$g" -v gcol="${ALLPUT_GENE_COL}" \
+        'NR>1 && $gcol == gene {n++} END {print n}')
+      echo "  ${g}: sum(ABC)=${SUM} from ${N} enhancers"
+    done
+  fi
+  
+  # QC metrics directory
+  echo ""
+  echo "--- QC Metrics ---"
+  ls "${ABC_DIR}/results/${BIOSAMPLE}/Metrics/" 2>/dev/null
+done
+
+echo ""
+echo "========================================"
+echo "CRITICAL: Copy the column header output above."
+echo "Steps 6-8 column names MUST be updated to match."
+echo "========================================"

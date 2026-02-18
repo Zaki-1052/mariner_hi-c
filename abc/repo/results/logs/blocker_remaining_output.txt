@@ -1,0 +1,535 @@
+========================================================================
+ABC REMAINING VERIFICATION — Mon Feb 16 17:43:30 PST 2026
+========================================================================
+
+=== A1. FULL macs2.smk ===
+## call macs2 -- if multiple accessibility inputs for one biosample, will aggregate into one output
+rule call_macs_peaks: 
+	input:
+		accessibility = get_accessibility_files,
+	params:
+		pval = config['params_macs']['pval'],
+		genome_size = config['params_macs']['genome_size'],
+	conda:
+		"../envs/abcenv.yml"
+	output: 
+		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak")
+	resources:
+		mem_mb=determine_mem_mb
+	shell: 
+		"""
+		if [[ "{input.accessibility}" == *tagAlign* ]]; then
+			FORMAT="BED"
+		else
+			FORMAT="AUTO"
+		fi
+
+		macs2 callpeak \
+		-f $FORMAT \
+		-g {params.genome_size} \
+		-p {params.pval} \
+		-n macs2 \
+		--shift -75 \
+		--extsize 150 \
+		--nomodel \
+		--keep-dup all \
+		--call-summits \
+		--outdir {RESULTS_DIR}/{wildcards.biosample}/Peaks \
+		-t {input.accessibility} 
+		"""
+
+rule generate_chrom_sizes_bed_file:
+	input:
+		chrom_sizes = config['ref']['chrom_sizes']
+	output:
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed')
+	resources:
+		mem_mb=determine_mem_mb
+	shell:
+		"""
+		awk 'BEGIN {{OFS="\t"}} {{if (NF > 0) print $1,"0",$2 ; else print $0}}' {input.chrom_sizes} > {output.chrom_sizes_bed}
+		"""
+
+## sort narrowPeaks
+rule sort_narrowpeaks:
+	input:
+		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak"),
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed')
+	params:
+		chrom_sizes = config['ref']['chrom_sizes']
+	conda:
+		"../envs/abcenv.yml"
+	output:
+		narrowPeakSorted = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted")
+	resources:
+		mem_mb=determine_mem_mb
+	shell:
+		"""
+		# intersect to remove alternate chromosomes
+		bedtools intersect -u -a {input.narrowPeak} -b {input.chrom_sizes_bed} | \
+		bedtools sort -faidx {params.chrom_sizes} -i stdin > {output.narrowPeakSorted}
+		"""
+
+=== A2. FULL candidate_regions.smk ===
+rule make_candidate_regions:
+	input:
+		narrowPeak = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted"),
+		accessibility = get_accessibility_files,
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed'),
+	params:
+		TSS = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'TSS'],
+		chrom_sizes = config['ref']['chrom_sizes'],
+		regions_blocklist = config['ref']['regions_blocklist'],
+		peakExtendFromSummit = config['params_candidate']['peakExtendFromSummit'],
+		nStrongestPeak = config['params_candidate']['nStrongestPeaks'],
+		output_dir = os.path.join(RESULTS_DIR, "{biosample}", "Peaks"),
+		scripts_dir = SCRIPTS_DIR,
+	conda:
+		"../envs/abcenv.yml"
+	output: 
+		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed")
+	resources:
+		mem_mb=determine_mem_mb
+	shell: 
+		"""
+		python {params.scripts_dir}/makeCandidateRegions.py \
+			--narrowPeak {input.narrowPeak}\
+			--accessibility {input.accessibility} \
+			--outDir {params.output_dir} \
+			--chrom_sizes {params.chrom_sizes} \
+			--chrom_sizes_bed {input.chrom_sizes_bed} \
+			--regions_blocklist {params.regions_blocklist} \
+			--regions_includelist {params.TSS} \
+			--peakExtendFromSummit {params.peakExtendFromSummit} \
+			--nStrongestPeak {params.nStrongestPeak}
+		"""
+
+=== A3. FULL neighborhoods.smk ===
+rule create_neighborhoods:
+	input:		
+		candidateRegions = os.path.join(RESULTS_DIR, "{biosample}", "Peaks", "macs2_peaks.narrowPeak.sorted.candidateRegions.bed"),
+		chrom_sizes_bed = os.path.join(RESULTS_DIR, "tmp", os.path.basename(config['ref']['chrom_sizes']) + '.bed')
+	params:
+		DHS = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "DHS"] or '',
+		ATAC = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "ATAC"] or '',
+		default = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'default_accessibility_feature'],
+		H3K27ac = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, "H3K27ac"] or '',
+		genes = lambda wildcards: BIOSAMPLES_CONFIG.loc[wildcards.biosample, 'genes'],
+		ubiquitous_genes = config['ref']['ubiquitous_genes'],
+		chrom_sizes = config['ref']['chrom_sizes'],
+		qnorm = f"--qnorm {config['ref']['qnorm']}" if config['params_neighborhoods']['use_qnorm'] else "",
+		scripts_dir = SCRIPTS_DIR
+	conda:
+		"../envs/abcenv.yml"
+	output: 
+		enhList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "EnhancerList.txt"),
+		geneList = os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods", "GeneList.txt"),
+		neighborhoodDirectory = directory(os.path.join(RESULTS_DIR, "{biosample}", "Neighborhoods")),
+		processed_genes_file = os.path.join(RESULTS_DIR, "{biosample}", "processed_genes_file.bed"),
+	resources:
+		mem_mb=32*1000
+	shell:
+		"""
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a {params.genes} -b {input.chrom_sizes_bed} | \
+		bedtools sort -faidx {params.chrom_sizes} -i stdin | \
+		uniq > {output.processed_genes_file}
+						
+		python {params.scripts_dir}/run.neighborhoods.py \
+			--candidate_enhancer_regions {input.candidateRegions} \
+			--DHS {params.DHS} \
+			--ATAC {params.ATAC} \
+			--default_accessibility_feature {params.default} \
+			--chrom_sizes {params.chrom_sizes} \
+			--chrom_sizes_bed {input.chrom_sizes_bed} \
+			--outdir {output.neighborhoodDirectory} \
+			--genes {output.processed_genes_file} \
+			--ubiquitously_expressed_genes {params.ubiquitous_genes} \
+			--H3K27ac {params.H3K27ac} \
+			{params.qnorm} 
+		"""
+=== A4. FULL Snakefile (main) ===
+import os
+import pandas as pd
+import hashlib
+import numpy as np
+from snakemake.utils import min_version
+min_version("7.0")
+
+configfile: "config/config.yaml"
+conda: "mamba"
+
+include: "rules/utils.smk"
+# Making paths absolute is important so that ABC can be 
+# used as a submodule for ENCODE-rE2G
+ABC_DIR_PATH = os.path.abspath(config["ABC_DIR_PATH"])
+config = make_paths_absolute(config, ABC_DIR_PATH)
+
+RESULTS_DIR = config['results_dir']
+BIOSAMPLES_CONFIG = load_biosamples_config(config)
+SCRIPTS_DIR = os.path.join(ABC_DIR_PATH, "workflow/scripts")
+ABC_THRESHOLDS = load_abc_thresholds(config)
+include: "rules/macs2.smk"
+include: "rules/candidate_regions.smk"
+include: "rules/neighborhoods.smk"
+include: "rules/predictions.smk"
+include: "rules/qc.smk"
+
+def qc_plot_outputs():
+	output_files = []
+	for _, row in BIOSAMPLES_CONFIG.iterrows():
+		biosample = row["biosample"]
+		threshold = determine_threshold(biosample)
+		file = os.path.join(RESULTS_DIR, biosample, "Metrics", f"QCSummary_{determine_filtered_prediction_file_format(threshold, config)}.tsv")
+		output_files.append(file)
+	return output_files
+
+
+rule all:
+	input:
+		allPutative = expand(
+			os.path.join(RESULTS_DIR, "{biosample}", "Predictions", "EnhancerPredictionsAllPutative.tsv.gz"), biosample=BIOSAMPLES_CONFIG["biosample"]
+		),
+		qcPlots = qc_plot_outputs()
+
+=== A5. All rule files ===
+total 292
+drwxr-sr-x 2 zalibhai csd940 57344 Feb 16 14:52 .
+drwxr-sr-x 5 zalibhai csd940 57344 Feb 16 14:52 ..
+-rw-r--r-- 1 zalibhai csd940  1393 Feb 16 14:52 candidate_regions.smk
+-rw-r--r-- 1 zalibhai csd940  1937 Feb 16 14:52 macs2.smk
+-rw-r--r-- 1 zalibhai csd940  2186 Feb 16 14:52 neighborhoods.smk
+-rw-r--r-- 1 zalibhai csd940  4155 Feb 16 14:52 predictions.smk
+-rw-r--r-- 1 zalibhai csd940  1426 Feb 16 14:52 qc.smk
+-rw-r--r-- 1 zalibhai csd940  5915 Feb 16 14:52 utils.smk
+
+=== B1. QNorm reference file ===
+-rw-r--r-- 1 zalibhai csd940 15643 Feb 16 14:52 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/reference/EnhancersQNormRef.K562.txt
+Lines: 352
+First 10 lines:
+enh_class	quantile	rank	H3K27ac.RPM	DHS.RPM
+any	0.01000	160559.00000	0.00000	0.02230
+any	0.02000	158937.00000	0.00000	0.04612
+any	0.03000	157316.00000	0.00000	0.07146
+any	0.04000	155694.00000	0.00000	0.11455
+any	0.05000	154072.00000	0.00000	0.16068
+any	0.06000	152450.00000	0.00000	0.25141
+any	0.07000	150828.00000	0.00000	0.34215
+any	0.08000	149207.00000	0.00000	0.38827
+any	0.09000	147585.00000	0.00000	0.41814
+Last 5 lines:
+nonpromoter	0.99950	67.00000	48.00739	45.55490
+nonpromoter	0.99960	54.00000	49.68820	48.40212
+nonpromoter	0.99970	40.00000	53.72071	59.06826
+nonpromoter	0.99980	27.00000	61.78833	68.56643
+nonpromoter	0.99990	13.00000	70.28431	94.64760
+
+=== B2. ABC thresholds reference ===
+-rw-r--r-- 1 zalibhai csd940 333 Feb 16 14:52 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/reference/abc_thresholds.tsv
+Full contents:
+accessibility	has_h3k27ac	hic_type	threshold
+DHS	TRUE	intact_hic	0.027
+DHS	FALSE	intact_hic	0.024
+DHS	TRUE	avg	0.016
+DHS	TRUE	powerlaw	0.017
+DHS	FALSE	avg	0.016
+ATAC	TRUE	intact_hic	0.025
+DHS	FALSE	powerlaw	0.016
+ATAC	TRUE	avg	0.016
+ATAC	TRUE	powerlaw	0.016
+ATAC	FALSE	intact_hic	0.021
+ATAC	FALSE	avg	0.012
+ATAC	FALSE	powerlaw	0.013
+
+=== C. Reference directory contents ===
+total 334
+drwxr-sr-x  4 zalibhai csd940 57344 Feb 16 14:52 .
+drwxr-sr-x 11 zalibhai csd940 57344 Feb 16 16:26 ..
+-rw-r--r--  1 zalibhai csd940   333 Feb 16 14:52 abc_thresholds.tsv
+-rw-r--r--  1 zalibhai csd940 15643 Feb 16 14:52 EnhancersQNormRef.K562.txt
+drwxr-sr-x  2 zalibhai csd940 57344 Feb 16 14:52 hg19
+drwxr-sr-x  2 zalibhai csd940 57344 Feb 16 14:52 hg38
+-rw-r--r--  1 zalibhai csd940  5297 Feb 16 14:52 UbiquitouslyExpressedGenes.txt
+total 3404
+drwxr-sr-x 2 zalibhai csd940   57344 Feb 16 14:52 .
+drwxr-sr-x 4 zalibhai csd940   57344 Feb 16 14:52 ..
+-rw-r--r-- 1 zalibhai csd940 1346196 Feb 16 14:52 CollapsedGeneBounds.hg38.bed
+-rw-r--r-- 1 zalibhai csd940  714898 Feb 16 14:52 CollapsedGeneBounds.hg38.bed6
+-rw-r--r-- 1 zalibhai csd940 1346196 Feb 16 14:52 CollapsedGeneBounds.hg38.TSS500bp.bed
+-rw-r--r-- 1 zalibhai csd940  714898 Feb 16 14:52 CollapsedGeneBounds.hg38.TSS500bp.bed6
+-rw-r--r-- 1 zalibhai csd940   11686 Feb 16 14:52 GRCh38_EBV.chrom.sizes.tsv
+-rw-r--r-- 1 zalibhai csd940     376 Feb 16 14:52 GRCh38_EBV.no_alt.chrom.sizes.tsv
+-rw-r--r-- 1 zalibhai csd940   21720 Feb 16 14:52 GRCh38_unified_blacklist.bed
+
+Bundled gene annotation format (first 5 lines):
+#chr	start	end	name	score	strand	Ensembl_ID	gene_type
+chr1	34610	36081	FAM138A	0	-	ENSG00000237613	lincRNA
+chr1	34610	36081	FAM138F	0	-	ENSG00000282591	lincRNA
+chr1	69090	70008	OR4F5	0	+	ENSG00000186092	protein_coding
+chr1	817370	819834	FAM87B	0	+	ENSG00000177757	lincRNA
+
+Bundled TSS format (first 5 lines):
+#chr	start	end	name	score	strand	Ensembl_ID	gene_type
+chr1	35831	36331	FAM138A	0	-	ENSG00000237613	lincRNA
+chr1	35831	36331	FAM138F	0	-	ENSG00000282591	lincRNA
+chr1	68840	69340	OR4F5	0	+	ENSG00000186092	protein_coding
+chr1	817120	817620	FAM87B	0	+	ENSG00000177757	lincRNA
+
+Bundled ubiquitous genes format (first 10 lines):
+AARS
+ABCF1
+ABCF3
+ABHD10
+ACAD9
+ACADVL
+ACLY
+ACP1
+ACTR10
+ACTR1A
+
+Bundled blacklist format (first 5 lines):
+chr1	628903	635104
+chr1	5850087	5850571
+chr1	8909610	8910014
+chr1	9574580	9574997
+chr1	32043823	32044203
+
+=== D1. TAGALIGN READ COUNTS ===
+--- ctrl_ATAC.tagAlign.gz ---
+  File size: 764M
+  Counting reads (may take 1-2 min)...
+  Total reads: 246139345
+  Sort order check (first 5 chromosomes):
+chr1
+chr10
+chr11
+chr12
+chr13
+--- mut_ATAC.tagAlign.gz ---
+  File size: 749M
+  Counting reads (may take 1-2 min)...
+  Total reads: 242032436
+  Sort order check (first 5 chromosomes):
+chr1
+chr10
+chr11
+chr12
+chr13
+
+=== D2. CONSENSUS PEAKS ===
+--- consensus_all.bed ---
+-rw-r--r-- 1 zalibhai csd940 1805759 Feb  9 10:26 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/atac_seq/consensus_all.bed
+Lines: 75371
+Columns: 3
+First 5:
+chr1	3251986	3252176
+chr1	3360993	3361201
+chr1	3369516	3369842
+chr1	3399056	3399273
+chr1	3416260	3416357
+Width stats (min/median/max):
+  min=1 median=230 max=3457 n=75371
+
+--- consensus_all_500bp.bed ---
+-rw-r--r-- 1 zalibhai csd940 1717861 Feb 16 16:47 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/atac_seq/consensus_all_500bp.bed
+Lines: 71704
+Width stats:
+  min=500 median=500 max=2028 n=71704
+Chr prefix: chr1
+Chromosomes in consensus_all.bed:
+chr1
+chr10
+chr11
+chr12
+chr13
+chr14
+chr15
+chr16
+chr17
+chr18
+chr19
+chr2
+chr3
+chr4
+chr5
+chr6
+chr7
+chr8
+chr9
+chrX
+chrY
+
+=== D3. HI-C FILES ===
+--- resorted_ctrl.hic ---
+-rwxrwxrwx 1 ctea csd940 6.3G Dec 25 02:21 /expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/juicerpre/merged/hic/resorted_ctrl.hic
+--- resorted_mut.hic ---
+-rwxrwxrwx 1 ctea csd940 5.9G Dec 25 11:45 /expanse/lustre/projects/csd940/ctea/nf-hic/250402_Bap1_deepseq/juicerpre/merged/hic/resorted_mut.hic
+
+=== D4. RNA-SEQ FILE ===
+-rw-r--r-- 1 zalibhai csd940 6.2M Feb  9 10:26 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx
+  Rows: 16572
+  Columns: ['ensembl_gene_id', 'baseMean', 'log2FoldChange', 'lfcSE', 'stat', 'pvalue', 'padj', 'ctrl10', 'ctrl2', 'ctrl3', 'ctrl4', 'ctrl5', 'ctrl6', 'ctrl9', 'mut10', 'mut2', 'mut3', 'mut4', 'mut5', 'mut6', 'mut9']
+  First gene: Xkr4
+  Gene column dtype: object
+  Has baseMean: True
+  Has padj: True
+  Has log2FoldChange: True
+
+=== D5. CHROM SIZES ===
+-rw-r--r-- 1 zalibhai csd940 1405 Oct 29 17:43 /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes
+First 5 lines:
+chr1	195471971
+chr2	182113224
+chrX	171031299
+chr3	160039680
+chr4	156508116
+Has chr prefix: 1
+Total entries: 66
+Standard chroms only:
+21
+
+=== D6. CONDA ENVIRONMENT PACKAGES ===
+bedtools                         2.26.0           0                    bioconda
+htslib                           1.20             h81da01d_0           bioconda
+macs2                            2.2.9.1          py310h4b81fae_0      bioconda
+matplotlib                       3.8.4            py310hff52083_2      conda-forge
+matplotlib-base                  3.8.4            py310hef631a5_2      conda-forge
+numpy                            1.26.4           py310hb13e2d6_0      conda-forge
+openpyxl                         3.1.5            py310h2372a71_0      conda-forge
+pandas                           2.2.2            py310hf9f9076_1      conda-forge
+pysam                            0.22.1           py310h41dec4a_0      bioconda
+samtools                         1.20             h50ea8bc_0           bioconda
+scipy                            1.13.1           py310h93e2701_0      conda-forge
+snakemake                        7.32.4           hdfd78af_1           bioconda
+snakemake-minimal                7.32.4           pyhdfd78af_1         bioconda
+tabix                            1.11             hdfd78af_0           bioconda
+
+=== D7. SNAKEMAKE VERSION + DRY-RUN TEST ===
+7.32.4
+-----------------------------  -------
+all                                  1
+call_macs_peaks                      1
+create_neighborhoods                 1
+create_predictions                   1
+filter_predictions                   1
+generate_chrom_sizes_bed_file        1
+generate_qc_plot_and_summary         1
+make_candidate_regions               1
+sort_narrowpeaks                     1
+total                                9
+
+Reasons:
+    (check individual jobs above for details)
+    input files updated by another job:
+        all, create_neighborhoods, create_predictions, filter_predictions, generate_qc_plot_and_summary, make_candidate_regions, sort_narrowpeaks
+    missing output files:
+        call_macs_peaks, create_neighborhoods, create_predictions, filter_predictions, generate_chrom_sizes_bed_file, generate_qc_plot_and_summary, make_candidate_regions, sort_narrowpeaks
+
+This was a dry-run (flag -n). The order of jobs does not reflect the order of execution.
+
+=== D8. JAVA (needed for juicertools / Hi-C extraction) ===
+openjdk version "1.8.0_412"
+OpenJDK Runtime Environment (build 1.8.0_412-b08)
+OpenJDK 64-Bit Server VM (build 25.412-b08, mixed mode)
+/usr/bin/java
+
+=== D9. H3K27ac bigWig files (for future enhancement) ===
+-rw-rw-r-- 1 zalibhai csd940 157M Feb 12 14:30 /expanse/lustre/projects/csd940/zalibhai/abc/input/H3K27ac_ctrl_merged.bw
+-rw-rw-r-- 1 zalibhai csd940 169M Feb 12 16:51 /expanse/lustre/projects/csd940/zalibhai/abc/input/H3K27ac_mut_merged.bw
+
+=== D10. CHARACTERIZED LOOPS (for Step 9 cross-reference) ===
+-rw-r--r-- 1 zalibhai csd940 1500027 Feb 16 17:43 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/characterized_loops.tsv
+Columns:
+     1	loop_id
+     2	chr1
+     3	start1
+     4	end1
+     5	chr2
+     6	start2
+     7	end2
+     8	coord_string
+     9	shift_status
+    10	logFC
+    11	logCPM
+    12	F
+    13	PValue
+    14	FDR
+    15	significant
+    16	exploratory
+    17	category
+    18	direction
+    19	plot_color
+    20	resolution
+    21	resolution_kb
+    22	n_overlaps
+    23	is_merged
+    24	anchor1_chr
+    25	anchor1_start
+    26	anchor1_end
+    27	anchor1_midpoint
+    28	anchor1_size
+    29	anchor2_chr
+    30	anchor2_start
+    31	anchor2_end
+    32	anchor2_midpoint
+    33	anchor2_size
+    34	loop_distance
+    35	distance_category
+    36	is_intrachromosomal
+    37	anchor1_nearest_gene_idx
+    38	anchor1_distance_to_tss
+    39	anchor2_nearest_gene_idx
+    40	anchor2_distance_to_tss
+    41	anchor1_nearest_gene
+    42	anchor2_nearest_gene
+    43	anchor1_H3K27ac_overlap
+    44	anchor1_H3K4me1_overlap
+    45	anchor1_type
+    46	anchor1_is_promoter
+    47	anchor2_H3K27ac_overlap
+    48	anchor2_H3K4me1_overlap
+    49	anchor2_type
+    50	anchor2_is_promoter
+    51	loop_type
+    52	anchor1_H3K27me3_overlap
+    53	anchor2_H3K27me3_overlap
+    54	anchor1_H3K4me3_overlap
+    55	anchor2_H3K4me3_overlap
+    56	anchor1_Bivalent_Promoter_overlap
+    57	anchor2_Bivalent_Promoter_overlap
+Lines: 2911
+First 3 data rows:
+loop_32	chr8	11635000	11640000	chr8	11695000	11700000	chr8:11635000-11640000_chr8:11695000-11700000	True	0.507964758182221	5.92970913950171	38.1966965974333	1.12314669989709e-05	0.0010800226715267	TRUE	TRUE	moderate_differential	up_in_mutant	NA	5000	5	1	FALSE	chr8	11635000	11640000	11637500	5000	chr8	11695000	11700000	11697500	5000	60000	<100kb	TRUE	1731	0	17440	515	102465714	624710	TRUE	TRUE	Active_Promoter	TRUE	FALSE	FALSE	Other	FALSE	Active_Promoter-Other	FALSE	FALSE	TRUE	FALSE	FALSE	FALSE
+loop_8162	chr14	105660000	105670000	chr14	105890000	105900000	chr14:105660000-105670000_chr14:105890000-105900000	False	-0.399584538766962	4.86375878882028	30.8191808462212	1.96438779158683e-05	0.0006576630843075	TRUE	TRUE	weak_differential	down_in_mutant	NA	10000	10	2	TRUE	chr14	105660000	105670000	105665000	10000	chr14	105890000	105900000	105895000	10000	230000	100-500kb	TRUE	1557	36229	11386	0	102465207	24064	TRUE	TRUE	Active_Enhancer	FALSE	TRUE	TRUE	Active_Promoter	TRUE	Active_Promoter-Active_Enhancer	FALSE	FALSE	FALSE	TRUE	FALSE	FALSE
+loop_1329	chr9	60590000	60600000	chr9	60680000	60690000	chr9:60590000-60600000_chr9:60680000-60690000	False	-0.385575955751452	6.1846099852789	64.3620435191987	1.1192832454642e-07	1.86261900083425e-05	TRUE	TRUE	weak_differential	down_in_mutant	NA	10000	10	3	TRUE	chr9	60590000	60600000	60595000	10000	chr9	60680000	60690000	60685000	10000	90000	<100kb	TRUE	1124	44117	2221	0	100504561	102747	TRUE	TRUE	Active_Enhancer	FALSE	TRUE	TRUE	Other	FALSE	Active_Enhancer-Other	FALSE	FALSE	FALSE	FALSE	FALSE	FALSE
+
+=== D11. H3K27ac PEAK BEDs (for Step 9 cross-reference) ===
+--- H3K27acCerebellumLate2.bed ---
+-rw-r--r-- 1 zalibhai csd940 607047 Feb  9 10:26 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K27acCerebellumLate2.bed
+  Lines: 15105
+  Columns: 6
+  First 3 lines:
+chr1	3669527	3671384	region_0	0	+
+chr1	3671645	3673029	region_1	0	+
+chr1	4784814	4786485	region_2	0	+
+--- H3K27acCerebellumEarly2.bed ---
+-rw-r--r-- 1 zalibhai csd940 1032828 Feb  9 10:26 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K27acCerebellumEarly2.bed
+  Lines: 18178
+  Columns: 6
+  First 3 lines:
+chr1	3671654	3672791	12925	23	chr1:3672092-3672115
+chr1	4784944	4786208	12857	28	chr1:4785587-4785593
+chr1	4856969	4858956	20251	27	chr1:4857484-4857600
+
+========================================================================
+COMPLETE — Mon Feb 16 17:47:30 PST 2026
+========================================================================
+
+DECISIONS PENDING FROM THIS OUTPUT:
+  1. QNorm: Is K562 human qnorm appropriate for mouse ATAC?
+     → If not, set use_qnorm: False and threshold: 0.02 manually
+  2. Snakemake rules: Confirm symlink injection path from macs2.smk
+  3. TagAlign sort order: Must match chrom.sizes chromosome order
+  4. Java version: Must be compatible with juicertools for Hi-C
+  5. characterized_loops.tsv column format: Needed for Step 9 implementation

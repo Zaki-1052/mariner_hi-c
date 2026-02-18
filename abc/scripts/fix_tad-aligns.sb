@@ -1,0 +1,76 @@
+#!/bin/bash
+#SBATCH --job-name=abc_fix_sort
+#SBATCH --output=logs/abc_fix_sort_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=03:00:00
+#SBATCH --account=csd940
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/abc/logs
+source ~/.bashrc
+conda activate abc-env
+
+INPUT_DIR="/expanse/lustre/projects/csd940/zalibhai/abc/input"
+CHROM_SIZES="/expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes"
+
+# Verify the sort order mismatch
+echo "=== chrom.sizes order (first 5) ==="
+head -5 "${CHROM_SIZES}"
+
+echo ""
+echo "=== Current tagAlign order (first chroms seen) ==="
+zcat "${INPUT_DIR}/ctrl_ATAC.tagAlign.bgz" | cut -f1 | uniq | head -25
+
+for CONDITION in ctrl mut; do
+  BGZ="${INPUT_DIR}/${CONDITION}_ATAC.tagAlign.bgz"
+  RESORTED="${INPUT_DIR}/${CONDITION}_ATAC.tagAlign.resorted.bgz"
+  
+  echo ""
+  echo "=== Re-sorting ${CONDITION} to match chrom.sizes order ==="
+  
+  # Decompress, re-sort by chrom.sizes order, re-compress
+  zcat "${BGZ}" \
+    | bedtools sort -faidx "${CHROM_SIZES}" -i stdin \
+    | bgzip -c -@ 4 \
+    > "${RESORTED}"
+  
+  # Index
+  tabix -p bed "${RESORTED}"
+  
+  # Validate
+  N_ORIG=$(zcat "${BGZ}" | wc -l)
+  N_NEW=$(zcat "${RESORTED}" | wc -l)
+  echo "  Original: ${N_ORIG} reads"
+  echo "  Resorted: ${N_NEW} reads"
+  
+  if [ "${N_ORIG}" -ne "${N_NEW}" ]; then
+    echo "ERROR: Read count mismatch!"
+    exit 1
+  fi
+  
+  # Verify new sort order matches chrom.sizes
+  echo "  New chrom order (first 5):"
+  zcat "${RESORTED}" | cut -f1 | uniq | head -5
+  
+  # Quick tabix test
+  N_TEST=$(tabix "${RESORTED}" chr1:1-1000000 | wc -l)
+  echo "  Tabix test (chr1:1-1M): ${N_TEST} reads"
+  
+  # Replace old file
+  mv "${BGZ}" "${BGZ}.lexsorted.bak"
+  mv "${BGZ}.tbi" "${BGZ}.tbi.lexsorted.bak" 2>/dev/null
+  mv "${RESORTED}" "${BGZ}"
+  mv "${RESORTED}.tbi" "${BGZ}.tbi"
+  
+  echo "  Replaced ${BGZ} with correctly sorted version"
+done
+
+echo ""
+echo "Done. Now clean snakemake state and re-run:"
+echo "  cd /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction"
+echo "  rm -rf results/WT_cerebellum/Neighborhoods results/KO_cerebellum/Neighborhoods"
+echo "  rm -f results/*/processed_genes_file.bed"
+echo "  snakemake -j16 --configfile config/config.yaml --rerun-incomplete"
