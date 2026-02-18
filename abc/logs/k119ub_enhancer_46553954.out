@@ -1,0 +1,130 @@
+=========================================
+K119ub Enhancer Signal Preprocessing
+=========================================
+Job ID: 46553954
+Node: exp-1-48
+Start time: Wed Feb 18 14:40:55 PST 2026
+=========================================
+
+Configuration:
+  Script:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/abc/scripts/preprocess_k119ub_enhancer_signal.R
+  ABC pairs: /expanse/lustre/projects/csd940/zalibhai/abc/results/delta_abc_all_pairs.tsv
+  BigWig dir: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps/
+  Output:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/abc/results/k119ub_enhancer_signal.tsv
+
+All 8 bigWig files found.
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/Rscript
+Rscript (R) version 4.4.2 (2024-10-31)
+
+================================================================================
+K119UB ENHANCER SIGNAL PREPROCESSING (PER-REPLICATE)
+================================================================================
+Date: 2026-02-18 14:41:06
+ABC pairs:   /expanse/lustre/projects/csd940/zalibhai/abc/results/delta_abc_all_pairs.tsv
+BigWig dir:  /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps/
+Output:      /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/abc/results/k119ub_enhancer_signal.tsv
+
+Loading packages...
+Warning message:
+package ‘rtracklayer’ was built under R version 4.4.3
+Packages loaded.
+
+Validating bigWig files:
+  [OK] ctrl1: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps//H2AK119ubCtrl1.bw
+  [OK] ctrl2: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps//H2AK119ubCtrl2.bw
+  [OK] ctrl3: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps//H2AK119ubCtrl3.bw
+  [OK] ctrl4: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps//H2AK119ubCtrl4.bw
+  [OK] mut1: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps//H2AK119ubMut1.bw
+  [OK] mut2: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps//H2AK119ubMut2.bw
+  [OK] mut3: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps//H2AK119ubMut3.bw
+  [OK] mut4: /expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps//H2AK119ubMut4.bw
+
+Loading ABC pairs and extracting unique enhancers...
+  Loaded 180423 E-G pairs
+  Unique enhancer regions: 33004
+  After filtering to standard chroms: 33004 enhancers
+
+--- Per-replicate signal extraction ---
+  Computing mean signal from ctrl1 (33004 regions)...
+    Range: [0.0000, 72.3333], Median: 4.3977, Non-zero: 32929 / 33004
+  Computing mean signal from ctrl2 (33004 regions)...
+    Range: [0.0000, 60.0398], Median: 3.2792, Non-zero: 32929 / 33004
+  Computing mean signal from ctrl3 (33004 regions)...
+    Range: [0.0000, 110.4427], Median: 4.3798, Non-zero: 32854 / 33004
+  Computing mean signal from ctrl4 (33004 regions)...
+    Range: [0.0000, 88.0283], Median: 4.8596, Non-zero: 32985 / 33004
+  Computing mean signal from mut1 (33004 regions)...
+    Range: [0.0000, 56.0437], Median: 4.6722, Non-zero: 32993 / 33004
+  Computing mean signal from mut2 (33004 regions)...
+    Range: [0.0000, 62.6098], Median: 4.3434, Non-zero: 32926 / 33004
+  Computing mean signal from mut3 (33004 regions)...
+    Range: [0.0000, 47.9093], Median: 4.2928, Non-zero: 32841 / 33004
+  Computing mean signal from mut4 (33004 regions)...
+    Range: [0.0000, 48.5568], Median: 3.9702, Non-zero: 32697 / 33004
+
+--- Median-ratio normalization across 8 samples ---
+  Per-sample medians (non-zero):
+    ctrl1   : 4.406630
+    ctrl2   : 3.286387
+    ctrl3   : 4.396208
+    ctrl4   : 4.861337
+    mut1    : 4.673313
+    mut2    : 4.352012
+    mut3    : 4.306627
+    mut4    : 4.005030
+  Reference (geometric mean of medians): 4.260540
+  Scale factors:
+    ctrl1   : 0.966848
+    ctrl2   : 1.296421
+    ctrl3   : 0.969140
+    ctrl4   : 0.876413
+    mut1    : 0.911674
+    mut2    : 0.978982
+    mut3    : 0.989299
+    mut4    : 1.063797
+
+--- Computing condition means and log2FC ---
+  Adaptive pseudocount: 1.078480
+  Signal classes:
+    quantifiable   : 31947 (96.8%)
+    one_condition  : 747 (2.3%)
+    no_signal      : 310 (0.9%)
+
+--- Building output table ---
+
+Writing output to: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/abc/results/k119ub_enhancer_signal.tsv
+  33004 enhancers written
+
+================================================================================
+PREPROCESSING SUMMARY
+================================================================================
+  Input E-G pairs:       180423
+  Unique enhancers:      33004
+  BigWig samples:        8 (4 ctrl + 4 mut)
+  Pseudocount:           1.078480
+  Reference median:      4.260540
+
+  Log2FC (quantifiable, n=31947):
+    Median: -0.0265
+    Mean:   -0.0240
+    SD:     0.3307
+    Range:  [-1.4970, +1.3800]
+    Positive (mut > ctrl): 14952 (46.8%)
+
+Preprocessing complete.
+
+=========================================
+Preprocessing complete!
+=========================================
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/abc/results/k119ub_enhancer_signal.tsv
+Lines:  33005
+
+Next steps:
+  scp expanse:/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/abc/results/k119ub_enhancer_signal.tsv abc/results/
+  Rscript abc/scripts/step10_k119ub_abc_correlation.R
+
+End time: Wed Feb 18 14:42:05 PST 2026
+=========================================

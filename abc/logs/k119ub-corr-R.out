@@ -1,0 +1,145 @@
+================================================================================
+STEP 10: K119UB-ABC ENHANCER CORRELATION ANALYSIS
+================================================================================
+Date: 2026-02-18 14:48:45 
+
+Loading packages...
+Packages loaded.
+
+Loading data...
+  ABC pairs: 180423 rows
+  K119ub signal: 33004 enhancers
+  Annotated pairs: 180423 rows
+
+--- Part A: Enhancer-level aggregation ---
+  Aggregated to 33004 unique enhancers
+  After joining with K119ub signal: 33004 enhancers
+  Quantifiable K119ub signal: 31947 enhancers
+  Saved merged data: results/k119ub_abc_enhancer_merged.tsv (33004 rows)
+
+--- Part B: Core Spearman correlations ---
+  delta_activity vs K119ub_log2fc              : rho = -0.0393 [-0.0503, -0.0284], p = 1.99e-12, n = 31947
+  mean_delta_unnorm vs K119ub_log2fc           : rho = -0.0901 [-0.1009, -0.0792], p = 1.58e-58, n = 31947
+  mean_delta_ABC vs K119ub_log2fc              : rho = -0.0232 [-0.0341, -0.0122], p = 3.41e-05, n = 31947
+  delta_activity vs K119ub_mut_mean            : rho = +0.0008 [-0.0102, +0.0118], p = 8.85e-01, n = 31947
+  K119ub_ctrl_mean vs K119ub_mut_mean (QC)     : rho = +0.8374 [+0.8341, +0.8406], p = 0.00e+00, n = 31947
+
+--- Part C: Category comparison ---
+  Category counts:
+    Lost        : 4861
+    Unchanged   : 21177
+    Gained      : 5909
+
+  Kruskal-Wallis: chi-sq = 81.03, df = 2, p = 2.54e-18
+  Wilcoxon Lost vs Unchanged: p = 1.42e-17, r_rb = -0.0784 (n = 4861 vs 21177)
+  Wilcoxon Gained vs Unchanged: p = 5.47e-06, r_rb = -0.0386 (n = 5909 vs 21177)
+  Wilcoxon Lost vs Gained: p = 4.42e-04, r_rb = -0.0393 (n = 4861 vs 5909)
+
+  Median K119ub log2FC by category:
+    Lost        : median = +0.0047, mean = +0.0111, n = 4861
+    Unchanged   : median = -0.0370, mean = -0.0349, n = 21177
+    Gained      : median = -0.0152, mean = -0.0135, n = 5909
+
+--- Part D: Stratified analyses ---
+
+  D1: By distance bin
+  delta_activity vs K119ub [<50kb]             : rho = -0.0547 [-0.0707, -0.0387], p = 2.09e-11, n = 14975
+  delta_activity vs K119ub [50-200kb]          : rho = -0.0630 [-0.0841, -0.0419], p = 5.05e-09, n = 8582
+  delta_activity vs K119ub [200-500kb]         : rho = -0.0388 [-0.0684, -0.0091], p = 1.04e-02, n = 4358
+  delta_activity vs K119ub [500kb-1Mb]         : rho = -0.0504 [-0.0919, -0.0088], p = 1.76e-02, n = 2216
+  delta_activity vs K119ub [1-5Mb]             : rho = -0.0442 [-0.0900, +0.0018], p = 5.95e-02, n = 1816
+  delta_activity vs K119ub [>5Mb]              : n=0 (too few)
+
+  D2: By H3K27ac status
+  delta_activity vs K119ub [H3K27ac+]          : rho = -0.0496 [-0.0668, -0.0323], p = 1.93e-08, n = 12837
+  mean_delta_unnorm vs K119ub [H3K27ac+]       : rho = -0.0824 [-0.0996, -0.0652], p = 8.59e-21, n = 12837
+  delta_activity vs K119ub [H3K27ac-]          : rho = -0.0170 [-0.0312, -0.0028], p = 1.86e-02, n = 19110
+  mean_delta_unnorm vs K119ub [H3K27ac-]       : rho = -0.0689 [-0.0830, -0.0548], p = 1.47e-21, n = 19110
+
+  Saved correlation summary: results/k119ub_abc_correlation_summary.tsv
+
+--- Part E: Visualizations ---
+geom_pointdensity() using method='kde2d' due to large number of points (>20k). You may override this by setting method='neighbors'.
+`geom_smooth()` using formula = 'y ~ x'
+geom_pointdensity() using method='kde2d' due to large number of points (>20k). You may override this by setting method='neighbors'.
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 01_delta_activity_vs_k119ub (.pdf + .png)
+Warning messages:
+1: In grSoftVersion() :
+  unable to load shared object '/Library/Frameworks/R.framework/Resources/modules//R_X11.so':
+  dlopen(/Library/Frameworks/R.framework/Resources/modules//R_X11.so, 0x0006): Library not loaded: /opt/X11/lib/libSM.6.dylib
+  Referenced from: <7ECC4104-EC6A-38FD-9BEA-BFE0B870925C> /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/modules/R_X11.so
+  Reason: tried: '/opt/X11/lib/libSM.6.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/X11/lib/libSM.6.dylib' (no such file), '/opt/X11/lib/libSM.6.dylib' (no such file), '/Library/Frameworks/R.framework/Resources/lib/libSM.6.dylib' (no such file), '/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home/lib/server/libSM.6.dylib' (no such file)
+2: In cairoVersion() :
+  unable to load shared object '/Library/Frameworks/R.framework/Resources/library/grDevices/libs//cairo.so':
+  dlopen(/Library/Frameworks/R.framework/Resources/library/grDevices/libs//cairo.so, 0x0006): Library not loaded: /opt/X11/lib/libXrender.1.dylib
+  Referenced from: <263B701F-2238-3478-A7D2-B7513231EF98> /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library/grDevices/libs/cairo.so
+  Reason: tried: '/opt/X11/lib/libXrender.1.dylib' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/opt/X11/lib/libXrender.1.dylib' (no such file), '/opt/X11/lib/libXrender.1.dylib' (no such file), '/Library/Frameworks/R.framework/Resources/lib/libXrender.1.dylib' (no such file), '/opt/homebrew/Cellar/openjdk/25.0.2/libexec/openjdk.jdk/Contents/Home/lib/server/libXrender.1.dylib' (no such file)
+3: In device(filename = "results/figures/k119ub_correlation/01_delta_activity_vs_k119ub.pdf",  :
+  failed to load cairo DLL
+geom_pointdensity() using method='kde2d' due to large number of points (>20k). You may override this by setting method='neighbors'.
+`geom_smooth()` using formula = 'y ~ x'
+geom_pointdensity() using method='kde2d' due to large number of points (>20k). You may override this by setting method='neighbors'.
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 02_delta_unnorm_vs_k119ub (.pdf + .png)
+Warning message:
+In device(filename = "results/figures/k119ub_correlation/02_delta_unnorm_vs_k119ub.pdf",  :
+  failed to load cairo DLL
+geom_pointdensity() using method='kde2d' due to large number of points (>20k). You may override this by setting method='neighbors'.
+`geom_smooth()` using formula = 'y ~ x'
+geom_pointdensity() using method='kde2d' due to large number of points (>20k). You may override this by setting method='neighbors'.
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 03_delta_abc_vs_k119ub (.pdf + .png)
+Warning message:
+In device(filename = "results/figures/k119ub_correlation/03_delta_abc_vs_k119ub.pdf",  :
+  failed to load cairo DLL
+  Saved: 04_boxplot_k119ub_by_abc_category (.pdf + .png)
+Warning messages:
+1: In device(filename = "results/figures/k119ub_correlation/04_boxplot_k119ub_by_abc_category.pdf",  :
+  failed to load cairo DLL
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ABC category (based on mean ΔABC)' in 'mbcsToSbcs': for Δ (U+0394)
+  Saved: 05_boxplot_k119ub_mut_by_category (.pdf + .png)
+Warning messages:
+1: In device(filename = "results/figures/k119ub_correlation/05_boxplot_k119ub_mut_by_category.pdf",  :
+  failed to load cairo DLL
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ABC category (based on mean ΔABC)' in 'mbcsToSbcs': for Δ (U+0394)
+  Saved: 06_violin_k119ub_by_category (.pdf + .png)
+Warning messages:
+1: In device(filename = "results/figures/k119ub_correlation/06_violin_k119ub_by_category.pdf",  :
+  failed to load cairo DLL
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ABC category (based on mean ΔABC)' in 'mbcsToSbcs': for Δ (U+0394)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 07_scatter_by_distance (.pdf + .png)
+Warning message:
+In device(filename = "results/figures/k119ub_correlation/07_scatter_by_distance.pdf",  :
+  failed to load cairo DLL
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 08_scatter_by_h3k27ac (.pdf + .png)
+Warning message:
+In device(filename = "results/figures/k119ub_correlation/08_scatter_by_h3k27ac.pdf",  :
+  failed to load cairo DLL
+
+================================================================================
+ANALYSIS COMPLETE
+================================================================================
+  Enhancers analyzed:    31947 (quantifiable K119ub)
+  Figures saved to:      results/figures/k119ub_correlation/
+  Correlation summary:   results/k119ub_abc_correlation_summary.tsv
+  Merged enhancer data:  results/k119ub_abc_enhancer_merged.tsv
+
+  Core correlations:
+    delta_activity vs K119ub_log2fc              : rho = -0.0393 (p = 1.99e-12)
+    mean_delta_unnorm vs K119ub_log2fc           : rho = -0.0901 (p = 1.58e-58)
+    mean_delta_ABC vs K119ub_log2fc              : rho = -0.0232 (p = 3.41e-05)
+    delta_activity vs K119ub_mut_mean            : rho = +0.0008 (p = 8.85e-01)
+    K119ub_ctrl_mean vs K119ub_mut_mean (QC)     : rho = +0.8374 (p = 0.00e+00)
+
+  Biological prediction: Negative rho for ΔABC vs ΔK119ub
+  (Lost enhancer activity → gained K119ub in BAP1-KO)
+
+Done.
