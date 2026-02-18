@@ -1,0 +1,94 @@
+#!/bin/bash
+#SBATCH --job-name=k119ub_enh
+#SBATCH --output=logs/k119ub_enhancer_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+echo "========================================="
+echo "K119ub Enhancer Signal Preprocessing"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+# Configuration
+WORK_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+SCRIPT="${WORK_DIR}/abc/scripts/preprocess_k119ub_enhancer_signal.R"
+ABC_PAIRS="/expanse/lustre/projects/csd940/zalibhai/abc/results/delta_abc_all_pairs.tsv"
+BW_DIR="/expanse/lustre/projects/csd940/zalibhai/loop-class/heatmaps/"
+OUTPUT="${WORK_DIR}/abc/results/k119ub_enhancer_signal.tsv"
+
+echo "Configuration:"
+echo "  Script:    ${SCRIPT}"
+echo "  ABC pairs: ${ABC_PAIRS}"
+echo "  BigWig dir: ${BW_DIR}"
+echo "  Output:    ${OUTPUT}"
+echo ""
+
+# Validate inputs
+if [ ! -f "${ABC_PAIRS}" ]; then
+    echo "ERROR: ABC pairs file not found: ${ABC_PAIRS}"
+    exit 1
+fi
+
+if [ ! -d "${BW_DIR}" ]; then
+    echo "ERROR: BigWig directory not found: ${BW_DIR}"
+    exit 1
+fi
+
+# Check all 8 bigWig files exist
+for SAMP in H2AK119ubCtrl1 H2AK119ubCtrl2 H2AK119ubCtrl3 H2AK119ubCtrl4 \
+            H2AK119ubMut1 H2AK119ubMut2 H2AK119ubMut3 H2AK119ubMut4; do
+    if [ ! -f "${BW_DIR}/${SAMP}.bw" ]; then
+        echo "ERROR: BigWig not found: ${BW_DIR}/${SAMP}.bw"
+        exit 1
+    fi
+done
+echo "All 8 bigWig files found."
+
+echo ""
+echo "Environment check:"
+which Rscript
+Rscript --version
+echo ""
+
+cd "${WORK_DIR}"
+
+Rscript "${SCRIPT}" \
+    --abc-pairs "${ABC_PAIRS}" \
+    --bw-dir "${BW_DIR}" \
+    --output "${OUTPUT}"
+
+EXIT_CODE=$?
+
+if [ ${EXIT_CODE} -eq 0 ]; then
+    echo ""
+    echo "========================================="
+    echo "Preprocessing complete!"
+    echo "========================================="
+    echo ""
+    echo "Output: ${OUTPUT}"
+    echo "Lines:  $(wc -l < ${OUTPUT})"
+    echo ""
+    echo "Next steps:"
+    echo "  scp expanse:${OUTPUT} abc/results/"
+    echo "  Rscript abc/scripts/step10_k119ub_abc_correlation.R"
+else
+    echo ""
+    echo "Preprocessing failed with exit code ${EXIT_CODE}"
+    exit ${EXIT_CODE}
+fi
+
+echo ""
+echo "End time: $(date)"
+echo "========================================="
