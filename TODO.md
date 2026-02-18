@@ -50,10 +50,10 @@ Reference: `CT-meeting-3.md` (meeting notes)
 
 ### Tasks
 
-- [ ] **2a. Associate genes with loop anchors using GREAT-style regulatory domains.** Map each loop anchor to its proximal genes (5kb upstream, 1kb downstream of TSS, 100kb max extension).
-- [ ] **2b. Violin plot: log2FC of DEGs near lost vs gained loop anchors.** Analogous to `deg_tad_violin.R` but for loop anchors instead of TAD boundaries.
-- [ ] **2c. Stratify by distance category.** Separate analysis for genes near long-range lost loops (>500kb) vs short-range gained loops (<500kb).
-- [ ] **2d. Stratify by anchor chromatin state.** Show expression changes specifically for genes near Polycomb-classified anchors.
+- [x] **2a. Associate genes with loop anchors using GREAT-style regulatory domains.** Map each loop anchor to its proximal genes (5kb upstream, 1kb downstream of TSS, 100kb max extension).
+- [x] **2b. Violin plot: log2FC of DEGs near lost vs gained loop anchors.** Analogous to `deg_tad_violin.R` but for loop anchors instead of TAD boundaries.
+- [x] **2c. Stratify by distance category.** Separate analysis for genes near long-range lost loops (>500kb) vs short-range gained loops (<500kb).
+- [x] **2d. Stratify by anchor chromatin state.** Show expression changes specifically for genes near Polycomb-classified anchors.
 
 ### Existing resources
 
