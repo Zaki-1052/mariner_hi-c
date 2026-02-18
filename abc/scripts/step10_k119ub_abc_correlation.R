@@ -22,11 +22,11 @@
 # CONFIGURATION
 # =============================================================================
 
-ABC_PAIRS_FILE   <- "abc/results/delta_abc_all_pairs.tsv"
-K119UB_FILE      <- "abc/results/k119ub_enhancer_signal.tsv"
-ANNOTATED_FILE   <- "abc/results/delta_abc_annotated.tsv"
-FIGURE_DIR       <- "abc/results/figures/k119ub_correlation"
-RESULTS_DIR      <- "abc/results"
+ABC_PAIRS_FILE   <- "results/delta_abc_all_pairs.tsv"
+K119UB_FILE      <- "results/k119ub_enhancer_signal.tsv"
+ANNOTATED_FILE   <- "results/delta_abc_annotated.tsv"
+FIGURE_DIR       <- "results/figures/k119ub_correlation"
+RESULTS_DIR      <- "results"
 
 cat("================================================================================\n")
 cat("STEP 10: K119UB-ABC ENHANCER CORRELATION ANALYSIS\n")
