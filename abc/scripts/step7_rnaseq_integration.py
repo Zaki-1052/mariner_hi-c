@@ -25,9 +25,9 @@ import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # === CONFIGURATION ===
-DELTA_ABC = "/expanse/lustre/projects/csd940/zalibhai/abc/results/delta_abc_all_pairs.tsv"
-RNASEQ = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx"
-OUTPUT_DIR = "/expanse/lustre/projects/csd940/zalibhai/abc/results"
+DELTA_ABC = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/abc/results/delta_abc_all_pairs.tsv"
+RNASEQ = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx"
+OUTPUT_DIR = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/abc/results"
 GENE_COL = "TargetGene"
 
 # Thresholds
@@ -97,6 +97,7 @@ def build_gene_summary(merged):
     agg = merged.groupby(GENE_COL).agg(
         n_enhancers=("delta_ABC", "size"),
         mean_delta_abc=("delta_ABC", "mean"),
+        sum_delta_abc=("delta_ABC", "sum"),
         sum_delta_unnorm=("delta_unnorm", "sum"),
         n_gained=("delta_ABC", lambda x: (x > ABC_DELTA_THRESH).sum()),
         n_lost=("delta_ABC", lambda x: (x < -ABC_DELTA_THRESH).sum()),
@@ -245,6 +246,108 @@ def make_scatter_plots(gene_summary):
     print(f"\nSaved: {OUTPUT_DIR}/figures/delta_abc_vs_log2fc.pdf")
 
 
+def make_sum_scatter_plots(gene_summary):
+    """Two-panel scatter: sum of all enhancers' ΔABC and Δ(A×C) vs log2FC."""
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+    sig = gene_summary["padj"] < RNA_PADJ
+    ns = ~sig
+
+    def pct_lim(series, pad=0.1):
+        lo, hi = series.quantile(0.005), series.quantile(0.995)
+        rng = hi - lo
+        return lo - pad * rng, hi + pad * rng
+
+    # --- Panel A: Normalized sum ΔABC ---
+    ax = axes[0]
+    ax.scatter(gene_summary.loc[ns, "sum_delta_abc"],
+               gene_summary.loc[ns, "log2FC"],
+               alpha=0.3, s=10, c="gray", label=f"padj \u2265 {RNA_PADJ}", rasterized=True)
+    ax.scatter(gene_summary.loc[sig, "sum_delta_abc"],
+               gene_summary.loc[sig, "log2FC"],
+               alpha=0.5, s=15, c="crimson", label=f"padj < {RNA_PADJ}", rasterized=True)
+    ax.axhline(0, color="black", lw=0.5, ls="--")
+    ax.axvline(0, color="black", lw=0.5, ls="--")
+    xlim_a = pct_lim(gene_summary["sum_delta_abc"].dropna())
+    ax.set_xlim(xlim_a)
+    ax.set_xlabel("\u03a3 \u0394ABC (all enhancers per gene)")
+    ax.set_ylabel("log2FC (KO vs WT)")
+    ax.set_title("Normalized ABC Score (Sum)")
+    ax.legend(fontsize=8)
+
+    de = gene_summary[sig & gene_summary["sum_delta_abc"].notna()
+                       & gene_summary["log2FC"].notna()]
+    if len(de) > 2:
+        r, p = stats.pearsonr(de["sum_delta_abc"], de["log2FC"])
+        rho, sp = stats.spearmanr(de["sum_delta_abc"], de["log2FC"])
+        ax.text(0.05, 0.95,
+                f"Pearson r={r:.3f}, p={p:.2e}\nSpearman \u03c1={rho:.3f}, p={sp:.2e}\n(DE genes, n={len(de)})",
+                transform=ax.transAxes, fontsize=7, va="top",
+                bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
+
+    # --- Panel B: Unnormalized sum Δ(A×C) ---
+    ax = axes[1]
+    xlim_b = pct_lim(gene_summary["sum_delta_unnorm"].dropna())
+    ax.scatter(gene_summary.loc[ns, "sum_delta_unnorm"],
+               gene_summary.loc[ns, "log2FC"],
+               alpha=0.3, s=10, c="gray", label=f"padj \u2265 {RNA_PADJ}", rasterized=True)
+    ax.scatter(gene_summary.loc[sig, "sum_delta_unnorm"],
+               gene_summary.loc[sig, "log2FC"],
+               alpha=0.5, s=15, c="steelblue", label=f"padj < {RNA_PADJ}", rasterized=True)
+    ax.axhline(0, color="black", lw=0.5, ls="--")
+    ax.axvline(0, color="black", lw=0.5, ls="--")
+    ax.set_xlim(xlim_b)
+    ax.set_xlabel("\u03a3 \u0394(Activity \u00d7 Contact) (all enhancers per gene)")
+    ax.set_ylabel("log2FC (KO vs WT)")
+    ax.set_title("Unnormalized Score (Sum)")
+    ax.legend(fontsize=8)
+
+    de2 = gene_summary[sig & gene_summary["sum_delta_unnorm"].notna()
+                        & gene_summary["log2FC"].notna()]
+    if len(de2) > 2:
+        r2, p2 = stats.pearsonr(de2["sum_delta_unnorm"], de2["log2FC"])
+        rho2, sp2 = stats.spearmanr(de2["sum_delta_unnorm"], de2["log2FC"])
+        ax.text(0.05, 0.95,
+                f"Pearson r={r2:.3f}, p={p2:.2e}\nSpearman \u03c1={rho2:.3f}, p={sp2:.2e}\n(DE genes, n={len(de2)})",
+                transform=ax.transAxes, fontsize=7, va="top",
+                bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
+
+    plt.tight_layout()
+    for ext in ["pdf", "png"]:
+        fig.savefig(f"{OUTPUT_DIR}/figures/sum_delta_abc_vs_log2fc.{ext}",
+                    dpi=300 if ext == "pdf" else 150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved: {OUTPUT_DIR}/figures/sum_delta_abc_vs_log2fc.pdf")
+
+
+def print_correlation_comparison(gene_summary):
+    """Print strongest-link vs sum correlations side by side."""
+    sig = gene_summary["padj"] < RNA_PADJ
+    de = gene_summary[sig].dropna(subset=["log2FC", "max_delta_abc",
+                                           "max_delta_unnorm", "sum_delta_abc",
+                                           "sum_delta_unnorm"])
+    if len(de) < 3:
+        print("WARNING: Too few DE genes for correlation comparison.")
+        return
+
+    metrics = [
+        ("Normalized (strongest)",   "max_delta_abc"),
+        ("Normalized (sum)",         "sum_delta_abc"),
+        ("Unnormalized (strongest)", "max_delta_unnorm"),
+        ("Unnormalized (sum)",       "sum_delta_unnorm"),
+    ]
+
+    print(f"\n{'='*65}")
+    print(f"  Correlation Comparison: Strongest Enhancer vs Sum (n={len(de)} DE genes)")
+    print(f"{'='*65}")
+    print(f"  {'Metric':<28s} {'Pearson r':>10s} {'Spearman ρ':>12s}")
+    print(f"  {'-'*28} {'-'*10} {'-'*12}")
+    for label, col in metrics:
+        r, _ = stats.pearsonr(de[col], de["log2FC"])
+        rho, _ = stats.spearmanr(de[col], de["log2FC"])
+        print(f"  {label:<28s} {r:>10.3f} {rho:>12.3f}")
+    print(f"{'='*65}")
+
+
 def main():
     delta, rna = load_data()
     merged = merge_with_rnaseq(delta, rna)
@@ -252,6 +355,8 @@ def main():
     concordance_analysis(gene_summary)
     gene_summary = identify_dysregulated(gene_summary)
     make_scatter_plots(gene_summary)
+    make_sum_scatter_plots(gene_summary)
+    print_correlation_comparison(gene_summary)
 
     # Save
     merged.to_csv(f"{OUTPUT_DIR}/delta_abc_with_rnaseq.tsv",
