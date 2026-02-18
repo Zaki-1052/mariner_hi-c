@@ -1,0 +1,846 @@
+Config file config/config.yaml is extended by additional config specified via the command line.
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 16
+Rules claiming more threads will be scaled down.
+Conda environments: ignored
+Job stats:
+job                             count
+----------------------------  -------
+all                                 1
+call_macs_peaks                     2
+create_neighborhoods                2
+create_predictions                  2
+filter_predictions                  2
+generate_qc_plot_and_summary        2
+make_candidate_regions              2
+sort_narrowpeaks                    2
+total                              15
+
+Select jobs to execute...
+
+[Tue Feb 17 00:08:21 2026]
+rule call_macs_peaks:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak
+    jobid: 11
+    reason: Updated input files: /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=8000, mem_mib=7630
+
+
+		if [[ "/expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz" == *tagAlign* ]]; then
+			FORMAT="BED"
+		else
+			FORMAT="AUTO"
+		fi
+
+		macs2 callpeak 		-f $FORMAT 		-g mm 		-p 0.1 		-n macs2 		--shift -75 		--extsize 150 		--nomodel 		--keep-dup all 		--call-summits 		--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//KO_cerebellum/Peaks 		-t /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz 
+		
+
+[Tue Feb 17 00:08:21 2026]
+rule call_macs_peaks:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak
+    jobid: 5
+    reason: Updated input files: /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=8000, mem_mib=7630
+
+
+		if [[ "/expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz" == *tagAlign* ]]; then
+			FORMAT="BED"
+		else
+			FORMAT="AUTO"
+		fi
+
+		macs2 callpeak 		-f $FORMAT 		-g mm 		-p 0.1 		-n macs2 		--shift -75 		--extsize 150 		--nomodel 		--keep-dup all 		--call-summits 		--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//WT_cerebellum/Peaks 		-t /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz 
+		
+INFO  @ Tue, 17 Feb 2026 00:08:22: 
+# Command line: callpeak -f BED -g mm -p 0.1 -n macs2 --shift -75 --extsize 150 --nomodel --keep-dup all --call-summits --outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//WT_cerebellum/Peaks -t /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz
+# ARGUMENTS LIST:
+# name = macs2
+# format = BED
+# ChIP-seq file = ['/expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# pvalue cutoff = 1.00e-01
+# qvalue will not be calculated and reported as -1 in the final output.
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is off
+# Searching for subpeak summits is on
+ 
+INFO  @ Tue, 17 Feb 2026 00:08:22: 
+# Command line: callpeak -f BED -g mm -p 0.1 -n macs2 --shift -75 --extsize 150 --nomodel --keep-dup all --call-summits --outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//KO_cerebellum/Peaks -t /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz
+# ARGUMENTS LIST:
+# name = macs2
+# format = BED
+# ChIP-seq file = ['/expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz']
+# control file = None
+# effective genome size = 1.87e+09
+# band width = 300
+# model fold = [5, 50]
+# pvalue cutoff = 1.00e-01
+# qvalue will not be calculated and reported as -1 in the final output.
+# The maximum gap between significant sites is assigned as the read length/tag size.
+# The minimum length of peaks is assigned as the predicted fragment length "d".
+# Larger dataset will be scaled towards smaller dataset.
+# Range for calculating regional lambda is: 10000 bps
+# Broad region calling is off
+# Paired-End mode is off
+# Searching for subpeak summits is on
+ 
+INFO  @ Tue, 17 Feb 2026 00:08:22: #1 read tag files... 
+INFO  @ Tue, 17 Feb 2026 00:08:22: #1 read tag files... 
+INFO  @ Tue, 17 Feb 2026 00:08:22: #1 read treatment tags... 
+INFO  @ Tue, 17 Feb 2026 00:08:22: #1 read treatment tags... 
+INFO  @ Tue, 17 Feb 2026 00:08:23:  1000000 
+INFO  @ Tue, 17 Feb 2026 00:08:23:  1000000 
+INFO  @ Tue, 17 Feb 2026 00:08:24:  2000000 
+INFO  @ Tue, 17 Feb 2026 00:08:24:  2000000 
+INFO  @ Tue, 17 Feb 2026 00:08:25:  3000000 
+INFO  @ Tue, 17 Feb 2026 00:08:25:  3000000 
+INFO  @ Tue, 17 Feb 2026 00:08:26:  4000000 
+INFO  @ Tue, 17 Feb 2026 00:08:26:  4000000 
+INFO  @ Tue, 17 Feb 2026 00:08:27:  5000000 
+INFO  @ Tue, 17 Feb 2026 00:08:27:  5000000 
+INFO  @ Tue, 17 Feb 2026 00:08:28:  6000000 
+INFO  @ Tue, 17 Feb 2026 00:08:28:  6000000 
+INFO  @ Tue, 17 Feb 2026 00:08:29:  7000000 
+INFO  @ Tue, 17 Feb 2026 00:08:29:  7000000 
+INFO  @ Tue, 17 Feb 2026 00:08:30:  8000000 
+INFO  @ Tue, 17 Feb 2026 00:08:30:  8000000 
+INFO  @ Tue, 17 Feb 2026 00:08:31:  9000000 
+INFO  @ Tue, 17 Feb 2026 00:08:31:  9000000 
+INFO  @ Tue, 17 Feb 2026 00:08:32:  10000000 
+INFO  @ Tue, 17 Feb 2026 00:08:32:  10000000 
+INFO  @ Tue, 17 Feb 2026 00:08:33:  11000000 
+INFO  @ Tue, 17 Feb 2026 00:08:33:  11000000 
+INFO  @ Tue, 17 Feb 2026 00:08:34:  12000000 
+INFO  @ Tue, 17 Feb 2026 00:08:34:  12000000 
+INFO  @ Tue, 17 Feb 2026 00:08:35:  13000000 
+INFO  @ Tue, 17 Feb 2026 00:08:35:  13000000 
+INFO  @ Tue, 17 Feb 2026 00:08:36:  14000000 
+INFO  @ Tue, 17 Feb 2026 00:08:36:  14000000 
+INFO  @ Tue, 17 Feb 2026 00:08:37:  15000000 
+INFO  @ Tue, 17 Feb 2026 00:08:37:  15000000 
+INFO  @ Tue, 17 Feb 2026 00:08:38:  16000000 
+INFO  @ Tue, 17 Feb 2026 00:08:38:  16000000 
+INFO  @ Tue, 17 Feb 2026 00:08:39:  17000000 
+INFO  @ Tue, 17 Feb 2026 00:08:39:  17000000 
+INFO  @ Tue, 17 Feb 2026 00:08:40:  18000000 
+INFO  @ Tue, 17 Feb 2026 00:08:40:  18000000 
+INFO  @ Tue, 17 Feb 2026 00:08:41:  19000000 
+INFO  @ Tue, 17 Feb 2026 00:08:41:  19000000 
+INFO  @ Tue, 17 Feb 2026 00:08:42:  20000000 
+INFO  @ Tue, 17 Feb 2026 00:08:42:  20000000 
+INFO  @ Tue, 17 Feb 2026 00:08:43:  21000000 
+INFO  @ Tue, 17 Feb 2026 00:08:43:  21000000 
+INFO  @ Tue, 17 Feb 2026 00:08:44:  22000000 
+INFO  @ Tue, 17 Feb 2026 00:08:44:  22000000 
+INFO  @ Tue, 17 Feb 2026 00:08:45:  23000000 
+INFO  @ Tue, 17 Feb 2026 00:08:45:  23000000 
+INFO  @ Tue, 17 Feb 2026 00:08:46:  24000000 
+INFO  @ Tue, 17 Feb 2026 00:08:46:  24000000 
+INFO  @ Tue, 17 Feb 2026 00:08:47:  25000000 
+INFO  @ Tue, 17 Feb 2026 00:08:47:  25000000 
+INFO  @ Tue, 17 Feb 2026 00:08:48:  26000000 
+INFO  @ Tue, 17 Feb 2026 00:08:48:  26000000 
+INFO  @ Tue, 17 Feb 2026 00:08:48:  27000000 
+INFO  @ Tue, 17 Feb 2026 00:08:49:  27000000 
+INFO  @ Tue, 17 Feb 2026 00:08:49:  28000000 
+INFO  @ Tue, 17 Feb 2026 00:08:50:  28000000 
+INFO  @ Tue, 17 Feb 2026 00:08:50:  29000000 
+INFO  @ Tue, 17 Feb 2026 00:08:51:  29000000 
+INFO  @ Tue, 17 Feb 2026 00:08:51:  30000000 
+INFO  @ Tue, 17 Feb 2026 00:08:51:  30000000 
+INFO  @ Tue, 17 Feb 2026 00:08:52:  31000000 
+INFO  @ Tue, 17 Feb 2026 00:08:52:  31000000 
+INFO  @ Tue, 17 Feb 2026 00:08:53:  32000000 
+INFO  @ Tue, 17 Feb 2026 00:08:53:  32000000 
+INFO  @ Tue, 17 Feb 2026 00:08:54:  33000000 
+INFO  @ Tue, 17 Feb 2026 00:08:54:  33000000 
+INFO  @ Tue, 17 Feb 2026 00:08:55:  34000000 
+INFO  @ Tue, 17 Feb 2026 00:08:55:  34000000 
+INFO  @ Tue, 17 Feb 2026 00:08:56:  35000000 
+INFO  @ Tue, 17 Feb 2026 00:08:56:  35000000 
+INFO  @ Tue, 17 Feb 2026 00:08:57:  36000000 
+INFO  @ Tue, 17 Feb 2026 00:08:57:  36000000 
+INFO  @ Tue, 17 Feb 2026 00:08:58:  37000000 
+INFO  @ Tue, 17 Feb 2026 00:08:58:  37000000 
+INFO  @ Tue, 17 Feb 2026 00:08:59:  38000000 
+INFO  @ Tue, 17 Feb 2026 00:09:00:  38000000 
+INFO  @ Tue, 17 Feb 2026 00:09:00:  39000000 
+INFO  @ Tue, 17 Feb 2026 00:09:00:  39000000 
+INFO  @ Tue, 17 Feb 2026 00:09:01:  40000000 
+INFO  @ Tue, 17 Feb 2026 00:09:01:  40000000 
+INFO  @ Tue, 17 Feb 2026 00:09:02:  41000000 
+INFO  @ Tue, 17 Feb 2026 00:09:02:  41000000 
+INFO  @ Tue, 17 Feb 2026 00:09:03:  42000000 
+INFO  @ Tue, 17 Feb 2026 00:09:03:  42000000 
+INFO  @ Tue, 17 Feb 2026 00:09:04:  43000000 
+INFO  @ Tue, 17 Feb 2026 00:09:04:  43000000 
+INFO  @ Tue, 17 Feb 2026 00:09:05:  44000000 
+INFO  @ Tue, 17 Feb 2026 00:09:05:  44000000 
+INFO  @ Tue, 17 Feb 2026 00:09:06:  45000000 
+INFO  @ Tue, 17 Feb 2026 00:09:06:  45000000 
+INFO  @ Tue, 17 Feb 2026 00:09:07:  46000000 
+INFO  @ Tue, 17 Feb 2026 00:09:07:  46000000 
+INFO  @ Tue, 17 Feb 2026 00:09:08:  47000000 
+INFO  @ Tue, 17 Feb 2026 00:09:08:  47000000 
+INFO  @ Tue, 17 Feb 2026 00:09:09:  48000000 
+INFO  @ Tue, 17 Feb 2026 00:09:09:  48000000 
+INFO  @ Tue, 17 Feb 2026 00:09:10:  49000000 
+INFO  @ Tue, 17 Feb 2026 00:09:10:  49000000 
+INFO  @ Tue, 17 Feb 2026 00:09:11:  50000000 
+INFO  @ Tue, 17 Feb 2026 00:09:11:  50000000 
+INFO  @ Tue, 17 Feb 2026 00:09:12:  51000000 
+INFO  @ Tue, 17 Feb 2026 00:09:12:  51000000 
+INFO  @ Tue, 17 Feb 2026 00:09:13:  52000000 
+INFO  @ Tue, 17 Feb 2026 00:09:13:  52000000 
+INFO  @ Tue, 17 Feb 2026 00:09:14:  53000000 
+INFO  @ Tue, 17 Feb 2026 00:09:14:  53000000 
+INFO  @ Tue, 17 Feb 2026 00:09:15:  54000000 
+INFO  @ Tue, 17 Feb 2026 00:09:15:  54000000 
+INFO  @ Tue, 17 Feb 2026 00:09:16:  55000000 
+INFO  @ Tue, 17 Feb 2026 00:09:16:  55000000 
+INFO  @ Tue, 17 Feb 2026 00:09:17:  56000000 
+INFO  @ Tue, 17 Feb 2026 00:09:17:  56000000 
+INFO  @ Tue, 17 Feb 2026 00:09:18:  57000000 
+INFO  @ Tue, 17 Feb 2026 00:09:18:  57000000 
+INFO  @ Tue, 17 Feb 2026 00:09:19:  58000000 
+INFO  @ Tue, 17 Feb 2026 00:09:19:  58000000 
+INFO  @ Tue, 17 Feb 2026 00:09:20:  59000000 
+INFO  @ Tue, 17 Feb 2026 00:09:20:  59000000 
+INFO  @ Tue, 17 Feb 2026 00:09:21:  60000000 
+INFO  @ Tue, 17 Feb 2026 00:09:21:  60000000 
+INFO  @ Tue, 17 Feb 2026 00:09:22:  61000000 
+INFO  @ Tue, 17 Feb 2026 00:09:22:  61000000 
+INFO  @ Tue, 17 Feb 2026 00:09:23:  62000000 
+INFO  @ Tue, 17 Feb 2026 00:09:23:  62000000 
+INFO  @ Tue, 17 Feb 2026 00:09:24:  63000000 
+INFO  @ Tue, 17 Feb 2026 00:09:24:  63000000 
+INFO  @ Tue, 17 Feb 2026 00:09:25:  64000000 
+INFO  @ Tue, 17 Feb 2026 00:09:25:  64000000 
+INFO  @ Tue, 17 Feb 2026 00:09:26:  65000000 
+INFO  @ Tue, 17 Feb 2026 00:09:26:  65000000 
+INFO  @ Tue, 17 Feb 2026 00:09:27:  66000000 
+INFO  @ Tue, 17 Feb 2026 00:09:27:  66000000 
+INFO  @ Tue, 17 Feb 2026 00:09:28:  67000000 
+INFO  @ Tue, 17 Feb 2026 00:09:28:  67000000 
+INFO  @ Tue, 17 Feb 2026 00:09:29:  68000000 
+INFO  @ Tue, 17 Feb 2026 00:09:29:  68000000 
+INFO  @ Tue, 17 Feb 2026 00:09:30:  69000000 
+INFO  @ Tue, 17 Feb 2026 00:09:30:  69000000 
+INFO  @ Tue, 17 Feb 2026 00:09:31:  70000000 
+INFO  @ Tue, 17 Feb 2026 00:09:31:  70000000 
+INFO  @ Tue, 17 Feb 2026 00:09:32:  71000000 
+INFO  @ Tue, 17 Feb 2026 00:09:32:  71000000 
+INFO  @ Tue, 17 Feb 2026 00:09:33:  72000000 
+INFO  @ Tue, 17 Feb 2026 00:09:33:  72000000 
+INFO  @ Tue, 17 Feb 2026 00:09:34:  73000000 
+INFO  @ Tue, 17 Feb 2026 00:09:34:  73000000 
+INFO  @ Tue, 17 Feb 2026 00:09:35:  74000000 
+INFO  @ Tue, 17 Feb 2026 00:09:35:  74000000 
+INFO  @ Tue, 17 Feb 2026 00:09:36:  75000000 
+INFO  @ Tue, 17 Feb 2026 00:09:36:  75000000 
+INFO  @ Tue, 17 Feb 2026 00:09:37:  76000000 
+INFO  @ Tue, 17 Feb 2026 00:09:37:  76000000 
+INFO  @ Tue, 17 Feb 2026 00:09:38:  77000000 
+INFO  @ Tue, 17 Feb 2026 00:09:38:  77000000 
+INFO  @ Tue, 17 Feb 2026 00:09:39:  78000000 
+INFO  @ Tue, 17 Feb 2026 00:09:39:  78000000 
+INFO  @ Tue, 17 Feb 2026 00:09:40:  79000000 
+INFO  @ Tue, 17 Feb 2026 00:09:40:  79000000 
+INFO  @ Tue, 17 Feb 2026 00:09:41:  80000000 
+INFO  @ Tue, 17 Feb 2026 00:09:41:  80000000 
+INFO  @ Tue, 17 Feb 2026 00:09:42:  81000000 
+INFO  @ Tue, 17 Feb 2026 00:09:42:  81000000 
+INFO  @ Tue, 17 Feb 2026 00:09:43:  82000000 
+INFO  @ Tue, 17 Feb 2026 00:09:43:  82000000 
+INFO  @ Tue, 17 Feb 2026 00:09:44:  83000000 
+INFO  @ Tue, 17 Feb 2026 00:09:44:  83000000 
+INFO  @ Tue, 17 Feb 2026 00:09:45:  84000000 
+INFO  @ Tue, 17 Feb 2026 00:09:45:  84000000 
+INFO  @ Tue, 17 Feb 2026 00:09:46:  85000000 
+INFO  @ Tue, 17 Feb 2026 00:09:46:  85000000 
+INFO  @ Tue, 17 Feb 2026 00:09:47:  86000000 
+INFO  @ Tue, 17 Feb 2026 00:09:47:  86000000 
+INFO  @ Tue, 17 Feb 2026 00:09:48:  87000000 
+INFO  @ Tue, 17 Feb 2026 00:09:48:  87000000 
+INFO  @ Tue, 17 Feb 2026 00:09:49:  88000000 
+INFO  @ Tue, 17 Feb 2026 00:09:49:  88000000 
+INFO  @ Tue, 17 Feb 2026 00:09:50:  89000000 
+INFO  @ Tue, 17 Feb 2026 00:09:50:  89000000 
+INFO  @ Tue, 17 Feb 2026 00:09:51:  90000000 
+INFO  @ Tue, 17 Feb 2026 00:09:51:  90000000 
+INFO  @ Tue, 17 Feb 2026 00:09:52:  91000000 
+INFO  @ Tue, 17 Feb 2026 00:09:52:  91000000 
+INFO  @ Tue, 17 Feb 2026 00:09:53:  92000000 
+INFO  @ Tue, 17 Feb 2026 00:09:53:  92000000 
+INFO  @ Tue, 17 Feb 2026 00:09:54:  93000000 
+INFO  @ Tue, 17 Feb 2026 00:09:54:  93000000 
+INFO  @ Tue, 17 Feb 2026 00:09:55:  94000000 
+INFO  @ Tue, 17 Feb 2026 00:09:55:  94000000 
+INFO  @ Tue, 17 Feb 2026 00:09:56:  95000000 
+INFO  @ Tue, 17 Feb 2026 00:09:56:  95000000 
+INFO  @ Tue, 17 Feb 2026 00:09:56:  96000000 
+INFO  @ Tue, 17 Feb 2026 00:09:57:  96000000 
+INFO  @ Tue, 17 Feb 2026 00:09:57:  97000000 
+INFO  @ Tue, 17 Feb 2026 00:09:58:  97000000 
+INFO  @ Tue, 17 Feb 2026 00:09:58:  98000000 
+INFO  @ Tue, 17 Feb 2026 00:09:59:  98000000 
+INFO  @ Tue, 17 Feb 2026 00:09:59:  99000000 
+INFO  @ Tue, 17 Feb 2026 00:10:00:  99000000 
+INFO  @ Tue, 17 Feb 2026 00:10:00:  100000000 
+INFO  @ Tue, 17 Feb 2026 00:10:01:  100000000 
+INFO  @ Tue, 17 Feb 2026 00:10:01:  101000000 
+INFO  @ Tue, 17 Feb 2026 00:10:02:  101000000 
+INFO  @ Tue, 17 Feb 2026 00:10:02:  102000000 
+INFO  @ Tue, 17 Feb 2026 00:10:03:  102000000 
+INFO  @ Tue, 17 Feb 2026 00:10:03:  103000000 
+INFO  @ Tue, 17 Feb 2026 00:10:04:  103000000 
+INFO  @ Tue, 17 Feb 2026 00:10:04:  104000000 
+INFO  @ Tue, 17 Feb 2026 00:10:04:  104000000 
+INFO  @ Tue, 17 Feb 2026 00:10:05:  105000000 
+INFO  @ Tue, 17 Feb 2026 00:10:05:  105000000 
+INFO  @ Tue, 17 Feb 2026 00:10:06:  106000000 
+INFO  @ Tue, 17 Feb 2026 00:10:06:  106000000 
+INFO  @ Tue, 17 Feb 2026 00:10:07:  107000000 
+INFO  @ Tue, 17 Feb 2026 00:10:07:  107000000 
+INFO  @ Tue, 17 Feb 2026 00:10:08:  108000000 
+INFO  @ Tue, 17 Feb 2026 00:10:08:  108000000 
+INFO  @ Tue, 17 Feb 2026 00:10:09:  109000000 
+INFO  @ Tue, 17 Feb 2026 00:10:09:  109000000 
+INFO  @ Tue, 17 Feb 2026 00:10:10:  110000000 
+INFO  @ Tue, 17 Feb 2026 00:10:10:  110000000 
+INFO  @ Tue, 17 Feb 2026 00:10:11:  111000000 
+INFO  @ Tue, 17 Feb 2026 00:10:11:  111000000 
+INFO  @ Tue, 17 Feb 2026 00:10:12:  112000000 
+INFO  @ Tue, 17 Feb 2026 00:10:12:  112000000 
+INFO  @ Tue, 17 Feb 2026 00:10:13:  113000000 
+INFO  @ Tue, 17 Feb 2026 00:10:13:  113000000 
+INFO  @ Tue, 17 Feb 2026 00:10:14:  114000000 
+INFO  @ Tue, 17 Feb 2026 00:10:14:  114000000 
+INFO  @ Tue, 17 Feb 2026 00:10:15:  115000000 
+INFO  @ Tue, 17 Feb 2026 00:10:15:  115000000 
+INFO  @ Tue, 17 Feb 2026 00:10:16:  116000000 
+INFO  @ Tue, 17 Feb 2026 00:10:16:  116000000 
+INFO  @ Tue, 17 Feb 2026 00:10:17:  117000000 
+INFO  @ Tue, 17 Feb 2026 00:10:17:  117000000 
+INFO  @ Tue, 17 Feb 2026 00:10:18:  118000000 
+INFO  @ Tue, 17 Feb 2026 00:10:18:  118000000 
+INFO  @ Tue, 17 Feb 2026 00:10:19:  119000000 
+INFO  @ Tue, 17 Feb 2026 00:10:19:  119000000 
+INFO  @ Tue, 17 Feb 2026 00:10:20:  120000000 
+INFO  @ Tue, 17 Feb 2026 00:10:20:  120000000 
+INFO  @ Tue, 17 Feb 2026 00:10:21:  121000000 
+INFO  @ Tue, 17 Feb 2026 00:10:21:  121000000 
+INFO  @ Tue, 17 Feb 2026 00:10:22:  122000000 
+INFO  @ Tue, 17 Feb 2026 00:10:22:  122000000 
+INFO  @ Tue, 17 Feb 2026 00:10:23:  123000000 
+INFO  @ Tue, 17 Feb 2026 00:10:23:  123000000 
+INFO  @ Tue, 17 Feb 2026 00:10:24:  124000000 
+INFO  @ Tue, 17 Feb 2026 00:10:24:  124000000 
+INFO  @ Tue, 17 Feb 2026 00:10:25:  125000000 
+INFO  @ Tue, 17 Feb 2026 00:10:25:  125000000 
+INFO  @ Tue, 17 Feb 2026 00:10:26:  126000000 
+INFO  @ Tue, 17 Feb 2026 00:10:26:  126000000 
+INFO  @ Tue, 17 Feb 2026 00:10:27:  127000000 
+INFO  @ Tue, 17 Feb 2026 00:10:27:  127000000 
+INFO  @ Tue, 17 Feb 2026 00:10:28:  128000000 
+INFO  @ Tue, 17 Feb 2026 00:10:28:  128000000 
+INFO  @ Tue, 17 Feb 2026 00:10:29:  129000000 
+INFO  @ Tue, 17 Feb 2026 00:10:29:  129000000 
+INFO  @ Tue, 17 Feb 2026 00:10:30:  130000000 
+INFO  @ Tue, 17 Feb 2026 00:10:30:  130000000 
+INFO  @ Tue, 17 Feb 2026 00:10:31:  131000000 
+INFO  @ Tue, 17 Feb 2026 00:10:31:  131000000 
+INFO  @ Tue, 17 Feb 2026 00:10:32:  132000000 
+INFO  @ Tue, 17 Feb 2026 00:10:32:  132000000 
+INFO  @ Tue, 17 Feb 2026 00:10:33:  133000000 
+INFO  @ Tue, 17 Feb 2026 00:10:33:  133000000 
+INFO  @ Tue, 17 Feb 2026 00:10:34:  134000000 
+INFO  @ Tue, 17 Feb 2026 00:10:34:  134000000 
+INFO  @ Tue, 17 Feb 2026 00:10:35:  135000000 
+INFO  @ Tue, 17 Feb 2026 00:10:35:  135000000 
+INFO  @ Tue, 17 Feb 2026 00:10:36:  136000000 
+INFO  @ Tue, 17 Feb 2026 00:10:36:  136000000 
+INFO  @ Tue, 17 Feb 2026 00:10:37:  137000000 
+INFO  @ Tue, 17 Feb 2026 00:10:37:  137000000 
+INFO  @ Tue, 17 Feb 2026 00:10:38:  138000000 
+INFO  @ Tue, 17 Feb 2026 00:10:38:  138000000 
+INFO  @ Tue, 17 Feb 2026 00:10:39:  139000000 
+INFO  @ Tue, 17 Feb 2026 00:10:39:  139000000 
+INFO  @ Tue, 17 Feb 2026 00:10:40:  140000000 
+INFO  @ Tue, 17 Feb 2026 00:10:40:  140000000 
+INFO  @ Tue, 17 Feb 2026 00:10:40:  141000000 
+INFO  @ Tue, 17 Feb 2026 00:10:41:  141000000 
+INFO  @ Tue, 17 Feb 2026 00:10:41:  142000000 
+INFO  @ Tue, 17 Feb 2026 00:10:42:  142000000 
+INFO  @ Tue, 17 Feb 2026 00:10:42:  143000000 
+INFO  @ Tue, 17 Feb 2026 00:10:43:  143000000 
+INFO  @ Tue, 17 Feb 2026 00:10:43:  144000000 
+INFO  @ Tue, 17 Feb 2026 00:10:44:  144000000 
+INFO  @ Tue, 17 Feb 2026 00:10:45:  145000000 
+INFO  @ Tue, 17 Feb 2026 00:10:45:  145000000 
+INFO  @ Tue, 17 Feb 2026 00:10:46:  146000000 
+INFO  @ Tue, 17 Feb 2026 00:10:46:  146000000 
+INFO  @ Tue, 17 Feb 2026 00:10:46:  147000000 
+INFO  @ Tue, 17 Feb 2026 00:10:47:  147000000 
+INFO  @ Tue, 17 Feb 2026 00:10:47:  148000000 
+INFO  @ Tue, 17 Feb 2026 00:10:48:  148000000 
+INFO  @ Tue, 17 Feb 2026 00:10:48:  149000000 
+INFO  @ Tue, 17 Feb 2026 00:10:49:  149000000 
+INFO  @ Tue, 17 Feb 2026 00:10:49:  150000000 
+INFO  @ Tue, 17 Feb 2026 00:10:50:  150000000 
+INFO  @ Tue, 17 Feb 2026 00:10:50:  151000000 
+INFO  @ Tue, 17 Feb 2026 00:10:51:  151000000 
+INFO  @ Tue, 17 Feb 2026 00:10:51:  152000000 
+INFO  @ Tue, 17 Feb 2026 00:10:52:  152000000 
+INFO  @ Tue, 17 Feb 2026 00:10:52:  153000000 
+INFO  @ Tue, 17 Feb 2026 00:10:53:  153000000 
+INFO  @ Tue, 17 Feb 2026 00:10:53:  154000000 
+INFO  @ Tue, 17 Feb 2026 00:10:54:  154000000 
+INFO  @ Tue, 17 Feb 2026 00:10:54:  155000000 
+INFO  @ Tue, 17 Feb 2026 00:10:55:  155000000 
+INFO  @ Tue, 17 Feb 2026 00:10:55:  156000000 
+INFO  @ Tue, 17 Feb 2026 00:10:56:  156000000 
+INFO  @ Tue, 17 Feb 2026 00:10:56:  157000000 
+INFO  @ Tue, 17 Feb 2026 00:10:57:  157000000 
+INFO  @ Tue, 17 Feb 2026 00:10:57:  158000000 
+INFO  @ Tue, 17 Feb 2026 00:10:58:  158000000 
+INFO  @ Tue, 17 Feb 2026 00:10:59:  159000000 
+INFO  @ Tue, 17 Feb 2026 00:10:59:  159000000 
+INFO  @ Tue, 17 Feb 2026 00:11:00:  160000000 
+INFO  @ Tue, 17 Feb 2026 00:11:00:  160000000 
+INFO  @ Tue, 17 Feb 2026 00:11:01:  161000000 
+INFO  @ Tue, 17 Feb 2026 00:11:01:  161000000 
+INFO  @ Tue, 17 Feb 2026 00:11:02:  162000000 
+INFO  @ Tue, 17 Feb 2026 00:11:02:  162000000 
+INFO  @ Tue, 17 Feb 2026 00:11:03:  163000000 
+INFO  @ Tue, 17 Feb 2026 00:11:03:  163000000 
+INFO  @ Tue, 17 Feb 2026 00:11:04:  164000000 
+INFO  @ Tue, 17 Feb 2026 00:11:04:  164000000 
+INFO  @ Tue, 17 Feb 2026 00:11:05:  165000000 
+INFO  @ Tue, 17 Feb 2026 00:11:05:  165000000 
+INFO  @ Tue, 17 Feb 2026 00:11:06:  166000000 
+INFO  @ Tue, 17 Feb 2026 00:11:06:  166000000 
+INFO  @ Tue, 17 Feb 2026 00:11:07:  167000000 
+INFO  @ Tue, 17 Feb 2026 00:11:07:  167000000 
+INFO  @ Tue, 17 Feb 2026 00:11:08:  168000000 
+INFO  @ Tue, 17 Feb 2026 00:11:08:  168000000 
+INFO  @ Tue, 17 Feb 2026 00:11:09:  169000000 
+INFO  @ Tue, 17 Feb 2026 00:11:09:  169000000 
+INFO  @ Tue, 17 Feb 2026 00:11:10:  170000000 
+INFO  @ Tue, 17 Feb 2026 00:11:10:  170000000 
+INFO  @ Tue, 17 Feb 2026 00:11:11:  171000000 
+INFO  @ Tue, 17 Feb 2026 00:11:11:  171000000 
+INFO  @ Tue, 17 Feb 2026 00:11:12:  172000000 
+INFO  @ Tue, 17 Feb 2026 00:11:12:  172000000 
+INFO  @ Tue, 17 Feb 2026 00:11:13:  173000000 
+INFO  @ Tue, 17 Feb 2026 00:11:13:  173000000 
+INFO  @ Tue, 17 Feb 2026 00:11:14:  174000000 
+INFO  @ Tue, 17 Feb 2026 00:11:14:  174000000 
+INFO  @ Tue, 17 Feb 2026 00:11:15:  175000000 
+INFO  @ Tue, 17 Feb 2026 00:11:15:  175000000 
+INFO  @ Tue, 17 Feb 2026 00:11:16:  176000000 
+INFO  @ Tue, 17 Feb 2026 00:11:16:  176000000 
+INFO  @ Tue, 17 Feb 2026 00:11:17:  177000000 
+INFO  @ Tue, 17 Feb 2026 00:11:17:  177000000 
+INFO  @ Tue, 17 Feb 2026 00:11:18:  178000000 
+INFO  @ Tue, 17 Feb 2026 00:11:18:  178000000 
+INFO  @ Tue, 17 Feb 2026 00:11:19:  179000000 
+INFO  @ Tue, 17 Feb 2026 00:11:19:  179000000 
+INFO  @ Tue, 17 Feb 2026 00:11:20:  180000000 
+INFO  @ Tue, 17 Feb 2026 00:11:20:  180000000 
+INFO  @ Tue, 17 Feb 2026 00:11:21:  181000000 
+INFO  @ Tue, 17 Feb 2026 00:11:21:  181000000 
+INFO  @ Tue, 17 Feb 2026 00:11:22:  182000000 
+INFO  @ Tue, 17 Feb 2026 00:11:22:  182000000 
+INFO  @ Tue, 17 Feb 2026 00:11:23:  183000000 
+INFO  @ Tue, 17 Feb 2026 00:11:23:  183000000 
+INFO  @ Tue, 17 Feb 2026 00:11:24:  184000000 
+INFO  @ Tue, 17 Feb 2026 00:11:24:  184000000 
+INFO  @ Tue, 17 Feb 2026 00:11:25:  185000000 
+INFO  @ Tue, 17 Feb 2026 00:11:25:  185000000 
+INFO  @ Tue, 17 Feb 2026 00:11:26:  186000000 
+INFO  @ Tue, 17 Feb 2026 00:11:26:  186000000 
+INFO  @ Tue, 17 Feb 2026 00:11:27:  187000000 
+INFO  @ Tue, 17 Feb 2026 00:11:27:  187000000 
+INFO  @ Tue, 17 Feb 2026 00:11:28:  188000000 
+INFO  @ Tue, 17 Feb 2026 00:11:28:  188000000 
+INFO  @ Tue, 17 Feb 2026 00:11:29:  189000000 
+INFO  @ Tue, 17 Feb 2026 00:11:29:  189000000 
+INFO  @ Tue, 17 Feb 2026 00:11:30:  190000000 
+INFO  @ Tue, 17 Feb 2026 00:11:30:  190000000 
+INFO  @ Tue, 17 Feb 2026 00:11:31:  191000000 
+INFO  @ Tue, 17 Feb 2026 00:11:31:  191000000 
+INFO  @ Tue, 17 Feb 2026 00:11:32:  192000000 
+INFO  @ Tue, 17 Feb 2026 00:11:32:  192000000 
+INFO  @ Tue, 17 Feb 2026 00:11:33:  193000000 
+INFO  @ Tue, 17 Feb 2026 00:11:33:  193000000 
+INFO  @ Tue, 17 Feb 2026 00:11:34:  194000000 
+INFO  @ Tue, 17 Feb 2026 00:11:34:  194000000 
+INFO  @ Tue, 17 Feb 2026 00:11:35:  195000000 
+INFO  @ Tue, 17 Feb 2026 00:11:35:  195000000 
+INFO  @ Tue, 17 Feb 2026 00:11:36:  196000000 
+INFO  @ Tue, 17 Feb 2026 00:11:36:  196000000 
+INFO  @ Tue, 17 Feb 2026 00:11:37:  197000000 
+INFO  @ Tue, 17 Feb 2026 00:11:37:  197000000 
+INFO  @ Tue, 17 Feb 2026 00:11:38:  198000000 
+INFO  @ Tue, 17 Feb 2026 00:11:38:  198000000 
+INFO  @ Tue, 17 Feb 2026 00:11:39:  199000000 
+INFO  @ Tue, 17 Feb 2026 00:11:39:  199000000 
+INFO  @ Tue, 17 Feb 2026 00:11:40:  200000000 
+INFO  @ Tue, 17 Feb 2026 00:11:40:  200000000 
+INFO  @ Tue, 17 Feb 2026 00:11:41:  201000000 
+INFO  @ Tue, 17 Feb 2026 00:11:41:  201000000 
+INFO  @ Tue, 17 Feb 2026 00:11:42:  202000000 
+INFO  @ Tue, 17 Feb 2026 00:11:42:  202000000 
+INFO  @ Tue, 17 Feb 2026 00:11:43:  203000000 
+INFO  @ Tue, 17 Feb 2026 00:11:43:  203000000 
+INFO  @ Tue, 17 Feb 2026 00:11:44:  204000000 
+INFO  @ Tue, 17 Feb 2026 00:11:44:  204000000 
+INFO  @ Tue, 17 Feb 2026 00:11:45:  205000000 
+INFO  @ Tue, 17 Feb 2026 00:11:46:  205000000 
+INFO  @ Tue, 17 Feb 2026 00:11:46:  206000000 
+INFO  @ Tue, 17 Feb 2026 00:11:47:  206000000 
+INFO  @ Tue, 17 Feb 2026 00:11:47:  207000000 
+INFO  @ Tue, 17 Feb 2026 00:11:48:  207000000 
+INFO  @ Tue, 17 Feb 2026 00:11:48:  208000000 
+INFO  @ Tue, 17 Feb 2026 00:11:49:  208000000 
+INFO  @ Tue, 17 Feb 2026 00:11:49:  209000000 
+INFO  @ Tue, 17 Feb 2026 00:11:50:  209000000 
+INFO  @ Tue, 17 Feb 2026 00:11:50:  210000000 
+INFO  @ Tue, 17 Feb 2026 00:11:51:  210000000 
+INFO  @ Tue, 17 Feb 2026 00:11:51:  211000000 
+INFO  @ Tue, 17 Feb 2026 00:11:52:  211000000 
+INFO  @ Tue, 17 Feb 2026 00:11:52:  212000000 
+INFO  @ Tue, 17 Feb 2026 00:11:53:  212000000 
+INFO  @ Tue, 17 Feb 2026 00:11:53:  213000000 
+INFO  @ Tue, 17 Feb 2026 00:11:54:  213000000 
+INFO  @ Tue, 17 Feb 2026 00:11:54:  214000000 
+INFO  @ Tue, 17 Feb 2026 00:11:55:  214000000 
+INFO  @ Tue, 17 Feb 2026 00:11:55:  215000000 
+INFO  @ Tue, 17 Feb 2026 00:11:56:  215000000 
+INFO  @ Tue, 17 Feb 2026 00:11:56:  216000000 
+INFO  @ Tue, 17 Feb 2026 00:11:57:  216000000 
+INFO  @ Tue, 17 Feb 2026 00:11:57:  217000000 
+INFO  @ Tue, 17 Feb 2026 00:11:58:  217000000 
+INFO  @ Tue, 17 Feb 2026 00:11:58:  218000000 
+INFO  @ Tue, 17 Feb 2026 00:11:59:  218000000 
+INFO  @ Tue, 17 Feb 2026 00:11:59:  219000000 
+INFO  @ Tue, 17 Feb 2026 00:12:00:  219000000 
+INFO  @ Tue, 17 Feb 2026 00:12:00:  220000000 
+INFO  @ Tue, 17 Feb 2026 00:12:01:  220000000 
+INFO  @ Tue, 17 Feb 2026 00:12:01:  221000000 
+INFO  @ Tue, 17 Feb 2026 00:12:02:  221000000 
+INFO  @ Tue, 17 Feb 2026 00:12:02:  222000000 
+INFO  @ Tue, 17 Feb 2026 00:12:03:  222000000 
+INFO  @ Tue, 17 Feb 2026 00:12:03:  223000000 
+INFO  @ Tue, 17 Feb 2026 00:12:04:  223000000 
+INFO  @ Tue, 17 Feb 2026 00:12:04:  224000000 
+INFO  @ Tue, 17 Feb 2026 00:12:05:  224000000 
+INFO  @ Tue, 17 Feb 2026 00:12:05:  225000000 
+INFO  @ Tue, 17 Feb 2026 00:12:06:  225000000 
+INFO  @ Tue, 17 Feb 2026 00:12:06:  226000000 
+INFO  @ Tue, 17 Feb 2026 00:12:06:  226000000 
+INFO  @ Tue, 17 Feb 2026 00:12:07:  227000000 
+INFO  @ Tue, 17 Feb 2026 00:12:07:  227000000 
+INFO  @ Tue, 17 Feb 2026 00:12:08:  228000000 
+INFO  @ Tue, 17 Feb 2026 00:12:08:  228000000 
+INFO  @ Tue, 17 Feb 2026 00:12:09:  229000000 
+INFO  @ Tue, 17 Feb 2026 00:12:09:  229000000 
+INFO  @ Tue, 17 Feb 2026 00:12:10:  230000000 
+INFO  @ Tue, 17 Feb 2026 00:12:10:  230000000 
+INFO  @ Tue, 17 Feb 2026 00:12:11:  231000000 
+INFO  @ Tue, 17 Feb 2026 00:12:11:  231000000 
+INFO  @ Tue, 17 Feb 2026 00:12:12:  232000000 
+INFO  @ Tue, 17 Feb 2026 00:12:13:  232000000 
+INFO  @ Tue, 17 Feb 2026 00:12:13:  233000000 
+INFO  @ Tue, 17 Feb 2026 00:12:14:  233000000 
+INFO  @ Tue, 17 Feb 2026 00:12:14:  234000000 
+INFO  @ Tue, 17 Feb 2026 00:12:15:  234000000 
+INFO  @ Tue, 17 Feb 2026 00:12:15:  235000000 
+INFO  @ Tue, 17 Feb 2026 00:12:15:  235000000 
+INFO  @ Tue, 17 Feb 2026 00:12:16:  236000000 
+INFO  @ Tue, 17 Feb 2026 00:12:16:  236000000 
+INFO  @ Tue, 17 Feb 2026 00:12:17:  237000000 
+INFO  @ Tue, 17 Feb 2026 00:12:17:  237000000 
+INFO  @ Tue, 17 Feb 2026 00:12:17:  238000000 
+INFO  @ Tue, 17 Feb 2026 00:12:18:  238000000 
+INFO  @ Tue, 17 Feb 2026 00:12:18:  239000000 
+INFO  @ Tue, 17 Feb 2026 00:12:19:  239000000 
+INFO  @ Tue, 17 Feb 2026 00:12:19:  240000000 
+INFO  @ Tue, 17 Feb 2026 00:12:20:  240000000 
+INFO  @ Tue, 17 Feb 2026 00:12:20:  241000000 
+INFO  @ Tue, 17 Feb 2026 00:12:20:  241000000 
+INFO  @ Tue, 17 Feb 2026 00:12:21:  242000000 
+INFO  @ Tue, 17 Feb 2026 00:12:21:  242000000 
+INFO  @ Tue, 17 Feb 2026 00:12:22:  243000000 
+INFO  @ Tue, 17 Feb 2026 00:12:23:  244000000 
+INFO  @ Tue, 17 Feb 2026 00:12:24:  245000000 
+INFO  @ Tue, 17 Feb 2026 00:12:25:  246000000 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #1 tag size is determined as 107 bps 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #1 tag size = 107.0 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #1  total tags in treatment: 242032436 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #1 finished! 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #2 Build Peak Model... 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #2 Skipped... 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #2 Use 150 as fragment length 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #2 Sequencing ends will be shifted towards 5' by 75 bp(s) 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #3 Call peaks... 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #3 Going to call summits inside each peak ... 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #3 Call peaks with given -log10pvalue cutoff: 1.00000 ... 
+INFO  @ Tue, 17 Feb 2026 00:12:25: #3 Pre-compute pvalue-qvalue table... 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #1 tag size is determined as 51 bps 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #1 tag size = 51.0 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #1  total tags in treatment: 246139345 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #1 finished! 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #2 Build Peak Model... 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #2 Skipped... 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #2 Use 150 as fragment length 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #2 Sequencing ends will be shifted towards 5' by 75 bp(s) 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #3 Call peaks... 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #3 Going to call summits inside each peak ... 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #3 Call peaks with given -log10pvalue cutoff: 1.00000 ... 
+INFO  @ Tue, 17 Feb 2026 00:12:29: #3 Pre-compute pvalue-qvalue table... 
+INFO  @ Tue, 17 Feb 2026 00:28:39: #3 Call peaks for each chromosome... 
+INFO  @ Tue, 17 Feb 2026 00:29:08: #3 Call peaks for each chromosome... 
+INFO  @ Tue, 17 Feb 2026 00:32:08: #4 Write output xls file... /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//KO_cerebellum/Peaks/macs2_peaks.xls 
+INFO  @ Tue, 17 Feb 2026 00:32:09: #4 Write peak in narrowPeak format file... /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//KO_cerebellum/Peaks/macs2_peaks.narrowPeak 
+INFO  @ Tue, 17 Feb 2026 00:32:10: #4 Write summits bed file... /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//KO_cerebellum/Peaks/macs2_summits.bed 
+INFO  @ Tue, 17 Feb 2026 00:32:10: Done! 
+[Tue Feb 17 00:32:12 2026]
+Finished job 11.
+1 of 15 steps (7%) done
+Select jobs to execute...
+
+[Tue Feb 17 00:32:12 2026]
+rule sort_narrowpeaks:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    jobid: 10
+    reason: Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=8000, mem_mib=7630
+
+
+		# intersect to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+		
+[Tue Feb 17 00:32:16 2026]
+Finished job 10.
+2 of 15 steps (13%) done
+Select jobs to execute...
+
+[Tue Feb 17 00:32:16 2026]
+rule make_candidate_regions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted, /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    jobid: 9
+    reason: Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=8000, mem_mib=7630
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/makeCandidateRegions.py 			--narrowPeak /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted			--accessibility /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz 			--outDir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--regions_blocklist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed 			--regions_includelist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed 			--peakExtendFromSummit 250 			--nStrongestPeak 150000
+		
+INFO  @ Tue, 17 Feb 2026 00:33:05: #4 Write output xls file... /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//WT_cerebellum/Peaks/macs2_peaks.xls 
+INFO  @ Tue, 17 Feb 2026 00:33:07: #4 Write peak in narrowPeak format file... /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//WT_cerebellum/Peaks/macs2_peaks.narrowPeak 
+INFO  @ Tue, 17 Feb 2026 00:33:07: #4 Write summits bed file... /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results//WT_cerebellum/Peaks/macs2_summits.bed 
+INFO  @ Tue, 17 Feb 2026 00:33:08: Done! 
+[Tue Feb 17 00:33:10 2026]
+Finished job 5.
+3 of 15 steps (20%) done
+Select jobs to execute...
+
+[Tue Feb 17 00:33:10 2026]
+rule sort_narrowpeaks:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    jobid: 4
+    reason: Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=8000, mem_mib=7630
+
+
+		# intersect to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+		
+[Tue Feb 17 00:33:13 2026]
+Finished job 4.
+4 of 15 steps (27%) done
+Select jobs to execute...
+
+[Tue Feb 17 00:33:13 2026]
+rule make_candidate_regions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted, /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    jobid: 3
+    reason: Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=8000, mem_mib=7630
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/makeCandidateRegions.py 			--narrowPeak /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted			--accessibility /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz 			--outDir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--regions_blocklist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed 			--regions_includelist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed 			--peakExtendFromSummit 250 			--nStrongestPeak 150000
+		
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed
+Running piped cmds: ['bedtools sort -i /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin -c 4 -o max', 'sort -nr -k 4', 'head -n 150000', 'bedtools intersect -b stdin -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted -wa', 'awk \'{{print $1 "\\t" $2 + $10 "\\t" $2 + $10}}\'', 'bedtools slop -i stdin -b 250 -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools sort -i stdin -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin', 'bedtools intersect -v -wa -a stdin -b /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed', 'cut -f 1-3', '(bedtools intersect -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed -wa | cut -f 1-3 && cat)', 'bedtools sort -i stdin -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed']
+[Tue Feb 17 00:37:05 2026]
+Finished job 9.
+5 of 15 steps (33%) done
+Select jobs to execute...
+
+[Tue Feb 17 00:37:05 2026]
+rule create_neighborhoods:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+    jobid: 8
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=32000, mem_mib=30518
+
+
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin | 		uniq > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+						
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/run.neighborhoods.py 			--candidate_enhancer_regions /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--DHS  			--ATAC /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz 			--default_accessibility_feature ATAC 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed 			--ubiquitously_expressed_genes /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv 			--H3K27ac  			 
+		
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed
+Running piped cmds: ['bedtools sort -i /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin -c 4 -o max', 'sort -nr -k 4', 'head -n 150000', 'bedtools intersect -b stdin -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted -wa', 'awk \'{{print $1 "\\t" $2 + $10 "\\t" $2 + $10}}\'', 'bedtools slop -i stdin -b 250 -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools sort -i stdin -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin', 'bedtools intersect -v -wa -a stdin -b /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed', 'cut -f 1-3', '(bedtools intersect -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed -wa | cut -f 1-3 && cat)', 'bedtools sort -i stdin -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed']
+[Tue Feb 17 00:37:59 2026]
+Finished job 3.
+6 of 15 steps (40%) done
+Select jobs to execute...
+
+[Tue Feb 17 00:37:59 2026]
+rule create_neighborhoods:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+    jobid: 2
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=32000, mem_mib=30518
+
+
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin | 		uniq > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+						
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/run.neighborhoods.py 			--candidate_enhancer_regions /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--DHS  			--ATAC /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz 			--default_accessibility_feature ATAC 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed 			--ubiquitously_expressed_genes /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv 			--H3K27ac  			 
+		
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+Namespace(candidate_enhancer_regions='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed', outdir='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods', genes='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed', genes_for_class_assignment=None, ubiquitously_expressed_genes='/expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv', gene_name_annotations='symbol', primary_gene_identifier='symbol', skip_gene_counts=False, H3K27ac=None, DHS=None, ATAC='/expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz', default_accessibility_feature='ATAC', expression_table='', qnorm=None, tss_slop_for_class_assignment=500, skip_rpkm_quantile=False, use_secondary_counting_method=False, chrom_sizes='/expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', chrom_sizes_bed='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', enhancer_class_override=None, supplementary_features=None, cellType=None)
+Running command: bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed.sorted; mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed.sorted /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Genes.ATAC.mut_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 309.07550573349
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 302.66563391685486
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Enhancers.ATAC.mut_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 303.30561876296997
+Assigning classes to enhancers
+Total enhancers: 174670
+         Promoters: 49675
+         Genic: 86650
+         Intergenic: 38345
+Neighborhoods Complete! 
+
+[Tue Feb 17 00:52:36 2026]
+Finished job 8.
+7 of 15 steps (47%) done
+Select jobs to execute...
+
+[Tue Feb 17 00:52:36 2026]
+rule create_predictions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    jobid: 7
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46503610, mem_mb=20000, mem_mib=19074
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predict.py 			--enhancers /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions 			--score_column ABC.Score 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--accessibility_feature ATAC 			--cellType KO_cerebellum 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt 			--hic_gamma 1.024238616787792 			--hic_scale 5.9594510043736655 			--hic_pseudocount_distance 5000 			--hic_file /expanse/lustre/projects/csd940/zalibhai/nf-hic/250402_Bap1_deepseq/juicerpre/merged/hic/resorted_mut.hic --hic_type hic --hic_resolution 5000 			--scale_hic_using_powerlaw
+		
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+File /expanse/lustre/projects/csd940/zalibhai/nf-hic/250402_Bap1_deepseq/juicerpre/merged/hic/resorted_mut.hic cannot be opened for reading
+[Tue Feb 17 00:52:40 2026]
+Error in rule create_predictions:
+    jobid: 7
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    conda-env: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/.snakemake/conda/c4b342f55862fd7a124df7d67e8121f1_
+    shell:
+        
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predict.py 			--enhancers /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions 			--score_column ABC.Score 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--accessibility_feature ATAC 			--cellType KO_cerebellum 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt 			--hic_gamma 1.024238616787792 			--hic_scale 5.9594510043736655 			--hic_pseudocount_distance 5000 			--hic_file /expanse/lustre/projects/csd940/zalibhai/nf-hic/250402_Bap1_deepseq/juicerpre/merged/hic/resorted_mut.hic --hic_type hic --hic_resolution 5000 			--scale_hic_using_powerlaw
+		
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+Namespace(candidate_enhancer_regions='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed', outdir='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods', genes='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed', genes_for_class_assignment=None, ubiquitously_expressed_genes='/expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv', gene_name_annotations='symbol', primary_gene_identifier='symbol', skip_gene_counts=False, H3K27ac=None, DHS=None, ATAC='/expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz', default_accessibility_feature='ATAC', expression_table='', qnorm=None, tss_slop_for_class_assignment=500, skip_rpkm_quantile=False, use_secondary_counting_method=False, chrom_sizes='/expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', chrom_sizes_bed='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', enhancer_class_override=None, supplementary_features=None, cellType=None)
+Running command: bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed.sorted; mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed.sorted /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Genes.ATAC.ctrl_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 315.05749464035034
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 305.48244881629944
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 302.56619000434875
+Assigning classes to enhancers
+Total enhancers: 170335
+         Promoters: 49549
+         Genic: 85547
+         Intergenic: 35239
+Neighborhoods Complete! 
+
+[Tue Feb 17 00:53:38 2026]
+Finished job 2.
+8 of 15 steps (53%) done
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2026-02-17T000818.806101.snakemake.log

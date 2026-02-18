@@ -1,0 +1,122 @@
+
+CondaError: Run 'conda init' before 'conda activate'
+
+============================================
+Step 0A: Gene Annotations from GENCODE vM25
+============================================
+Whitelist biotypes: protein_coding|lincRNA|processed_transcript
+Output directory: /expanse/lustre/projects/csd940/zalibhai/abc/reference
+
+[1/7] GTF already exists: /expanse/lustre/projects/csd940/zalibhai/abc/reference/gencode.vM25.annotation.gtf.gz
+
+[2/7] Verifying GTF structure...
+  Total gene entries in GTF: 55401
+  First chromosome in GTF: chr1
+
+  Full biotype distribution in GTF (top 15):
+  21859 protein_coding
+  10002 processed_pseudogene
+   5629 lincRNA
+   3238 TEC
+   2991 antisense
+   2723 unprocessed_pseudogene
+   2202 miRNA
+   1507 snoRNA
+   1383 snRNA
+    779 processed_transcript
+    562 misc_RNA
+    354 rRNA
+    328 sense_intronic
+    300 transcribed_processed_pseudogene
+    271 transcribed_unprocessed_pseudogene
+
+[3/7] Extracting gene annotations (whitelist: protein_coding|lincRNA|processed_transcript)...
+  Genes after whitelist filter: 28267
+
+[4/7] Validating biotype composition...
+  Gene type distribution in output:
+  21859 protein_coding
+   5629 lincRNA
+    779 processed_transcript
+
+  protein_coding:       21859 (expect 21,000-22,000)
+  lincRNA:              5629 (expect 5,500-5,700)
+  processed_transcript: 779 (expect 700-800)
+  Total:                28267 (expect 28,000-29,000)
+  Pseudogene check: 0 found (correct)
+  Small RNA check: 0 found (correct)
+
+  First chromosome in output: chr1
+  Chromosomes present:
+chr1 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chrM chrX chrY 
+
+[5/7] Checking for duplicate gene symbols...
+  Unique gene symbols: 28230
+  Duplicate symbols:   37
+  Resolving duplicates: keeping longest transcript per gene symbol...
+  Examples of duplicated symbols:
+4933434E20Rik
+A530058N18Rik
+Aldoa
+Arhgap26
+Arhgef4
+Atp5o
+C730027H18Rik
+Ddit3
+Dpep2
+Fam220a
+  After dedup: 28230 genes (removed 37 duplicates)
+
+[6/7] Generating 500bp TSS regions...
+  TSS regions: 28230 (should match gene count: 28230)
+
+[7/7] Final validation...
+  Columns in genes file: 8 (expect 8)
+  Columns in TSS file:   8 (expect 8)
+  Sample Ensembl IDs (first 5):
+    ENSMUSG00000051951
+    ENSMUSG00000102343
+    ENSMUSG00000025900
+    ENSMUSG00000025902
+    ENSMUSG00000104238
+  TSS region widths:
+    500bp: 28230 regions
+  TSS-gene body consistency check (sample 1000 genes)...
+    Mismatches > 1bp: 110 / 1000
+
+  Spot-check known genes:
+    Actb: chr5:142903114-142906754 (-) protein_coding
+    Gapdh: chr6:125161714-125166467 (-) protein_coding
+    Neurod1: chr2:79452520-79456751 (-) protein_coding
+    Pax6: chr2:105668899-105697364 (+) protein_coding
+    Bap1: chr14:31251449-31259944 (+) protein_coding
+    Atoh1: chr6:64729124-64731245 (+) protein_coding
+
+  First 3 entries:
+chr1	3205900	3671498	Xkr4	0	-	ENSMUSG00000051951	protein_coding
+chr1	3905738	3986215	Gm37381	0	-	ENSMUSG00000102343	lincRNA
+chr1	3999556	4409241	Rp1	0	-	ENSMUSG00000025900	protein_coding
+
+  Last 3 entries:
+chrY	90752426	90755467	Gm21860	0	-	ENSMUSG00000095366	lincRNA
+chrY	90784737	90816465	Gm47283	0	+	ENSMUSG00000096768	lincRNA
+chrY	90838868	90839177	Gm21748	0	-	ENSMUSG00000096850	protein_coding
+
+============================================
+Step 0A COMPLETE
+============================================
+
+Outputs:
+  Genes: /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed (28230 genes)
+  TSS:   /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed (28230 regions)
+
+Biotype composition:
+  protein_coding:       21859
+  lincRNA:              5629
+  processed_transcript: 779
+
+Next steps:
+  1. Rerun Step 0D (ubiquitous genes) — depends on this output
+  2. Steps 0B, 0C, 0E are UNCHANGED — no need to rerun
+  3. Re-inject consensus peaks (Step 2) — MACS2 output may be stale
+  4. Rerun Step 4 (ABC pipeline)

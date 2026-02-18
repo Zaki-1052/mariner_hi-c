@@ -1,0 +1,330 @@
+#!/bin/bash
+#SBATCH --job-name=abc_gene_annot
+#SBATCH --output=logs/abc_gene_annot_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+# Step 0A: Generate mm10 gene annotations from GENCODE vM25 GTF
+#
+# CORRECTED: Uses whitelist biotype filter instead of blacklist.
+# Original blacklist regex failed to match compound biotypes like
+# "processed_pseudogene" because grep matched after the opening quote,
+# requiring the biotype string to START with the pattern.
+#
+# Whitelist approach: only include protein_coding, lincRNA, processed_transcript.
+# This excludes all pseudogenes, small RNAs, TEC, antisense, miRNA, etc.
+#
+# Outputs (8-column BED with # header, matching ABC bundled hg38 format):
+#   mm10_genes.bed  — gene body coordinates
+#   mm10_tss.bed    — 500bp TSS regions centered on transcription start site
+#
+# Depends on: nothing (first step in pipeline)
+# Depended on by: Step 0D (ubiquitous genes), Step 1 (ABC config)
+
+conda activate abc-env
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/abc/logs
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/abc/reference
+source ~/.bashrc
+
+REF_DIR="/expanse/lustre/projects/csd940/zalibhai/abc/reference"
+GTF_URL="https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M25/gencode.vM25.annotation.gtf.gz"
+GTF_FILE="${REF_DIR}/gencode.vM25.annotation.gtf.gz"
+CHROM_SIZES="/expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes"
+GENES_OUT="${REF_DIR}/mm10_genes.bed"
+TSS_OUT="${REF_DIR}/mm10_tss.bed"
+
+# Biotypes to INCLUDE (whitelist approach — safer than blacklist)
+# protein_coding: core gene set (~21,800)
+# lincRNA: biologically relevant, can have distal enhancers (~5,600)
+# processed_transcript: transcripts without clear ORF but real loci (~780)
+#
+# This excludes: all pseudogene variants (processed_, unprocessed_, transcribed_,
+# polymorphic_), miRNA, snoRNA, snRNA, rRNA, misc_RNA, TEC, antisense,
+# bidirectional_promoter_lncRNA, and all other minor biotypes.
+INCLUDE_BIOTYPES="protein_coding|lincRNA|processed_transcript"
+
+echo "============================================"
+echo "Step 0A: Gene Annotations from GENCODE vM25"
+echo "============================================"
+echo "Whitelist biotypes: ${INCLUDE_BIOTYPES}"
+echo "Output directory: ${REF_DIR}"
+echo ""
+
+# ---------- Download GTF ----------
+if [ ! -f "${GTF_FILE}" ]; then
+  echo "[1/7] Downloading GENCODE vM25 GTF..."
+  wget -q -O "${GTF_FILE}" "${GTF_URL}"
+  echo "  Downloaded: $(ls -lh "${GTF_FILE}" | awk '{print $5}')"
+else
+  echo "[1/7] GTF already exists: ${GTF_FILE}"
+fi
+
+echo ""
+echo "[2/7] Verifying GTF structure..."
+TOTAL_GENE_COUNT=$(zcat "${GTF_FILE}" | awk '$3 == "gene"' | wc -l)
+echo "  Total gene entries in GTF: ${TOTAL_GENE_COUNT}"
+if [ "${TOTAL_GENE_COUNT}" -lt 50000 ] || [ "${TOTAL_GENE_COUNT}" -gt 60000 ]; then
+  echo "  WARNING: Expected ~55,000 for vM25. Got ${TOTAL_GENE_COUNT}."
+fi
+
+# Verify chr prefix (GENCODE mouse uses chr)
+FIRST_CHR_GTF=$(zcat "${GTF_FILE}" | grep -v "^#" | head -1 | cut -f1)
+echo "  First chromosome in GTF: ${FIRST_CHR_GTF}"
+if [[ ! "${FIRST_CHR_GTF}" =~ ^chr ]]; then
+  echo "  ERROR: GTF lacks chr prefix. This is unexpected for GENCODE mouse."
+  exit 1
+fi
+
+# Show full biotype distribution in GTF before filtering
+echo ""
+echo "  Full biotype distribution in GTF (top 15):"
+zcat "${GTF_FILE}" \
+  | awk -F'\t' '$3 == "gene"' \
+  | grep -oP 'gene_type "\K[^"]+' \
+  | sort | uniq -c | sort -rn | head -15
+
+# ---------- Extract gene annotation BED (whitelist filter) ----------
+echo ""
+echo "[3/7] Extracting gene annotations (whitelist: ${INCLUDE_BIOTYPES})..."
+
+# Header (must match ABC bundled format exactly)
+echo -e "#chr\tstart\tend\tname\tscore\tstrand\tEnsembl_ID\tgene_type" > "${GENES_OUT}"
+
+zcat "${GTF_FILE}" \
+  | awk -F'\t' '$3 == "gene"' \
+  | grep -E "gene_type \"(${INCLUDE_BIOTYPES})\"" \
+  | gawk -F'\t' 'BEGIN{OFS="\t"} {
+      match($9, /gene_name "([^"]+)"/, gn)
+      match($9, /gene_id "([^"]+)"/, gi)
+      match($9, /gene_type "([^"]+)"/, gt)
+      # Strip version suffix from Ensembl ID (ENSMUSG00000051951.5 -> ENSMUSG00000051951)
+      split(gi[1], eid, ".")
+      print $1, $4-1, $5, gn[1], 0, $7, eid[1], gt[1]
+    }' \
+  | sort -k1,1 -k2,2n \
+  >> "${GENES_OUT}"
+
+N_GENES=$(tail -n +2 "${GENES_OUT}" | wc -l)
+echo "  Genes after whitelist filter: ${N_GENES}"
+
+# ---------- Validate biotype composition ----------
+echo ""
+echo "[4/7] Validating biotype composition..."
+echo "  Gene type distribution in output:"
+tail -n +2 "${GENES_OUT}" | cut -f8 | sort | uniq -c | sort -rn
+
+N_PC=$(tail -n +2 "${GENES_OUT}" | awk -F'\t' '$8 == "protein_coding"' | wc -l)
+N_LINC=$(tail -n +2 "${GENES_OUT}" | awk -F'\t' '$8 == "lincRNA"' | wc -l)
+N_PT=$(tail -n +2 "${GENES_OUT}" | awk -F'\t' '$8 == "processed_transcript"' | wc -l)
+
+echo ""
+echo "  protein_coding:       ${N_PC} (expect 21,000-22,000)"
+echo "  lincRNA:              ${N_LINC} (expect 5,500-5,700)"
+echo "  processed_transcript: ${N_PT} (expect 700-800)"
+echo "  Total:                ${N_GENES} (expect 28,000-29,000)"
+
+# Validate ranges
+FAIL=0
+if [ "${N_PC}" -lt 20000 ] || [ "${N_PC}" -gt 23000 ]; then
+  echo "  ERROR: protein_coding count ${N_PC} outside expected range [20000, 23000]"
+  FAIL=1
+fi
+if [ "${N_LINC}" -lt 5000 ] || [ "${N_LINC}" -gt 6500 ]; then
+  echo "  ERROR: lincRNA count ${N_LINC} outside expected range [5000, 6500]"
+  FAIL=1
+fi
+if [ "${N_GENES}" -lt 26000 ] || [ "${N_GENES}" -gt 30000 ]; then
+  echo "  ERROR: Total gene count ${N_GENES} outside expected range [26000, 30000]"
+  FAIL=1
+fi
+
+# Verify NO pseudogenes leaked through
+N_PSEUDO=$(tail -n +2 "${GENES_OUT}" | cut -f8 | grep -c "pseudogene" || true)
+if [ "${N_PSEUDO}" -gt 0 ]; then
+  echo "  ERROR: ${N_PSEUDO} pseudogene entries found in output! Whitelist filter failed."
+  FAIL=1
+else
+  echo "  Pseudogene check: 0 found (correct)"
+fi
+
+# Verify NO small RNAs leaked through
+N_SMALLRNA=$(tail -n +2 "${GENES_OUT}" | cut -f8 | grep -cE "snoRNA|snRNA|miRNA|rRNA" || true)
+if [ "${N_SMALLRNA}" -gt 0 ]; then
+  echo "  ERROR: ${N_SMALLRNA} small RNA entries found in output! Whitelist filter failed."
+  FAIL=1
+else
+  echo "  Small RNA check: 0 found (correct)"
+fi
+
+if [ "${FAIL}" -eq 1 ]; then
+  echo ""
+  echo "  VALIDATION FAILED. Review output before proceeding."
+  exit 1
+fi
+
+# ---------- Check chr prefix in output ----------
+FIRST_CHR_OUT=$(tail -n +2 "${GENES_OUT}" | head -1 | cut -f1)
+echo ""
+echo "  First chromosome in output: ${FIRST_CHR_OUT}"
+if [[ ! "${FIRST_CHR_OUT}" =~ ^chr ]]; then
+  echo "  ERROR: Missing chr prefix in output."
+  exit 1
+fi
+
+# Verify chromosomes are standard (chr1-19, chrX, chrY, chrM only)
+echo "  Chromosomes present:"
+tail -n +2 "${GENES_OUT}" | cut -f1 | sort -u | tr '\n' ' '
+echo ""
+
+# ---------- Deduplicate gene symbols ----------
+echo ""
+echo "[5/7] Checking for duplicate gene symbols..."
+N_UNIQUE=$(tail -n +2 "${GENES_OUT}" | cut -f4 | sort -u | wc -l)
+N_DUPS=$((N_GENES - N_UNIQUE))
+echo "  Unique gene symbols: ${N_UNIQUE}"
+echo "  Duplicate symbols:   ${N_DUPS}"
+
+if [ "${N_DUPS}" -gt 0 ]; then
+  echo "  Resolving duplicates: keeping longest transcript per gene symbol..."
+  echo "  Examples of duplicated symbols:"
+  tail -n +2 "${GENES_OUT}" | cut -f4 | sort | uniq -d | head -10
+
+  # Preserve header, dedup body by keeping longest span per gene symbol
+  head -1 "${GENES_OUT}" > "${GENES_OUT}.dedup"
+  tail -n +2 "${GENES_OUT}" | gawk -F'\t' 'BEGIN{OFS="\t"} {
+    span = $3 - $2
+    gene = $4
+    if (!(gene in best) || span > best_span[gene]) {
+      best[gene] = $0
+      best_span[gene] = span
+    }
+  } END {
+    for (g in best) print best[g]
+  }' | sort -k1,1 -k2,2n >> "${GENES_OUT}.dedup"
+
+  mv "${GENES_OUT}.dedup" "${GENES_OUT}"
+  N_FINAL=$(tail -n +2 "${GENES_OUT}" | wc -l)
+  echo "  After dedup: ${N_FINAL} genes (removed ${N_DUPS} duplicates)"
+else
+  N_FINAL=${N_GENES}
+  echo "  No duplicates found."
+fi
+
+# ---------- Generate TSS file (500bp centered on TSS) ----------
+echo ""
+echo "[6/7] Generating 500bp TSS regions..."
+
+echo -e "#chr\tstart\tend\tname\tscore\tstrand\tEnsembl_ID\tgene_type" > "${TSS_OUT}"
+
+tail -n +2 "${GENES_OUT}" | awk -F'\t' 'BEGIN{OFS="\t"} {
+  if ($6 == "+") {
+    tss = $2
+  } else {
+    tss = $3
+  }
+  start = tss - 250
+  if (start < 0) start = 0
+  end = tss + 250
+  print $1, start, end, $4, $5, $6, $7, $8
+}' | sort -k1,1 -k2,2n >> "${TSS_OUT}"
+
+N_TSS=$(tail -n +2 "${TSS_OUT}" | wc -l)
+echo "  TSS regions: ${N_TSS} (should match gene count: ${N_FINAL})"
+
+if [ "${N_TSS}" -ne "${N_FINAL}" ]; then
+  echo "  ERROR: TSS count (${N_TSS}) != gene count (${N_FINAL})"
+  exit 1
+fi
+
+# ---------- Comprehensive validation ----------
+echo ""
+echo "[7/7] Final validation..."
+
+# Column count
+NCOL_GENES=$(tail -n +2 "${GENES_OUT}" | head -1 | awk -F'\t' '{print NF}')
+NCOL_TSS=$(tail -n +2 "${TSS_OUT}" | head -1 | awk -F'\t' '{print NF}')
+echo "  Columns in genes file: ${NCOL_GENES} (expect 8)"
+echo "  Columns in TSS file:   ${NCOL_TSS} (expect 8)"
+
+if [ "${NCOL_GENES}" -ne 8 ] || [ "${NCOL_TSS}" -ne 8 ]; then
+  echo "  ERROR: Wrong column count."
+  exit 1
+fi
+
+# Verify Ensembl IDs are ENSMUSG format without version suffix
+echo "  Sample Ensembl IDs (first 5):"
+tail -n +2 "${GENES_OUT}" | head -5 | cut -f7 | while read eid; do
+  echo "    ${eid}"
+  if [[ ! "${eid}" =~ ^ENSMUSG[0-9]+$ ]]; then
+    echo "    ERROR: Malformed Ensembl ID: ${eid}"
+    exit 1
+  fi
+done
+
+# TSS width check (all should be exactly 500bp, except those clipped at chr start)
+echo "  TSS region widths:"
+tail -n +2 "${TSS_OUT}" | awk -F'\t' '{w=$3-$2; widths[w]++} END{for(w in widths) printf "    %dbp: %d regions\n", w, widths[w]}' | sort -t: -k1 -n
+
+# Cross-validate: TSS midpoint should be at gene boundary (start for +, end for -)
+echo "  TSS-gene body consistency check (sample 1000 genes)..."
+N_MISMATCH=0
+paste <(tail -n +2 "${TSS_OUT}" | head -1000) <(tail -n +2 "${GENES_OUT}" | head -1000) \
+  | awk -F'\t' '{
+      tss_mid = int(($2 + $3) / 2)
+      strand = $6
+      if (strand == "+") {
+        gene_tss = $10   # gene start from second file (col 2 + 8 = col 10)
+      } else {
+        gene_tss = $11   # gene end from second file (col 3 + 8 = col 11)
+      }
+      diff = (tss_mid > gene_tss) ? tss_mid - gene_tss : gene_tss - tss_mid
+      if (diff > 1) errors++
+    } END {
+      printf "    Mismatches > 1bp: %d / 1000\n", errors+0
+    }'
+
+# Spot-check known genes
+echo ""
+echo "  Spot-check known genes:"
+for gene in Actb Gapdh Neurod1 Pax6 Bap1 Atoh1; do
+  found=$(tail -n +2 "${GENES_OUT}" | awk -F'\t' -v g="${gene}" '$4==g{print $1":"$2"-"$3" ("$6") "$8}')
+  if [ -n "${found}" ]; then
+    echo "    ${gene}: ${found}"
+  else
+    echo "    ${gene}: NOT FOUND"
+  fi
+done
+
+# First and last entries
+echo ""
+echo "  First 3 entries:"
+tail -n +2 "${GENES_OUT}" | head -3
+
+echo ""
+echo "  Last 3 entries:"
+tail -n +2 "${GENES_OUT}" | tail -3
+
+echo ""
+echo "============================================"
+echo "Step 0A COMPLETE"
+echo "============================================"
+echo ""
+echo "Outputs:"
+echo "  Genes: ${GENES_OUT} (${N_FINAL} genes)"
+echo "  TSS:   ${TSS_OUT} (${N_TSS} regions)"
+echo ""
+echo "Biotype composition:"
+echo "  protein_coding:       ${N_PC}"
+echo "  lincRNA:              ${N_LINC}"
+echo "  processed_transcript: ${N_PT}"
+echo ""
+echo "Next steps:"
+echo "  1. Rerun Step 0D (ubiquitous genes) — depends on this output"
+echo "  2. Steps 0B, 0C, 0E are UNCHANGED — no need to rerun"
+echo "  3. Re-inject consensus peaks (Step 2) — MACS2 output may be stale"
+echo "  4. Rerun Step 4 (ABC pipeline)"

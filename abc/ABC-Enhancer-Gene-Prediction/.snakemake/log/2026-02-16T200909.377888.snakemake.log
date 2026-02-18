@@ -1,0 +1,179 @@
+Config file config/config.yaml is extended by additional config specified via the command line.
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 16
+Rules claiming more threads will be scaled down.
+Conda environments: ignored
+Job stats:
+job                              count
+-----------------------------  -------
+all                                  1
+create_neighborhoods                 2
+create_predictions                   2
+filter_predictions                   2
+generate_chrom_sizes_bed_file        1
+generate_qc_plot_and_summary         2
+make_candidate_regions               2
+sort_narrowpeaks                     2
+total                               14
+
+Select jobs to execute...
+
+[Mon Feb 16 20:09:14 2026]
+rule generate_chrom_sizes_bed_file:
+    input: /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    jobid: 6
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    resources: tmpdir=/scratch/zalibhai/job_46501788, mem_mb=8000, mem_mib=7630
+
+
+		awk 'BEGIN {OFS="	"} {if (NF > 0) print $1,"0",$2 ; else print $0}' /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+		
+[Mon Feb 16 20:09:15 2026]
+Finished job 6.
+1 of 14 steps (7%) done
+Select jobs to execute...
+
+[Mon Feb 16 20:09:15 2026]
+rule sort_narrowpeaks:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    jobid: 10
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46501788, mem_mb=8000, mem_mib=7630
+
+
+		# intersect to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+		
+
+[Mon Feb 16 20:09:15 2026]
+rule sort_narrowpeaks:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    jobid: 4
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46501788, mem_mb=8000, mem_mib=7630
+
+
+		# intersect to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+		
+[Mon Feb 16 20:09:22 2026]
+Finished job 10.
+2 of 14 steps (14%) done
+Select jobs to execute...
+
+[Mon Feb 16 20:09:22 2026]
+rule make_candidate_regions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted, /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    jobid: 9
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46501788, mem_mb=8000, mem_mib=7630
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/makeCandidateRegions.py 			--narrowPeak /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted			--accessibility /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz 			--outDir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--regions_blocklist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed 			--regions_includelist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed 			--peakExtendFromSummit 250 			--nStrongestPeak 150000
+		
+[Mon Feb 16 20:09:22 2026]
+Finished job 4.
+3 of 14 steps (21%) done
+Select jobs to execute...
+
+[Mon Feb 16 20:09:22 2026]
+rule make_candidate_regions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted, /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    jobid: 3
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46501788, mem_mb=8000, mem_mib=7630
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/makeCandidateRegions.py 			--narrowPeak /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted			--accessibility /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz 			--outDir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--regions_blocklist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed 			--regions_includelist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed 			--peakExtendFromSummit 250 			--nStrongestPeak 150000
+		
+[Mon Feb 16 20:10:09 2026]
+Finished job 9.
+4 of 14 steps (29%) done
+Select jobs to execute...
+
+[Mon Feb 16 20:10:09 2026]
+rule create_neighborhoods:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+    jobid: 8
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46501788, mem_mb=32000, mem_mib=30518
+
+
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin | 		uniq > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+						
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/run.neighborhoods.py 			--candidate_enhancer_regions /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--DHS  			--ATAC /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz 			--default_accessibility_feature ATAC 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed 			--ubiquitously_expressed_genes /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv 			--H3K27ac  			 
+		
+[Mon Feb 16 20:10:17 2026]
+Finished job 3.
+5 of 14 steps (36%) done
+Select jobs to execute...
+
+[Mon Feb 16 20:10:17 2026]
+rule create_neighborhoods:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+    jobid: 2
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46501788, mem_mb=32000, mem_mib=30518
+
+
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin | 		uniq > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+						
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/run.neighborhoods.py 			--candidate_enhancer_regions /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--DHS  			--ATAC /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz 			--default_accessibility_feature ATAC 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed 			--ubiquitously_expressed_genes /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv 			--H3K27ac  			 
+		
+[Mon Feb 16 20:11:39 2026]
+Error in rule create_neighborhoods:
+    jobid: 8
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+    conda-env: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/.snakemake/conda/c4b342f55862fd7a124df7d67e8121f1_
+    shell:
+        
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin | 		uniq > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+						
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/run.neighborhoods.py 			--candidate_enhancer_regions /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--DHS  			--ATAC /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz 			--default_accessibility_feature ATAC 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed 			--ubiquitously_expressed_genes /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv 			--H3K27ac  			 
+		
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Removing output files of failed job create_neighborhoods since they might be corrupted:
+/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+[Mon Feb 16 20:11:43 2026]
+Error in rule create_neighborhoods:
+    jobid: 2
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+    conda-env: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/.snakemake/conda/c4b342f55862fd7a124df7d67e8121f1_
+    shell:
+        
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin | 		uniq > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+						
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/run.neighborhoods.py 			--candidate_enhancer_regions /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--DHS  			--ATAC /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz 			--default_accessibility_feature ATAC 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed 			--ubiquitously_expressed_genes /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv 			--H3K27ac  			 
+		
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Removing output files of failed job create_neighborhoods since they might be corrupted:
+/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2026-02-16T200909.377888.snakemake.log

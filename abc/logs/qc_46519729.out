@@ -1,0 +1,196 @@
+=== COLUMN HEADERS (AllPutative) ===
+--- WT ---
+     1	chr
+     2	start
+     3	end
+     4	name
+     5	class
+     6	activity_base
+     7	activity_base_enh
+     8	activity_base_squared_enh
+     9	normalized_atac_enh
+    10	TargetGene
+    11	TargetGeneTSS
+    12	TargetGeneExpression
+    13	TargetGenePromoterActivityQuantile
+    14	TargetGeneIsExpressed
+    15	TargetGeneEnsembl_ID
+    16	normalized_atac_prom
+    17	distance
+    18	isSelfPromoter
+    19	powerlaw_contact
+    20	powerlaw_contact_reference
+    21	hic_contact
+    22	hic_contact_pl_scaled
+    23	hic_pseudocount
+    24	hic_contact_pl_scaled_adj
+    25	ABC.Score.Numerator
+    26	ABC.Score
+    27	powerlaw.Score.Numerator
+    28	powerlaw.Score
+    29	CellType
+    30	hic_contact_squared
+
+--- KO (verify identical) ---
+     1	chr
+     2	start
+     3	end
+     4	name
+     5	class
+     6	activity_base
+     7	activity_base_enh
+     8	activity_base_squared_enh
+     9	normalized_atac_enh
+    10	TargetGene
+    11	TargetGeneTSS
+    12	TargetGeneExpression
+    13	TargetGenePromoterActivityQuantile
+    14	TargetGeneIsExpressed
+    15	TargetGeneEnsembl_ID
+    16	normalized_atac_prom
+    17	distance
+    18	isSelfPromoter
+    19	powerlaw_contact
+    20	powerlaw_contact_reference
+    21	hic_contact
+    22	hic_contact_pl_scaled
+    23	hic_pseudocount
+    24	hic_contact_pl_scaled_adj
+    25	ABC.Score.Numerator
+    26	ABC.Score
+    27	powerlaw.Score.Numerator
+    28	powerlaw.Score
+    29	CellType
+    30	hic_contact_squared
+
+=== SAMPLE DATA ROWS (first 3) ===
+chr	start	end	name	class	activity_base	activity_base_enh	activity_base_squared_enh	normalized_atac_enh	TargetGene	TargetGeneTSS	TargetGeneExpression	TargetGenePromoterActivityQuantile	TargetGeneIsExpressed	TargetGeneEnsembl_ID	normalized_atac_prom	distance	isSelfPromoter	powerlaw_contact	powerlaw_contact_reference	hic_contact	hic_contact_pl_scaled	hic_pseudocount	hic_contact_pl_scaled_adj	ABC.Score.Numerator	ABC.Score	powerlaw.Score.Numerator	powerlaw.Score	CellType	hic_contact_squared
+chr1	3073002	3073502	promoter|chr1:3073002-3073502	promoter	0.004276	0.004276	0.000018	0.004276	Gm17100	4927299	NaN	0.349529	True	ENSMUSG00000091305	0.349529	1854047.000000	False	0.000147	0.000718	0.000000	0.000000	0.000147	0.000147	0.000001	0.000000	0.000001	0.000001	WT_cerebellum	0.000000
+chr1	3073002	3073502	promoter|chr1:3073002-3073502	promoter	0.004276	0.004276	0.000018	0.004276	Gm6104	4880651	NaN	0.659112	True	ENSMUSG00000062588	0.659112	1807399.000000	False	0.000151	0.000734	0.000000	0.000000	0.000151	0.000151	0.000001	0.000000	0.000001	0.000001	WT_cerebellum	0.000000
+chr1	3073002	3073502	promoter|chr1:3073002-3073502	promoter	0.004276	0.004276	0.000018	0.004276	Tcea1	4857813	NaN	0.976092	True	ENSMUSG00000033813	0.976092	1784561.000000	False	0.000153	0.000743	0.000000	0.000000	0.000153	0.000153	0.000001	0.000000	0.000001	0.000000	WT_cerebellum	0.000000
+
+=== THRESHOLDED FILE HEADERS ===
+==> /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv <==
+chr	start	end	name	class	activity_base	activity_base_enh	activity_base_squared_enh	normalized_atac_enh	TargetGene	TargetGeneTSS	TargetGeneExpression	TargetGenePromoterActivityQuantile	TargetGeneIsExpressed	TargetGeneEnsembl_ID	normalized_atac_prom	distance	isSelfPromoter	powerlaw_contact	powerlaw_contact_reference	hic_contact	hic_contact_pl_scaled	hic_pseudocount	hic_contact_pl_scaled_adj	ABC.Score.Numerator	ABC.Score	powerlaw.Score.Numerator	powerlaw.Score	CellType	hic_contact_squared
+
+==> /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictions_threshold0.02_self_promoter.tsv <==
+chr	start	end	name	TargetGene	TargetGeneTSS	CellType	ABC.Score
+
+========================================
+=== WT_cerebellum ===
+========================================
+Thresholded file: EnhancerPredictionsFull_threshold0.02_self_promoter.tsv
+E-G pairs: 206692
+
+--- ABC Score Distribution ---
+ABC.Score is column 25
+  n=206692 min=0.0000 median=0.1036 max=387.2159 mean=0.5215
+
+--- Enhancers per Gene ---
+TargetGene is column 10
+  Unique genes with predictions: 48255
+  Mean enhancers per gene: 4.2
+  Top 5 genes by enhancer count:
+     16 Rnf148
+     16 Gm27959
+     16 Gm24217
+     16 Gm18388
+     15 Zic1
+
+--- Per-Chromosome E-G Pairs ---
+  14051 chr1
+  14431 chr2
+  12026 chr3
+  10807 chr4
+  13241 chr5
+  12213 chr6
+  16707 chr7
+   9288 chr8
+  11618 chr9
+  10700 chr10
+  10373 chr11
+   9413 chr12
+   9477 chr13
+   9686 chr14
+   7235 chr15
+   5990 chr16
+   7622 chr17
+   6205 chr18
+   4512 chr19
+  11097 chrX
+
+--- ABC Score Sum per Gene (AllPutative, sample 5 genes) ---
+  Tiam1: sum(ABC)=26.1860 from 880 enhancers
+  Gm14973: sum(ABC)=0.0586 from 136 enhancers
+  Cmtm1: sum(ABC)=3.7188 from 640 enhancers
+  Fancd2os: sum(ABC)=14.2463 from 877 enhancers
+  Rybp: sum(ABC)=6.7429 from 465 enhancers
+
+--- QC Metrics ---
+EnhancerGenePairsPerChrom.txt
+EnhancerPerGene.tsv
+GenesPerEnhancer.tsv
+QCPlots_threshold0.02_self_promoter.pdf
+QCSummary_threshold0.02_self_promoter.tsv
+
+========================================
+=== KO_cerebellum ===
+========================================
+Thresholded file: EnhancerPredictionsFull_threshold0.02_self_promoter.tsv
+E-G pairs: 203888
+
+--- ABC Score Distribution ---
+ABC.Score is column 25
+  n=203888 min=0.0000 median=0.1091 max=442.6991 mean=0.5390
+
+--- Enhancers per Gene ---
+TargetGene is column 10
+  Unique genes with predictions: 48255
+  Mean enhancers per gene: 4.2
+  Top 5 genes by enhancer count:
+     17 Gm24217
+     16 Rnf133
+     16 n-R5s84
+     16 Gm26543
+     16 G430095P16Rik
+
+--- Per-Chromosome E-G Pairs ---
+  13853 chr1
+  14127 chr2
+  11799 chr3
+  10785 chr4
+  13019 chr5
+  11954 chr6
+  16424 chr7
+   9149 chr8
+  11323 chr9
+  10478 chr10
+  10262 chr11
+   9312 chr12
+   9466 chr13
+   9727 chr14
+   7120 chr15
+   5792 chr16
+   7746 chr17
+   6125 chr18
+   4483 chr19
+  10944 chrX
+
+--- ABC Score Sum per Gene (AllPutative, sample 5 genes) ---
+  Gm15407: sum(ABC)=3.4143 from 662 enhancers
+  Leng8: sum(ABC)=27.7003 from 370 enhancers
+  Gm43697: sum(ABC)=1.6656 from 596 enhancers
+  Fos: sum(ABC)=21.7394 from 1078 enhancers
+  Olfr429: sum(ABC)=0.8228 from 832 enhancers
+
+--- QC Metrics ---
+EnhancerGenePairsPerChrom.txt
+EnhancerPerGene.tsv
+GenesPerEnhancer.tsv
+QCPlots_threshold0.02_self_promoter.pdf
+QCSummary_threshold0.02_self_promoter.tsv
+
+========================================
+CRITICAL: Copy the column header output above.
+Steps 6-8 column names MUST be updated to match.
+========================================

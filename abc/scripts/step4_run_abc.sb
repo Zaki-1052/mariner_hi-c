@@ -1,0 +1,71 @@
+#!/bin/bash
+#SBATCH --job-name=abc_run
+#SBATCH --output=logs/abc_run_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=40:00:00
+#SBATCH --account=csd940
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/abc/logs
+source ~/.bashrc
+conda activate abc-env
+
+cd /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction
+
+echo "Starting ABC pipeline: $(date)"
+echo "Using config: config/config.yaml"
+echo "Snakemake version: $(snakemake --version)"
+echo ""
+
+snakemake \
+  -j 1 \
+  --configfile config/config.yaml \
+  --rerun-incomplete \
+  --printshellcmds \
+  2>&1 | tee logs/abc_run_$(date +%Y%m%d_%H%M%S).log
+
+EXIT_CODE=${PIPESTATUS[0]}
+
+echo ""
+echo "Pipeline finished with exit code: ${EXIT_CODE}"
+echo "End time: $(date)"
+
+# Quick output validation
+for BIOSAMPLE in WT_cerebellum KO_cerebellum; do
+  PRED_DIR="results/${BIOSAMPLE}/Predictions"
+  echo ""
+  echo "=== ${BIOSAMPLE} ==="
+  
+  if [ ! -d "${PRED_DIR}" ]; then
+    echo "  ERROR: Predictions directory not found"
+    continue
+  fi
+
+  # Thresholded predictions
+  for f in "${PRED_DIR}"/EnhancerPredictions*.tsv; do
+    if [ -f "$f" ]; then
+      N=$(tail -n +2 "$f" | wc -l)
+      echo "  $(basename $f): ${N} E-G pairs"
+    fi
+  done
+  
+  # Unthresholded
+  ALLPUT="${PRED_DIR}/EnhancerPredictionsAllPutative.tsv.gz"
+  if [ -f "${ALLPUT}" ]; then
+    N=$(zcat "${ALLPUT}" | tail -n +2 | wc -l)
+    echo "  AllPutative: ${N} E-G pairs (unthresholded)"
+  else
+    echo "  ERROR: AllPutative file not found"
+  fi
+  
+  # QC metrics
+  METRICS="results/${BIOSAMPLE}/Metrics"
+  if [ -d "${METRICS}" ]; then
+    echo "  QC metrics: $(ls "${METRICS}" | wc -l) files"
+  fi
+done
+
+exit ${EXIT_CODE}

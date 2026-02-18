@@ -1,0 +1,43 @@
+======================================
+Final Results RNA
+======================================
+Started: Wed Feb 18 01:57:28 PST 2026
+
+ΔABC pairs: 180,423
+ΔABC unique genes: 20,265
+RNA-seq genes: 16,572
+
+Genes in ABC: 20,265
+Genes in RNA-seq: 16,572
+Genes matched: 13,588 (67.1% of ABC genes)
+E-G pairs with RNA-seq: 113,453
+Gene-level summary: 13,588 genes
+
+=== Gene-Level Concordance ===
+  Genes with |ΔABC| > 0.01: 12,665
+  Genes with DE (padj<0.05, |LFC|>0.5): 978
+  Genes with both: 940
+  Concordant (same direction): 553 (58.8%)
+  Discordant: 387 (41.2%)
+  Binomial test p-value (vs 50%): 6.84e-08
+
+  Gained enhancer + upregulated:   154
+  Lost enhancer + downregulated:   399
+  Gained enhancer + downregulated: 252
+  Lost enhancer + upregulated:     135
+
+=== Dysregulated Genes ===
+  Total: 940 (|ΔABC|>0.01 AND padj<0.05 AND |LFC|>0.5)
+  Concordant: 553, Discordant: 387
+Traceback (most recent call last):
+  File "/expanse/lustre/projects/csd940/zalibhai/abc/scripts/step7_rnaseq_integration.py", line 266, in <module>
+    main()
+  File "/expanse/lustre/projects/csd940/zalibhai/abc/scripts/step7_rnaseq_integration.py", line 253, in main
+    gene_summary = identify_dysregulated(gene_summary)
+  File "/expanse/lustre/projects/csd940/zalibhai/abc/scripts/step7_rnaseq_integration.py", line 172, in identify_dysregulated
+    top = dys.nlargest(20, "max_delta_abc", key=abs)[top_cols]
+TypeError: DataFrame.nlargest() got an unexpected keyword argument 'key'
+
+======================================
+Completed: Wed Feb 18 01:57:38 PST 2026
+======================================

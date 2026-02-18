@@ -1,0 +1,314 @@
+Config file config/config.yaml is extended by additional config specified via the command line.
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Conda environments: ignored
+Job stats:
+job                             count
+----------------------------  -------
+all                                 1
+create_predictions                  2
+filter_predictions                  2
+generate_qc_plot_and_summary        2
+total                               7
+
+Select jobs to execute...
+
+[Tue Feb 17 09:59:38 2026]
+rule create_predictions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    jobid: 7
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46508995, mem_mb=20000, mem_mib=19074
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predict.py 			--enhancers /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions 			--score_column ABC.Score 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--accessibility_feature ATAC 			--cellType KO_cerebellum 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt 			--hic_gamma 1.024238616787792 			--hic_scale 5.9594510043736655 			--hic_pseudocount_distance 5000 			--hic_file /expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402/mut_merged.hic --hic_type hic --hic_resolution 5000 			--scale_hic_using_powerlaw
+		
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+reading genes
+reading enhancers
+Making predictions for chromosome: chr1
+Making putative predictions table...
+Done. There are 2135817 putative enhancers for chromosome chr1
+Elapsed time: 1.5071051120758057
+Begin HiC
+HiC added to predictions table. Elapsed time: 201.85908579826355
+HiC Complete
+Completed chromosome: chr1. Elapsed time: 204.98421239852905 
+
+Making predictions for chromosome: chr10
+Making putative predictions table...
+Done. There are 1715592 putative enhancers for chromosome chr10
+Elapsed time: 0.9436550140380859
+Begin HiC
+HiC added to predictions table. Elapsed time: 118.76216077804565
+HiC Complete
+Completed chromosome: chr10. Elapsed time: 120.87382221221924 
+
+Making predictions for chromosome: chr11
+Making putative predictions table...
+Done. There are 2518435 putative enhancers for chromosome chr11
+Elapsed time: 1.5808641910552979
+Begin HiC
+HiC added to predictions table. Elapsed time: 116.27294421195984
+HiC Complete
+Completed chromosome: chr11. Elapsed time: 119.24831414222717 
+
+Making predictions for chromosome: chr12
+Making putative predictions table...
+Done. There are 1661406 putative enhancers for chromosome chr12
+Elapsed time: 0.9436893463134766
+Begin HiC
+HiC added to predictions table. Elapsed time: 94.61486005783081
+HiC Complete
+Completed chromosome: chr12. Elapsed time: 96.43659591674805 
+
+Making predictions for chromosome: chr13
+Making putative predictions table...
+Done. There are 1558831 putative enhancers for chromosome chr13
+Elapsed time: 0.8869767189025879
+Begin HiC
+HiC added to predictions table. Elapsed time: 97.73179197311401
+HiC Complete
+Completed chromosome: chr13. Elapsed time: 99.49616360664368 
+
+Making predictions for chromosome: chr14
+Making putative predictions table...
+Done. There are 1662143 putative enhancers for chromosome chr14
+Elapsed time: 0.9865531921386719
+Begin HiC
+HiC added to predictions table. Elapsed time: 92.57673215866089
+HiC Complete
+Completed chromosome: chr14. Elapsed time: 94.57608199119568 
+
+Making predictions for chromosome: chr15
+Making putative predictions table...
+Done. There are 1500451 putative enhancers for chromosome chr15
+Elapsed time: 0.8523237705230713
+Begin HiC
+HiC added to predictions table. Elapsed time: 76.8581428527832
+HiC Complete
+Completed chromosome: chr15. Elapsed time: 78.72024273872375 
+
+Making predictions for chromosome: chr16
+Making putative predictions table...
+Done. There are 932257 putative enhancers for chromosome chr16
+Elapsed time: 0.5280752182006836
+Begin HiC
+HiC added to predictions table. Elapsed time: 66.53768706321716
+HiC Complete
+Completed chromosome: chr16. Elapsed time: 67.7247633934021 
+
+Making predictions for chromosome: chr17
+Making putative predictions table...
+Done. There are 1788131 putative enhancers for chromosome chr17
+Elapsed time: 1.0358479022979736
+Begin HiC
+HiC added to predictions table. Elapsed time: 66.14157676696777
+HiC Complete
+Completed chromosome: chr17. Elapsed time: 68.33279418945312 
+
+Making predictions for chromosome: chr18
+Making putative predictions table...
+Done. There are 904942 putative enhancers for chromosome chr18
+Elapsed time: 0.5067009925842285
+Begin HiC
+HiC added to predictions table. Elapsed time: 68.84638953208923
+HiC Complete
+Completed chromosome: chr18. Elapsed time: 69.97662806510925 
+
+Making predictions for chromosome: chr19
+Making putative predictions table...
+Done. There are 914066 putative enhancers for chromosome chr19
+Elapsed time: 0.497025728225708
+Begin HiC
+HiC added to predictions table. Elapsed time: 37.119502544403076
+HiC Complete
+Completed chromosome: chr19. Elapsed time: 38.42688465118408 
+
+Making predictions for chromosome: chr2
+Making putative predictions table...
+Done. There are 2686405 putative enhancers for chromosome chr2
+Elapsed time: 1.7693896293640137
+Begin HiC
+HiC added to predictions table. Elapsed time: 182.33492827415466
+HiC Complete
+Completed chromosome: chr2. Elapsed time: 186.09127259254456 
+
+Making predictions for chromosome: chr3
+Making putative predictions table...
+Done. There are 1690565 putative enhancers for chromosome chr3
+Elapsed time: 0.9759953022003174
+Begin HiC
+HiC added to predictions table. Elapsed time: 152.29653143882751
+HiC Complete
+Completed chromosome: chr3. Elapsed time: 154.2282257080078 
+
+Making predictions for chromosome: chr4
+Making putative predictions table...
+Done. There are 2147828 putative enhancers for chromosome chr4
+Elapsed time: 1.282336711883545
+Begin HiC
+HiC added to predictions table. Elapsed time: 131.1324439048767
+HiC Complete
+Completed chromosome: chr4. Elapsed time: 133.95838451385498 
+
+Making predictions for chromosome: chr5
+Making putative predictions table...
+Done. There are 2393733 putative enhancers for chromosome chr5
+Elapsed time: 1.4478974342346191
+Begin HiC
+HiC added to predictions table. Elapsed time: 125.5096926689148
+HiC Complete
+Completed chromosome: chr5. Elapsed time: 128.7053189277649 
+
+Making predictions for chromosome: chr6
+Making putative predictions table...
+Done. There are 2086839 putative enhancers for chromosome chr6
+Elapsed time: 1.2316875457763672
+Begin HiC
+HiC added to predictions table. Elapsed time: 142.94008922576904
+HiC Complete
+Completed chromosome: chr6. Elapsed time: 145.98044800758362 
+
+Making predictions for chromosome: chr7
+Making putative predictions table...
+Done. There are 3400120 putative enhancers for chromosome chr7
+Elapsed time: 2.0121395587921143
+Begin HiC
+HiC added to predictions table. Elapsed time: 126.98396348953247
+HiC Complete
+Completed chromosome: chr7. Elapsed time: 131.1101655960083 
+
+Making predictions for chromosome: chr8
+Making putative predictions table...
+Done. There are 1815339 putative enhancers for chromosome chr8
+Elapsed time: 1.1059861183166504
+Begin HiC
+HiC added to predictions table. Elapsed time: 105.13346767425537
+HiC Complete
+Completed chromosome: chr8. Elapsed time: 107.34575533866882 
+
+Making predictions for chromosome: chr9
+Making putative predictions table...
+Done. There are 1962307 putative enhancers for chromosome chr9
+Elapsed time: 1.2954564094543457
+Begin HiC
+HiC added to predictions table. Elapsed time: 115.44199633598328
+HiC Complete
+Completed chromosome: chr9. Elapsed time: 117.90477085113525 
+
+Making predictions for chromosome: chrM
+Making putative predictions table...
+Done. There are 444 putative enhancers for chromosome chrM
+Elapsed time: 0.011914968490600586
+Begin HiC
+Traceback (most recent call last):
+  File "/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predict.py", line 312, in <module>
+    main()
+  File "/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predict.py", line 251, in main
+    this_chr = make_predictions(
+  File "/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predictor.py", line 28, in make_predictions
+    pred = add_hic_from_hic_file(
+  File "/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predictor.py", line 217, in add_hic_from_hic_file
+    chromosome_size = get_chrom_size(hic, chromosome)
+  File "/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predictor.py", line 170, in get_chrom_size
+    raise Exception(f"{chromosome} not found in hic data")
+Exception: chrM not found in hic data
+[Tue Feb 17 10:35:49 2026]
+Error in rule create_predictions:
+    jobid: 7
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    conda-env: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/.snakemake/conda/c4b342f55862fd7a124df7d67e8121f1_
+    shell:
+        
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predict.py 			--enhancers /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions 			--score_column ABC.Score 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--accessibility_feature ATAC 			--cellType KO_cerebellum 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt 			--hic_gamma 1.024238616787792 			--hic_scale 5.9594510043736655 			--hic_pseudocount_distance 5000 			--hic_file /expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402/mut_merged.hic --hic_type hic --hic_resolution 5000 			--scale_hic_using_powerlaw
+		
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2026-02-17T095918.412000.snakemake.log
