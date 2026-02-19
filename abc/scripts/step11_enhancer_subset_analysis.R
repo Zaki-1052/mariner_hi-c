@@ -105,13 +105,15 @@ theme_pub <- theme_bw(base_size = 11) +
     legend.position = "bottom"
   )
 
-# Save PDF + PNG
+# Multi-format save (PDF + SVG + JPG in subfolders)
+UTIL_PATH <- "../scripts/utils/multi_format_output.R"
+stopifnot(file.exists(UTIL_PATH))
+source(UTIL_PATH)
+
 save_plot <- function(p, name, w = 7, h = 6) {
-  pdf_path <- file.path(OUTPUT_DIR, paste0(name, ".pdf"))
-  png_path <- file.path(OUTPUT_DIR, paste0(name, ".png"))
-  ggsave(pdf_path, p, width = w, height = h)
-  ggsave(png_path, p, width = w, height = h, dpi = 300)
-  cat(sprintf("  Saved: %s (.pdf + .png)\n", name))
+  save_multiformat_ggplot(p, base_path = file.path(OUTPUT_DIR, name),
+                          width = w, height = h, dpi = 300,
+                          verbose = TRUE, use_subfolders = TRUE)
 }
 
 # Format p-values for plot annotations
@@ -963,6 +965,459 @@ p12 <- (p05 + p08) / (p06 + p11) +
 save_plot(p12, "12_summary_patchwork", w = 14, h = 12)
 
 
+# #############################################################################
+# PART G: K119ub_Only STRATIFIED BY K119ub MAGNITUDE (Plots 13-15)
+# #############################################################################
+
+cat("\n=== PART G: K119ub_Only Stratified by K119ub Magnitude ===\n\n")
+
+TERTILE_COLORS <- c(T1_low = "#FDBB84", T2_mid = "#E34A33", T3_high = "#7F0000")
+
+# K119ub_Only enhancer indices in enh_all
+k119_idx <- which(enh_all$enhancer_class == "K119ub_Only")
+k119_enh <- enh_all[k119_idx, ]
+cat(sprintf("  K119ub_Only enhancers: %d\n", nrow(k119_enh)))
+
+# Assign tertiles by log2FC_K119ub
+breaks <- quantile(k119_enh$log2FC_K119ub, probs = c(0, 1/3, 2/3, 1))
+k119_enh$tertile <- cut(k119_enh$log2FC_K119ub,
+                         breaks = breaks,
+                         labels = c("T1_low", "T2_mid", "T3_high"),
+                         include.lowest = TRUE)
+
+cat("  Tertile breakpoints:\n")
+cat(sprintf("    T1_low:  [%.3f, %.3f]\n", breaks[1], breaks[2]))
+cat(sprintf("    T2_mid:  (%.3f, %.3f]\n", breaks[2], breaks[3]))
+cat(sprintf("    T3_high: (%.3f, %.3f]\n", breaks[3], breaks[4]))
+for (trt in c("T1_low", "T2_mid", "T3_high")) {
+  cat(sprintf("    %s: n=%d\n", trt, sum(k119_enh$tertile == trt)))
+}
+
+# Build tertile lookup: enh_idx -> tertile + log2FC_K119ub
+k119_tertile <- data.frame(
+  enh_idx = k119_idx,
+  tertile = k119_enh$tertile,
+  log2FC_K119ub = k119_enh$log2FC_K119ub
+)
+
+# Merge tertile -> enh_loop_map (for loop logFC)
+k119_loop <- merge(
+  enh_loop_map[enh_loop_map$enhancer_class == "K119ub_Only", ],
+  k119_tertile[, c("enh_idx", "tertile", "log2FC_K119ub")],
+  by = "enh_idx"
+)
+cat(sprintf("\n  K119ub_Only enhancer-loop pairs with tertile: %d\n", nrow(k119_loop)))
+
+# Merge tertile -> enh_abc_metrics (for delta_ABC)
+k119_abc <- merge(
+  enh_abc_metrics[enh_abc_metrics$enhancer_class == "K119ub_Only", ],
+  k119_tertile[, c("enh_idx", "tertile", "log2FC_K119ub")],
+  by = "enh_idx"
+)
+cat(sprintf("  K119ub_Only enhancers with ABC + tertile: %d\n", nrow(k119_abc)))
+
+# Tertile rank for trend tests
+k119_loop$tertile_rank <- as.integer(factor(k119_loop$tertile,
+                                             levels = c("T1_low", "T2_mid", "T3_high")))
+k119_abc$tertile_rank <- as.integer(factor(k119_abc$tertile,
+                                            levels = c("T1_low", "T2_mid", "T3_high")))
+
+# Spearman: tertile rank vs metrics
+cor_tert_loop <- cor.test(k119_loop$tertile_rank, k119_loop$loop_logFC,
+                           method = "spearman")
+cat(sprintf("\n  Spearman (tertile rank vs loop logFC): rho=%.4f, %s\n",
+            cor_tert_loop$estimate, fmt_p(cor_tert_loop$p.value)))
+
+cor_tert_abc <- cor.test(k119_abc$tertile_rank, k119_abc$mean_delta_abc,
+                          method = "spearman")
+cat(sprintf("  Spearman (tertile rank vs mean delta_ABC): rho=%.4f, %s\n",
+            cor_tert_abc$estimate, fmt_p(cor_tert_abc$p.value)))
+
+# Continuous Spearman for scatter plot
+cor_cont <- cor.test(k119_loop$log2FC_K119ub, k119_loop$loop_logFC,
+                      method = "spearman")
+cat(sprintf("  Spearman (continuous K119ub vs loop logFC): rho=%.4f, %s\n",
+            cor_cont$estimate, fmt_p(cor_cont$p.value)))
+
+# Kruskal-Wallis across 3 tertiles
+kw_tert_loop <- kruskal.test(loop_logFC ~ tertile, data = k119_loop)
+cat(sprintf("\n  Kruskal-Wallis (loop logFC by tertile): chi2=%.1f, %s\n",
+            kw_tert_loop$statistic, fmt_p(kw_tert_loop$p.value)))
+
+kw_tert_abc <- kruskal.test(mean_delta_abc ~ tertile, data = k119_abc)
+cat(sprintf("  Kruskal-Wallis (mean delta_ABC by tertile): chi2=%.1f, %s\n",
+            kw_tert_abc$statistic, fmt_p(kw_tert_abc$p.value)))
+
+# Wilcoxon T1 vs T3
+wt_t1_t3_loop <- wilcox.test(
+  k119_loop$loop_logFC[k119_loop$tertile == "T1_low"],
+  k119_loop$loop_logFC[k119_loop$tertile == "T3_high"]
+)
+cat(sprintf("  Wilcoxon T1_low vs T3_high (loop logFC): %s\n",
+            fmt_p(wt_t1_t3_loop$p.value)))
+
+wt_t1_t3_abc <- wilcox.test(
+  k119_abc$mean_delta_abc[k119_abc$tertile == "T1_low"],
+  k119_abc$mean_delta_abc[k119_abc$tertile == "T3_high"]
+)
+cat(sprintf("  Wilcoxon T1_low vs T3_high (mean delta_ABC): %s\n",
+            fmt_p(wt_t1_t3_abc$p.value)))
+
+# Per-tertile summary
+cat("\n  Per-tertile loop logFC:\n")
+for (trt in c("T1_low", "T2_mid", "T3_high")) {
+  sub <- k119_loop[k119_loop$tertile == trt, ]
+  cat(sprintf("    %s: n=%d, median logFC=%.4f\n",
+              trt, nrow(sub), median(sub$loop_logFC)))
+}
+cat("  Per-tertile mean delta_ABC:\n")
+for (trt in c("T1_low", "T2_mid", "T3_high")) {
+  sub <- k119_abc[k119_abc$tertile == trt, ]
+  cat(sprintf("    %s: n=%d, median delta_ABC=%.5f\n",
+              trt, nrow(sub), median(sub$mean_delta_abc)))
+}
+
+# --- Plot 13: Violin+box of loop logFC by tertile ---
+cat("\nGenerating Part G plots...\n")
+k119_loop$tertile <- factor(k119_loop$tertile,
+                              levels = c("T1_low", "T2_mid", "T3_high"))
+
+p13 <- ggplot(k119_loop, aes(x = tertile, y = loop_logFC, fill = tertile)) +
+  geom_violin(scale = "width", alpha = 0.7) +
+  geom_boxplot(width = 0.15, outlier.size = 0.3, fill = "white") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  scale_fill_manual(values = TERTILE_COLORS) +
+  labs(
+    x = "K119ub gain tertile", y = "Loop logFC (KO/WT)",
+    title = "Loop strength change by K119ub magnitude (K119ub_Only)",
+    subtitle = sprintf("Spearman rho=%.3f, %s",
+                        cor_tert_loop$estimate, fmt_p(cor_tert_loop$p.value))
+  ) +
+  theme_pub +
+  theme(legend.position = "none")
+save_plot(p13, "13_k119ub_tertile_loop_logfc", w = 6, h = 6)
+
+# --- Plot 14: Boxplot of mean delta_ABC by tertile ---
+k119_abc$tertile <- factor(k119_abc$tertile,
+                             levels = c("T1_low", "T2_mid", "T3_high"))
+
+p14 <- ggplot(k119_abc, aes(x = tertile, y = mean_delta_abc, fill = tertile)) +
+  geom_boxplot(outlier.size = 0.3, notch = TRUE) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  scale_fill_manual(values = TERTILE_COLORS) +
+  labs(
+    x = "K119ub gain tertile", y = "Mean delta-ABC per enhancer",
+    title = "ABC score change by K119ub magnitude (K119ub_Only)",
+    subtitle = sprintf("Spearman rho=%.3f, %s",
+                        cor_tert_abc$estimate, fmt_p(cor_tert_abc$p.value))
+  ) +
+  theme_pub +
+  theme(legend.position = "none")
+save_plot(p14, "14_k119ub_tertile_delta_abc", w = 6, h = 6)
+
+# --- Plot 15: Continuous scatter: log2FC_K119ub vs loop_logFC ---
+p15 <- ggplot(k119_loop, aes(x = log2FC_K119ub, y = loop_logFC)) +
+  geom_point(alpha = 0.15, size = 0.6, color = "#B2182B") +
+  geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
+  labs(
+    x = "log2FC K119ub (KO/WT)", y = "Loop logFC (KO/WT)",
+    title = "K119ub gain vs loop strength change (K119ub_Only enhancers)",
+    subtitle = sprintf("Spearman rho=%.3f, %s",
+                        cor_cont$estimate, fmt_p(cor_cont$p.value))
+  ) +
+  theme_pub
+save_plot(p15, "15_k119ub_vs_loop_logfc_scatter", w = 7, h = 6)
+
+
+# #############################################################################
+# PART H: RNA-seq CONCORDANCE FOR TARGET GENES (Plots 16-18)
+# #############################################################################
+
+cat("\n=== PART H: RNA-seq Concordance for Target Genes ===\n\n")
+
+# Build join key: abc_matched -> abc coordinates -> abc_rna
+h_data <- data.frame(
+  enh_idx = abc_matched$enh_idx,
+  enhancer_class = abc_matched$enhancer_class,
+  delta_ABC = abc_matched$delta_ABC,
+  chr = abc$chr[abc_matched$abc_row],
+  start = abc$start[abc_matched$abc_row],
+  end = abc$end[abc_matched$abc_row],
+  target_gene = abc$TargetGene[abc_matched$abc_row],
+  stringsAsFactors = FALSE
+)
+
+# Merge with abc_rna on 4-column key
+abc_rna_merge <- merge(
+  h_data,
+  abc_rna[, c("chr", "start", "end", "TargetGene", "log2FC", "padj")],
+  by.x = c("chr", "start", "end", "target_gene"),
+  by.y = c("chr", "start", "end", "TargetGene")
+)
+cat(sprintf("  ABC-RNA-seq merged pairs: %d\n", nrow(abc_rna_merge)))
+
+# Filter for concordance: non-zero delta_ABC, non-NA and non-zero log2FC
+conc_data <- abc_rna_merge[abs(abc_rna_merge$delta_ABC) > 0 &
+                             !is.na(abc_rna_merge$log2FC) &
+                             abc_rna_merge$log2FC != 0, ]
+cat(sprintf("  After filtering zeros/NAs: %d\n", nrow(conc_data)))
+
+# Concordance: delta_ABC and gene log2FC have same sign
+conc_data$concordant <- sign(conc_data$delta_ABC) == sign(conc_data$log2FC)
+conc_data$enhancer_class <- factor(conc_data$enhancer_class, levels = CLASS_ORDER)
+
+# Per-class concordance
+cat("\n  Per-class concordance:\n")
+conc_by_class <- data.frame(
+  enhancer_class = CLASS_ORDER,
+  n_pairs = NA_integer_,
+  n_concordant = NA_integer_,
+  concordance_rate = NA_real_,
+  stringsAsFactors = FALSE
+)
+for (i in seq_along(CLASS_ORDER)) {
+  cls <- CLASS_ORDER[i]
+  sub <- conc_data[conc_data$enhancer_class == cls, ]
+  conc_by_class$n_pairs[i] <- nrow(sub)
+  conc_by_class$n_concordant[i] <- sum(sub$concordant)
+  conc_by_class$concordance_rate[i] <- if (nrow(sub) > 0) {
+    mean(sub$concordant)
+  } else NA_real_
+  cat(sprintf("    %s: %d / %d (%.1f%%)\n", cls, conc_by_class$n_concordant[i],
+              conc_by_class$n_pairs[i],
+              100 * conc_by_class$concordance_rate[i]))
+}
+
+# Binomial test: K119ub_Only concordance vs 50%
+k119_conc <- conc_data[conc_data$enhancer_class == "K119ub_Only", ]
+binom_k119 <- binom.test(sum(k119_conc$concordant), nrow(k119_conc), p = 0.5)
+cat(sprintf("\n  Binomial K119ub_Only concordance vs 50%%: %s (rate=%.1f%%)\n",
+            fmt_p(binom_k119$p.value), 100 * binom_k119$estimate))
+
+# Fisher's exact: K119ub_Only concordance vs each other class
+cat("  Fisher's exact (K119ub_Only concordance vs each class):\n")
+k119_row <- conc_by_class[conc_by_class$enhancer_class == "K119ub_Only", ]
+fisher_h_results <- list()
+for (cls in setdiff(CLASS_ORDER, "K119ub_Only")) {
+  other_row <- conc_by_class[conc_by_class$enhancer_class == cls, ]
+  mat <- matrix(c(
+    k119_row$n_concordant, k119_row$n_pairs - k119_row$n_concordant,
+    other_row$n_concordant, other_row$n_pairs - other_row$n_concordant
+  ), nrow = 2, byrow = TRUE)
+  ft <- fisher.test(mat)
+  fisher_h_results[[cls]] <- ft
+  cat(sprintf("    K119ub_Only vs %s: OR=%.2f, %s\n",
+              cls, ft$estimate, fmt_p(ft$p.value)))
+}
+
+# DE fraction among K119ub_Only target genes
+k119_rna <- abc_rna_merge[abc_rna_merge$enhancer_class == "K119ub_Only" &
+                            !is.na(abc_rna_merge$padj), ]
+k119_de_genes <- unique(k119_rna$target_gene[k119_rna$padj < 0.05 &
+                                               abs(k119_rna$log2FC) > 0.5])
+k119_all_genes <- unique(k119_rna$target_gene)
+cat(sprintf("\n  K119ub_Only target genes: %d total, %d DE (padj<0.05, |log2FC|>0.5) = %.1f%%\n",
+            length(k119_all_genes), length(k119_de_genes),
+            100 * length(k119_de_genes) / max(length(k119_all_genes), 1)))
+
+# --- Plot 16: Stacked bar of concordance rate by class ---
+cat("\nGenerating Part H plots...\n")
+conc_bar <- data.frame(
+  enhancer_class = rep(CLASS_ORDER, each = 2),
+  type = rep(c("Concordant", "Discordant"), times = length(CLASS_ORDER)),
+  count = NA_integer_,
+  stringsAsFactors = FALSE
+)
+for (i in seq_along(CLASS_ORDER)) {
+  cls <- CLASS_ORDER[i]
+  row_i <- conc_by_class[conc_by_class$enhancer_class == cls, ]
+  conc_bar$count[(i-1)*2 + 1] <- row_i$n_concordant
+  conc_bar$count[(i-1)*2 + 2] <- row_i$n_pairs - row_i$n_concordant
+}
+conc_bar$enhancer_class <- factor(conc_bar$enhancer_class, levels = CLASS_ORDER)
+conc_bar$type <- factor(conc_bar$type, levels = c("Concordant", "Discordant"))
+
+p16 <- ggplot(conc_bar, aes(x = enhancer_class, y = count, fill = type)) +
+  geom_col(position = "fill") +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey40") +
+  scale_fill_manual(values = c(Concordant = "#4DAF4A", Discordant = "#E41A1C")) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    x = "Enhancer class", y = "Proportion of E-G pairs",
+    fill = "Concordance",
+    title = "ABC-RNA concordance by enhancer class",
+    subtitle = sprintf("K119ub_Only: %.1f%% concordant, %s",
+                        100 * binom_k119$estimate, fmt_p(binom_k119$p.value))
+  ) +
+  theme_pub
+save_plot(p16, "16_abc_rnaseq_concordance_bar", w = 7, h = 6)
+
+# --- Plot 17: Scatter delta_ABC vs gene log2FC colored by class ---
+# Downsample Stable to 3K for visibility
+set.seed(42)
+scatter_data <- abc_rna_merge[!is.na(abc_rna_merge$log2FC), ]
+scatter_data$enhancer_class <- factor(scatter_data$enhancer_class, levels = CLASS_ORDER)
+stable_rows <- which(scatter_data$enhancer_class == "Stable")
+if (length(stable_rows) > 3000) {
+  keep_stable <- sample(stable_rows, 3000)
+  drop_stable <- setdiff(stable_rows, keep_stable)
+  scatter_data <- scatter_data[-drop_stable, ]
+}
+cat(sprintf("  Scatter plot data: %d pairs (Stable downsampled to <=3K)\n",
+            nrow(scatter_data)))
+
+p17 <- ggplot(scatter_data, aes(x = delta_ABC, y = log2FC, color = enhancer_class)) +
+  geom_point(alpha = 0.2, size = 0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
+  scale_color_manual(values = CLASS_COLORS) +
+  labs(
+    x = "delta-ABC (KO - WT)", y = "Gene log2FC (KO/WT)",
+    color = "Enhancer class",
+    title = "ABC change vs gene expression change",
+    subtitle = "Each point = one enhancer-gene pair"
+  ) +
+  theme_pub
+save_plot(p17, "17_delta_abc_vs_gene_logfc_scatter", w = 8, h = 7)
+
+# --- Plot 18: Histogram of K119ub_Only target gene log2FC ---
+k119_gene_logfc <- unique(k119_rna[, c("target_gene", "log2FC", "padj")])
+k119_gene_logfc <- k119_gene_logfc[!is.na(k119_gene_logfc$log2FC), ]
+k119_gene_logfc$is_de <- !is.na(k119_gene_logfc$padj) &
+                          k119_gene_logfc$padj < 0.05 &
+                          abs(k119_gene_logfc$log2FC) > 0.5
+
+p18 <- ggplot(k119_gene_logfc, aes(x = log2FC, fill = is_de)) +
+  geom_histogram(bins = 50, color = "grey30", linewidth = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
+  scale_fill_manual(values = c(`FALSE` = "grey70", `TRUE` = "#B2182B"),
+                     labels = c("Not DE", "DE (padj<0.05, |log2FC|>0.5)")) +
+  labs(
+    x = "Gene log2FC (KO/WT)", y = "Count",
+    fill = "",
+    title = "K119ub_Only target gene expression changes",
+    subtitle = sprintf("%d unique genes, %d DE (%.1f%%)",
+                        nrow(k119_gene_logfc), sum(k119_gene_logfc$is_de),
+                        100 * mean(k119_gene_logfc$is_de))
+  ) +
+  theme_pub
+save_plot(p18, "18_k119ub_target_gene_logfc_hist", w = 7, h = 5)
+
+
+# #############################################################################
+# PART I: MOTIF ENRICHMENT BED EXPORT (No Plots)
+# #############################################################################
+
+cat("\n=== PART I: Motif Enrichment BED Export ===\n\n")
+
+bed_dir <- file.path(OUTPUT_DIR, "beds_for_homer")
+dir.create(bed_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Export 4 class-level BED files (BED6: chr, start, end, name, score, strand)
+cat("  Exporting class-level BED files:\n")
+for (cls in CLASS_ORDER) {
+  sub <- enh_all[enh_all$enhancer_class == cls, c("chr", "start", "end")]
+  bed <- data.frame(
+    chr = sub$chr, start = sub$start, end = sub$end,
+    name = cls, score = 0, strand = "."
+  )
+  bed_path <- file.path(bed_dir, sprintf("%s.bed", cls))
+  write.table(bed, bed_path, sep = "\t", row.names = FALSE,
+              col.names = FALSE, quote = FALSE)
+  cat(sprintf("    %s: %d regions\n", basename(bed_path), nrow(bed)))
+}
+
+# Export 3 K119ub_Only tertile BED files
+cat("  Exporting K119ub tertile BED files:\n")
+for (trt in c("T1_low", "T2_mid", "T3_high")) {
+  sub_idx <- k119_tertile$enh_idx[k119_tertile$tertile == trt]
+  sub <- enh_all[sub_idx, c("chr", "start", "end")]
+  bed <- data.frame(
+    chr = sub$chr, start = sub$start, end = sub$end,
+    name = trt, score = 0, strand = "."
+  )
+  bed_path <- file.path(bed_dir, sprintf("K119ub_Only_%s.bed", trt))
+  write.table(bed, bed_path, sep = "\t", row.names = FALSE,
+              col.names = FALSE, quote = FALSE)
+  cat(sprintf("    %s: %d regions\n", basename(bed_path), nrow(bed)))
+}
+
+# Print HOMER commands
+cat("\n  HOMER findMotifsGenome.pl commands:\n")
+cat("  # K119ub_Only vs Stable background\n")
+cat(sprintf("  findMotifsGenome.pl %s/K119ub_Only.bed mm10 homer_out/K119ub_Only_vs_Stable -bg %s/Stable.bed -size given\n",
+            bed_dir, bed_dir))
+cat("\n  # Each class vs Stable background\n")
+for (cls in setdiff(CLASS_ORDER, "Stable")) {
+  cat(sprintf("  findMotifsGenome.pl %s/%s.bed mm10 homer_out/%s_vs_Stable -bg %s/Stable.bed -size given\n",
+              bed_dir, cls, cls, bed_dir))
+}
+cat("\n  # T3_high vs T1_low background (gradient test)\n")
+cat(sprintf("  findMotifsGenome.pl %s/K119ub_Only_T3_high.bed mm10 homer_out/T3_high_vs_T1_low -bg %s/K119ub_Only_T1_low.bed -size given\n",
+            bed_dir, bed_dir))
+
+
+# =============================================================================
+# ACCUMULATE PART G/H STATISTICS
+# =============================================================================
+
+# Part G stats
+stat_tests <- rbind(stat_tests, data.frame(
+  test_name = "Spearman_K119ub_tertile_vs_loopLogFC",
+  statistic = cor_tert_loop$estimate,
+  p_value = cor_tert_loop$p.value,
+  comparison = "K119ub_tertile_rank_vs_loop_logFC"))
+stat_tests <- rbind(stat_tests, data.frame(
+  test_name = "Spearman_K119ub_tertile_vs_deltaABC",
+  statistic = cor_tert_abc$estimate,
+  p_value = cor_tert_abc$p.value,
+  comparison = "K119ub_tertile_rank_vs_mean_delta_ABC"))
+stat_tests <- rbind(stat_tests, data.frame(
+  test_name = "Spearman_K119ub_continuous_vs_loopLogFC",
+  statistic = cor_cont$estimate,
+  p_value = cor_cont$p.value,
+  comparison = "K119ub_log2FC_vs_loop_logFC"))
+stat_tests <- rbind(stat_tests, data.frame(
+  test_name = "KW_loop_logFC_by_K119ub_tertile",
+  statistic = kw_tert_loop$statistic,
+  p_value = kw_tert_loop$p.value,
+  comparison = "3_tertiles"))
+stat_tests <- rbind(stat_tests, data.frame(
+  test_name = "KW_deltaABC_by_K119ub_tertile",
+  statistic = kw_tert_abc$statistic,
+  p_value = kw_tert_abc$p.value,
+  comparison = "3_tertiles"))
+stat_tests <- rbind(stat_tests, data.frame(
+  test_name = "Wilcoxon_T1_vs_T3_loopLogFC",
+  statistic = wt_t1_t3_loop$statistic,
+  p_value = wt_t1_t3_loop$p.value,
+  comparison = "T1_low_vs_T3_high"))
+stat_tests <- rbind(stat_tests, data.frame(
+  test_name = "Wilcoxon_T1_vs_T3_deltaABC",
+  statistic = wt_t1_t3_abc$statistic,
+  p_value = wt_t1_t3_abc$p.value,
+  comparison = "T1_low_vs_T3_high"))
+
+# Part H stats
+stat_tests <- rbind(stat_tests, data.frame(
+  test_name = "Binomial_K119ub_concordance_vs_50pct",
+  statistic = binom_k119$statistic,
+  p_value = binom_k119$p.value,
+  comparison = "K119ub_Only_vs_chance"))
+for (cls in names(fisher_h_results)) {
+  ft <- fisher_h_results[[cls]]
+  stat_tests <- rbind(stat_tests, data.frame(
+    test_name = "Fisher_K119ub_concordance_vs_class",
+    statistic = ft$estimate,
+    p_value = ft$p.value,
+    comparison = sprintf("K119ub_Only_vs_%s", cls)))
+}
+
+cat(sprintf("\n  Total statistical tests collected: %d\n", nrow(stat_tests)))
+
+
 # =============================================================================
 # SAVE OUTPUT FILES
 # =============================================================================
@@ -1007,6 +1462,41 @@ if (nrow(promoter_gene_de) > 0) {
   cat(sprintf("  promoter_loop_gene_logfc.tsv: %d rows\n", nrow(promoter_gene_de)))
 }
 
+# 7. K119ub tertile assignments
+k119_tert_out <- data.frame(
+  chr = k119_enh$chr, start = k119_enh$start, end = k119_enh$end,
+  tertile = k119_enh$tertile, log2FC_K119ub = k119_enh$log2FC_K119ub
+)
+write.table(k119_tert_out, file.path(OUTPUT_DIR, "k119ub_tertile_assignments.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+cat(sprintf("  k119ub_tertile_assignments.tsv: %d rows\n", nrow(k119_tert_out)))
+
+# 8. K119ub tertile loop summary
+tert_loop_summary <- data.frame(tertile = c("T1_low", "T2_mid", "T3_high"))
+for (i in 1:3) {
+  trt <- tert_loop_summary$tertile[i]
+  sub_loop <- k119_loop[k119_loop$tertile == trt, ]
+  sub_abc_t <- k119_abc[k119_abc$tertile == trt, ]
+  tert_loop_summary$n_enhancers[i] <- sum(k119_enh$tertile == trt)
+  tert_loop_summary$n_loop_pairs[i] <- nrow(sub_loop)
+  tert_loop_summary$median_loop_logFC[i] <- median(sub_loop$loop_logFC)
+  tert_loop_summary$n_abc_enhancers[i] <- nrow(sub_abc_t)
+  tert_loop_summary$median_delta_abc[i] <- median(sub_abc_t$mean_delta_abc)
+}
+write.table(tert_loop_summary, file.path(OUTPUT_DIR, "k119ub_tertile_loop_summary.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+cat(sprintf("  k119ub_tertile_loop_summary.tsv: %d rows\n", nrow(tert_loop_summary)))
+
+# 9. ABC-RNA concordance by class
+write.table(conc_by_class, file.path(OUTPUT_DIR, "abc_rnaseq_concordance_by_class.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+cat(sprintf("  abc_rnaseq_concordance_by_class.tsv: %d rows\n", nrow(conc_by_class)))
+
+# 10. K119ub_Only target gene DE
+write.table(k119_gene_logfc, file.path(OUTPUT_DIR, "k119ub_only_target_gene_de.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+cat(sprintf("  k119ub_only_target_gene_de.tsv: %d rows\n", nrow(k119_gene_logfc)))
+
 # =============================================================================
 # DONE
 # =============================================================================
@@ -1014,6 +1504,6 @@ if (nrow(promoter_gene_de) > 0) {
 cat("\n================================================================================\n")
 cat("STEP 11 COMPLETE\n")
 cat(sprintf("Output directory: %s\n", OUTPUT_DIR))
-cat(sprintf("Plots: 12 panels saved (PDF + PNG)\n"))
-cat(sprintf("Tables: 6 TSV files\n"))
+cat("Plots: 18 panels saved (PDF + SVG + JPG in subfolders)\n")
+cat("Tables: 10 TSV files + 7 BED files\n")
 cat("================================================================================\n")
