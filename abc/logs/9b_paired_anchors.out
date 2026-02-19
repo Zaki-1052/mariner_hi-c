@@ -1,0 +1,262 @@
+zakiralibhai@Zakirs-MacBook-Air mariner_hi-c % cd abc && Rscript scripts/step9b_paired_anchor_analysis.R 
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+=== Step 9b: Paired-Anchor Loop-ABC Analysis (v2) ===
+
+Loading data...
+  All loops: 39344 rows
+  Differential loops: 2910 rows
+  ABC pairs: 180423 rows
+  TSS entries: 28230 rows
+  RNA-seq gene summary: 13588 rows
+  K119ub enhancer signal: 33004 rows
+  All 20265 ABC target genes matched to TSS
+  Diff loop keys built: 2910 unique
+
+Building GRanges from ALL 39344 loops...
+  Anchor1/2: 39344 ranges each
+  Enhancer GRanges: 180423 ranges
+  TSS GRanges: 180423 ranges
+
+Finding paired-anchor overlaps (Case A: enh->anchor1, TSS->anchor2)...
+  Case A: 220553 initial overlaps, 7554 paired matches
+Finding paired-anchor overlaps (Case B: enh->anchor2, TSS->anchor1)...
+  Case B: 221962 initial overlaps, 7558 paired matches
+
+Combining Cases A+B...
+  Total unique (ABC pair, loop) matches: 15112
+  All matches: 15112 (from 8339 unique loops)
+  Differential matches: 490 (from 304 unique differential loops)
+  Background matches: 14622
+
+=== MATCH STATISTICS ===
+  Matched triplets (loop, enhancer, gene): 490
+  Unique loops with >= 1 match: 304 / 2910 (10.4%)
+  Unique E-G pairs confirmed by loops: 465 / 180423 (0.26%)
+  Unique genes in matched set: 353
+  Unique enhancers in matched set: 348
+
+=== DIRECTIONAL CONCORDANCE ===
+  dABC concordance: 269 / 300 = 89.7% (p = 1.67e-48, 95% CI: 85.7-92.9%)
+  d(AxC) concordance: 426 / 490 = 86.9% (p = 1.16e-66, 95% CI: 83.6-89.8%)
+  Reference: Step 9 independent-overlap concordance was 51.4%
+
+=== STRATIFICATION BY LOOP TYPE ===
+  Loop type distribution in matched set:
+    Active_Promoter-Active_Promoter: 133 (27.1%)
+    Active_Promoter-Active_Enhancer: 63 (12.9%)
+    Active_Promoter-Other: 47 (9.6%)
+    Repressed_Promoter-Polycomb: 39 (8.0%)
+    Repressed_Promoter-Poised_Enhancer: 32 (6.5%)
+    Repressed_Promoter-Other: 23 (4.7%)
+    Active_Enhancer-Poised_Enhancer: 19 (3.9%)
+    Active_Promoter-Repressed_Promoter: 19 (3.9%)
+    Active_Enhancer-Active_Enhancer: 16 (3.3%)
+    Active_Promoter-Poised_Enhancer: 16 (3.3%)
+    Poised_Enhancer-Other: 16 (3.3%)
+    Active_Promoter-Polycomb: 15 (3.1%)
+    Other-Other: 15 (3.1%)
+    Active_Promoter-Bivalent_Promoter: 9 (1.8%)
+    Repressed_Promoter-Repressed_Promoter: 7 (1.4%)
+    Polycomb-Other: 6 (1.2%)
+    Active_Enhancer-Other: 4 (0.8%)
+    Bivalent_Promoter-Poised_Enhancer: 3 (0.6%)
+    Polycomb-Polycomb: 3 (0.6%)
+    Repressed_Promoter-Active_Enhancer: 3 (0.6%)
+    Poised_Enhancer-Poised_Enhancer: 1 (0.2%)
+    Polycomb-Poised_Enhancer: 1 (0.2%)
+
+  Concordance by loop type (dABC):
+    Active_Promoter-Active_Promoter: 50/59 = 84.7%
+    Active_Promoter-Active_Enhancer: 46/47 = 97.9%
+    Repressed_Promoter-Poised_Enhancer: 23/23 = 100.0%
+    Repressed_Promoter-Polycomb: 20/23 = 87.0%
+    Active_Promoter-Other: 18/20 = 90.0%
+    Repressed_Promoter-Other: 14/17 = 82.4%
+    Active_Enhancer-Poised_Enhancer: 14/15 = 93.3%
+    Active_Promoter-Polycomb: 13/15 = 86.7%
+    Active_Promoter-Repressed_Promoter: 11/13 = 84.6%
+    Active_Enhancer-Active_Enhancer: 10/12 = 83.3%
+    Poised_Enhancer-Other: 10/11 = 90.9%
+    Active_Promoter-Poised_Enhancer: 10/10 = 100.0%
+    Other-Other: 8/10 = 80.0%
+    Polycomb-Other: 6/6 = 100.0%
+    Active_Promoter-Bivalent_Promoter: 4/6 = 66.7%
+    Repressed_Promoter-Repressed_Promoter: 5/5 = 100.0%
+    Active_Enhancer-Other: 3/3 = 100.0%
+    Repressed_Promoter-Active_Enhancer: 1/2 = 50.0%
+    Polycomb-Polycomb: 2/2 = 100.0%
+    Bivalent_Promoter-Poised_Enhancer: 1/1 = 100.0%
+
+=== EFFECT SIZE COMPARISON ===
+  Median |dABC| matched: 0.0141 vs all: 0.0102
+  Wilcoxon p-value (matched > all): 3.00e-08
+  Median |d(AxC)| matched: 0.103098 vs all: 0.061074
+  Wilcoxon p-value (matched > all): 2.34e-21
+
+=== FDR STRATIFICATION ===
+  significant (FDR < 0.05): 269/300 = 89.7% (p = 1.67e-48, 95% CI: 85.7-92.9%)
+
+=== RNA-SEQ 3-WAY CONCORDANCE ===
+  Triplets with RNA-seq data: 347 / 490 (70.8%)
+  Triplets with directional ABC + significant DE: 68
+  Loop-ABC 2-way concordance (this subset): 63/68 = 92.6%
+  Loop-ABC-DE 3-way concordance: 60/68 = 88.2% (p = 1.69e-45 vs 12.5% chance)
+  Gene-level 3-way concordance: 39/44 = 88.6% (p = 3.41e-30 vs 12.5% chance)
+
+  Direction breakdown (triplet-level):
+    Loop=down_in_mutant, ABC=lost, DE=down: 47
+    Loop=up_in_mutant, ABC=gained, DE=up: 13
+    Loop=down_in_mutant, ABC=gained, DE=down: 4
+    Loop=up_in_mutant, ABC=gained, DE=down: 3
+    Loop=up_in_mutant, ABC=lost, DE=up: 1
+
+=== K119UB AT PAIRED ENHANCERS ===
+  Triplets with K119ub data: 490 / 490 (100.0%)
+  Triplets with quantifiable K119ub: 490
+  K119ub log2fc by ABC direction (quantifiable enhancers):
+    lost: median=0.321, mean=0.267, n=164
+    gained: median=-0.074, mean=-0.060, n=136
+  Spearman K119ub log2fc vs dABC: rho = -0.401, p = 5.48e-13 (n = 300)
+  Wilcoxon K119ub gained vs lost: p = 5.23e-15
+Warning message:
+In cor.test.default(k119_quant$k119_log2fc, k119_quant$delta_ABC,  :
+  Cannot compute exact p-value with ties
+
+=== K119UB BY LOOP TYPE ===
+  Loop types with n >= 10 quantifiable K119ub: 13 / 22
+  K119ub log2fc by loop type (ordered by median):
+    Repressed_Promoter-Polycomb: median=-0.335, mean=-0.280, n=39
+    Repressed_Promoter-Poised_Enhancer: median=-0.178, mean=-0.108, n=32
+    Other-Other: median=-0.116, mean=-0.031, n=15
+    Active_Promoter-Polycomb: median=-0.084, mean=-0.109, n=15
+    Poised_Enhancer-Other: median=-0.036, mean=-0.055, n=16
+    Active_Promoter-Poised_Enhancer: median=0.093, mean=0.004, n=16
+    Repressed_Promoter-Other: median=0.112, mean=0.093, n=23
+    Active_Promoter-Repressed_Promoter: median=0.138, mean=0.137, n=19
+    Active_Promoter-Active_Enhancer: median=0.222, mean=0.243, n=63
+    Active_Promoter-Active_Promoter: median=0.231, mean=0.226, n=133
+    Active_Enhancer-Poised_Enhancer: median=0.238, mean=0.230, n=19
+    Active_Promoter-Other: median=0.316, mean=0.260, n=47
+    Active_Enhancer-Active_Enhancer: median=0.388, mean=0.321, n=16
+  Kruskal-Wallis across types: chi2 = 109.88, df = 12, p = 6.33e-18
+  Gained vs Lost K119ub by loop type:
+    Active_Promoter-Active_Promoter: gained median=0.413 (n=8), lost median=0.313 (n=51), p=6.10e-01
+    Active_Promoter-Active_Enhancer: gained median=0.089 (n=3), lost median=0.383 (n=44), p=2.15e-01
+    Active_Promoter-Other: gained median=0.403 (n=3), lost median=0.467 (n=17), p=5.25e-01
+    Repressed_Promoter-Polycomb: gained median=-0.379 (n=19), lost median=-0.308 (n=4), p=2.39e-01
+    Repressed_Promoter-Other: gained median=-0.050 (n=13), lost median=0.337 (n=4), p=1.40e-01
+    Active_Enhancer-Poised_Enhancer: gained median=0.035 (n=4), lost median=0.414 (n=11), p=1.33e-01
+    Active_Promoter-Repressed_Promoter: gained median=0.134 (n=10), lost median=0.175 (n=3), p=7.99e-01
+    Active_Promoter-Polycomb: gained median=-0.129 (n=12), lost median=0.400 (n=3), p=1.12e-02
+    Other-Other: gained median=-0.116 (n=7), lost median=0.243 (n=3), p=4.91e-01
+Warning messages:
+1: In wilcox.test.default(gained_vals, lost_vals) :
+  cannot compute exact p-value with ties
+2: In wilcox.test.default(gained_vals, lost_vals) :
+  cannot compute exact p-value with ties
+3: In wilcox.test.default(gained_vals, lost_vals) :
+  cannot compute exact p-value with ties
+4: In wilcox.test.default(gained_vals, lost_vals) :
+  cannot compute exact p-value with ties
+5: In wilcox.test.default(gained_vals, lost_vals) :
+  cannot compute exact p-value with ties
+6: In wilcox.test.default(gained_vals, lost_vals) :
+  cannot compute exact p-value with ties
+7: In wilcox.test.default(gained_vals, lost_vals) :
+  cannot compute exact p-value with ties
+8: In wilcox.test.default(gained_vals, lost_vals) :
+  cannot compute exact p-value with ties
+
+=== DISTANCE-DEPENDENT CONCORDANCE ===
+  Concordance by distance bin:
+    <100kb: 34/36 = 94.4% (p = 1.94e-08)
+    100-250kb: 77/86 = 89.5% (p = 1.34e-14)
+    250-500kb: 52/61 = 85.2% (p = 1.80e-08)
+    500kb-1Mb: 46/49 = 93.9% (p = 6.98e-11)
+    >1Mb: 60/68 = 88.2% (p = 5.75e-11)
+Warning message:
+In cor.test.default(result$distance, abs(result$delta_ABC), method = "spearman") :
+  Cannot compute exact p-value with ties
+  Spearman distance vs |dABC|: rho = -0.207, p = 3.81e-06
+
+=== GENE ONTOLOGY ENRICHMENT ===
+  Genes in up-loops: 152, down-loops: 203
+'select()' returned 1:1 mapping between keys and columns
+'select()' returned 1:1 mapping between keys and columns
+  Entrez IDs mapped: up=136, down=185
+  GO BP significant terms: 150
+  Wrote paired_anchor_go_enrichment.tsv
+  Top GO BP terms (Up_in_Mutant):
+    regulation of biomineral tissue development (q=1.36e-02, 6/125)
+    biomineral tissue development (q=1.36e-02, 7/125)
+    embryonic organ morphogenesis (q=1.36e-02, 9/125)
+    skeletal system morphogenesis (q=1.36e-02, 8/125)
+    cell-substrate adhesion (q=1.36e-02, 9/125)
+  Top GO BP terms (Down_in_Mutant):
+    heparin proteoglycan biosynthetic process (q=2.17e-06, 5/150)
+    negative regulation of DNA recombination (q=1.22e-05, 7/150)
+    heparin proteoglycan metabolic process (q=1.22e-05, 5/150)
+    negative regulation of DNA metabolic process (q=3.28e-04, 8/150)
+    negative regulation of gene expression, epigenetic (q=1.55e-03, 9/150)
+  KEGG significant pathways: 8
+  Wrote paired_anchor_kegg_enrichment.tsv
+  Top KEGG pathways (Down_in_Mutant):
+    Systemic lupus erythematosus (q=9.97e-18, 20/82)
+    Alcoholism (q=2.67e-15, 20/82)
+    Neutrophil extracellular trap formation (q=2.67e-15, 20/82)
+    Viral carcinogenesis (q=4.23e-05, 11/82)
+    ATP-dependent chromatin remodeling (q=2.22e-03, 7/82)
+
+Saving results...
+  Wrote paired_anchor_all_matches.tsv (15112 rows)
+  Wrote paired_anchor_matches.tsv (490 rows)
+  Wrote paired_anchor_summary.txt
+
+Generating plots...
+  Saved: paired_anchor_concordance/{pdf,svg,jpg}
+  Saved: fdr_stratified_concordance/{pdf,svg,jpg}
+Warning message:
+In cor.test.default(result$loop_logFC, result$delta_ABC, method = "spearman") :
+  Cannot compute exact p-value with ties
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: logFC_vs_deltaABC/{pdf,svg,jpg}
+Warning message:
+In cor.test.default(result$loop_logFC, result$delta_unnorm, method = "spearman") :
+  Cannot compute exact p-value with ties
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: logFC_vs_delta_unnorm/{pdf,svg,jpg}
+  Saved: rnaseq_concordance/{pdf,svg,jpg}
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: k119ub_at_paired_enhancers/{pdf,svg,jpg}
+  Saved: k119ub_by_loop_type/{pdf,svg,jpg}
+  Saved: distance_concordance/{pdf,svg,jpg}
+  Saved: go_bp_dotplot/{pdf,svg,jpg}
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at <https://github.com/GuangchuangYu/enrichplot/issues>. 
+  Saved: kegg_dotplot/{pdf,svg,jpg}
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: paired_anchor_panel/{pdf,svg,jpg}
+
+=== Step 9b complete ===
+zakiralibhai@Zakirs-MacBook-Air abc % 

@@ -11,7 +11,11 @@ suppressPackageStartupMessages({
   library(data.table)
   library(ggplot2)
   library(patchwork)
+  library(clusterProfiler)
+  library(org.Mm.eg.db)
 })
+
+source("../scripts/utils/multi_format_output.R")
 
 # === CONFIGURATION ===
 ALL_LOOPS_FILE  <- "../25042-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"
@@ -424,6 +428,190 @@ if (nrow(k119_quant) > 0) {
   k119_quant <- NULL
 }
 
+# --- 6h: K119ub stratified by loop type ---
+cat("\n=== K119UB BY LOOP TYPE ===\n")
+
+# Use result_k119 which carries loop_type from the diff_lookup merge
+k119_by_type <- result_k119[k119_signal_class == "quantifiable"]
+k119_by_type_counts <- k119_by_type[, .N, by = loop_type][order(-N)]
+
+# Keep only loop types with n >= 10
+reliable_types <- k119_by_type_counts[N >= 10]$loop_type
+k119_by_type_filt <- k119_by_type[loop_type %in% reliable_types]
+
+cat(sprintf("  Loop types with n >= 10 quantifiable K119ub: %d / %d\n",
+            length(reliable_types), nrow(k119_by_type_counts)))
+
+if (length(reliable_types) > 0 && nrow(k119_by_type_filt) > 0) {
+  # Per-type summary: median K119ub log2fc
+  k119_type_summary <- k119_by_type_filt[, .(
+    median_k119 = median(k119_log2fc),
+    mean_k119 = mean(k119_log2fc),
+    n = .N
+  ), by = loop_type][order(median_k119)]
+
+  cat("  K119ub log2fc by loop type (ordered by median):\n")
+  for (i in seq_len(nrow(k119_type_summary))) {
+    cat(sprintf("    %s: median=%.3f, mean=%.3f, n=%d\n",
+                k119_type_summary$loop_type[i],
+                k119_type_summary$median_k119[i],
+                k119_type_summary$mean_k119[i],
+                k119_type_summary$n[i]))
+  }
+
+  # Kruskal-Wallis test across loop types
+  if (length(reliable_types) >= 2) {
+    kw_test <- kruskal.test(k119_log2fc ~ loop_type, data = k119_by_type_filt)
+    cat(sprintf("  Kruskal-Wallis across types: chi2 = %.2f, df = %d, p = %.2e\n",
+                kw_test$statistic, kw_test$parameter, kw_test$p.value))
+  }
+
+  # Wilcoxon gained vs lost within each type
+  k119_type_dir <- k119_by_type_filt[abc_direction %in% c("gained", "lost")]
+  if (nrow(k119_type_dir) > 0) {
+    cat("  Gained vs Lost K119ub by loop type:\n")
+    for (lt in reliable_types) {
+      gained_vals <- k119_type_dir[loop_type == lt & abc_direction == "gained"]$k119_log2fc
+      lost_vals   <- k119_type_dir[loop_type == lt & abc_direction == "lost"]$k119_log2fc
+      if (length(gained_vals) >= 3 && length(lost_vals) >= 3) {
+        wt_lt <- wilcox.test(gained_vals, lost_vals)
+        cat(sprintf("    %s: gained median=%.3f (n=%d), lost median=%.3f (n=%d), p=%.2e\n",
+                    lt, median(gained_vals), length(gained_vals),
+                    median(lost_vals), length(lost_vals), wt_lt$p.value))
+      }
+    }
+  }
+} else {
+  cat("  No loop types with sufficient K119ub data (n >= 10)\n")
+  k119_type_summary <- NULL
+}
+
+# --- 6i: Distance-dependent concordance ---
+cat("\n=== DISTANCE-DEPENDENT CONCORDANCE ===\n")
+
+result[, dist_bin := fcase(
+  distance < 100000,  "<100kb",
+  distance < 250000,  "100-250kb",
+  distance < 500000,  "250-500kb",
+  distance < 1000000, "500kb-1Mb",
+  default = ">1Mb"
+)]
+result[, dist_bin := factor(dist_bin,
+  levels = c("<100kb", "100-250kb", "250-500kb", "500kb-1Mb", ">1Mb"))]
+
+dist_directional <- result[abc_direction != "unchanged"]
+dist_directional[, concordant := (loop_direction == "up_in_mutant" & abc_direction == "gained") |
+                                 (loop_direction == "down_in_mutant" & abc_direction == "lost")]
+
+dist_conc <- dist_directional[, .(
+  n_conc = sum(concordant),
+  n_total = .N,
+  pct = 100 * sum(concordant) / .N
+), by = dist_bin][order(dist_bin)]
+
+cat("  Concordance by distance bin:\n")
+for (i in seq_len(nrow(dist_conc))) {
+  bt_dist <- binom.test(dist_conc$n_conc[i], dist_conc$n_total[i], p = 0.5)
+  cat(sprintf("    %s: %d/%d = %.1f%% (p = %.2e)\n",
+              dist_conc$dist_bin[i], dist_conc$n_conc[i],
+              dist_conc$n_total[i], dist_conc$pct[i], bt_dist$p.value))
+}
+
+# Spearman: distance vs |delta_ABC| to check magnitude effect
+cor_dist <- cor.test(result$distance, abs(result$delta_ABC), method = "spearman")
+cat(sprintf("  Spearman distance vs |dABC|: rho = %.3f, p = %.2e\n",
+            cor_dist$estimate, cor_dist$p.value))
+
+# --- 6j: Gene Ontology enrichment ---
+cat("\n=== GENE ONTOLOGY ENRICHMENT ===\n")
+
+# Extract unique gene symbols split by loop direction
+up_genes   <- unique(result[loop_direction == "up_in_mutant"]$target_gene)
+down_genes <- unique(result[loop_direction == "down_in_mutant"]$target_gene)
+cat(sprintf("  Genes in up-loops: %d, down-loops: %d\n", length(up_genes), length(down_genes)))
+
+# Convert symbols to Entrez IDs
+convert_to_entrez <- function(symbols) {
+  mapping <- AnnotationDbi::select(org.Mm.eg.db, keys = symbols,
+                                   keytype = "SYMBOL", columns = "ENTREZID")
+  mapping <- mapping[!is.na(mapping$ENTREZID), ]
+  unique(mapping$ENTREZID)
+}
+
+up_entrez   <- convert_to_entrez(up_genes)
+down_entrez <- convert_to_entrez(down_genes)
+cat(sprintf("  Entrez IDs mapped: up=%d, down=%d\n", length(up_entrez), length(down_entrez)))
+
+gene_clusters <- list(Up_in_Mutant = up_entrez, Down_in_Mutant = down_entrez)
+
+# GO Biological Process enrichment
+go_result <- NULL
+if (length(up_entrez) >= 5 && length(down_entrez) >= 5) {
+  go_result <- tryCatch(
+    compareCluster(gene_clusters, fun = "enrichGO",
+                   OrgDb = org.Mm.eg.db, ont = "BP",
+                   pvalueCutoff = 0.05, qvalueCutoff = 0.05,
+                   readable = TRUE),
+    error = function(e) { cat(sprintf("  GO enrichment error: %s\n", e$message)); NULL }
+  )
+
+  if (!is.null(go_result) && nrow(go_result@compareClusterResult) > 0) {
+    cat(sprintf("  GO BP significant terms: %d\n", nrow(go_result@compareClusterResult)))
+    fwrite(as.data.table(go_result@compareClusterResult),
+           file.path(OUT_DIR, "paired_anchor_go_enrichment.tsv"), sep = "\t")
+    cat("  Wrote paired_anchor_go_enrichment.tsv\n")
+
+    # Top 5 per cluster
+    go_top <- as.data.table(go_result@compareClusterResult)
+    for (cl in unique(go_top$Cluster)) {
+      cat(sprintf("  Top GO BP terms (%s):\n", cl))
+      top5 <- head(go_top[Cluster == cl][order(p.adjust)], 5)
+      for (j in seq_len(nrow(top5))) {
+        cat(sprintf("    %s (q=%.2e, %s)\n",
+                    top5$Description[j], top5$p.adjust[j], top5$GeneRatio[j]))
+      }
+    }
+  } else {
+    cat("  No significant GO BP terms found\n")
+    go_result <- NULL
+  }
+} else {
+  cat("  Too few genes for GO enrichment (need >= 5 per direction)\n")
+}
+
+# KEGG pathway enrichment
+kegg_result <- NULL
+if (length(up_entrez) >= 5 && length(down_entrez) >= 5) {
+  kegg_result <- tryCatch(
+    compareCluster(gene_clusters, fun = "enrichKEGG",
+                   organism = "mmu",
+                   pvalueCutoff = 0.05, qvalueCutoff = 0.05),
+    error = function(e) { cat(sprintf("  KEGG enrichment error: %s\n", e$message)); NULL }
+  )
+
+  if (!is.null(kegg_result) && nrow(kegg_result@compareClusterResult) > 0) {
+    cat(sprintf("  KEGG significant pathways: %d\n", nrow(kegg_result@compareClusterResult)))
+    fwrite(as.data.table(kegg_result@compareClusterResult),
+           file.path(OUT_DIR, "paired_anchor_kegg_enrichment.tsv"), sep = "\t")
+    cat("  Wrote paired_anchor_kegg_enrichment.tsv\n")
+
+    kegg_top <- as.data.table(kegg_result@compareClusterResult)
+    for (cl in unique(kegg_top$Cluster)) {
+      cat(sprintf("  Top KEGG pathways (%s):\n", cl))
+      top5 <- head(kegg_top[Cluster == cl][order(p.adjust)], 5)
+      for (j in seq_len(nrow(top5))) {
+        cat(sprintf("    %s (q=%.2e, %s)\n",
+                    top5$Description[j], top5$p.adjust[j], top5$GeneRatio[j]))
+      }
+    }
+  } else {
+    cat("  No significant KEGG pathways found\n")
+    kegg_result <- NULL
+  }
+} else {
+  cat("  Too few genes for KEGG enrichment\n")
+}
+
 # === STEP 7: SAVE RESULTS ===
 cat("\nSaving results...\n")
 
@@ -517,6 +705,51 @@ if (!is.null(k119_quant) && nrow(k119_quant) > 0) {
   }
 }
 
+# K119ub by loop type
+if (!is.null(k119_type_summary) && nrow(k119_type_summary) > 0) {
+  summary_lines <- c(summary_lines, "",
+    "--- K119ub by Loop Type ---")
+  for (i in seq_len(nrow(k119_type_summary))) {
+    summary_lines <- c(summary_lines,
+      sprintf("  %s: median K119ub log2fc = %.3f (n=%d)",
+              k119_type_summary$loop_type[i],
+              k119_type_summary$median_k119[i],
+              k119_type_summary$n[i]))
+  }
+  if (exists("kw_test")) {
+    summary_lines <- c(summary_lines,
+      sprintf("  Kruskal-Wallis p = %.2e", kw_test$p.value))
+  }
+}
+
+# Distance-dependent concordance
+summary_lines <- c(summary_lines, "",
+  "--- Distance-Dependent Concordance ---")
+for (i in seq_len(nrow(dist_conc))) {
+  summary_lines <- c(summary_lines,
+    sprintf("  %s: %d/%d = %.1f%%",
+            dist_conc$dist_bin[i], dist_conc$n_conc[i],
+            dist_conc$n_total[i], dist_conc$pct[i]))
+}
+summary_lines <- c(summary_lines,
+  sprintf("  Spearman distance vs |dABC|: rho = %.3f, p = %.2e",
+          cor_dist$estimate, cor_dist$p.value))
+
+# GO enrichment top terms
+if (!is.null(go_result) && nrow(go_result@compareClusterResult) > 0) {
+  summary_lines <- c(summary_lines, "",
+    "--- GO Biological Process Enrichment ---")
+  go_top_summary <- as.data.table(go_result@compareClusterResult)
+  for (cl in unique(go_top_summary$Cluster)) {
+    summary_lines <- c(summary_lines, sprintf("  %s:", cl))
+    top5 <- head(go_top_summary[Cluster == cl][order(p.adjust)], 5)
+    for (j in seq_len(nrow(top5))) {
+      summary_lines <- c(summary_lines,
+        sprintf("    %s (q=%.2e)", top5$Description[j], top5$p.adjust[j]))
+    }
+  }
+}
+
 summary_lines <- c(summary_lines, "",
   "--- Effect Size ---",
   sprintf("Median |dABC| matched: %.4f vs all: %.4f (Wilcoxon p = %.2e)",
@@ -558,9 +791,7 @@ p_conc <- ggplot(conc_df, aes(x = method, y = concordance, fill = method)) +
   theme_paired +
   theme(panel.grid.major.x = element_blank())
 
-ggsave(file.path(PLOT_DIR, "paired_anchor_concordance.pdf"), p_conc,
-       width = 5, height = 5)
-cat("  Saved paired_anchor_concordance.pdf\n")
+save_multiformat_ggplot(p_conc, file.path(PLOT_DIR, "paired_anchor_concordance"), width = 5, height = 5)
 
 # --- Plot 2: FDR-stratified concordance ---
 fdr_label_map <- c("significant" = "FDR < 0.05", "exploratory" = "FDR 0.05-0.15")
@@ -586,9 +817,7 @@ p_fdr <- ggplot(fdr_plot_df, aes(x = stratum, y = concordance, fill = stratum)) 
   theme_paired +
   theme(panel.grid.major.x = element_blank())
 
-ggsave(file.path(PLOT_DIR, "fdr_stratified_concordance.pdf"), p_fdr,
-       width = 4, height = 5)
-cat("  Saved fdr_stratified_concordance.pdf\n")
+save_multiformat_ggplot(p_fdr, file.path(PLOT_DIR, "fdr_stratified_concordance"), width = 4, height = 5)
 
 # --- Plot 3: Loop logFC vs dABC scatter (with background) ---
 # Subsample background for rendering if too large
@@ -622,9 +851,7 @@ p_scatter1 <- p_scatter1 + annotate("text", x = Inf, y = Inf,
                                    cor_abc$estimate, cor_abc$p.value),
                    hjust = 1.1, vjust = 1.5, size = 3.5)
 
-ggsave(file.path(PLOT_DIR, "logFC_vs_deltaABC.pdf"), p_scatter1,
-       width = 6, height = 5)
-cat("  Saved logFC_vs_deltaABC.pdf\n")
+save_multiformat_ggplot(p_scatter1, file.path(PLOT_DIR, "logFC_vs_deltaABC"), width = 6, height = 5)
 
 # --- Plot 4: Loop logFC vs d(AxC) scatter (with background) ---
 p_scatter2 <- ggplot() +
@@ -653,9 +880,7 @@ p_scatter2 <- p_scatter2 + annotate("text", x = Inf, y = Inf,
                                    cor_unnorm$estimate, cor_unnorm$p.value),
                    hjust = 1.1, vjust = 1.5, size = 3.5)
 
-ggsave(file.path(PLOT_DIR, "logFC_vs_delta_unnorm.pdf"), p_scatter2,
-       width = 6, height = 5)
-cat("  Saved logFC_vs_delta_unnorm.pdf\n")
+save_multiformat_ggplot(p_scatter2, file.path(PLOT_DIR, "logFC_vs_delta_unnorm"), width = 6, height = 5)
 
 # --- Plot 5: RNA-seq 3-way concordance ---
 if (!is.null(three_way) && nrow(three_way) > 0) {
@@ -681,9 +906,7 @@ if (!is.null(three_way) && nrow(three_way) > 0) {
     theme_paired +
     theme(panel.grid.major.x = element_blank())
 
-  ggsave(file.path(PLOT_DIR, "rnaseq_concordance.pdf"), p_rnaseq,
-         width = 4, height = 5)
-  cat("  Saved rnaseq_concordance.pdf\n")
+  save_multiformat_ggplot(p_rnaseq, file.path(PLOT_DIR, "rnaseq_concordance"), width = 4, height = 5)
 } else {
   p_rnaseq <- NULL
   cat("  Skipped rnaseq_concordance.pdf (no data)\n")
@@ -708,15 +931,82 @@ if (!is.null(k119_quant) && nrow(k119_quant) > 0) {
     theme(legend.position = c(0.85, 0.15),
           legend.background = element_rect(fill = "white", color = "grey80"))
 
-  ggsave(file.path(PLOT_DIR, "k119ub_at_paired_enhancers.pdf"), p_k119ub,
-         width = 6, height = 5)
-  cat("  Saved k119ub_at_paired_enhancers.pdf\n")
+  save_multiformat_ggplot(p_k119ub, file.path(PLOT_DIR, "k119ub_at_paired_enhancers"), width = 6, height = 5)
 } else {
   p_k119ub <- NULL
   cat("  Skipped k119ub_at_paired_enhancers.pdf (no data)\n")
 }
 
-# --- Plot 7: Combined panel ---
+# --- Plot 7: K119ub by loop type ---
+if (!is.null(k119_type_summary) && nrow(k119_type_summary) > 0) {
+  # Order loop types by median K119ub for readability
+  type_order <- k119_type_summary[order(median_k119)]$loop_type
+  k119_plot_data <- k119_by_type_filt[abc_direction %in% c("gained", "lost")]
+  k119_plot_data[, loop_type := factor(loop_type, levels = type_order)]
+
+  p_k119_type <- ggplot(k119_plot_data,
+                        aes(x = loop_type, y = k119_log2fc, fill = abc_direction)) +
+    geom_boxplot(outlier.size = 0.8, alpha = 0.8, position = position_dodge(width = 0.75)) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+    scale_fill_manual(values = c("gained" = "#D6604D", "lost" = "#4393C3"),
+                      name = "ABC direction") +
+    labs(title = "K119ub Signal Change by Loop Type",
+         subtitle = sprintf("Quantifiable enhancers, types with n >= 10 (Kruskal-Wallis %s)",
+                            if (exists("kw_test")) sprintf("p = %.2e", kw_test$p.value) else "N/A"),
+         x = "Loop Type", y = "H2AK119ub log2FC (mut/ctrl)") +
+    theme_paired +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          legend.position = "top")
+
+  save_multiformat_ggplot(p_k119_type, file.path(PLOT_DIR, "k119ub_by_loop_type"), width = 10, height = 6)
+} else {
+  cat("  Skipped k119ub_by_loop_type (insufficient data)\n")
+}
+
+# --- Plot 8: Distance-dependent concordance ---
+dist_conc[, label := sprintf("%.1f%%\nn=%d", pct, n_total)]
+
+p_dist <- ggplot(dist_conc, aes(x = dist_bin, y = pct, fill = dist_bin)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "grey40") +
+  geom_text(aes(label = label), vjust = -0.3, size = 3.2) +
+  scale_fill_brewer(palette = "Blues") +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25)) +
+  labs(title = "Concordance by Enhancer-Gene Distance",
+       subtitle = "Loop direction vs dABC direction",
+       x = "Enhancer-Gene Distance", y = "Concordance (%)") +
+  theme_paired +
+  theme(panel.grid.major.x = element_blank())
+
+save_multiformat_ggplot(p_dist, file.path(PLOT_DIR, "distance_concordance"), width = 6, height = 5)
+
+# --- Plot 9: GO BP dotplot ---
+if (!is.null(go_result) && nrow(go_result@compareClusterResult) > 0) {
+  p_go <- dotplot(go_result, showCategory = 15) +
+    labs(title = "GO Biological Process Enrichment",
+         subtitle = "Paired-anchor loop-connected genes by direction") +
+    theme(plot.title = element_text(size = 12, face = "bold"),
+          plot.subtitle = element_text(size = 9, color = "grey40"))
+
+  save_multiformat_ggplot(p_go, file.path(PLOT_DIR, "go_bp_dotplot"), width = 10, height = 9)
+} else {
+  cat("  Skipped go_bp_dotplot (no significant terms)\n")
+}
+
+# --- Plot 10: KEGG dotplot ---
+if (!is.null(kegg_result) && nrow(kegg_result@compareClusterResult) > 0) {
+  p_kegg <- dotplot(kegg_result, showCategory = 15) +
+    labs(title = "KEGG Pathway Enrichment",
+         subtitle = "Paired-anchor loop-connected genes by direction") +
+    theme(plot.title = element_text(size = 12, face = "bold"),
+          plot.subtitle = element_text(size = 9, color = "grey40"))
+
+  save_multiformat_ggplot(p_kegg, file.path(PLOT_DIR, "kegg_dotplot"), width = 10, height = 9)
+} else {
+  cat("  Skipped kegg_dotplot (no significant pathways)\n")
+}
+
+# --- Plot 11: Combined panel ---
 # Build panel from available plots
 panel_plots <- list(p_conc, p_fdr, p_scatter1, p_scatter2)
 if (!is.null(p_rnaseq)) panel_plots <- c(panel_plots, list(p_rnaseq))
@@ -746,8 +1036,6 @@ if (n_plots == 6) {
   panel_h <- 11
 }
 
-ggsave(file.path(PLOT_DIR, "paired_anchor_panel.pdf"), combined,
-       width = panel_w, height = panel_h)
-cat("  Saved paired_anchor_panel.pdf\n")
+save_multiformat_ggplot(combined, file.path(PLOT_DIR, "paired_anchor_panel"), width = panel_w, height = panel_h)
 
 cat("\n=== Step 9b complete ===\n")

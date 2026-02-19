@@ -1,5 +1,5 @@
 === Paired-Anchor Loop-ABC Analysis Summary (v2) ===
-Date: 2026-02-18 15:56:53.087595
+Date: 2026-02-18 16:12:33.466109
 
 --- Input Data ---
 All loops (visual background): 39344
@@ -32,6 +32,44 @@ Triplets with quantifiable K119ub: 490
 Spearman K119ub log2fc vs dABC: rho = -0.401, p = 5.48e-13
   lost: median K119ub log2fc = 0.321 (n=164)
   gained: median K119ub log2fc = -0.074 (n=136)
+
+--- K119ub by Loop Type ---
+  Repressed_Promoter-Polycomb: median K119ub log2fc = -0.335 (n=39)
+  Repressed_Promoter-Poised_Enhancer: median K119ub log2fc = -0.178 (n=32)
+  Other-Other: median K119ub log2fc = -0.116 (n=15)
+  Active_Promoter-Polycomb: median K119ub log2fc = -0.084 (n=15)
+  Poised_Enhancer-Other: median K119ub log2fc = -0.036 (n=16)
+  Active_Promoter-Poised_Enhancer: median K119ub log2fc = 0.093 (n=16)
+  Repressed_Promoter-Other: median K119ub log2fc = 0.112 (n=23)
+  Active_Promoter-Repressed_Promoter: median K119ub log2fc = 0.138 (n=19)
+  Active_Promoter-Active_Enhancer: median K119ub log2fc = 0.222 (n=63)
+  Active_Promoter-Active_Promoter: median K119ub log2fc = 0.231 (n=133)
+  Active_Enhancer-Poised_Enhancer: median K119ub log2fc = 0.238 (n=19)
+  Active_Promoter-Other: median K119ub log2fc = 0.316 (n=47)
+  Active_Enhancer-Active_Enhancer: median K119ub log2fc = 0.388 (n=16)
+  Kruskal-Wallis p = 6.33e-18
+
+--- Distance-Dependent Concordance ---
+  <100kb: 34/36 = 94.4%
+  100-250kb: 77/86 = 89.5%
+  250-500kb: 52/61 = 85.2%
+  500kb-1Mb: 46/49 = 93.9%
+  >1Mb: 60/68 = 88.2%
+  Spearman distance vs |dABC|: rho = -0.207, p = 3.81e-06
+
+--- GO Biological Process Enrichment ---
+  Up_in_Mutant:
+    regulation of biomineral tissue development (q=1.36e-02)
+    biomineral tissue development (q=1.36e-02)
+    embryonic organ morphogenesis (q=1.36e-02)
+    skeletal system morphogenesis (q=1.36e-02)
+    cell-substrate adhesion (q=1.36e-02)
+  Down_in_Mutant:
+    heparin proteoglycan biosynthetic process (q=2.17e-06)
+    negative regulation of DNA recombination (q=1.22e-05)
+    heparin proteoglycan metabolic process (q=1.22e-05)
+    negative regulation of DNA metabolic process (q=3.28e-04)
+    negative regulation of gene expression, epigenetic (q=1.55e-03)
 
 --- Effect Size ---
 Median |dABC| matched: 0.0141 vs all: 0.0102 (Wilcoxon p = 3.00e-08)
