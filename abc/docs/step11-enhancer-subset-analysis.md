@@ -182,6 +182,46 @@ These have not yet been run. The motif analysis could reveal whether K119ub_Only
 
 ---
 
+## Recommended Figures for Presentation
+
+Step 11 tells a story with two acts: (1) K119ub_Only enhancers show a contact-level phenotype, and (2) that phenotype does not reach gene expression. Both acts are important — the positive finding establishes the biology, and the negative finding defines its limits. A good presentation shows both honestly.
+
+### If You Have One Slide: Panel 12 (Summary Patchwork)
+
+The `12_summary_patchwork/` figure is a 4-panel composite (violin of loop logFC, density overlay, unnormalized ABC boxplot, contact decay by distance). It puts the core Part C result and supporting evidence on a single slide. The top-left violin is the punchline: Activity_Lost and K119ub_Only are both shifted negative, Activity_Gain is shifted positive, Stable is near zero. The bottom-left density overlay shows the same data as continuous distributions, making the K119ub_Only-vs-Stable shift visible as a slight leftward displacement of the red curve relative to the light blue curve. The top-right boxplot confirms the ABC-level pattern, and the bottom-right contact decay shows the distance-dependent behavior (Activity_Lost loses contact at all distances, K119ub_Only has a short-range gain that decays quickly).
+
+### If You Have Two Slides
+
+**Slide 1 — Panel 05 (Loop logFC Violin) + Panel 16 (ABC-RNA Concordance Bar):**
+
+Panel 05 is the single most important positive result: the violin plot of loop logFC by enhancer class shows the clean ordering Activity_Lost (-0.088) > K119ub_Only (-0.054) > Stable (-0.013) > Activity_Gain (+0.066), with K119ub_Only intermediate and clearly shifted from Stable (p < 2.2e-16). The four violins are color-coded and the medians are visually distinct. This is the figure that establishes K119ub as having a contact-level effect independent of activity mark changes.
+
+Then immediately pair it with Panel 16, the ABC-RNA concordance stacked bar. This is the most important *negative* result: K119ub_Only concordance is 49.4% (the green/red split sits right at the 50% dashed line), indistinguishable from chance, while Activity_Lost (59.8%) and Activity_Gain (61.9%) show clear concordance. The visual contrast between the K119ub_Only bar (50/50 split) and the Activity_Lost/Activity_Gain bars (clear green majority) is striking and communicates the finding without any statistics needed.
+
+Showing both panels together is essential for honest presentation. Panel 05 alone would imply K119ub_Only enhancers are functionally important. Panel 16 tempers that: the contact perturbation is real but does not propagate to measurable transcriptional changes.
+
+**Slide 2 — Panel 06 (Loop logFC Density Overlay):**
+
+Panel 06 is the cleanest visualization of the distributional shift. The overlaid density curves show that K119ub_Only (red) tracks Activity_Lost (blue) on the left tail but peaks slightly to the right, while Activity_Gain (orange) peaks clearly to the right of zero. The visual makes the "intermediate phenotype" argument intuitive. This is the figure best suited for a paper main figure or a slide where you want to show the full distribution shapes rather than just medians.
+
+### Why Not the Others?
+
+- **Panels 01-04** (Parts A-B: loop anchoring, distance, promoter loops, gene logFC) are characterization panels that set the stage but don't carry the central finding. Panel 04 (gene logFC by class) is useful if asked about expression effects, but shows small effect sizes (median log2FC = -0.040 for K119ub_Only)
+- **Panels 07-08** (delta-ABC, delta-unnorm boxplots) show the paradoxical positive delta-ABC for K119ub_Only, which requires careful explanation of the loop-vs-ABC methodological mismatch. Not ideal for a talk unless you plan to discuss this explicitly
+- **Panel 09** (ABC directionality stacked bar) is informative but secondary — shows the gained/lost/unchanged proportions per class
+- **Panels 10-11** (contact decay) are important for the paper (distance-dependent behavior) but are secondary for a talk. Panel 11 is included in the summary patchwork (Panel 12) already
+- **Panels 13-15** (Part G: K119ub tertile analysis) show the dose-response, which is the *weakest* result (rho = -0.035, non-monotonic tertiles). Panel 13 (tertile violin) visually shows T2_mid is *less* negative than T1_low, which undermines the dose-response narrative. Panel 15 (continuous scatter) is a cloud with an essentially flat regression line. These are important for completeness and the paper, but showing them in a talk invites criticism of the dose-response claim without adding to the story
+- **Panel 17** (delta-ABC vs gene logFC scatter) is visually noisy — the four classes overlap heavily and the K119ub_Only points (pink) are indistinguishable from the Stable background (grey). Better as a supplementary figure
+- **Panel 18** (K119ub_Only target gene logFC histogram) shows that most target genes are near zero log2FC, reinforcing the negative finding from Panel 16 but less efficiently
+
+### The Two-Slide Narrative
+
+> **Slide 1:** "K119ub_Only enhancers — which gain H2AK119ub without losing activity marks — show significant loop weakening (Panel 05: median logFC = -0.054, p < 2.2e-16), intermediate between Activity_Lost and Stable. This supports a direct contact-level role for K119ub independent of transcriptional activity."
+
+> **Slide 2:** "However, this contact perturbation does not propagate to detectable gene expression changes (Panel 16: 49.4% concordance = chance, p = 0.55). The K119ub-driven loop weakening is real but below the functional threshold needed to alter transcription in the adult cerebellum."
+
+---
+
 ## Output File Descriptions
 
 ### Plots (18 panels, each in PDF + SVG + JPG subfolders)
