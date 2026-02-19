@@ -1,18 +1,38 @@
-=== Paired-Anchor Loop-ABC Analysis Summary ===
-Date: 2026-02-18 15:31:48.423706
+=== Paired-Anchor Loop-ABC Analysis Summary (v2) ===
+Date: 2026-02-18 15:56:53.087595
+
+--- Input Data ---
+All loops (visual background): 39344
+Differential loops (statistical analysis): 2910
+ABC E-G pairs: 180423
 
 --- Match Statistics ---
-Matched (loop, enhancer, gene) triplets: 555
-Unique loops with >= 1 match: 343 / 2910 (11.8%)
-Unique E-G pairs confirmed by loops: 528 / 180423 (0.2926%)
-Unique genes: 410
-Unique enhancers: 393
+All-loop matches: 15112 (from 8339 unique loops)
+Differential matches: 490 (from 304 unique diff loops)
+Unique E-G pairs confirmed by diff loops: 465 / 180423 (0.2577%)
+Unique genes: 353
+Unique enhancers: 348
 
---- Directional Concordance ---
-ΔABC concordance: 296 / 333 = 88.9% (p = 2.54e-51)
-Δ(A×C) concordance: 479 / 555 = 86.3% (p = 1.80e-72)
+--- Directional Concordance (differential loops) ---
+dABC concordance: 269 / 300 = 89.7% (p = 1.67e-48)
+d(AxC) concordance: 426 / 490 = 86.9% (p = 1.16e-66)
 Step 9 independent-overlap concordance: 51.4%
 
+--- FDR Stratification ---
+significant: 269/300 = 89.7%
+
+--- RNA-seq 3-Way Concordance ---
+Triplets with directional ABC + significant DE: 68
+Loop-ABC 2-way concordance (this subset): 63/68 = 92.6%
+Loop-ABC-DE 3-way concordance: 60/68 = 88.2% (p = 1.69e-45 vs 12.5% chance)
+Gene-level 3-way concordance: 39/44 = 88.6%
+
+--- K119ub at Paired Enhancers ---
+Triplets with quantifiable K119ub: 490
+Spearman K119ub log2fc vs dABC: rho = -0.401, p = 5.48e-13
+  lost: median K119ub log2fc = 0.321 (n=164)
+  gained: median K119ub log2fc = -0.074 (n=136)
+
 --- Effect Size ---
-Median |ΔABC| matched: 0.0135 vs all: 0.0102 (Wilcoxon p = 7.26e-08)
-Median |Δ(A×C)| matched: 0.103773 vs all: 0.061074 (Wilcoxon p = 9.40e-27)
+Median |dABC| matched: 0.0141 vs all: 0.0102 (Wilcoxon p = 3.00e-08)
+Median |d(AxC)| matched: 0.103098 vs all: 0.061074 (Wilcoxon p = 2.34e-21)

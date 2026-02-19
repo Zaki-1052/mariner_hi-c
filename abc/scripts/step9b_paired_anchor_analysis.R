@@ -1,8 +1,10 @@
 # abc/scripts/step9b_paired_anchor_analysis.R
 #
-# Paired-anchor loop-ABC analysis: tests whether ABC-predicted enhancer-gene
-# pairs are physically connected by the SAME differential Hi-C loop (enhancer
-# at one anchor, gene TSS at the other).
+# Paired-anchor loop-ABC analysis (v2): tests whether ABC-predicted enhancer-gene
+# pairs are physically connected by the SAME Hi-C loop (enhancer at one anchor,
+# gene TSS at the other). Runs overlap on ALL 39K loops for visual context,
+# then performs statistical analyses on the 2,910 differential loops only.
+# Enhancements: FDR stratification, RNA-seq 3-way concordance, K119ub overlay.
 
 suppressPackageStartupMessages({
   library(GenomicRanges)
@@ -12,26 +14,32 @@ suppressPackageStartupMessages({
 })
 
 # === CONFIGURATION ===
-LOOPS_FILE     <- "../characterized_loops.tsv"
-ABC_FILE       <- "results/delta_abc_all_pairs.tsv"
-TSS_FILE       <- "reference/mm10_tss.bed"
-OUT_DIR        <- "results"
-PLOT_DIR       <- "results/paired_anchor_plots"
+ALL_LOOPS_FILE  <- "../25042-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"
+DIFF_LOOPS_FILE <- "../25042-late_outputs/merged_loops/non_redundant_loops.tsv"
+ABC_FILE        <- "results/delta_abc_all_pairs.tsv"
+TSS_FILE        <- "reference/mm10_tss.bed"
+RNASEQ_FILE     <- "results/gene_level_summary.tsv"
+K119UB_FILE     <- "results/k119ub_abc_enhancer_merged.tsv"
+OUT_DIR         <- "results"
+PLOT_DIR        <- "results/paired_anchor_plots"
 ABC_DELTA_THRESH <- 0.01
 
 # === VALIDATE INPUTS ===
-stopifnot(file.exists(LOOPS_FILE))
-stopifnot(file.exists(ABC_FILE))
-stopifnot(file.exists(TSS_FILE))
+for (f in c(ALL_LOOPS_FILE, DIFF_LOOPS_FILE, ABC_FILE, TSS_FILE, RNASEQ_FILE, K119UB_FILE)) {
+  if (!file.exists(f)) stop(sprintf("FATAL: Required input not found: %s", f))
+}
 dir.create(PLOT_DIR, recursive = TRUE, showWarnings = FALSE)
 
-cat("=== Step 9b: Paired-Anchor Loop-ABC Analysis ===\n\n")
+cat("=== Step 9b: Paired-Anchor Loop-ABC Analysis (v2) ===\n\n")
 
 # === STEP 1: LOAD DATA ===
 cat("Loading data...\n")
 
-loops <- fread(LOOPS_FILE)
-cat(sprintf("  Loops: %d rows\n", nrow(loops)))
+all_loops <- fread(ALL_LOOPS_FILE)
+cat(sprintf("  All loops: %d rows\n", nrow(all_loops)))
+
+diff_loops <- fread(DIFF_LOOPS_FILE)
+cat(sprintf("  Differential loops: %d rows\n", nrow(diff_loops)))
 
 abc <- fread(ABC_FILE)
 cat(sprintf("  ABC pairs: %d rows\n", nrow(abc)))
@@ -39,6 +47,12 @@ cat(sprintf("  ABC pairs: %d rows\n", nrow(abc)))
 tss <- fread(TSS_FILE)
 setnames(tss, c("chr", "start", "end", "name", "score", "strand", "ensembl_id", "gene_type"))
 cat(sprintf("  TSS entries: %d rows\n", nrow(tss)))
+
+rnaseq <- fread(RNASEQ_FILE)
+cat(sprintf("  RNA-seq gene summary: %d rows\n", nrow(rnaseq)))
+
+k119ub <- fread(K119UB_FILE)
+cat(sprintf("  K119ub enhancer signal: %d rows\n", nrow(k119ub)))
 
 # Merge TSS coordinates onto ABC pairs by gene name
 abc_genes <- unique(abc$TargetGene)
@@ -54,13 +68,20 @@ cat(sprintf("  All %d ABC target genes matched to TSS\n", length(abc_genes)))
 abc <- merge(abc, tss_lookup, by.x = "TargetGene", by.y = "name", all.x = TRUE)
 stopifnot(!any(is.na(abc$tss_chr)))
 
-# === STEP 2: BUILD GRanges OBJECTS ===
-cat("\nBuilding GRanges objects...\n")
+# Build diff_loops lookup key for later subsetting
+diff_loops[, loop_key := paste(chr1, start1, end1, chr2, start2, end2, sep = "_")]
+diff_lookup <- diff_loops[, .(loop_key, loop_id, loop_type, category,
+                               diff_significant = as.logical(significant))]
+setkey(diff_lookup, loop_key)
+cat(sprintf("  Diff loop keys built: %d unique\n", nrow(diff_lookup)))
 
-anchor1_gr <- GRanges(seqnames = loops$chr1,
-                      ranges = IRanges(start = loops$start1, end = loops$end1))
-anchor2_gr <- GRanges(seqnames = loops$chr2,
-                      ranges = IRanges(start = loops$start2, end = loops$end2))
+# === STEP 2: BUILD GRanges FROM ALL LOOPS ===
+cat(sprintf("\nBuilding GRanges from ALL %d loops...\n", nrow(all_loops)))
+
+anchor1_gr <- GRanges(seqnames = all_loops$chr1,
+                      ranges = IRanges(start = all_loops$start1, end = all_loops$end1))
+anchor2_gr <- GRanges(seqnames = all_loops$chr2,
+                      ranges = IRanges(start = all_loops$start2, end = all_loops$end2))
 
 enh_gr <- GRanges(seqnames = abc$chr,
                   ranges = IRanges(start = abc$start, end = abc$end))
@@ -72,13 +93,12 @@ cat(sprintf("  Enhancer GRanges: %d ranges\n", length(enh_gr)))
 cat(sprintf("  TSS GRanges: %d ranges\n", length(tss_gr)))
 
 # === STEP 3: CASE A — enhancer overlaps anchor1, TSS overlaps anchor2 ===
-cat("\nFinding paired-anchor overlaps (Case A: enh→anchor1, TSS→anchor2)...\n")
+cat("\nFinding paired-anchor overlaps (Case A: enh->anchor1, TSS->anchor2)...\n")
 
 hits_enh_a1 <- findOverlaps(enh_gr, anchor1_gr)
 abc_idx_A <- queryHits(hits_enh_a1)
 loop_idx_A <- subjectHits(hits_enh_a1)
 
-# Pairwise check: does this ABC row's TSS overlap the same loop's anchor2?
 pairwise_A <- (as.character(seqnames(tss_gr[abc_idx_A])) == as.character(seqnames(anchor2_gr[loop_idx_A]))) &
               (start(tss_gr[abc_idx_A]) <= end(anchor2_gr[loop_idx_A])) &
               (end(tss_gr[abc_idx_A]) >= start(anchor2_gr[loop_idx_A]))
@@ -90,7 +110,7 @@ cat(sprintf("  Case A: %d initial overlaps, %d paired matches\n",
             length(abc_idx_A), sum(pairwise_A)))
 
 # === STEP 4: CASE B — enhancer overlaps anchor2, TSS overlaps anchor1 ===
-cat("Finding paired-anchor overlaps (Case B: enh→anchor2, TSS→anchor1)...\n")
+cat("Finding paired-anchor overlaps (Case B: enh->anchor2, TSS->anchor1)...\n")
 
 hits_enh_a2 <- findOverlaps(enh_gr, anchor2_gr)
 abc_idx_B <- queryHits(hits_enh_a2)
@@ -110,7 +130,6 @@ cat(sprintf("  Case B: %d initial overlaps, %d paired matches\n",
 cat("\nCombining Cases A+B...\n")
 
 matched_all <- rbind(matched_A, matched_B)
-# Deduplicate by unique (abc_row, loop_row) — same pair found via both cases
 matched_all <- unique(matched_all, by = c("abc_row", "loop_row"))
 cat(sprintf("  Total unique (ABC pair, loop) matches: %d\n", nrow(matched_all)))
 
@@ -118,22 +137,17 @@ if (nrow(matched_all) == 0) {
   stop("FATAL: No paired-anchor matches found. Check coordinate systems.")
 }
 
-# Attach metadata from both tables
-result <- data.table(
-  # Loop info
-  loop_id        = loops$loop_id[matched_all$loop_row],
-  loop_chr1      = loops$chr1[matched_all$loop_row],
-  loop_start1    = loops$start1[matched_all$loop_row],
-  loop_end1      = loops$end1[matched_all$loop_row],
-  loop_chr2      = loops$chr2[matched_all$loop_row],
-  loop_start2    = loops$start2[matched_all$loop_row],
-  loop_end2      = loops$end2[matched_all$loop_row],
-  loop_logFC     = loops$logFC[matched_all$loop_row],
-  loop_FDR       = loops$FDR[matched_all$loop_row],
-  loop_direction = loops$direction[matched_all$loop_row],
-  loop_type      = loops$loop_type[matched_all$loop_row],
-  loop_significant = loops$significant[matched_all$loop_row],
-  # ABC info
+# Build all_result with metadata from both tables
+all_result <- data.table(
+  loop_chr1      = all_loops$chr1[matched_all$loop_row],
+  loop_start1    = all_loops$start1[matched_all$loop_row],
+  loop_end1      = all_loops$end1[matched_all$loop_row],
+  loop_chr2      = all_loops$chr2[matched_all$loop_row],
+  loop_start2    = all_loops$start2[matched_all$loop_row],
+  loop_end2      = all_loops$end2[matched_all$loop_row],
+  loop_logFC     = all_loops$logFC[matched_all$loop_row],
+  loop_FDR       = all_loops$FDR[matched_all$loop_row],
+  loop_direction = all_loops$direction[matched_all$loop_row],
   enh_chr        = abc$chr[matched_all$abc_row],
   enh_start      = abc$start[matched_all$abc_row],
   enh_end        = abc$end[matched_all$abc_row],
@@ -149,6 +163,29 @@ result <- data.table(
   match_case     = matched_all$case
 )
 
+# Create loop coordinate key for matching to differential loops
+all_result[, loop_key := paste(loop_chr1, loop_start1, loop_end1,
+                               loop_chr2, loop_start2, loop_end2, sep = "_")]
+
+# Left-join differential loop metadata
+all_result <- merge(all_result, diff_lookup, by = "loop_key", all.x = TRUE)
+all_result[, is_differential := !is.na(loop_id)]
+# For non-differential loops, derive significance from FDR
+all_result[is.na(diff_significant), diff_significant := (loop_FDR < 0.05)]
+
+# Split into differential and background subsets
+diff_result <- all_result[is_differential == TRUE]
+bg_result   <- all_result[is_differential == FALSE]
+
+cat(sprintf("  All matches: %d (from %d unique loops)\n",
+            nrow(all_result), length(unique(all_result$loop_key))))
+cat(sprintf("  Differential matches: %d (from %d unique differential loops)\n",
+            nrow(diff_result), length(unique(diff_result$loop_id))))
+cat(sprintf("  Background matches: %d\n", nrow(bg_result)))
+
+# Use diff_result for all statistical analyses (backward-compatible alias)
+result <- diff_result
+
 # === STEP 6: ANALYSES ===
 
 # --- 6a: Match statistics ---
@@ -161,7 +198,7 @@ n_unique_enh   <- nrow(unique(result[, .(enh_chr, enh_start, enh_end)]))
 
 cat(sprintf("  Matched triplets (loop, enhancer, gene): %d\n", n_triplets))
 cat(sprintf("  Unique loops with >= 1 match: %d / %d (%.1f%%)\n",
-            n_unique_loops, nrow(loops), 100 * n_unique_loops / nrow(loops)))
+            n_unique_loops, nrow(diff_loops), 100 * n_unique_loops / nrow(diff_loops)))
 cat(sprintf("  Unique E-G pairs confirmed by loops: %d / %d (%.2f%%)\n",
             n_unique_pairs, nrow(abc), 100 * n_unique_pairs / nrow(abc)))
 cat(sprintf("  Unique genes in matched set: %d\n", n_unique_genes))
@@ -170,49 +207,42 @@ cat(sprintf("  Unique enhancers in matched set: %d\n", n_unique_enh))
 # --- 6b: Directional concordance ---
 cat("\n=== DIRECTIONAL CONCORDANCE ===\n")
 
-# Define concordance: loop up + ΔABC positive = concordant
-#                     loop down + ΔABC negative = concordant
-# Filter to pairs with meaningful delta
 result[, abc_direction := fifelse(delta_ABC > ABC_DELTA_THRESH, "gained",
                            fifelse(delta_ABC < -ABC_DELTA_THRESH, "lost", "unchanged"))]
 result[, unnorm_direction := fifelse(delta_unnorm > 0, "gained",
                                fifelse(delta_unnorm < 0, "lost", "unchanged"))]
 
-# ΔABC concordance (filtered to directional pairs)
+# dABC concordance
 directional_abc <- result[abc_direction != "unchanged"]
-if (nrow(directional_abc) > 0) {
-  directional_abc[, concordant := (loop_direction == "up_in_mutant" & abc_direction == "gained") |
-                                  (loop_direction == "down_in_mutant" & abc_direction == "lost")]
-  n_conc_abc <- sum(directional_abc$concordant)
-  n_dir_abc  <- nrow(directional_abc)
-  pct_abc    <- 100 * n_conc_abc / n_dir_abc
-  binom_abc  <- binom.test(n_conc_abc, n_dir_abc, p = 0.5)
+stopifnot(nrow(directional_abc) > 0)
 
-  cat(sprintf("  ΔABC concordance: %d / %d = %.1f%% (p = %.2e, 95%% CI: %.1f-%.1f%%)\n",
-              n_conc_abc, n_dir_abc, pct_abc,
-              binom_abc$p.value,
-              100 * binom_abc$conf.int[1], 100 * binom_abc$conf.int[2]))
-} else {
-  cat("  No directional ABC pairs found (all |ΔABC| <= threshold)\n")
-}
+directional_abc[, concordant := (loop_direction == "up_in_mutant" & abc_direction == "gained") |
+                                (loop_direction == "down_in_mutant" & abc_direction == "lost")]
+n_conc_abc <- sum(directional_abc$concordant)
+n_dir_abc  <- nrow(directional_abc)
+pct_abc    <- 100 * n_conc_abc / n_dir_abc
+binom_abc  <- binom.test(n_conc_abc, n_dir_abc, p = 0.5)
 
-# Δ(A×C) unnormalized concordance (any nonzero)
+cat(sprintf("  dABC concordance: %d / %d = %.1f%% (p = %.2e, 95%% CI: %.1f-%.1f%%)\n",
+            n_conc_abc, n_dir_abc, pct_abc,
+            binom_abc$p.value,
+            100 * binom_abc$conf.int[1], 100 * binom_abc$conf.int[2]))
+
+# d(AxC) concordance
 directional_unnorm <- result[unnorm_direction != "unchanged"]
-if (nrow(directional_unnorm) > 0) {
-  directional_unnorm[, concordant := (loop_direction == "up_in_mutant" & unnorm_direction == "gained") |
-                                     (loop_direction == "down_in_mutant" & unnorm_direction == "lost")]
-  n_conc_un <- sum(directional_unnorm$concordant)
-  n_dir_un  <- nrow(directional_unnorm)
-  pct_un    <- 100 * n_conc_un / n_dir_un
-  binom_un  <- binom.test(n_conc_un, n_dir_un, p = 0.5)
+directional_unnorm[, concordant := (loop_direction == "up_in_mutant" & unnorm_direction == "gained") |
+                                   (loop_direction == "down_in_mutant" & unnorm_direction == "lost")]
+n_conc_un <- sum(directional_unnorm$concordant)
+n_dir_un  <- nrow(directional_unnorm)
+pct_un    <- 100 * n_conc_un / n_dir_un
+binom_un  <- binom.test(n_conc_un, n_dir_un, p = 0.5)
 
-  cat(sprintf("  Δ(A×C) concordance: %d / %d = %.1f%% (p = %.2e, 95%% CI: %.1f-%.1f%%)\n",
-              n_conc_un, n_dir_un, pct_un,
-              binom_un$p.value,
-              100 * binom_un$conf.int[1], 100 * binom_un$conf.int[2]))
-}
+cat(sprintf("  d(AxC) concordance: %d / %d = %.1f%% (p = %.2e, 95%% CI: %.1f-%.1f%%)\n",
+            n_conc_un, n_dir_un, pct_un,
+            binom_un$p.value,
+            100 * binom_un$conf.int[1], 100 * binom_un$conf.int[2]))
 
-cat(sprintf("  Reference: Step 9 independent-overlap concordance was 51.4%%\n"))
+cat("  Reference: Step 9 independent-overlap concordance was 51.4%\n")
 
 # --- 6c: Stratification by loop type ---
 cat("\n=== STRATIFICATION BY LOOP TYPE ===\n")
@@ -226,22 +256,19 @@ for (i in seq_len(nrow(loop_type_counts))) {
               100 * loop_type_counts$N[i] / nrow(result)))
 }
 
-# Concordance by loop type (using ΔABC)
-if (nrow(directional_abc) > 0) {
-  cat("\n  Concordance by loop type (ΔABC):\n")
-  conc_by_type <- directional_abc[, .(
-    concordant = sum(concordant),
-    total = .N,
-    pct = 100 * sum(concordant) / .N
-  ), by = loop_type][order(-total)]
+cat("\n  Concordance by loop type (dABC):\n")
+conc_by_type <- directional_abc[, .(
+  concordant = sum(concordant),
+  total = .N,
+  pct = 100 * sum(concordant) / .N
+), by = loop_type][order(-total)]
 
-  for (i in seq_len(nrow(conc_by_type))) {
-    cat(sprintf("    %s: %d/%d = %.1f%%\n",
-                conc_by_type$loop_type[i],
-                conc_by_type$concordant[i],
-                conc_by_type$total[i],
-                conc_by_type$pct[i]))
-  }
+for (i in seq_len(nrow(conc_by_type))) {
+  cat(sprintf("    %s: %d/%d = %.1f%%\n",
+              conc_by_type$loop_type[i],
+              conc_by_type$concordant[i],
+              conc_by_type$total[i],
+              conc_by_type$pct[i]))
 }
 
 # --- 6d: Effect size comparison ---
@@ -250,149 +277,477 @@ cat("\n=== EFFECT SIZE COMPARISON ===\n")
 matched_delta <- abs(result$delta_ABC)
 all_delta     <- abs(abc$delta_ABC)
 wt <- wilcox.test(matched_delta, all_delta, alternative = "greater")
-cat(sprintf("  Median |ΔABC| matched: %.4f vs all: %.4f\n",
+cat(sprintf("  Median |dABC| matched: %.4f vs all: %.4f\n",
             median(matched_delta), median(all_delta)))
 cat(sprintf("  Wilcoxon p-value (matched > all): %.2e\n", wt$p.value))
 
 matched_unnorm <- abs(result$delta_unnorm)
 all_unnorm     <- abs(abc$delta_unnorm)
 wt2 <- wilcox.test(matched_unnorm, all_unnorm, alternative = "greater")
-cat(sprintf("  Median |Δ(A×C)| matched: %.6f vs all: %.6f\n",
+cat(sprintf("  Median |d(AxC)| matched: %.6f vs all: %.6f\n",
             median(matched_unnorm), median(all_unnorm)))
 cat(sprintf("  Wilcoxon p-value (matched > all): %.2e\n", wt2$p.value))
+
+# --- 6e: FDR stratification ---
+cat("\n=== FDR STRATIFICATION ===\n")
+
+result[, fdr_stratum := fifelse(loop_FDR < 0.05, "significant",
+                          fifelse(loop_FDR < 0.15, "exploratory", "other"))]
+
+strat_abc <- result[abc_direction != "unchanged"]
+strat_abc[, concordant := (loop_direction == "up_in_mutant" & abc_direction == "gained") |
+                          (loop_direction == "down_in_mutant" & abc_direction == "lost")]
+
+fdr_strata <- strat_abc[fdr_stratum %in% c("significant", "exploratory"),
+  .(n_conc = sum(concordant), n_total = .N,
+    pct = 100 * sum(concordant) / .N),
+  by = fdr_stratum]
+
+for (i in seq_len(nrow(fdr_strata))) {
+  bt <- binom.test(fdr_strata$n_conc[i], fdr_strata$n_total[i], p = 0.5)
+  cat(sprintf("  %s (FDR %s): %d/%d = %.1f%% (p = %.2e, 95%% CI: %.1f-%.1f%%)\n",
+              fdr_strata$fdr_stratum[i],
+              ifelse(fdr_strata$fdr_stratum[i] == "significant", "< 0.05", "0.05-0.15"),
+              fdr_strata$n_conc[i], fdr_strata$n_total[i], fdr_strata$pct[i],
+              bt$p.value, 100 * bt$conf.int[1], 100 * bt$conf.int[2]))
+}
+
+# --- 6f: RNA-seq 3-way concordance ---
+cat("\n=== RNA-SEQ 3-WAY CONCORDANCE ===\n")
+
+# Merge RNA-seq DE results onto diff_result
+rnaseq_cols <- rnaseq[, .(TargetGene, de_log2FC = log2FC, de_padj = padj)]
+result_de <- merge(result, rnaseq_cols, by.x = "target_gene", by.y = "TargetGene", all.x = TRUE)
+
+n_de_matched <- sum(!is.na(result_de$de_log2FC))
+cat(sprintf("  Triplets with RNA-seq data: %d / %d (%.1f%%)\n",
+            n_de_matched, nrow(result_de), 100 * n_de_matched / nrow(result_de)))
+
+# Filter to triplets where ABC is directional AND gene has significant DE
+three_way <- result_de[abc_direction != "unchanged" & !is.na(de_padj) & de_padj < 0.05]
+three_way[, de_direction := fifelse(de_log2FC > 0, "up", "down")]
+
+cat(sprintf("  Triplets with directional ABC + significant DE: %d\n", nrow(three_way)))
+
+if (nrow(three_way) > 0) {
+  # 2-way: loop-ABC concordance (among this subset)
+  three_way[, conc_loop_abc := (loop_direction == "up_in_mutant" & abc_direction == "gained") |
+                               (loop_direction == "down_in_mutant" & abc_direction == "lost")]
+  # 3-way: loop-ABC-DE all agree
+  three_way[, conc_all_three := (loop_direction == "up_in_mutant" & abc_direction == "gained" & de_direction == "up") |
+                                (loop_direction == "down_in_mutant" & abc_direction == "lost" & de_direction == "down")]
+
+  n_3way <- nrow(three_way)
+  n_conc_2 <- sum(three_way$conc_loop_abc)
+  n_conc_3 <- sum(three_way$conc_all_three)
+  pct_2way <- 100 * n_conc_2 / n_3way
+  pct_3way <- 100 * n_conc_3 / n_3way
+
+  binom_3way <- binom.test(n_conc_3, n_3way, p = 0.125)
+
+  cat(sprintf("  Loop-ABC 2-way concordance (this subset): %d/%d = %.1f%%\n",
+              n_conc_2, n_3way, pct_2way))
+  cat(sprintf("  Loop-ABC-DE 3-way concordance: %d/%d = %.1f%% (p = %.2e vs 12.5%% chance)\n",
+              n_conc_3, n_3way, pct_3way, binom_3way$p.value))
+
+  # Gene-level concordance (deduplicate to strongest dABC per gene)
+  gene_level <- three_way[order(-abs(delta_ABC))][!duplicated(target_gene)]
+  n_gl <- nrow(gene_level)
+  n_gl_conc3 <- sum(gene_level$conc_all_three)
+  pct_gl <- 100 * n_gl_conc3 / n_gl
+  binom_gl <- binom.test(n_gl_conc3, n_gl, p = 0.125)
+
+  cat(sprintf("  Gene-level 3-way concordance: %d/%d = %.1f%% (p = %.2e vs 12.5%% chance)\n",
+              n_gl_conc3, n_gl, pct_gl, binom_gl$p.value))
+
+  # Direction breakdown table
+  cat("\n  Direction breakdown (triplet-level):\n")
+  combo_table <- three_way[, .N, by = .(loop_direction, abc_direction, de_direction)][order(-N)]
+  for (i in seq_len(nrow(combo_table))) {
+    cat(sprintf("    Loop=%s, ABC=%s, DE=%s: %d\n",
+                combo_table$loop_direction[i], combo_table$abc_direction[i],
+                combo_table$de_direction[i], combo_table$N[i]))
+  }
+} else {
+  cat("  No triplets with both directional ABC and significant DE\n")
+  three_way <- NULL
+}
+
+# --- 6g: K119ub at paired enhancers ---
+cat("\n=== K119UB AT PAIRED ENHANCERS ===\n")
+
+k119_cols <- k119ub[, .(chr, start, end, k119_ctrl_mean = ctrl_mean,
+                         k119_mut_mean = mut_mean, k119_log2fc = log2fc,
+                         k119_signal_class = signal_class)]
+result_k119 <- merge(result, k119_cols,
+                     by.x = c("enh_chr", "enh_start", "enh_end"),
+                     by.y = c("chr", "start", "end"),
+                     all.x = TRUE)
+
+n_k119_matched <- sum(!is.na(result_k119$k119_log2fc))
+n_k119_quant   <- sum(result_k119$k119_signal_class == "quantifiable", na.rm = TRUE)
+cat(sprintf("  Triplets with K119ub data: %d / %d (%.1f%%)\n",
+            n_k119_matched, nrow(result_k119), 100 * n_k119_matched / nrow(result_k119)))
+cat(sprintf("  Triplets with quantifiable K119ub: %d\n", n_k119_quant))
+
+# K119ub log2fc distribution by ABC direction
+k119_quant <- result_k119[k119_signal_class == "quantifiable" & abc_direction != "unchanged"]
+if (nrow(k119_quant) > 0) {
+  k119_by_dir <- k119_quant[, .(
+    median_k119 = median(k119_log2fc),
+    mean_k119 = mean(k119_log2fc),
+    n = .N
+  ), by = abc_direction]
+
+  cat("  K119ub log2fc by ABC direction (quantifiable enhancers):\n")
+  for (i in seq_len(nrow(k119_by_dir))) {
+    cat(sprintf("    %s: median=%.3f, mean=%.3f, n=%d\n",
+                k119_by_dir$abc_direction[i],
+                k119_by_dir$median_k119[i],
+                k119_by_dir$mean_k119[i],
+                k119_by_dir$n[i]))
+  }
+
+  # Spearman correlation: K119ub log2fc vs dABC
+  cor_k119 <- cor.test(k119_quant$k119_log2fc, k119_quant$delta_ABC, method = "spearman")
+  cat(sprintf("  Spearman K119ub log2fc vs dABC: rho = %.3f, p = %.2e (n = %d)\n",
+              cor_k119$estimate, cor_k119$p.value, nrow(k119_quant)))
+
+  # Wilcoxon: K119ub log2fc in gained vs lost pairs
+  if (all(c("gained", "lost") %in% k119_quant$abc_direction)) {
+    wt_k119 <- wilcox.test(k119_quant[abc_direction == "gained"]$k119_log2fc,
+                           k119_quant[abc_direction == "lost"]$k119_log2fc)
+    cat(sprintf("  Wilcoxon K119ub gained vs lost: p = %.2e\n", wt_k119$p.value))
+  }
+} else {
+  cat("  No quantifiable K119ub data for directional ABC pairs\n")
+  k119_quant <- NULL
+}
 
 # === STEP 7: SAVE RESULTS ===
 cat("\nSaving results...\n")
 
-# Main results table
-fwrite(result, file.path(OUT_DIR, "paired_anchor_matches.tsv"), sep = "\t")
-cat(sprintf("  Wrote %s (%d rows)\n",
-            file.path(OUT_DIR, "paired_anchor_matches.tsv"), nrow(result)))
+# All matches (full background)
+fwrite(all_result, file.path(OUT_DIR, "paired_anchor_all_matches.tsv"), sep = "\t")
+cat(sprintf("  Wrote paired_anchor_all_matches.tsv (%d rows)\n", nrow(all_result)))
+
+# Differential matches only (backward-compatible output)
+# Select columns matching original output format
+diff_out_cols <- c("loop_id", "loop_chr1", "loop_start1", "loop_end1",
+                   "loop_chr2", "loop_start2", "loop_end2",
+                   "loop_logFC", "loop_FDR", "loop_direction", "loop_type",
+                   "diff_significant",
+                   "enh_chr", "enh_start", "enh_end",
+                   "target_gene", "tss_chr", "tss_start", "tss_end",
+                   "abc_score_wt", "abc_score_ko", "delta_ABC", "delta_unnorm",
+                   "distance", "match_case")
+diff_export <- result[, ..diff_out_cols]
+setnames(diff_export, "diff_significant", "loop_significant")
+fwrite(diff_export, file.path(OUT_DIR, "paired_anchor_matches.tsv"), sep = "\t")
+cat(sprintf("  Wrote paired_anchor_matches.tsv (%d rows)\n", nrow(diff_export)))
 
 # Summary text
 summary_lines <- c(
-  "=== Paired-Anchor Loop-ABC Analysis Summary ===",
+  "=== Paired-Anchor Loop-ABC Analysis Summary (v2) ===",
   sprintf("Date: %s", Sys.time()),
   "",
+  "--- Input Data ---",
+  sprintf("All loops (visual background): %d", nrow(all_loops)),
+  sprintf("Differential loops (statistical analysis): %d", nrow(diff_loops)),
+  sprintf("ABC E-G pairs: %d", nrow(abc)),
+  "",
   "--- Match Statistics ---",
-  sprintf("Matched (loop, enhancer, gene) triplets: %d", n_triplets),
-  sprintf("Unique loops with >= 1 match: %d / %d (%.1f%%)",
-          n_unique_loops, nrow(loops), 100 * n_unique_loops / nrow(loops)),
-  sprintf("Unique E-G pairs confirmed by loops: %d / %d (%.4f%%)",
+  sprintf("All-loop matches: %d (from %d unique loops)",
+          nrow(all_result), length(unique(all_result$loop_key))),
+  sprintf("Differential matches: %d (from %d unique diff loops)",
+          nrow(result), n_unique_loops),
+  sprintf("Unique E-G pairs confirmed by diff loops: %d / %d (%.4f%%)",
           n_unique_pairs, nrow(abc), 100 * n_unique_pairs / nrow(abc)),
   sprintf("Unique genes: %d", n_unique_genes),
   sprintf("Unique enhancers: %d", n_unique_enh),
+  "",
+  "--- Directional Concordance (differential loops) ---",
+  sprintf("dABC concordance: %d / %d = %.1f%% (p = %.2e)",
+          n_conc_abc, n_dir_abc, pct_abc, binom_abc$p.value),
+  sprintf("d(AxC) concordance: %d / %d = %.1f%% (p = %.2e)",
+          n_conc_un, n_dir_un, pct_un, binom_un$p.value),
+  "Step 9 independent-overlap concordance: 51.4%",
   ""
 )
 
-if (nrow(directional_abc) > 0) {
+# FDR stratification
+summary_lines <- c(summary_lines, "--- FDR Stratification ---")
+for (i in seq_len(nrow(fdr_strata))) {
   summary_lines <- c(summary_lines,
-    "--- Directional Concordance ---",
-    sprintf("ΔABC concordance: %d / %d = %.1f%% (p = %.2e)",
-            n_conc_abc, n_dir_abc, pct_abc, binom_abc$p.value),
-    sprintf("Δ(A×C) concordance: %d / %d = %.1f%% (p = %.2e)",
-            n_conc_un, n_dir_un, pct_un, binom_un$p.value),
-    "Step 9 independent-overlap concordance: 51.4%",
+    sprintf("%s: %d/%d = %.1f%%",
+            fdr_strata$fdr_stratum[i], fdr_strata$n_conc[i],
+            fdr_strata$n_total[i], fdr_strata$pct[i]))
+}
+summary_lines <- c(summary_lines, "")
+
+# RNA-seq concordance
+if (!is.null(three_way) && nrow(three_way) > 0) {
+  summary_lines <- c(summary_lines,
+    "--- RNA-seq 3-Way Concordance ---",
+    sprintf("Triplets with directional ABC + significant DE: %d", n_3way),
+    sprintf("Loop-ABC 2-way concordance (this subset): %d/%d = %.1f%%",
+            n_conc_2, n_3way, pct_2way),
+    sprintf("Loop-ABC-DE 3-way concordance: %d/%d = %.1f%% (p = %.2e vs 12.5%% chance)",
+            n_conc_3, n_3way, pct_3way, binom_3way$p.value),
+    sprintf("Gene-level 3-way concordance: %d/%d = %.1f%%",
+            n_gl_conc3, n_gl, pct_gl),
     ""
   )
 }
 
-summary_lines <- c(summary_lines,
+# K119ub
+if (!is.null(k119_quant) && nrow(k119_quant) > 0) {
+  summary_lines <- c(summary_lines,
+    "--- K119ub at Paired Enhancers ---",
+    sprintf("Triplets with quantifiable K119ub: %d", n_k119_quant),
+    sprintf("Spearman K119ub log2fc vs dABC: rho = %.3f, p = %.2e",
+            cor_k119$estimate, cor_k119$p.value)
+  )
+  for (i in seq_len(nrow(k119_by_dir))) {
+    summary_lines <- c(summary_lines,
+      sprintf("  %s: median K119ub log2fc = %.3f (n=%d)",
+              k119_by_dir$abc_direction[i],
+              k119_by_dir$median_k119[i],
+              k119_by_dir$n[i]))
+  }
+}
+
+summary_lines <- c(summary_lines, "",
   "--- Effect Size ---",
-  sprintf("Median |ΔABC| matched: %.4f vs all: %.4f (Wilcoxon p = %.2e)",
+  sprintf("Median |dABC| matched: %.4f vs all: %.4f (Wilcoxon p = %.2e)",
           median(matched_delta), median(all_delta), wt$p.value),
-  sprintf("Median |Δ(A×C)| matched: %.6f vs all: %.6f (Wilcoxon p = %.2e)",
+  sprintf("Median |d(AxC)| matched: %.6f vs all: %.6f (Wilcoxon p = %.2e)",
           median(matched_unnorm), median(all_unnorm), wt2$p.value)
 )
 
 writeLines(summary_lines, file.path(OUT_DIR, "paired_anchor_summary.txt"))
-cat(sprintf("  Wrote %s\n", file.path(OUT_DIR, "paired_anchor_summary.txt")))
+cat(sprintf("  Wrote paired_anchor_summary.txt\n"))
 
 # === STEP 8: PLOTS ===
 cat("\nGenerating plots...\n")
 
+# Shared theme
+theme_paired <- theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(size = 12, face = "bold"),
+        plot.subtitle = element_text(size = 9, color = "grey40"))
+
 # --- Plot 1: Concordance comparison bar chart ---
-if (nrow(directional_abc) > 0) {
-  conc_df <- data.frame(
-    method = c("Independent\noverlap (Step 9)", "Paired-anchor\n(dABC)", "Paired-anchor\n(d(AxC))"),
-    concordance = c(51.4, pct_abc, pct_un),
-    n = c(NA, n_dir_abc, n_dir_un)
-  )
-  conc_df$method <- factor(conc_df$method, levels = conc_df$method)
+conc_df <- data.frame(
+  method = c("Independent\noverlap (Step 9)", "Paired-anchor\n(dABC)", "Paired-anchor\n(d(AxC))"),
+  concordance = c(51.4, pct_abc, pct_un),
+  n = c(NA, n_dir_abc, n_dir_un)
+)
+conc_df$method <- factor(conc_df$method, levels = conc_df$method)
 
-  p1 <- ggplot(conc_df, aes(x = method, y = concordance, fill = method)) +
-    geom_col(width = 0.6, show.legend = FALSE) +
-    geom_hline(yintercept = 50, linetype = "dashed", color = "grey40") +
-    geom_text(aes(label = sprintf("%.1f%%", concordance)), vjust = -0.5, size = 4) +
-    geom_text(aes(label = ifelse(is.na(n), "", sprintf("n=%d", n))),
-              vjust = 1.5, color = "white", size = 3.5) +
-    scale_fill_manual(values = c("grey60", "#2166AC", "#B2182B")) +
-    scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25)) +
-    labs(title = "Loop-ABC Directional Concordance",
-         subtitle = "Paired-anchor vs independent overlap",
-         x = NULL, y = "Concordance (%)") +
-    theme_minimal(base_size = 13) +
-    theme(panel.grid.major.x = element_blank())
+p_conc <- ggplot(conc_df, aes(x = method, y = concordance, fill = method)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "grey40") +
+  geom_text(aes(label = sprintf("%.1f%%", concordance)), vjust = -0.5, size = 3.5) +
+  geom_text(aes(label = ifelse(is.na(n), "", sprintf("n=%d", n))),
+            vjust = 1.5, color = "white", size = 3) +
+  scale_fill_manual(values = c("grey60", "#2166AC", "#B2182B")) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25)) +
+  labs(title = "Loop-ABC Concordance",
+       subtitle = "Paired-anchor vs independent overlap",
+       x = NULL, y = "Concordance (%)") +
+  theme_paired +
+  theme(panel.grid.major.x = element_blank())
 
-  ggsave(file.path(PLOT_DIR, "paired_anchor_concordance.pdf"), p1,
-         width = 5, height = 5)
-  cat("  Saved paired_anchor_concordance.pdf\n")
-}
+ggsave(file.path(PLOT_DIR, "paired_anchor_concordance.pdf"), p_conc,
+       width = 5, height = 5)
+cat("  Saved paired_anchor_concordance.pdf\n")
 
-# --- Plot 2: Loop logFC vs ΔABC scatter ---
-p2 <- ggplot(result, aes(x = loop_logFC, y = delta_ABC)) +
-  geom_hline(yintercept = 0, color = "grey60", linewidth = 0.3) +
-  geom_vline(xintercept = 0, color = "grey60", linewidth = 0.3) +
-  geom_point(alpha = 0.4, size = 1.5, color = "#4393C3") +
-  geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.8) +
-  labs(title = "Loop logFC vs dABC (Paired-Anchor Matches)",
-       subtitle = sprintf("n = %d matched triplets", nrow(result)),
+# --- Plot 2: FDR-stratified concordance ---
+fdr_label_map <- c("significant" = "FDR < 0.05", "exploratory" = "FDR 0.05-0.15")
+fdr_color_map <- c("FDR < 0.05" = "#2166AC", "FDR 0.05-0.15" = "#92C5DE")
+fdr_plot_df <- data.frame(
+  stratum = fdr_label_map[fdr_strata$fdr_stratum],
+  concordance = fdr_strata$pct,
+  n = fdr_strata$n_total,
+  stringsAsFactors = FALSE
+)
+fdr_plot_df$stratum <- factor(fdr_plot_df$stratum,
+                              levels = c("FDR < 0.05", "FDR 0.05-0.15"))
+
+p_fdr <- ggplot(fdr_plot_df, aes(x = stratum, y = concordance, fill = stratum)) +
+  geom_col(width = 0.5, show.legend = FALSE) +
+  geom_hline(yintercept = 50, linetype = "dashed", color = "grey40") +
+  geom_text(aes(label = sprintf("%.1f%%\nn=%d", concordance, n)), vjust = -0.3, size = 3.5) +
+  scale_fill_manual(values = fdr_color_map, drop = FALSE) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25)) +
+  labs(title = "Concordance by FDR Stratum",
+       subtitle = "dABC direction vs loop direction",
+       x = NULL, y = "Concordance (%)") +
+  theme_paired +
+  theme(panel.grid.major.x = element_blank())
+
+ggsave(file.path(PLOT_DIR, "fdr_stratified_concordance.pdf"), p_fdr,
+       width = 4, height = 5)
+cat("  Saved fdr_stratified_concordance.pdf\n")
+
+# --- Plot 3: Loop logFC vs dABC scatter (with background) ---
+# Subsample background for rendering if too large
+bg_plot <- if (nrow(bg_result) > 20000) bg_result[sample(.N, 20000)] else bg_result
+
+p_scatter1 <- ggplot() +
+  geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
+  geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
+  # Background: all non-differential loops
+  geom_point(data = bg_plot, aes(x = loop_logFC, y = delta_ABC),
+             color = "grey80", alpha = 0.3, size = 0.8) +
+  # Foreground: differential loops colored by direction
+  geom_point(data = result[loop_direction == "up_in_mutant"],
+             aes(x = loop_logFC, y = delta_ABC),
+             color = "#D6604D", alpha = 0.6, size = 1.8) +
+  geom_point(data = result[loop_direction == "down_in_mutant"],
+             aes(x = loop_logFC, y = delta_ABC),
+             color = "#4393C3", alpha = 0.6, size = 1.8) +
+  geom_smooth(data = result, aes(x = loop_logFC, y = delta_ABC),
+              method = "lm", se = TRUE, color = "black", linewidth = 0.8) +
+  labs(title = "Loop logFC vs dABC",
+       subtitle = sprintf("Grey: %d non-diff matches | Red/Blue: %d diff matches",
+                          nrow(bg_result), nrow(result)),
        x = "Loop logFC (mutant / control)",
        y = "dABC (KO - WT)") +
-  theme_minimal(base_size = 13)
+  theme_paired
 
-# Add Spearman correlation
-cor_test <- cor.test(result$loop_logFC, result$delta_ABC, method = "spearman")
-p2 <- p2 + annotate("text", x = Inf, y = Inf,
-                     label = sprintf("rho = %.3f\np = %.2e",
-                                     cor_test$estimate, cor_test$p.value),
-                     hjust = 1.1, vjust = 1.5, size = 4)
+cor_abc <- cor.test(result$loop_logFC, result$delta_ABC, method = "spearman")
+p_scatter1 <- p_scatter1 + annotate("text", x = Inf, y = Inf,
+                   label = sprintf("rho = %.3f\np = %.2e",
+                                   cor_abc$estimate, cor_abc$p.value),
+                   hjust = 1.1, vjust = 1.5, size = 3.5)
 
-ggsave(file.path(PLOT_DIR, "logFC_vs_deltaABC.pdf"), p2,
+ggsave(file.path(PLOT_DIR, "logFC_vs_deltaABC.pdf"), p_scatter1,
        width = 6, height = 5)
 cat("  Saved logFC_vs_deltaABC.pdf\n")
 
-# --- Plot 3: Loop logFC vs Δ(A×C) scatter ---
-p3 <- ggplot(result, aes(x = loop_logFC, y = delta_unnorm)) +
-  geom_hline(yintercept = 0, color = "grey60", linewidth = 0.3) +
-  geom_vline(xintercept = 0, color = "grey60", linewidth = 0.3) +
-  geom_point(alpha = 0.4, size = 1.5, color = "#D6604D") +
-  geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.8) +
-  labs(title = "Loop logFC vs d(AxC) (Paired-Anchor Matches)",
-       subtitle = sprintf("n = %d matched triplets", nrow(result)),
+# --- Plot 4: Loop logFC vs d(AxC) scatter (with background) ---
+p_scatter2 <- ggplot() +
+  geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
+  geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
+  geom_point(data = bg_plot, aes(x = loop_logFC, y = delta_unnorm),
+             color = "grey80", alpha = 0.3, size = 0.8) +
+  geom_point(data = result[loop_direction == "up_in_mutant"],
+             aes(x = loop_logFC, y = delta_unnorm),
+             color = "#D6604D", alpha = 0.6, size = 1.8) +
+  geom_point(data = result[loop_direction == "down_in_mutant"],
+             aes(x = loop_logFC, y = delta_unnorm),
+             color = "#4393C3", alpha = 0.6, size = 1.8) +
+  geom_smooth(data = result, aes(x = loop_logFC, y = delta_unnorm),
+              method = "lm", se = TRUE, color = "black", linewidth = 0.8) +
+  labs(title = "Loop logFC vs d(AxC)",
+       subtitle = sprintf("Grey: %d non-diff matches | Red/Blue: %d diff matches",
+                          nrow(bg_result), nrow(result)),
        x = "Loop logFC (mutant / control)",
        y = "d(Activity x Contact) (KO - WT)") +
-  theme_minimal(base_size = 13)
+  theme_paired
 
-cor_test2 <- cor.test(result$loop_logFC, result$delta_unnorm, method = "spearman")
-p3 <- p3 + annotate("text", x = Inf, y = Inf,
-                     label = sprintf("rho = %.3f\np = %.2e",
-                                     cor_test2$estimate, cor_test2$p.value),
-                     hjust = 1.1, vjust = 1.5, size = 4)
+cor_unnorm <- cor.test(result$loop_logFC, result$delta_unnorm, method = "spearman")
+p_scatter2 <- p_scatter2 + annotate("text", x = Inf, y = Inf,
+                   label = sprintf("rho = %.3f\np = %.2e",
+                                   cor_unnorm$estimate, cor_unnorm$p.value),
+                   hjust = 1.1, vjust = 1.5, size = 3.5)
 
-ggsave(file.path(PLOT_DIR, "logFC_vs_delta_unnorm.pdf"), p3,
+ggsave(file.path(PLOT_DIR, "logFC_vs_delta_unnorm.pdf"), p_scatter2,
        width = 6, height = 5)
 cat("  Saved logFC_vs_delta_unnorm.pdf\n")
 
-# --- Plot 4: Combined panel ---
-if (nrow(directional_abc) > 0) {
-  combined <- (p1 | p2) / (p3 | plot_spacer()) +
-    plot_annotation(title = "Paired-Anchor Loop-ABC Analysis",
-                    theme = theme(plot.title = element_text(size = 16, face = "bold")))
+# --- Plot 5: RNA-seq 3-way concordance ---
+if (!is.null(three_way) && nrow(three_way) > 0) {
+  rnaseq_conc_df <- data.frame(
+    comparison = c("Loop-ABC\n(2-way)", "Loop-ABC-DE\n(3-way)"),
+    concordance = c(pct_2way, pct_3way),
+    n = c(n_3way, n_3way),
+    chance = c(50, 12.5),
+    stringsAsFactors = FALSE
+  )
+  rnaseq_conc_df$comparison <- factor(rnaseq_conc_df$comparison, levels = rnaseq_conc_df$comparison)
 
-  ggsave(file.path(PLOT_DIR, "paired_anchor_panel.pdf"), combined,
-         width = 11, height = 10)
-  cat("  Saved paired_anchor_panel.pdf\n")
+  p_rnaseq <- ggplot(rnaseq_conc_df, aes(x = comparison, y = concordance, fill = comparison)) +
+    geom_col(width = 0.5, show.legend = FALSE) +
+    geom_hline(data = rnaseq_conc_df, aes(yintercept = chance),
+               linetype = "dashed", color = "grey40") +
+    geom_text(aes(label = sprintf("%.1f%%\nn=%d", concordance, n)), vjust = -0.3, size = 3.5) +
+    scale_fill_manual(values = c("#2166AC", "#762A83")) +
+    scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25)) +
+    labs(title = "RNA-seq Integration",
+         subtitle = "Among pairs with sig. DE (padj < 0.05)",
+         x = NULL, y = "Concordance (%)") +
+    theme_paired +
+    theme(panel.grid.major.x = element_blank())
+
+  ggsave(file.path(PLOT_DIR, "rnaseq_concordance.pdf"), p_rnaseq,
+         width = 4, height = 5)
+  cat("  Saved rnaseq_concordance.pdf\n")
+} else {
+  p_rnaseq <- NULL
+  cat("  Skipped rnaseq_concordance.pdf (no data)\n")
 }
+
+# --- Plot 6: K119ub at paired enhancers ---
+if (!is.null(k119_quant) && nrow(k119_quant) > 0) {
+  p_k119ub <- ggplot(k119_quant, aes(x = k119_log2fc, y = delta_ABC, color = abc_direction)) +
+    geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
+    geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
+    geom_point(alpha = 0.5, size = 1.5) +
+    geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.8,
+                inherit.aes = FALSE, aes(x = k119_log2fc, y = delta_ABC)) +
+    scale_color_manual(values = c("gained" = "#D6604D", "lost" = "#4393C3"),
+                       name = "ABC direction") +
+    labs(title = "K119ub Signal vs dABC",
+         subtitle = sprintf("rho = %.3f, p = %.2e (n = %d quantifiable)",
+                            cor_k119$estimate, cor_k119$p.value, nrow(k119_quant)),
+         x = "H2AK119ub log2FC (mut/ctrl) at enhancer",
+         y = "dABC (KO - WT)") +
+    theme_paired +
+    theme(legend.position = c(0.85, 0.15),
+          legend.background = element_rect(fill = "white", color = "grey80"))
+
+  ggsave(file.path(PLOT_DIR, "k119ub_at_paired_enhancers.pdf"), p_k119ub,
+         width = 6, height = 5)
+  cat("  Saved k119ub_at_paired_enhancers.pdf\n")
+} else {
+  p_k119ub <- NULL
+  cat("  Skipped k119ub_at_paired_enhancers.pdf (no data)\n")
+}
+
+# --- Plot 7: Combined panel ---
+# Build panel from available plots
+panel_plots <- list(p_conc, p_fdr, p_scatter1, p_scatter2)
+if (!is.null(p_rnaseq)) panel_plots <- c(panel_plots, list(p_rnaseq))
+if (!is.null(p_k119ub)) panel_plots <- c(panel_plots, list(p_k119ub))
+
+n_plots <- length(panel_plots)
+if (n_plots == 6) {
+  combined <- (panel_plots[[1]] | panel_plots[[2]] | panel_plots[[5]]) /
+              (panel_plots[[3]] | panel_plots[[4]] | panel_plots[[6]]) +
+    plot_annotation(title = "Paired-Anchor Loop-ABC Analysis (v2)",
+                    theme = theme(plot.title = element_text(size = 16, face = "bold")))
+  panel_w <- 18
+  panel_h <- 11
+} else if (n_plots == 5) {
+  combined <- (panel_plots[[1]] | panel_plots[[2]] | panel_plots[[5]]) /
+              (panel_plots[[3]] | panel_plots[[4]] | plot_spacer()) +
+    plot_annotation(title = "Paired-Anchor Loop-ABC Analysis (v2)",
+                    theme = theme(plot.title = element_text(size = 16, face = "bold")))
+  panel_w <- 18
+  panel_h <- 11
+} else {
+  combined <- (panel_plots[[1]] | panel_plots[[2]]) /
+              (panel_plots[[3]] | panel_plots[[4]]) +
+    plot_annotation(title = "Paired-Anchor Loop-ABC Analysis (v2)",
+                    theme = theme(plot.title = element_text(size = 16, face = "bold")))
+  panel_w <- 14
+  panel_h <- 11
+}
+
+ggsave(file.path(PLOT_DIR, "paired_anchor_panel.pdf"), combined,
+       width = panel_w, height = panel_h)
+cat("  Saved paired_anchor_panel.pdf\n")
 
 cat("\n=== Step 9b complete ===\n")
