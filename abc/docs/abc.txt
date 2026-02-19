@@ -1,0 +1,62 @@
+This is originally what CCBB was going to do for us
+
+2. Integration with ABC: ABC links + delta ABC concordance. Produce condition-specific enhance-gene links and quantify how much they change.
+
+Run ABC separately for WT and KO using ATAC + H3K27ac + Hi-C. (Cap to top 100-150k enhancers by H3K27ac activity if we have
+
+runtime/compute issues). Get ABC>=0.02 links per condition; compute delta ABC = ABC_KO - ABC_WT. Join delta ABC with RNA log2FC and
+
+summarize directional concordance. Aggregate to gene level: strongest link per gene, total ABC per gene, and number of perturbed links.
+
+Looking over the read the docs, we just have to be careful with how we run ABC. A lot of papers have used this to define cell-type specific enhancers and that is not what we want to do b/c that means defining separate enhancers b/tw the ctrl and mut. We will need to define a consensus enhancer universe (we can probably just use a merged atac-seq peakset, maybe within a distance 5-100/200 kb of genes), then we can quantify enhancer activity w/ K27ac & ATAC-seq dataimage.png 2 repliesZakir Alibhai  [11:17 PM]
+lastly this is definitely an expanse thing for the weekend or whenever but just to confirm:
+
+we merge atac-seq peaks across all samples (the ups downs u gave) within 5-200kb (?) of TSSs
+then run separate abc per condition with hic and h3k27ac peaks
+then get delta and join w gene logfc from rna-seq (like degs)
+lastly corr w change in ub signal at E-Ps (using the beds, not bigwigs?)
+i wanna say w the inputs and some formatting the repo should handle the meaty part
+Challana Tea  [11:24 PM]
+The general practice for generating a consensus is intersect across replicates, merge across genotype (but double check that the intersect w/ a particular sample isn't removing a ton of peaks). I can send the bed files for all the atac tmrow
+Run separate abc calculations but on your atac consensus - activity should be measured by K27ac and atac signal, contact from hic
+
+Let's leave step 4 for when we get the results, we can interpret from there
+
+
+--
+
+One last set of analysis we can do that won’t prove this, but can support it:
+
+Separate enhancers into those that are:
+1) activity lost (K27ac down, ATAC down or unchanged, K119ub up or unchanged) 
+2) change in only K119ub (K119ub sig up, K27ac and ATAC not significant)
+3) activity gain (K27ac up, ATAC up or unchanged, K119ub unchanged or down)
+4) stable (no significant changes)
+
+[1:15 PM]Then calculate loop metrics for each enhancer
+
+number of loops anchored at the enhancer
+mean loop distance
+promoter-loop count (and associated gene logFC changes)
+logFC loop strength
+ABC score for these subsets of enhancer-gene linkages
+Helpful to look at the contact decay profile for each just to check for a bias (edited) 
+[1:18 PM]The best support for us will be to see that their are still contact changes in class 2 despite no changes in K27ac
+
+--
+
+I can probably do the enhancer classification subsetting since it’ll be more of a thing for diffbind and then you can use some of the tools you already have to do the quants. But let me know the enhancer universe file you’re going to use for ABC so we can at least match the analysis
+Challana Tea  [6:20 PM]
+Okay nvm I found it, considering the question we’re asking, I will probably just use the ctrl enhancer universe for this particular analysis
+
+
+--
+
+okay will take the time to look over all this tmrow, but here’s the enhancer subsets (based from ctrl ATAC enhancers, log conc K27ac minimum of 2.0)
+[10:37 PM]you can just pull the first 3 columns if you want these as bed files
+4 files enhancer_classes_activity_gain.tsvTSVenhancer_classes_activity_lost.tsvTSVenhancer_classes_k119ub_only.tsvTSVenhancer_classes_stable.tsvTSV[10:41 PM]Class counts:
+Activity lost: 7503 
+K119ub change only: 2479 
+Activity gain: 2851 
+Stable: 42864 (edited)
+
