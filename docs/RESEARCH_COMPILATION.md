@@ -896,12 +896,13 @@ BAP1 loss in the cerebellum causes a **progressive, multi-scale disruption** of 
 ### Mechanistic Chain
 
 1. **BAP1 loss** -> H2AK119ub accumulates (cannot be removed)
-2. **K119ub accumulation** -> Destabilizes long-range Polycomb contacts (OR=10.70)
-3. **Long-range loop loss** -> Reorganization into shorter-range contacts ("loop rewriting")
-4. **At enhancers**: K119ub_Only causes 3.7% contact weakening (sub-functional)
-5. **Activity loss** (K27ac down): Causes functional E-G disruption (59.8% concordance)
-6. **Gene expression**: 940 dysregulated genes with concordant DABC and DE
-7. **Temporal progression**: Early subtle -> Late massive (regulatory cascade)
+2. **At active enhancers**: K119ub accumulation directly weakens E-P contacts at all distances (OR=10.70 globally; rho=-0.314 at active anchors)
+3. **At Polycomb domains**: Structural reorganization -- mid-range contacts (100kb-1Mb) strengthen, long-range contacts (>1Mb) weaken -- largely independent of local K119ub changes (downstream consequence of global Polycomb redistribution)
+4. **Net effect**: Long-range loop loss + shorter-range contact gain = "loop rewriting"
+5. **At enhancers**: K119ub_Only causes 3.7% contact weakening (sub-functional threshold)
+6. **Activity loss** (K27ac down): Causes functional E-G disruption (59.8% concordance)
+7. **Gene expression**: 940 dysregulated genes with concordant DABC and DE
+8. **Temporal progression**: Early subtle -> Late massive (regulatory cascade)
 
 ### Key Loci of Interest
 
@@ -910,6 +911,60 @@ BAP1 loss in the cerebellum causes a **progressive, multi-scale disruption** of 
 - **Hox clusters**: Developmental gene regulatory hubs affected
 - **Sox2/6/9, Foxg1, Shh**: Gained loop targets (developmental transcription factors)
 - **BDNF, Mef2c, Pax6**: Lost loop targets (neuronal function genes)
+
+### Biological Interpretation
+
+#### What BAP1 Does in the Normal Brain
+
+In a healthy cell, DNA is not a passive string of instructions -- it is a dynamic, three-dimensional structure. Genes can be separated by millions of base pairs along the linear chromosome but brought into physical contact through chromatin loops. These loops connect regulatory elements called enhancers to the genes they activate, and their formation and dissolution are tightly controlled during development. The architecture of these contacts -- which enhancers talk to which genes, across what distances, and at what developmental stage -- is a fundamental layer of gene regulation.
+
+BAP1 is a deubiquitinase: an enzyme that removes a specific chemical tag, monoubiquitination of histone H2A at lysine 119 (H2AK119ub), from the proteins that package DNA. This tag is deposited by Polycomb Repressive Complex 1 (PRC1), a master regulator of gene silencing during development. The interplay between PRC1 depositing H2AK119ub and BAP1 removing it creates a dynamic cycle -- a molecular "toggle" -- that allows the cell to precisely control when and where genes are silenced or activated. In the developing cerebellum, this cycle is essential for the proper timing of neuronal differentiation programs.
+
+#### What Goes Wrong Without BAP1
+
+When BAP1 is lost, H2AK119ub can no longer be removed. The mark accumulates at sites where it was previously being dynamically cycled. But the consequences are not a simple, uniform increase in gene silencing. Instead, the loss of dynamic turnover creates a cascading disruption that manifests differently depending on the chromatin context:
+
+**At active regulatory elements (enhancers and promoters):** These are sites where BAP1 was actively working -- removing H2AK119ub to keep the chromatin "clean" and permissive for gene activation. Without BAP1, H2AK119ub accumulates at these sites like rust on an unlocked gate. The enhancer-promoter contacts that these elements maintain begin to weaken. This is the most direct, enzymatic consequence of BAP1 loss: the substrate (H2AK119ub) accumulates at the sites where the enzyme (BAP1) was needed, and the functional output (enhancer-gene contact) degrades. The data show this clearly -- at active anchors, K119ub accumulation correlates with loop weakening at every distance (rho = -0.314), and the logistic regression for predicting loop loss yields an odds ratio of 10.7 (p < 10^-91). For enhancers that lose their H3K27ac active mark entirely (the "Activity_Lost" class), 59.8% show concordant gene downregulation -- a strong functional link.
+
+**At Polycomb-repressed domains:** These are regions already marked by H3K27me3, the histone modification associated with gene silencing and maintained by PRC2. In the wildtype brain, Polycomb domains form long-range contacts -- loops spanning megabases that connect distant silenced regions into nuclear compartments. These contacts depend not on the static presence of H2AK119ub, but on the dynamic organization of Polycomb bodies and the higher-order phase separation that PRC1 and PRC2 facilitate. When BAP1 is lost, the Polycomb landscape undergoes a global structural reorganization: long-range contacts (>1 Mb) weaken while mid-range contacts (100 kb - 1 Mb) strengthen. Critically, this reorganization occurs largely independent of local K119ub changes at those specific loops. Polycomb loops without any K119ub change show the same distance-dependent pattern (logFC = +0.30 at 100-500 kb, -0.17 at >1 Mb) as those with K119ub gain. This suggests the Polycomb reorganization is a downstream, structural consequence of the global redistribution of Polycomb marks across the genome -- not a direct, site-by-site effect of K119ub accumulation.
+
+The combined effect of these two mechanisms is what we term **"loop rewriting"**: the genome-wide replacement of long-range developmental contacts with shorter-range interactions. Lost loops have a median distance of 625 kb; gained loops have a median of 320 kb -- a 1.95-fold difference. Loops spanning more than 1 Mb are 3.3-fold enriched for loss. At 212 "shared anchor" hubs, the same genomic locus loses a long-range partner and gains a shorter-range one, with 83% directional consistency (p = 1.17 x 10^-20). These shared anchors are enriched for H3K27me3 (OR = 2.04) and depleted for H3K27ac (OR = 0.68), confirming that the switching phenomenon is concentrated at Polycomb-regulated sites.
+
+#### The Threshold Problem: When Contact Change Becomes Functional
+
+Not all chromatin changes translate into gene expression changes. One of the most informative findings of this study is the behavior of "K119ub_Only" enhancers -- sites where H2AK119ub accumulates but the active marks (H3K27ac, ATAC accessibility) remain unchanged. These enhancers show a real but modest 3.7% reduction in contact strength (median logFC = -0.054, p < 2.2 x 10^-16). However, this contact perturbation does not cross a functional threshold: the concordance between contact changes and gene expression changes at these sites is 49.4% -- indistinguishable from chance. By contrast, enhancers that lose their H3K27ac mark (the "Activity_Lost" class) show 59.8% concordance.
+
+This establishes a threshold model: H2AK119ub accumulation is mechanistically upstream of contact disruption, but the contact change must reach a critical magnitude -- or be accompanied by loss of activating marks -- before the downstream gene is affected. In steady-state adult tissue, K119ub alone is insufficient. This has implications for understanding why BAP1-associated diseases develop progressively: the initial epigenetic perturbation may be tolerated until it crosses a threshold, either through cumulative K119ub accumulation or through secondary loss of active chromatin marks.
+
+#### The Temporal Cascade: From Subtle to Catastrophic
+
+The most striking aspect of the BAP1 phenotype is its temporal progression. At postnatal day 12 (P12), only 165 differential loops are detected -- a whisper of dysregulation. By adulthood (P60), this has expanded to 2,910 differential loops, an 18-fold amplification. The direction of change also reverses: at P12, 57% of differential loops are weakened (down in mutant); by P60, 59% are strengthened (up in mutant).
+
+This reversal likely reflects two phases of the disease:
+
+1. **Early (P12): Initial disruption.** BAP1 loss begins to destabilize existing developmental contacts. The dominant signal is loss -- loops that should be maintained during cerebellar maturation are beginning to fail. The chromatin landscape is still largely intact, and the changes are concentrated at Polycomb-regulated loci (Repressed_Promoter-dominated loop types).
+
+2. **Late (P60): Compensatory reorganization and collapse.** By adulthood, the Polycomb landscape has been fundamentally remodeled. The 44% of the genome showing compartment shifts reflects a global redistribution of active and repressive chromatin. The majority of new loops (59% UP) are not healthy -- they represent ectopic contacts formed as architectural boundaries fail, compensatory enhancer-promoter interactions attempting to rescue lost connections, and the structural consequence of Polycomb domain reorganization (mid-range contacts filling the void left by long-range losses). The diversity of affected loop types at this stage (Active_Enhancer, Poised_Enhancer, Polycomb, all involved) reflects system-wide failure rather than targeted disruption.
+
+#### Multi-Scale Architecture: Why Some Structures Are Resistant
+
+The analysis across four scales of chromatin organization reveals a hierarchy of sensitivity to BAP1 loss:
+
+1. **Compartments** (most sensitive): 44% of the genome shifts. Compartments are defined by the aggregate behavior of many loci and are sensitive to widespread Polycomb redistribution. Even modest per-locus changes sum to massive compartment shifts.
+
+2. **Loops** (primary functional unit): 2,910 differential. Loops are the scale at which regulatory consequence is most directly measurable -- each loop connects a specific enhancer to a specific gene.
+
+3. **TAD boundaries** (moderately stable): 16-20% differential. TAD boundaries are maintained by CTCF and cohesin -- structural proteins whose occupancy is not directly affected by H2AK119ub. BAP1 loss perturbs the regulatory landscape within TADs more than the boundaries between them.
+
+4. **Stripes** (preserved): No significant changes. Stripes reflect cohesin-mediated loop extrusion, a structural process that is mechanistically independent of Polycomb/H2AK119ub. Their preservation confirms that BAP1's effects are channeled through the Polycomb axis, not through the cohesin/extrusion machinery.
+
+This hierarchy makes biological sense: BAP1 is a Polycomb regulator, so its loss should primarily affect Polycomb-dependent structures (compartments, Polycomb loops) while leaving Polycomb-independent structures (CTCF boundaries, cohesin stripes) relatively intact. The data confirm this prediction across every scale analyzed.
+
+#### Connecting to Disease
+
+BAP1 mutations are associated with neurodegeneration in mouse models and with cancer susceptibility (mesothelioma, uveal melanoma, renal cell carcinoma) in humans. The findings here suggest a unifying mechanism: BAP1 loss does not simply silence or activate individual genes. It progressively reorganizes the 3D regulatory landscape, disrupting the spatial relationships between enhancers and their target genes. The "loop rewriting" phenomenon -- where developmental long-range contacts are replaced by ectopic short-range interactions -- could explain why BAP1-associated pathologies develop gradually and affect cell identity: the regulatory grammar of the cell is being rewritten, one loop at a time.
+
+The 88.2% three-way concordance between loop changes, enhancer-gene linkage alterations, and differential gene expression (from the ABC model analysis) provides strong evidence that these architectural changes are not epiphenomenal -- they directly drive transcriptional dysregulation. The genes affected include neuronal identity factors (BDNF, Mef2c, Pax6 at lost loops) and developmental transcription factors (Sox2/6/9, Foxg1, Shh at gained loops), consistent with the progressive loss of cerebellar neuronal identity observed in BAP1-KO mice.
 
 ---
 
