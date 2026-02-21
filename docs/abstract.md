@@ -23,3 +23,9 @@ The workshop emphasizes tailoring jargon to your audience. A specialist conferen
 ### Three Worked Examples
 
 The presenters walked through three abstracts of increasing quality — from a bare-bones one-sentence abstract missing results, to a social sciences abstract with good content but choppy organization, to a well-structured PAAD (pancreatic cancer) bioinformatics abstract that flowed clearly through all four components. The progression illustrated how structure and flow distinguish a serviceable abstract from a strong one.
+
+
+---
+
+Example 3
+Pancreatic adenocarcinoma (PAAD) is the third leading cause of cancer deaths in the USA and seventh worldwide. Older individuals are at a significantly higher risk of developing PAAD, with 80% of PAAD tumors developing in patients between the ages of 60 and 80 years. Since patients seldom exhibit symptoms until advanced stages of the disease, the most significant challenge in combating PAAD is detecting the disease in its early stages. There are currently no proven markers for PAAD, making early diagnosis virtually impossible. Recent studies have shown that the intratumoral microbiome may play a role in the development of PAAD. We aim to identify dysbiotic microbes between PAAD and normal samples and characterize their effects on immune signaling that may alter PAAD carcinogenesis. This will be accomplished through the mining and analysis of patient RNA-sequencing data using various computational analyses that correlate between microbial abundance, host gene expression, and clinical outcomes. We hypothesize that changes to the microbiome over time as the host ages may lead to deleterious signaling that leads to PAAD, and therefore may explain why age is such a significant risk factor. We hope that our findings may eventually contribute to the development of better immunotherapy strategies and diagnostic tools for patients with PAAD, thereby improving the prognosis of these patients.
