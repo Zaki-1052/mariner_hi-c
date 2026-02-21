@@ -19,6 +19,8 @@ KEEP_NAMES = {
     # Social Science / Psychology / Neuroscience
     "Avery Charneski", "Simon Roberts", "Nathalie Gider", "Moumen Gabir",
     "David Ngan", "Julie Qian",
+    # Added — originally missed
+    "Rebecca Tseng", "Ashley Becker", "Leena Kang", "Connor Stratman",
 }
 
 # Margaret Jones appears twice; keep only the bioinformatics abstract (Mesirov mentor)
