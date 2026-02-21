@@ -68,3 +68,71 @@ This creates a genome-wide redistribution where the Polycomb landscape is being 
 > BAP1 loss eliminates H2AK119ub turnover, causing the same mark to act as a "stuck switch" in two contexts: at Polycomb domains it breaks long-range connectivity while preserving local compaction (loop rewriting), and at active enhancers it introduces a foreign repressive signal that blocks E-P contacts (enhancer silencing) -- both effects redistributing interactions toward shorter range.
 
 Does this framing align with what you're seeing, or is there a specific data point that still feels contradictory?
+
+---
+
+## TAD Boundaries: Not Stable Bystanders, but Structural Witnesses to Loop Collapse
+
+### The Initial (Wrong) Framing
+
+It's tempting to look at the TAD boundary data and conclude "TADs are relatively stable, BAP1's effects are at other scales." And at a gross level that's true — only 16-20% of boundaries are differential, versus 44% of the genome shifting compartments. But this framing misses what the boundary-loop cross-reference actually shows: **differential TAD boundaries and differential loops are spatially and directionally coordinated**, and the specific *types* of boundary changes tell a mechanistic story about how loop rewriting physically manifests.
+
+### The Data
+
+| Metric | Value |
+|--------|-------|
+| Loops analyzed | 2,910 (1,187 lost, 1,723 gained) |
+| Differential boundaries | 4,141 |
+| Distance to nearest diff boundary | Lost median 45kb vs Gained median 75kb (p<4e-9) |
+| Proximity enrichment | Lost loops 46% more likely near boundaries (OR~1.4) |
+| Direction concordance | **69.6%** (gained near mutant-enriched, lost near control-enriched; χ² p=0.0005) |
+| Permutation baseline | Differential loops ~2x more likely than expected to have anchors near diff boundaries |
+
+The directional concordance mosaic (n=1,327 loop-boundary pairs):
+- Gained loops near mutant-enriched boundaries: 540
+- Lost loops near control-enriched boundaries: 383
+- Off-diagonal (discordant): 404
+
+### The Boundary Type Breakdown — Where It Gets Interesting
+
+Not all differential boundaries are the same. TADCompare classifies them into types, and the association with loop direction is highly non-random:
+
+| Boundary Type | OR (>1 = enriched in gained loops) | Interpretation |
+|---------------|-------------------------------------|----------------|
+| **Merge** | **0.32\*\*\*** | **3x enriched in LOST loops** — TAD fusion disrupts contacts |
+| **Strength Change** | **2.11\*\*\*** | **2x enriched in GAINED loops** — boundaries getting stronger |
+| **Split** | **1.48\*** | Enriched in gained loops — TAD subdivision creates new contacts |
+| Shifted | 0.84 | No significant association |
+| Complex | 0.91 | No significant association |
+
+This is where the story crystallizes. The boundary types aren't randomly distributed with respect to loop changes — they're mechanistically paired.
+
+### The Mechanistic Model: Loops Collapse, TADs Reorganize
+
+The framing isn't "TAD boundaries are also affected by BAP1 loss" (which makes it sound like an independent, parallel phenotype). It's: **TAD boundary changes are the structural consequence of loop collapse**, and the specific types of boundary changes tell you *how* the collapse is happening.
+
+Here's the causal chain:
+
+**1. Long-range Polycomb loops span across TADs.** In wildtype, these megabase-scale loops connect distant Polycomb domains, and their anchors often sit near or at TAD boundaries. The loops and the boundaries coexist in a structural equilibrium.
+
+**2. BAP1 loss destabilizes these long-range loops.** The loop rewriting phenomenon — K119ub accumulation breaks long-range contacts, and the interaction probability redistributes locally.
+
+**3. When a long-range loop collapses, the TAD boundary it spanned becomes unnecessary.** Two previously separated TADs, held apart by the loop architecture, now **merge**. This is why merge boundaries are 3x enriched near lost loops — the TADs are fusing because the long-range contacts that defined the boundary between them are gone.
+
+**4. The gained shorter-range contacts create denser local structure.** The interaction "budget" that was spent on megabase-scale loops now redistributes into the local neighborhood. TAD boundaries near these new contacts show **strength changes** (2.1x enriched) and **splits** (1.5x enriched) — the gained contacts are making existing TADs denser and, in some cases, subdividing them into smaller domains.
+
+Or, as the mentor put it more concisely: **long Polycomb loops collapse inward to a closer TAD checkpoint, making a higher-density TAD.**
+
+### Why This Matters for the Overall Model
+
+This is actually the missing structural link between the loop-level and compartment-level findings:
+
+- **Loop level:** Long-range lost, short-range gained (loop rewriting)
+- **TAD level:** Merges where loops are lost, strengthening/splits where loops are gained
+- **Compartment level:** 44% of genome shifts, net B→A
+
+The TAD data provides the intermediate-scale evidence that loop collapse doesn't just change which enhancers talk to which genes — it physically reorganizes the domain structure of the chromosome. The merging of TADs at loop-loss sites and the densification at loop-gain sites is what a "regulatory traffic jam" actually looks like in 3D: the genome's organizational units are being remodeled because the contacts that defined them are being rewritten.
+
+### Caveats
+
+The mentor's caution is worth noting: these TADCompare classifications are algorithmically defined and can't be individually verified by eye in Juicebox at scale. The statistics are solid (69.6% concordance, significant ORs for merge/strength/split), but the per-boundary confidence is lower than for loops (where you can visually confirm each call). This is supplementary-figure-level evidence that supports the main loop rewriting story — it shouldn't be a headline finding, but it shouldn't be dismissed as "TADs are stable" either. The truth is more nuanced: **TAD boundaries are structurally responsive to loop collapse, and the pattern of their response is mechanistically coherent with the loop rewriting model.**
