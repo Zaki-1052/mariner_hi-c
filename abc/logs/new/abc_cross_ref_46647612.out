@@ -1,0 +1,68 @@
+======================================
+Final Results Cross Ref
+======================================
+Started: Sat Feb 21 18:41:59 PST 2026
+
+ΔABC pairs: 179,709
+Unique ABC enhancers: 37,431
+
+=== 9A: Differential Loop Overlap ===
+Differential loops: 2,910
+  Assigning nearest genes to loop anchors...
+  Anchor1 genes assigned: 2,525
+  Anchor2 genes assigned: 2,467
+  Sample anchor gene assignments:
+    loop_32: Ankrd10 (0bp) <-> 1700016D06Rik (814bp)
+    loop_8162: Gm10076 (11578bp) <-> Spry2 (0bp)
+    loop_1329: 9230112J17Rik (43869bp) <-> Lrrc49 (0bp)
+    loop_122: Car12 (21066bp) <-> Aph1b (241bp)
+    loop_139: Senp8 (25461bp) <-> Gm15507 (22950bp)
+  ABC enhancers overlapping anchor1: 1,452 / 37,431
+  ABC enhancers overlapping anchor2: 1,369 / 37,431
+  Unique genes in loop annotations: 3,073
+  ABC target genes in loop annotations: 2,490 / 20,538
+
+  Directional concordance (loop vs ΔABC): 1326/2407 (55.1%)
+  Ambiguous (tied loop directions): 83
+  Saved: /expanse/lustre/projects/csd940/zalibhai/abc/results/loops_with_gene_assignments.tsv
+
+=== 9B: H3K27ac Peak Overlap ===
+  ABC enhancers overlapping H3K27ac: 15,532 / 37,431
+  ABC enhancers without H3K27ac:     21,899 / 37,431
+
+  E-G pairs at H3K27ac+ enhancers: 110,260
+  E-G pairs at H3K27ac- enhancers: 69,449
+  Mean |ΔABC| H3K27ac+: 0.01604
+  Mean |ΔABC| H3K27ac-: 0.01449
+
+=== 9C: H3K27ac-Stratified Gain/Loss Asymmetry ===
+
+  H3K27ac+ (n=110,260 E-G pairs):
+    Gained (ΔABC > 0.01):  25,822
+    Lost (ΔABC < -0.01):   30,572
+    Unchanged:                 53,866
+    Lost/Gained ratio:         1.18
+    Mean ΔABC:                 -0.00096
+
+  H3K27ac- (n=69,449 E-G pairs):
+    Gained (ΔABC > 0.01):  16,288
+    Lost (ΔABC < -0.01):   13,944
+    Unchanged:                 39,217
+    Lost/Gained ratio:         0.86
+    Mean ΔABC:                 +0.00113
+
+  Chi-square test (gain/loss asymmetry differs by H3K27ac status):
+    Contingency table:
+                 Gained    Lost
+      H3K27ac+   25,822  30,572  (ratio 1.18)
+      H3K27ac-   16,288  13,944  (ratio 0.86)
+    Chi2 = 515.07, p = 4.99e-114
+
+  Mann-Whitney U test (H3K27ac+ ΔABC < H3K27ac- ΔABC):
+    U = 3,555,244,571, p = 3.74e-144
+
+Saved: /expanse/lustre/projects/csd940/zalibhai/abc/results/delta_abc_annotated.tsv (179,709 pairs)
+
+======================================
+Completed: Sat Feb 21 18:42:11 PST 2026
+======================================

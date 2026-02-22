@@ -1,0 +1,590 @@
+
+CondaError: Run 'conda init' before 'conda activate'
+
+################################################################
+# ABC Model — Comprehensive QC Report
+# Generated: Fri Feb 20 10:23:33 PST 2026
+# Host: exp-3-17
+################################################################
+
+================================================================
+SECTION 1: Reference File Inventory
+================================================================
+
+--- Gene Annotation ---
+  Path: /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed
+  Genes: 28230
+  Biotype distribution:
+    protein_coding            21833
+    lincRNA                   5620
+    processed_transcript      777
+  Pseudogene check: 0 entries (expect 0)
+  Small RNA check:  0 entries (expect 0)
+  Chromosomes: chr1 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chrM chrX chrY 
+  Column count: 8 (expect 8)
+  Header: #chr	start	end	name	score	strand	Ensembl_ID	gene_type
+  First entry: chr1	3205900	3671498	Xkr4	0	-	ENSMUSG00000051951	protein_coding
+
+--- TSS Annotation ---
+  Path: /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed
+  TSS regions: 28230 (should match gene count: 28230)
+  Column count: 8 (expect 8)
+  TSS widths: 500bp(28230) 
+
+--- Blacklist ---
+  Path: /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed
+  Regions: 3581
+  Column count: 3 (expect 3)
+
+--- Ubiquitous Genes ---
+  Path: /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv
+  Gene count: 730
+  Spot-check: Xkr4,St18,Ncoa2,Rims1,Adgrb3,
+    Actb: FOUND
+    Gapdh: not in list
+    Rpl13a: not in list
+
+--- Consensus Peaks ---
+  WT_cerebellum: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak
+    Peaks: 75371, columns: 10 (expect 10)
+  KO_cerebellum: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak
+    Peaks: 75371, columns: 10 (expect 10)
+
+--- Config ---
+  config.yaml: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/config/config.yaml
+  Key params:
+    biosamplesTable: "config/config-biosamples-mm10.tsv"
+    abc_thresholds: "reference/abc_thresholds.tsv"
+    genome_size: mm
+    use_qnorm: False
+    threshold: 0.02
+
+================================================================
+SECTION 2: Column Headers (AllPutative)
+================================================================
+
+--- WT_cerebellum ---
+  File: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+     1	chr
+     2	start
+     3	end
+     4	name
+     5	class
+     6	activity_base
+     7	activity_base_enh
+     8	activity_base_squared_enh
+     9	normalized_atac_enh
+    10	normalized_h3k27ac_enh
+    11	TargetGene
+    12	TargetGeneTSS
+    13	TargetGeneExpression
+    14	TargetGenePromoterActivityQuantile
+    15	TargetGeneIsExpressed
+    16	TargetGeneEnsembl_ID
+    17	normalized_atac_prom
+    18	normalized_h3k27ac_prom
+    19	distance
+    20	isSelfPromoter
+    21	powerlaw_contact
+    22	powerlaw_contact_reference
+    23	hic_contact
+    24	hic_contact_pl_scaled
+    25	hic_pseudocount
+    26	hic_contact_pl_scaled_adj
+    27	ABC.Score.Numerator
+    28	ABC.Score
+    29	powerlaw.Score.Numerator
+    30	powerlaw.Score
+    31	CellType
+    32	hic_contact_squared
+
+--- KO_cerebellum ---
+  File: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+     1	chr
+     2	start
+     3	end
+     4	name
+     5	class
+     6	activity_base
+     7	activity_base_enh
+     8	activity_base_squared_enh
+     9	normalized_atac_enh
+    10	normalized_h3k27ac_enh
+    11	TargetGene
+    12	TargetGeneTSS
+    13	TargetGeneExpression
+    14	TargetGenePromoterActivityQuantile
+    15	TargetGeneIsExpressed
+    16	TargetGeneEnsembl_ID
+    17	normalized_atac_prom
+    18	normalized_h3k27ac_prom
+    19	distance
+    20	isSelfPromoter
+    21	powerlaw_contact
+    22	powerlaw_contact_reference
+    23	hic_contact
+    24	hic_contact_pl_scaled
+    25	hic_pseudocount
+    26	hic_contact_pl_scaled_adj
+    27	ABC.Score.Numerator
+    28	ABC.Score
+    29	powerlaw.Score.Numerator
+    30	powerlaw.Score
+    31	CellType
+    32	hic_contact_squared
+
+--- Column identity check ---
+  WT and KO headers: IDENTICAL
+
+--- Sample data rows (WT, first 3) ---
+chr	start	end	name	class	activity_base	activity_base_enh	activity_base_squared_enh	normalized_atac_enh	normalized_h3k27ac_enh	TargetGene	TargetGeneTSS	TargetGeneExpression	TargetGenePromoterActivityQuantile	TargetGeneIsExpressed	TargetGeneEnsembl_ID	normalized_atac_prom	normalized_h3k27ac_prom	distance	isSelfPromoter	powerlaw_contact	powerlaw_contact_reference	hic_contact	hic_contact_pl_scaled	hic_pseudocount	hic_contact_pl_scaled_adj	ABC.Score.Numerator	ABC.Score	powerlaw.Score.Numerator	powerlaw.Score	CellType	hic_contact_squared
+chr1	3251831	3252331	genic|chr1:3251831-3252331	genic	0.863713	0.863713	0.746000	0.547369	1.362884	Tcea1	4857813	NaN	0.971648	True	ENSMUSG00000033813	0.959315	0.917036	1605732.000000	False	0.000171	0.000814	0.000000	0.000000	0.000171	0.000171	0.000147	0.000032	0.000147	0.000108	WT_cerebellum	0.000000
+chr1	3251831	3252331	genic|chr1:3251831-3252331	genic	0.863713	0.863713	0.746000	0.547369	1.362884	Gm37988	4807891	NaN	0.879541	True	ENSMUSG00000104217	0.843924	0.871460	1555810.000000	False	0.000176	0.000837	0.000000	0.000000	0.000176	0.000176	0.000152	0.000048	0.000152	0.000177	WT_cerebellum	0.000000
+chr1	3251831	3252331	genic|chr1:3251831-3252331	genic	0.863713	0.863713	0.746000	0.547369	1.362884	Lypla1	4807787	NaN	0.885955	True	ENSMUSG00000025903	0.843623	0.881242	1555706.000000	False	0.000176	0.000837	0.000000	0.000000	0.000176	0.000176	0.000152	0.000048	0.000152	0.000177	WT_cerebellum	0.000000
+
+--- Thresholded file listing ---
+  WT_cerebellum:
+    -rw-r--r-- 1 zalibhai csd940  11M Feb 20 00:04 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.tsv.gz
+    -rw-r--r-- 1 zalibhai csd940  10M Feb 20 00:04 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.tsv.gz.tmp
+    -rw-r--r-- 1 zalibhai csd940  91M Feb 20 00:04 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    -rw-r--r-- 1 zalibhai csd940 366M Feb 20 00:04 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+    -rw-r--r-- 1 zalibhai csd940  42M Feb 20 01:04 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv
+    -rw-r--r-- 1 zalibhai csd940  13M Feb 20 01:04 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictions_threshold0.02_self_promoter.tsv
+  KO_cerebellum:
+    -rw-r--r-- 1 zalibhai csd940  11M Feb 20 01:02 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.tsv.gz
+    -rw-r--r-- 1 zalibhai csd940 9.8M Feb 20 01:02 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.ForVariantOverlap.shrunk150bp.tsv.gz.tmp
+    -rw-r--r-- 1 zalibhai csd940  92M Feb 20 01:02 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    -rw-r--r-- 1 zalibhai csd940 362M Feb 20 01:02 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+    -rw-r--r-- 1 zalibhai csd940  40M Feb 20 01:03 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv
+    -rw-r--r-- 1 zalibhai csd940  13M Feb 20 01:03 /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictions_threshold0.02_self_promoter.tsv
+
+--- Thresholded file headers ---
+  EnhancerPredictionsFull_threshold0.02_self_promoter.tsv:
+     1	chr
+     2	start
+     3	end
+     4	name
+     5	class
+     6	activity_base
+     7	activity_base_enh
+     8	activity_base_squared_enh
+     9	normalized_atac_enh
+    10	normalized_h3k27ac_enh
+    11	TargetGene
+    12	TargetGeneTSS
+    13	TargetGeneExpression
+    14	TargetGenePromoterActivityQuantile
+    15	TargetGeneIsExpressed
+    16	TargetGeneEnsembl_ID
+    17	normalized_atac_prom
+    18	normalized_h3k27ac_prom
+    19	distance
+    20	isSelfPromoter
+    21	powerlaw_contact
+    22	powerlaw_contact_reference
+    23	hic_contact
+    24	hic_contact_pl_scaled
+    25	hic_pseudocount
+    26	hic_contact_pl_scaled_adj
+    27	ABC.Score.Numerator
+    28	ABC.Score
+    29	powerlaw.Score.Numerator
+    30	powerlaw.Score
+    31	CellType
+    32	hic_contact_squared
+
+  EnhancerPredictions_threshold0.02_self_promoter.tsv:
+     1	chr
+     2	start
+     3	end
+     4	name
+     5	TargetGene
+     6	TargetGeneTSS
+     7	CellType
+     8	ABC.Score
+
+  EnhancerPredictionsFull_threshold0.02_self_promoter.tsv:
+     1	chr
+     2	start
+     3	end
+     4	name
+     5	class
+     6	activity_base
+     7	activity_base_enh
+     8	activity_base_squared_enh
+     9	normalized_atac_enh
+    10	normalized_h3k27ac_enh
+    11	TargetGene
+    12	TargetGeneTSS
+    13	TargetGeneExpression
+    14	TargetGenePromoterActivityQuantile
+    15	TargetGeneIsExpressed
+    16	TargetGeneEnsembl_ID
+    17	normalized_atac_prom
+    18	normalized_h3k27ac_prom
+    19	distance
+    20	isSelfPromoter
+    21	powerlaw_contact
+    22	powerlaw_contact_reference
+    23	hic_contact
+    24	hic_contact_pl_scaled
+    25	hic_pseudocount
+    26	hic_contact_pl_scaled_adj
+    27	ABC.Score.Numerator
+    28	ABC.Score
+    29	powerlaw.Score.Numerator
+    30	powerlaw.Score
+    31	CellType
+    32	hic_contact_squared
+
+  EnhancerPredictions_threshold0.02_self_promoter.tsv:
+     1	chr
+     2	start
+     3	end
+     4	name
+     5	TargetGene
+     6	TargetGeneTSS
+     7	CellType
+     8	ABC.Score
+
+
+================================================================
+SECTION 3: Per-Biosample Statistics
+================================================================
+
+========================================
+=== WT_cerebellum ===
+========================================
+Thresholded file: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv
+E-G pairs (thresholded): 138860
+
+--- Detected Columns ---
+  ABC.Score:           col 28
+  ABC.Score.Numerator: col 27
+  TargetGene:          col 11
+  chr:                 col 1
+  isSelfPromoter:      col 20
+  distance:            col 19
+  class:               col 5
+
+--- ABC.Score Distribution (col 28) ---
+  n=138860  min=0.0200  Q25=0.0267  median=0.0415  Q75=0.1299  max=1.0000  mean=0.248775
+
+--- Self-Promoter Breakdown ---
+  isSelfPromoter=True:  29152
+  isSelfPromoter=False: 109708
+  Distal E-G pairs:    109708
+
+--- ABC.Score Distribution (distal only, isSelfPromoter=False) ---
+  n=109708  min=0.0200  median=0.0334  max=0.7957  mean=0.049157
+
+--- Element Class Distribution ---
+  76569 genic
+  33139 intergenic
+  29152 promoter
+
+--- Enhancers per Gene ---
+  Unique genes with predictions: 27492
+  Mean enhancers per gene (all): 5.05
+  Mean distal enhancers per gene: 3.99
+  Top 10 genes by enhancer count:
+     21 Zic1
+     19 Zic4
+     19 Gm28703
+     18 Gm5089
+     18 Gm29185
+     17 Rnf148
+     17 Rnf133
+     17 Gm48622
+     17 Gm45356
+     17 Gm32455
+  Enhancer count distribution:
+    min=1  Q25=3  median=5  Q75=7  max=21  mean=5.1
+
+--- Distance Distribution (distal elements only) ---
+  n=109708  min=750  median=117697  Q75=419573  max=4999852  mean=471469
+
+--- Per-Chromosome E-G Pairs ---
+  chr1   8356
+  chr2   10972
+  chr3   6562
+  chr4   7752
+  chr5   8309
+  chr6   7137
+  chr7   11088
+  chr8   7104
+  chr9   8189
+  chr10  7478
+  chr11  8900
+  chr12  5464
+  chr13  6376
+  chr14  6154
+  chr15  5291
+  chr16  4131
+  chr17  6092
+  chr18  4147
+  chr19  4076
+  chrX   5282
+  Total chromosomes: 20 (expect 20: chr1-19 + chrX)
+
+--- QC Metrics Files ---
+total 1.3M
+-rw-r--r-- 1 zalibhai csd940  215 Feb 20 01:04 EnhancerGenePairsPerChrom.txt
+-rw-r--r-- 1 zalibhai csd940 253K Feb 20 01:04 EnhancerPerGene.tsv
+-rw-r--r-- 1 zalibhai csd940 1.4M Feb 20 01:04 GenesPerEnhancer.tsv
+-rw-r--r-- 1 zalibhai csd940 261K Feb 20 01:05 QCPlots_threshold0.02_self_promoter.pdf
+-rw-r--r-- 1 zalibhai csd940  772 Feb 20 01:05 QCSummary_threshold0.02_self_promoter.tsv
+
+========================================
+=== KO_cerebellum ===
+========================================
+Thresholded file: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv
+E-G pairs (thresholded): 132012
+
+--- Detected Columns ---
+  ABC.Score:           col 28
+  ABC.Score.Numerator: col 27
+  TargetGene:          col 11
+  chr:                 col 1
+  isSelfPromoter:      col 20
+  distance:            col 19
+  class:               col 5
+
+--- ABC.Score Distribution (col 28) ---
+  n=132012  min=0.0200  Q25=0.0267  median=0.0423  Q75=0.1520  max=1.0000  mean=0.259495
+
+--- Self-Promoter Breakdown ---
+  isSelfPromoter=True:  29152
+  isSelfPromoter=False: 102860
+  Distal E-G pairs:    102860
+
+--- ABC.Score Distribution (distal only, isSelfPromoter=False) ---
+  n=102860  min=0.0200  median=0.0335  max=0.7618  mean=0.049626
+
+--- Element Class Distribution ---
+  73054 genic
+  29806 intergenic
+  29152 promoter
+
+--- Enhancers per Gene ---
+  Unique genes with predictions: 27492
+  Mean enhancers per gene (all): 4.80
+  Mean distal enhancers per gene: 3.74
+  Top 10 genes by enhancer count:
+     19 Gm32585
+     18 Gm29478
+     17 Gm49978
+     17 Gm48843
+     17 Gm41654
+     17 Gm28703
+     17 BC051408
+     16 Zic1
+     16 Nfix
+     16 Neb
+  Enhancer count distribution:
+    min=1  Q25=3  median=4  Q75=6  max=19  mean=4.8
+
+--- Distance Distribution (distal elements only) ---
+  n=102860  min=750  median=101902  Q75=358432  max=4999826  mean=428391
+
+--- Per-Chromosome E-G Pairs ---
+  chr1   7947
+  chr2   10554
+  chr3   6163
+  chr4   7285
+  chr5   7878
+  chr6   6610
+  chr7   10688
+  chr8   6766
+  chr9   7868
+  chr10  7035
+  chr11  8565
+  chr12  5162
+  chr13  5906
+  chr14  5863
+  chr15  5114
+  chr16  3840
+  chr17  5801
+  chr18  4039
+  chr19  3839
+  chrX   5089
+  Total chromosomes: 20 (expect 20: chr1-19 + chrX)
+
+--- QC Metrics Files ---
+total 1.3M
+-rw-r--r-- 1 zalibhai csd940  215 Feb 20 01:03 EnhancerGenePairsPerChrom.txt
+-rw-r--r-- 1 zalibhai csd940 252K Feb 20 01:03 EnhancerPerGene.tsv
+-rw-r--r-- 1 zalibhai csd940 1.4M Feb 20 01:03 GenesPerEnhancer.tsv
+-rw-r--r-- 1 zalibhai csd940 263K Feb 20 01:04 QCPlots_threshold0.02_self_promoter.pdf
+-rw-r--r-- 1 zalibhai csd940  773 Feb 20 01:04 QCSummary_threshold0.02_self_promoter.tsv
+
+================================================================
+SECTION 4: Per-Gene ABC.Score Sum Validation
+================================================================
+
+Expected: per-gene sums ~1.0 for non-self-promoter entries
+          per-gene sums ~2.0 including forced self-promoters (by design)
+
+--- WT_cerebellum ---
+  File: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+  Detected columns: TargetGene=11, ABC.Score=28, isSelfPromoter=20
+
+  Total genes in AllPutative: 19711
+
+  --- Per-gene sum (ALL entries, including forced self-promoters) ---
+  Mean per-gene sum: 1.903332 (expect ~2.0 due to forced self-promoter)
+  Genes outside [0.95, 1.05]: 19710 / 19711 (100.0%)
+
+  --- Per-gene sum (EXCLUDING isSelfPromoter=True) ---
+  Mean per-gene sum: 0.821297 (expect ~0.85-0.90)
+  Genes outside [0.90, 1.05]: 11610 / 19711 (58.9%)
+
+  --- Self-promoter entry counts ---
+  Genes with 0 self-promoter entries: 0
+  Genes with 1 self-promoter entry:   18130 (normal)
+  Genes with 2 self-promoter entries:  1545 (check for annotation overlap)
+  Genes with 3+ self-promoter entries: 36
+
+  --- Sample genes ---
+    Ubl4a: sum_all=1.9322  sum_distal=0.9322  n_elements=200  n_self_promoter=1
+    Actrt3: sum_all=1.7378  sum_distal=0.7378  n_elements=251  n_self_promoter=1
+    Parp4: sum_all=1.8804  sum_distal=0.8804  n_elements=457  n_self_promoter=1
+    Klf11: sum_all=1.6421  sum_distal=0.6421  n_elements=255  n_self_promoter=1
+    Kin: sum_all=1.4580  sum_distal=0.4580  n_elements=218  n_self_promoter=1
+    Vrtn: sum_all=1.9886  sum_distal=0.9886  n_elements=553  n_self_promoter=1
+    Tmem74bos: sum_all=1.9755  sum_distal=0.9755  n_elements=553  n_self_promoter=1
+    Grip2: sum_all=1.9827  sum_distal=0.9827  n_elements=454  n_self_promoter=1
+    Amotl2: sum_all=1.9912  sum_distal=0.9912  n_elements=484  n_self_promoter=1
+
+--- KO_cerebellum ---
+  File: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+  Detected columns: TargetGene=11, ABC.Score=28, isSelfPromoter=20
+
+  Total genes in AllPutative: 19708
+
+  --- Per-gene sum (ALL entries, including forced self-promoters) ---
+  Mean per-gene sum: 1.888755 (expect ~2.0 due to forced self-promoter)
+  Genes outside [0.95, 1.05]: 19708 / 19708 (100.0%)
+
+  --- Per-gene sum (EXCLUDING isSelfPromoter=True) ---
+  Mean per-gene sum: 0.807113 (expect ~0.85-0.90)
+  Genes outside [0.90, 1.05]: 12074 / 19708 (61.3%)
+
+  --- Self-promoter entry counts ---
+  Genes with 0 self-promoter entries: 0
+  Genes with 1 self-promoter entry:   18135 (normal)
+  Genes with 2 self-promoter entries:  1537 (check for annotation overlap)
+  Genes with 3+ self-promoter entries: 36
+
+  --- Sample genes ---
+    Ubl4a: sum_all=1.9411  sum_distal=0.9411  n_elements=200  n_self_promoter=1
+    Trim21: sum_all=1.9437  sum_distal=0.9437  n_elements=584  n_self_promoter=1
+    Man2c1: sum_all=1.7366  sum_distal=0.7366  n_elements=513  n_self_promoter=1
+    Gm50378: sum_all=1.9187  sum_distal=0.9187  n_elements=326  n_self_promoter=1
+    Acbd6: sum_all=1.6564  sum_distal=0.6564  n_elements=434  n_self_promoter=1
+    Sucnr1: sum_all=1.9399  sum_distal=0.9399  n_elements=203  n_self_promoter=1
+    Stpg2: sum_all=1.5341  sum_distal=0.5341  n_elements=277  n_self_promoter=1
+    Ctsc: sum_all=1.6533  sum_distal=0.6533  n_elements=275  n_self_promoter=1
+    Gm3604: sum_all=1.7605  sum_distal=0.7605  n_elements=394  n_self_promoter=1
+
+
+================================================================
+SECTION 5: Cross-Condition Comparison
+================================================================
+
+--- Gene Overlap ---
+  WT unique genes:        27492
+  KO unique genes:        27492
+  Genes in both:          27492 (100.0% of WT)
+  WT-only genes:          0
+  KO-only genes:          0
+
+--- E-G Pair Counts ---
+  WT total:  138860    (distal: 109708)
+  KO total:  132012    (distal: 102860)
+  Difference: -4.9% (KO vs WT)
+
+================================================================
+SECTION 6: Spot-Check Known Genes
+================================================================
+
+Checking biologically relevant genes in WT predictions...
+(Bap1=knocked out gene, Atoh1/Neurod1=cerebellum TFs, Actb=housekeeping)
+
+  --- Bap1 ---
+    Total elements within 5Mb: 441
+    Self-promoter entries: 1
+    Distal elements (all): 440
+    Distal elements (ABC >= 0.02): 9
+    Sum ABC.Score: 1.8144
+    Strongest element: ABC=1.0000, dist=126, class=promoter
+
+  --- Atoh1 ---
+    Total elements within 5Mb: 124
+    Self-promoter entries: 1
+    Distal elements (all): 123
+    Distal elements (ABC >= 0.02): 8
+    Sum ABC.Score: 1.8747
+    Strongest element: ABC=1.0000, dist=0, class=promoter
+
+  --- Neurod1 ---
+    Total elements within 5Mb: 222
+    Self-promoter entries: 1
+    Distal elements (all): 221
+    Distal elements (ABC >= 0.02): 9
+    Sum ABC.Score: 1.7713
+    Strongest element: ABC=1.0000, dist=43, class=promoter
+
+  --- Pax6 ---
+    Total elements within 5Mb: 317
+    Self-promoter entries: 1
+    Distal elements (all): 316
+    Distal elements (ABC >= 0.02): 12
+    Sum ABC.Score: 1.9297
+    Strongest element: ABC=1.0000, dist=46, class=promoter
+
+  --- Actb ---
+    Total elements within 5Mb: 546
+    Self-promoter entries: 1
+    Distal elements (all): 545
+    Distal elements (ABC >= 0.02): 6
+    Sum ABC.Score: 1.8316
+    Strongest element: ABC=1.0000, dist=34, class=promoter
+
+  --- Gapdh ---
+    Total elements within 5Mb: 504
+    Self-promoter entries: 1
+    Distal elements (all): 503
+    Distal elements (ABC >= 0.02): 7
+    Sum ABC.Score: 1.7992
+    Strongest element: ABC=1.0000, dist=6, class=promoter
+
+================================================================
+SECTION 7: Summary and Readiness Check
+================================================================
+
+  [PASS] mm10_genes.bed: exists
+  [PASS] mm10_tss.bed: exists
+  [PASS] mm10_merged_blacklist.bed: exists
+  [PASS] mm10_ubiquitous_genes.tsv: exists
+  [PASS] Biotype filter: 0 pseudogenes in annotation
+  [PASS] WT_cerebellum predictions: AllPutative and thresholded files exist
+  [PASS] KO_cerebellum predictions: AllPutative and thresholded files exist
+  [PASS] Column headers: identical between WT and KO
+  [PASS] WT_cerebellum chromosomes: 20 chromosomes
+  [PASS] KO_cerebellum chromosomes: 20 chromosomes
+
+  Results: 10 PASS, 0 WARN, 0 FAIL
+
+  Ready to proceed to Step 6 (delta ABC computation)
+  Confirmed column names for Steps 6-8:
+    ENHANCER_COLS = ["chr", "start", "end"]
+    GENE_COL = "TargetGene"
+    ABC_SCORE_COL = "ABC.Score"
+    UNNORM_COL = "ABC.Score.Numerator"
+    SELF_PROMOTER_COL = "isSelfPromoter"
+    Filter: isSelfPromoter == False for delta ABC
+
+################################################################
+# QC Report Complete: Fri Feb 20 10:26:53 PST 2026
+################################################################

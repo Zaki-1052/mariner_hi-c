@@ -1,0 +1,79 @@
+======================================
+Final ABC Delta
+======================================
+Started: Fri Feb 20 18:14:50 PST 2026
+
+Loading WT predictions: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+  Raw: 8,406,728 E-G pairs, 19,711 genes
+  Removed 21,328 self-promoter entries (0.3%)
+  Distal: 8,385,400 E-G pairs, 19,711 genes
+Loading KO predictions: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+  Raw: 8,356,071 E-G pairs, 19,708 genes
+  Removed 21,317 self-promoter entries (0.3%)
+  Distal: 8,334,754 E-G pairs, 19,708 genes
+
+Joining WT and KO on enhancer-gene pairs...
+  Both conditions: 8,032,254
+  WT only:         353,146
+  KO only:         302,500
+  Overlap: 92.5%
+
+Total distal E-G pairs (union, AllPutative): 8,687,900
+Pairs with ABC >= 0.02 in at least one condition: 179,709
+Unique genes: 20,538
+
+=== ΔABC Summary (thresholded distal pairs) ===
+  n:      179,709
+  Mean:   -0.000152
+  Median: 0.000161
+  Std:    0.027232
+  Q5/Q95: -0.03275 / 0.03198
+  Gained (ΔABC > 0.01):    42,110
+  Lost (ΔABC < -0.01):     44,519
+  Unchanged (|Δ| <= 0.01): 93,080
+
+=== Δ(Activity × Contact) Summary ===
+  Mean:   -0.006919
+  Median: 0.001393
+  Std:    0.131691
+
+=== Hi-C Coverage (thresholded pairs) ===
+  With Hi-C in at least one condition: 178,384/179,709 (99.3%)
+  Powerlaw-only (no Hi-C either cond): 1,325
+
+=== ΔABC by Distance Bin ===
+       <50kb: n=53,622  mean_Δ=+0.00046  gained=11,177  lost=10,252
+    50-200kb: n=55,641  mean_Δ=-0.00016  gained=9,902  lost=10,803
+   200-500kb: n=31,834  mean_Δ=-0.00048  gained=7,464  lost=8,478
+   500kb-1Mb: n=15,904  mean_Δ=-0.00066  gained=4,805  lost=5,442
+       1-5Mb: n=22,708  mean_Δ=-0.00075  gained=8,762  lost=9,544
+
+Saved all thresholded pairs: /expanse/lustre/projects/csd940/zalibhai/abc/results/delta_abc_all_pairs.tsv (179,709 pairs)
+Saved significant pairs (|ΔABC| > 0.01): /expanse/lustre/projects/csd940/zalibhai/abc/results/delta_abc_significant.tsv (86,629 pairs)
+
+=== Output Column Inventory ===
+   1. chr
+   2. start
+   3. end
+   4. TargetGene
+   5. ABC.Score_WT
+   6. ABC.Score.Numerator_WT
+   7. activity_base_WT
+   8. hic_contact_pl_scaled_adj_WT
+   9. hic_contact_WT
+  10. ABC.Score_KO
+  11. ABC.Score.Numerator_KO
+  12. activity_base_KO
+  13. hic_contact_pl_scaled_adj_KO
+  14. hic_contact_KO
+  15. distance
+  16. class
+  17. delta_ABC
+  18. delta_unnorm
+  19. hic_data_wt
+  20. hic_data_ko
+  21. has_hic_either
+
+======================================
+Completed: Fri Feb 20 18:16:22 PST 2026
+======================================

@@ -1,0 +1,881 @@
+Starting ABC pipeline: Tue Feb 17 17:11:03 PST 2026
+Using config: config/config.yaml
+Snakemake version: 7.32.4
+
+Config file config/config.yaml is extended by additional config specified via the command line.
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Conda environments: ignored
+Job stats:
+job                              count
+-----------------------------  -------
+all                                  1
+create_neighborhoods                 2
+create_predictions                   2
+filter_predictions                   2
+generate_chrom_sizes_bed_file        1
+generate_qc_plot_and_summary         2
+make_candidate_regions               2
+sort_narrowpeaks                     2
+total                               14
+
+Select jobs to execute...
+
+[Tue Feb 17 17:11:07 2026]
+rule generate_chrom_sizes_bed_file:
+    input: /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    jobid: 6
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=8000, mem_mib=7630
+
+
+		awk 'BEGIN {OFS="	"} {if (NF > 0) print $1,"0",$2 ; else print $0}' /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+		
+[Tue Feb 17 17:11:08 2026]
+Finished job 6.
+1 of 14 steps (7%) done
+Select jobs to execute...
+
+[Tue Feb 17 17:11:08 2026]
+rule sort_narrowpeaks:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    jobid: 10
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=8000, mem_mib=7630
+
+
+		# intersect to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+		
+[Tue Feb 17 17:11:09 2026]
+Finished job 10.
+2 of 14 steps (14%) done
+Select jobs to execute...
+
+[Tue Feb 17 17:11:09 2026]
+rule make_candidate_regions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted, /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    jobid: 9
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=8000, mem_mib=7630
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/makeCandidateRegions.py 			--narrowPeak /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted			--accessibility /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz 			--outDir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--regions_blocklist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed 			--regions_includelist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed 			--peakExtendFromSummit 250 			--nStrongestPeak 150000
+		
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed
+Running piped cmds: ['bedtools sort -i /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.mut_ATAC.tagAlign.bgz.Counts.bed -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin -c 4 -o max', 'sort -nr -k 4', 'head -n 150000', 'bedtools intersect -b stdin -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted -wa', 'awk \'{{print $1 "\\t" $2 + $10 "\\t" $2 + $10}}\'', 'bedtools slop -i stdin -b 250 -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools sort -i stdin -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin', 'bedtools intersect -v -wa -a stdin -b /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed', 'cut -f 1-3', '(bedtools intersect -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed -wa | cut -f 1-3 && cat)', 'bedtools sort -i stdin -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed']
+[Tue Feb 17 17:14:53 2026]
+Finished job 9.
+3 of 14 steps (21%) done
+Select jobs to execute...
+
+[Tue Feb 17 17:14:53 2026]
+rule sort_narrowpeaks:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+    jobid: 4
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=8000, mem_mib=7630
+
+
+		# intersect to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted
+		
+[Tue Feb 17 17:14:54 2026]
+Finished job 4.
+4 of 14 steps (29%) done
+Select jobs to execute...
+
+[Tue Feb 17 17:14:54 2026]
+rule make_candidate_regions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted, /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    jobid: 3
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=8000, mem_mib=7630
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/makeCandidateRegions.py 			--narrowPeak /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted			--accessibility /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz 			--outDir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--regions_blocklist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed 			--regions_includelist /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed 			--peakExtendFromSummit 250 			--nStrongestPeak 150000
+		
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed
+Running piped cmds: ['bedtools sort -i /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.ctrl_ATAC.tagAlign.bgz.Counts.bed -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin -c 4 -o max', 'sort -nr -k 4', 'head -n 150000', 'bedtools intersect -b stdin -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted -wa', 'awk \'{{print $1 "\\t" $2 + $10 "\\t" $2 + $10}}\'', 'bedtools slop -i stdin -b 250 -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools sort -i stdin -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin', 'bedtools intersect -v -wa -a stdin -b /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_merged_blacklist.bed', 'cut -f 1-3', '(bedtools intersect -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_tss.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed -wa | cut -f 1-3 && cat)', 'bedtools sort -i stdin -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', 'bedtools merge -i stdin > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed']
+[Tue Feb 17 17:19:06 2026]
+Finished job 3.
+5 of 14 steps (36%) done
+Select jobs to execute...
+
+[Tue Feb 17 17:19:06 2026]
+rule create_neighborhoods:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+    jobid: 2
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=32000, mem_mib=30518
+
+
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin | 		uniq > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed
+						
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/run.neighborhoods.py 			--candidate_enhancer_regions /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--DHS  			--ATAC /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz 			--default_accessibility_feature ATAC 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed 			--ubiquitously_expressed_genes /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv 			--H3K27ac  			 
+		
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+Namespace(candidate_enhancer_regions='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed', outdir='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods', genes='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/processed_genes_file.bed', genes_for_class_assignment=None, ubiquitously_expressed_genes='/expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv', gene_name_annotations='symbol', primary_gene_identifier='symbol', skip_gene_counts=False, H3K27ac=None, DHS=None, ATAC='/expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz', default_accessibility_feature='ATAC', expression_table='', qnorm=None, tss_slop_for_class_assignment=500, skip_rpkm_quantile=False, use_secondary_counting_method=False, chrom_sizes='/expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', chrom_sizes_bed='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', enhancer_class_override=None, supplementary_features=None, cellType=None)
+Running command: bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed.sorted; mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed.sorted /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Genes.ATAC.ctrl_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 239.82970070838928
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.TSS1kb.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 231.95752048492432
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/ctrl_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/Enhancers.ATAC.ctrl_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 232.45739102363586
+Assigning classes to enhancers
+Total enhancers: 84685
+         Promoters: 27768
+         Genic: 38966
+         Intergenic: 17951
+Neighborhoods Complete! 
+
+[Tue Feb 17 17:30:59 2026]
+Finished job 2.
+6 of 14 steps (43%) done
+Select jobs to execute...
+
+[Tue Feb 17 17:30:59 2026]
+rule create_predictions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    jobid: 1
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt
+    wildcards: biosample=WT_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=20000, mem_mib=19074
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predict.py 			--enhancers /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/EnhancerList.txt 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions 			--score_column ABC.Score 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--accessibility_feature ATAC 			--cellType WT_cerebellum 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods/GeneList.txt 			--hic_gamma 1.024238616787792 			--hic_scale 5.9594510043736655 			--hic_pseudocount_distance 5000 			--hic_file /expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402/ctrl_merged.hic --hic_type hic --hic_resolution 5000 			--scale_hic_using_powerlaw
+		
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+reading genes
+reading enhancers
+Making predictions for chromosome: chr1
+Making putative predictions table...
+Done. There are 553517 putative enhancers for chromosome chr1
+Elapsed time: 0.3402118682861328
+Begin HiC
+HiC added to predictions table. Elapsed time: 200.1104655265808
+HiC Complete
+Completed chromosome: chr1. Elapsed time: 201.22040367126465 
+
+Making predictions for chromosome: chr10
+Making putative predictions table...
+Done. There are 549103 putative enhancers for chromosome chr10
+Elapsed time: 0.28736424446105957
+Begin HiC
+HiC added to predictions table. Elapsed time: 116.13759803771973
+HiC Complete
+Completed chromosome: chr10. Elapsed time: 116.93554139137268 
+
+Making predictions for chromosome: chr11
+Making putative predictions table...
+Done. There are 1088447 putative enhancers for chromosome chr11
+Elapsed time: 0.5793101787567139
+Begin HiC
+HiC added to predictions table. Elapsed time: 117.79034233093262
+HiC Complete
+Completed chromosome: chr11. Elapsed time: 119.01490116119385 
+
+Making predictions for chromosome: chr12
+Making putative predictions table...
+Done. There are 353245 putative enhancers for chromosome chr12
+Elapsed time: 0.18740177154541016
+Begin HiC
+HiC added to predictions table. Elapsed time: 96.24119019508362
+HiC Complete
+Completed chromosome: chr12. Elapsed time: 96.64660263061523 
+
+Making predictions for chromosome: chr13
+Making putative predictions table...
+Done. There are 424115 putative enhancers for chromosome chr13
+Elapsed time: 0.2291257381439209
+Begin HiC
+HiC added to predictions table. Elapsed time: 95.61783576011658
+HiC Complete
+Completed chromosome: chr13. Elapsed time: 96.09684300422668 
+
+Making predictions for chromosome: chr14
+Making putative predictions table...
+Done. There are 404367 putative enhancers for chromosome chr14
+Elapsed time: 0.22309041023254395
+Begin HiC
+HiC added to predictions table. Elapsed time: 92.84359049797058
+HiC Complete
+Completed chromosome: chr14. Elapsed time: 93.32639408111572 
+
+Making predictions for chromosome: chr15
+Making putative predictions table...
+Done. There are 508696 putative enhancers for chromosome chr15
+Elapsed time: 0.2689244747161865
+Begin HiC
+HiC added to predictions table. Elapsed time: 78.05743432044983
+HiC Complete
+Completed chromosome: chr15. Elapsed time: 78.82785248756409 
+
+Making predictions for chromosome: chr16
+Making putative predictions table...
+Done. There are 294228 putative enhancers for chromosome chr16
+Elapsed time: 0.1570589542388916
+Begin HiC
+HiC added to predictions table. Elapsed time: 66.32233834266663
+HiC Complete
+Completed chromosome: chr16. Elapsed time: 66.85057258605957 
+
+Making predictions for chromosome: chr17
+Making putative predictions table...
+Done. There are 646205 putative enhancers for chromosome chr17
+Elapsed time: 0.3458421230316162
+Begin HiC
+HiC added to predictions table. Elapsed time: 67.04293942451477
+HiC Complete
+Completed chromosome: chr17. Elapsed time: 67.86051964759827 
+
+Making predictions for chromosome: chr18
+Making putative predictions table...
+Done. There are 266993 putative enhancers for chromosome chr18
+Elapsed time: 0.15824246406555176
+Begin HiC
+HiC added to predictions table. Elapsed time: 68.18181252479553
+HiC Complete
+Completed chromosome: chr18. Elapsed time: 68.5971109867096 
+
+Making predictions for chromosome: chr19
+Making putative predictions table...
+Done. There are 377202 putative enhancers for chromosome chr19
+Elapsed time: 0.20644450187683105
+Begin HiC
+HiC added to predictions table. Elapsed time: 37.87454175949097
+HiC Complete
+Completed chromosome: chr19. Elapsed time: 38.480926275253296 
+
+Making predictions for chromosome: chr2
+Making putative predictions table...
+Done. There are 992511 putative enhancers for chromosome chr2
+Elapsed time: 0.5432476997375488
+Begin HiC
+HiC added to predictions table. Elapsed time: 184.93087148666382
+HiC Complete
+Completed chromosome: chr2. Elapsed time: 186.5179123878479 
+
+Making predictions for chromosome: chr3
+Making putative predictions table...
+Done. There are 419485 putative enhancers for chromosome chr3
+Elapsed time: 0.21937251091003418
+Begin HiC
+HiC added to predictions table. Elapsed time: 151.38709568977356
+HiC Complete
+Completed chromosome: chr3. Elapsed time: 151.8573911190033 
+
+Making predictions for chromosome: chr4
+Making putative predictions table...
+Done. There are 734775 putative enhancers for chromosome chr4
+Elapsed time: 0.4013538360595703
+Begin HiC
+HiC added to predictions table. Elapsed time: 133.40741181373596
+HiC Complete
+Completed chromosome: chr4. Elapsed time: 134.85880637168884 
+
+Making predictions for chromosome: chr5
+Making putative predictions table...
+Done. There are 728248 putative enhancers for chromosome chr5
+Elapsed time: 0.3992784023284912
+Begin HiC
+HiC added to predictions table. Elapsed time: 125.3811264038086
+HiC Complete
+Completed chromosome: chr5. Elapsed time: 126.50633573532104 
+
+Making predictions for chromosome: chr6
+Making putative predictions table...
+Done. There are 491638 putative enhancers for chromosome chr6
+Elapsed time: 0.2650008201599121
+Begin HiC
+HiC added to predictions table. Elapsed time: 143.0631537437439
+HiC Complete
+Completed chromosome: chr6. Elapsed time: 144.0035593509674 
+
+Making predictions for chromosome: chr7
+Making putative predictions table...
+Done. There are 1083226 putative enhancers for chromosome chr7
+Elapsed time: 0.5960178375244141
+Begin HiC
+HiC added to predictions table. Elapsed time: 128.33108019828796
+HiC Complete
+Completed chromosome: chr7. Elapsed time: 129.82240223884583 
+
+Making predictions for chromosome: chr8
+Making putative predictions table...
+Done. There are 547897 putative enhancers for chromosome chr8
+Elapsed time: 0.31366968154907227
+Begin HiC
+HiC added to predictions table. Elapsed time: 105.94451427459717
+HiC Complete
+Completed chromosome: chr8. Elapsed time: 106.66968870162964 
+
+Making predictions for chromosome: chr9
+Making putative predictions table...
+Done. There are 696783 putative enhancers for chromosome chr9
+Elapsed time: 0.3718533515930176
+Begin HiC
+HiC added to predictions table. Elapsed time: 118.45887637138367
+HiC Complete
+Completed chromosome: chr9. Elapsed time: 119.31669068336487 
+
+Making predictions for chromosome: chrX
+Making putative predictions table...
+Done. There are 150462 putative enhancers for chromosome chrX
+Elapsed time: 0.08780932426452637
+Begin HiC
+HiC added to predictions table. Elapsed time: 71.74965810775757
+HiC Complete
+Completed chromosome: chrX. Elapsed time: 72.03073024749756 
+
+Writing output files...
+Done.
+Done.
+[Tue Feb 17 18:18:02 2026]
+Finished job 1.
+7 of 14 steps (50%) done
+Select jobs to execute...
+
+[Tue Feb 17 18:18:02 2026]
+rule create_neighborhoods:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+    jobid: 8
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=32000, mem_mib=30518
+
+
+		# get sorted & unique gene list
+		# intersect first to remove alternate chromosomes
+		bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_genes.bed -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed | 		bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i stdin | 		uniq > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed
+						
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/run.neighborhoods.py 			--candidate_enhancer_regions /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--DHS  			--ATAC /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz 			--default_accessibility_feature ATAC 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--chrom_sizes_bed /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed 			--ubiquitously_expressed_genes /expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv 			--H3K27ac  			 
+		
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+Namespace(candidate_enhancer_regions='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed', outdir='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods', genes='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/processed_genes_file.bed', genes_for_class_assignment=None, ubiquitously_expressed_genes='/expanse/lustre/projects/csd940/zalibhai/abc/reference/mm10_ubiquitous_genes.tsv', gene_name_annotations='symbol', primary_gene_identifier='symbol', skip_gene_counts=False, H3K27ac=None, DHS=None, ATAC='/expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz', default_accessibility_feature='ATAC', expression_table='', qnorm=None, tss_slop_for_class_assignment=500, skip_rpkm_quantile=False, use_secondary_counting_method=False, chrom_sizes='/expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes', chrom_sizes_bed='/expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', enhancer_class_override=None, supplementary_features=None, cellType=None)
+Running command: bedtools sort -faidx /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -i /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed.sorted; mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed.sorted /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Genes.ATAC.mut_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 233.2970540523529
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.TSS1kb.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Genes.TSS1kb.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 226.71834015846252
+Generating /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Counting coverage for Enhancers.ATAC.mut_ATAC.tagAlign.bgz
+Running piped cmds: ['bedtools intersect -u -a /expanse/lustre/projects/csd940/zalibhai/abc/input/mut_ATAC.tagAlign.bgz -b /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/tmp/mm10.chrom.sizes.bed', 'bedtools coverage -counts -sorted -g /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes -b - -a /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed', 'awk \'{{print $1 "\\t" $2 "\\t" $3 "\\t" $NF}}\' > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph']
+Running command: awk 'BEGIN {FS=OFS="\t"} (substr($1, length($1)) == "X" || substr($1, length($1)) == "Y") { $4 *= 2 } 1' /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph > /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp && mv /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph.tmp /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/Enhancers.ATAC.mut_ATAC.tagAlign.bgz.CountReads.bedgraph
+Feature ATAC completed in 226.98121762275696
+Assigning classes to enhancers
+Total enhancers: 84685
+         Promoters: 27768
+         Genic: 38966
+         Intergenic: 17951
+Neighborhoods Complete! 
+
+[Tue Feb 17 18:29:39 2026]
+Finished job 8.
+8 of 14 steps (57%) done
+Select jobs to execute...
+
+[Tue Feb 17 18:29:39 2026]
+rule create_predictions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    jobid: 7
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt
+    wildcards: biosample=KO_cerebellum
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=20000, mem_mib=19074
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/predict.py 			--enhancers /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/EnhancerList.txt 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions 			--score_column ABC.Score 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--accessibility_feature ATAC 			--cellType KO_cerebellum 			--genes /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods/GeneList.txt 			--hic_gamma 1.024238616787792 			--hic_scale 5.9594510043736655 			--hic_pseudocount_distance 5000 			--hic_file /expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402/mut_merged.hic --hic_type hic --hic_resolution 5000 			--scale_hic_using_powerlaw
+		
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+/home/zalibhai/miniforge3/envs/abc-env/lib/python3.10/site-packages/pyranges/methods/init.py:45: FutureWarning: The default of observed=False is deprecated and will be changed to True in a future version of pandas. Pass observed=False to retain current behavior or observed=True to adopt the future default and silence this warning.
+  return {k: v for k, v in df.groupby(grpby_key)}
+reading genes
+reading enhancers
+Making predictions for chromosome: chr1
+Making putative predictions table...
+Done. There are 553517 putative enhancers for chromosome chr1
+Elapsed time: 0.34166812896728516
+Begin HiC
+HiC added to predictions table. Elapsed time: 187.7542097568512
+HiC Complete
+Completed chromosome: chr1. Elapsed time: 188.86908602714539 
+
+Making predictions for chromosome: chr10
+Making putative predictions table...
+Done. There are 549103 putative enhancers for chromosome chr10
+Elapsed time: 0.28512144088745117
+Begin HiC
+HiC added to predictions table. Elapsed time: 110.3014554977417
+HiC Complete
+Completed chromosome: chr10. Elapsed time: 111.02287578582764 
+
+Making predictions for chromosome: chr11
+Making putative predictions table...
+Done. There are 1088447 putative enhancers for chromosome chr11
+Elapsed time: 0.5777263641357422
+Begin HiC
+HiC added to predictions table. Elapsed time: 108.46352100372314
+HiC Complete
+Completed chromosome: chr11. Elapsed time: 109.68676710128784 
+
+Making predictions for chromosome: chr12
+Making putative predictions table...
+Done. There are 353245 putative enhancers for chromosome chr12
+Elapsed time: 0.18731331825256348
+Begin HiC
+HiC added to predictions table. Elapsed time: 88.56403970718384
+HiC Complete
+Completed chromosome: chr12. Elapsed time: 88.96433997154236 
+
+Making predictions for chromosome: chr13
+Making putative predictions table...
+Done. There are 424115 putative enhancers for chromosome chr13
+Elapsed time: 0.23382067680358887
+Begin HiC
+HiC added to predictions table. Elapsed time: 92.29821825027466
+HiC Complete
+Completed chromosome: chr13. Elapsed time: 92.79744386672974 
+
+Making predictions for chromosome: chr14
+Making putative predictions table...
+Done. There are 404367 putative enhancers for chromosome chr14
+Elapsed time: 0.2204897403717041
+Begin HiC
+HiC added to predictions table. Elapsed time: 87.78330087661743
+HiC Complete
+Completed chromosome: chr14. Elapsed time: 88.30475187301636 
+
+Making predictions for chromosome: chr15
+Making putative predictions table...
+Done. There are 508696 putative enhancers for chromosome chr15
+Elapsed time: 0.27271604537963867
+Begin HiC
+HiC added to predictions table. Elapsed time: 72.47104620933533
+HiC Complete
+Completed chromosome: chr15. Elapsed time: 73.22526025772095 
+
+Making predictions for chromosome: chr16
+Making putative predictions table...
+Done. There are 294228 putative enhancers for chromosome chr16
+Elapsed time: 0.15945959091186523
+Begin HiC
+HiC added to predictions table. Elapsed time: 63.479037046432495
+HiC Complete
+Completed chromosome: chr16. Elapsed time: 63.98169684410095 
+
+Making predictions for chromosome: chr17
+Making putative predictions table...
+Done. There are 646205 putative enhancers for chromosome chr17
+Elapsed time: 0.35146045684814453
+Begin HiC
+HiC added to predictions table. Elapsed time: 62.23771786689758
+HiC Complete
+Completed chromosome: chr17. Elapsed time: 63.0972158908844 
+
+Making predictions for chromosome: chr18
+Making putative predictions table...
+Done. There are 266993 putative enhancers for chromosome chr18
+Elapsed time: 0.14393162727355957
+Begin HiC
+HiC added to predictions table. Elapsed time: 65.42852711677551
+HiC Complete
+Completed chromosome: chr18. Elapsed time: 65.92306900024414 
+
+Making predictions for chromosome: chr19
+Making putative predictions table...
+Done. There are 377202 putative enhancers for chromosome chr19
+Elapsed time: 0.19936561584472656
+Begin HiC
+HiC added to predictions table. Elapsed time: 35.510255575180054
+HiC Complete
+Completed chromosome: chr19. Elapsed time: 36.2133355140686 
+
+Making predictions for chromosome: chr2
+Making putative predictions table...
+Done. There are 992511 putative enhancers for chromosome chr2
+Elapsed time: 0.5170772075653076
+Begin HiC
+HiC added to predictions table. Elapsed time: 171.07969760894775
+HiC Complete
+Completed chromosome: chr2. Elapsed time: 172.5164132118225 
+
+Making predictions for chromosome: chr3
+Making putative predictions table...
+Done. There are 419485 putative enhancers for chromosome chr3
+Elapsed time: 0.22988367080688477
+Begin HiC
+HiC added to predictions table. Elapsed time: 142.895525932312
+HiC Complete
+Completed chromosome: chr3. Elapsed time: 143.36464619636536 
+
+Making predictions for chromosome: chr4
+Making putative predictions table...
+Done. There are 734775 putative enhancers for chromosome chr4
+Elapsed time: 0.39205026626586914
+Begin HiC
+HiC added to predictions table. Elapsed time: 123.1164174079895
+HiC Complete
+Completed chromosome: chr4. Elapsed time: 124.20995616912842 
+
+Making predictions for chromosome: chr5
+Making putative predictions table...
+Done. There are 728248 putative enhancers for chromosome chr5
+Elapsed time: 0.4048638343811035
+Begin HiC
+HiC added to predictions table. Elapsed time: 117.00136375427246
+HiC Complete
+Completed chromosome: chr5. Elapsed time: 118.31441330909729 
+
+Making predictions for chromosome: chr6
+Making putative predictions table...
+Done. There are 491638 putative enhancers for chromosome chr6
+Elapsed time: 0.2655630111694336
+Begin HiC
+HiC added to predictions table. Elapsed time: 133.12202978134155
+HiC Complete
+Completed chromosome: chr6. Elapsed time: 134.21199703216553 
+
+Making predictions for chromosome: chr7
+Making putative predictions table...
+Done. There are 1083226 putative enhancers for chromosome chr7
+Elapsed time: 0.5876302719116211
+Begin HiC
+HiC added to predictions table. Elapsed time: 115.92635607719421
+HiC Complete
+Completed chromosome: chr7. Elapsed time: 117.38412928581238 
+
+Making predictions for chromosome: chr8
+Making putative predictions table...
+Done. There are 547897 putative enhancers for chromosome chr8
+Elapsed time: 0.3021535873413086
+Begin HiC
+HiC added to predictions table. Elapsed time: 97.37650609016418
+HiC Complete
+Completed chromosome: chr8. Elapsed time: 98.0964744091034 
+
+Making predictions for chromosome: chr9
+Making putative predictions table...
+Done. There are 696783 putative enhancers for chromosome chr9
+Elapsed time: 0.3692302703857422
+Begin HiC
+HiC added to predictions table. Elapsed time: 106.61989521980286
+HiC Complete
+Completed chromosome: chr9. Elapsed time: 107.46497631072998 
+
+Making predictions for chromosome: chrX
+Making putative predictions table...
+Done. There are 150462 putative enhancers for chromosome chrX
+Elapsed time: 0.08606815338134766
+Begin HiC
+HiC added to predictions table. Elapsed time: 66.63793611526489
+HiC Complete
+Completed chromosome: chrX. Elapsed time: 66.91341876983643 
+
+Writing output files...
+Done.
+Done.
+[Tue Feb 17 19:14:07 2026]
+Finished job 7.
+9 of 14 steps (64%) done
+Select jobs to execute...
+
+[Tue Feb 17 19:14:07 2026]
+rule filter_predictions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.bedpe.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictions_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/GenePredictionStats_threshold0.02_self_promoter.tsv
+    jobid: 15
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    wildcards: biosample=KO_cerebellum, threshold=0.02, separator=, other_flags=_self_promoter
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=12809, mem_mib=12216
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/filter_predictions.py 			--output_tsv_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv 			--output_slim_tsv_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictions_threshold0.02_self_promoter.tsv 			--output_bed_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.bedpe.gz 			--output_gene_stats_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/GenePredictionStats_threshold0.02_self_promoter.tsv 			--pred_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz 			--pred_nonexpressed_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz 			--score_column ABC.Score 			--threshold 0.02 			--include_self_promoter True 			--only_expressed_genes False
+		
+[Tue Feb 17 19:14:47 2026]
+Finished job 15.
+10 of 14 steps (71%) done
+Select jobs to execute...
+
+[Tue Feb 17 19:14:47 2026]
+rule generate_qc_plot_and_summary:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Metrics/QCPlots_threshold0.02_self_promoter.pdf
+    jobid: 14
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv
+    wildcards: biosample=KO_cerebellum, threshold=0.02, separator=, other_flags=_self_promoter
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=8000, mem_mib=7630
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/grabMetrics.py 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Metrics 			--output_qc_summary /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv 			--output_qc_plots /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Metrics/QCPlots_threshold0.02_self_promoter.pdf 			--macs_peaks /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--neighborhood_outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Neighborhoods 			--preds_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--hic_gamma 1.024238616787792 			--hic_scale 5.9594510043736655 
+		
+[Tue Feb 17 19:15:04 2026]
+Finished job 14.
+11 of 14 steps (79%) done
+Select jobs to execute...
+
+[Tue Feb 17 19:15:04 2026]
+rule filter_predictions:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.bedpe.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictions_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/GenePredictionStats_threshold0.02_self_promoter.tsv
+    jobid: 13
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz
+    wildcards: biosample=WT_cerebellum, threshold=0.02, separator=, other_flags=_self_promoter
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=12949, mem_mib=12350
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/filter_predictions.py 			--output_tsv_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv 			--output_slim_tsv_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictions_threshold0.02_self_promoter.tsv 			--output_bed_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.bedpe.gz 			--output_gene_stats_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/GenePredictionStats_threshold0.02_self_promoter.tsv 			--pred_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz 			--pred_nonexpressed_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutativeNonExpressedGenes.tsv.gz 			--score_column ABC.Score 			--threshold 0.02 			--include_self_promoter True 			--only_expressed_genes False
+		
+[Tue Feb 17 19:15:44 2026]
+Finished job 13.
+12 of 14 steps (86%) done
+Select jobs to execute...
+
+[Tue Feb 17 19:15:44 2026]
+rule generate_qc_plot_and_summary:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes
+    output: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Metrics/QCPlots_threshold0.02_self_promoter.pdf
+    jobid: 12
+    reason: Missing output files: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv; Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed
+    wildcards: biosample=WT_cerebellum, threshold=0.02, separator=, other_flags=_self_promoter
+    resources: tmpdir=/scratch/zalibhai/job_46523270, mem_mb=8000, mem_mib=7630
+
+
+		python /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/workflow/scripts/grabMetrics.py 			--outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Metrics 			--output_qc_summary /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv 			--output_qc_plots /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Metrics/QCPlots_threshold0.02_self_promoter.pdf 			--macs_peaks /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Peaks/macs2_peaks.narrowPeak.sorted.candidateRegions.bed 			--neighborhood_outdir /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Neighborhoods 			--preds_file /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsFull_threshold0.02_self_promoter.tsv 			--chrom_sizes /expanse/lustre/projects/csd940/zalibhai/taiji-new/reference/mm10/mm10.chrom.sizes 			--hic_gamma 1.024238616787792 			--hic_scale 5.9594510043736655 
+		
+[Tue Feb 17 19:15:55 2026]
+Finished job 12.
+13 of 14 steps (93%) done
+Select jobs to execute...
+
+[Tue Feb 17 19:15:55 2026]
+localrule all:
+    input: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv
+    jobid: 0
+    reason: Input files updated by another job: /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Metrics/QCSummary_threshold0.02_self_promoter.tsv, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/WT_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz, /expanse/lustre/projects/csd940/zalibhai/abc/ABC-Enhancer-Gene-Prediction/results/KO_cerebellum/Predictions/EnhancerPredictionsAllPutative.tsv.gz
+    resources: tmpdir=/scratch/zalibhai/job_46523270
+
+[Tue Feb 17 19:15:55 2026]
+Finished job 0.
+14 of 14 steps (100%) done
+Complete log: .snakemake/log/2026-02-17T171104.236956.snakemake.log
+
+Pipeline finished with exit code: 0
+End time: Tue Feb 17 19:15:55 PST 2026
+
+=== WT_cerebellum ===
+  EnhancerPredictionsFull_threshold0.02_self_promoter.tsv: 122212 E-G pairs
+  EnhancerPredictions_threshold0.02_self_promoter.tsv: 122212 E-G pairs
+  AllPutative: 8318699 E-G pairs (unthresholded)
+  QC metrics: 5 files
+
+=== KO_cerebellum ===
+  EnhancerPredictionsFull_threshold0.02_self_promoter.tsv: 119965 E-G pairs
+  EnhancerPredictions_threshold0.02_self_promoter.tsv: 119965 E-G pairs
+  AllPutative: 8220686 E-G pairs (unthresholded)
+  QC metrics: 5 files
