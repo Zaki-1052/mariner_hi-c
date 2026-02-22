@@ -1,0 +1,98 @@
+zakiralibhai@Zakirs-MacBook-Air emseq % python non_cg_analysis/non_cg_methylation.py            
+[1/7] Verifying input files ...
+  All input files found.
+
+[2/7] Computing EM-seq genome-wide non-CG rates ...
+  Parsing 250504_A1_Bap1_P60_ctrl1_5mC_S44_L002_CHH.methylKit.gz ...
+  Parsing 250504_A1_Bap1_P60_ctrl1_5mC_S44_L002_CHG.methylKit.gz ...
+  Parsing 250504_B1_Bap1_P60_ctrl2_5mC_S45_L002_CHH.methylKit.gz ...
+  Parsing 250504_B1_Bap1_P60_ctrl2_5mC_S45_L002_CHG.methylKit.gz ...
+
+[3/7] Extracting evoC baseline ...
+
+[4/7] Genome-wide comparison ...
+
+==========================================================================================
+GENOME-WIDE NON-CG METHYLATION COMPARISON
+==========================================================================================
+Method     Sample                 Context Rate(%)    Sites          Coverage      
+------------------------------------------------------------------------------------------
+EM-seq     ctrl1                  CHH    0.8977     290,048,651    377,713,137   
+EM-seq     ctrl1                  CHG    0.7256     82,966,525     107,911,949   
+EM-seq     ctrl2                  CHH    1.3024     255,014,978    319,861,462   
+EM-seq     ctrl2                  CHG    1.0313     73,276,006     91,856,443    
+------------------------------------------------------------------------------------------
+evoC       evoC-Bap1-ctrl-F       CHH    0.8591     N/A            N/A           
+evoC       evoC-Bap1-ctrl-F       CHG    0.6261     N/A            N/A           
+evoC       evoC-Bap1-ctrl-M       CHH    0.8641     N/A            N/A           
+evoC       evoC-Bap1-ctrl-M       CHG    0.6306     N/A            N/A           
+
+==========================================================================================
+SPIKE-IN FALSE-POSITIVE RATES (EM-seq)
+==========================================================================================
+Sample     Context Lambda(%)    Lambda Sites   pUC19(%)     pUC19 Sites   
+------------------------------------------------------------------------------------------
+ctrl1      CHH    0.4597       11,502         0.9629       698           
+ctrl1      CHG    0.4558       6,449          1.5362       316           
+ctrl2      CHH    0.9334       11,502         1.6808       698           
+ctrl2      CHG    0.8907       6,449          2.6048       316           
+
+==========================================================================================
+evoC QC METRICS (Control Samples)
+==========================================================================================
+  evoC-Bap1-ctrl-F: lambda_mc_sensitivity=0.9867, puc19_mc_specificity=0.9995
+  evoC-Bap1-ctrl-F: lambda_mc_sensitivity=0.9867, puc19_mc_specificity=0.9995
+  evoC-Bap1-ctrl-M: lambda_mc_sensitivity=0.9869, puc19_mc_specificity=0.9997
+  evoC-Bap1-ctrl-M: lambda_mc_sensitivity=0.9869, puc19_mc_specificity=0.9997
+
+[5/7] Per-chromosome breakdown ...
+  Saved /Users/zakiralibhai/sdsc/emseq/non_cg_analysis/per_chromosome_rates.png
+
+[5c/7] Coverage-stratified analysis ...
+    Cov-stratified: streaming 250504_A1_Bap1_P60_ctrl1_5mC_S44_L002_CHH.methylKit.gz ...
+    Cov-stratified: streaming 250504_B1_Bap1_P60_ctrl2_5mC_S45_L002_CHH.methylKit.gz ...
+
+  CHH coverage-stratified rates (autosomes):
+  Sample   MinCov   Rate(%)    Sites          TotalCov      
+  ctrl1    1        0.8977       290,048,651   377,713,137
+  ctrl1    2        0.8856        71,552,170   159,216,656
+  ctrl1    3        0.9067        12,752,294    41,616,904
+  ctrl1    5        1.5129           252,335     2,546,838
+  ctrl2    1        1.3024       255,014,978   319,861,462
+  ctrl2    2        1.2839        54,300,380   119,146,864
+  ctrl2    3        1.3059         8,320,260    27,186,624
+  ctrl2    5        2.0206           135,119     1,728,825
+    Cov-stratified: streaming 250504_A1_Bap1_P60_ctrl1_5mC_S44_L002_CHG.methylKit.gz ...
+    Cov-stratified: streaming 250504_B1_Bap1_P60_ctrl2_5mC_S45_L002_CHG.methylKit.gz ...
+
+  CHG coverage-stratified rates (autosomes):
+  Sample   MinCov   Rate(%)    Sites          TotalCov      
+  ctrl1    1        0.7256        82,966,525   107,911,949
+  ctrl1    2        0.7260        20,377,016    45,322,440
+  ctrl1    3        0.7394         3,603,089    11,774,586
+  ctrl1    5        1.1437            72,459       742,510
+  ctrl2    1        1.0313        73,276,006    91,856,443
+  ctrl2    2        1.0331        15,565,089    34,145,526
+  ctrl2    3        1.0634         2,371,037     7,757,422
+  ctrl2    5        1.7539            39,848       508,350
+
+[6/7] Per-gene comparison ...
+
+  --- CHH per-gene ---
+    Per-gene: streaming 250504_A1_Bap1_P60_ctrl1_5mC_S44_L002_CHH.methylKit.gz ...
+    Per-gene: streaming 250504_B1_Bap1_P60_ctrl2_5mC_S45_L002_CHH.methylKit.gz ...
+  Merged genes: 21382 (EM-seq: 21359, evoC: 21673)
+  Saved /Users/zakiralibhai/sdsc/emseq/non_cg_analysis/per_gene_scatter_CHH.png
+
+  --- CHG per-gene ---
+    Per-gene: streaming 250504_A1_Bap1_P60_ctrl1_5mC_S44_L002_CHG.methylKit.gz ...
+    Per-gene: streaming 250504_B1_Bap1_P60_ctrl2_5mC_S45_L002_CHG.methylKit.gz ...
+  Merged genes: 10504 (EM-seq: 21356, evoC: 10506)
+  Saved /Users/zakiralibhai/sdsc/emseq/non_cg_analysis/per_gene_scatter_CHG.png
+
+[7/7] Generating plots and saving outputs ...
+  Saved /Users/zakiralibhai/sdsc/emseq/non_cg_analysis/non_cg_comparison.png
+  Saved /Users/zakiralibhai/sdsc/emseq/non_cg_analysis/non_cg_summary.tsv
+
+Done.
+zakiralibhai@Zakirs-MacBook-Air emseq % 
