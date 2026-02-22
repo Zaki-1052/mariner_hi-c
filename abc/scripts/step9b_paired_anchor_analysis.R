@@ -18,8 +18,8 @@ suppressPackageStartupMessages({
 source("../scripts/utils/multi_format_output.R")
 
 # === CONFIGURATION ===
-ALL_LOOPS_FILE  <- "../25042-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"
-DIFF_LOOPS_FILE <- "../25042-late_outputs/merged_loops/non_redundant_loops.tsv"
+ALL_LOOPS_FILE  <- "../outputs//250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"
+DIFF_LOOPS_FILE <- "../outputs/250402-late_outputs/merged_loops/non_redundant_loops.tsv"
 ABC_FILE        <- "results/delta_abc_all_pairs.tsv"
 TSS_FILE        <- "reference/mm10_tss.bed"
 RNASEQ_FILE     <- "results/gene_level_summary.tsv"

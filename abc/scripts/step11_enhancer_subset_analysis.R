@@ -32,7 +32,7 @@ ENHANCER_FILES <- c(
 )
 
 LOOPS_FILE       <- "../25042-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"
-CHAR_LOOPS_FILE  <- "../characterized_loops.tsv"
+CHAR_LOOPS_FILE  <- "characterized_loops.tsv"
 ABC_PAIRS_FILE   <- "results/delta_abc_all_pairs.tsv"
 ABC_RNASEQ_FILE  <- "results/delta_abc_with_rnaseq.tsv"
 GENE_SUMMARY_FILE <- "results/gene_level_summary.tsv"
