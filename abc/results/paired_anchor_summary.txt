@@ -1,76 +1,77 @@
 === Paired-Anchor Loop-ABC Analysis Summary (v2) ===
-Date: 2026-02-18 16:12:33.466109
+Date: 2026-02-22 14:25:02.24543
 
 --- Input Data ---
 All loops (visual background): 39344
 Differential loops (statistical analysis): 2910
-ABC E-G pairs: 180423
+ABC E-G pairs: 179709
 
 --- Match Statistics ---
-All-loop matches: 15112 (from 8339 unique loops)
-Differential matches: 490 (from 304 unique diff loops)
-Unique E-G pairs confirmed by diff loops: 465 / 180423 (0.2577%)
-Unique genes: 353
-Unique enhancers: 348
+All-loop matches: 17020 (from 8530 unique loops)
+Differential matches: 513 (from 314 unique diff loops)
+Unique E-G pairs confirmed by diff loops: 483 / 179709 (0.2688%)
+Unique genes: 347
+Unique enhancers: 374
 
 --- Directional Concordance (differential loops) ---
-dABC concordance: 269 / 300 = 89.7% (p = 1.67e-48)
-d(AxC) concordance: 426 / 490 = 86.9% (p = 1.16e-66)
+dABC concordance: 283 / 316 = 89.6% (p = 1.07e-50)
+d(AxC) concordance: 438 / 513 = 85.4% (p = 2.22e-63)
 Step 9 independent-overlap concordance: 51.4%
 
 --- FDR Stratification ---
-significant: 269/300 = 89.7%
+significant: 283/316 = 89.6%
 
 --- RNA-seq 3-Way Concordance ---
-Triplets with directional ABC + significant DE: 68
-Loop-ABC 2-way concordance (this subset): 63/68 = 92.6%
-Loop-ABC-DE 3-way concordance: 60/68 = 88.2% (p = 1.69e-45 vs 12.5% chance)
-Gene-level 3-way concordance: 39/44 = 88.6%
+Triplets with directional ABC + significant DE: 82
+Loop-ABC 2-way concordance (this subset): 73/82 = 89.0%
+Loop-ABC-DE 3-way concordance: 71/82 = 86.6% (p = 2.50e-52 vs 12.5% chance)
+Gene-level 3-way concordance: 45/50 = 90.0%
 
 --- K119ub at Paired Enhancers ---
-Triplets with quantifiable K119ub: 490
-Spearman K119ub log2fc vs dABC: rho = -0.401, p = 5.48e-13
-  lost: median K119ub log2fc = 0.321 (n=164)
-  gained: median K119ub log2fc = -0.074 (n=136)
+Triplets with quantifiable K119ub: 476
+Spearman K119ub log2fc vs dABC: rho = -0.337, p = 3.51e-09
+  gained: median K119ub log2fc = -0.053 (n=130)
+  lost: median K119ub log2fc = 0.246 (n=161)
 
 --- K119ub by Loop Type ---
-  Repressed_Promoter-Polycomb: median K119ub log2fc = -0.335 (n=39)
-  Repressed_Promoter-Poised_Enhancer: median K119ub log2fc = -0.178 (n=32)
-  Other-Other: median K119ub log2fc = -0.116 (n=15)
-  Active_Promoter-Polycomb: median K119ub log2fc = -0.084 (n=15)
-  Poised_Enhancer-Other: median K119ub log2fc = -0.036 (n=16)
-  Active_Promoter-Poised_Enhancer: median K119ub log2fc = 0.093 (n=16)
-  Repressed_Promoter-Other: median K119ub log2fc = 0.112 (n=23)
-  Active_Promoter-Repressed_Promoter: median K119ub log2fc = 0.138 (n=19)
-  Active_Promoter-Active_Enhancer: median K119ub log2fc = 0.222 (n=63)
-  Active_Promoter-Active_Promoter: median K119ub log2fc = 0.231 (n=133)
-  Active_Enhancer-Poised_Enhancer: median K119ub log2fc = 0.238 (n=19)
-  Active_Promoter-Other: median K119ub log2fc = 0.316 (n=47)
-  Active_Enhancer-Active_Enhancer: median K119ub log2fc = 0.388 (n=16)
-  Kruskal-Wallis p = 6.33e-18
+  Repressed_Promoter-Polycomb: median K119ub log2fc = -0.318 (n=34)
+  Repressed_Promoter-Poised_Enhancer: median K119ub log2fc = -0.149 (n=31)
+  Active_Promoter-Polycomb: median K119ub log2fc = -0.084 (n=13)
+  Repressed_Promoter-Other: median K119ub log2fc = -0.025 (n=16)
+  Poised_Enhancer-Other: median K119ub log2fc = 0.003 (n=13)
+  Other-Other: median K119ub log2fc = 0.040 (n=17)
+  Active_Promoter-Bivalent_Promoter: median K119ub log2fc = 0.070 (n=10)
+  Active_Promoter-Poised_Enhancer: median K119ub log2fc = 0.118 (n=13)
+  Active_Promoter-Active_Promoter: median K119ub log2fc = 0.154 (n=120)
+  Active_Enhancer-Active_Enhancer: median K119ub log2fc = 0.178 (n=25)
+  Active_Promoter-Repressed_Promoter: median K119ub log2fc = 0.189 (n=16)
+  Active_Promoter-Active_Enhancer: median K119ub log2fc = 0.192 (n=68)
+  Active_Enhancer-Poised_Enhancer: median K119ub log2fc = 0.231 (n=23)
+  Active_Promoter-Other: median K119ub log2fc = 0.339 (n=44)
+  Kruskal-Wallis p = 9.12e-15
 
 --- Distance-Dependent Concordance ---
-  <100kb: 34/36 = 94.4%
-  100-250kb: 77/86 = 89.5%
-  250-500kb: 52/61 = 85.2%
-  500kb-1Mb: 46/49 = 93.9%
-  >1Mb: 60/68 = 88.2%
-  Spearman distance vs |dABC|: rho = -0.207, p = 3.81e-06
+  <100kb: 38/41 = 92.7%
+  100-250kb: 83/90 = 92.2%
+  250-500kb: 52/63 = 82.5%
+  500kb-1Mb: 64/66 = 97.0%
+  >1Mb: 46/56 = 82.1%
+  Spearman distance vs |dABC|: rho = -0.222, p = 3.66e-07
 
 --- GO Biological Process Enrichment ---
   Up_in_Mutant:
-    regulation of biomineral tissue development (q=1.36e-02)
-    biomineral tissue development (q=1.36e-02)
-    embryonic organ morphogenesis (q=1.36e-02)
-    skeletal system morphogenesis (q=1.36e-02)
-    cell-substrate adhesion (q=1.36e-02)
+    skeletal system morphogenesis (q=2.34e-03)
+    negative regulation of chondrocyte differentiation (q=2.34e-03)
+    regulation of chondrocyte differentiation (q=2.34e-03)
+    cell fate commitment (q=2.34e-03)
+    cartilage development (q=2.34e-03)
   Down_in_Mutant:
-    heparin proteoglycan biosynthetic process (q=2.17e-06)
-    negative regulation of DNA recombination (q=1.22e-05)
-    heparin proteoglycan metabolic process (q=1.22e-05)
-    negative regulation of DNA metabolic process (q=3.28e-04)
-    negative regulation of gene expression, epigenetic (q=1.55e-03)
+    heparin proteoglycan biosynthetic process (q=4.03e-04)
+    heparin proteoglycan metabolic process (q=1.71e-03)
+    ribosomal small subunit biogenesis (q=1.53e-02)
+    locomotory behavior (q=1.53e-02)
+    negative regulation of gene expression, epigenetic (q=1.53e-02)
 
 --- Effect Size ---
-Median |dABC| matched: 0.0141 vs all: 0.0102 (Wilcoxon p = 3.00e-08)
-Median |d(AxC)| matched: 0.103098 vs all: 0.061074 (Wilcoxon p = 2.34e-21)
+Median |dABC| matched: 0.0132 vs all: 0.0095 (Wilcoxon p = 4.95e-12)
+Median |d(AxC)| matched: 0.064200 vs all: 0.035050 (Wilcoxon p = 3.47e-33)
