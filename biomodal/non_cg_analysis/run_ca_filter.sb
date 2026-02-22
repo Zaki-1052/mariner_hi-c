@@ -1,0 +1,39 @@
+#!/bin/bash
+#SBATCH --job-name=ca_filter
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+#SBATCH --output=ca_filter_%j.out
+
+# CA-context filtering of EM-seq methylKit files against the reference genome.
+# Produces CA-only methylKit files and ca_summary_stats.tsv.
+#
+# Usage: sbatch run_ca_filter.sb
+
+# Activate environment with pysam installed
+# Adjust the conda/mamba activation to match your cluster setup
+conda activate emseq_env
+
+REF="/expanse/lustre/projects/csd940/zalibhai/refs/mm10+controls.fa"
+INPUT_DIR="/expanse/lustre/projects/csd940/zalibhai/emseq/em-seq_output/methylDackelExtracts"
+OUTPUT_DIR="/expanse/lustre/projects/csd940/zalibhai/emseq/ca_filtered"
+SCRIPT_DIR="/expanse/lustre/projects/csd940/zalibhai/emseq/scripts"
+
+echo "=== CA-context filter ==="
+echo "Reference:  ${REF}"
+echo "Input dir:  ${INPUT_DIR}"
+echo "Output dir: ${OUTPUT_DIR}"
+echo "Start time: $(date)"
+echo ""
+
+python "${SCRIPT_DIR}/ca_filter.py" \
+    --ref "${REF}" \
+    --input-dir "${INPUT_DIR}" \
+    --output-dir "${OUTPUT_DIR}"
+
+echo ""
+echo "Finished: $(date)"
