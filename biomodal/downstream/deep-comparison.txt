@@ -1,0 +1,163 @@
+zakiralibhai@Zakirs-MacBook-Air downstream % Rscript /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/scripts/viz_sections/compare_shallow_vs_deep.R
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:17:06 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SHALLOW-SEQ (RUN-2) vs DEEP-SEQ (RUN-3) COMPARISON
+================================================================================
+
+Validating shallow-seq (run-2) paths...
+  All shallow-seq paths validated.
+Validating deep-seq (run-3) paths...
+  All deep-seq paths validated.
+
+Loading shallow-seq and deep-seq DMR data...
+  Shallow gene body: 20224 mC genes, 20224 hmC genes
+  Deep gene body:    20979 mC genes, 20979 hmC genes
+  All regional data loaded.
+
+--- Analysis A: DMR count comparison by region ---
+  Saved: 20a_dmr_counts_by_region/{pdf,svg,jpg}
+  Saved 20a_dmr_counts_by_region
+
+--- Analysis B: Gene status classification ---
+Warning message:
+In full_join(shallow_df %>% dplyr::select(gene, shallow_q = dmr_qvalue,  :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 288 of `x` matches multiple rows in `y`.
+ℹ Row 291 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+Warning message:
+In full_join(shallow_df %>% dplyr::select(gene, shallow_q = dmr_qvalue,  :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 288 of `x` matches multiple rows in `y`.
+ℹ Row 291 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+
+  5mC gene status:
+    Deep only            755
+    Lost significance    278
+    Never significant    11211
+    Newly significant    4864
+    Retained             3919
+
+  5hmC gene status:
+    Deep only            755
+    Lost significance    171
+    Never significant    10206
+    Newly significant    5163
+    Retained             4732
+  Saved: 20b_gene_status_summary/{pdf,svg,jpg}
+
+  Saved 20b_gene_status_summary
+
+--- Analysis C: Newly significant genes ---
+  4864 newly significant mC genes
+  5163 newly significant hmC genes
+  Saved newly_significant_deep_seq.tsv (10027 rows)
+
+--- Analysis D: Effect size scatter ---
+  Saved: 20d_effect_size_scatter/{pdf,svg,jpg}
+  5mC correlation: 0.6505 (20272 genes)
+  5hmC correlation: 0.6288 (20272 genes)
+  Saved 20d_effect_size_scatter
+
+--- Analysis E: Q-value improvement ---
+  Saved: 20e_qvalue_improvement/{pdf,svg,jpg}
+  80.3% of genes have improved q-values in deep-seq
+  Saved 20e_qvalue_improvement
+
+--- Analysis F: Coverage comparison ---
+  Saved: 20f_coverage_comparison/{pdf,svg,jpg}
+  Median coverage: 11.8 (shallow) vs 18.8 (deep)
+  Saved 20f_coverage_comparison
+
+--- Analysis G: Coordinated pattern stability ---
+Warning message:
+In inner_join(mc_sig, hmc_sig, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 676 of `x` matches multiple rows in `y`.
+ℹ Row 825 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+Warning message:
+In inner_join(mc_sig, hmc_sig, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+  Shallow coordinated genes: 2856 (92.3% of co-significant)
+  Deep coordinated genes:    5708 (84.6% of co-significant)
+  Shared:       2725
+  Shallow only: 122
+  Deep only:    2961
+  Saved: 20g_coordinated_pattern_stability/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Percentage of co-significant genes with mC↑/hmC↓ pattern' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Percentage of co-significant genes with mC↑/hmC↓ pattern' in 'mbcsToSbcs': for ↓ (U+2193)
+  Saved 20g_coordinated_pattern_stability
+
+--- Creating master summary table ---
+Warning message:
+In full_join(mc_status %>% dplyr::select(gene, shallow_mc_q = shallow_q,  :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 288 of `x` matches multiple rows in `y`.
+ℹ Row 288 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+  Master table: 21387 genes
+  Columns: gene, shallow_mc_q, deep_mc_q, shallow_mc_effect, deep_mc_effect, shallow_mc_coverage, deep_mc_coverage, mc_status, shallow_hmc_q, deep_hmc_q, shallow_hmc_effect, deep_hmc_effect, hmc_status, mc_effect_delta, hmc_effect_delta
+  Saved shallow_vs_deep_comparison.tsv
+
+================================================================================
+COMPARISON COMPLETE
+================================================================================
+
+Output plots:   /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/comparison_shallow_vs_deep 
+Output tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables 
+
+Key findings:
+  mC significant: 4188 (shallow) -> 8836 (deep)
+  hmC significant: 4897 (shallow) -> 9930 (deep)
+  Newly significant mC genes: 4864
+  Newly significant hmC genes: 5163
+  Effect size correlation: mC r=0.650, hmC r=0.629
+  Coordinated pattern: 92.3% (shallow) -> 84.6% (deep)
+  Coverage increase: 11.8x -> 18.8x median
+
+zakiralibhai@Zakirs-MacBook-Air downstream % 

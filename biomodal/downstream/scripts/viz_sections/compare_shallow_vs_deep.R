@@ -70,18 +70,27 @@ dir.create(COMP_DIR, recursive = TRUE, showWarnings = FALSE)
 
 cat("Loading shallow-seq and deep-seq DMR data...\n")
 
+# Deduplicate DMR BED: some genes have multiple regions annotated to the same
+# gene name. Keep the entry with the lowest q-value per gene.
+dedup_by_gene <- function(df) {
+  df %>%
+    dplyr::group_by(gene) %>%
+    dplyr::slice_min(dmr_qvalue, n = 1, with_ties = FALSE) %>%
+    dplyr::ungroup()
+}
+
 # Gene body DMRs
-shallow_mc <- load_dmr_bed(SHALLOW_PATHS$mc_dmr)
-shallow_hmc <- load_dmr_bed(SHALLOW_PATHS$hmc_dmr)
-deep_mc <- mc_dmr  # Already loaded by _shared_config.R
-deep_hmc <- hmc_dmr
+shallow_mc <- dedup_by_gene(load_dmr_bed(SHALLOW_PATHS$mc_dmr))
+shallow_hmc <- dedup_by_gene(load_dmr_bed(SHALLOW_PATHS$hmc_dmr))
+deep_mc <- dedup_by_gene(mc_dmr)  # mc_dmr loaded by _shared_config.R
+deep_hmc <- dedup_by_gene(hmc_dmr)
 
 stopifnot(!is.null(shallow_mc), !is.null(shallow_hmc),
           !is.null(deep_mc), !is.null(deep_hmc))
 
-cat(sprintf("  Shallow gene body: %d mC genes, %d hmC genes\n",
+cat(sprintf("  Shallow gene body: %d mC genes, %d hmC genes (deduplicated)\n",
             nrow(shallow_mc), nrow(shallow_hmc)))
-cat(sprintf("  Deep gene body:    %d mC genes, %d hmC genes\n",
+cat(sprintf("  Deep gene body:    %d mC genes, %d hmC genes (deduplicated)\n",
             nrow(deep_mc), nrow(deep_hmc)))
 
 # Regional DMRs — organized as list keyed by region name
@@ -101,12 +110,12 @@ for (region in names(REGION_KEYS)) {
   mc_key <- REGION_KEYS[[region]]$mc
   hmc_key <- REGION_KEYS[[region]]$hmc
   shallow_regional[[region]] <- list(
-    mc = load_dmr_bed(SHALLOW_PATHS[[mc_key]]),
-    hmc = load_dmr_bed(SHALLOW_PATHS[[hmc_key]])
+    mc = dedup_by_gene(load_dmr_bed(SHALLOW_PATHS[[mc_key]])),
+    hmc = dedup_by_gene(load_dmr_bed(SHALLOW_PATHS[[hmc_key]]))
   )
   deep_regional[[region]] <- list(
-    mc = load_dmr_bed(DEEP_PATHS[[mc_key]]),
-    hmc = load_dmr_bed(DEEP_PATHS[[hmc_key]])
+    mc = dedup_by_gene(load_dmr_bed(DEEP_PATHS[[mc_key]])),
+    hmc = dedup_by_gene(load_dmr_bed(DEEP_PATHS[[hmc_key]]))
   )
 }
 
@@ -483,7 +492,7 @@ p_pattern_bar <- ggplot(pattern_pct, aes(x = Run, y = Pct_coordinated, fill = Ru
   scale_y_continuous(limits = c(0, 110), expand = c(0, 0)) +
   labs(
     title = "Coordinated Pattern Stability",
-    subtitle = "Percentage of co-significant genes with mC\u2191/hmC\u2193 pattern",
+    subtitle = "Percentage of co-significant genes with mC(+)/hmC(-) pattern",
     x = "", y = "Percentage (%)"
   ) +
   theme_biomodal() +
