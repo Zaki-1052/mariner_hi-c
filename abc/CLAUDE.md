@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Core hypothesis:** BAP1-KO eliminates H2AK119ub-mediated suppression of enhancer activity, leading to measurable changes in enhancer-gene linkage that correlate with differential gene expression and H2AK119ub signal changes.
 
-**ABC formula:** `ABC score = (Enhancer Activity × Contact Frequency) / Σ(Activity × Contact)` over all candidate elements within 5 Mb of each gene.
+**ABC formula:** `ABC score = (Enhancer Activity × Contact Frequency) / Σ(Activity × Contact)` over all candidate elements within 5 Mb of each gene. Activity is the geometric mean of ATAC-seq and H3K27ac signal: `activity = sqrt(ATAC.RPM × H3K27ac.RPM)`.
 
 ## Running the Pipeline
 
@@ -62,7 +62,8 @@ Both WT and KO ABC runs use the **same** `consensus_all.bed` (75,371 ATAC peaks 
 ```
 consensus_all.bed ──┐
 ATAC tagAlign ──────┤  Step 4: ABC Snakemake
-Hi-C .hic files ────┤  (ATAC-only mode, no H3K27ac BAMs)
+H3K27ac BAMs ───────┤  (ATAC + H3K27ac mode, geometric mean activity)
+Hi-C .hic files ────┤
 mm10 references ────┘
         │
         ▼
@@ -113,7 +114,7 @@ use_qnorm: False             # K562 DHS quantile ref inappropriate for mouse ATA
 threshold: 0.02              # ABC score cutoff for thresholded predictions
 ```
 
-Running in **ATAC-only mode** — activity is ATAC signal only because H3K27ac BAMs are unavailable (only bigWigs exist). H3K27ac peaks are used downstream for annotation in Step 9, not for ABC scoring.
+**Activity quantitation:** Geometric mean of ATAC-seq and H3K27ac signal — `activity = sqrt(ATAC.RPM × H3K27ac.RPM)`. ATAC provides chromatin accessibility, H3K27ac distinguishes active enhancers from merely accessible regions. Each condition has 1 merged ATAC tagAlign + 5 H3K27ac BAM replicates. Quantile normalization is disabled (`use_qnorm: False`) because the ABC default reference is K562 (human), inappropriate for mm10.
 
 ## Key Thresholds
 
@@ -124,6 +125,8 @@ Running in **ATAC-only mode** — activity is ATAC signal only because H3K27ac B
 | RNA-seq DE | padj < 0.05, |log2FC| > 0.5 | Step 7 concordance |
 
 ## Key Findings
+
+> **Note:** These findings are from the earlier ATAC-only ABC run and may change with the updated ATAC + H3K27ac activity scores. Re-evaluate after re-running Steps 6–10.
 
 - **Unnormalized Δ(A×C) outperforms normalized ΔABC** for concordance with DE: 65.3% vs 58.8%. ABC normalization compresses real activity changes when BAP1-KO causes widespread chromatin remodeling.
 - **940 dysregulated genes** with both significant ΔABC and DE; 58.8% concordant (binomial p = 6.84e-08).
