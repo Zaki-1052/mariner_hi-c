@@ -1,0 +1,68 @@
+zakiralibhai@Zakirs-MacBook-Air abc % python /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/abc/scripts/step7_rnaseq_integration.py
+ΔABC pairs: 179,709
+ΔABC unique genes: 20,538
+RNA-seq genes: 16,572
+
+Genes in ABC: 20,538
+Genes in RNA-seq: 16,572
+Genes matched: 13,749 (66.9% of ABC genes)
+E-G pairs with RNA-seq: 113,943
+Gene-level summary: 13,749 genes
+
+=== Gene-Level Concordance ===
+  Genes with |ΔABC| > 0.01: 12,631
+  Genes with DE (padj<0.05, |LFC|>0.5): 992
+  Genes with both: 957
+  Concordant (same direction): 619 (64.7%)
+  Discordant: 338 (35.3%)
+  Binomial test p-value (vs 50%): 7.73e-20
+
+  Gained enhancer + upregulated:   175
+  Lost enhancer + downregulated:   444
+  Gained enhancer + downregulated: 222
+  Lost enhancer + upregulated:     116
+
+=== Dysregulated Genes ===
+  Total: 957 (|ΔABC|>0.01 AND padj<0.05 AND |LFC|>0.5)
+  Concordant: 619, Discordant: 338
+
+  Top 20 by |ΔABC|:
+TargetGene  max_delta_abc    log2FC         padj  n_enhancers  n_gained  n_lost  top_enh_distance top_enh_class
+   Col15a1       0.616698  1.817056 8.083972e-15            7         1       5         4838399.0    intergenic
+       Emb      -0.383931 -0.567441 1.335180e-12            5         0       5           12363.0         genic
+     Ces5a      -0.281916  1.550442 1.368850e-05            7         0       7           33842.0         genic
+Mindy4b-ps      -0.273638 -1.118358 3.690632e-03            9         0       9           11707.0         genic
+   Gm17188      -0.267785  1.055382 7.377421e-03           12         6       5         1808722.0      promoter
+      Mid1       0.266372 -0.950586 9.025355e-09           13         6       4          364715.0      promoter
+   Rps6ka3       0.264970 -0.788932 8.871353e-07            9         9       0           45296.5         genic
+    Atp10a       0.223782  0.528280 1.513176e-05            9         9       0            2264.0         genic
+     Snorc      -0.205021  1.479579 1.497293e-02            9         0       9           16332.0         genic
+  Arhgef15      -0.199075 -0.773753 1.133016e-04            9         0       9           10549.0      promoter
+  Il1rapl2       0.185843  0.844092 4.715560e-03           15         7       8          828847.5      promoter
+   Gm43690       0.174200  0.812453 2.229522e-02            8         8       0           22400.5         genic
+     Mef2c      -0.173777 -0.556124 8.171036e-03           11         0      11           20581.0         genic
+     Tigit       0.155635 -1.804208 3.513297e-04            8         8       0          788231.5      promoter
+      Gpc3      -0.151010  1.013886 3.604153e-02           22        12       7          298271.0      promoter
+     Ptpn5       0.138209  0.862952 2.445143e-06            6         6       0           16687.0         genic
+     Robo1       0.131628 -1.743519 1.292131e-53           15         5       9         1994208.5      promoter
+     Il5ra       0.130792 -1.443990 2.444331e-02            9         9       0           20118.5      promoter
+     Dact2       0.123906  2.027085 3.356138e-12           12         4       7          805871.0      promoter
+    Parp12      -0.123295 -0.800963 3.168481e-06           10         5       1            5003.0         genic
+
+Saved: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/abc/results/figures/delta_abc_vs_log2fc.pdf
+Saved: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/abc/results/figures/sum_delta_abc_vs_log2fc.pdf
+
+=================================================================
+  Correlation Comparison: Strongest Enhancer vs Sum (n=1895 DE genes)
+=================================================================
+  Metric                        Pearson r   Spearman ρ
+  ---------------------------- ---------- ------------
+  Normalized (strongest)            0.170        0.229
+  Normalized (sum)                  0.117        0.242
+  Unnormalized (strongest)          0.402        0.454
+  Unnormalized (sum)                0.537        0.660
+=================================================================
+
+Saved: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/abc/results/delta_abc_with_rnaseq.tsv (113,943 pairs)
+Saved: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/abc/results/gene_level_summary.tsv (13,749 genes)
+zakiralibhai@Zakirs-MacBook-Air abc % 
