@@ -85,10 +85,18 @@ p_mc_hmc <- ggplot(mc_hmc_compare, aes(x = Type, y = Significant, fill = Type)) 
 # Context comparison (CG vs CHG vs CHH)
 cat("Creating methylation context comparison...\n")
 
+# Compute baseline methylation from upstream summary (control samples)
+ctrl_rows <- upstream[upstream$condition == "control", ]
+cg_baseline <- mean(ctrl_rows$modality_summary_cg_autosomes_mc)
+chg_baseline <- mean(ctrl_rows$modality_summary_chg_autosomes_modc)
+chh_baseline <- mean(ctrl_rows$modality_summary_chh_autosomes_modc)
+cat(sprintf("  Baseline methylation (control): CG=%.1f%%, CHG=%.2f%%, CHH=%.2f%%\n",
+            cg_baseline, chg_baseline, chh_baseline))
+
 context_data <- data.frame(
   Context = c("CG (CpG)", "CHG", "CHH"),
-  Baseline_Methylation = c(72, 0.65, 0.87),  # From analysis_summary
-  Significant_DMRs = c(sum(mc_dmr$significant), 0, 0),  # CHG/CHH have 0 significant
+  Baseline_Methylation = c(cg_baseline, chg_baseline, chh_baseline),
+  Significant_DMRs = c(sum(mc_dmr$significant), 0, 0),
   Label = c("Primary Signal", "No Signal", "No Signal")
 )
 
