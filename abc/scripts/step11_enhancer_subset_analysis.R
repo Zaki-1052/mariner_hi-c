@@ -559,11 +559,16 @@ cat("  Pairwise Wilcoxon (loop logFC):\n")
 print(pw_logfc$p.value)
 
 # --- Plot 05: Violin + box of loop logFC ---
+n_per_class <- as.data.frame(table(loop_logfc_data$enhancer_class))
+colnames(n_per_class) <- c("enhancer_class", "n")
 p05 <- ggplot(loop_logfc_data, aes(x = enhancer_class, y = loop_logFC,
                                     fill = enhancer_class)) +
   geom_violin(scale = "width", alpha = 0.7) +
   geom_boxplot(width = 0.15, outlier.size = 0.3, fill = "white") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_text(data = n_per_class, aes(x = enhancer_class, y = Inf,
+            label = paste0("n=", format(n, big.mark = ","))),
+            vjust = 1.5, size = 3.2, inherit.aes = FALSE) +
   scale_fill_manual(values = CLASS_COLORS) +
   labs(
     x = "Enhancer class", y = "Loop logFC (KO/WT)",

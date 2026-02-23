@@ -1,0 +1,332 @@
+  ⎿  ================================================================================
+     STEP 11: ENHANCER SUBSET STRATIFIED ANALYSIS
+     ================================================================================
+     Date: 2026-02-23 15:07:09
+
+     Loading packages...
+     Packages loaded.
+
+     Validating input files...
+       [OK] Activity_Lost: enhancer_subsets/enhancer_classes_activity_lost.tsv
+       [OK] K119ub_Only: enhancer_subsets/enhancer_classes_k119ub_only.tsv
+       [OK] Activity_Gain: enhancer_subsets/enhancer_classes_activity_gain.tsv
+       [OK] Stable: enhancer_subsets/enhancer_classes_stable.tsv
+       [OK] Loops: ../outputs/250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe
+       [OK] Characterized loops: characterized_loops.tsv
+       [OK] ABC pairs: results/delta_abc_all_pairs.tsv
+       [OK] ABC + RNA-seq: results/delta_abc_with_rnaseq.tsv
+       [OK] Gene summary: results/gene_level_summary.tsv
+       [OK] TSS: reference/mm10_tss.bed
+
+     Output directory: results/enhancer_subset_analysis
+
+     Loaded multi_format_output.R - Functions available:
+       - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+       - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+       - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+     Loading data...
+       Enhancers: 55697 total across 4 classes
+         Activity_Lost: 7503
+         K119ub_Only: 2479
+         Activity_Gain: 2851
+         Stable: 42864
+       Loops: 39344
+       Characterized loops: 2910
+       ABC pairs: 179709
+       ABC + RNA-seq pairs: 113943
+       Gene summary: 13749 genes
+       TSS regions: 28230
+
+     Building GRanges objects...
+     GRanges built.
+
+     === PART A: Loop Anchoring ===
+
+       Enhancer-anchor1 overlaps: 46079
+       Enhancer-anchor2 overlaps: 46590
+       Unique enhancer-loop pairs: 92669
+       Enhancers with >=1 loop: 32161 / 55697 (57.7%)
+
+       Per-class loop summary:
+         Activity_Lost (n=7503): median loops=1, mean loops=1.79, zero-loop=40.0%
+         K119ub_Only (n=2479): median loops=1, mean loops=2.17, zero-loop=36.5%
+         Activity_Gain (n=2851): median loops=0, mean loops=1.22, zero-loop=52.2%
+         Stable (n=42864): median loops=1, mean loops=1.64, zero-loop=42.3%
+
+       Kruskal-Wallis (loops per enhancer): chi2=244.1, p=p < 2.2e-16
+       Pairwise Wilcoxon (loops per enhancer):
+                   Activity_Lost  K119ub_Only Activity_Gain
+     K119ub_Only    7.312075e-09           NA            NA
+     Activity_Gain  8.893096e-35 1.777365e-47            NA
+     Stable         2.646673e-04 2.435613e-18   2.37622e-31
+
+       Kruskal-Wallis (loop distance): chi2=132.2, p=p < 2.2e-16
+
+     Generating Part A plots...
+     Notch went outside hinges
+     ℹ Do you want `notch = FALSE`?
+     Notch went outside hinges
+     ℹ Do you want `notch = FALSE`?
+     Notch went outside hinges
+     ℹ Do you want `notch = FALSE`?
+       Saved: 01_loops_per_enhancer_boxplot/{pdf,svg,jpg}
+       Saved: 02_loop_distance_violin/{pdf,svg,jpg}
+
+     === PART B: Promoter Loops & Gene Expression ===
+
+       Other-anchor ↔ TSS overlaps: 50488
+       Unique enhancer-loop-gene promoter links: 36703
+
+       Promoter loop proportions:
+         Activity_Lost: 2674 / 7503 (35.6%) have promoter loops
+         K119ub_Only: 1073 / 2479 (43.3%) have promoter loops
+         Activity_Gain: 713 / 2851 (25.0%) have promoter loops
+         Stable: 16198 / 42864 (37.8%) have promoter loops
+
+       Fisher's exact (vs Stable):
+         Activity_Lost vs Stable: OR=0.91, p = 3.78e-04
+         K119ub_Only vs Stable: OR=1.26, p = 5.68e-08
+         Activity_Gain vs Stable: OR=0.55, p < 2.2e-16
+
+       Promoter-linked genes with DE data: 26572 unique enhancer-gene pairs
+       Gene logFC by class (promoter-connected):
+         Activity_Lost: n=3222, median logFC=-0.112, mean logFC=-0.258
+         K119ub_Only: n=1526, median logFC=-0.041, mean logFC=-0.141
+         Activity_Gain: n=727, median logFC=0.087, mean logFC=0.091
+         Stable: n=21097, median logFC=0.009, mean logFC=-0.037
+
+       Wilcoxon K119ub_Only vs Stable gene logFC: p < 2.2e-16
+       Saved: 03_promoter_loop_proportion/{pdf,svg,jpg}
+       Saved: 04_gene_logfc_by_class/{pdf,svg,jpg}
+
+     === PART C: Loop Strength logFC ===
+
+       Loop logFC per class:
+         Activity_Lost: n=13410 loops, median logFC=-0.0878, sig (FDR<0.05)=3529 (26.3%)
+         K119ub_Only: n=5372 loops, median logFC=-0.0542, sig (FDR<0.05)=1029 (19.2%)
+         Activity_Gain: n=3492 loops, median logFC=0.0661, sig (FDR<0.05)=1002 (28.7%)
+         Stable: n=70395 loops, median logFC=-0.0131, sig (FDR<0.05)=10411 (14.8%)
+
+       One-sample Wilcoxon K119ub_Only logFC vs 0: p < 2.2e-16 (median=-0.0542)
+       Effect size (rank-biserial r): 0.346
+       Wilcoxon K119ub_Only vs Stable: p < 2.2e-16
+       Kruskal-Wallis (loop logFC): chi2=4798.2, p < 2.2e-16
+       Pairwise Wilcoxon (loop logFC):
+                   Activity_Lost  K119ub_Only Activity_Gain
+     K119ub_Only    1.969739e-62           NA            NA
+     Activity_Gain  0.000000e+00 1.26702e-235            NA
+     Stable         0.000000e+00  1.72542e-99 7.935093e-177
+       Saved: 05_loop_logfc_violin/{pdf,svg,jpg}
+       Saved: 06_loop_logfc_density/{pdf,svg,jpg}
+
+     === PART D: ABC Scores ===
+
+       Enhancer ↔ ABC overlaps: 172495
+       After removing self-promoters: 84275 (removed 88220)
+       Enhancers matched to ABC: 21512 / 55697 (38.6%)
+
+       Per-class ABC summary:
+         Activity_Lost: n=4325 enhancers, median delta_ABC=-0.01384, median delta_unnorm=-0.09958
+           mean n_abc_pairs=4.0, mean gained=0.25, mean lost=2.62
+         K119ub_Only: n=1213 enhancers, median delta_ABC=-0.00118, median delta_unnorm=-0.00801
+           mean n_abc_pairs=5.1, mean gained=1.26, mean lost=1.67
+         Activity_Gain: n=1155 enhancers, median delta_ABC=0.01373, median delta_unnorm=0.07109
+           mean n_abc_pairs=2.8, mean gained=1.78, mean lost=0.18
+         Stable: n=14819 enhancers, median delta_ABC=0.00091, median delta_unnorm=0.00527
+           mean n_abc_pairs=3.9, mean gained=0.77, mean lost=0.76
+
+       Kruskal-Wallis (mean delta_ABC): chi2=6701.0, p < 2.2e-16
+       Kruskal-Wallis (mean delta_unnorm): chi2=8252.8, p < 2.2e-16
+       Pairwise Wilcoxon (mean delta_ABC):
+                   Activity_Lost   K119ub_Only Activity_Gain
+     K119ub_Only     6.0492e-232            NA            NA
+     Activity_Gain    0.0000e+00 1.337717e-177            NA
+     Stable           0.0000e+00  1.335980e-08             0
+       Pairwise Wilcoxon (mean delta_unnorm):
+                   Activity_Lost   K119ub_Only Activity_Gain
+     K119ub_Only               0            NA            NA
+     Activity_Gain             0 4.735136e-278            NA
+     Stable                    0  1.825796e-37             0
+       Saved: 07_delta_abc_boxplot/{pdf,svg,jpg}
+       Saved: 08_delta_unnorm_boxplot/{pdf,svg,jpg}
+       Saved: 09_abc_direction_stacked_bar/{pdf,svg,jpg}
+
+     === PART E: Contact Decay Profile ===
+
+       Contact decay summary:
+       dist_bin enhancer_class hic_contact_WT hic_contact_KO delta_contact
+          <50kb  Activity_Lost   0.0233138453   0.0226075354 -7.063099e-04
+       50-100kb  Activity_Lost   0.0067509325   0.0061843273 -5.666052e-04
+      100-200kb  Activity_Lost   0.0041925675   0.0037485459 -4.440216e-04
+      200-500kb  Activity_Lost   0.0024008848   0.0021146598 -2.862251e-04
+      500kb-1Mb  Activity_Lost   0.0012184631   0.0010154466 -2.030166e-04
+          1-5Mb  Activity_Lost   0.0005066788   0.0003706456 -1.360331e-04
+          <50kb    K119ub_Only   0.0218863183   0.0221690704  2.827522e-04
+       50-100kb    K119ub_Only   0.0059608545   0.0058862504 -7.460407e-05
+      100-200kb    K119ub_Only   0.0035966778   0.0035860525 -1.062530e-05
+      200-500kb    K119ub_Only   0.0018827229   0.0018839961  1.273155e-06
+      500kb-1Mb    K119ub_Only   0.0010931961   0.0010140427 -7.915334e-05
+          1-5Mb    K119ub_Only   0.0003519436   0.0003471259 -4.817716e-06
+          <50kb  Activity_Gain   0.0216620626   0.0230940078  1.431945e-03
+       50-100kb  Activity_Gain   0.0049840184   0.0057289665  7.449481e-04
+      100-200kb  Activity_Gain   0.0031769511   0.0039271362  7.501851e-04
+      200-500kb  Activity_Gain   0.0019703730   0.0025086048  5.382319e-04
+      500kb-1Mb  Activity_Gain   0.0009931933   0.0011872647  1.940714e-04
+          1-5Mb  Activity_Gain   0.0002613934   0.0003772701  1.158768e-04
+          <50kb         Stable   0.0252342815   0.0256163544  3.820730e-04
+       50-100kb         Stable   0.0063346850   0.0063973274  6.264235e-05
+      100-200kb         Stable   0.0039656097   0.0040480272  8.241750e-05
+      200-500kb         Stable   0.0022047987   0.0022159237  1.112492e-05
+      500kb-1Mb         Stable   0.0011036668   0.0010853635 -1.830323e-05
+          1-5Mb         Stable   0.0004041702   0.0003992727 -4.897540e-06
+       Saved: 10_contact_decay_wt/{pdf,svg,jpg}
+       Saved: 11_contact_decay_delta/{pdf,svg,jpg}
+
+     === PART F: Summary Integration ===
+
+     Class-level summary:
+      enhancer_class n_enhancers median_loops mean_loops frac_with_loops
+       Activity_Lost        7503            1       1.79           0.600
+         K119ub_Only        2479            1       2.17           0.635
+       Activity_Gain        2851            0       1.22           0.478
+              Stable       42864            1       1.64           0.577
+      median_loop_distance frac_promoter_loops median_loop_logfc frac_sig_loops
+                    210000               0.356           -0.0878          0.263
+                    315000               0.433           -0.0542          0.192
+                    210000               0.250            0.0661          0.287
+                    220000               0.378           -0.0131          0.148
+      n_with_abc median_delta_abc median_delta_unnorm
+            4325         -0.01384            -0.09958
+            1213         -0.00118            -0.00801
+            1155          0.01373             0.07109
+           14819          0.00091             0.00527
+
+       Total statistical tests collected: 19
+
+     Generating summary patchwork...
+       Saved: 12_summary_patchwork/{pdf,svg,jpg}
+
+     === PART G: K119ub_Only Stratified by K119ub Magnitude ===
+
+       K119ub_Only enhancers: 2479
+       Tertile breakpoints:
+         T1_low:  [0.320, 0.550]
+         T2_mid:  (0.550, 0.682]
+         T3_high: (0.682, 1.594]
+         T1_low: n=827
+         T2_mid: n=826
+         T3_high: n=826
+
+       K119ub_Only enhancer-loop pairs with tertile: 5372
+       K119ub_Only enhancers with ABC + tertile: 1213
+     Warning message:
+     In cor.test.default(k119_loop$tertile_rank, k119_loop$loop_logFC,  :
+       Cannot compute exact p-value with ties
+
+       Spearman (tertile rank vs loop logFC): rho=-0.0287, p = 3.56e-02
+     Warning message:
+     In cor.test.default(k119_abc$tertile_rank, k119_abc$mean_delta_abc,  :
+       Cannot compute exact p-value with ties
+       Spearman (tertile rank vs mean delta_ABC): rho=-0.0019, p = 9.48e-01
+     Warning message:
+     In cor.test.default(k119_loop$log2FC_K119ub, k119_loop$loop_logFC,  :
+       Cannot compute exact p-value with ties
+       Spearman (continuous K119ub vs loop logFC): rho=-0.0353, p = 9.70e-03
+
+       Kruskal-Wallis (loop logFC by tertile): chi2=20.3, p = 3.93e-05
+       Kruskal-Wallis (mean delta_ABC by tertile): chi2=0.0, p = 9.79e-01
+       Wilcoxon T1_low vs T3_high (loop logFC): p = 2.82e-02
+       Wilcoxon T1_low vs T3_high (mean delta_ABC): p = 9.97e-01
+
+       Per-tertile loop logFC:
+         T1_low: n=1868, median logFC=-0.0541
+         T2_mid: n=1732, median logFC=-0.0447
+         T3_high: n=1772, median logFC=-0.0642
+       Per-tertile mean delta_ABC:
+         T1_low: n=465, median delta_ABC=-0.00125
+         T2_mid: n=350, median delta_ABC=-0.00127
+         T3_high: n=398, median delta_ABC=-0.00113
+
+     Generating Part G plots...
+       Saved: 13_k119ub_tertile_loop_logfc/{pdf,svg,jpg}
+       Saved: 14_k119ub_tertile_delta_abc/{pdf,svg,jpg}
+     `geom_smooth()` using formula = 'y ~ x'
+     `geom_smooth()` using formula = 'y ~ x'
+     `geom_smooth()` using formula = 'y ~ x'
+       Saved: 15_k119ub_vs_loop_logfc_scatter/{pdf,svg,jpg}
+
+     === PART H: RNA-seq Concordance for Target Genes ===
+
+       ABC-RNA-seq merged pairs: 53947
+       After filtering zeros/NAs: 53944
+
+       Per-class concordance:
+         Activity_Lost: 6781 / 10946 (61.9%)
+         K119ub_Only: 1801 / 3700 (48.7%)
+         Activity_Gain: 1327 / 1975 (67.2%)
+         Stable: 18058 / 37323 (48.4%)
+
+       Binomial K119ub_Only concordance vs 50%: p = 1.11e-01 (rate=48.7%)
+       Fisher's exact (K119ub_Only concordance vs each class):
+         K119ub_Only vs Activity_Lost: OR=0.58, p < 2.2e-16
+         K119ub_Only vs Activity_Gain: OR=0.46, p < 2.2e-16
+         K119ub_Only vs Stable: OR=1.01, p = 7.43e-01
+
+       K119ub_Only target genes: 2618 total, 254 DE (padj<0.05, |log2FC|>0.5) = 9.7%
+
+     Generating Part H plots...
+       Saved: 16_abc_rnaseq_concordance_bar/{pdf,svg,jpg}
+       Scatter plot data: 19622 pairs (Stable downsampled to <=3K)
+       Saved: 17_delta_abc_vs_gene_logfc_scatter/{pdf,svg,jpg}
+       Saved: 18_k119ub_target_gene_logfc_hist/{pdf,svg,jpg}
+
+     === PART I: Motif Enrichment BED Export ===
+
+       Exporting class-level BED files:
+         Activity_Lost.bed: 7503 regions
+         K119ub_Only.bed: 2479 regions
+         Activity_Gain.bed: 2851 regions
+         Stable.bed: 42864 regions
+       Exporting K119ub tertile BED files:
+         K119ub_Only_T1_low.bed: 827 regions
+         K119ub_Only_T2_mid.bed: 826 regions
+         K119ub_Only_T3_high.bed: 826 regions
+
+       HOMER findMotifsGenome.pl commands:
+       # K119ub_Only vs Stable background
+       findMotifsGenome.pl results/enhancer_subset_analysis/beds_for_homer/K119ub_Only.bed mm10 homer_out/K119ub_Only_vs_Stable -bg
+     results/enhancer_subset_analysis/beds_for_homer/Stable.bed -size given
+
+       # Each class vs Stable background
+       findMotifsGenome.pl results/enhancer_subset_analysis/beds_for_homer/Activity_Lost.bed mm10 homer_out/Activity_Lost_vs_Stable -bg
+     results/enhancer_subset_analysis/beds_for_homer/Stable.bed -size given
+       findMotifsGenome.pl results/enhancer_subset_analysis/beds_for_homer/K119ub_Only.bed mm10 homer_out/K119ub_Only_vs_Stable -bg
+     results/enhancer_subset_analysis/beds_for_homer/Stable.bed -size given
+       findMotifsGenome.pl results/enhancer_subset_analysis/beds_for_homer/Activity_Gain.bed mm10 homer_out/Activity_Gain_vs_Stable -bg
+     results/enhancer_subset_analysis/beds_for_homer/Stable.bed -size given
+
+       # T3_high vs T1_low background (gradient test)
+       findMotifsGenome.pl results/enhancer_subset_analysis/beds_for_homer/K119ub_Only_T3_high.bed mm10 homer_out/T3_high_vs_T1_low -bg
+     results/enhancer_subset_analysis/beds_for_homer/K119ub_Only_T1_low.bed -size given
+
+       Total statistical tests collected: 30
+
+     === Saving output files ===
+
+       enhancer_class_loop_metrics.tsv: 55697 rows
+       enhancer_class_abc_metrics.tsv: 21512 rows
+       class_level_summary.tsv: 4 rows
+       statistical_tests.tsv: 30 rows
+       contact_decay_by_class.tsv: 24 rows
+       promoter_loop_gene_logfc.tsv: 26572 rows
+       k119ub_tertile_assignments.tsv: 2479 rows
+       k119ub_tertile_loop_summary.tsv: 3 rows
+       abc_rnaseq_concordance_by_class.tsv: 4 rows
+       k119ub_only_target_gene_de.tsv: 2618 rows
+
+     ================================================================================
+     STEP 11 COMPLETE
+     Output directory: results/enhancer_subset_analysis
+     Plots: 18 panels saved (PDF + SVG + JPG in subfolders)
+     Tables: 10 TSV files + 7 BED files
+     ================================================================================
