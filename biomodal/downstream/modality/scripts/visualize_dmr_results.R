@@ -259,7 +259,7 @@ load_dmr_data <- function(context, annotation, mod_type) {
                         paste0(mod_type, "_significant_q0.05.bed"))
 
   # Load the original full file instead
-  results_dir <- file.path(BASE_DIR, "outputs", "run-2", paste0("outputs_", context), "Results",
+  results_dir <- file.path(BASE_DIR, "outputs", "run-3", paste0("outputs_", context), "Results",
                            paste0("gencode.vM25.mouse.", annotation, ".annotation"))
 
   dmr_dirs <- list.dirs(results_dir, recursive = FALSE)

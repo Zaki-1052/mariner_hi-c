@@ -11,7 +11,7 @@ set -e
 # Base directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(dirname "$SCRIPT_DIR")"
-INPUT_DIR="$BASE_DIR/outputs/run-2"
+INPUT_DIR="$BASE_DIR/outputs/run-3"
 OUTPUT_DIR="$BASE_DIR/DMR_processed"
 CHROM_SIZES="$OUTPUT_DIR/mm10.chrom.sizes"
 BEDTOBIGBED="$SCRIPT_DIR/bedToBigBed"
@@ -79,6 +79,8 @@ process_dmr_file() {
     local bed_dir="$output_dir/bed"
     local bigbed_dir="$output_dir/bigbed"
     local stats_dir="$output_dir/stats"
+
+    mkdir -p "$bed_dir" "$bigbed_dir" "$stats_dir"
 
     if [[ ! -f "$input_file" ]]; then
         log_msg "  WARNING: Input file not found: $input_file"
@@ -264,6 +266,9 @@ if [[ ! -x "$BEDTOBIGBED" ]]; then
     log_msg "ERROR: bedToBigBed not found or not executable: $BEDTOBIGBED"
     exit 1
 fi
+
+# Create output directories
+mkdir -p "$OUTPUT_DIR/summary"
 
 # Initialize summary file
 SUMMARY_FILE="$OUTPUT_DIR/summary/all_contexts_summary.tsv"
