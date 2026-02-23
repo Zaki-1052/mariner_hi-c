@@ -3,7 +3,7 @@ zakiralibhai@Zakirs-MacBook-Air downstream % Rscript /Users/zakiralibhai/Documen
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-02-22 19:17:06 
+Date: 2026-02-22 19:23:35 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -47,8 +47,8 @@ Validating deep-seq (run-3) paths...
   All deep-seq paths validated.
 
 Loading shallow-seq and deep-seq DMR data...
-  Shallow gene body: 20224 mC genes, 20224 hmC genes
-  Deep gene body:    20979 mC genes, 20979 hmC genes
+  Shallow gene body: 20202 mC genes, 20202 hmC genes (deduplicated)
+  Deep gene body:    20957 mC genes, 20957 hmC genes (deduplicated)
   All regional data loaded.
 
 --- Analysis A: DMR count comparison by region ---
@@ -56,45 +56,33 @@ Loading shallow-seq and deep-seq DMR data...
   Saved 20a_dmr_counts_by_region
 
 --- Analysis B: Gene status classification ---
-Warning message:
-In full_join(shallow_df %>% dplyr::select(gene, shallow_q = dmr_qvalue,  :
-  Detected an unexpected many-to-many relationship between `x` and `y`.
-ℹ Row 288 of `x` matches multiple rows in `y`.
-ℹ Row 291 of `y` matches multiple rows in `x`.
-ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
-Warning message:
-In full_join(shallow_df %>% dplyr::select(gene, shallow_q = dmr_qvalue,  :
-  Detected an unexpected many-to-many relationship between `x` and `y`.
-ℹ Row 288 of `x` matches multiple rows in `y`.
-ℹ Row 291 of `y` matches multiple rows in `x`.
-ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
 
   5mC gene status:
     Deep only            755
-    Lost significance    278
-    Never significant    11211
-    Newly significant    4864
-    Retained             3919
+    Lost significance    277
+    Never significant    11178
+    Newly significant    4840
+    Retained             3907
 
   5hmC gene status:
     Deep only            755
-    Lost significance    171
-    Never significant    10206
-    Newly significant    5163
-    Retained             4732
+    Lost significance    169
+    Never significant    10179
+    Newly significant    5129
+    Retained             4725
   Saved: 20b_gene_status_summary/{pdf,svg,jpg}
 
   Saved 20b_gene_status_summary
 
 --- Analysis C: Newly significant genes ---
-  4864 newly significant mC genes
-  5163 newly significant hmC genes
-  Saved newly_significant_deep_seq.tsv (10027 rows)
+  4840 newly significant mC genes
+  5129 newly significant hmC genes
+  Saved newly_significant_deep_seq.tsv (9969 rows)
 
 --- Analysis D: Effect size scatter ---
   Saved: 20d_effect_size_scatter/{pdf,svg,jpg}
-  5mC correlation: 0.6505 (20272 genes)
-  5hmC correlation: 0.6288 (20272 genes)
+  5mC correlation: 0.6512 (20202 genes)
+  5hmC correlation: 0.6293 (20202 genes)
   Saved 20d_effect_size_scatter
 
 --- Analysis E: Q-value improvement ---
@@ -108,39 +96,16 @@ In full_join(shallow_df %>% dplyr::select(gene, shallow_q = dmr_qvalue,  :
   Saved 20f_coverage_comparison
 
 --- Analysis G: Coordinated pattern stability ---
-Warning message:
-In inner_join(mc_sig, hmc_sig, by = "gene") :
-  Detected an unexpected many-to-many relationship between `x` and `y`.
-ℹ Row 676 of `x` matches multiple rows in `y`.
-ℹ Row 825 of `y` matches multiple rows in `x`.
-ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
-Warning message:
-In inner_join(mc_sig, hmc_sig, by = "gene") :
-  Detected an unexpected many-to-many relationship between `x` and `y`.
-ℹ Row 135 of `x` matches multiple rows in `y`.
-ℹ Row 160 of `y` matches multiple rows in `x`.
-ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
-  Shallow coordinated genes: 2856 (92.3% of co-significant)
-  Deep coordinated genes:    5708 (84.6% of co-significant)
+  Shallow coordinated genes: 2847 (92.3% of co-significant)
+  Deep coordinated genes:    5686 (84.6% of co-significant)
   Shared:       2725
   Shallow only: 122
   Deep only:    2961
   Saved: 20g_coordinated_pattern_stability/{pdf,svg,jpg}
-Warning messages:
-1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'Percentage of co-significant genes with mC↑/hmC↓ pattern' in 'mbcsToSbcs': for ↑ (U+2191)
-2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'Percentage of co-significant genes with mC↑/hmC↓ pattern' in 'mbcsToSbcs': for ↓ (U+2193)
   Saved 20g_coordinated_pattern_stability
 
 --- Creating master summary table ---
-Warning message:
-In full_join(mc_status %>% dplyr::select(gene, shallow_mc_q = shallow_q,  :
-  Detected an unexpected many-to-many relationship between `x` and `y`.
-ℹ Row 288 of `x` matches multiple rows in `y`.
-ℹ Row 288 of `y` matches multiple rows in `x`.
-ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
-  Master table: 21387 genes
+  Master table: 20957 genes
   Columns: gene, shallow_mc_q, deep_mc_q, shallow_mc_effect, deep_mc_effect, shallow_mc_coverage, deep_mc_coverage, mc_status, shallow_hmc_q, deep_hmc_q, shallow_hmc_effect, deep_hmc_effect, hmc_status, mc_effect_delta, hmc_effect_delta
   Saved shallow_vs_deep_comparison.tsv
 
@@ -152,11 +117,11 @@ Output plots:   /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downs
 Output tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables 
 
 Key findings:
-  mC significant: 4188 (shallow) -> 8836 (deep)
-  hmC significant: 4897 (shallow) -> 9930 (deep)
-  Newly significant mC genes: 4864
-  Newly significant hmC genes: 5163
-  Effect size correlation: mC r=0.650, hmC r=0.629
+  mC significant: 4184 (shallow) -> 8826 (deep)
+  hmC significant: 4894 (shallow) -> 9919 (deep)
+  Newly significant mC genes: 4840
+  Newly significant hmC genes: 5129
+  Effect size correlation: mC r=0.651, hmC r=0.629
   Coordinated pattern: 92.3% (shallow) -> 84.6% (deep)
   Coverage increase: 11.8x -> 18.8x median
 
