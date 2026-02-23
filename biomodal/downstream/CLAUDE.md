@@ -26,7 +26,7 @@ Requires conda environment `modality`. The SLURM script copies `config_${CONTEXT
 ### Visualization Pipeline
 
 ```bash
-# Run all 10 sections sequentially (must run from downstream/ directory)
+# Run all 19 sections sequentially (must run from downstream/ directory)
 cd downstream/
 bash scripts/viz_sections/run_all_sections.sh
 
@@ -77,11 +77,13 @@ Each section script is independent and sources `_shared_config.R` for shared sta
 | `section_08_enrichment.R` | GO/KEGG functional enrichment |
 | `section_09_summary.R` | Key findings and summary tables |
 | `section_10_chromatin_state.R` | ChIP-seq integration, 7-state classification |
+| `section_11` through `section_19` | MeCP2, ATAC-seq, H2AK119ub, H3K27ac integrations |
+| `compare_shallow_vs_deep.R` | Standalone: shallow-seq (run-2) vs deep-seq (run-3) comparison |
 
 ### Shared Config (`_shared_config.R`)
 
 Central configuration loaded by every section script. Contains:
-- `DATA_PATHS` — Hardcoded paths to run-2 DMR BED files (timestamped filenames)
+- `DATA_PATHS` — Hardcoded paths to run-3 (deep-seq) DMR BED files (timestamped filenames)
 - `CHIP_PEAK_FILES` — ChIP-seq BED paths for chromatin state classification
 - `load_dmr_bed()` — Parses modality DMR BED format (13-14 columns)
 - `theme_biomodal()` — Consistent ggplot2 theme
@@ -116,15 +118,17 @@ Key parameters:
 - `Depth_Filter=10` — Minimum coverage threshold
 - `Overdispersion=False` — GLM overdispersion correction toggle
 
-### Two Analysis Runs
+### Three Analysis Runs
 
 - **run-1** (with sex covariate): No significant DMRs — sex confounded with genotype at n=2/group
-- **run-2** (sex removed): Primary results — significant DMRs but cannot fully separate sex vs genotype effects
+- **run-2** (sex removed, shallow-seq): Significant DMRs but cannot fully separate sex vs genotype effects. Visualization outputs archived at `plots/visualizations_run2_shallow-seq/`
+- **run-3** (sex removed, deep-seq): Current primary results — deeper sequencing for improved statistical power. Visualization pipeline and `_shared_config.R` now point to run-3
 
 ## Output Locations
 
-- **DMR results:** `modality/outputs/run-2/outputs_CG/Results/{region}/DMR_*/`
-- **QC reports:** `modality/outputs/run-2/outputs_CG/Results/BioQC_*/`
+- **DMR results:** `modality/outputs/run-3/outputs_CG/Results/{region}/DMR_*/`
+- **QC reports:** `modality/outputs/run-3/outputs_CG/Results/BioQC_*/`
+- **Archived run-2 plots:** `plots/visualizations_run2_shallow-seq/`
 - **Visualization plots:** `plots/visualizations/{01-10}_*/`
 - **Export tables:** `plots/visualizations/tables/`
 - **BigBed files:** `modality/DMR_Genes_CG/bigbed/`
@@ -139,6 +143,6 @@ Key parameters:
 
 ## Key Caveats
 
-- DMR BED filenames contain timestamps (e.g., `DMR_mc_control__mutant_20260121_172049.bed`) — paths in `_shared_config.R` and `biomodal_visualizations.R` are hardcoded to run-2 timestamps
+- DMR BED filenames contain timestamps (e.g., `DMR_mc_control__mutant_20260221_190322.bed`) — paths in `_shared_config.R` are hardcoded to run-3 timestamps; `compare_shallow_vs_deep.R` hardcodes run-2 timestamps for comparison
 - With n=2 per condition, sex and genotype effects are confounded — results from run-2 (no sex covariate) are used but should be interpreted with this caveat
 - Non-CpG contexts (CHG/CHH) show <1% methylation and no significant DMRs
