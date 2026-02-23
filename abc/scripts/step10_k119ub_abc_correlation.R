@@ -1,35 +1,39 @@
 # abc/scripts/step10_k119ub_abc_correlation.R
-# Correlate ΔABC scores with H2AK119ub ChIP-seq signal at enhancers
+# Correlate ΔABC scores with H2AK119ub DiffBind results at enhancers
 #
 # BAP1 is an H2AK119ub deubiquitinase. In BAP1-KO, enhancers that lose ABC
 # activity should show *increased* K119ub (negative correlation between
-# delta_ABC and K119ub log2FC).
+# delta_ABC and K119ub Fold change).
+#
+# Now uses DiffBind output directly — replicate-aware normalization, proper
+# statistical testing (FDR per peak), no HPC preprocessing needed.
 #
 # Inputs:
-#   abc/results/delta_abc_all_pairs.tsv      — 180K E-G pairs with ABC deltas
-#   abc/results/k119ub_enhancer_signal.tsv   — per-replicate K119ub at enhancers (from HPC)
-#   abc/results/delta_abc_annotated.tsv      — for H3K27ac stratification
+#   abc/results/delta_abc_all_pairs.tsv                          — 180K E-G pairs with ABC deltas
+#   abc/K119ub_allATAC_diffbind_results_summit_appended_ap.txt   — DiffBind K119ub results (75K peaks)
+#   abc/results/delta_abc_annotated.tsv                          — for H3K27ac stratification
 #
 # Outputs:
-#   abc/results/figures/k119ub_correlation/  — 8 visualization panels (PDF + PNG)
+#   abc/results/figures/k119ub_correlation/  — 12 visualization panels (PDF + SVG + JPG)
 #   abc/results/k119ub_abc_correlation_summary.tsv — correlation results
 #   abc/results/k119ub_abc_enhancer_merged.tsv     — joined enhancer-level data
 #
-# Usage (local):
-#   Rscript abc/scripts/step10_k119ub_abc_correlation.R
+# Usage (local, from abc/ directory):
+#   Rscript scripts/step10_k119ub_abc_correlation.R
 
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
 
 ABC_PAIRS_FILE   <- "results/delta_abc_all_pairs.tsv"
-K119UB_FILE      <- "results/k119ub_enhancer_signal.tsv"
+DIFFBIND_FILE    <- "K119ub_allATAC_diffbind_results_summit_appended_ap.txt"
 ANNOTATED_FILE   <- "results/delta_abc_annotated.tsv"
 FIGURE_DIR       <- "results/figures/k119ub_correlation"
 RESULTS_DIR      <- "results"
+MULTIFORMAT_UTIL <- "../scripts/utils/multi_format_output.R"
 
 cat("================================================================================\n")
-cat("STEP 10: K119UB-ABC ENHANCER CORRELATION ANALYSIS\n")
+cat("STEP 10: K119UB-ABC ENHANCER CORRELATION ANALYSIS (DiffBind)\n")
 cat("================================================================================\n")
 cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 
@@ -39,11 +43,17 @@ cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 
 cat("Loading packages...\n")
 suppressPackageStartupMessages({
+  library(GenomicRanges)
+  library(IRanges)
   library(ggplot2)
   library(patchwork)
   library(scales)
   library(ggpointdensity)
 })
+
+# Load multi-format output utility
+stopifnot(file.exists(MULTIFORMAT_UTIL))
+source(MULTIFORMAT_UTIL)
 cat("Packages loaded.\n\n")
 
 # =============================================================================
@@ -51,7 +61,7 @@ cat("Packages loaded.\n\n")
 # =============================================================================
 
 stopifnot(file.exists(ABC_PAIRS_FILE))
-stopifnot(file.exists(K119UB_FILE))
+stopifnot(file.exists(DIFFBIND_FILE))
 stopifnot(file.exists(ANNOTATED_FILE))
 
 dir.create(FIGURE_DIR, recursive = TRUE, showWarnings = FALSE)
@@ -65,22 +75,95 @@ cat("Loading data...\n")
 abc <- read.table(ABC_PAIRS_FILE, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 cat(sprintf("  ABC pairs: %d rows\n", nrow(abc)))
 
-k119 <- read.table(K119UB_FILE, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-cat(sprintf("  K119ub signal: %d enhancers\n", nrow(k119)))
+diffbind <- read.table(DIFFBIND_FILE, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+cat(sprintf("  DiffBind K119ub peaks: %d rows\n", nrow(diffbind)))
 
 annot <- read.table(ANNOTATED_FILE, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 cat(sprintf("  Annotated pairs: %d rows\n", nrow(annot)))
 
+# Validate DiffBind columns
+required_cols <- c("Peak_Chr", "Peak_Start", "Peak_End", "Fold", "FDR", "Conc", "Conc_mut", "Conc_ctrl")
+missing_cols <- setdiff(required_cols, colnames(diffbind))
+if (length(missing_cols) > 0) {
+  stop(sprintf("DiffBind file missing columns: %s", paste(missing_cols, collapse = ", ")))
+}
+
 # =============================================================================
-# PART A: ENHANCER-LEVEL AGGREGATION
+# PART A: COORDINATE MATCHING VIA GENOMICRANGES
 # =============================================================================
 
-cat("\n--- Part A: Enhancer-level aggregation ---\n")
+cat("\n--- Part A: Coordinate matching (GenomicRanges overlap) ---\n")
+
+# Build unique enhancer set from ABC pairs
+abc$enh_key <- paste0(abc$chr, ":", abc$start, "-", abc$end)
+enh_coords <- unique(abc[, c("chr", "start", "end", "enh_key")])
+cat(sprintf("  Unique ABC enhancers: %d\n", nrow(enh_coords)))
+
+# Build GRanges for ABC enhancers
+gr_abc <- GRanges(
+  seqnames = enh_coords$chr,
+  ranges   = IRanges(start = enh_coords$start, end = enh_coords$end)
+)
+gr_abc$enh_key <- enh_coords$enh_key
+
+# Build GRanges for DiffBind peaks (using Peak coordinates for best coverage)
+gr_db <- GRanges(
+  seqnames = diffbind$Peak_Chr,
+  ranges   = IRanges(start = diffbind$Peak_Start, end = diffbind$Peak_End)
+)
+gr_db$db_idx <- seq_len(nrow(diffbind))
+
+# Find overlaps
+hits <- findOverlaps(gr_abc, gr_db)
+cat(sprintf("  Raw overlaps found: %d\n", length(hits)))
+
+# Resolve multi-matches: select peak with maximum basepair overlap
+hit_df <- data.frame(
+  abc_idx = queryHits(hits),
+  db_idx  = subjectHits(hits),
+  stringsAsFactors = FALSE
+)
+
+# Compute overlap width for each hit
+overlap_widths <- width(pintersect(gr_abc[hit_df$abc_idx], gr_db[hit_df$db_idx]))
+hit_df$overlap_width <- overlap_widths
+
+# For each ABC enhancer, keep the DiffBind peak with maximum overlap
+hit_df <- hit_df[order(hit_df$abc_idx, -hit_df$overlap_width), ]
+hit_best <- hit_df[!duplicated(hit_df$abc_idx), ]
+
+# Count statistics
+n_matched <- nrow(hit_best)
+n_unmatched <- nrow(enh_coords) - n_matched
+n_multi <- sum(table(hit_df$abc_idx) > 1)
+match_rate <- n_matched / nrow(enh_coords) * 100
+
+cat(sprintf("  Matched enhancers:   %d (%.1f%%)\n", n_matched, match_rate))
+cat(sprintf("  Unmatched enhancers: %d\n", n_unmatched))
+cat(sprintf("  Multi-match (resolved by max overlap): %d\n", n_multi))
+
+stopifnot(n_matched > 30000)
+
+# Build matched lookup: enh_key → DiffBind row
+match_map <- data.frame(
+  enh_key   = gr_abc$enh_key[hit_best$abc_idx],
+  Fold      = diffbind$Fold[hit_best$db_idx],
+  FDR       = diffbind$FDR[hit_best$db_idx],
+  Conc      = diffbind$Conc[hit_best$db_idx],
+  Conc_mut  = diffbind$Conc_mut[hit_best$db_idx],
+  Conc_ctrl = diffbind$Conc_ctrl[hit_best$db_idx],
+  p.value   = diffbind$p.value[hit_best$db_idx],
+  stringsAsFactors = FALSE
+)
+
+# =============================================================================
+# PART B: ENHANCER-LEVEL AGGREGATION
+# =============================================================================
+
+cat("\n--- Part B: Enhancer-level aggregation ---\n")
 
 # delta_activity is identical for all genes from same enhancer, so take first
 # delta_ABC and delta_unnorm vary per gene, so aggregate
-abc$enh_key <- paste0(abc$chr, ":", abc$start, "-", abc$end)
-
 enh_agg <- do.call(rbind, lapply(split(abc, abc$enh_key), function(df) {
   data.frame(
     enh_key          = df$enh_key[1],
@@ -114,20 +197,14 @@ h3k27ac_df <- data.frame(
 
 enh_agg <- merge(enh_agg, h3k27ac_df, by = "enh_key", all.x = TRUE)
 
-# Join with K119ub signal
-k119$enh_key <- paste0(k119$chr, ":", k119$start, "-", k119$end)
-enh_merged <- merge(enh_agg, k119, by = "enh_key", suffixes = c("", ".k119"))
+# Join with DiffBind matched data (inner join — only matched enhancers)
+enh_merged <- merge(enh_agg, match_map, by = "enh_key")
 
-cat(sprintf("  After joining with K119ub signal: %d enhancers\n", nrow(enh_merged)))
+cat(sprintf("  After joining with DiffBind signal: %d enhancers\n", nrow(enh_merged)))
 
-# Filter to quantifiable signal
-enh_q <- enh_merged[enh_merged$signal_class == "quantifiable", ]
-cat(sprintf("  Quantifiable K119ub signal: %d enhancers\n", nrow(enh_q)))
-
-# Also add distance info per enhancer (median distance across gene targets)
+# Add distance info per enhancer (median distance across gene targets)
 dist_agg <- tapply(abc$distance, abc$enh_key, median)
 enh_merged$median_distance <- dist_agg[enh_merged$enh_key]
-enh_q$median_distance <- dist_agg[enh_q$enh_key]
 
 # Save merged enhancer data
 merged_out <- file.path(RESULTS_DIR, "k119ub_abc_enhancer_merged.tsv")
@@ -135,10 +212,10 @@ write.table(enh_merged, merged_out, sep = "\t", quote = FALSE, row.names = FALSE
 cat(sprintf("  Saved merged data: %s (%d rows)\n", merged_out, nrow(enh_merged)))
 
 # =============================================================================
-# PART B: CORE CORRELATIONS
+# PART C: CORE CORRELATIONS
 # =============================================================================
 
-cat("\n--- Part B: Core Spearman correlations ---\n")
+cat("\n--- Part C: Core Spearman correlations ---\n")
 
 run_spearman <- function(x, y, label) {
   valid <- !is.na(x) & !is.na(y)
@@ -166,53 +243,53 @@ run_spearman <- function(x, y, label) {
 corr_results <- list()
 
 corr_results[[1]] <- run_spearman(
-  enh_q$delta_activity, enh_q$log2fc,
-  "delta_activity vs K119ub_log2fc"
+  enh_merged$delta_activity, enh_merged$Fold,
+  "delta_activity vs K119ub_Fold"
 )
 
 corr_results[[2]] <- run_spearman(
-  enh_q$mean_delta_unnorm, enh_q$log2fc,
-  "mean_delta_unnorm vs K119ub_log2fc"
+  enh_merged$mean_delta_unnorm, enh_merged$Fold,
+  "mean_delta_unnorm vs K119ub_Fold"
 )
 
 corr_results[[3]] <- run_spearman(
-  enh_q$mean_delta_abc, enh_q$log2fc,
-  "mean_delta_ABC vs K119ub_log2fc"
+  enh_merged$mean_delta_abc, enh_merged$Fold,
+  "mean_delta_ABC vs K119ub_Fold"
 )
 
 corr_results[[4]] <- run_spearman(
-  enh_q$delta_activity, enh_q$mut_mean,
-  "delta_activity vs K119ub_mut_mean"
+  enh_merged$delta_activity, enh_merged$Conc_mut,
+  "delta_activity vs K119ub_Conc_mut"
 )
 
 corr_results[[5]] <- run_spearman(
-  enh_q$ctrl_mean, enh_q$mut_mean,
-  "K119ub_ctrl_mean vs K119ub_mut_mean (QC)"
+  enh_merged$Conc_ctrl, enh_merged$Conc_mut,
+  "K119ub_Conc_ctrl vs K119ub_Conc_mut (QC)"
 )
 
 corr_table <- do.call(rbind, corr_results)
 cat("\n")
 
 # =============================================================================
-# PART C: CATEGORY COMPARISON
+# PART D: CATEGORY COMPARISON
 # =============================================================================
 
-cat("--- Part C: Category comparison ---\n")
+cat("--- Part D: Category comparison ---\n")
 
-enh_q$abc_category <- ifelse(
-  enh_q$mean_delta_abc < -0.01, "Lost",
-  ifelse(enh_q$mean_delta_abc > 0.01, "Gained", "Unchanged")
+enh_merged$abc_category <- ifelse(
+  enh_merged$mean_delta_abc < -0.01, "Lost",
+  ifelse(enh_merged$mean_delta_abc > 0.01, "Gained", "Unchanged")
 )
-enh_q$abc_category <- factor(enh_q$abc_category, levels = c("Lost", "Unchanged", "Gained"))
+enh_merged$abc_category <- factor(enh_merged$abc_category, levels = c("Lost", "Unchanged", "Gained"))
 
 cat("  Category counts:\n")
-cat_counts <- table(enh_q$abc_category)
+cat_counts <- table(enh_merged$abc_category)
 for (cat_name in names(cat_counts)) {
   cat(sprintf("    %-12s: %d\n", cat_name, cat_counts[cat_name]))
 }
 
 # Kruskal-Wallis
-kw <- kruskal.test(log2fc ~ abc_category, data = enh_q)
+kw <- kruskal.test(Fold ~ abc_category, data = enh_merged)
 cat(sprintf("\n  Kruskal-Wallis: chi-sq = %.2f, df = %d, p = %.2e\n",
             kw$statistic, kw$parameter, kw$p.value))
 
@@ -225,8 +302,8 @@ pairs <- list(
 
 wilcox_results <- list()
 for (pr in pairs) {
-  g1 <- enh_q$log2fc[enh_q$abc_category == pr[1]]
-  g2 <- enh_q$log2fc[enh_q$abc_category == pr[2]]
+  g1 <- enh_merged$Fold[enh_merged$abc_category == pr[1]]
+  g2 <- enh_merged$Fold[enh_merged$abc_category == pr[2]]
   wt <- wilcox.test(g1, g2)
 
   # Rank-biserial correlation as effect size
@@ -245,47 +322,93 @@ for (pr in pairs) {
   )
 }
 
-# Median K119ub log2fc per category
-cat("\n  Median K119ub log2FC by category:\n")
-for (cat_name in levels(enh_q$abc_category)) {
-  vals <- enh_q$log2fc[enh_q$abc_category == cat_name]
+# Median K119ub Fold per category
+cat("\n  Median K119ub Fold by category:\n")
+for (cat_name in levels(enh_merged$abc_category)) {
+  vals <- enh_merged$Fold[enh_merged$abc_category == cat_name]
   cat(sprintf("    %-12s: median = %+.4f, mean = %+.4f, n = %d\n",
               cat_name, median(vals), mean(vals), length(vals)))
 }
 
 # =============================================================================
-# PART D: STRATIFIED ANALYSES
+# PART E: STRATIFIED ANALYSES
 # =============================================================================
 
-cat("\n--- Part D: Stratified analyses ---\n")
+cat("\n--- Part E: Stratified analyses ---\n")
 
-# D1: By distance bin
-cat("\n  D1: By distance bin\n")
+# E1: By distance bin
+cat("\n  E1: By distance bin\n")
 dist_breaks <- c(0, 50e3, 200e3, 500e3, 1e6, 5e6, Inf)
 dist_labels <- c("<50kb", "50-200kb", "200-500kb", "500kb-1Mb", "1-5Mb", ">5Mb")
-enh_q$dist_bin <- cut(enh_q$median_distance, breaks = dist_breaks, labels = dist_labels,
-                      include.lowest = TRUE, right = FALSE)
+enh_merged$dist_bin <- cut(enh_merged$median_distance, breaks = dist_breaks, labels = dist_labels,
+                           include.lowest = TRUE, right = FALSE)
 
 dist_corrs <- list()
-for (bin in levels(enh_q$dist_bin)) {
-  sub <- enh_q[enh_q$dist_bin == bin, ]
+for (bin in levels(enh_merged$dist_bin)) {
+  sub <- enh_merged[enh_merged$dist_bin == bin, ]
   dist_corrs[[bin]] <- run_spearman(
-    sub$delta_activity, sub$log2fc,
+    sub$delta_activity, sub$Fold,
     paste0("delta_activity vs K119ub [", bin, "]")
   )
 }
 dist_corr_table <- do.call(rbind, dist_corrs)
 
-# D2: By H3K27ac status
-cat("\n  D2: By H3K27ac status\n")
+# E2: By H3K27ac status
+cat("\n  E2: By H3K27ac status\n")
 for (has_mark in c(TRUE, FALSE)) {
-  sub <- enh_q[!is.na(enh_q$has_H3K27ac) & enh_q$has_H3K27ac == has_mark, ]
+  sub <- enh_merged[!is.na(enh_merged$has_H3K27ac) & enh_merged$has_H3K27ac == has_mark, ]
   label <- if (has_mark) "H3K27ac+" else "H3K27ac-"
 
-  run_spearman(sub$delta_activity, sub$log2fc,
+  run_spearman(sub$delta_activity, sub$Fold,
                paste0("delta_activity vs K119ub [", label, "]"))
-  run_spearman(sub$mean_delta_unnorm, sub$log2fc,
+  run_spearman(sub$mean_delta_unnorm, sub$Fold,
                paste0("mean_delta_unnorm vs K119ub [", label, "]"))
+}
+
+# =============================================================================
+# PART F: DIFFBIND FDR-BASED ANALYSES
+# =============================================================================
+
+cat("\n--- Part F: DiffBind FDR-based analyses ---\n")
+
+# Classify enhancers by K119ub significance
+enh_merged$k119ub_sig <- ifelse(
+  enh_merged$FDR < 0.05 & enh_merged$Fold > 0, "Sig_Up",
+  ifelse(enh_merged$FDR < 0.05 & enh_merged$Fold < 0, "Sig_Down", "NS")
+)
+enh_merged$k119ub_sig <- factor(enh_merged$k119ub_sig, levels = c("Sig_Down", "NS", "Sig_Up"))
+
+cat("  K119ub significance classes:\n")
+sig_counts <- table(enh_merged$k119ub_sig)
+for (sig_name in names(sig_counts)) {
+  cat(sprintf("    %-12s: %d (%.1f%%)\n", sig_name, sig_counts[sig_name],
+              sig_counts[sig_name] / nrow(enh_merged) * 100))
+}
+
+# Contingency table: K119ub significance × ABC category
+ct <- table(enh_merged$abc_category, enh_merged$k119ub_sig)
+cat("\n  Contingency table (ABC category × K119ub significance):\n")
+print(ct)
+
+# Fisher's exact test
+fisher_res <- fisher.test(ct, simulate.p.value = TRUE, B = 10000)
+cat(sprintf("\n  Fisher's exact test: p = %.4e\n", fisher_res$p.value))
+
+# Log2 observed/expected ratios for heatmap
+row_totals <- rowSums(ct)
+col_totals <- colSums(ct)
+grand_total <- sum(ct)
+expected <- outer(row_totals, col_totals) / grand_total
+log2_oe <- log2((ct + 0.5) / (expected + 0.5))
+cat("\n  Log2(O/E) matrix:\n")
+print(round(log2_oe, 3))
+
+# Stratified correlation by K119ub significance
+cat("\n  Correlations stratified by K119ub significance:\n")
+for (sig_class in levels(enh_merged$k119ub_sig)) {
+  sub <- enh_merged[enh_merged$k119ub_sig == sig_class, ]
+  run_spearman(sub$delta_activity, sub$Fold,
+               paste0("delta_activity vs Fold [", sig_class, "]"))
 }
 
 # =============================================================================
@@ -297,10 +420,10 @@ write.table(corr_table, summary_out, sep = "\t", quote = FALSE, row.names = FALS
 cat(sprintf("\n  Saved correlation summary: %s\n", summary_out))
 
 # =============================================================================
-# PART E: VISUALIZATIONS
+# PART G: VISUALIZATIONS
 # =============================================================================
 
-cat("\n--- Part E: Visualizations ---\n")
+cat("\n--- Part G: Visualizations (12 panels) ---\n")
 
 theme_pub <- theme_bw(base_size = 11) +
   theme(
@@ -309,14 +432,6 @@ theme_pub <- theme_bw(base_size = 11) +
     plot.title = element_text(size = 12, face = "bold")
   )
 
-save_plot <- function(p, name, w = 7, h = 6) {
-  pdf_path <- file.path(FIGURE_DIR, paste0(name, ".pdf"))
-  png_path <- file.path(FIGURE_DIR, paste0(name, ".png"))
-  ggsave(pdf_path, p, width = w, height = h, device = cairo_pdf)
-  ggsave(png_path, p, width = w, height = h, dpi = 300)
-  cat(sprintf("  Saved: %s (.pdf + .png)\n", name))
-}
-
 format_rho <- function(x, y) {
   valid <- !is.na(x) & !is.na(y)
   test <- cor.test(x[valid], y[valid], method = "spearman", exact = FALSE)
@@ -324,120 +439,113 @@ format_rho <- function(x, y) {
           test$estimate, test$p.value, format(sum(valid), big.mark = ","))
 }
 
-# --- Panel 1: delta_activity vs K119ub log2FC ---
-p1 <- ggplot(enh_q, aes(x = delta_activity, y = log2fc)) +
+cat_colors <- c(Lost = "#2166AC", Unchanged = "grey60", Gained = "#B2182B")
+sig_colors <- c(Sig_Down = "#2166AC", NS = "grey70", Sig_Up = "#B2182B")
+
+# --- Panel 01: delta_activity vs K119ub Fold ---
+p01 <- ggplot(enh_merged, aes(x = delta_activity, y = Fold)) +
   geom_pointdensity(size = 0.3, alpha = 0.7) +
   scale_color_viridis_c(name = "Density") +
   geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
   annotate("text", x = Inf, y = Inf,
-           label = format_rho(enh_q$delta_activity, enh_q$log2fc),
+           label = format_rho(enh_merged$delta_activity, enh_merged$Fold),
            hjust = 1.1, vjust = 1.3, size = 3.5, fontface = "bold") +
   labs(
     x = expression(Delta * "Activity (KO - WT)"),
-    y = expression("K119ub log"[2] * "FC (Mut / Ctrl)"),
+    y = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
     title = "Enhancer activity change vs K119ub change"
   ) +
   theme_pub
-save_plot(p1, "01_delta_activity_vs_k119ub")
+save_multiformat_ggplot(p01, file.path(FIGURE_DIR, "01_delta_activity_vs_k119ub"), width = 7, height = 6)
 
-# --- Panel 2: mean delta_unnorm vs K119ub log2FC ---
-p2 <- ggplot(enh_q, aes(x = mean_delta_unnorm, y = log2fc)) +
+# --- Panel 02: mean delta_unnorm vs K119ub Fold ---
+p02 <- ggplot(enh_merged, aes(x = mean_delta_unnorm, y = Fold)) +
   geom_pointdensity(size = 0.3, alpha = 0.7) +
   scale_color_viridis_c(name = "Density") +
   geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
   annotate("text", x = Inf, y = Inf,
-           label = format_rho(enh_q$mean_delta_unnorm, enh_q$log2fc),
+           label = format_rho(enh_merged$mean_delta_unnorm, enh_merged$Fold),
            hjust = 1.1, vjust = 1.3, size = 3.5, fontface = "bold") +
   labs(
     x = expression("Mean " * Delta * "(A" %*% "C) per enhancer"),
-    y = expression("K119ub log"[2] * "FC (Mut / Ctrl)"),
+    y = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
     title = "Unnormalized ABC change vs K119ub change"
   ) +
   theme_pub
-save_plot(p2, "02_delta_unnorm_vs_k119ub")
+save_multiformat_ggplot(p02, file.path(FIGURE_DIR, "02_delta_unnorm_vs_k119ub"), width = 7, height = 6)
 
-# --- Panel 3: mean delta_ABC vs K119ub log2FC ---
-p3 <- ggplot(enh_q, aes(x = mean_delta_abc, y = log2fc)) +
+# --- Panel 03: mean delta_ABC vs K119ub Fold ---
+p03 <- ggplot(enh_merged, aes(x = mean_delta_abc, y = Fold)) +
   geom_pointdensity(size = 0.3, alpha = 0.7) +
   scale_color_viridis_c(name = "Density") +
   geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
   annotate("text", x = Inf, y = Inf,
-           label = format_rho(enh_q$mean_delta_abc, enh_q$log2fc),
+           label = format_rho(enh_merged$mean_delta_abc, enh_merged$Fold),
            hjust = 1.1, vjust = 1.3, size = 3.5, fontface = "bold") +
   labs(
     x = expression("Mean " * Delta * "ABC per enhancer"),
-    y = expression("K119ub log"[2] * "FC (Mut / Ctrl)"),
+    y = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
     title = "Normalized ABC change vs K119ub change"
   ) +
   theme_pub
-save_plot(p3, "03_delta_abc_vs_k119ub")
+save_multiformat_ggplot(p03, file.path(FIGURE_DIR, "03_delta_abc_vs_k119ub"), width = 7, height = 6)
 
-# --- Panel 4: Boxplot K119ub log2FC by ABC category ---
-cat_colors <- c(Lost = "#2166AC", Unchanged = "grey60", Gained = "#B2182B")
-
-# Compute p-values for bracket annotations
-wilcox_p <- sapply(pairs, function(pr) {
-  g1 <- enh_q$log2fc[enh_q$abc_category == pr[1]]
-  g2 <- enh_q$log2fc[enh_q$abc_category == pr[2]]
-  wilcox.test(g1, g2)$p.value
-})
-
-p4 <- ggplot(enh_q, aes(x = abc_category, y = log2fc, fill = abc_category)) +
+# --- Panel 04: Boxplot K119ub Fold by ABC category ---
+p04 <- ggplot(enh_merged, aes(x = abc_category, y = Fold, fill = abc_category)) +
   geom_boxplot(outlier.size = 0.3, outlier.alpha = 0.2, width = 0.6) +
   scale_fill_manual(values = cat_colors, guide = "none") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   labs(
-    x = "ABC category (based on mean ΔABC)",
-    y = expression("K119ub log"[2] * "FC (Mut / Ctrl)"),
+    x = expression("ABC category (based on mean " * Delta * "ABC)"),
+    y = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
     title = "K119ub change by ABC enhancer category",
     subtitle = sprintf("Kruskal-Wallis p = %.2e", kw$p.value)
   ) +
   theme_pub
-save_plot(p4, "04_boxplot_k119ub_by_abc_category")
+save_multiformat_ggplot(p04, file.path(FIGURE_DIR, "04_boxplot_k119ub_by_abc_category"), width = 7, height = 6)
 
-# --- Panel 5: Boxplot K119ub mut signal by ABC category ---
-p5 <- ggplot(enh_q, aes(x = abc_category, y = mut_mean, fill = abc_category)) +
+# --- Panel 05: Boxplot K119ub Conc_mut by ABC category (log2 scale, no log1p) ---
+p05 <- ggplot(enh_merged, aes(x = abc_category, y = Conc_mut, fill = abc_category)) +
   geom_boxplot(outlier.size = 0.3, outlier.alpha = 0.2, width = 0.6) +
   scale_fill_manual(values = cat_colors, guide = "none") +
-  scale_y_continuous(trans = "log1p") +
   labs(
-    x = "ABC category (based on mean ΔABC)",
-    y = "K119ub signal in KO (normalized, log1p scale)",
+    x = expression("ABC category (based on mean " * Delta * "ABC)"),
+    y = expression("K119ub KO concentration (DiffBind log"[2] * " scale)"),
     title = "Absolute K119ub level in KO by ABC category"
   ) +
   theme_pub
-save_plot(p5, "05_boxplot_k119ub_mut_by_category")
+save_multiformat_ggplot(p05, file.path(FIGURE_DIR, "05_boxplot_k119ub_mut_by_category"), width = 7, height = 6)
 
-# --- Panel 6: Violin + box overlay ---
-p6 <- ggplot(enh_q, aes(x = abc_category, y = log2fc, fill = abc_category)) +
+# --- Panel 06: Violin + box overlay ---
+p06 <- ggplot(enh_merged, aes(x = abc_category, y = Fold, fill = abc_category)) +
   geom_violin(alpha = 0.4, scale = "width") +
   geom_boxplot(width = 0.15, outlier.shape = NA, fill = "white", alpha = 0.8) +
   scale_fill_manual(values = cat_colors, guide = "none") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   labs(
-    x = "ABC category (based on mean ΔABC)",
-    y = expression("K119ub log"[2] * "FC (Mut / Ctrl)"),
+    x = expression("ABC category (based on mean " * Delta * "ABC)"),
+    y = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
     title = "K119ub change distribution by ABC category"
   ) +
   theme_pub
-save_plot(p6, "06_violin_k119ub_by_category")
+save_multiformat_ggplot(p06, file.path(FIGURE_DIR, "06_violin_k119ub_by_category"), width = 7, height = 6)
 
-# --- Panel 7: Faceted scatter by distance bin ---
-enh_q_dist <- enh_q[!is.na(enh_q$dist_bin), ]
+# --- Panel 07: Faceted scatter by distance bin ---
+enh_dist <- enh_merged[!is.na(enh_merged$dist_bin), ]
 
 # Pre-compute rho per bin for annotation
-rho_by_bin <- do.call(rbind, lapply(levels(enh_q_dist$dist_bin), function(bin) {
-  sub <- enh_q_dist[enh_q_dist$dist_bin == bin, ]
-  valid <- !is.na(sub$delta_activity) & !is.na(sub$log2fc)
+rho_by_bin <- do.call(rbind, lapply(levels(enh_dist$dist_bin), function(bin) {
+  sub <- enh_dist[enh_dist$dist_bin == bin, ]
+  valid <- !is.na(sub$delta_activity) & !is.na(sub$Fold)
   n <- sum(valid)
   if (n < 10) return(data.frame(dist_bin = bin, label = paste0("n=", n), stringsAsFactors = FALSE))
-  test <- cor.test(sub$delta_activity[valid], sub$log2fc[valid], method = "spearman", exact = FALSE)
+  test <- cor.test(sub$delta_activity[valid], sub$Fold[valid], method = "spearman", exact = FALSE)
   data.frame(
     dist_bin = bin,
     label = sprintf("rho=%+.3f, n=%s", test$estimate, format(n, big.mark = ",")),
@@ -446,7 +554,7 @@ rho_by_bin <- do.call(rbind, lapply(levels(enh_q_dist$dist_bin), function(bin) {
 }))
 rho_by_bin$dist_bin <- factor(rho_by_bin$dist_bin, levels = dist_labels)
 
-p7 <- ggplot(enh_q_dist, aes(x = delta_activity, y = log2fc)) +
+p07 <- ggplot(enh_dist, aes(x = delta_activity, y = Fold)) +
   geom_pointdensity(size = 0.2, alpha = 0.5) +
   scale_color_viridis_c(name = "Density") +
   geom_smooth(method = "lm", color = "red", linewidth = 0.4, se = FALSE) +
@@ -458,23 +566,23 @@ p7 <- ggplot(enh_q_dist, aes(x = delta_activity, y = log2fc)) +
   facet_wrap(~dist_bin, nrow = 1, scales = "free_x") +
   labs(
     x = expression(Delta * "Activity (KO - WT)"),
-    y = expression("K119ub log"[2] * "FC"),
+    y = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
     title = "Activity-K119ub correlation by enhancer-gene distance"
   ) +
   theme_pub +
   theme(strip.text = element_text(size = 9))
-save_plot(p7, "07_scatter_by_distance", w = 14, h = 4)
+save_multiformat_ggplot(p07, file.path(FIGURE_DIR, "07_scatter_by_distance"), width = 14, height = 4)
 
-# --- Panel 8: Faceted scatter by H3K27ac status ---
-enh_q_h3k <- enh_q[!is.na(enh_q$has_H3K27ac), ]
-enh_q_h3k$h3k_label <- ifelse(enh_q_h3k$has_H3K27ac, "H3K27ac+", "H3K27ac-")
+# --- Panel 08: Faceted scatter by H3K27ac status ---
+enh_h3k <- enh_merged[!is.na(enh_merged$has_H3K27ac), ]
+enh_h3k$h3k_label <- ifelse(enh_h3k$has_H3K27ac, "H3K27ac+", "H3K27ac-")
 
 rho_by_h3k <- do.call(rbind, lapply(c("H3K27ac+", "H3K27ac-"), function(lbl) {
-  sub <- enh_q_h3k[enh_q_h3k$h3k_label == lbl, ]
-  valid <- !is.na(sub$delta_activity) & !is.na(sub$log2fc)
+  sub <- enh_h3k[enh_h3k$h3k_label == lbl, ]
+  valid <- !is.na(sub$delta_activity) & !is.na(sub$Fold)
   n <- sum(valid)
   if (n < 10) return(data.frame(h3k_label = lbl, label = paste0("n=", n), stringsAsFactors = FALSE))
-  test <- cor.test(sub$delta_activity[valid], sub$log2fc[valid], method = "spearman", exact = FALSE)
+  test <- cor.test(sub$delta_activity[valid], sub$Fold[valid], method = "spearman", exact = FALSE)
   data.frame(
     h3k_label = lbl,
     label = sprintf("rho=%+.3f, p=%.1e, n=%s", test$estimate, test$p.value, format(n, big.mark = ",")),
@@ -482,7 +590,7 @@ rho_by_h3k <- do.call(rbind, lapply(c("H3K27ac+", "H3K27ac-"), function(lbl) {
   )
 }))
 
-p8 <- ggplot(enh_q_h3k, aes(x = delta_activity, y = log2fc)) +
+p08 <- ggplot(enh_h3k, aes(x = delta_activity, y = Fold)) +
   geom_pointdensity(size = 0.3, alpha = 0.7) +
   scale_color_viridis_c(name = "Density") +
   geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE) +
@@ -494,11 +602,99 @@ p8 <- ggplot(enh_q_h3k, aes(x = delta_activity, y = log2fc)) +
   facet_wrap(~h3k_label, nrow = 1) +
   labs(
     x = expression(Delta * "Activity (KO - WT)"),
-    y = expression("K119ub log"[2] * "FC (Mut / Ctrl)"),
+    y = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
     title = "Activity-K119ub correlation by H3K27ac status"
   ) +
   theme_pub
-save_plot(p8, "08_scatter_by_h3k27ac", w = 10, h = 5)
+save_multiformat_ggplot(p08, file.path(FIGURE_DIR, "08_scatter_by_h3k27ac"), width = 10, height = 5)
+
+# --- Panel 09: K119ub volcano at ABC enhancers ---
+p09 <- ggplot(enh_merged, aes(x = Fold, y = -log10(FDR))) +
+  geom_pointdensity(size = 0.3, alpha = 0.7) +
+  scale_color_viridis_c(name = "Density") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "red", linewidth = 0.4) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  annotate("text", x = Inf, y = Inf,
+           label = sprintf("FDR<0.05: %d up, %d down\n%d NS (%.0f%%)",
+                           sig_counts["Sig_Up"], sig_counts["Sig_Down"],
+                           sig_counts["NS"], sig_counts["NS"] / nrow(enh_merged) * 100),
+           hjust = 1.1, vjust = 1.2, size = 3.2, fontface = "bold") +
+  labs(
+    x = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
+    y = expression("-log"[10] * "(FDR)"),
+    title = "K119ub differential signal at ABC enhancers"
+  ) +
+  theme_pub
+save_multiformat_ggplot(p09, file.path(FIGURE_DIR, "09_k119ub_volcano_at_enhancers"), width = 7, height = 6)
+
+# --- Panel 10: Contingency heatmap — ABC category × K119ub significance ---
+# Reshape log2(O/E) matrix for ggplot
+heatmap_df <- expand.grid(
+  abc_category = rownames(log2_oe),
+  k119ub_sig   = colnames(log2_oe),
+  stringsAsFactors = FALSE
+)
+heatmap_df$log2_oe <- as.vector(log2_oe)
+heatmap_df$count <- as.vector(ct)
+heatmap_df$abc_category <- factor(heatmap_df$abc_category, levels = c("Lost", "Unchanged", "Gained"))
+heatmap_df$k119ub_sig <- factor(heatmap_df$k119ub_sig, levels = c("Sig_Down", "NS", "Sig_Up"))
+
+# Symmetric color limits
+max_abs <- max(abs(heatmap_df$log2_oe))
+
+p10 <- ggplot(heatmap_df, aes(x = k119ub_sig, y = abc_category, fill = log2_oe)) +
+  geom_tile(color = "white", linewidth = 1) +
+  geom_text(aes(label = sprintf("%.2f\n(%d)", log2_oe, count)),
+            size = 3.5, fontface = "bold") +
+  scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
+                       midpoint = 0, limits = c(-max_abs, max_abs),
+                       name = expression("log"[2] * "(O/E)")) +
+  labs(
+    x = "K119ub significance (DiffBind FDR < 0.05)",
+    y = "ABC category",
+    title = "Enrichment: ABC category vs K119ub significance",
+    subtitle = sprintf("Fisher's exact test p = %.2e", fisher_res$p.value)
+  ) +
+  theme_pub +
+  theme(panel.grid = element_blank())
+save_multiformat_ggplot(p10, file.path(FIGURE_DIR, "10_contingency_heatmap"), width = 7, height = 5)
+
+# --- Panel 11: delta_activity by K119ub significance class ---
+# Kruskal-Wallis for this grouping
+kw_sig <- kruskal.test(delta_activity ~ k119ub_sig, data = enh_merged)
+
+p11 <- ggplot(enh_merged, aes(x = k119ub_sig, y = delta_activity, fill = k119ub_sig)) +
+  geom_boxplot(outlier.size = 0.3, outlier.alpha = 0.2, width = 0.6) +
+  scale_fill_manual(values = sig_colors, guide = "none") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  labs(
+    x = "K119ub significance (DiffBind FDR < 0.05)",
+    y = expression(Delta * "Activity (KO - WT)"),
+    title = "Enhancer activity change by K119ub significance",
+    subtitle = sprintf("Kruskal-Wallis p = %.2e", kw_sig$p.value)
+  ) +
+  theme_pub
+save_multiformat_ggplot(p11, file.path(FIGURE_DIR, "11_delta_activity_by_k119ub_sig"), width = 7, height = 6)
+
+# --- Panel 12: delta_activity vs K119ub Fold colored by significance ---
+p12 <- ggplot(enh_merged, aes(x = delta_activity, y = Fold, color = k119ub_sig)) +
+  geom_point(size = 0.3, alpha = 0.4) +
+  scale_color_manual(values = sig_colors, name = "K119ub\nSignificance") +
+  geom_smooth(data = enh_merged, aes(x = delta_activity, y = Fold),
+              method = "lm", color = "black", linewidth = 0.5, se = FALSE, inherit.aes = FALSE) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  annotate("text", x = Inf, y = Inf,
+           label = format_rho(enh_merged$delta_activity, enh_merged$Fold),
+           hjust = 1.1, vjust = 1.3, size = 3.5, fontface = "bold") +
+  labs(
+    x = expression(Delta * "Activity (KO - WT)"),
+    y = expression("K119ub Fold (DiffBind log"[2] * "FC)"),
+    title = "Activity change vs K119ub change, colored by significance"
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))) +
+  theme_pub
+save_multiformat_ggplot(p12, file.path(FIGURE_DIR, "12_scatter_colored_by_significance"), width = 8, height = 6)
 
 # =============================================================================
 # FINAL SUMMARY
@@ -507,8 +703,10 @@ save_plot(p8, "08_scatter_by_h3k27ac", w = 10, h = 5)
 cat("\n================================================================================\n")
 cat("ANALYSIS COMPLETE\n")
 cat("================================================================================\n")
-cat(sprintf("  Enhancers analyzed:    %d (quantifiable K119ub)\n", nrow(enh_q)))
-cat(sprintf("  Figures saved to:      %s/\n", FIGURE_DIR))
+cat(sprintf("  Data source:           DiffBind K119ub (%d peaks)\n", nrow(diffbind)))
+cat(sprintf("  Enhancers matched:     %d / %d (%.1f%%)\n", n_matched, nrow(enh_coords), match_rate))
+cat(sprintf("  Enhancers analyzed:    %d (after merge with ABC aggregates)\n", nrow(enh_merged)))
+cat(sprintf("  Figures saved to:      %s/ (12 panels, PDF+SVG+JPG each)\n", FIGURE_DIR))
 cat(sprintf("  Correlation summary:   %s\n", summary_out))
 cat(sprintf("  Merged enhancer data:  %s\n", merged_out))
 
@@ -518,6 +716,12 @@ for (i in seq_len(nrow(corr_table))) {
               corr_table$label[i], corr_table$rho[i], corr_table$p_value[i]))
 }
 
-cat("\n  Biological prediction: Negative rho for ΔABC vs ΔK119ub\n")
-cat("  (Lost enhancer activity → gained K119ub in BAP1-KO)\n")
+cat("\n  K119ub significance at enhancers:\n")
+for (sig_name in levels(enh_merged$k119ub_sig)) {
+  cat(sprintf("    %-12s: %d (%.1f%%)\n", sig_name, sig_counts[sig_name],
+              sig_counts[sig_name] / nrow(enh_merged) * 100))
+}
+
+cat("\n  Biological prediction: Negative rho for ΔABC vs K119ub Fold\n")
+cat("  (Lost enhancer activity -> gained K119ub in BAP1-KO)\n")
 cat("\nDone.\n")
