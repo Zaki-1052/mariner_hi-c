@@ -11,16 +11,23 @@ BASE_DIR <- getwd()
 
 # Data file paths
 DATA_PATHS <- list(
-  mc_dmr = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260121_172049/DMR_mc_control__mutant_20260121_172049.bed"),
-  hmc_dmr = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260121_172049/DMR_hmc_control__mutant_20260121_172049.bed"),
-  bioqc_json = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/BioQC_20260121_170327/biological_qc_report_4_samples_20260121_170327.json"),
+  # Gene body DMRs (run-3, deep-seq)
+  mc_dmr = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260221_190322/DMR_mc_control__mutant_20260221_190322.bed"),
+  hmc_dmr = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260221_190322/DMR_hmc_control__mutant_20260221_190322.bed"),
+  bioqc_json = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/BioQC_20260221_184206/biological_qc_report_4_samples_20260221_184206.json"),
   upstream_csv = file.path(BASE_DIR, "../upstream/duet-1.5.0_evoC_Bap1_run_6bp/reports/evoC_Bap1_run_duet-evoC_Summary.csv"),
-  # Additional region DMR files for region comparison
-  cpg_islands_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/DMR_20260121_171455/DMR_mc_control__mutant_20260121_171455.bed"),
-  cpg_shores_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/DMR_20260121_171910/DMR_mc_control__mutant_20260121_171910.bed"),
-  cpg_shelves_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/DMR_20260121_171718/DMR_mc_control__mutant_20260121_171718.bed"),
-  promoters_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/DMR_20260121_172220/DMR_mc_control__mutant_20260121_172220.bed"),
-  tss_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260121_172333/DMR_mc_control__mutant_20260121_172333.bed")
+  # Regional mC DMR files
+  cpg_islands_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/DMR_20260221_185728/DMR_mc_control__mutant_20260221_185728.bed"),
+  cpg_shores_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/DMR_20260221_190122/DMR_mc_control__mutant_20260221_190122.bed"),
+  cpg_shelves_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/DMR_20260221_185914/DMR_mc_control__mutant_20260221_185914.bed"),
+  promoters_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/DMR_20260221_190510/DMR_mc_control__mutant_20260221_190510.bed"),
+  tss_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260221_190652/DMR_mc_control__mutant_20260221_190652.bed"),
+  # Regional hmC DMR files
+  cpg_islands_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/DMR_20260221_185728/DMR_hmc_control__mutant_20260221_185728.bed"),
+  cpg_shores_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/DMR_20260221_190122/DMR_hmc_control__mutant_20260221_190122.bed"),
+  cpg_shelves_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/DMR_20260221_185914/DMR_hmc_control__mutant_20260221_185914.bed"),
+  promoters_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/DMR_20260221_190510/DMR_hmc_control__mutant_20260221_190510.bed"),
+  tss_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260221_190652/DMR_hmc_control__mutant_20260221_190652.bed")
 )
 
 # ChIP-seq peak file paths (from peaks/beds/)

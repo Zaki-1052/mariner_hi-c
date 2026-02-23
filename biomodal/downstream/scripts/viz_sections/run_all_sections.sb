@@ -1,0 +1,60 @@
+#!/bin/bash
+#SBATCH --job-name=biomodal_viz
+#SBATCH --output=logs/biomodal_viz_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+echo "========================================="
+echo "Biomodal Visualization Pipeline (19 sections)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which Rscript
+Rscript --version
+echo ""
+
+# Run from downstream/ directory (required by _shared_config.R)
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream
+echo "Working directory: $(pwd)"
+echo ""
+
+FAILED=0
+TOTAL=0
+
+for section in scripts/viz_sections/section_*.R; do
+  TOTAL=$((TOTAL + 1))
+  echo "--------------------------------------------------------------------------------"
+  echo "Running ${section}..."
+  echo "--------------------------------------------------------------------------------"
+  Rscript "${section}"
+  EXIT_CODE=$?
+  if [ ${EXIT_CODE} -ne 0 ]; then
+    echo "WARNING: ${section} failed with exit code ${EXIT_CODE}"
+    FAILED=$((FAILED + 1))
+  fi
+  echo ""
+done
+
+echo "========================================="
+if [ ${FAILED} -eq 0 ]; then
+  echo "All ${TOTAL} sections complete!"
+else
+  echo "${FAILED}/${TOTAL} sections failed"
+fi
+echo "End time: $(date)"
+echo "========================================="
+
+exit ${FAILED}
