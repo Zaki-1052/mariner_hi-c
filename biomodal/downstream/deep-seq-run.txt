@@ -1,0 +1,2389 @@
+zakiralibhai@Zakirs-MacBook-Air downstream % bash scripts/viz_sections/run_all_sections.sb
+=========================================
+Biomodal Visualization Pipeline (19 sections)
+=========================================
+Job ID: 
+Node: Zakirs-MacBook-Air.local
+Start time: Sun Feb 22 19:06:08 PST 2026
+=========================================
+
+scripts/viz_sections/run_all_sections.sb: line 21: /Users/zakiralibhai/.bashrc: No such file or directory
+scripts/viz_sections/run_all_sections.sb: line 22: conda: command not found
+Environment check:
+/usr/local/bin/Rscript
+Rscript (R) version 4.5.2 (2025-10-31)
+
+scripts/viz_sections/run_all_sections.sb: line 30: cd: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream: No such file or directory
+Working directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_01_qc_overview.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:06:08 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 1: QC & DATA OVERVIEW
+================================================================================
+
+Creating QC overview plot...
+  Saved: 01_qc_overview/{pdf,svg,jpg}
+Warning messages:
+1: Use of `seq_metrics$Mean_Phred_Score` is discouraged.
+ℹ Use `Mean_Phred_Score` instead. 
+2: Use of `seq_metrics$Mean_Phred_Score` is discouraged.
+ℹ Use `Mean_Phred_Score` instead. 
+3: Use of `seq_metrics$Mean_Phred_Score` is discouraged.
+ℹ Use `Mean_Phred_Score` instead. 
+Section 1 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_02_correlation.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:06:15 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 2: SAMPLE CORRELATION ANALYSIS
+================================================================================
+
+Extracting correlation matrices...
+Creating 5mC correlation heatmap...
+  Saved: 02a_mc_correlation_heatmap/{pdf,svg,jpg}
+Creating 5hmC correlation heatmap...
+  Saved: 02b_hmc_correlation_heatmap/{pdf,svg,jpg}
+Creating combined correlation comparison...
+  Saved: 02c_correlation_comparison/{pdf,svg,jpg}
+Section 2 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_03_dmr_statistics.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:06:21 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 3: DMR STATISTICS BY GENOMIC REGION
+================================================================================
+
+Creating region comparison bar chart...
+  Saved: 03a_dmr_by_region/{pdf,svg,jpg}
+Creating mC vs hmC comparison...
+Creating methylation context comparison...
+  Saved: 03_dmr_region_statistics/{pdf,svg,jpg}
+Creating Figure 3b: Methylation direction comparison...
+  Saved: 03b_direction_comparison/{pdf,svg,jpg}
+Section 3 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_04_volcano_plots.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:06:29 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 4: VOLCANO PLOTS
+================================================================================
+
+Creating 5mC volcano plot...
+  Saved: 04a_volcano_mc/{pdf,svg,jpg}
+Warning messages:
+1: ggrepel: 5 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+2: ggrepel: 5 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+3: ggrepel: 5 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+Creating 5hmC volcano plot...
+  Saved: 04b_volcano_hmc/{pdf,svg,jpg}
+Creating combined volcano panel...
+  Saved: 04_volcano_plots/{pdf,svg,jpg}
+Warning messages:
+1: ggrepel: 6 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+2: ggrepel: 3 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+3: ggrepel: 6 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+4: ggrepel: 3 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+5: ggrepel: 6 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+6: ggrepel: 3 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+Section 4 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_05_coordinated_changes.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:06:45 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 5: COORDINATED CHANGES ANALYSIS (KEY INSIGHT)
+================================================================================
+
+Identifying genes with coordinated mC/hmC changes...
+Warning message:
+In inner_join(mc_sig, hmc_sig, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+  6750 genes significant in both mC and hmC
+  5708 genes show coordinated mC↑/hmC↓ pattern (84.6%)
+  Saved coordinated_changes.tsv
+Creating mC vs hmC scatter plot...
+  Saved: 05a_mc_hmc_scatter/{pdf,svg,jpg}
+Warning messages:
+1: ggrepel: 11 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'mC↑ / hmC↓' in 'mbcsToSbcs': for ↑ (U+2191)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'mC↑ / hmC↓' in 'mbcsToSbcs': for ↓ (U+2193)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'mC↑ / hmC↓' in 'mbcsToSbcs': for ↑ (U+2191)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'mC↑ / hmC↓' in 'mbcsToSbcs': for ↓ (U+2193)
+6: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '6750 genes significant in both | 85% show mC↑/hmC↓ pattern' in 'mbcsToSbcs': for ↑ (U+2191)
+7: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '6750 genes significant in both | 85% show mC↑/hmC↓ pattern' in 'mbcsToSbcs': for ↓ (U+2193)
+8: ggrepel: 11 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+9: ggrepel: 11 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+Creating top coordinated genes bar chart...
+  Saved: 05b_top_coordinated_genes/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Top 20 Genes with Coordinated mC↑/hmC↓ Pattern' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Top 20 Genes with Coordinated mC↑/hmC↓ Pattern' in 'mbcsToSbcs': for ↓ (U+2193)
+Creating detailed locus plots...
+  Saved: 05c_syt1_detail/{pdf,svg,jpg}
+  Saved: 05d_zbtb20_detail/{pdf,svg,jpg}
+  Saved: 05_coordinated_changes/{pdf,svg,jpg}
+Section 5 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_06_top_genes.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:06:54 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 6: TOP DIFFERENTIALLY METHYLATED GENES
+================================================================================
+
+Creating top mC DMRs bar chart...
+Creating top hmC DMRs bar chart...
+  Saved: 06a_top_dmrs/{pdf,svg,jpg}
+  Saved top_mc_dmrs.tsv and top_hmc_dmrs.tsv
+Creating overlap Venn diagram...
+  Saved: 06b_venn_overlap/{pdf,svg,jpg}
+  Saved: 06_top_genes/{pdf,svg,jpg}
+Section 6 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_07_effect_size.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:07:01 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 7: EFFECT SIZE DISTRIBUTIONS
+================================================================================
+
+Creating effect size distribution plots...
+Warning message:
+The `draw_quantiles` argument of `geom_violin()` is deprecated as of ggplot2 4.0.0.
+ℹ Please use the `quantiles.linetype` argument instead. 
+  Saved: 07_effect_size_distributions/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Significant genes show opposite directions: 5mC↑ / 5hmC↓' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Significant genes show opposite directions: 5mC↑ / 5hmC↓' in 'mbcsToSbcs': for ↓ (U+2193)
+Section 7 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_08_enrichment.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:07:08 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 8: GO/KEGG ENRICHMENT ANALYSIS
+================================================================================
+
+Running enrichment on 6627 hypermethylated genes...
+'select()' returned 1:1 mapping between keys and columns
+  Converted 6373 genes to Entrez IDs
+Running GO Biological Process enrichment...
+  Saved: 08a_enrichment_go_bp/{pdf,svg,jpg}
+  Saved GO BP results
+Running GO Cellular Component enrichment...
+  Saved: 08b_enrichment_go_cc/{pdf,svg,jpg}
+  Saved GO CC results
+Running GO Molecular Function enrichment...
+  Saved: 08c_enrichment_go_mf/{pdf,svg,jpg}
+  Saved GO MF results
+Running KEGG pathway enrichment...
+Reading KEGG annotation online: "https://rest.kegg.jp/link/mmu/pathway"...
+Reading KEGG annotation online: "https://rest.kegg.jp/list/pathway/mmu"...
+  Saved: 08d_enrichment_kegg/{pdf,svg,jpg}
+  Saved KEGG results
+Warning message:
+In bitr(hyper_genes, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  3.83% of input gene IDs are fail to map...
+Section 8 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_09_summary.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:08:07 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+Warning message:
+In inner_join(mc_sig, hmc_sig, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+================================================================================
+SECTION 9: SUMMARY STATISTICS
+================================================================================
+
+Saved summary_statistics.txt
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION ANALYSIS SUMMARY
+================================================================================
+
+Analysis Date: 2026-02-22 19:08:13
+Genome: GRCm38 (mm10)
+Comparison: BAP1-KO Mutant vs Wildtype Control
+Samples: 4 (2 Control, 2 Mutant)
+
+--------------------------------------------------------------------------------
+DIFFERENTIAL METHYLATION STATISTICS (CG Context, Gene Bodies)
+--------------------------------------------------------------------------------
+
+5mC (5-methylcytosine):
+  Total genes tested: 20979
+  Significant (q < 0.05): 8836 (42.1%)
+  Hypermethylated: 6635
+  Hypomethylated: 2201
+  Mean change (significant): +2.27%
+
+5hmC (5-hydroxymethylcytosine):
+  Total genes tested: 20979
+  Significant (q < 0.05): 9930 (47.3%)
+  Increased: 1307
+  Decreased: 8623
+  Mean change (significant): -2.08%
+
+--------------------------------------------------------------------------------
+COORDINATED CHANGES
+--------------------------------------------------------------------------------
+
+Genes significant in both mC and hmC: 6750
+Genes with mC↑ / hmC↓ pattern: 5708 (84.6%)
+
+This pattern indicates impaired TET-mediated active demethylation:
+  5mC → (TET1/2/3) → 5hmC → 5fC → 5caC → C (unmethylated)
+
+BAP1 loss → Increased H2AK119ub → Altered chromatin → TET access restricted
+
+--------------------------------------------------------------------------------
+TOP AFFECTED GENES (Coordinated Pattern)
+--------------------------------------------------------------------------------
+
+Gene      mC Change    hmC Change   mC q-value     hmC q-value
+----      ---------    ----------   ----------     -----------
+Syt1          +17.9%        -15.3%   1.7e-305    2.9e-305
+Tmem238       +20.3%        -11.1%   2.5e-41    2.9e-16
+Prxl2b        +19.5%         -9.3%   4.1e-17    2.5e-05
+Sap30         +22.4%         -6.3%   1.1e-24    2.9e-05
+Ripply2       +20.0%         -8.0%   5.5e-21    1.1e-04
+Gm5136        +14.1%        -13.7%   1.5e-23    2.2e-24
+Gclm          +16.3%        -11.4%   3.3e-115    2.0e-81
+
+--------------------------------------------------------------------------------
+KEY FINDINGS
+--------------------------------------------------------------------------------
+
+1. PRIMARY AFFECTED REGIONS: Gene bodies (NOT promoters or CpG islands)
+2. COORDINATED PATTERN: 5mC increase + 5hmC decrease at same loci
+3. NEURONAL GENES: Top hits include synaptic/neuronal genes (Syt1, Cntnap2, Dlgap1)
+4. NON-CpG: No significant changes in CHG/CHH contexts
+5. MECHANISM: Consistent with blocked TET-mediated active demethylation
+
+--------------------------------------------------------------------------------
+OUTPUT FILES
+--------------------------------------------------------------------------------
+
+Plots: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations
+Tables: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables
+
+Generated by: biomodal_visualizations.R
+================================================================================
+Section 9 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_10_chromatin_state.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:08:13 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+Warning message:
+In inner_join(mc_sig_coord, hmc_sig_coord, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+================================================================================
+SECTION 10: ChIP-seq CHROMATIN STATE ANALYSIS
+================================================================================
+
+Loading ChIP-seq peak files...
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+
+Creating GRanges from mC DMR data...
+  8836 significant mC DMRs
+
+Computing TSS distances...
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+  Loaded 24528 genes
+  DMRs <= 2kb from TSS: 8743 (98.9%)
+
+Computing ChIP-seq overlaps...
+  Overlap summary:
+    CTCF:     4933 DMRs (55.8%)
+    H3K27ac:  4766 DMRs (53.9%)
+    H3K27me3: 1513 DMRs (17.1%)
+    H3K4me1:  8260 DMRs (93.5%)
+    H3K4me3:  4759 DMRs (53.9%)
+    Bivalent: 177 DMRs (2.0%)
+
+Classifying chromatin states (7 categories)...
+
+  Chromatin state distribution (significant mC DMRs):
+    Active_Promoter     :  4413 (49.9%)
+    Repressed_Promoter  :  1211 (13.7%)
+    Bivalent_Promoter   :   101 (1.1%)
+    Polycomb            :    11 (0.1%)
+    Active_Enhancer     :    25 (0.3%)
+    Poised_Enhancer     :    26 (0.3%)
+    Other               :  3049 (34.5%)
+
+Creating Figure 10a: Chromatin state distribution...
+  Saved: 10a_chromatin_state_distribution/{pdf,svg,jpg}
+Creating Figure 10b: Chromatin state by direction...
+  Saved: 10b_chromatin_by_methylation_direction/{pdf,svg,jpg}
+Creating Figure 10c: ChIP mark overlap heatmap...
+  Saved: 10c_chip_mark_overlap_heatmap/{pdf,svg,jpg}
+Creating Figure 10d: Coordinated genes chromatin state...
+  Saved: 10d_coordinated_genes_chromatin/{pdf,svg,jpg}
+Creating Figure 10e: Top genes with chromatin annotations...
+  Saved: 10e_top_genes_chromatin_annotation/{pdf,svg,jpg}
+
+Saving chromatin state annotation tables...
+  Saved: dmr_chromatin_state_annotation.tsv
+  Saved: chromatin_state_summary.tsv
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Chromatin State of Coordinated mC↑/hmC↓ Genes' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Chromatin State of Coordinated mC↑/hmC↓ Genes' in 'mbcsToSbcs': for ↓ (U+2193)
+
+Section 10 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_11_mecp2_correlation.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:08:22 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+Warning message:
+In inner_join(mc_sig_coord, hmc_sig_coord, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+================================================================================
+SECTION 11: MeCP2 CORRELATION AT DMRs
+================================================================================
+
+Loading MeCP2 differential binding data...
+  Loaded 202650 MeCP2 peaks
+  Significant (FDR < 0.05): 7686 up, 1200 down
+  MeCP2 Up: 7686 peaks
+  MeCP2 Down: 1200 peaks
+
+Aggregating MeCP2 peaks per gene...
+  21195 unique genes with MeCP2 peaks
+
+Creating Figure 11a: MeCP2 peak overlap at DMRs...
+  Hypermethylated DMRs: 510/6635 (7.7%) overlap MeCP2 Up, 129/6635 (1.9%) overlap MeCP2 Down
+  Hypomethylated DMRs: 136/2201 (6.2%) overlap MeCP2 Up, 193/2201 (8.8%) overlap MeCP2 Down
+  Fisher's exact test: OR = 5.60, p = 1.25e-32
+  Saved: 11a_mecp2_overlap/{pdf,svg,jpg}
+  Saved: mecp2_dmr_overlap_summary.tsv
+
+Creating Figure 11b: MeCP2 fold change by DMR direction...
+  16954 DMR genes matched to MeCP2 data
+  Median MeCP2 fold change - Hyper: -0.019, Hypo: -0.019, NS: -0.018
+  Wilcoxon Hyper vs Hypo: p = 5.01e-01
+  Wilcoxon Hyper vs NS: p = 5.19e-02
+  Saved: 11b_mecp2_fold_by_dmr_direction/{pdf,svg,jpg}
+
+Creating Figure 11c: mC change vs MeCP2 fold change scatter...
+  Spearman rho = 0.015, p = 1.81e-01
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 11c_mc_vs_mecp2_scatter/{pdf,svg,jpg}
+  Saved: mecp2_gene_level_correlation.tsv
+
+Creating Figure 11d: MeCP2 at coordinated genes...
+  5287 coordinated genes matched to MeCP2 data
+  Wilcoxon coordinated vs other: p = 8.64e-08
+  Saved: 11d_mecp2_coordinated_genes/{pdf,svg,jpg}
+  Saved: mecp2_coordinated_genes.tsv
+
+Creating Figure 11e: Integration heatmap...
+  Contingency table:
+         
+          MeCP2 Down MeCP2 Up
+  mC Down       1370      651
+  mC Up         4240     1830
+  Fisher's exact test: OR = 0.91, p = 8.42e-02
+  Saved: 11e_mecp2_integration_heatmap/{pdf,svg,jpg}
+
+================================================================================
+SECTION 11 SUMMARY
+================================================================================
+Total MeCP2 peaks analyzed: 202650
+Genes with MeCP2 peaks: 21195
+DMR genes matched to MeCP2: 8091
+Coordinated genes with MeCP2 data: 5287
+
+Overlap analysis: Fisher OR = 5.60, p = 1.25e-32
+Fold change correlation: Spearman rho = 0.015, p = 1.81e-01
+Coordinated vs other: Wilcoxon p = 8.64e-08
+Integration: Fisher OR = 0.91, p = 8.42e-02
+
+Median MeCP2 fold change:
+  Hypermethylated DMRs: -0.019
+  Hypomethylated DMRs:  -0.019
+  Not significant:      -0.018
+There were 27 warnings (use warnings() to see them)
+
+Section 11 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_12_atac_correlation.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:08:34 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+Warning message:
+In inner_join(mc_sig_coord, hmc_sig_coord, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+================================================================================
+SECTION 12: ATAC-seq ACCESSIBILITY CORRELATION AT DMRs
+================================================================================
+
+Loading ATAC-seq differential peaks...
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+
+Creating Figure 12a: ATAC differential peak overlap at DMRs...
+  Hypermethylated DMRs: 701/6635 (10.6%) overlap ATAC Up, 950/6635 (14.3%) overlap ATAC Down
+  Hypomethylated DMRs: 840/2201 (38.2%) overlap ATAC Up, 64/2201 (2.9%) overlap ATAC Down
+  Fisher's exact test: OR = 0.06, p = 5.17e-158
+  Saved: 12a_atac_overlap/{pdf,svg,jpg}
+  Saved: atac_dmr_overlap_summary.tsv
+
+Creating Figure 12b: Consensus accessibility at DMRs...
+  Consensus Control: 65799 peaks
+  Consensus Mutant: 67581 peaks
+  Hypermethylated DMRs: 96.4% ctrl accessible, 96.7% mut accessible
+  Hypomethylated DMRs: 75.3% ctrl accessible, 78.8% mut accessible
+  Saved: 12b_consensus_accessibility/{pdf,svg,jpg}
+
+Creating Figure 12c: ATAC at coordinated genes...
+  Annotating ATAC Up peaks to genes...
+>> preparing features information...             2026-02-22 19:08:40 
+>> identifying nearest features...               2026-02-22 19:08:41 
+>> calculating distance from peak to TSS...      2026-02-22 19:08:41 
+>> assigning genomic annotation...               2026-02-22 19:08:41 
+>> adding gene annotation...                     2026-02-22 19:08:48 
+>> assigning chromosome lengths                  2026-02-22 19:08:48 
+>> done...                                       2026-02-22 19:08:48 
+  Annotating ATAC Down peaks to genes...
+>> preparing features information...             2026-02-22 19:08:48 
+>> identifying nearest features...               2026-02-22 19:08:48 
+>> calculating distance from peak to TSS...      2026-02-22 19:08:48 
+>> assigning genomic annotation...               2026-02-22 19:08:48 
+>> adding gene annotation...                     2026-02-22 19:08:48 
+>> assigning chromosome lengths                  2026-02-22 19:08:48 
+>> done...                                       2026-02-22 19:08:48 
+  ATAC Up peaks mapped to 4284 unique genes
+  ATAC Down peaks mapped to 2131 unique genes
+  Wilcoxon ATAC Down at coordinated vs other: p = 1.58e-133
+  Saved: 12c_atac_coordinated_genes/{pdf,svg,jpg}
+  Saved: atac_coordinated_genes.tsv
+
+Creating Figure 12d: mC change vs net ATAC change scatter...
+  2487 significant DMR genes with non-zero net ATAC change
+  Spearman rho = -0.539, p = 1.23e-187
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 12d_mc_vs_atac_scatter/{pdf,svg,jpg}
+  Saved: atac_gene_level_annotation.tsv
+
+Creating Figure 12e: Integration heatmap...
+  Contingency table:
+         
+          ATAC Down ATAC Up
+  mC Down        80     845
+  mC Up         881     681
+  Fisher's exact test: OR = 0.07, p = 1.51e-139
+  Saved: 12e_atac_integration_heatmap/{pdf,svg,jpg}
+
+================================================================================
+SECTION 12 SUMMARY
+================================================================================
+Total ATAC Up peaks: 7620
+Total ATAC Down peaks: 3744
+Genes with ATAC Up peaks: 4284
+Genes with ATAC Down peaks: 2131
+Significant DMR genes with non-zero net ATAC: 2487
+Coordinated genes (mC↑/hmC↓) with ATAC data: 1430
+
+Overlap analysis: Fisher OR = 0.06, p = 5.17e-158
+mC vs ATAC correlation: Spearman rho = -0.539, p = 1.23e-187
+ATAC Down at coordinated vs other: Wilcoxon p = 1.58e-133
+Integration: Fisher OR = 0.07, p = 1.51e-139
+
+ATAC overlap at DMRs:
+  Hypermethylated: 10.6% ATAC Up, 14.3% ATAC Down
+  Hypomethylated:  38.2% ATAC Up, 2.9% ATAC Down
+
+Consensus accessibility at DMRs:
+  Hypermethylated: 96.4% ctrl, 96.7% mut
+  Hypomethylated:  75.3% ctrl, 78.8% mut
+There were 29 warnings (use warnings() to see them)
+
+Section 12 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_13_atac_chromatin_and_loops.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:08:51 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 13: ATAC CHROMATIN STATE ENRICHMENT + LOOP ANCHOR ACCESSIBILITY
+================================================================================
+
+Loading ATAC-seq differential peaks...
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+
+Loading ChIP-seq peaks for chromatin state classification...
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+
+Classifying ATAC peaks into chromatin states...
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+  ATAC Up:   7620 peaks classified
+  ATAC Down: 3744 peaks classified
+
+--- PART A: ATAC Chromatin State Enrichment ---
+
+Creating Figure 13a: Chromatin state distribution...
+  Active_Promoter: Up=2.9%, Down=1.8%
+  Repressed_Promoter: Up=9.8%, Down=0.1%
+  Bivalent_Promoter: Up=1.1%, Down=0.3%
+  Polycomb: Up=12.7%, Down=0.5%
+  Active_Enhancer: Up=8.6%, Down=35.8%
+  Poised_Enhancer: Up=47.7%, Down=54.5%
+  Other: Up=17.2%, Down=6.9%
+  Saved: 13a_atac_chromatin_state_distribution/{pdf,svg,jpg}
+  Saved: atac_chromatin_state_distribution.tsv
+
+Creating Figure 13b: ChIP mark overlap enrichment...
+  CTCF: Up=17.3%, Down=6.1%, OR=0.31 (Down/Up), p=4.92e-68
+  H3K27ac: Up=12.3%, Down=40.2%, OR=4.79 (Down/Up), p=3.71e-241
+  H3K27me3: Up=23.6%, Down=1.0%, OR=0.03 (Down/Up), p=2.86e-283
+  H3K4me1: Up=78.4%, Down=94.5%, OR=4.73 (Down/Up), p=9.01e-123
+  H3K4me3: Up=7.4%, Down=4.2%, OR=0.55 (Down/Up), p=3.30e-11
+  Bivalent: Up=2.5%, Down=0.4%, OR=0.16 (Down/Up), p=6.59e-19
+  Saved: 13b_atac_chip_overlap_enrichment/{pdf,svg,jpg}
+  Saved: atac_chip_overlap_enrichment.tsv
+
+Creating Figure 13c: ATAC direction x chromatin state enrichment heatmap...
+  Saved: 13c_atac_chromatin_enrichment_heatmap/{pdf,svg,jpg}
+
+--- PART B: ATAC at Hi-C Loop Anchors ---
+
+Loading Hi-C loop annotations...
+  Loaded 2910 differential loops
+    up_in_mutant:   1723
+    down_in_mutant: 1187
+
+  Anchor ATAC overlap summary:
+    Loops with any anchor ATAC Up:   950/2910 (32.6%)
+    Loops with any anchor ATAC Down: 406/2910 (14.0%)
+
+Creating Figure 13d: ATAC overlap at loop anchors by loop direction...
+  Up in Mutant loops, ATAC Up: 779/1723 (45.2%)
+  Up in Mutant loops, ATAC Down: 36/1723 (2.1%)
+  Down in Mutant loops, ATAC Up: 171/1187 (14.4%)
+  Down in Mutant loops, ATAC Down: 370/1187 (31.2%)
+  Fisher (up loops vs ATAC Up): OR=4.90, p=2.39e-72
+  Fisher (down loops vs ATAC Down): OR=21.20, p=1.08e-116
+  Saved: 13d_loop_anchor_atac_overlap/{pdf,svg,jpg}
+  Saved: loop_anchor_atac_overlap.tsv
+
+Creating Figure 13e: ATAC overlap by anchor chromatin state...
+  Anchor ATAC overlap by chromatin state:
+    Active_Enhancer (n=663): ATAC Up=6.6%, ATAC Down=47.5%
+    Active_Promoter (n=510): ATAC Up=7.3%, ATAC Down=10.6%
+    Bivalent_Promoter (n=49): ATAC Up=46.9%, ATAC Down=10.2%
+    CTCF_Site (n=1551): ATAC Up=9.5%, ATAC Down=0.8%
+    Other (n=387): ATAC Up=6.7%, ATAC Down=4.1%
+    Poised_Enhancer (n=1172): ATAC Up=22.3%, ATAC Down=7.8%
+    Polycomb (n=928): ATAC Up=37.7%, ATAC Down=0.5%
+    Repressed_Promoter (n=560): ATAC Up=51.1%, ATAC Down=0.4%
+  Saved: 13e_anchor_atac_by_chromatin_state/{pdf,svg,jpg}
+
+Creating Figure 13f: Loop type ATAC concordance...
+  Overall ATAC concordance: 1149/2910 (39.5%)
+  28 loop types with >= 10 loops
+  Top 10 by concordance:
+    Active_Enhancer-Active_Enhancer: 79.6% (n=142)
+    Bivalent_Promoter-Poised_Enhancer: 76.2% (n=21)
+    Active_Enhancer-Other: 70.4% (n=27)
+    Repressed_Promoter-Poised_Enhancer: 69.7% (n=76)
+    Repressed_Promoter-Other: 65.4% (n=26)
+    Active_Promoter-Active_Enhancer: 63.9% (n=119)
+    Active_Enhancer-Poised_Enhancer: 55.6% (n=162)
+    Active_Promoter-Repressed_Promoter: 52.6% (n=19)
+    Repressed_Promoter-Polycomb: 52.3% (n=172)
+    Polycomb-Active_Enhancer: 50.0% (n=12)
+  Saved: 13f_loop_atac_concordance_by_type/{pdf,svg,jpg}
+  Saved: loop_atac_concordance_by_type.tsv
+
+================================================================================
+SECTION 13 SUMMARY
+================================================================================
+ATAC Up peaks: 7620
+ATAC Down peaks: 3744
+
+Part A: Chromatin State Enrichment
+  Polycomb: ATAC Up=12.7% vs Down=0.5% (Up enriched)
+  Repressed_Promoter: ATAC Up=9.8% vs Down=0.1% (Up enriched)
+  Active_Enhancer: ATAC Up=8.6% vs Down=35.8% (Down enriched)
+  Active_Promoter: ATAC Up=2.9% vs Down=1.8% (Up enriched)
+
+  H3K27me3 enrichment in ATAC Down vs Up: OR=0.03, p=2.86e-283
+
+Part B: Loop Anchor Accessibility
+  Differential loops: 2910 (up=1723, down=1187)
+  Overall ATAC concordance: 39.5%
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chr1_GL456221_random, chrM, chrUn_JH584304, chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+3: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+
+Section 13 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_14_h2ak119ub_correlation.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:09:00 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+Warning message:
+In inner_join(mc_sig_coord, hmc_sig_coord, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+================================================================================
+SECTION 14: H2AK119ub CORRELATION AT DMRs
+================================================================================
+
+Loading H2AK119ub condition-specific peaks...
+  K119ub Control: 20592 peaks
+  K119ub Mutant: 20399 peaks
+
+Deriving differential K119ub peaks...
+  Gained (mut-only): 6172 peaks
+  Lost (ctrl-only):  6103 peaks
+  Shared:            14227 peaks
+
+Creating Figure 14a: Condition-specific K119ub overlap at DMRs...
+  Hypermethylated DMRs: 28.3% ctrl K119ub, 36.2% mut K119ub
+  Hypomethylated DMRs: 65.5% ctrl K119ub, 59.3% mut K119ub
+  Fisher's exact test: OR = 0.71, p = 2.44e-12
+  Saved: 14a_k119ub_condition_overlap/{pdf,svg,jpg}
+  Saved: k119ub_condition_dmr_overlap_summary.tsv
+
+Creating Figure 14b: Gained/lost K119ub overlap at DMRs...
+  Hypermethylated DMRs: 1348/6635 (20.3%) K119ub Gained, 703/6635 (10.6%) K119ub Lost
+  Hypomethylated DMRs: 308/2201 (14.0%) K119ub Gained, 707/2201 (32.1%) K119ub Lost
+  Fisher's exact test: OR = 4.40, p = 1.72e-77
+  Saved: 14b_k119ub_differential_overlap/{pdf,svg,jpg}
+  Saved: k119ub_differential_dmr_overlap_summary.tsv
+
+Creating Figure 14c: K119ub at coordinated genes...
+  Annotating K119ub Control peaks to genes...
+>> preparing features information...             2026-02-22 19:09:06 
+>> identifying nearest features...               2026-02-22 19:09:06 
+>> calculating distance from peak to TSS...      2026-02-22 19:09:07 
+>> assigning genomic annotation...               2026-02-22 19:09:07 
+>> adding gene annotation...                     2026-02-22 19:09:13 
+>> assigning chromosome lengths                  2026-02-22 19:09:13 
+>> done...                                       2026-02-22 19:09:13 
+  Annotating K119ub Mutant peaks to genes...
+>> preparing features information...             2026-02-22 19:09:13 
+>> identifying nearest features...               2026-02-22 19:09:13 
+>> calculating distance from peak to TSS...      2026-02-22 19:09:13 
+>> assigning genomic annotation...               2026-02-22 19:09:13 
+>> adding gene annotation...                     2026-02-22 19:09:15 
+>> assigning chromosome lengths                  2026-02-22 19:09:15 
+>> done...                                       2026-02-22 19:09:15 
+  K119ub Control peaks mapped to 7778 unique genes
+  K119ub Mutant peaks mapped to 8073 unique genes
+  Wilcoxon K119ub Mut peaks at coordinated vs other: p = 4.14e-13
+  Saved: 14c_k119ub_coordinated_genes/{pdf,svg,jpg}
+  Saved: k119ub_coordinated_genes.tsv
+
+Creating Figure 14d: mC change vs net K119ub change scatter...
+  2683 significant DMR genes with non-zero net K119ub change
+  Spearman rho = 0.405, p = 1.53e-106
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 14d_mc_vs_k119ub_scatter/{pdf,svg,jpg}
+  Saved: k119ub_gene_level_annotation.tsv
+
+Creating Figure 14e: Integration heatmap...
+  Contingency table:
+         
+          K119ub Gained K119ub Lost
+  mC Down           233         648
+  mC Up            1252         550
+  Fisher's exact test: OR = 0.16, p = 2.82e-100
+  Saved: 14e_k119ub_integration_heatmap/{pdf,svg,jpg}
+
+================================================================================
+SECTION 14 SUMMARY
+================================================================================
+Total K119ub Control peaks: 20592
+Total K119ub Mutant peaks: 20399
+Derived differential peaks:
+  Gained (mut-only): 6172
+  Lost (ctrl-only):  6103
+  Shared:            14227
+
+Genes with K119ub Control peaks: 7778
+Genes with K119ub Mutant peaks: 8073
+Significant DMR genes with non-zero net K119ub: 2683
+Coordinated genes (mC↑/hmC↓) with K119ub data: 2154
+
+Condition overlap (14a): Fisher OR = 0.71, p = 2.44e-12
+Differential overlap (14b): Fisher OR = 4.40, p = 1.72e-77
+mC vs K119ub correlation (14d): Spearman rho = 0.405, p = 1.53e-106
+K119ub Mut at coordinated vs other (14c): Wilcoxon p = 4.14e-13
+Integration (14e): Fisher OR = 0.16, p = 2.82e-100
+
+Condition-specific K119ub overlap at DMRs:
+  Hypermethylated: 28.3% ctrl, 36.2% mut
+  Hypomethylated:  65.5% ctrl, 59.3% mut
+
+Differential K119ub overlap at DMRs:
+  Hypermethylated: 20.3% gained, 10.6% lost
+  Hypomethylated:  14.0% gained, 32.1% lost
+There were 31 warnings (use warnings() to see them)
+
+Section 14 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_15_hmc_chromatin_correlations.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:03:54 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 15: 5hmC DMR CORRELATIONS WITH CHROMATIN MARKS
+================================================================================
+
+Preparing hmC DMR gene sets...
+  Total significant hmC DMRs: 9930
+  hmC Down (decreased 5hmC): 8623 (86.8%)
+  hmC Up (increased 5hmC):   1307 (13.2%)
+
+  Total significant mC DMRs: 8836 (for comparison)
+  mC Up: 6635, mC Down: 2201
+
+--- FIGURE 15a: hmC Direction x MeCP2 Direction ---
+
+Loading MeCP2 differential binding data...
+  21195 unique genes with MeCP2 peaks
+  9095 significant hmC DMR genes matched to MeCP2 data
+  Saved: 15a_hmc_mecp2_heatmap/{pdf,svg,jpg}
+  Contingency table:
+          
+           MeCP2 Up MeCP2 Down
+  hmC Down     2298       5573
+  hmC Up        410        814
+  Fisher OR = 0.82, p = 2.49e-03
+  Saved: hmc_mecp2_integration.tsv
+
+--- FIGURE 15b: hmC Direction x ATAC Direction ---
+
+Loading ATAC-seq differential peaks...
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+  Annotating ATAC peaks to genes...
+>> preparing features information...             2026-02-22 19:04:04 
+>> identifying nearest features...               2026-02-22 19:04:05 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:05 
+>> assigning genomic annotation...               2026-02-22 19:04:05 
+>> adding gene annotation...                     2026-02-22 19:04:11 
+>> assigning chromosome lengths                  2026-02-22 19:04:11 
+>> done...                                       2026-02-22 19:04:11 
+>> preparing features information...             2026-02-22 19:04:11 
+>> identifying nearest features...               2026-02-22 19:04:11 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:11 
+>> assigning genomic annotation...               2026-02-22 19:04:11 
+>> adding gene annotation...                     2026-02-22 19:04:12 
+>> assigning chromosome lengths                  2026-02-22 19:04:12 
+>> done...                                       2026-02-22 19:04:12 
+  5913 genes with ATAC data
+  2575 significant hmC DMR genes with non-zero net ATAC
+  Saved: 15b_hmc_atac_heatmap/{pdf,svg,jpg}
+  Contingency table:
+          
+           ATAC Up ATAC Down
+  hmC Down     959       890
+  hmC Up       674        52
+  Fisher OR = 0.08, p = 9.27e-99
+  Saved: hmc_atac_integration.tsv
+
+--- FIGURE 15c: hmC Direction x K119ub Direction ---
+
+Loading H2AK119ub condition-specific peaks...
+  K119ub Control: 20592 peaks
+  K119ub Mutant: 20399 peaks
+  K119ub Gained (mut-only): 6172
+  K119ub Lost (ctrl-only):  6103
+  Annotating K119ub peaks to genes...
+>> preparing features information...             2026-02-22 19:04:12 
+>> identifying nearest features...               2026-02-22 19:04:12 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:12 
+>> assigning genomic annotation...               2026-02-22 19:04:12 
+>> adding gene annotation...                     2026-02-22 19:04:13 
+>> assigning chromosome lengths                  2026-02-22 19:04:13 
+>> done...                                       2026-02-22 19:04:13 
+>> preparing features information...             2026-02-22 19:04:13 
+>> identifying nearest features...               2026-02-22 19:04:13 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:14 
+>> assigning genomic annotation...               2026-02-22 19:04:14 
+>> adding gene annotation...                     2026-02-22 19:04:14 
+>> assigning chromosome lengths                  2026-02-22 19:04:14 
+>> done...                                       2026-02-22 19:04:14 
+  9267 genes with K119ub data
+  2681 significant hmC DMR genes with non-zero net K119ub
+  Saved: 15c_hmc_k119ub_heatmap/{pdf,svg,jpg}
+  Contingency table:
+          
+           K119ub Gained K119ub Lost
+  hmC Down          1332         755
+  hmC Up             234         360
+  Fisher OR = 2.71, p = 3.72e-26
+  Saved: hmc_k119ub_integration.tsv
+
+--- FIGURE 15d: Comparative Summary (mC vs hmC Enrichment) ---
+
+  O/E comparison summary:
+    5hmC | MeCP2 | hmC Down + MeCP2 Up: O/E = 0.98 (Obs=2298, Exp=2344)
+    5hmC | MeCP2 | hmC Up + MeCP2 Down: O/E = 0.95 (Obs=814, Exp=860)
+    5hmC | ATAC | hmC Up + ATAC Up: O/E = 1.46 (Obs=674, Exp=460)
+    5hmC | ATAC | hmC Down + ATAC Down: O/E = 1.32 (Obs=890, Exp=676)
+    5hmC | K119ub | hmC Down + K119ub Gained: O/E = 1.09 (Obs=1332, Exp=1219)
+    5hmC | K119ub | hmC Up + K119ub Lost: O/E = 1.46 (Obs=360, Exp=247)
+    5mC | MeCP2 | mC Up + MeCP2 Up: O/E = 0.98 (Obs=1830, Exp=1861)
+    5mC | MeCP2 | mC Down + MeCP2 Down: O/E = 0.98 (Obs=1370, Exp=1401)
+    5mC | ATAC | mC Down + ATAC Up: O/E = 1.49 (Obs=845, Exp=568)
+    5mC | ATAC | mC Up + ATAC Down: O/E = 1.46 (Obs=881, Exp=604)
+    5mC | K119ub | mC Up + K119ub Gained: O/E = 1.26 (Obs=1252, Exp=997)
+    5mC | K119ub | mC Down + K119ub Lost: O/E = 1.65 (Obs=648, Exp=393)
+  Saved: 15d_mc_vs_hmc_enrichment_comparison/{pdf,svg,jpg}
+  Saved: hmc_vs_mc_enrichment_comparison.tsv
+
+================================================================================
+SECTION 15 SUMMARY
+================================================================================
+Significant hmC DMRs: 9930 (Down: 8623, Up: 1307)
+Significant mC DMRs: 8836 (Up: 6635, Down: 2201)
+
+15a hmC x MeCP2:  Fisher OR = 0.82, p = 2.49e-03
+     hmC Down + MeCP2 Up: O/E = 0.98 (n=2298)
+     hmC Up + MeCP2 Down: O/E = 0.95 (n=814)
+
+15b hmC x ATAC:   Fisher OR = 0.08, p = 9.27e-99
+     hmC Up + ATAC Up: O/E = 1.46 (n=674)
+     hmC Down + ATAC Down: O/E = 1.32 (n=890)
+
+15c hmC x K119ub: Fisher OR = 2.71, p = 3.72e-26
+     hmC Down + K119ub Gained: O/E = 1.09 (n=1332)
+     hmC Up + K119ub Lost: O/E = 1.46 (n=360)
+
+--- mC vs hmC Comparison ---
+  MeCP2: mC mean O/E = 0.98, hmC mean O/E = 0.96 -> mC stronger
+  ATAC: mC mean O/E = 1.48, hmC mean O/E = 1.39 -> mC stronger
+  K119ub: mC mean O/E = 1.46, hmC mean O/E = 1.27 -> mC stronger
+
+Section 15 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_16_raw_concordance_barcharts.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:04:15 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 16: RAW CONCORDANCE BAR CHARTS
+================================================================================
+
+Preparing methylation gene groups...
+  mC Up:    6635 genes
+  mC Down:  2201 genes
+  hmC Down: 8623 genes
+  hmC Up:   1307 genes
+
+--- FIGURE 16a: MeCP2 Concordance ---
+
+  21195 genes with MeCP2 data
+  Saved: 16a_mecp2_concordance_bars/{pdf,svg,jpg}
+  Results:
+    mC Up: 30.1% MeCP2 Up (1830/6070)
+    mC Down: 67.8% MeCP2 Down (1370/2021)
+    hmC Down: 29.2% MeCP2 Up (2298/7871)
+    hmC Up: 66.5% MeCP2 Down (814/1224)
+  Fisher mC Up vs Down: p = 2.89e-195
+  Fisher hmC Down vs Up: p = 1.51e-136
+
+--- FIGURE 16b: ATAC Concordance ---
+
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+  Annotating ATAC peaks to genes...
+>> preparing features information...             2026-02-22 19:04:25 
+>> identifying nearest features...               2026-02-22 19:04:26 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:26 
+>> assigning genomic annotation...               2026-02-22 19:04:26 
+>> adding gene annotation...                     2026-02-22 19:04:32 
+>> assigning chromosome lengths                  2026-02-22 19:04:32 
+>> done...                                       2026-02-22 19:04:32 
+>> preparing features information...             2026-02-22 19:04:32 
+>> identifying nearest features...               2026-02-22 19:04:32 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:32 
+>> assigning genomic annotation...               2026-02-22 19:04:32 
+>> adding gene annotation...                     2026-02-22 19:04:33 
+>> assigning chromosome lengths                  2026-02-22 19:04:33 
+>> done...                                       2026-02-22 19:04:33 
+  5687 genes with non-zero net ATAC
+  Saved: 16b_atac_concordance_bars/{pdf,svg,jpg}
+  Results:
+    mC Up: 56.4% ATAC Down (881/1562)
+    mC Down: 91.4% ATAC Up (845/925)
+    hmC Down: 48.1% ATAC Down (890/1849)
+    hmC Up: 92.8% ATAC Up (674/726)
+  Fisher mC Up vs Down: p = 4.04e-84
+  Fisher hmC Down vs Up: p = 1.38e-113
+
+--- FIGURE 16c: K119ub Concordance ---
+
+  K119ub Control: 20592 peaks
+  K119ub Mutant: 20399 peaks
+  Annotating K119ub peaks to genes...
+>> preparing features information...             2026-02-22 19:04:33 
+>> identifying nearest features...               2026-02-22 19:04:33 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:33 
+>> assigning genomic annotation...               2026-02-22 19:04:33 
+>> adding gene annotation...                     2026-02-22 19:04:34 
+>> assigning chromosome lengths                  2026-02-22 19:04:34 
+>> done...                                       2026-02-22 19:04:34 
+>> preparing features information...             2026-02-22 19:04:34 
+>> identifying nearest features...               2026-02-22 19:04:34 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:35 
+>> assigning genomic annotation...               2026-02-22 19:04:35 
+>> adding gene annotation...                     2026-02-22 19:04:36 
+>> assigning chromosome lengths                  2026-02-22 19:04:36 
+>> done...                                       2026-02-22 19:04:36 
+  5994 genes with non-zero net K119ub
+  Saved: 16c_k119ub_concordance_bars/{pdf,svg,jpg}
+  Results:
+    mC Up: 69.5% K119ub Gained (1252/1802)
+    mC Down: 73.6% K119ub Lost (648/881)
+    hmC Down: 63.8% K119ub Gained (1332/2087)
+    hmC Up: 60.6% K119ub Lost (360/594)
+  Fisher mC Up vs Down: p = 3.00e-02
+  Fisher hmC Down vs Up: p = 1.62e-01
+
+--- FIGURE 16d: Summary Comparison ---
+
+  Saved: 16d_raw_concordance_comparison/{pdf,svg,jpg}
+  Saved: raw_concordance_all_marks.tsv
+  Saved: raw_concordance_summary.tsv
+
+  mC Up vs hmC Down comparison:
+    MeCP2: mC Up = 30.1%, hmC Down = 29.2% (-1.0 pp, mC Up stronger)
+    ATAC: mC Up = 56.4%, hmC Down = 48.1% (-8.3 pp, mC Up stronger)
+    K119ub: mC Up = 69.5%, hmC Down = 63.8% (-5.7 pp, mC Up stronger)
+
+================================================================================
+SECTION 16 SUMMARY
+================================================================================
+Concordance = % of genes in methylation group showing predicted mark direction
+
+MeCP2:
+  mC Up       30.1% MeCP2 Up (1830/6070)
+  mC Down     67.8% MeCP2 Down (1370/2021)
+  hmC Down    29.2% MeCP2 Up (2298/7871)
+  hmC Up      66.5% MeCP2 Down (814/1224)
+  Fisher: mC p=2.9e-195, hmC p=1.5e-136
+
+ATAC:
+  mC Up       56.4% ATAC Down (881/1562)
+  mC Down     91.4% ATAC Up (845/925)
+  hmC Down    48.1% ATAC Down (890/1849)
+  hmC Up      92.8% ATAC Up (674/726)
+  Fisher: mC p=4.0e-84, hmC p=1.4e-113
+
+K119ub:
+  mC Up       69.5% K119ub Gained (1252/1802)
+  mC Down     73.6% K119ub Lost (648/881)
+  hmC Down    63.8% K119ub Gained (1332/2087)
+  hmC Up      60.6% K119ub Lost (360/594)
+  Fisher: mC p=3.0e-02, hmC p=1.6e-01
+
+Section 16 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_17_k119ub_honest_assessment.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:04:37 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 17: HONEST K119UB ASSESSMENT AT DMR GENES
+================================================================================
+
+Preparing methylation gene groups...
+  mC Up:    6635 genes
+  mC Down:  2201 genes
+  hmC Down: 8623 genes
+  hmC Up:   1307 genes
+
+Loading K119ub condition-specific peaks...
+  K119ub Control: 20592 peaks
+  K119ub Mutant: 20399 peaks
+  Annotating K119ub peaks to genes via ChIPseeker...
+>> preparing features information...             2026-02-22 19:04:42 
+>> identifying nearest features...               2026-02-22 19:04:43 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:43 
+>> assigning genomic annotation...               2026-02-22 19:04:43 
+>> adding gene annotation...                     2026-02-22 19:04:50 
+>> assigning chromosome lengths                  2026-02-22 19:04:50 
+>> done...                                       2026-02-22 19:04:50 
+>> preparing features information...             2026-02-22 19:04:50 
+>> identifying nearest features...               2026-02-22 19:04:50 
+>> calculating distance from peak to TSS...      2026-02-22 19:04:50 
+>> assigning genomic annotation...               2026-02-22 19:04:50 
+>> adding gene annotation...                     2026-02-22 19:04:51 
+>> assigning chromosome lengths                  2026-02-22 19:04:51 
+>> done...                                       2026-02-22 19:04:51 
+  9267 unique genes with any K119ub peak
+
+Classifying K119ub status for all DMR genes...
+  12023 unique significant DMR genes total
+
+  K119ub status breakdown:
+    mC Up     : 6635 total, 4082 (61.5%) no peaks
+    mC Down   : 2201 total, 779 (35.4%) no peaks
+    hmC Down  : 8623 total, 5522 (64.0%) no peaks
+    hmC Up    : 1307 total, 398 (30.5%) no peaks
+
+--- FIGURE 17a: Complete K119ub Status Breakdown ---
+
+  Saved: 17a_k119ub_full_breakdown/{pdf,svg,jpg}
+  Per-group breakdown:
+    mC Up (n=6635):
+      Gained      : 1252 ( 18.9%)
+      Equal Peaks :  751 ( 11.3%)
+      No Peaks    : 4082 ( 61.5%)
+      Lost        :  550 (  8.3%)
+    mC Down (n=2201):
+      Gained      :  233 ( 10.6%)
+      Equal Peaks :  541 ( 24.6%)
+      No Peaks    :  779 ( 35.4%)
+      Lost        :  648 ( 29.4%)
+    hmC Down (n=8623):
+      Gained      : 1332 ( 15.4%)
+      Equal Peaks : 1014 ( 11.8%)
+      No Peaks    : 5522 ( 64.0%)
+      Lost        :  755 (  8.8%)
+    hmC Up (n=1307):
+      Gained      :  234 ( 17.9%)
+      Equal Peaks :  315 ( 24.1%)
+      No Peaks    :  398 ( 30.5%)
+      Lost        :  360 ( 27.5%)
+
+--- FIGURE 17b: Conditional Direction (Genes WITH K119ub Peaks) ---
+
+  Saved: 17b_k119ub_conditional_direction/{pdf,svg,jpg}
+  Conditional direction (genes with peaks):
+    mC Up         : 2553 genes with peaks, 49.0% gained, 29.4% equal, 21.5% lost, Fisher vs BG p=2.61e-29
+    mC Down       : 1422 genes with peaks, 16.4% gained, 38.0% equal, 45.6% lost, Fisher vs BG p=5.16e-47
+    hmC Down      : 3101 genes with peaks, 43.0% gained, 32.7% equal, 24.3% lost, Fisher vs BG p=4.41e-11
+    hmC Up        : 909 genes with peaks, 25.7% gained, 34.7% equal, 39.6% lost, Fisher vs BG p=4.52e-09
+    All DMR Genes : 5072 genes with peaks, 35.6% gained, 34.1% equal, 30.3% lost
+
+  Background gain rate: 35.6%
+  Background loss rate: 30.3%
+  mC Up gain rate: 49.0% (+13.4 pp above background)
+  hmC Down gain rate: 43.0% (+7.3 pp above background)
+
+--- FIGURE 17c: Per-Gene K119ub Effect Size ---
+
+  Saved: 17c_k119ub_effect_sizes/{pdf,svg,jpg}
+  Effect size distributions (genes with peaks):
+    mC Up     : n=2553, median=+0, IQR=[+0, +1], range=[-9, +23]
+    mC Down   : n=1422, median=+0, IQR=[-1, +0], range=[-13, +6]
+    hmC Down  : n=3101, median=+0, IQR=[+0, +1], range=[-10, +23]
+    hmC Up    : n=909, median=+0, IQR=[-1, +1], range=[-14, +16]
+
+  Extreme genes (|net| >= 5):
+    Clnk (mC Up): net = +23 (ctrl=5, mut=28)
+    Cnr1 (mC Up): net = +16 (ctrl=1, mut=17)
+    Kif16b (mC Up): net = +15 (ctrl=16, mut=31)
+    Clip4 (mC Down): net = -13 (ctrl=28, mut=15)
+    Sdk2 (mC Down): net = -12 (ctrl=19, mut=7)
+    Afap1 (mC Down): net = -11 (ctrl=23, mut=12)
+    Clnk (hmC Down): net = +23 (ctrl=5, mut=28)
+    Kif16b (hmC Down): net = +15 (ctrl=16, mut=31)
+    Syt1 (hmC Down): net = +15 (ctrl=11, mut=26)
+    Cnr1 (hmC Up): net = +16 (ctrl=1, mut=17)
+    Sik1 (hmC Up): net = -14 (ctrl=19, mut=5)
+    Clip4 (hmC Up): net = -13 (ctrl=28, mut=15)
+
+--- Saving summary table ---
+
+  Saved: k119ub_honest_breakdown.tsv
+
+================================================================================
+SECTION 17 SUMMARY: HONEST K119UB ASSESSMENT
+================================================================================
+
+Per methylation group:
+  Group           Total  No Peak   Gained    Equal     Lost  %NoPeak %Gain|Peak
+------------------------------------------------------------------------------------------ 
+  hmC Down         8623     5522     1332     1014      755    64.0%      43.0%
+  hmC Up           1307      398      234      315      360    30.5%      25.7%
+  mC Down          2201      779      233      541      648    35.4%      16.4%
+  mC Up            6635     4082     1252      751      550    61.5%      49.0%
+  All DMR Genes   12023     6951     1806     1731     1535    57.8%      35.6%
+
+Background gain rate (all DMR genes with peaks): 35.6%
+
+Gain enrichment above background:
+  mC Up     : +13.4 pp (*, Fisher p=2.61e-29)
+  mC Down   : -19.2 pp (*, Fisher p=5.16e-47)
+  hmC Down  : +7.3 pp (*, Fisher p=4.41e-11)
+  hmC Up    : -9.9 pp (*, Fisher p=4.52e-09)
+
+Key takeaways:
+  1. The majority of genes in every group have NO K119ub peaks at all
+  2. Gain enrichment at hyper sites is statistically modest above background
+  3. Most per-gene changes are +/-1 peak (not large redistributions)
+
+Section 17 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_18_k119ub_bigwig_signal.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:04:53 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 18: K119UB CONTINUOUS BIGWIG SIGNAL ANALYSIS
+================================================================================
+
+Loading preprocessed K119ub signal data...
+  Loaded 23150 genes with bigwig signal
+  Gene body signal classes: no_signal=767, one_condition=779, quantifiable=21604
+
+Preparing methylation gene groups...
+  mC Up:    6635 genes
+  mC Down:  2201 genes
+  hmC Down: 8623 genes
+  hmC Up:   1307 genes
+  All DMR:  12023 unique genes
+
+Joining K119ub signal to methylation groups...
+  mC Up     : 6353 / 6635 matched to K119ub data (95.7%)
+  mC Down   : 2090 / 2201 matched to K119ub data (95.0%)
+  hmC Down  : 8242 / 8623 matched to K119ub data (95.6%)
+  hmC Up    : 1245 / 1307 matched to K119ub data (95.3%)
+  All DMR Genes: 11424 / 12023 matched to K119ub data (95.0%)
+
+--- FIGURE 18a: K119ub Signal Distribution ---
+
+  Saved: 18a_k119ub_signal_distribution/{pdf,svg,jpg}
+  Paired Wilcoxon signed-rank (ctrl vs mut within group):
+    mC Up     : n=6346, p=1.0e-122
+    mC Down   : n=2088, p=7.4e-12
+    hmC Down  : n=8233, p=1.9e-35
+    hmC Up    : n=1243, p=3.2e-09
+
+--- FIGURE 18b: K119ub log2FC Distributions ---
+
+  Saved: 18b_k119ub_log2fc_distributions/{pdf,svg,jpg}
+  log2FC statistics per group:
+  Group               n    median      mean      p(vs 0)     p(vs BG)
+--------------------------------------------------------------------------- 
+  mC Up            6174   +0.0587   +0.0976     3.76e-83     3.73e-22
+  mC Down          2033   -0.0699   -0.0381     3.12e-19     4.93e-32
+  hmC Down         7975   +0.0121   +0.0431     3.13e-16     6.66e-01
+  hmC Up           1236   +0.0150   +0.0566     2.92e-05     4.92e-01
+  All DMR Genes   11089   +0.0121   +0.0490     9.83e-25          ---
+
+--- FIGURE 18c: Methylation vs K119ub Scatter ---
+
+  5mC genes with quantifiable K119ub signal: 8207
+  5hmC genes with quantifiable K119ub signal: 9211
+Warning message:
+There were 2 warnings in `summarise()`.
+The first warning was:
+ℹ In argument: `p_value = cor.test(mod_difference, gb_log2fc, method = "spearman")$p.value`.
+ℹ In group 1: `modality = 5mC`.
+Caused by warning in `cor.test.default()`:
+! Cannot compute exact p-value with ties
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning. 
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 18c_methylation_vs_k119ub_scatter/{pdf,svg,jpg}
+  Spearman correlations:
+    5mC: rho = +0.2583, p = 3.30e-125, n = 8207
+    5hmC: rho = -0.0425, p = 4.50e-05, n = 9211
+
+--- FIGURE 18d: K119ub Waterfall ---
+
+  mC Up: n=6167, median rank=8798 / 21604 (percentile=40.7%)
+  mC Down: n=1820, median rank=12070 / 21604 (percentile=55.9%)
+  hmC Down: n=2649, median rank=11219 / 21604 (percentile=51.9%)
+  hmC Up: n=453, median rank=8274 / 21604 (percentile=38.3%)
+  Saved: 18d_k119ub_waterfall/{pdf,svg,jpg}
+
+--- STATISTICAL TESTS ---
+
+1. Wilcoxon rank-sum: each group's log2FC vs All DMR Genes
+   mC Up     : W=37269138, p=3.73e-22
+   mC Down   : W=9422272, p=4.93e-32
+   hmC Down  : W=44055599, p=0.6660
+   hmC Up    : W=6934554, p=0.4919
+
+2. One-sample Wilcoxon: each group's log2FC != 0
+   mC Up         : V=12236845, p=3.76e-83, median=+0.0587
+   mC Down       : V=796478, p=3.12e-19, median=-0.0699
+   hmC Down      : V=17581612, p=3.13e-16, median=+0.0121
+   hmC Up        : V=434696, p=2.92e-05, median=+0.0150
+   All DMR Genes : V=34205706, p=9.83e-25, median=+0.0121
+
+3. Spearman correlation: mod_difference vs gb_log2fc
+   5mC: rho=+0.2583, S=68333921262, p=3.30e-125, n=8207
+   5hmC: rho=-0.0425, S=135783228820, p=4.50e-05, n=9211
+Warning messages:
+1: In cor.test.default(sub$mod_difference, sub$gb_log2fc, method = "spearman") :
+  Cannot compute exact p-value with ties
+2: In cor.test.default(sub$mod_difference, sub$gb_log2fc, method = "spearman") :
+  Cannot compute exact p-value with ties
+
+4. Cliff's delta (effect size): each group vs All DMR Genes
+   mC Up     : delta=+0.0887 (negligible)
+   mC Down   : delta=-0.1641 (small)
+   hmC Down  : delta=-0.0037 (negligible)
+   hmC Up    : delta=+0.0119 (negligible)
+
+--- Saving summary table ---
+
+  Saved: k119ub_bigwig_signal_summary.tsv
+
+================================================================================
+SECTION 18 SUMMARY: K119UB CONTINUOUS SIGNAL ANALYSIS
+================================================================================
+
+Figures generated:
+  18a: K119ub signal distribution (ctrl vs mut per group)
+  18b: K119ub log2FC distributions per methylation group
+  18c: Methylation change vs K119ub signal change scatter
+  18d: Gene waterfall ranked by K119ub change
+
+Key results:
+  mC Up     : median log2FC = +0.0587 (n=6174)
+  mC Down   : median log2FC = -0.0699 (n=2033)
+  hmC Down  : median log2FC = +0.0121 (n=7975)
+  hmC Up    : median log2FC = +0.0150 (n=1236)
+  Background: median log2FC = +0.0121 (n=11089)
+
+Correlations (mod_difference vs K119ub log2FC):
+  5mC: rho = +0.2583
+  5hmC: rho = -0.0425
+
+Section 18 complete.
+
+
+--------------------------------------------------------------------------------
+Running scripts/viz_sections/section_19_h3k27ac_peak_analysis.R...
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-22 19:05:01 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 19: H3K27AC PEAK ANALYSIS AT DMR GENES
+================================================================================
+
+Preparing methylation gene groups...
+  mC Up:    6635 genes
+  mC Down:  2201 genes
+  hmC Down: 8623 genes
+  hmC Up:   1307 genes
+  All DMR:  12023 unique genes
+
+Loading H3K27ac condition-specific peaks...
+  H3K27ac Control: 13635 peaks
+  H3K27ac Mutant: 15663 peaks
+  Annotating H3K27ac peaks to genes via ChIPseeker...
+>> preparing features information...             2026-02-22 19:05:06 
+>> identifying nearest features...               2026-02-22 19:05:07 
+>> calculating distance from peak to TSS...      2026-02-22 19:05:07 
+>> assigning genomic annotation...               2026-02-22 19:05:07 
+>> adding gene annotation...                     2026-02-22 19:05:13 
+>> assigning chromosome lengths                  2026-02-22 19:05:13 
+>> done...                                       2026-02-22 19:05:13 
+>> preparing features information...             2026-02-22 19:05:13 
+>> identifying nearest features...               2026-02-22 19:05:13 
+>> calculating distance from peak to TSS...      2026-02-22 19:05:13 
+>> assigning genomic annotation...               2026-02-22 19:05:13 
+>> adding gene annotation...                     2026-02-22 19:05:14 
+>> assigning chromosome lengths                  2026-02-22 19:05:14 
+>> done...                                       2026-02-22 19:05:14 
+  7789 unique genes with any H3K27ac peak
+  Ctrl-only genes: 550
+  Mut-only genes:  1601
+  Both conditions: 5638
+
+Classifying H3K27ac status for all DMR genes...
+
+  H3K27ac status breakdown:
+    mC Up     : 6635 total, 3798 (57.2%) with peaks, 2837 (42.8%) no peaks
+    mC Down   : 2201 total, 480 (21.8%) with peaks, 1721 (78.2%) no peaks
+    hmC Down  : 8623 total, 4291 (49.8%) with peaks, 4332 (50.2%) no peaks
+    hmC Up    : 1307 total, 280 (21.4%) with peaks, 1027 (78.6%) no peaks
+
+--- FIGURE 19a: Complete H3K27ac Status Breakdown ---
+
+  Saved: 19a_h3k27ac_status_breakdown/{pdf,svg,jpg}
+  Per-group breakdown:
+    mC Up (n=6635):
+      Gained      : 1197 ( 18.0%)
+      Equal Peaks : 1779 ( 26.8%)
+      No Peaks    : 2837 ( 42.8%)
+      Lost        :  822 ( 12.4%)
+    mC Down (n=2201):
+      Gained      :  264 ( 12.0%)
+      Equal Peaks :  179 (  8.1%)
+      No Peaks    : 1721 ( 78.2%)
+      Lost        :   37 (  1.7%)
+    hmC Down (n=8623):
+      Gained      : 1482 ( 17.2%)
+      Equal Peaks : 2014 ( 23.4%)
+      No Peaks    : 4332 ( 50.2%)
+      Lost        :  795 (  9.2%)
+    hmC Up (n=1307):
+      Gained      :  148 ( 11.3%)
+      Equal Peaks :   91 (  7.0%)
+      No Peaks    : 1027 ( 78.6%)
+      Lost        :   41 (  3.1%)
+
+--- FIGURE 19b: H3K27ac Conditional Direction ---
+
+  Saved: 19b_h3k27ac_conditional_direction/{pdf,svg,jpg}
+  Conditional direction (genes with peaks):
+    mC Up         : 3798 genes with peaks, 31.5% gained, 46.8% equal, 21.6% lost, Fisher vs BG p=2.00e-04
+    mC Down       : 480 genes with peaks, 55.0% gained, 37.3% equal, 7.7% lost, Fisher vs BG p=4.77e-17
+    hmC Down      : 4291 genes with peaks, 34.5% gained, 46.9% equal, 18.5% lost, Fisher vs BG p=4.63e-01
+    hmC Up        : 280 genes with peaks, 52.9% gained, 32.5% equal, 14.6% lost, Fisher vs BG p=6.60e-09
+    All DMR Genes : 5249 genes with peaks, 35.3% gained, 46.4% equal, 18.3% lost
+
+  Background gain rate: 35.3%
+  Background loss rate: 18.3%
+
+--- FIGURE 19c: Per-Gene H3K27ac Effect Size ---
+
+  Saved: 19c_h3k27ac_effect_sizes/{pdf,svg,jpg}
+  Effect size distributions (genes with peaks):
+    mC Up     : n=3798, median=+0, IQR=[+0, +1], range=[-12, +20]
+    mC Down   : n=480, median=+1, IQR=[+0, +1], range=[-3, +15]
+    hmC Down  : n=4291, median=+0, IQR=[+0, +1], range=[-12, +20]
+    hmC Up    : n=280, median=+1, IQR=[+0, +1], range=[-4, +4]
+
+  Extreme genes (|net| >= 5):
+    Speer4b (mC Up): net = +20 (ctrl=14, mut=34)
+    Ntm (mC Up): net = +17 (ctrl=35, mut=52)
+    Ppp3ca (mC Up): net = +15 (ctrl=24, mut=39)
+    Cacna1e (mC Down): net = +15 (ctrl=4, mut=19)
+    Ryr2 (mC Down): net = +12 (ctrl=7, mut=19)
+    Phactr3 (mC Down): net = +10 (ctrl=10, mut=20)
+    Speer4b (hmC Down): net = +20 (ctrl=14, mut=34)
+    Slc4a4 (hmC Down): net = +19 (ctrl=13, mut=32)
+    Ntm (hmC Down): net = +17 (ctrl=35, mut=52)
+
+--- FIGURE 19d: Methylation vs H3K27ac Scatter ---
+
+  5mC genes with H3K27ac peaks: 4278
+  5hmC genes with H3K27ac peaks: 4571
+Warning message:
+There were 2 warnings in `summarise()`.
+The first warning was:
+ℹ In argument: `p_value = cor.test(mod_difference, net_h3k27ac, method = "spearman")$p.value`.
+ℹ In group 1: `modality = 5mC`.
+Caused by warning in `cor.test.default()`:
+! Cannot compute exact p-value with ties
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 1 remaining warning. 
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 19d_methylation_vs_h3k27ac_scatter/{pdf,svg,jpg}
+  Spearman correlations:
+    5mC: rho = -0.2466, p = 2.68e-60, n = 4278
+    5hmC: rho = +0.1685, p = 1.81e-30, n = 4571
+
+--- FIGURE 19e: H3K27ac Waterfall ---
+
+  Total genes with H3K27ac peaks: 7789
+  mC Up: n=3795, median rank=4310 / 7789 (percentile=55.3%)
+  mC Down: n=367, median rank=2467 / 7789 (percentile=31.7%)
+  hmC Down: n=1006, median rank=3504 / 7789 (percentile=45.0%)
+  hmC Up: n=81, median rank=2566 / 7789 (percentile=32.9%)
+  Saved: 19e_h3k27ac_waterfall/{pdf,svg,jpg}
+
+--- FIGURE 19f: Condition-Specific H3K27ac Overlap at DMRs ---
+
+  Hypermethylated DMRs: 6635
+  Hypomethylated DMRs: 2201
+  Hypermethylated DMRs: 54.6% ctrl H3K27ac, 62.0% mut H3K27ac
+  Hypomethylated DMRs: 13.2% ctrl H3K27ac, 20.2% mut H3K27ac
+  Fisher's exact test: OR = 1.35, p = 1.25e-04
+  Saved: 19f_h3k27ac_condition_overlap/{pdf,svg,jpg}
+
+--- FIGURE 19g: H3K27ac O/E Heatmaps ---
+
+  mC DMR genes with non-zero net H3K27ac: 2320
+  mC x H3K27ac contingency table:
+         
+          H3K27ac Gained H3K27ac Lost
+  mC Up             1197          822
+  mC Down            264           37
+  Fisher OR = 0.20, p = 2.75e-24
+  hmC DMR genes with non-zero net H3K27ac: 2466
+  hmC x H3K27ac contingency table:
+          
+           H3K27ac Gained H3K27ac Lost
+  hmC Down           1482          795
+  hmC Up              148           41
+  Fisher OR = 0.52, p = 1.62e-04
+  Saved: 19g_h3k27ac_oe_heatmaps/{pdf,svg,jpg}
+
+--- FIGURE 19h: Comparative O/E Dot Plot ---
+
+  Re-computing MeCP2 O/E...
+  Re-computing ATAC O/E...
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+>> preparing features information...             2026-02-22 19:05:20 
+>> identifying nearest features...               2026-02-22 19:05:20 
+>> calculating distance from peak to TSS...      2026-02-22 19:05:20 
+>> assigning genomic annotation...               2026-02-22 19:05:20 
+>> adding gene annotation...                     2026-02-22 19:05:21 
+>> assigning chromosome lengths                  2026-02-22 19:05:21 
+>> done...                                       2026-02-22 19:05:21 
+>> preparing features information...             2026-02-22 19:05:21 
+>> identifying nearest features...               2026-02-22 19:05:21 
+>> calculating distance from peak to TSS...      2026-02-22 19:05:21 
+>> assigning genomic annotation...               2026-02-22 19:05:21 
+>> adding gene annotation...                     2026-02-22 19:05:22 
+>> assigning chromosome lengths                  2026-02-22 19:05:23 
+>> done...                                       2026-02-22 19:05:23 
+  Re-computing K119ub O/E...
+  K119ub Control: 20592 peaks
+  K119ub Mutant: 20399 peaks
+>> preparing features information...             2026-02-22 19:05:23 
+>> identifying nearest features...               2026-02-22 19:05:23 
+>> calculating distance from peak to TSS...      2026-02-22 19:05:23 
+>> assigning genomic annotation...               2026-02-22 19:05:23 
+>> adding gene annotation...                     2026-02-22 19:05:24 
+>> assigning chromosome lengths                  2026-02-22 19:05:24 
+>> done...                                       2026-02-22 19:05:24 
+>> preparing features information...             2026-02-22 19:05:24 
+>> identifying nearest features...               2026-02-22 19:05:24 
+>> calculating distance from peak to TSS...      2026-02-22 19:05:24 
+>> assigning genomic annotation...               2026-02-22 19:05:24 
+>> adding gene annotation...                     2026-02-22 19:05:25 
+>> assigning chromosome lengths                  2026-02-22 19:05:25 
+>> done...                                       2026-02-22 19:05:25 
+  Collecting O/E comparison data...
+  O/E comparison summary:
+    5mC | MeCP2 | mC Down + MeCP2 Up: O/E = 1.05 (Obs=651, Exp=620)
+    5mC | MeCP2 | mC Up + MeCP2 Down: O/E = 1.01 (Obs=4240, Exp=4209)
+    5hmC | MeCP2 | hmC Up + MeCP2 Up: O/E = 1.13 (Obs=410, Exp=364)
+    5hmC | MeCP2 | hmC Down + MeCP2 Down: O/E = 1.01 (Obs=5573, Exp=5527)
+    5mC | ATAC | mC Down + ATAC Up: O/E = 1.49 (Obs=845, Exp=568)
+    5mC | ATAC | mC Up + ATAC Down: O/E = 1.46 (Obs=881, Exp=604)
+    5hmC | ATAC | hmC Up + ATAC Up: O/E = 1.46 (Obs=674, Exp=460)
+    5hmC | ATAC | hmC Down + ATAC Down: O/E = 1.32 (Obs=890, Exp=676)
+    5mC | K119ub | mC Up + K119ub Gained: O/E = 1.26 (Obs=1252, Exp=997)
+    5mC | K119ub | mC Down + K119ub Lost: O/E = 1.65 (Obs=648, Exp=393)
+    5hmC | K119ub | hmC Down + K119ub Gained: O/E = 1.09 (Obs=1332, Exp=1219)
+    5hmC | K119ub | hmC Up + K119ub Lost: O/E = 1.46 (Obs=360, Exp=247)
+    5mC | H3K27ac | mC Down + H3K27ac Gained: O/E = 1.39 (Obs=264, Exp=190)
+    5mC | H3K27ac | mC Up + H3K27ac Lost: O/E = 1.10 (Obs=822, Exp=748)
+    5hmC | H3K27ac | hmC Up + H3K27ac Gained: O/E = 1.18 (Obs=148, Exp=125)
+    5hmC | H3K27ac | hmC Down + H3K27ac Lost: O/E = 1.03 (Obs=795, Exp=772)
+  Saved: 19h_chromatin_mark_oe_comparison/{pdf,svg,jpg}
+  Saved: h3k27ac_all_marks_oe_comparison.tsv
+
+--- STATISTICAL TESTS ---
+
+1. Fisher's exact: each group's gain rate vs background (all DMR genes)
+   mC Up     : OR=0.84, p=2.00e-04
+   mC Down   : OR=2.24, p=4.77e-17
+   hmC Down  : OR=0.97, p=0.4631
+   hmC Up    : OR=2.06, p=6.60e-09
+
+2. Wilcoxon rank-sum: each group's net change vs All DMR Genes
+   mC Up     : W=9432490, p=3.15e-06
+   mC Down   : W=1579658, p=8.46e-23
+   hmC Down  : W=11170650, p=0.4671
+   hmC Up    : W=852746, p=1.37e-06
+
+3. Wilcoxon one-sample: each group's net change != 0
+   mC Up         : V=1180314, p=8.12e-11, median=+0
+   mC Down       : V=41033, p=1.09e-36, median=+1
+   hmC Down      : V=1658239, p=2.77e-34, median=+0
+   hmC Up        : V=13904, p=2.70e-12, median=+1
+   All DMR Genes : V=2575085, p=9.54e-49, median=+0
+
+4. Spearman correlation: mod_difference vs net_h3k27ac
+   5mC: rho=-0.2466, S=16266915773, p=2.68e-60, n=4278
+   5hmC: rho=+0.1685, S=13235225524, p=1.81e-30, n=4571
+Warning messages:
+1: In cor.test.default(sub$mod_difference, sub$net_h3k27ac, method = "spearman") :
+  Cannot compute exact p-value with ties
+2: In cor.test.default(sub$mod_difference, sub$net_h3k27ac, method = "spearman") :
+  Cannot compute exact p-value with ties
+
+5. Cliff's delta (effect size): each group vs All DMR Genes
+   mC Up     : delta=-0.0537 (negligible)
+   mC Down   : delta=+0.2539 (small)
+   hmC Down  : delta=-0.0081 (negligible)
+   hmC Up    : delta=+0.1604 (small)
+
+6. Fisher's exact: condition-specific H3K27ac overlap at DMRs (19f)
+   OR = 1.35, p = 1.25e-04
+   Hyper DMRs: 54.6% ctrl, 62.0% mut H3K27ac overlap
+   Hypo DMRs:  13.2% ctrl, 20.2% mut H3K27ac overlap
+
+7. Fisher's exact: 2x2 O/E heatmaps (19g)
+   mC x H3K27ac:  Fisher OR = 0.20, p = 2.75e-24 (n=2320 genes)
+   hmC x H3K27ac: Fisher OR = 0.52, p = 1.62e-04 (n=2466 genes)
+
+8. O/E comparison across 4 chromatin marks (19h)
+   MeCP2: mC mean O/E = 1.03, hmC mean O/E = 1.07 -> hmC stronger
+   ATAC: mC mean O/E = 1.48, hmC mean O/E = 1.39 -> mC stronger
+   K119ub: mC mean O/E = 1.46, hmC mean O/E = 1.27 -> mC stronger
+   H3K27ac: mC mean O/E = 1.25, hmC mean O/E = 1.10 -> mC stronger
+
+--- Saving summary table ---
+
+  Saved: h3k27ac_peak_analysis_summary.tsv
+
+================================================================================
+SECTION 19 SUMMARY: H3K27AC PEAK ANALYSIS AT DMR GENES
+================================================================================
+
+Per methylation group:
+  Group           Total  No Peak   Gained    Equal     Lost  %NoPeak %Gain|Peak
+------------------------------------------------------------------------------------------ 
+  hmC Down         8623     4332     1482     2014      795    50.2%      34.5%
+  hmC Up           1307     1027      148       91       41    78.6%      52.9%
+  mC Down          2201     1721      264      179       37    78.2%      55.0%
+  mC Up            6635     2837     1197     1779      822    42.8%      31.5%
+  All DMR Genes   12023     6774     1851     2436      962    56.3%      35.3%
+
+Background gain rate (all DMR genes with peaks): 35.3%
+Background loss rate (all DMR genes with peaks): 18.3%
+
+Figures generated:
+  19a: H3K27ac status breakdown (100% stacked bars)
+  19b: H3K27ac conditional direction (grouped bars + Fisher)
+  19c: H3K27ac per-gene effect sizes (strip + box)
+  19d: Methylation change vs H3K27ac scatter (Spearman)
+  19e: Gene waterfall ranked by H3K27ac change
+  19f: Condition-specific H3K27ac overlap at DMRs
+  19g: 2x2 O/E heatmaps (mC x H3K27ac, hmC x H3K27ac)
+  19h: Comparative O/E dot plot across 4 chromatin marks
+
+Correlations (mod_difference vs net_h3k27ac):
+  5mC: rho = -0.2466
+  5hmC: rho = +0.1685
+
+Condition-specific overlap (19f):
+  Fisher OR = 1.35, p = 1.25e-04
+
+O/E heatmaps (19g):
+  mC x H3K27ac:  Fisher OR = 0.20, p = 2.75e-24
+  hmC x H3K27ac: Fisher OR = 0.52, p = 1.62e-04
+
+Comparative O/E (19h): 4 marks x 2 perspectives
+  MeCP2: mC O/E = 1.03, hmC O/E = 1.07
+  ATAC: mC O/E = 1.48, hmC O/E = 1.39
+  K119ub: mC O/E = 1.46, hmC O/E = 1.27
+  H3K27ac: mC O/E = 1.25, hmC O/E = 1.10
+
+Section 19 complete.
+
+
+=========================================
+1/19 sections failed
+End time: Sun Feb 22 19:05:27 PST 2026
+=========================================
+zakiralibhai@Zakirs-MacBook-Air downstream % 

@@ -403,7 +403,7 @@ n_total <- nrow(waterfall_base)
 for (grp in c("mC Up", "mC Down", "hmC Down", "hmC Up")) {
   ranks <- waterfall_base$rank[waterfall_base$dmr_group == grp]
   if (length(ranks) > 0) {
-    cat(sprintf("  %s: n=%d, median rank=%d / %d (percentile=%.1f%%)\n",
+    cat(sprintf("  %s: n=%d, median rank=%.0f / %d (percentile=%.1f%%)\n",
                 grp, length(ranks), median(ranks), n_total,
                 100 * median(ranks) / n_total))
   }
