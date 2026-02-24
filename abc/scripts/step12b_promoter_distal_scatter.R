@@ -224,12 +224,11 @@ loc_cors_raw <- abc_classified %>%
   mutate(label = sprintf("%s: rho = %.3f (n = %s)",
                          location, rho, format(n, big.mark = ",")))
 
-# Clip outliers (99.5th percentile symmetric)
-clip_raw <- quantile(c(abs(abc_classified$delta_activity),
-                       abs(abc_classified$delta_contact)),
-                     0.995, na.rm = TRUE)
-x_lim_raw <- c(-clip_raw, clip_raw)
-y_lim_raw <- c(-clip_raw, clip_raw)
+# Clip outliers (99.5th percentile, independent per axis)
+clip_x_raw <- quantile(abs(abc_classified$delta_activity), 0.995, na.rm = TRUE)
+clip_y_raw <- quantile(abs(abc_classified$delta_contact), 0.995, na.rm = TRUE)
+x_lim_raw <- c(-clip_x_raw, clip_x_raw)
+y_lim_raw <- c(-clip_y_raw, clip_y_raw)
 
 p8 <- ggplot(abc_classified,
              aes(x = delta_activity, y = delta_contact,

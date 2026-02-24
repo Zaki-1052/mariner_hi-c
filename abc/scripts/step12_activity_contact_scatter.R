@@ -250,12 +250,11 @@ for (i in seq_len(nrow(class_cors))) {
               class_cors$enhancer_class[i], class_cors$rho[i], class_cors$n[i]))
 }
 
-# Clip outliers for axis limits (99.5th percentile symmetric)
-clip_raw <- quantile(c(abs(abc_classified$delta_activity),
-                       abs(abc_classified$delta_contact)),
-                     0.995, na.rm = TRUE)
-x_lim_raw <- c(-clip_raw, clip_raw)
-y_lim_raw <- c(-clip_raw, clip_raw)
+# Clip outliers for axis limits (99.5th percentile, independent per axis)
+clip_x_raw <- quantile(abs(abc_classified$delta_activity), 0.995, na.rm = TRUE)
+clip_y_raw <- quantile(abs(abc_classified$delta_contact), 0.995, na.rm = TRUE)
+x_lim_raw <- c(-clip_x_raw, clip_x_raw)
+y_lim_raw <- c(-clip_y_raw, clip_y_raw)
 
 # Quadrant annotations
 q_labels_raw <- make_quadrant_labels(
@@ -304,10 +303,10 @@ abc_ordered <- rbind(
 
 all_colors <- c(CLASS_COLORS, Unclassified = "grey80")
 
-clip_all <- quantile(c(abs(abc$delta_activity), abs(abc$delta_contact)),
-                     0.995, na.rm = TRUE)
-x_lim_all <- c(-clip_all, clip_all)
-y_lim_all <- c(-clip_all, clip_all)
+clip_x_all <- quantile(abs(abc$delta_activity), 0.995, na.rm = TRUE)
+clip_y_all <- quantile(abs(abc$delta_contact), 0.995, na.rm = TRUE)
+x_lim_all <- c(-clip_x_all, clip_x_all)
+y_lim_all <- c(-clip_y_all, clip_y_all)
 
 q_labels_all <- make_quadrant_labels(
   abc$delta_activity, abc$delta_contact, x_lim_all, y_lim_all
