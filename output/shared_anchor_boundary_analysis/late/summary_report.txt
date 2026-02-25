@@ -1,0 +1,70 @@
+==========================================================================
+SHARED ANCHOR x TAD BOUNDARY CROSS-REFERENCE ANALYSIS - LATE TIMEPOINT
+==========================================================================
+Generated: 2026-02-25 15:15:07
+
+--------------------------------------------------------------------------
+Q1: ARE SHARED ANCHORS CLOSER TO DIFFERENTIAL TAD BOUNDARIES THAN NON-SHARED?
+--------------------------------------------------------------------------
+Shared anchors: n=212, median distance = 122,499 bp
+Non-shared control anchors: n=3457, median distance = 167,499 bp
+Wilcoxon rank-sum: W=318408, p=0.004512, effect size r=0.047
+
+Fisher's exact test at distance thresholds:
+  threshold_label shared_prop control_prop odds_ratio     p_value
+1            10kb   0.2358491    0.1477340   1.780188 0.001082937
+2            25kb   0.2735849    0.1907004   1.598089 0.004225697
+3            50kb   0.3301887    0.2466157   1.505747 0.008835932
+4           100kb   0.4622642    0.3711006   1.456627 0.008531201
+
+Permutation test (50kb, n=1000): observed=0.330, null mean=0.193, fold=1.71, p=0.000999
+
+--------------------------------------------------------------------------
+Q2: IS MERGE-TYPE BOUNDARY ENRICHED NEAR SHARED ANCHORS?
+--------------------------------------------------------------------------
+Shared anchors within 50kb of boundary: 70
+Chi-square GOF: X²=3.48, df=4, p=0.4811
+
+Type comparison (observed / expected):
+             type observed expected     ratio
+1         Complex       13     13.0 0.9974616
+2           Merge       16     13.2 1.2119261
+3         Shifted        7     12.6 0.5550938
+4           Split       10     10.0 0.9975909
+5 Strength Change       24     21.1 1.1358171
+
+Per-type Fisher's exact (BH-corrected):
+    boundary_type odds_ratio    p_value     p_adj
+1         Shifted  0.5057318 0.08504867 0.4252433
+2           Merge  1.2746397 0.44056314 0.8529406
+3 Strength Change  1.2065934 0.51176433 0.8529406
+4         Complex  0.9968833 1.00000000 1.0000000
+5           Split  0.9971901 1.00000000 1.0000000
+
+--------------------------------------------------------------------------
+Q3: ARE LOST-LOOP PARTNER ANCHORS CLOSER TO BOUNDARIES THAN GAINED-LOOP PARTNERS?
+--------------------------------------------------------------------------
+Partner anchors analyzed: 494 (excluded 72 both-shared)
+Lost-loop partners: n=214, median=157,499 bp
+Gained-loop partners: n=280, median=149,999 bp
+Wilcoxon: W=30633, p=0.6686, r=0.019
+
+--------------------------------------------------------------------------
+Q4: DOES BOUNDARY ENRICHMENT DIRECTION MATCH LOOP DIRECTION AT SHARED ANCHORS?
+--------------------------------------------------------------------------
+Loops at shared anchors within 50kb of boundary: 214
+
+Contingency table:
+                boundary_enriched
+loop_direction   Matrix 1 Matrix 2
+  down_in_mutant       30       75
+  up_in_mutant         37       72
+
+Concordance rate: 47.7% (102 concordant, 112 discordant)
+Binomial test vs 50%: p=0.5385
+Chi-square: X²=0.72, p=0.4723
+Population-level concordance (all 2,910 loops): 69.6%
+
+==========================================================================
+END OF REPORT
+==========================================================================
