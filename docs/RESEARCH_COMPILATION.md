@@ -485,8 +485,10 @@ Violin plots showing DEG log2FC distribution stratified by:
 
 ### Boundary-Loop Cross-Reference
 
-- Lost loops: 2.15x odds of being within 10kb of a boundary (p=0.039)
-- But only 46.7% directional concordance -- boundary and loop changes partially independent
+- Differential loops 2.08x enriched near differential boundaries (permutation p<0.001)
+- Lost loops closer to boundaries than gained (median 45kb vs 75kb, OR=1.46, p=4.8e-06)
+- 69.6% directional concordance at late timepoint (χ² p=0.0005) -- boundary and loop changes mostly aligned
+- Note: early timepoint showed 46.7% concordance but was underpowered (n=75 loops, p=1.0)
 
 ### Key Finding
 
