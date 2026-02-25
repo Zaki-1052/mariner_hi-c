@@ -436,6 +436,42 @@ p_nenh <- ggplot(dysreg,
   theme_pub
 
 # =============================================================================
+# ANALYSIS 7: ENHANCER WIDTH (peak size of strongest enhancer)
+# =============================================================================
+
+cat("\n--- Analysis 7: Enhancer width ---\n")
+
+# Peak width of the strongest enhancer per gene
+dysreg$enh_width <- dysreg$top_enh_end - dysreg$top_enh_start
+
+wt_width <- wilcox.test(enh_width ~ concordance, data = dysreg)
+
+conc_width <- dysreg$enh_width[dysreg$concordance == "Concordant"]
+disc_width <- dysreg$enh_width[dysreg$concordance == "Discordant"]
+
+cat(sprintf("  Median width Concordant: %d bp (%.1f%% exactly 500bp)\n",
+            median(conc_width), 100 * mean(conc_width == 500)))
+cat(sprintf("  Median width Discordant: %d bp (%.1f%% exactly 500bp)\n",
+            median(disc_width), 100 * mean(disc_width == 500)))
+cat(sprintf("  Pct > 500bp — Concordant: %.1f%%, Discordant: %.1f%%\n",
+            100 * mean(conc_width > 500), 100 * mean(disc_width > 500)))
+cat(sprintf("  Wilcoxon test: %s\n", fmt_p(wt_width$p.value)))
+
+p_enh_width <- ggplot(dysreg,
+                      aes(x = concordance, y = enh_width,
+                          fill = concordance)) +
+  geom_boxplot(outlier.size = 0.5, width = 0.6) +
+  geom_jitter(width = 0.15, alpha = 0.1, size = 0.4) +
+  scale_fill_manual(values = CONCORDANCE_COLORS, guide = "none") +
+  labs(
+    title = "Strongest Enhancer Width",
+    subtitle = sprintf("Wilcoxon %s", fmt_p(wt_width$p.value)),
+    x = NULL,
+    y = "Peak width (bp)"
+  ) +
+  theme_pub
+
+# =============================================================================
 # COMPOSITE FIGURE
 # =============================================================================
 
@@ -443,7 +479,7 @@ cat("\n--- Assembling composite figure ---\n")
 
 p_composite <- (p_conflict | p_dabc_mag | p_lfc_mag) /
                (p_padj | p_class_enrich | p_distance) /
-               (p_nenh | plot_spacer() | plot_spacer()) +
+               (p_nenh | p_enh_width | plot_spacer()) +
   plot_annotation(
     title = "Discordant Gene Characterization",
     subtitle = sprintf(
@@ -463,6 +499,7 @@ save_plot(p_lfc_mag, "04_log2fc_magnitude", w = 5, h = 5)
 save_plot(p_class_enrich, "05_class_enrichment", w = 6, h = 5)
 save_plot(p_distance, "06_distance", w = 5, h = 5)
 save_plot(p_nenh, "07_n_enhancers", w = 5, h = 5)
+save_plot(p_enh_width, "15_enhancer_width", w = 5, h = 5)
 
 # =============================================================================
 # SCATTER: max_delta_abc vs log2FC colored by concordance
@@ -500,7 +537,7 @@ cat("\n--- Saving gene characteristics table ---\n")
 # Merge enhancer conflict info with dysregulated gene table
 out_df <- left_join(
   dysreg[, c("TargetGene", "max_delta_abc", "log2FC", "padj",
-             "n_enhancers", "top_enh_distance", "concordance",
+             "n_enhancers", "top_enh_distance", "enh_width", "concordance",
              "n_gained", "n_lost", "sum_delta_abc", "sum_abc_wt", "sum_abc_ko")],
   enh_per_gene[, c("TargetGene", "n_enh_positive_dabc",
                     "n_enh_negative_dabc", "frac_agree_max")],
@@ -533,6 +570,7 @@ cat(sprintf("  |log2FC|:        Wilcoxon %s\n", fmt_p(wt_lfc$p.value)))
 cat(sprintf("  Enhancer agree:  Wilcoxon %s\n", fmt_p(wt_agree$p.value)))
 cat(sprintf("  Distance:        Wilcoxon %s\n", fmt_p(wt_dist$p.value)))
 cat(sprintf("  n_enhancers:     Wilcoxon %s\n", fmt_p(wt_nenh$p.value)))
+cat(sprintf("  Enhancer width:  Wilcoxon %s\n", fmt_p(wt_width$p.value)))
 cat(sprintf("  Class enrich:    Fisher's %s\n", fmt_p(fisher_res$p.value)))
 
 cat(sprintf("\nOutputs:\n"))
