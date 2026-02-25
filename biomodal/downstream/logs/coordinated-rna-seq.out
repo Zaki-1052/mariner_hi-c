@@ -1,0 +1,134 @@
+zakiralibhai@Zakirs-MacBook-Air downstream % Rscript /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/scripts/viz_sections/section_20_coordinated_rnaseq.R
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-24 16:09:00 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 20: COORDINATED GENE RNA-seq EXPRESSION INTEGRATION
+================================================================================
+
+  RNA-seq file: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx
+
+Recomputing coordinated mC/hmC changes...
+Warning message:
+In inner_join(mc_sig, hmc_sig, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+  6750 genes significant in both mC and hmC
+  5708 genes show coordinated mC up/hmC dn pattern (84.6%)
+
+Loading RNA-seq data...
+  Loaded 16572 genes from RNA-seq
+  Significant (padj < 0.05): 2127
+  DEG (padj < 0.05 & |log2FC| > 0.3): 1737
+
+Joining coordinated genes with RNA-seq...
+  Q4 genes with RNA-seq data: 5203 / 5708 (91.2%)
+  Other mC DMR genes with RNA-seq data: 2322
+
+Creating Figure 20a: Expression direction breakdown...
+  Fisher's (Tier 1, coord vs other): OR = 0.11, p = 2.09e-70
+  Fisher's (Tier 2, coord vs other): OR = 0.02, p = 3.31e-106
+  Saved: 20a_coordinated_expression_breakdown/{pdf,svg,jpg}
+
+Creating Figure 20b: Combined methylation effect vs log2FC...
+Warning message:
+In cor.test.default(scatter_data$combined_pct, scatter_data$log2FC,  :
+  Cannot compute exact p-value with ties
+  Spearman rho = -0.231, p = 1.03e-63
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 20b_methylation_vs_expression_scatter/{pdf,svg,jpg}
+Warning messages:
+1: ggrepel: 1 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+2: ggrepel: 1 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+3: ggrepel: 1 unlabeled data points (too many overlaps). Consider increasing max.overlaps 
+
+Creating Figure 20c: log2FC distribution comparison...
+  Wilcoxon log2FC: p = 1.07e-60
+  Median log2FC coordinated: -0.0095
+  Median log2FC other: 0.0604
+  Saved: 20c_log2fc_violin_comparison/{pdf,svg,jpg}
+
+Creating Figure 20d: mC direction x expression direction heatmap...
+  Genes significant in both mC and expression: 1330
+  Contingency table:
+         
+          Expr Down Expr Up
+  mC Down        50     278
+  mC Up         847     155
+  Fisher's exact test: OR = 0.03, p = 5.90e-118
+  Saved: 20d_mc_expression_heatmap/{pdf,svg,jpg}
+
+Saving output tables...
+  Saved: coordinated_rnaseq_expression.tsv (6750 rows)
+
+================================================================================
+SECTION 20 SUMMARY
+================================================================================
+
+Coordinated mC up/hmC dn genes (Q4): 5708 total, 5203 with RNA-seq
+
+--- Tier 1 (padj < 0.05) ---
+  Up:    143 (2.7%)
+  Down:  742 (14.3%)
+  NS:    4318 (83.0%)
+  Up/Down ratio: 0.19
+
+--- Tier 2 (padj < 0.05 & |log2FC| > 0.3) ---
+  Up:    28 (0.5%)
+  Down:  628 (12.1%)
+  NS:    4547 (87.4%)
+  Up/Down ratio: 0.04
+
+--- Statistical Tests ---
+  Fisher's Tier 1 (coord vs other, Up/Down): OR = 0.11, p = 2.09e-70
+  Fisher's Tier 2 (coord vs other, Up/Down): OR = 0.02, p = 3.31e-106
+  Wilcoxon log2FC (coord vs other): p = 1.07e-60
+  Spearman combined effect vs log2FC: rho = -0.231, p = 1.03e-63
+  Fisher's mC x expression heatmap: OR = 0.03, p = 5.90e-118
+
+--- Biological Interpretation ---
+  mC up/hmC dn genes are biased toward REPRESSION (more Down than Up)
+  Consistent with: methylation gain leading to transcriptional silencing
+
+Section 20 complete.
+
+zakiralibhai@Zakirs-MacBook-Air downstream % 
