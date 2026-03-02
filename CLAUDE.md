@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
+This is a genomics/epigenomics research project. Primary languages: R for analysis scripts, Python for pipelines and visualization (Streamlit + Plotly). SLURM is used for HPC job submission. Always use Unix line endings (LF, not CRLF) when writing shell/SLURM scripts.
+
 **Mariner Hi-C Differential Chromatin Loop Analysis Pipeline** - A bioinformatics pipeline for replicate-aware differential analysis of chromatin loops from Hi-C data, comparing BAP1-KO mutant vs wildtype control conditions in mouse (mm10 genome) with biological replication (n=3 per condition).
 
 **Key Technologies:**
@@ -120,6 +122,8 @@ Resolutions supported: 5000 (5kb), 10000 (10kb), 25000 (25kb)
 
 ## Development Guidelines
 
+When pre-computed summary files (TSVs, CSVs, log outputs) exist, use them directly. Do not recalculate from raw data unless the user explicitly asks for recomputation.
+
 ### Script Modification Workflow
 
 When modifying existing scripts:
@@ -160,6 +164,8 @@ results <- topTags(qlf, n = Inf)
 - **Robust estimation**: `robust=TRUE` protects against outliers
 - **Proper filtering**: `filterByExpr()` with replicate awareness
 - **TMM normalization**: Accounts for sequencing depth differences
+
+When the user asks about a specific script or file, confirm which file they mean before answering. Do not assume based on similar names. If the user corrects a misidentification, acknowledge immediately and switch context.
 
 ### Quality Control Checkpoints
 
