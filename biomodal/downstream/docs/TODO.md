@@ -12,7 +12,7 @@ Reference: `URS_Proposal.md`, `FIGURES.md`, `docs/urs/methylation-bio-revised-co
 
 ---
 
-## Completed Work (Sections 1-21 of Visualization Pipeline)
+## Completed Work (Sections 1-22 of Visualization Pipeline)
 
 The following are **done** and produce outputs in `plots/visualizations/`:
 
@@ -25,10 +25,10 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 | 05 | Coordinated Changes | 5,708/6,750 (84.6%) show mC up/hmC down |
 | 06 | Top Genes | Syt1 top hit (+18% mC, -15% hmC) |
 | 07 | Effect Size Distributions | Mean mC change +2.27%, hmC change -2.08% |
-| 08 | GO/KEGG Enrichment | RNA splicing #1 GO term (248 genes, q=3.4e-48) |
+| 08 | GO/KEGG Enrichment | RNA splicing #1 GO term (248 genes, q=3.4e-48); delta-ratio decile GO/KEGG (08e-08h) |
 | 09 | Summary Statistics | Integrated tables |
 | 10 | Chromatin State Analysis | 49.9% DMRs at Active_Promoter; 94% of those hypermethylated |
-| 11 | MeCP2 Integration | MeCP2 peak overlap with DMR direction |
+| 11 | MeCP2 Integration | MeCP2 peak overlap with DMR direction; delta-ratio lm/glm (11f-11g) |
 | 12 | ATAC-seq Correlation | 14.3% hypermethylated DMRs overlap ATAC-down (weak coupling) |
 | 13 | ATAC + Chromatin + Loops | Loop-ATAC concordance 39.5%; Active_Enhancer-Active_Enhancer 80% |
 | 14 | K119ub Peak Integration | K119ub-up at hypermethylated: OR=4.40 |
@@ -39,6 +39,7 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 | 19 | H3K27ac Peak Analysis | Status breakdown, waterfall, O/E, 4-mark comparison |
 | 20 | Expression Integration | mC vs log2FC scatter, expression outcome bars |
 | 21 | Discordant Gene Characterization | 4-quadrant analysis, composite panels |
+| 22 | Demethylation Efficiency Ratio | 72.5% genes show decreased 5hmC/(5mC+5hmC); Cliff's delta=0.455 (medium); Active_Promoter most affected (med=-0.030) |
 
 ---
 
@@ -135,8 +136,8 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 ### Tasks
 
 - [~] **4a. Basic MeCP2-DMR overlap.** Section 11 already computes MeCP2 peak overlap with DMR direction. -> `plots/visualizations/11a_mecp2_overlap/` through `11e_mecp2_integration_heatmap/`. **Done but may need extension.**
-- [ ] **4b. Predict MeCP2 gain from coordinated mC up/hmC down.** Among coordinated genes (n=5,708), test whether those with MeCP2 gain (from CUT&RUN differential) are enriched compared to non-coordinated genes. Fisher's exact test.
-- [ ] **4c. Quantitative MeCP2-methylation model.** Scatter plot: delta_mC (x) vs delta_MeCP2 (y), per gene. Expect positive correlation (more mC gain = more MeCP2 gain). Stratify by coordinated vs discordant genes.
+- [~] **4b. Predict MeCP2 gain from coordinated mC up/hmC down.** Among coordinated genes (n=5,708), test whether those with MeCP2 gain (from CUT&RUN differential) are enriched compared to non-coordinated genes. Fisher's exact test. *Partially done: Section 11d Wilcoxon test (p=8.64e-08) shows coordinated genes have significantly different MeCP2 fold change vs all other genes. Fisher's exact on binary gain not yet done.*
+- [~] **4c. Quantitative MeCP2-methylation model.** Scatter plot: delta_mC (x) vs delta_MeCP2 (y), per gene. Expect positive correlation (more mC gain = more MeCP2 gain). Stratify by coordinated vs discordant genes. *Partially done: Section 11c scatter (rho=0.015, p=0.18) + 11f-11g delta-ratio regression models (lm coeff=-0.319, p=6.5e-05; glm OR<1, p=5.2e-04). Stratification by coordinated vs discordant not yet done.*
 - [ ] **4d. MeCP2 at loop anchors.** Cross-reference MeCP2 differential binding with loop anchor positions. Do anchors where MeCP2 increases also show loop changes? This connects the methylation reader to 3D architecture.
 
 ### Existing resources
@@ -399,10 +400,10 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 
 ### Tasks
 
-- [ ] **14a. Compute per-gene demethylation ratio in WT and KO.** For each gene body, calculate 5hmC/(5mC+5hmC) in control and mutant samples. Use modality feature extraction output (mean mC and hmC per gene) or Zarr stores.
-- [ ] **14b. Compute delta-ratio per gene.** KO ratio minus WT ratio. This continuous "demethylation activity score" can replace or supplement the binary coordinated/discordant classification in downstream models (Sections 1, 3, 8, 11).
-- [ ] **14c. Compare WT ratio distribution to published TET-KO data.** If the BAP1-KO ratio shift phenocopies direct TET loss (e.g., Rao lab data, Lopez-Moyado et al. 2019), that is a strong claim for convergent mechanisms. If the shift pattern differs, BAP1 is working through a distinct pathway.
-- [ ] **14d. Use delta-ratio as primary response variable.** Refit key models (baseline 5hmC predictor in Section 3, expression-methylation model in Section 8, DNMT3A prediction in Section 11) using the ratio instead of separate mC/hmC metrics.
+- [x] **14a. Compute per-gene demethylation ratio in WT and KO.** For each gene body, calculate 5hmC/(5mC+5hmC) in control and mutant samples. Use modality feature extraction output (mean mC and hmC per gene) or Zarr stores. *Done: Section 22 computes ratio_ctrl and ratio_mut for 20,898 genes. WT median=0.1284, KO median=0.1182. Per-sample ratios also computed from feature extraction TSVs (22h).*
+- [x] **14b. Compute delta-ratio per gene.** KO ratio minus WT ratio. This continuous "demethylation activity score" can replace or supplement the binary coordinated/discordant classification in downstream models (Sections 1, 3, 8, 11). *Done: Section 22 exports `demethylation_ratio_all_genes.tsv` (20,898 genes with delta_ratio). 72.5% genes decreased. Cliff's delta=0.455 (medium). Figures 22a-22h produced.*
+- [ ] **14c. Compare WT ratio distribution to published TET-KO data.** If the BAP1-KO ratio shift phenocopies direct TET loss (e.g., Rao lab data, Lopez-Moyado et al. 2019), that is a strong claim for convergent mechanisms. If the shift pattern differs, BAP1 is working through a distinct pathway. *Section 22 summary notes partial reduction consistent with indirect TET impairment (not ablation), but no formal quantitative comparison to published datasets yet.*
+- [~] **14d. Use delta-ratio as primary response variable.** Refit key models (baseline 5hmC predictor in Section 3, expression-methylation model in Section 8, DNMT3A prediction in Section 11) using the ratio instead of separate mC/hmC metrics. *Partially done: delta-ratio used in Section 8 decile GO/KEGG enrichment (08e-08h) and Section 11 MeCP2 regression (11f lm: coeff=-0.319, p=6.5e-05; 11g glm: OR<1, p=5.2e-04). Not yet used in TODO Sections 3 (baseline 5hmC predictor) or 11 (DNMT3A prediction model).*
 
 ### Existing resources
 
@@ -638,13 +639,13 @@ Based on URS proposal commitments, mechanistic importance, data availability, an
 | Priority | Analysis | Data Available? | Depends On |
 |----------|----------|----------------|------------|
 | **1** | Methylation x Hi-C loop anchors (Section 1) | Yes | Nothing |
-| **2** | 5hmC/(5mC+5hmC) demethylation ratio (Section 14) | Yes | Nothing |
+| **2** | 5hmC/(5mC+5hmC) demethylation ratio (Section 14) | **14a,14b done; 14d partial** | Nothing |
 | **3** | CTCF site methylation at loop anchors (Section 15) | Yes (HPC) | Nothing |
 | **4** | A/B compartment methylation (Section 2) | Yes | Nothing |
 | **5** | Repeat element methylation (Section 16) | Yes (HPC) | Nothing |
 | **6** | Spatial autocorrelation (Section 18) | Yes | Nothing |
 | **7** | Baseline 5hmC as predictor (Section 3) | Likely (check modality output) | Nothing |
-| **8** | MeCP2 functional readout (Section 4) | Yes (Section 11 foundation) | Nothing |
+| **8** | MeCP2 functional readout (Section 4) | **4a~, 4b~, 4c~ done** | Nothing |
 
 **Would strengthen the paper:**
 
