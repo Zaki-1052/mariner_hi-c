@@ -522,6 +522,239 @@ if (is.null(mecp2_annotated) || is.null(mecp2_up_gr) || is.null(mecp2_down_gr)) 
                           width = 9, height = 7)
 
   # -----------------------------------------------------------------------
+  # FIGURES 11f-11g: DELTA-RATIO REGRESSION MODELS
+  # -----------------------------------------------------------------------
+  # Test whether delta_ratio (TET efficiency change) predicts MeCP2 binding.
+  # Linear: does delta_ratio predict magnitude of MeCP2 fold change?
+  # Logistic: does delta_ratio predict probability of significant MeCP2 increase?
+  #
+  # Expected: negative coefficient (more TET impairment -> more MeCP2 binding)
+  # because impaired TET -> more mC retained -> more MeCP2 recruited.
+
+  cat("\n")
+  cat("================================================================================\n")
+  cat("DELTA-RATIO REGRESSION MODELS (Figures 11f-11g)\n")
+  cat("================================================================================\n\n")
+
+  stopifnot("broom package required for regression models" =
+              requireNamespace("broom", quietly = TRUE))
+  suppressPackageStartupMessages(library(broom))
+
+  delta_ratio_path <- file.path(TABLES_DIR, "demethylation_ratio_all_genes.tsv")
+  stopifnot("demethylation_ratio_all_genes.tsv not found — run Section 22 first" =
+              file.exists(delta_ratio_path))
+
+  delta_ratio_df <- read.table(delta_ratio_path, header = TRUE, sep = "\t",
+                               stringsAsFactors = FALSE)
+  cat(sprintf("Loaded %d genes with delta_ratio values\n", nrow(delta_ratio_df)))
+
+  # Join delta_ratio to mc_dmr_mecp2 (already built at line 213)
+  reg_data <- mc_dmr_mecp2 %>%
+    dplyr::filter(significant) %>%
+    left_join(delta_ratio_df %>% dplyr::select(gene, delta_ratio),
+              by = "gene") %>%
+    dplyr::filter(!is.na(delta_ratio) & !is.na(nearest_fold) & !is.na(mean_coverage))
+
+  cat(sprintf("Regression dataset: %d significant DMR genes with delta_ratio + MeCP2 data\n",
+              nrow(reg_data)))
+
+  if (nrow(reg_data) >= 20) {
+
+    # -------------------------------------------------------------------
+    # FIGURE 11f: Linear Model — MeCP2 fold ~ delta_ratio + coverage
+    # -------------------------------------------------------------------
+    cat("\nFitting linear model: nearest_fold ~ delta_ratio + mean_coverage...\n")
+
+    lm_fit <- lm(nearest_fold ~ delta_ratio + mean_coverage, data = reg_data)
+    lm_tidy <- tidy(lm_fit, conf.int = TRUE)
+    lm_glance <- glance(lm_fit)
+
+    cat(sprintf("  R-squared: %.4f, Adj R-squared: %.4f\n",
+                lm_glance$r.squared, lm_glance$adj.r.squared))
+    cat(sprintf("  F-statistic: %.2f, p = %.2e\n", lm_glance$statistic, lm_glance$p.value))
+    cat("  Coefficients:\n")
+    for (i in seq_len(nrow(lm_tidy))) {
+      cat(sprintf("    %s: %.4f (SE=%.4f, p=%.2e)\n",
+                  lm_tidy$term[i], lm_tidy$estimate[i],
+                  lm_tidy$std.error[i], lm_tidy$p.value[i]))
+    }
+
+    # Save coefficients table
+    write.table(lm_tidy, file.path(TABLES_DIR, "mecp2_delta_ratio_lm_coefficients.tsv"),
+                sep = "\t", quote = FALSE, row.names = FALSE)
+    cat("  Saved: mecp2_delta_ratio_lm_coefficients.tsv\n")
+
+    # Left panel: Coefficient forest plot (exclude intercept)
+    lm_coef_df <- lm_tidy %>%
+      dplyr::filter(term != "(Intercept)") %>%
+      mutate(
+        term_label = case_when(
+          term == "delta_ratio" ~ "Delta-Ratio\n(TET efficiency change)",
+          term == "mean_coverage" ~ "Mean Coverage\n(technical covariate)"
+        ),
+        sig_label = ifelse(p.value < 0.05, "p < 0.05", "p >= 0.05")
+      )
+
+    p_11f_forest <- ggplot(lm_coef_df, aes(x = estimate, y = term_label, color = sig_label)) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.5) +
+      geom_pointrange(aes(xmin = conf.low, xmax = conf.high), size = 1, linewidth = 0.8) +
+      scale_color_manual(values = c("p < 0.05" = "#E41A1C", "p >= 0.05" = "grey50"),
+                         name = "Significance") +
+      labs(
+        title = "Linear Model Coefficients",
+        subtitle = sprintf("R\u00B2 = %.3f, F(%.0f,%.0f) = %.1f, p = %.2e",
+                           lm_glance$r.squared, lm_glance$df, lm_glance$df.residual,
+                           lm_glance$statistic, lm_glance$p.value),
+        x = "Coefficient Estimate (95% CI)", y = ""
+      ) +
+      theme_biomodal() +
+      theme(legend.position = "bottom")
+
+    # Right panel: Partial regression plot (delta_ratio effect)
+    # Residualize both Y and X on coverage to isolate delta_ratio effect
+    reg_data$resid_fold <- residuals(lm(nearest_fold ~ mean_coverage, data = reg_data))
+    reg_data$resid_delta <- residuals(lm(delta_ratio ~ mean_coverage, data = reg_data))
+
+    p_11f_partial <- ggplot(reg_data, aes(x = resid_delta, y = resid_fold)) +
+      geom_point(alpha = 0.3, size = 1.5, color = "grey40") +
+      geom_smooth(method = "lm", color = "#E41A1C", linewidth = 0.8, se = TRUE, alpha = 0.15) +
+      geom_hline(yintercept = 0, linetype = "dashed", color = "grey60", linewidth = 0.4) +
+      geom_vline(xintercept = 0, linetype = "dashed", color = "grey60", linewidth = 0.4) +
+      labs(
+        title = "Partial Regression: Delta-Ratio Effect",
+        subtitle = "After residualizing out mean coverage",
+        x = "Delta-Ratio (residualized)",
+        y = "MeCP2 Fold Change (residualized)"
+      ) +
+      theme_biomodal()
+
+    p_11f <- p_11f_forest + p_11f_partial +
+      plot_layout(widths = c(1, 1.3)) +
+      plot_annotation(
+        title = "Linear Model: MeCP2 Fold Change ~ Delta-Ratio + Coverage",
+        subtitle = "Does TET efficiency change predict MeCP2 binding magnitude at significant DMRs?",
+        theme = theme(
+          plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+          plot.subtitle = element_text(hjust = 0.5, size = 11, color = "grey40")
+        )
+      )
+
+    save_multiformat_ggplot(p_11f, file.path(OUTPUT_DIR, "11f_mecp2_delta_ratio_lm"),
+                            width = 14, height = 7)
+
+    # -------------------------------------------------------------------
+    # FIGURE 11g: Logistic Model — MeCP2 sig up ~ delta_ratio + coverage
+    # -------------------------------------------------------------------
+    cat("\nFitting logistic model: mecp2_up ~ delta_ratio + mean_coverage...\n")
+
+    reg_data$mecp2_up <- as.integer(reg_data$nearest_fold > 0 & reg_data$nearest_fdr < 0.05)
+
+    n_up <- sum(reg_data$mecp2_up == 1)
+    n_down <- sum(reg_data$mecp2_up == 0)
+    cat(sprintf("  MeCP2 significant up: %d, other: %d\n", n_up, n_down))
+
+    if (n_up >= 5 && n_down >= 5) {
+      glm_fit <- glm(mecp2_up ~ delta_ratio + mean_coverage,
+                      data = reg_data, family = binomial)
+      glm_tidy <- tidy(glm_fit, conf.int = TRUE, exponentiate = TRUE)
+      glm_glance <- glance(glm_fit)
+
+      cat(sprintf("  AIC: %.1f, Deviance: %.1f\n", glm_glance$AIC, glm_glance$deviance))
+      cat("  Odds ratios:\n")
+      for (i in seq_len(nrow(glm_tidy))) {
+        cat(sprintf("    %s: OR = %.4f (95%% CI: %.4f-%.4f, p = %.2e)\n",
+                    glm_tidy$term[i], glm_tidy$estimate[i],
+                    glm_tidy$conf.low[i], glm_tidy$conf.high[i],
+                    glm_tidy$p.value[i]))
+      }
+
+      # Save odds ratios table
+      write.table(glm_tidy, file.path(TABLES_DIR, "mecp2_delta_ratio_glm_odds_ratios.tsv"),
+                  sep = "\t", quote = FALSE, row.names = FALSE)
+      cat("  Saved: mecp2_delta_ratio_glm_odds_ratios.tsv\n")
+
+      # Left panel: Odds ratio forest plot (exclude intercept)
+      glm_coef_df <- glm_tidy %>%
+        dplyr::filter(term != "(Intercept)") %>%
+        mutate(
+          term_label = case_when(
+            term == "delta_ratio" ~ "Delta-Ratio\n(TET efficiency change)",
+            term == "mean_coverage" ~ "Mean Coverage\n(technical covariate)"
+          ),
+          sig_label = ifelse(p.value < 0.05, "p < 0.05", "p >= 0.05")
+        )
+
+      p_11g_forest <- ggplot(glm_coef_df, aes(x = estimate, y = term_label, color = sig_label)) +
+        geom_vline(xintercept = 1, linetype = "dashed", color = "grey50", linewidth = 0.5) +
+        geom_pointrange(aes(xmin = conf.low, xmax = conf.high), size = 1, linewidth = 0.8) +
+        scale_color_manual(values = c("p < 0.05" = "#E41A1C", "p >= 0.05" = "grey50"),
+                           name = "Significance") +
+        scale_x_log10() +
+        labs(
+          title = "Logistic Model: Odds Ratios",
+          subtitle = sprintf("AIC = %.1f | Reference line at OR = 1", glm_glance$AIC),
+          x = "Odds Ratio (95% CI, log scale)", y = ""
+        ) +
+        theme_biomodal() +
+        theme(legend.position = "bottom")
+
+      # Right panel: Predicted probability curve vs delta_ratio
+      # Hold mean_coverage at median
+      median_coverage <- median(reg_data$mean_coverage, na.rm = TRUE)
+      delta_seq <- seq(min(reg_data$delta_ratio), max(reg_data$delta_ratio), length.out = 200)
+      pred_df <- data.frame(delta_ratio = delta_seq, mean_coverage = median_coverage)
+      pred_df$prob <- predict(glm_fit, newdata = pred_df, type = "response")
+
+      # Get raw coefficients for annotation
+      glm_tidy_raw <- tidy(glm_fit, conf.int = TRUE, exponentiate = FALSE)
+      delta_coef <- glm_tidy_raw$estimate[glm_tidy_raw$term == "delta_ratio"]
+
+      p_11g_prob <- ggplot() +
+        geom_rug(data = reg_data, aes(x = delta_ratio, color = factor(mecp2_up)),
+                 sides = "b", alpha = 0.3) +
+        geom_line(data = pred_df, aes(x = delta_ratio, y = prob),
+                  color = "#E41A1C", linewidth = 1) +
+        geom_ribbon(data = pred_df, aes(x = delta_ratio, ymin = 0, ymax = prob),
+                    fill = "#E41A1C", alpha = 0.08) +
+        scale_color_manual(values = c("0" = "grey60", "1" = "#D95F02"),
+                           labels = c("Not sig up", "MeCP2 sig up"),
+                           name = "") +
+        labs(
+          title = "Predicted Probability of MeCP2 Sig. Increase",
+          subtitle = sprintf("Coverage held at median (%.0f) | \u03B2(delta_ratio) = %.3f",
+                             median_coverage, delta_coef),
+          x = "Delta-Ratio (TET efficiency change)",
+          y = "P(MeCP2 significantly up)"
+        ) +
+        theme_biomodal() +
+        theme(legend.position = "bottom")
+
+      p_11g <- p_11g_forest + p_11g_prob +
+        plot_layout(widths = c(1, 1.3)) +
+        plot_annotation(
+          title = "Logistic Model: MeCP2 Significant Increase ~ Delta-Ratio + Coverage",
+          subtitle = "Does TET efficiency change predict probability of significant MeCP2 binding increase?",
+          theme = theme(
+            plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+            plot.subtitle = element_text(hjust = 0.5, size = 11, color = "grey40")
+          )
+        )
+
+      save_multiformat_ggplot(p_11g, file.path(OUTPUT_DIR, "11g_mecp2_delta_ratio_glm"),
+                              width = 14, height = 7)
+
+    } else {
+      cat("  Not enough events in both classes for logistic regression\n")
+      glm_fit <- NULL
+    }
+
+  } else {
+    cat("  Not enough genes for regression models (need >= 20)\n")
+    lm_fit <- NULL
+    glm_fit <- NULL
+  }
+
+  # -----------------------------------------------------------------------
   # Print summary
   # -----------------------------------------------------------------------
   cat("\n")
@@ -543,6 +776,37 @@ if (is.null(mecp2_annotated) || is.null(mecp2_up_gr) || is.null(mecp2_down_gr)) 
   cat(sprintf("  Hypermethylated DMRs: %.3f\n", median(hyper_fold)))
   cat(sprintf("  Hypomethylated DMRs:  %.3f\n", median(hypo_fold)))
   cat(sprintf("  Not significant:      %.3f\n", median(ns_fold)))
+
+  # Delta-ratio regression summary
+  if (exists("lm_fit") && !is.null(lm_fit)) {
+    lm_g <- glance(lm_fit)
+    lm_t <- tidy(lm_fit)
+    delta_row <- lm_t[lm_t$term == "delta_ratio", ]
+    cat(sprintf("\nDelta-ratio linear model:\n"))
+    cat(sprintf("  R-squared: %.4f, F-statistic p = %.2e\n",
+                lm_g$r.squared, lm_g$p.value))
+    cat(sprintf("  delta_ratio coefficient: %.4f (p = %.2e)\n",
+                delta_row$estimate, delta_row$p.value))
+    if (delta_row$estimate < 0) {
+      cat("  Direction: NEGATIVE (consistent with prediction — more TET impairment -> more MeCP2)\n")
+    } else {
+      cat("  Direction: POSITIVE (unexpected — opposite to prediction)\n")
+    }
+  }
+
+  if (exists("glm_fit") && !is.null(glm_fit)) {
+    glm_t <- tidy(glm_fit, exponentiate = TRUE)
+    delta_or <- glm_t[glm_t$term == "delta_ratio", ]
+    cat(sprintf("\nDelta-ratio logistic model:\n"))
+    cat(sprintf("  delta_ratio OR: %.4f (95%% CI: %.4f-%.4f, p = %.2e)\n",
+                delta_or$estimate, delta_or$conf.low, delta_or$conf.high,
+                delta_or$p.value))
+    if (delta_or$estimate < 1) {
+      cat("  Direction: OR < 1 (consistent with prediction — more TET impairment -> higher MeCP2 up probability)\n")
+    } else {
+      cat("  Direction: OR > 1 (unexpected — opposite to prediction)\n")
+    }
+  }
 }
 
 cat("\nSection 11 complete.\n\n")
