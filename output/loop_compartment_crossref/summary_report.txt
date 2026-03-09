@@ -1,0 +1,122 @@
+=================================================================
+LOOP-COMPARTMENT/TAD CROSS-REFERENCE ANALYSIS
+=================================================================
+
+Date: 2026-03-09 06:05:11.796043
+
+INPUT DATA:
+  Loops: outputs/250402-late_outputs/loop_annotation_extended/late/extended_characterized_loops.tsv
+    Gained: 1723 | Lost: 1187 | Total: 2910
+  Compartment bins: tads/tad-pc-analysis/inputs/late/diffPC/diffcompartments.txt (104071 bins)
+  A-shift regions: 6
+  B-shift regions: 3
+  Differential TADs: 4366
+
+SIGN CONVENTION:
+  Positive PC1 difference = mut_PC1 > ctrl_PC1 = A-shift (more active in mutant)
+  Negative PC1 difference = mut_PC1 < ctrl_PC1 = B-shift (more inactive in mutant)
+
+=================================================================
+Q1: LOOP ANCHOR OVERLAP WITH COMPARTMENT SHIFT REGIONS
+=================================================================
+
+Gained loop anchors:
+  A-shift overlap: 23 / 3446 (0.7%)
+  B-shift overlap: 4 / 3446 (0.1%)
+  Neither: 3419 / 3446 (99.2%)
+
+Lost loop anchors:
+  A-shift overlap: 0 / 2374 (0.0%)
+  B-shift overlap: 3 / 2374 (0.1%)
+  Neither: 2371 / 2374 (99.9%)
+
+Fisher's exact tests (per-loop, either-anchor):
+  B-shift enrichment (gained vs lost): OR=0.918, p=1.00e+00
+    95% CI: [0.155, 6.281]
+    Gained loops in B-shift: 4 / 1723 (0.2%)
+    Lost loops in B-shift: 3 / 1187 (0.3%)
+
+  A-shift enrichment (gained vs lost): OR=Inf, p=1.10e-04
+    95% CI: [3.052, Inf]
+    Gained loops in A-shift: 18 / 1723 (1.0%)
+    Lost loops in A-shift: 0 / 1187 (0.0%)
+
+=================================================================
+Q2: PC1 VALUES AT LOOP ANCHORS
+=================================================================
+
+PC1 difference (mut - ctrl) at anchors:
+  Gained: median=0.1168, mean=0.1494 (n=1723)
+  Lost: median=-0.1194, mean=-0.1360 (n=1187)
+  Wilcoxon: W=1760086, p=2.16e-240
+
+Baseline ctrl PC1 at anchors:
+  Gained: median=0.0113, mean=0.0780 (n=1723)
+  Lost: median=0.5313, mean=0.4715 (n=1187)
+  Wilcoxon: W=720204, p=5.54e-42
+
+=================================================================
+Q3: TAD INCLUSION RATIO CHANGES AT LOOP LOCATIONS
+=================================================================
+
+  Gained: median IR_diff=0.2126 (n=1156)
+  Lost: median IR_diff=-0.0613 (n=787)
+  Wilcoxon: W=788784, p=1.58e-166
+
+=================================================================
+Q4: DISTANCE x COMPARTMENT INTERACTION
+=================================================================
+
+  Short (<250kb) | Gained: n=674, median_PC1_diff=0.1398, median_ctrl_PC1=0.4890
+  Short (<250kb) | Lost: n=285, median_PC1_diff=-0.2137, median_ctrl_PC1=0.9184
+  Medium (250kb-1Mb) | Gained: n=868, median_PC1_diff=0.1047, median_ctrl_PC1=-0.2069
+  Medium (250kb-1Mb) | Lost: n=489, median_PC1_diff=-0.1148, median_ctrl_PC1=0.6112
+  Long (>1Mb) | Gained: n=181, median_PC1_diff=0.0674, median_ctrl_PC1=-0.3686
+  Long (>1Mb) | Lost: n=413, median_PC1_diff=-0.0787, median_ctrl_PC1=0.2473
+
+  Short (<250kb) Wilcoxon: W=185478, p=3.34e-115
+  Medium (250kb-1Mb) Wilcoxon: W=355659, p=3.81e-95
+  Long (>1Mb) Wilcoxon: W=56808, p=5.96e-24
+
+=================================================================
+POLYCOMB-SPECIFIC COMPARTMENT ANALYSIS (Gained loops only)
+=================================================================
+
+  Polycomb-anchor gained loops: 628
+  Non-Polycomb gained loops: 1095
+
+Baseline ctrl PC1:
+  Polycomb: median=0.0910 (n=628)
+  Non-Polycomb: median=-0.0378 (n=1095)
+  Wilcoxon: W=350618, p=4.95e-01
+
+PC1 difference (mut - ctrl):
+  Polycomb: median=0.1518 (n=628)
+  Non-Polycomb: median=0.0872 (n=1095)
+  Wilcoxon: W=406560, p=2.77e-10
+
+=================================================================
+INTERPRETATION
+=================================================================
+
+Gained loops are located in regions with LOWER baseline PC1 (B-compartment,
+heterochromatic) compared to lost loops (A-compartment, active).
+This independently validates the loop rewriting model.
+
+=================================================================
+OUTPUT FILES
+=================================================================
+
+tables/loop_compartment_annotated.tsv - Full loop table with PC1/TAD annotations
+
+plots/q1_shift_overlap_barplot/ - Shift region overlap (gained vs lost)
+plots/q2_pc1_diff_violin/ - PC1 difference at loop anchors
+plots/q2_ctrl_pc1_violin/ - Baseline ctrl PC1 at loop anchors
+plots/q2_distance_vs_pc1diff_scatter/ - Distance vs PC1 difference
+plots/q3_tad_ir_boxplot/ - TAD IR change at loop locations
+plots/q4_distance_pc1_violin/ - Distance bin x direction interaction
+plots/q5_polycomb_pc1_violin/ - Polycomb vs non-Polycomb ctrl PC1
+
+=================================================================
+END REPORT
+=================================================================
