@@ -30,6 +30,9 @@
 #   24d: Model comparison (AIC + AUC bar/dot chart, 5 models)
 #   24e: Predicted probability by K119ub signal (sigmoid curve)
 #   24f: Predicted probability by chromatin state (faceted violin/box)
+#   24g: 10-fold cross-validated AUC comparison (boxplot + in-sample overlay)
+#   24h: Stratified model comparison — all genes vs non-promoter subset
+#   24i: K119ub x baseline 5hmC interaction (tertile-stratified sigmoid + forest plot)
 #
 # Run from downstream/ directory:
 #   Rscript scripts/viz_sections/section_24_dnmt3a_prediction.R
@@ -41,6 +44,7 @@ suppressPackageStartupMessages({
   library(ChIPseeker)
   library(readxl)
   library(randomForest)
+  library(caret)
 })
 
 # =============================================================================
@@ -913,6 +917,587 @@ write.table(importance_table,
 cat(sprintf("  Saved dnmt3a_feature_importance.tsv (%d rows)\n", nrow(importance_table)))
 
 # =============================================================================
+# STEP 6: 10-FOLD CROSS-VALIDATION
+# =============================================================================
+
+cat("\n--- Step 6: 10-fold cross-validation ---\n")
+
+set.seed(42)
+
+# Stratified folds preserving hyper_dmr class balance
+cv_folds <- createFolds(
+  factor(model_data$hyper_dmr),
+  k = 10, list = TRUE, returnTrain = FALSE
+)
+
+# Model formulas (reuse from Step 2)
+cv_formulas <- list(
+  Full = hyper_dmr ~ k119ub + atac_count + cpg_density +
+    baseline_mc + baseline_hmc + log_gene_length + log_expression,
+  `DNMT3A recruitment` = hyper_dmr ~ k119ub + atac_count + cpg_density,
+  `TET impediment` = hyper_dmr ~ baseline_hmc + atac_count,
+  `K119ub only` = hyper_dmr ~ k119ub,
+  Stepwise = formula(model_step)
+)
+
+# Cross-validate each model
+cv_results_list <- list()
+for (model_name in names(cv_formulas)) {
+  fold_aucs <- numeric(10)
+  for (fold_i in seq_along(cv_folds)) {
+    test_idx <- cv_folds[[fold_i]]
+    train_data <- model_data[-test_idx, ]
+    test_data <- model_data[test_idx, ]
+
+    fit <- glm(cv_formulas[[model_name]],
+               data = train_data, family = binomial)
+    preds <- predict(fit, newdata = test_data, type = "response")
+    fold_aucs[fold_i] <- tryCatch(
+      as.numeric(auc(roc(test_data$hyper_dmr, preds, quiet = TRUE))),
+      error = function(e) NA_real_
+    )
+  }
+  cv_results_list[[model_name]] <- fold_aucs
+}
+
+# Build results data frame
+cv_long <- do.call(rbind, lapply(names(cv_results_list), function(nm) {
+  data.frame(
+    model = nm,
+    fold = seq_along(cv_results_list[[nm]]),
+    auc = cv_results_list[[nm]],
+    stringsAsFactors = FALSE
+  )
+}))
+cv_long$model <- factor(cv_long$model, levels = names(MODEL_COLORS))
+
+# Summary statistics
+cv_summary <- cv_long %>%
+  dplyr::group_by(model) %>%
+  dplyr::summarise(
+    cv_mean_auc = mean(auc, na.rm = TRUE),
+    cv_sd_auc = sd(auc, na.rm = TRUE),
+    cv_min_auc = min(auc, na.rm = TRUE),
+    cv_max_auc = max(auc, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Add in-sample AUC for comparison
+cv_summary$in_sample_auc <- sapply(
+  as.character(cv_summary$model),
+  function(nm) as.numeric(auc(roc_list[[nm]]))
+)
+cv_summary$optimism <- cv_summary$in_sample_auc - cv_summary$cv_mean_auc
+
+cat("  10-fold CV results:\n")
+for (i in seq_len(nrow(cv_summary))) {
+  cat(sprintf("    %-22s CV AUC=%.3f +/- %.3f  (in-sample=%.3f, optimism=%.3f)\n",
+              paste0(cv_summary$model[i], ":"),
+              cv_summary$cv_mean_auc[i], cv_summary$cv_sd_auc[i],
+              cv_summary$in_sample_auc[i], cv_summary$optimism[i]))
+}
+
+# --- Figure 24g: CV AUC boxplot ---
+cat("\n--- Figure 24g: Cross-validated AUC comparison ---\n")
+
+# In-sample AUC overlay points
+insample_df <- data.frame(
+  model = factor(names(MODEL_COLORS), levels = names(MODEL_COLORS)),
+  auc = sapply(roc_list, function(r) as.numeric(auc(r)))
+)
+
+# Annotation labels
+cv_label_df <- cv_summary %>%
+  dplyr::mutate(
+    label = sprintf("%.3f +/- %.3f", cv_mean_auc, cv_sd_auc)
+  )
+
+p_24g <- ggplot(cv_long, aes(x = model, y = auc, fill = model)) +
+  geom_boxplot(alpha = 0.6, outlier.shape = NA, width = 0.5) +
+  geom_jitter(aes(color = model), width = 0.15, size = 1.5, alpha = 0.7) +
+  geom_point(data = insample_df, aes(x = model, y = auc),
+             shape = 18, size = 4, color = "black") +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey50") +
+  geom_text(data = cv_label_df,
+            aes(x = model, y = cv_min_auc - 0.015, label = label),
+            size = 3, inherit.aes = FALSE) +
+  scale_fill_manual(values = MODEL_COLORS) +
+  scale_color_manual(values = MODEL_COLORS) +
+  labs(
+    title = "10-Fold Cross-Validated AUC",
+    subtitle = paste0(
+      "Boxes = CV fold AUCs; black diamonds = in-sample AUC\n",
+      sprintf("N=%s genes, 10 stratified folds",
+              format(nrow(model_data), big.mark = ","))
+    ),
+    x = NULL, y = "AUC"
+  ) +
+  theme_biomodal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 25, hjust = 1))
+
+save_multiformat_ggplot(
+  p_24g, file.path(OUTPUT_DIR, "24g_cv_auc_comparison"), 11, 8
+)
+
+# Export CV table
+cv_export <- cv_summary %>%
+  dplyr::select(model, in_sample_auc, cv_mean_auc, cv_sd_auc,
+                cv_min_auc, cv_max_auc, optimism)
+write.table(cv_export,
+            file.path(TABLES_DIR, "dnmt3a_cv_results.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("  Saved dnmt3a_cv_results.tsv (%d rows)\n", nrow(cv_export)))
+
+# =============================================================================
+# STEP 7: STRATIFIED ANALYSIS — NON-PROMOTER SUBSET
+# =============================================================================
+
+cat("\n--- Step 7: Stratified analysis (non-promoter subset) ---\n")
+
+nonprom <- model_data %>%
+  dplyr::filter(chromatin_state != "Active_Promoter")
+
+cat(sprintf("  Non-promoter subset: %d genes (%d hyper-DMR, %.1f%%)\n",
+            nrow(nonprom), sum(nonprom$hyper_dmr),
+            100 * mean(nonprom$hyper_dmr)))
+
+# Refit all 5 models on non-promoter subset
+np_null_ll <- as.numeric(logLik(
+  glm(hyper_dmr ~ 1, data = nonprom, family = binomial)
+))
+np_mcfadden <- function(model) {
+  1 - as.numeric(logLik(model)) / np_null_ll
+}
+
+np_models <- list()
+np_rocs <- list()
+np_cis <- list()
+for (nm in names(cv_formulas)) {
+  np_models[[nm]] <- glm(cv_formulas[[nm]],
+                          data = nonprom, family = binomial)
+  np_rocs[[nm]] <- roc(nonprom$hyper_dmr,
+                        predict(np_models[[nm]], type = "response"),
+                        quiet = TRUE)
+  np_cis[[nm]] <- ci.auc(np_rocs[[nm]], quiet = TRUE)
+}
+
+# DeLong test on non-promoter subset
+np_delong <- roc.test(
+  np_rocs[["DNMT3A recruitment"]],
+  np_rocs[["TET impediment"]],
+  method = "delong"
+)
+
+cat("  Non-promoter model comparison:\n")
+for (nm in names(np_models)) {
+  cat(sprintf("    %-22s AUC=%.3f [%.3f, %.3f]  AIC=%.1f  R2=%.4f\n",
+              paste0(nm, ":"),
+              auc(np_rocs[[nm]]), np_cis[[nm]][1], np_cis[[nm]][3],
+              AIC(np_models[[nm]]), np_mcfadden(np_models[[nm]])))
+}
+cat(sprintf("  DeLong (non-promoter, DNMT3A vs TET): %s\n",
+            fmt_p(np_delong$p.value)))
+
+# Non-promoter K119ub coefficient direction
+np_full_z_data <- nonprom %>%
+  dplyr::mutate(dplyr::across(
+    all_of(predictor_cols),
+    ~ as.numeric(scale(.x)),
+    .names = "{.col}_z"
+  ))
+np_full_z <- glm(
+  hyper_dmr ~ k119ub_z + atac_count_z + cpg_density_z +
+    baseline_mc_z + baseline_hmc_z + log_gene_length_z + log_expression_z,
+  data = np_full_z_data, family = binomial
+)
+np_k119ub_beta <- coef(np_full_z)["k119ub_z"]
+cat(sprintf("  Non-promoter K119ub standardized beta: %.3f (vs All: %.3f)\n",
+            np_k119ub_beta, full_z_coefs["k119ub_z"]))
+
+# --- Figure 24h: Stratified model comparison ---
+cat("\n--- Figure 24h: Stratified model comparison ---\n")
+
+# Build combined comparison data
+strat_df <- rbind(
+  data.frame(
+    model = factor(names(MODEL_COLORS), levels = names(MODEL_COLORS)),
+    stratum = "All genes",
+    auc = sapply(roc_list, function(r) as.numeric(auc(r))),
+    auc_lower = sapply(ci_list, function(c) c[1]),
+    auc_upper = sapply(ci_list, function(c) c[3]),
+    stringsAsFactors = FALSE, row.names = NULL
+  ),
+  data.frame(
+    model = factor(names(MODEL_COLORS), levels = names(MODEL_COLORS)),
+    stratum = "Non-promoter",
+    auc = sapply(np_rocs, function(r) as.numeric(auc(r))),
+    auc_lower = sapply(np_cis, function(c) c[1]),
+    auc_upper = sapply(np_cis, function(c) c[3]),
+    stringsAsFactors = FALSE, row.names = NULL
+  )
+)
+strat_df$stratum <- factor(strat_df$stratum,
+                           levels = c("All genes", "Non-promoter"))
+
+# Left panel: AUC comparison
+p_24h_left <- ggplot(strat_df,
+                     aes(x = model, y = auc,
+                         color = stratum, group = stratum)) +
+  geom_point(size = 3, position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = auc_lower, ymax = auc_upper),
+                width = 0.2, linewidth = 0.7,
+                position = position_dodge(width = 0.5)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey50") +
+  scale_color_manual(
+    values = c("All genes" = "#333333", "Non-promoter" = "#E66100"),
+    name = "Subset"
+  ) +
+  labs(title = "AUC by Subset", x = NULL, y = "AUC (95% CI)") +
+  theme_biomodal() +
+  theme(axis.text.x = element_text(angle = 25, hjust = 1, size = 9),
+        legend.position = "bottom")
+
+# Right panel: top feature importance comparison
+np_z_coefs <- coef(np_full_z)[-1]
+all_z_coefs <- full_z_coefs[-1]
+
+importance_cmp <- data.frame(
+  feature = gsub("_z$", "", names(all_z_coefs)),
+  stringsAsFactors = FALSE
+) %>%
+  dplyr::mutate(
+    display_name = display_names[feature],
+    all_beta = as.numeric(all_z_coefs),
+    np_beta = as.numeric(np_z_coefs[paste0(feature, "_z")])
+  ) %>%
+  tidyr::pivot_longer(
+    cols = c(all_beta, np_beta),
+    names_to = "stratum", values_to = "beta"
+  ) %>%
+  dplyr::mutate(
+    stratum = ifelse(stratum == "all_beta", "All genes", "Non-promoter"),
+    stratum = factor(stratum, levels = c("All genes", "Non-promoter"))
+  )
+
+p_24h_right <- ggplot(importance_cmp,
+                      aes(x = beta, y = reorder(display_name, abs(beta)),
+                          fill = stratum)) +
+  geom_col(position = position_dodge(width = 0.7),
+           alpha = 0.8, width = 0.6) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  scale_fill_manual(
+    values = c("All genes" = "#333333", "Non-promoter" = "#E66100"),
+    name = "Subset"
+  ) +
+  labs(title = "Standardized Betas (Full Model)",
+       x = "Standardized beta", y = NULL) +
+  theme_biomodal() +
+  theme(legend.position = "bottom")
+
+np_delong_label <- sprintf(
+  "Non-promoter DeLong: %s\nAll genes: N=%s, Non-promoter: N=%s",
+  fmt_p(np_delong$p.value),
+  format(nrow(model_data), big.mark = ","),
+  format(nrow(nonprom), big.mark = ",")
+)
+
+p_24h <- (p_24h_left | p_24h_right) +
+  plot_annotation(
+    title = "Model Performance: All Genes vs Non-Promoter Subset",
+    subtitle = np_delong_label,
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 11)
+    )
+  )
+
+save_multiformat_ggplot(
+  p_24h, file.path(OUTPUT_DIR, "24h_stratified_comparison"), 15, 9
+)
+
+# Export stratified comparison table
+strat_export <- data.frame(
+  model = rep(names(models_list), 2),
+  stratum = rep(c("All genes", "Non-promoter"), each = 5),
+  n_genes = c(rep(nrow(model_data), 5), rep(nrow(nonprom), 5)),
+  n_hyper = c(rep(sum(model_data$hyper_dmr), 5),
+              rep(sum(nonprom$hyper_dmr), 5)),
+  auc = c(sapply(roc_list, function(r) as.numeric(auc(r))),
+          sapply(np_rocs, function(r) as.numeric(auc(r)))),
+  auc_ci_lower = c(sapply(ci_list, function(c) c[1]),
+                   sapply(np_cis, function(c) c[1])),
+  auc_ci_upper = c(sapply(ci_list, function(c) c[3]),
+                   sapply(np_cis, function(c) c[3])),
+  aic = c(sapply(models_list, AIC),
+          sapply(np_models, AIC)),
+  mcfadden_r2 = c(sapply(models_list, mcfadden),
+                  sapply(np_models, np_mcfadden)),
+  stringsAsFactors = FALSE, row.names = NULL
+)
+
+write.table(strat_export,
+            file.path(TABLES_DIR, "dnmt3a_stratified_comparison.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("  Saved dnmt3a_stratified_comparison.tsv (%d rows)\n",
+            nrow(strat_export)))
+
+# =============================================================================
+# STEP 8: K119ub x BASELINE 5hmC INTERACTION
+# =============================================================================
+
+cat("\n--- Step 8: K119ub x baseline 5hmC interaction ---\n")
+
+# Fit interaction model
+model_interact <- glm(
+  hyper_dmr ~ k119ub * baseline_hmc + atac_count + cpg_density +
+    baseline_mc + log_gene_length + log_expression,
+  data = model_data, family = binomial
+)
+
+# Standardized interaction model
+model_interact_z <- glm(
+  hyper_dmr ~ k119ub_z * baseline_hmc_z + atac_count_z + cpg_density_z +
+    baseline_mc_z + log_gene_length_z + log_expression_z,
+  data = model_data_z, family = binomial
+)
+
+# Interaction term statistics
+interact_coefs <- summary(model_interact)$coefficients
+interact_z_coefs <- summary(model_interact_z)$coefficients
+
+interact_term <- "k119ub:baseline_hmc"
+interact_z_term <- "k119ub_z:baseline_hmc_z"
+
+interact_or <- exp(coef(model_interact)[interact_term])
+interact_ci <- exp(confint.default(model_interact)[interact_term, ])
+interact_p <- interact_coefs[interact_term, 4]
+
+interact_z_beta <- coef(model_interact_z)[interact_z_term]
+interact_z_p <- interact_z_coefs[interact_z_term, 4]
+
+cat(sprintf("  Interaction term (k119ub:baseline_hmc):\n"))
+cat(sprintf("    Raw OR = %.3f [%.3f, %.3f], %s\n",
+            interact_or, interact_ci[1], interact_ci[2],
+            fmt_p(interact_p)))
+cat(sprintf("    Standardized beta = %.3f, %s\n",
+            interact_z_beta, fmt_p(interact_z_p)))
+
+# ROC/AUC for interaction model
+roc_interact <- roc(model_data$hyper_dmr,
+                    predict(model_interact, type = "response"),
+                    quiet = TRUE)
+ci_interact <- ci.auc(roc_interact, quiet = TRUE)
+cat(sprintf("    AUC = %.3f [%.3f, %.3f]  AIC = %.1f\n",
+            auc(roc_interact), ci_interact[1], ci_interact[3],
+            AIC(model_interact)))
+
+# LR test: interaction model vs full model (nested)
+lr_interact <- -2 * (as.numeric(logLik(model_full)) -
+                      as.numeric(logLik(model_interact)))
+lr_interact_p <- pchisq(lr_interact, df = 1, lower.tail = FALSE)
+cat(sprintf("    LR test vs Full model: chi2=%.2f, df=1, %s\n",
+            lr_interact, fmt_p(lr_interact_p)))
+
+# Tertile-stratified K119ub effect
+model_data$hmc_tertile <- cut(
+  model_data$baseline_hmc,
+  breaks = quantile(model_data$baseline_hmc, probs = c(0, 1/3, 2/3, 1)),
+  labels = c("Low 5hmC", "Mid 5hmC", "High 5hmC"),
+  include.lowest = TRUE
+)
+
+tertile_results <- list()
+for (tert in levels(model_data$hmc_tertile)) {
+  tert_data <- model_data %>% dplyr::filter(hmc_tertile == tert)
+  tert_fit <- glm(hyper_dmr ~ k119ub, data = tert_data, family = binomial)
+  tert_or_info <- extract_or(tert_fit)
+  tert_roc <- roc(tert_data$hyper_dmr,
+                  predict(tert_fit, type = "response"), quiet = TRUE)
+  tertile_results[[tert]] <- data.frame(
+    tertile = tert,
+    n = nrow(tert_data),
+    n_hyper = sum(tert_data$hyper_dmr),
+    k119ub_or = tert_or_info$or[2],
+    k119ub_or_lower = tert_or_info$or_lower[2],
+    k119ub_or_upper = tert_or_info$or_upper[2],
+    k119ub_p = tert_or_info$p_value[2],
+    auc = as.numeric(auc(tert_roc)),
+    stringsAsFactors = FALSE
+  )
+}
+tertile_df <- do.call(rbind, tertile_results)
+rownames(tertile_df) <- NULL
+
+cat("\n  Per-tertile K119ub effect:\n")
+for (i in seq_len(nrow(tertile_df))) {
+  cat(sprintf("    %-12s OR=%.3f [%.3f, %.3f] %s (n=%d, AUC=%.3f)\n",
+              paste0(tertile_df$tertile[i], ":"),
+              tertile_df$k119ub_or[i],
+              tertile_df$k119ub_or_lower[i],
+              tertile_df$k119ub_or_upper[i],
+              fmt_p(tertile_df$k119ub_p[i]),
+              tertile_df$n[i],
+              tertile_df$auc[i]))
+}
+
+# --- Figure 24i: Interaction visualization ---
+cat("\n--- Figure 24i: K119ub x baseline 5hmC interaction ---\n")
+
+# Left panel: predicted probability curves by 5hmC tertile
+# Generate prediction grid
+k119ub_range <- seq(
+  min(model_data$k119ub), max(model_data$k119ub), length.out = 200
+)
+
+# Median values for other predictors
+median_vals <- model_data %>%
+  dplyr::summarise(dplyr::across(
+    c(atac_count, cpg_density, baseline_mc,
+      log_gene_length, log_expression),
+    median
+  ))
+
+# Tertile median 5hmC values
+hmc_medians <- model_data %>%
+  dplyr::group_by(hmc_tertile) %>%
+  dplyr::summarise(baseline_hmc = median(baseline_hmc), .groups = "drop")
+
+pred_grid <- expand.grid(
+  k119ub = k119ub_range,
+  hmc_tertile = levels(model_data$hmc_tertile),
+  stringsAsFactors = FALSE
+) %>%
+  dplyr::left_join(hmc_medians, by = "hmc_tertile") %>%
+  dplyr::mutate(
+    atac_count = median_vals$atac_count,
+    cpg_density = median_vals$cpg_density,
+    baseline_mc = median_vals$baseline_mc,
+    log_gene_length = median_vals$log_gene_length,
+    log_expression = median_vals$log_expression
+  )
+
+pred_grid$pred_prob <- predict(model_interact,
+                               newdata = pred_grid, type = "response")
+
+tertile_colors <- c(
+  "Low 5hmC" = "#2C7BB6", "Mid 5hmC" = "#ABD9E9", "High 5hmC" = "#D7191C"
+)
+
+interact_annot <- sprintf(
+  "Interaction: %s\nbeta(z) = %.3f",
+  fmt_p(interact_p), interact_z_beta
+)
+
+p_24i_left <- ggplot(pred_grid,
+                     aes(x = k119ub, y = pred_prob,
+                         color = hmc_tertile)) +
+  geom_line(linewidth = 1.2) +
+  scale_color_manual(values = tertile_colors,
+                     name = "Baseline 5hmC Tertile") +
+  annotate("text", x = Inf, y = Inf, hjust = 1.1, vjust = 1.5,
+           size = 3.5, label = interact_annot) +
+  labs(
+    title = "Predicted P(hyper-DMR) by K119ub",
+    subtitle = "Interaction model, at tertile-median 5hmC",
+    x = "WT H2AK119ub Gene Body Signal",
+    y = "P(mC Hyper-DMR)"
+  ) +
+  theme_biomodal() +
+  theme(legend.position = "bottom")
+
+# Right panel: forest plot of per-tertile K119ub OR
+tertile_df$tertile <- factor(tertile_df$tertile,
+                             levels = rev(levels(model_data$hmc_tertile)))
+tertile_df$or_label <- sapply(seq_len(nrow(tertile_df)), function(i) {
+  sprintf("OR=%.2f\n%s", tertile_df$k119ub_or[i], fmt_p(tertile_df$k119ub_p[i]))
+})
+
+p_24i_right <- ggplot(tertile_df,
+                      aes(x = k119ub_or, y = tertile)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey50") +
+  geom_errorbar(aes(xmin = k119ub_or_lower, xmax = k119ub_or_upper),
+                width = 0.2, linewidth = 0.8, orientation = "y") +
+  geom_point(size = 4, aes(color = tertile)) +
+  geom_text(aes(label = or_label),
+            hjust = -0.15, vjust = 0.5, size = 3) +
+  scale_color_manual(values = tertile_colors) +
+  scale_x_log10() +
+  labs(
+    title = "K119ub OR by 5hmC Tertile",
+    subtitle = "Univariate K119ub effect within each tertile",
+    x = "Odds Ratio (log scale)", y = NULL
+  ) +
+  theme_biomodal() +
+  theme(legend.position = "none")
+
+p_24i <- (p_24i_left | p_24i_right) +
+  plot_annotation(
+    title = "K119ub Effect Modulated by Baseline 5hmC Level",
+    subtitle = sprintf(
+      "Interaction model AUC=%.3f (Full=%.3f); LR test %s",
+      auc(roc_interact), auc(roc_full), fmt_p(lr_interact_p)
+    ),
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 11)
+    )
+  )
+
+save_multiformat_ggplot(
+  p_24i, file.path(OUTPUT_DIR, "24i_interaction_k119ub_hmc"), 15, 8
+)
+
+# Export interaction results table
+interact_export <- rbind(
+  data.frame(
+    term = "Interaction model summary",
+    value = NA_character_,
+    aic = AIC(model_interact),
+    auc = as.numeric(auc(roc_interact)),
+    lr_test_p = lr_interact_p,
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    term = "k119ub:baseline_hmc (raw)",
+    value = sprintf("OR=%.3f [%.3f, %.3f], %s",
+                    interact_or, interact_ci[1], interact_ci[2],
+                    fmt_p(interact_p)),
+    aic = NA_real_, auc = NA_real_, lr_test_p = NA_real_,
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    term = "k119ub_z:baseline_hmc_z (standardized)",
+    value = sprintf("beta=%.3f, %s", interact_z_beta, fmt_p(interact_z_p)),
+    aic = NA_real_, auc = NA_real_, lr_test_p = NA_real_,
+    stringsAsFactors = FALSE
+  )
+)
+
+# Append tertile rows
+for (i in seq_len(nrow(tertile_df))) {
+  interact_export <- rbind(interact_export, data.frame(
+    term = sprintf("K119ub OR in %s tertile", tertile_df$tertile[i]),
+    value = sprintf("OR=%.3f [%.3f, %.3f], %s, n=%d",
+                    tertile_df$k119ub_or[i],
+                    tertile_df$k119ub_or_lower[i],
+                    tertile_df$k119ub_or_upper[i],
+                    fmt_p(tertile_df$k119ub_p[i]),
+                    tertile_df$n[i]),
+    aic = NA_real_,
+    auc = tertile_df$auc[i],
+    lr_test_p = NA_real_,
+    stringsAsFactors = FALSE
+  ))
+}
+
+write.table(interact_export,
+            file.path(TABLES_DIR, "dnmt3a_interaction_results.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("  Saved dnmt3a_interaction_results.tsv (%d rows)\n",
+            nrow(interact_export)))
+
+# =============================================================================
 # SUMMARY
 # =============================================================================
 
@@ -988,8 +1573,46 @@ if (!is.na(k119ub_beta) && k119ub_beta > 0) {
   cat("  May reflect indirect effects or confounding with gene expression.\n")
 }
 
+cat("\n--- Enhancement results ---\n")
+
+cat(sprintf("\n10-Fold Cross-Validation:\n"))
+for (i in seq_len(nrow(cv_summary))) {
+  cat(sprintf("  %-22s CV=%.3f +/- %.3f (optimism=%.3f)\n",
+              paste0(cv_summary$model[i], ":"),
+              cv_summary$cv_mean_auc[i], cv_summary$cv_sd_auc[i],
+              cv_summary$optimism[i]))
+}
+
+cat(sprintf("\nNon-Promoter Stratification:\n"))
+cat(sprintf("  N=%d genes (excl. %d Active_Promoter)\n",
+            nrow(nonprom), nrow(model_data) - nrow(nonprom)))
+cat(sprintf("  K119ub beta: All=%.3f, Non-promoter=%.3f\n",
+            full_z_coefs["k119ub_z"], np_k119ub_beta))
+cat(sprintf("  DeLong (non-prom, DNMT3A vs TET): %s\n",
+            fmt_p(np_delong$p.value)))
+
+cat(sprintf("\nK119ub x 5hmC Interaction:\n"))
+cat(sprintf("  Interaction OR=%.3f, %s\n", interact_or, fmt_p(interact_p)))
+cat(sprintf("  Interaction beta(z)=%.3f, %s\n",
+            interact_z_beta, fmt_p(interact_z_p)))
+for (i in seq_len(nrow(tertile_df))) {
+  cat(sprintf("  %s: K119ub OR=%.3f\n",
+              tertile_df$tertile[i], tertile_df$k119ub_or[i]))
+}
+
+if (interact_p < 0.05 && interact_z_beta > 0) {
+  cat("  SIGNIFICANT POSITIVE interaction: K119ub promotes hyper-DMR\n")
+  cat("  specifically at high-5hmC genes. Supports dual mechanism.\n")
+} else if (interact_p < 0.05 && interact_z_beta < 0) {
+  cat("  SIGNIFICANT NEGATIVE interaction: K119ub effect is even more\n")
+  cat("  negative at high-5hmC genes. Argues against dual mechanism.\n")
+} else {
+  cat("  Non-significant interaction: K119ub effect does not depend\n")
+  cat("  on baseline 5hmC level. No evidence for dual mechanism.\n")
+}
+
 cat("\n--- Output files ---\n")
-cat(sprintf("  Figures: %s/24{a-f}_*/\n", OUTPUT_DIR))
-cat(sprintf("  Tables:  %s/dnmt3a_*.tsv (4 files)\n", TABLES_DIR))
+cat(sprintf("  Figures: %s/24{a-i}_*/\n", OUTPUT_DIR))
+cat(sprintf("  Tables:  %s/dnmt3a_*.tsv (7 files)\n", TABLES_DIR))
 
 cat("\n=== Section 24 complete ===\n")
