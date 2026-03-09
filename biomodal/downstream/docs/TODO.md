@@ -45,6 +45,7 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 | 25 | Delta-Ratio Linear Model Refits (14d) | Refits Section 23/24 logistic models as linear with delta_ratio response; feature importance rank correlation between logistic and linear frameworks |
 | 26 | TET Triple-KO Comparison (14c) | GSE166423 BS/OxBS-seq; absolute attenuation 3.9%, relative 9.8%; QQ slope=0.106; rho=0.217 (57% baseline-driven, residualized=0.092); TET-KO binary (68.6% complete loss) vs BAP1-KO graded (47.9% moderate); 9 figures (26a-26i) + 2 tables |
 | 27 | Methylation x Hi-C Loop Anchor Integration | Lost-loop anchors 2.5x more likely hypermethylated than gained (OR=2.54, p<2.2e-16); K119ub-gained x hyper at anchors OR=1.84; 113 triple-convergence genes; loop direction strongest predictor in logistic model (OR=2.42); GREAT-style mapping; 10 figures (27a-27e) + 7 tables |
+| 28 | Coordinated Q4 Gene Characterization | Q4 (5,708) vs non-Q4 (1,042) across 9 dimensions; all comparisons p<1e-4; Q4 has larger effect sizes, lower expression, less ATAC-up, more K119ub gain, more MeCP2-up, less loop involvement; 1,438 GO terms enriched; 5 figures (28a-28e) + 1 table |
 
 ---
 
@@ -657,6 +658,31 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 
 ---
 
+## 23. Q4 Coordinated Gene Sub-Stratification
+
+**Source:** Section 28 follow-up
+
+**Core question:** Q4 (mC up/hmC dn) contains 5,708 genes — too heterogeneous to treat as a single block. Sub-stratifying by effect size, chromatin state, or expression response could separate primary targets (direct BAP1/TET mechanism) from secondary/downstream effects, and identify which subgroups drive the aggregate statistical signals in Section 28.
+
+### Tasks
+
+- [ ] **23a. Stratify by effect size magnitude.** Split Q4 into tertiles/quartiles by combined_effect (|mc_diff| + |hmc_diff|). Compare top vs bottom quartile across all 9 Section 28 dimensions. Strong-effect genes are more likely direct targets.
+- [ ] **23b. Stratify by chromatin state.** Q4 genes at Bivalent/Repressed promoters (n~686) have a more direct mechanistic link to BAP1 (PRC1 deubiquitinase) than Q4 genes at Active promoters (n~3,950). Compare epigenomic profiles between chromatin state subgroups.
+- [ ] **23c. Stratify by expression response.** Q4 genes with concordant mC up + expression down (functional responders) vs Q4 genes with mC up but no expression change (non-responders). Tests whether methylation gain is functionally consequential or compensated.
+- [ ] **23d. Multivariate clustering within Q4.** Unsupervised clustering (k-means or hierarchical) on the Section 28 master table features to identify natural subgroups without pre-defining the stratification axis.
+
+### Existing resources
+
+- **Section 28 master table:** `plots/visualizations/tables/coordinated_gene_characteristics.tsv` (5,708 Q4 genes with all 9 dimensions)
+- **Section 28 script:** `scripts/viz_sections/section_28_coordinated_mc_hmc_analysis.R`
+
+### Notes
+
+- **Requires expanded cohort (n>=4 per condition)** before sub-group statistical tests are meaningful. With n=2, splitting further reduces power below useful thresholds.
+- Descriptive/exploratory analysis is feasible now but inferential tests should wait for the expanded cohort (TODO Section 10).
+
+---
+
 ## Summary: Priority Order
 
 Based on URS proposal commitments, mechanistic importance, data availability, and FURTHER_ANALYSIS recommendations:
@@ -697,6 +723,7 @@ Based on URS proposal commitments, mechanistic importance, data availability, an
 | **20** | Single-CpG resolution (Section 6) | Yes (HPC) | HPC access |
 | **21** | Developmental timepoint (Section 12) | No (no P12 DUET data) | Lab |
 | **22** | H3K36me2/3 discussion (Section 22) | No data (manuscript task) | Lab / writing |
+| **23** | Q4 sub-stratification (Section 23) | Yes (Section 28 table) | Expanded cohort (Section 10) |
 
 ---
 
