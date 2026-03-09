@@ -340,9 +340,9 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 
 ### Potential Enhancements
 
-- [ ] Add k-fold cross-validation for more robust AUC estimates (current AUCs are in-sample)
-- [ ] Stratified analysis excluding Active_Promoter genes (which dominate at 66.9% hyper-DMR rate) to test whether predictions hold in non-promoter chromatin contexts
-- [ ] Interaction terms (K119ub x baseline_hmc) to test whether K119ub modulates the TET impediment effect — the negative K119ub direction may reverse in high-5hmC genes if dual mechanism applies
+- [x] Add k-fold cross-validation for more robust AUC estimates (current AUCs are in-sample) *(Done: 10-fold stratified CV shows near-zero optimism across all models — Full CV=0.856+/-0.011, TET=0.793+/-0.014, DNMT3A=0.692+/-0.017. Model ranking robust under CV.)*
+- [x] Stratified analysis excluding Active_Promoter genes (which dominate at 66.9% hyper-DMR rate) to test whether predictions hold in non-promoter chromatin contexts *(Done: Non-promoter subset (N=6,596, 29.5% hyper-DMR) — TET still outperforms DNMT3A (p=6.4e-15). K119ub beta becomes even more negative (-1.509 vs -1.035), confirming it is NOT driven by Active_Promoter confounding.)*
+- [x] Interaction terms (K119ub x baseline_hmc) to test whether K119ub modulates the TET impediment effect — the negative K119ub direction may reverse in high-5hmC genes if dual mechanism applies *(Done: Interaction NS (p=0.425, beta=-0.032). K119ub is negative across ALL 5hmC tertiles (OR=0.25-0.46). No evidence for dual mechanism — TET impediment is the dominant explanation.)*
 
 ---
 
