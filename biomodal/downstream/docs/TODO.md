@@ -43,7 +43,7 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 | 23 | Baseline 5hmC Predictor | 5hmC AUC=0.762 >> K119ub AUC=0.592; substrate availability confirmed (rho=-0.586) |
 | 24 | DNMT3A Binding Prediction | TET impediment AUC=0.793 >> DNMT3A recruitment AUC=0.693 (DeLong p<2.2e-16); baseline 5hmC #1 predictor; K119ub negative direction argues against direct UDR recruitment |
 | 25 | Delta-Ratio Linear Model Refits (14d) | Refits Section 23/24 logistic models as linear with delta_ratio response; feature importance rank correlation between logistic and linear frameworks |
-| 26 | TET Triple-KO Comparison (14c) | GSE166423 BS/OxBS-seq; attenuation factor, KS test, per-gene Spearman rho, QQ slope; BAP1-KO shows partial TET impairment |
+| 26 | TET Triple-KO Comparison (14c) | GSE166423 BS/OxBS-seq; absolute attenuation 3.9%, relative 9.8%; QQ slope=0.106; rho=0.217 (57% baseline-driven, residualized=0.092); TET-KO binary (68.6% complete loss) vs BAP1-KO graded (47.9% moderate); 9 figures (26a-26i) + 2 tables |
 
 ---
 
@@ -87,19 +87,35 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 
 ### Tasks
 
-- [ ] **2a. Assign DMR genes to A/B compartments.** Use PC1 eigenvector from Hi-C HOMER analysis (`tad_analysis/all_PC1.txt`, `tad_analysis/diffcompartments.txt`) to classify genomic bins as A (positive PC1) or B (negative PC1). Map each DMR gene to its compartment.
+- [ ] **2a. Assign DMR genes to A/B compartments.** Use PC1 eigenvector from Hi-C HOMER analysis (late timepoint: `tads/tad-pc-analysis/inputs/late/diffPC/all_PC1.txt`) to classify genomic bins as A (positive PC1) or B (negative PC1). Map each DMR gene to its compartment.
 - [ ] **2b. Test compartment enrichment of methylation direction.** Fisher's exact: are hypermethylated genes enriched in A compartment? Are hypomethylated genes enriched in B compartment? This tests the Lopez-Moyado TET-KO phenotype parallel.
 - [ ] **2c. Differential compartment x DMR overlap.** The Hi-C analysis found 44% of the genome shows significant compartment shifts (44,703 regions). Do genes in B-to-A shifted regions show hypermethylation (gained euchromatin + DNMT3A access)?
 - [ ] **2d. Visualization: compartment-stratified methylation effect sizes.** Violin or box plots of mC/hmC change magnitude in A vs B compartment genes, and in stable vs shifted compartment regions.
 
 ### Existing resources
 
-- **PC1/compartment data:** `../../tad_analysis/all_PC1.txt`, `../../tad_analysis/diffcompartments.txt`
-- **Differential compartment analysis:** `../../scripts/compartment_volcano_plot.R` (44,703 significant, 6,462 B->A, 4,184 A->B)
+- **PC1/compartment data (LATE timepoint, bwt2_bam deep-seq, 104,071 regions):**
+  - `../../tads/tad-pc-analysis/inputs/late/diffPC/all_PC1.txt` — Raw PC1 eigenvector, 6 samples (3 ctrl, 3 mut), gene annotations. Positive PC1 = A compartment, negative = B compartment. 25x50kb resolution.
+  - `../../tads/tad-pc-analysis/inputs/late/diffPC/diffcompartments.txt` — Differential PC1 from HOMER `getDiffExpression.pl` with Difference, p-value, adj. p-value columns. Positive Difference = B→A shift (more active in mutant).
+  - `../../tads/tad-pc-analysis/inputs/late/diffPC/regions.Up_mut_vs_ctrl.txt` — B→A shifted regions (full annotations)
+  - `../../tads/tad-pc-analysis/inputs/late/diffPC/regions.Down_mut_vs_ctrl.txt` — A→B shifted regions (full annotations)
+  - `../../tads/tad-pc-analysis/inputs/late/diffPC/corrdiff/` — Per-replicate compartment correlation differences (ctrl_M{1,2,3}_vs_mut_M{1,2,3})
+- **Per-sample PC1 bedGraphs:** `../../tads/tad-pc-analysis/inputs/late/tags/{ctrl,mut}_M{1,2,3}/tagdirs.25x50kb.PC1.{bedGraph,txt}` (12 files)
+- **Differential TAD data (LATE):**
+  - `../../tads/tad-pc-analysis/inputs/late/diffTAD/Bap1.diff.tad.txt` — Differential TAD inclusion ratios
+  - `../../tads/tad-pc-analysis/inputs/late/diffTAD/BAP1.tad.scores.txt` — TAD scores per sample
+  - `../../tads/tad-pc-analysis/inputs/late/diffTAD/merged.tad.2D.bed` — TAD boundaries
+- **Differential compaction (LATE):** `../../tads/tad-pc-analysis/inputs/late/diffcompaction/` — Per-replicate DLR, ICF, PC1 bedGraphs + region-specific (CTCF, H3K27ac, H3K27me3, TSS) histogram/table files
+- **PC-associated regions:** `../../tads/tad-pc-analysis/inputs/late/PC_regions/` — Per-replicate compartment-mark association tables (H3K27ac, H3K27me3, Superenhancers, TSS)
+- **Early timepoint (250831, for comparison):** `../../tads/tad-pc-analysis/inputs/new/` — Same file types, 101,684 regions
+- **Differential compartment analysis script:** `../../scripts/compartment_volcano_plot.R` (ran on early data: 44,703 significant, 6,462 B->A, 4,184 A->B — re-run needed on late data)
 - **Lopez-Moyado framework:** Hypermethylation in A compartment + hypomethylation in B compartment = DNMT3A redistribution signature (docs/urs/methylation-bio-revised-conclusions)
+- **HPC source:** `/expanse/lustre/projects/csd940/ctea/homer/bwt2_bam/` (late timepoint, bowtie2-aligned deep-seq BAMs → HOMER tag dirs → PC1/TAD analysis by ctea)
 
 ### Notes
 
+- The early timepoint PC1 data (250831_bams, in `inputs/new/`) was previously used for compartment volcano plots. The late timepoint data (bwt2_bam, in `inputs/late/`) has ~2.4K more genomic regions (104K vs 101K) due to deeper sequencing.
+- The compartment volcano plot script needs to be re-run on the late timepoint `diffcompartments.txt` to get updated significance counts.
 - If the A/B pattern matches TET-KO, it supports the "convergent mechanisms" interpretation from the revised conclusions.
 - If the pattern does NOT match, it suggests BAP1-mediated mechanism is distinct from direct TET loss, which is also informative.
 
@@ -412,7 +428,7 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 
 - [x] **14a. Compute per-gene demethylation ratio in WT and KO.** For each gene body, calculate 5hmC/(5mC+5hmC) in control and mutant samples. Use modality feature extraction output (mean mC and hmC per gene) or Zarr stores. *Done: Section 22 computes ratio_ctrl and ratio_mut for 20,898 genes. WT median=0.1284, KO median=0.1182. Per-sample ratios also computed from feature extraction TSVs (22h).*
 - [x] **14b. Compute delta-ratio per gene.** KO ratio minus WT ratio. This continuous "demethylation activity score" can replace or supplement the binary coordinated/discordant classification in downstream models (Sections 1, 3, 8, 11). *Done: Section 22 exports `demethylation_ratio_all_genes.tsv` (20,898 genes with delta_ratio). 72.5% genes decreased. Cliff's delta=0.455 (medium). Figures 22a-22h produced.*
-- [x] **14c. Compare WT ratio distribution to published TET-KO data.** If the BAP1-KO ratio shift phenocopies direct TET loss (e.g., Rao lab data, Lopez-Moyado et al. 2019), that is a strong claim for convergent mechanisms. If the shift pattern differs, BAP1 is working through a distinct pathway. *Done: Section 26 implements formal quantitative comparison using GSE166423 TET triple-KO BS/OxBS-seq bigWigs. Pipeline: download_tet_ko_data.sb -> preprocess_tet_ko_bigwig.R -> section_26_tet_ko_comparison.R. Computes attenuation factor (BAP1/TET median deltas), KS test, per-gene Spearman rho, QQ slope, Cliff's delta/Cohen's d comparison, and chromatin-stratified paired Wilcoxon tests. 6 figures (26a-26f) + 2 tables.*
+- [x] **14c. Compare WT ratio distribution to published TET-KO data.** If the BAP1-KO ratio shift phenocopies direct TET loss (e.g., Rao lab data, Lopez-Moyado et al. 2019), that is a strong claim for convergent mechanisms. If the shift pattern differs, BAP1 is working through a distinct pathway. *Done: Section 26 implements formal quantitative comparison using GSE166423 TET triple-KO BS/OxBS-seq bigWigs. Pipeline: download_tet_ko_data.sb -> preprocess_tet_ko_bigwig.R -> section_26_tet_ko_comparison.R. Key results: absolute attenuation 3.9% (QQ slope=0.106), relative attenuation 9.8% after baseline normalization; per-gene Spearman rho=0.217 but variance decomposition shows 57% was baseline-driven (residualized rho=0.092); TET-KO shows binary response (68.6% complete loss, 27.0% no signal) vs BAP1-KO graded (1.4% strong, 47.9% moderate, 50.7% weak). Supports indirect TET blockade model: BAP1-KO impairs TET access (graded dimmer) rather than eliminating TET activity (binary switch). 9 figures (26a-26i) + 2 tables (37-row summary TSV).*
 - [x] **14d. Use delta-ratio as primary response variable.** Refit key models (baseline 5hmC predictor in Section 3, expression-methylation model in Section 8, DNMT3A prediction in Section 11) using the ratio instead of separate mC/hmC metrics. *Done: Section 25 refits all key models from Sections 23 and 24 using delta_ratio as continuous linear response. Section 23 refits: 3 linear models (baseline 5hmC, K119ub, combined) with R² vs AUC comparison. Section 24 refits: 4 linear models (Full, DNMT3A recruitment, TET impediment, K119ub only) with feature importance rank correlation between logistic and linear betas. Includes residual diagnostics, predicted vs observed scatter. 6 figures (25a-25f) + 4 tables. Previously done: Section 8 decile GO/KEGG (08e-08h), Section 11 MeCP2 regression (11f-11g).*
 
 ### Existing resources
