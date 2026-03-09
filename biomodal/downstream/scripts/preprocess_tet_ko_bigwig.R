@@ -120,15 +120,20 @@ if (output_dir != "" && output_dir != ".") {
 
 cat("Loading gene coordinates from GENCODE vM25 BED...\n")
 
-gene_bed <- read.table(gzfile(params$gene_bed), header = FALSE, sep = "\t",
-                       stringsAsFactors = FALSE, comment.char = "#")
+# This BED has a header row (Chromosome, Start, End, Annotation, Name)
+# and chromosomes without "chr" prefix
+gene_bed <- read.table(gzfile(params$gene_bed), header = TRUE, sep = "\t",
+                       stringsAsFactors = FALSE)
 cat(sprintf("  Read %d rows from BED file\n", nrow(gene_bed)))
 
-# BED format: chr, start (0-based), end, gene_name, ...
+# Add chr prefix to match bigWig chromosome names
+gene_bed$Chromosome <- paste0("chr", gene_bed$Chromosome)
+
+# Columns: Chromosome, Start (0-based), End, Annotation, Name
 gene_gr <- GRanges(
-  seqnames = gene_bed$V1,
-  ranges = IRanges(start = gene_bed$V2 + 1, end = gene_bed$V3),
-  gene = gene_bed$V4
+  seqnames = gene_bed$Chromosome,
+  ranges = IRanges(start = gene_bed$Start + 1, end = gene_bed$End),
+  gene = gene_bed$Name
 )
 
 # Standard chromosomes only, minimum gene length, deduplicate
