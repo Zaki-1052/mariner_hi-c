@@ -40,6 +40,8 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 | 20 | Expression Integration | mC vs log2FC scatter, expression outcome bars |
 | 21 | Discordant Gene Characterization | 4-quadrant analysis, composite panels |
 | 22 | Demethylation Efficiency Ratio | 72.5% genes show decreased 5hmC/(5mC+5hmC); Cliff's delta=0.455 (medium); Active_Promoter most affected (med=-0.030) |
+| 23 | Baseline 5hmC Predictor | 5hmC AUC=0.762 >> K119ub AUC=0.592; substrate availability confirmed (rho=-0.586) |
+| 24 | DNMT3A Binding Prediction | TET impediment AUC=0.793 >> DNMT3A recruitment AUC=0.693 (DeLong p<2.2e-16); baseline 5hmC #1 predictor; K119ub negative direction argues against direct UDR recruitment |
 
 ---
 
@@ -109,10 +111,10 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 
 ### Tasks
 
-- [ ] **3a. Extract per-gene WT 5hmC levels.** From the Zarr stores or modality output, obtain mean 5hmC fraction per gene body in control samples.
-- [ ] **3b. Logistic regression: DMR status ~ WT 5hmC level.** Binary outcome (significant hmC DMR vs not), predictor is baseline 5hmC. If baseline 5hmC is a strong predictor, supports substrate availability model.
-- [ ] **3c. Compare predictive power: WT 5hmC vs K119ub.** Run competing models: (a) DMR ~ WT 5hmC, (b) DMR ~ K119ub signal, (c) DMR ~ both. AIC comparison. Section 18 already showed K119ub is a weak gene-specific predictor (Cliff's delta 0.089); if 5hmC is stronger, it confirms the revised conclusions.
-- [ ] **3d. Dose-response visualization.** Scatter plot of WT 5hmC level (x) vs magnitude of hmC change (y), colored by DMR significance. Expect negative correlation (high baseline = more loss).
+- [x] **3a. Extract per-gene WT 5hmC levels.** From the Zarr stores or modality output, obtain mean 5hmC fraction per gene body in control samples. *(Done: section_23, averaged ctrl-M + ctrl-F regional-frac, 20,947 genes)*
+- [x] **3b. Logistic regression: DMR status ~ WT 5hmC level.** Binary outcome (significant hmC DMR vs not), predictor is baseline 5hmC. If baseline 5hmC is a strong predictor, supports substrate availability model. *(Done: Model A AUC=0.762, OR=663K, p<2.2e-16)*
+- [x] **3c. Compare predictive power: WT 5hmC vs K119ub.** Run competing models: (a) DMR ~ WT 5hmC, (b) DMR ~ K119ub signal, (c) DMR ~ both. AIC comparison. Section 18 already showed K119ub is a weak gene-specific predictor (Cliff's delta 0.089); if 5hmC is stronger, it confirms the revised conclusions. *(Done: 5hmC AUC=0.762 >> K119ub AUC=0.592; combined AUC=0.800; R² 6x larger for 5hmC)*
+- [x] **3d. Dose-response visualization.** Scatter plot of WT 5hmC level (x) vs magnitude of hmC change (y), colored by DMR significance. Expect negative correlation (high baseline = more loss). *(Done: Spearman rho=-0.586, p<2.2e-16, confirms substrate availability)*
 
 ### Existing resources
 
@@ -318,10 +320,10 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 
 ### Tasks
 
-- [ ] **11a. Build feature matrix per gene.** For each gene body: H2AK119ub signal (from bigwig), ATAC accessibility, CpG density, baseline 5mC, baseline 5hmC, gene length, expression level.
-- [ ] **11b. Train logistic regression: hypermethylated DMR ~ features.** Binary outcome (significant mC-up DMR vs not), predictors from 11a. Report feature importance and model performance (AUC).
-- [ ] **11c. Test DNMT3A-UDR predictions.** If the model works: H2AK119ub + accessibility should be the strongest predictors (DNMT3A recruited by ubiquitin to accessible chromatin). If H2AK119ub alone is sufficient, supports direct recruitment. If accessibility alone suffices, suggests DNMT3A access rather than recruitment.
-- [ ] **11d. Cross-validate with TET impediment model.** Compare predictive power of "DNMT3A recruitment features" (K119ub, accessibility, CpG density) vs "TET impediment features" (baseline 5hmC, chromatin compaction) for hypermethylation.
+- [x] **11a. Build feature matrix per gene.** For each gene body: H2AK119ub signal (from bigwig), ATAC accessibility, CpG density, baseline 5mC, baseline 5hmC, gene length, expression level. *(Done: section_24, 11,936 genes with all 7 features after inner join cascade; 46.2% hyper-DMR)*
+- [x] **11b. Train logistic regression: hypermethylated DMR ~ features.** Binary outcome (significant mC-up DMR vs not), predictors from 11a. Report feature importance and model performance (AUC). *(Done: 5 models — Full AUC=0.857, DNMT3A recruitment AUC=0.693, TET impediment AUC=0.793, K119ub only AUC=0.645, Stepwise AUC=0.857. Random forest also fitted (OOB error 20.8%))*
+- [x] **11c. Test DNMT3A-UDR predictions.** If the model works: H2AK119ub + accessibility should be the strongest predictors (DNMT3A recruited by ubiquitin to accessible chromatin). If H2AK119ub alone is sufficient, supports direct recruitment. If accessibility alone suffices, suggests DNMT3A access rather than recruitment. *(Done: K119ub is a NEGATIVE predictor (beta=-1.035), meaning genes with MORE K119ub are LESS likely to be hypermethylated. Baseline 5hmC is the strongest positive predictor (beta=+1.267). RF confirms: baseline_hmc #1, k119ub #2. This argues against direct DNMT3A-UDR recruitment as primary mechanism.)*
+- [x] **11d. Cross-validate with TET impediment model.** Compare predictive power of "DNMT3A recruitment features" (K119ub, accessibility, CpG density) vs "TET impediment features" (baseline 5hmC, chromatin compaction) for hypermethylation. *(Done: DeLong test p<2.2e-16 — TET impediment (AUC=0.793) significantly outperforms DNMT3A recruitment (AUC=0.693). Supports TET blockade as primary mechanism.)*
 
 ### Existing resources
 
@@ -335,6 +337,12 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 - This is feasible even with n=2 because it is a cross-sectional feature prediction (not differential testing).
 - The Chen et al. (2024) cryo-EM structures showing DNMT3A UDR bidentate interaction with H2AK119ub and nucleosome acidic patch provide the structural basis.
 - Consider using a random forest or gradient boosting for feature importance ranking in addition to logistic regression.
+
+### Potential Enhancements
+
+- [ ] Add k-fold cross-validation for more robust AUC estimates (current AUCs are in-sample)
+- [ ] Stratified analysis excluding Active_Promoter genes (which dominate at 66.9% hyper-DMR rate) to test whether predictions hold in non-promoter chromatin contexts
+- [ ] Interaction terms (K119ub x baseline_hmc) to test whether K119ub modulates the TET impediment effect — the negative K119ub direction may reverse in high-5hmC genes if dual mechanism applies
 
 ---
 
