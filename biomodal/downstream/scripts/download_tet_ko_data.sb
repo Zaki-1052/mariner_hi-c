@@ -1,0 +1,157 @@
+#!/bin/bash
+#SBATCH --job-name=tet_ko_download
+#SBATCH --output=logs/tet_ko_download_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=16G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+echo "========================================="
+echo "TET Triple-KO Data Download (GSE166423)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+# GSE166423: "5-hydroxymethylcytosine is required for terminal differentiation
+# of Purkinje neurons" — Purkinje cell OxBS/BS-seq from WT and TET TKO mice (P56)
+#
+# Relevant samples (P56 adult):
+#   WT OxBS-Seq:  GSM5070963, GSM5070964 (2 replicates)
+#   WT BS-Seq:    GSM5070969, GSM5070970 (2 replicates)
+#   TKO OxBS-Seq: GSM5070971 (1 replicate, Pcp2-Cre conditional)
+#   TKO BS-Seq:   GSM5070972 (1 replicate, Pcp2-Cre conditional)
+#
+# Note: TET-TKO has n=1 per assay. Purkinje neurons (not bulk cerebellum).
+
+# Configuration
+OUTPUT_DIR="/expanse/lustre/projects/csd940/zalibhai/biomodal/tet_ko_comparison"
+
+echo "Configuration:"
+echo "  Output dir: ${OUTPUT_DIR}"
+echo ""
+
+mkdir -p "${OUTPUT_DIR}"
+cd "${OUTPUT_DIR}"
+
+# =========================================================================
+# STEP 1: Download RAW tar (small — check for processed per-gene tables)
+# =========================================================================
+
+echo "--- Step 1: Downloading RAW supplementary files (1.2 MB) ---"
+
+RAW_URL="https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE166423&format=file"
+echo "  URL: ${RAW_URL}"
+wget -q --show-progress -O GSE166423_RAW.tar "${RAW_URL}"
+
+if [ ! -s GSE166423_RAW.tar ]; then
+    echo "ERROR: Failed to download RAW tar"
+    exit 1
+fi
+echo "  Size: $(du -h GSE166423_RAW.tar | cut -f1)"
+
+echo ""
+echo "  Extracting..."
+mkdir -p raw_files
+tar xf GSE166423_RAW.tar -C raw_files/
+
+echo ""
+echo "  RAW contents:"
+ls -lh raw_files/
+
+echo ""
+echo "  Inspecting file headers (checking for per-gene processed tables):"
+for f in raw_files/*; do
+    echo ""
+    echo "    === $(basename $f) ==="
+    if [[ "$f" == *.gz ]]; then
+        echo "    (first 5 lines, decompressed):"
+        zcat "$f" 2>/dev/null | head -5 || echo "    (binary or unreadable)"
+        echo "    (line count):"
+        zcat "$f" 2>/dev/null | wc -l || echo "    (unknown)"
+    else
+        echo "    (first 5 lines):"
+        head -5 "$f" 2>/dev/null || echo "    (binary or unreadable)"
+    fi
+done
+
+echo ""
+echo "  *** DECISION POINT ***"
+echo "  If RAW files contain per-gene 5mC/5hmC values, bigWig download may be unnecessary."
+echo "  Inspect the output above before proceeding."
+echo ""
+
+# =========================================================================
+# STEP 2: Download BigWig archive (1.6 GB)
+# =========================================================================
+
+echo "--- Step 2: Downloading OxBS/BS-Seq bigWig archive (1.6 GB) ---"
+
+# Primary: NCBI GEO HTTP download
+BW_URL="https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE166423&format=file&file=GSE166423%5FOxBS%2DSeq%5FBS%2DSeq%5FbigWigs%2Etar%2Egz"
+echo "  URL: ${BW_URL}"
+wget -q --show-progress -O GSE166423_bigWigs.tar.gz "${BW_URL}"
+
+if [ ! -s GSE166423_bigWigs.tar.gz ]; then
+    echo "  Primary URL failed, trying FTP..."
+    BW_FTP="ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE166nnn/GSE166423/suppl/GSE166423_OxBS-Seq_BS-Seq_bigWigs.tar.gz"
+    wget -q --show-progress -O GSE166423_bigWigs.tar.gz "${BW_FTP}"
+fi
+
+if [ ! -s GSE166423_bigWigs.tar.gz ]; then
+    echo "ERROR: Failed to download bigWig archive from both URLs"
+    echo "  Manual download: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE166423"
+    exit 1
+fi
+echo "  Size: $(du -h GSE166423_bigWigs.tar.gz | cut -f1)"
+
+echo ""
+echo "  Extracting..."
+mkdir -p bigwigs
+tar xzf GSE166423_bigWigs.tar.gz -C bigwigs/
+
+echo ""
+echo "  Extracted bigWig files (sorted by name):"
+find bigwigs/ -type f \( -name "*.bw" -o -name "*.bigwig" -o -name "*.bigWig" \) | sort | while read f; do
+    echo "    $(du -h "$f" | cut -f1)  $(basename "$f")"
+done
+
+echo ""
+echo "  All extracted files (including subdirectories):"
+find bigwigs/ -type f | sort | while read f; do
+    echo "    $(du -h "$f" | cut -f1)  ${f}"
+done
+
+# =========================================================================
+# STEP 3: Catalog for preprocessing
+# =========================================================================
+
+echo ""
+echo "========================================="
+echo "DOWNLOAD COMPLETE"
+echo "========================================="
+echo ""
+echo "Disk usage:"
+du -sh "${OUTPUT_DIR}"
+echo ""
+echo "You need to identify 4 bigWig files for preprocessing:"
+echo "  1. BS-WT   (P56 WT BS-Seq — GSM5070969/GSM5070970, 2 reps)"
+echo "  2. OxBS-WT (P56 WT OxBS-Seq — GSM5070963/GSM5070964, 2 reps)"
+echo "  3. BS-KO   (P56 TET-TKO BS-Seq — GSM5070972, 1 rep)"
+echo "  4. OxBS-KO (P56 TET-TKO OxBS-Seq — GSM5070971, 1 rep)"
+echo ""
+echo "If WT has 2 separate bigWigs per assay, either:"
+echo "  a) Average them in preprocess_tet_ko_bigwig.R (--bs-wt-rep1 / --bs-wt-rep2)"
+echo "  b) Use bigWigMerge to merge before preprocessing"
+echo ""
+echo "Next steps:"
+echo "  1. Inspect filenames above to match GSM IDs to bigWig files"
+echo "  2. Run preprocess_tet_ko_bigwig.R with correct paths"
+echo ""
+echo "End time: $(date)"
+echo "========================================="
