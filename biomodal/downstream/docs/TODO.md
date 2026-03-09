@@ -46,6 +46,7 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 | 26 | TET Triple-KO Comparison (14c) | GSE166423 BS/OxBS-seq; absolute attenuation 3.9%, relative 9.8%; QQ slope=0.106; rho=0.217 (57% baseline-driven, residualized=0.092); TET-KO binary (68.6% complete loss) vs BAP1-KO graded (47.9% moderate); 9 figures (26a-26i) + 2 tables |
 | 27 | Methylation x Hi-C Loop Anchor Integration | Lost-loop anchors 2.5x more likely hypermethylated than gained (OR=2.54, p<2.2e-16); K119ub-gained x hyper at anchors OR=1.84; 113 triple-convergence genes; loop direction strongest predictor in logistic model (OR=2.42); GREAT-style mapping; 10 figures (27a-27e) + 7 tables |
 | 28 | Coordinated Q4 Gene Characterization | Q4 (5,708) vs non-Q4 (1,042) across 9 dimensions; all comparisons p<1e-4; Q4 has larger effect sizes, lower expression, less ATAC-up, more K119ub gain, more MeCP2-up, less loop involvement; 1,438 GO terms enriched; 5 figures (28a-28e) + 1 table |
+| 29 | A/B Compartment Methylation Mapping | mC hyper enriched in A (OR=14.71, p<2.2e-16); hmC loss enriched in A (OR=9.35); Spearman rho=0.348 (PC1 vs mC diff); B->A shifted bins 3.67x enriched for mC hypo (O/E); supports convergent TET-KO mechanism (DNMT3A redistribution); 7 figures (29a-29g) + 3 tables |
 
 ---
 
@@ -89,10 +90,10 @@ The following are **done** and produce outputs in `plots/visualizations/`:
 
 ### Tasks
 
-- [ ] **2a. Assign DMR genes to A/B compartments.** Use PC1 eigenvector from Hi-C HOMER analysis (late timepoint: `tads/tad-pc-analysis/inputs/late/diffPC/all_PC1.txt`) to classify genomic bins as A (positive PC1) or B (negative PC1). Map each DMR gene to its compartment.
-- [ ] **2b. Test compartment enrichment of methylation direction.** Fisher's exact: are hypermethylated genes enriched in A compartment? Are hypomethylated genes enriched in B compartment? This tests the Lopez-Moyado TET-KO phenotype parallel.
-- [ ] **2c. Differential compartment x DMR overlap.** The Hi-C analysis found 44% of the genome shows significant compartment shifts (44,703 regions). Do genes in B-to-A shifted regions show hypermethylation (gained euchromatin + DNMT3A access)?
-- [ ] **2d. Visualization: compartment-stratified methylation effect sizes.** Violin or box plots of mC/hmC change magnitude in A vs B compartment genes, and in stable vs shifted compartment regions.
+- [x] **2a. Assign DMR genes to A/B compartments.** Use PC1 eigenvector from Hi-C HOMER analysis (late timepoint: `tads/tad-pc-analysis/inputs/late/diffPC/all_PC1.txt`) to classify genomic bins as A (positive PC1) or B (negative PC1). Map each DMR gene to its compartment. *(Done: section_29. Used `diffcompartments.txt` (104,071 bins, LATE timepoint). Control mean PC1 for A/B classification. Deduplicated by closest-to-TSS bin per gene. 22,143 unique genes -> 16,086 matched to DMRs (76.8% match rate). A: 12,347 genes (76.8%), B: 3,739 genes (23.2%).)*
+- [x] **2b. Test compartment enrichment of methylation direction.** Fisher's exact: are hypermethylated genes enriched in A compartment? Are hypomethylated genes enriched in B compartment? This tests the Lopez-Moyado TET-KO phenotype parallel. *(Done: section_29, Step 2. mC hyper -> A enriched: OR=14.71 (12.65-17.20), p<2.2e-16 (43.8% in A vs 5.0% in B). mC hypo -> B enriched: OR=1.67, p<2.2e-16. hmC loss -> A enriched: OR=9.35, p<2.2e-16. All four directional tests significant — strong TET-KO parallel confirmed.)*
+- [x] **2c. Differential compartment x DMR overlap.** The Hi-C analysis found 44% of the genome shows significant compartment shifts (44,703 regions). Do genes in B-to-A shifted regions show hypermethylation (gained euchromatin + DNMT3A access)? *(Done: section_29, Step 3. 629 genes at shifted compartments (427 B->A, 202 A->B). B->A bins show 3.67x enrichment for mC hypomethylation (O/E), opposite to static prediction — these bins are actively losing heterochromatic character. A->B x hyper O/E=1.17. Shift Fisher's tests also computed.)*
+- [x] **2d. Visualization: compartment-stratified methylation effect sizes.** Violin or box plots of mC/hmC change magnitude in A vs B compartment genes, and in stable vs shifted compartment regions. *(Done: section_29, Step 4. 7 figures: 29a/29b violins by A/B, 29c/29d violins by shift, 29e stacked bar DMR direction proportions, 29f PC1 vs mC scatter (Spearman rho=0.348, p<2.2e-16), 29g composite panel. Wilcoxon A vs B: mC p<2.2e-16 (median A: +0.012, B: -0.004), hmC p<2.2e-16.)*
 
 ### Existing resources
 
