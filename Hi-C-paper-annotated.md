@@ -269,6 +269,9 @@
 
 | Item | Status | Path |
 |------|--------|------|
+| **Concordance pie chart (binary)** | ✅ | `abc/results/figures/concordance_pie/concordance_pie_binary/concordance_pie_binary.pdf` |
+| **Concordance pie chart (4-cat)** | ✅ | `abc/results/figures/concordance_pie/concordance_pie_4cat/concordance_pie_4cat.pdf` |
+| **Concordance pie chart (combined)** | ✅ | `abc/results/figures/concordance_pie/concordance_pie_combined/concordance_pie_combined.pdf` |
 | **Concordance bar plot** | ✅ | `abc/results/enhancer_subset_analysis/16_abc_rnaseq_concordance_bar/16_abc_rnaseq_concordance_bar.pdf` |
 | **Discordant composite figure** | ✅ | `abc/results/figures/discordant_analysis/01_discordant_composite/01_discordant_composite.pdf` |
 | **Enhancer agreement** | ✅ | `abc/results/figures/discordant_analysis/02_enhancer_agreement/02_enhancer_agreement.pdf` |

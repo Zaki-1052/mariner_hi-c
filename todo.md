@@ -50,14 +50,13 @@ Items where upstream data exists in this repo but the specific figure/analysis c
 
 ## Figure 4
 
-### TODO 4.1 — Concordance Pie Chart
+### TODO 4.1 — Concordance Pie Chart ✅ DONE
 **Paper panel:** 4B — "Pie chart of concordant vs discordant and of the 4 categories"
-**What's missing:** The existing figure (`abc/results/enhancer_subset_analysis/16_abc_rnaseq_concordance_bar/`) is a bar plot, not a pie chart. The paper specifically requests a pie chart showing concordant vs discordant proportions and the 4 concordance categories.
+**What was missing:** The existing figure was a bar plot, not a pie chart. Discordant composite (9 panels) confirmed to contain no pie chart.
+**Resolution:** Created `scripts/concordance_pie_chart.R`. From 957 dysregulated genes: 619 concordant (64.7%) vs 338 discordant (35.3%). 4-category breakdown: Concordant Down 444 (46.4%), Discordant ABC-up/RNA-down 222 (23.2%), Concordant Up 175 (18.3%), Discordant ABC-down/RNA-up 116 (12.1%). Output: `abc/results/figures/concordance_pie/` — binary pie, 4-category pie, combined dual-panel figure.
 **Upstream data:**
-- `abc/results/enhancer_subset_analysis/abc_rnaseq_concordance_by_class.tsv`
 - `abc/results/discordant_gene_characteristics.tsv`
-- `abc/results/figures/discordant_analysis/01_discordant_composite/01_discordant_composite.pdf` (may already contain a pie — verify)
-**Task:** Generate a pie chart (or dual pie chart) showing: (1) concordant vs discordant proportion out of 957 DEGs, (2) breakdown of the 4 categories (concordant-up, concordant-down, discordant-up-ABC/down-RNA, discordant-down-ABC/up-RNA). May already be in the discordant composite — check before creating new.
+**Reference script:** `scripts/concordance_pie_chart.R`
 
 ### TODO 4.2 — K27ac and ATAC Volcano Plots Within Combined ATAC Peaks
 **Paper panel:** 4C — "Volcano plots for K27ac, ATAC, K119ub within combined ATAC peaks"
