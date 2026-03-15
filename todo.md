@@ -6,9 +6,10 @@ Items where upstream data exists in this repo but the specific figure/analysis c
 
 ## Figure 1
 
-### TODO 1.1 — P13 TAD Volcano Plot
+### TODO 1.1 — P13 TAD Volcano Plot ✅ DONE
 **Paper panel:** 1B — "Volcano plot - Differential TAD IDs at P13 and adult"
-**What's missing:** Adult volcano exists (`tads/tad-pc-analysis/output/tad_analysis/tad_volcano_*.pdf`), but no equivalent P13/early volcano has been generated.
+**What was missing:** Adult volcano exists (`tads/tad-pc-analysis/output/tad_analysis/tad_volcano_*.pdf`), but no equivalent P13/early volcano had been generated.
+**Resolution:** Added TADCompare format auto-detection to `scripts/tad_volcano_plot.R`. P-values derived from Gap_Score Z-scores (`2*pnorm(-|Z|)`, BH FDR). Thresholds adjusted for Z-score scale (|Z|>2.0 relaxed, |Z|>3.0 standard). Output: `tads/tad-pc-analysis/output/tad_analysis_early/` — 23,104 boundaries analyzed; 1,419 significant at standard, 2,950 at relaxed.
 **Upstream data:**
 - `tads/results/early/tadcompare/tadcompare_differential_only.tsv`
 - `tads/results/early/consensus/high_confidence_differential.tsv`

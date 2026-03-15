@@ -5,25 +5,23 @@
 # Date: 2025-11-20 (Updated: 2025-11-24)
 #
 # Purpose:
-#   Generate publication-quality volcano plots from TAD differential expression
-#   analysis performed using getDiffExpression.pl (HOMER/Hi-C).
+#   Generate publication-quality volcano plots from TAD differential analysis.
+#   Supports two input formats:
+#     1. HOMER getDiffExpression.pl output (inclusion ratio differences)
+#     2. TADCompare output (Gap_Score Z-scores, p-values computed internally)
 #
-#   This script creates EnhancedVolcano plots showing TAD inclusion ratio
-#   differences between control and mutant conditions, with significance
-#   testing via adjusted p-values.
+#   Format is auto-detected from column names. Generates TWO threshold versions:
+#   - HOMER:      Relaxed (FDR<0.15, |Diff|>0.15), Standard (FDR<0.05, |Diff|>0.30)
+#   - TADCompare: Relaxed (FDR<0.15, |Z|>2.0),     Standard (FDR<0.05, |Z|>3.0)
 #
-#   Generates TWO versions of the volcano plot:
-#   1. Relaxed thresholds (FDR < 0.15, |Diff| > 0.15) - exploratory analysis
-#   2. Standard thresholds (FDR < 0.05, |Diff| > 0.30) - publication quality
+# Input Formats:
+#   HOMER (getDiffExpression.pl):
+#   - TAD name, chr1, start1, end1, "ctrl vs. mut Difference", p-value, adj. p-value
 #
-# Input Format:
-#   Tab-delimited file from getDiffExpression.pl with columns:
-#   - TAD name (chr:start-end)
-#   - chr1, start1, end1, chr2, start2, end2
-#   - InclusionRatio(IR) and replicate IR values
-#   - "ctrl vs. mut Difference" (effect size, analogous to logFC)
-#   - "ctrl vs. mut p-value" (raw p-value)
-#   - "ctrl vs. mut adj. p-value" (FDR-adjusted, primary significance metric)
+#   TADCompare (tadcompare_final_filtered.tsv):
+#   - chr, Boundary, Gap_Score, TAD_Score1, TAD_Score2, Differential, Enriched_In, Type
+#   - P-values are derived from Gap_Score as Z-scores: 2*pnorm(-|Z|), then BH FDR
+#   - Gap_Score sign convention depends on matrix order in TADCompare call
 #
 # Usage:
 #   Rscript scripts/tad_volcano_plot.R [INPUT_FILE] [OPTIONS]
@@ -73,11 +71,7 @@ custom_title <- NULL
 plot_width <- 10
 plot_height <- 8
 
-# Define threshold sets
-thresholds <- list(
-  relaxed = list(fdr = 0.15, fc = 0.15, name = "relaxed"),
-  standard = list(fdr = 0.05, fc = 0.30, name = "standard")
-)
+# Thresholds and labels are set after format detection (see below)
 
 # Parse arguments
 i <- 1
@@ -111,8 +105,7 @@ if (!file.exists(input_file)) {
 cat(sprintf("Configuration:\n"))
 cat(sprintf("  Input file: %s\n", input_file))
 cat(sprintf("  Output directory: %s\n", output_dir))
-cat(sprintf("  Plot dimensions: %.1f x %.1f inches\n", plot_width, plot_height))
-cat(sprintf("  Threshold sets: relaxed (FDR<0.15, |Diff|>0.15), standard (FDR<0.05, |Diff|>0.30)\n\n"))
+cat(sprintf("  Plot dimensions: %.1f x %.1f inches\n\n", plot_width, plot_height))
 
 # Load required libraries
 cat("Loading required packages...\n")
@@ -149,40 +142,94 @@ cat("Column names in input file:\n")
 print(names(tad_data))
 cat("\n")
 
-# Identify key columns (handle variable naming from getDiffExpression.pl)
-tad_name_col <- names(tad_data)[1]  # First column is TAD name
-difference_col <- grep("ctrl vs\\. mut Difference", names(tad_data), value = TRUE, ignore.case = TRUE)[1]
-pvalue_col <- grep("ctrl vs\\. mut p-value$", names(tad_data), value = TRUE, ignore.case = TRUE)[1]
-adj_pvalue_col <- grep("ctrl vs\\. mut adj\\. p-value", names(tad_data), value = TRUE, ignore.case = TRUE)[1]
+# Auto-detect input format from column names
+col_names <- names(tad_data)
+is_homer <- any(grepl("ctrl vs\\. mut Difference", col_names, ignore.case = TRUE))
+is_tadcompare <- all(c("Gap_Score", "Boundary", "Differential") %in% col_names)
 
-# Validate required columns exist
-if (is.na(difference_col)) {
-  stop("ERROR: Could not find 'ctrl vs. mut Difference' column")
-}
-if (is.na(adj_pvalue_col)) {
-  stop("ERROR: Could not find 'ctrl vs. mut adj. p-value' column")
+if (!is_homer && !is_tadcompare) {
+  stop(sprintf("Unrecognized input format. Expected HOMER or TADCompare columns.\nFound: %s",
+               paste(col_names, collapse = ", ")))
 }
 
-cat(sprintf("Identified key columns:\n"))
-cat(sprintf("  TAD name: %s\n", tad_name_col))
-cat(sprintf("  Difference (effect size): %s\n", difference_col))
-cat(sprintf("  Adjusted p-value: %s\n", adj_pvalue_col))
-cat("\n")
+input_format <- if (is_homer) "homer" else "tadcompare"
+cat(sprintf("Detected input format: %s\n\n", toupper(input_format)))
 
-# Create clean working dataframe with standardized column names
-tad_df <- data.frame(
-  TAD_name = tad_data[[tad_name_col]],
-  chr1 = tad_data$chr1,
-  start1 = tad_data$start1,
-  end1 = tad_data$end1,
-  Difference = as.numeric(tad_data[[difference_col]]),
-  pvalue = if (!is.na(pvalue_col)) as.numeric(tad_data[[pvalue_col]]) else NA,
-  adj_pvalue = as.numeric(tad_data[[adj_pvalue_col]]),
-  stringsAsFactors = FALSE
-)
+if (input_format == "homer") {
+  # === HOMER getDiffExpression.pl format ===
+  tad_name_col <- col_names[1]
+  difference_col <- grep("ctrl vs\\. mut Difference", col_names, value = TRUE, ignore.case = TRUE)[1]
+  pvalue_col <- grep("ctrl vs\\. mut p-value$", col_names, value = TRUE, ignore.case = TRUE)[1]
+  adj_pvalue_col <- grep("ctrl vs\\. mut adj\\. p-value", col_names, value = TRUE, ignore.case = TRUE)[1]
 
-# Calculate TAD size
-tad_df$TAD_size <- tad_df$end1 - tad_df$start1
+  stopifnot("Could not find 'ctrl vs. mut Difference' column" = !is.na(difference_col))
+  stopifnot("Could not find 'ctrl vs. mut adj. p-value' column" = !is.na(adj_pvalue_col))
+
+  cat(sprintf("Identified key columns:\n"))
+  cat(sprintf("  TAD name: %s\n", tad_name_col))
+  cat(sprintf("  Difference (effect size): %s\n", difference_col))
+  cat(sprintf("  Adjusted p-value: %s\n\n", adj_pvalue_col))
+
+  tad_df <- data.frame(
+    TAD_name = tad_data[[tad_name_col]],
+    chr1 = tad_data$chr1,
+    start1 = tad_data$start1,
+    end1 = tad_data$end1,
+    Difference = as.numeric(tad_data[[difference_col]]),
+    pvalue = if (!is.na(pvalue_col)) as.numeric(tad_data[[pvalue_col]]) else NA,
+    adj_pvalue = as.numeric(tad_data[[adj_pvalue_col]]),
+    stringsAsFactors = FALSE
+  )
+  tad_df$TAD_size <- tad_df$end1 - tad_df$start1
+
+  # HOMER thresholds (inclusion ratio difference scale)
+  thresholds <- list(
+    relaxed = list(fdr = 0.15, fc = 0.15, name = "relaxed"),
+    standard = list(fdr = 0.05, fc = 0.30, name = "standard")
+  )
+  x_axis_label <- bquote(bold('Ctrl vs Mut Difference'))
+  analysis_type <- "TAD Inclusion Ratio Analysis"
+  effect_label <- "Difference"
+
+} else {
+  # === TADCompare format ===
+  # Gap_Score is a Z-score; compute p-values and FDR from it
+  stopifnot("TADCompare file missing 'chr' column" = "chr" %in% col_names)
+
+  cat("Computing p-values from Gap_Score Z-scores (BH FDR correction)...\n")
+  pvals <- 2 * pnorm(-abs(tad_data$Gap_Score))
+  adj_pvals <- p.adjust(pvals, method = "BH")
+  cat(sprintf("  FDR range: [%.2e, %.4f]\n\n", min(adj_pvals), max(adj_pvals)))
+
+  # Gap_Score used directly as effect size (Difference)
+  # Sign convention: depends on matrix order in TADCompare call.
+  # For early timepoint (matrices swapped): positive = mutant-enriched.
+  # For standard matrix order: positive = control-enriched (negate with --negate if needed).
+  tad_df <- data.frame(
+    TAD_name = paste0(tad_data$chr, ":", tad_data$Boundary),
+    chr1 = tad_data$chr,
+    start1 = tad_data$Boundary,
+    end1 = tad_data$Boundary,
+    Difference = tad_data$Gap_Score,
+    pvalue = pvals,
+    adj_pvalue = adj_pvals,
+    stringsAsFactors = FALSE
+  )
+  tad_df$TAD_size <- 0
+
+  # TADCompare thresholds (Z-score scale)
+  thresholds <- list(
+    relaxed = list(fdr = 0.15, fc = 2.0, name = "relaxed"),
+    standard = list(fdr = 0.05, fc = 3.0, name = "standard")
+  )
+  x_axis_label <- bquote(bold('Boundary Gap Score'))
+  analysis_type <- "TADCompare Boundary Analysis"
+  effect_label <- "Gap Score"
+}
+
+cat(sprintf("Thresholds: relaxed (FDR<%.2f, |%s|>%.2f), standard (FDR<%.2f, |%s|>%.2f)\n",
+            thresholds$relaxed$fdr, effect_label, thresholds$relaxed$fc,
+            thresholds$standard$fdr, effect_label, thresholds$standard$fc))
 
 # Remove rows with NA values in critical columns
 n_before <- nrow(tad_df)
@@ -215,7 +262,10 @@ cat(sprintf("  -log10(adj. p-value): [%.2f, %.2f]\n\n",
 # =============================================================================
 
 generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_name,
-                                  plot_title_base, output_dir, plot_width, plot_height) {
+                                  plot_title_base, output_dir, plot_width, plot_height,
+                                  x_label = bquote(bold('Ctrl vs Mut Difference')),
+                                  analysis_type = "TAD Inclusion Ratio Analysis",
+                                  effect_label = "Difference") {
 
   cat(sprintf("\n--- Generating %s threshold plot (FDR < %.2f, |Diff| > %.2f) ---\n",
               threshold_name, fdr_threshold, fc_threshold))
@@ -249,8 +299,8 @@ generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_nam
     plot_title <- sprintf("%s (%s)", plot_title_base, threshold_name)
   }
 
-  subtitle <- sprintf("TAD Inclusion Ratio Analysis | FDR < %.2f, |Diff| > %.2f",
-                      fdr_threshold, fc_threshold)
+  subtitle <- sprintf("%s | FDR < %.2f, |%s| > %.2f",
+                      analysis_type, fdr_threshold, effect_label, fc_threshold)
 
   # Create EnhancedVolcano
   p <- EnhancedVolcano(
@@ -269,14 +319,14 @@ generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_nam
     legendPosition = 'top',
     legendLabSize = 11,
     legendIconSize = 4.0,
-    legendLabels = c('NS', 'Difference', 'FDR', 'FDR and Difference'),
+    legendLabels = c('NS', effect_label, 'FDR', paste('FDR and', effect_label)),
     drawConnectors = FALSE,
     gridlines.major = TRUE,
     gridlines.minor = FALSE,
     border = 'full',
     borderWidth = 0.8,
     borderColour = 'black',
-    xlab = bquote(bold('Ctrl vs Mut Difference')),
+    xlab = x_label,
     ylab = bquote(bold('-log'[10]*'(Adjusted p-value)')),
     xlim = c(diff_range[1] - 0.2, diff_range[2] + 0.2),
     ylim = y_lim,
@@ -358,7 +408,10 @@ for (thresh in thresholds) {
     plot_title_base = custom_title,
     output_dir = output_dir,
     plot_width = plot_width,
-    plot_height = plot_height
+    plot_height = plot_height,
+    x_label = x_axis_label,
+    analysis_type = analysis_type,
+    effect_label = effect_label
   )
   results_list[[thresh$name]] <- result
 }
@@ -378,12 +431,13 @@ summary_text <- c(
   "",
   sprintf("Analysis Date: %s", Sys.Date()),
   sprintf("Input File: %s", input_file),
+  sprintf("Input Format: %s", toupper(input_format)),
   sprintf("Output Directory: %s", output_dir),
   "",
-  sprintf("Total TADs analyzed: %d", n_total),
+  sprintf("Total boundaries analyzed: %d", n_total),
   "",
   "Data Ranges:",
-  sprintf("  Difference: [%.3f, %.3f]", min(tad_df$Difference), max(tad_df$Difference)),
+  sprintf("  %s: [%.3f, %.3f]", effect_label, min(tad_df$Difference), max(tad_df$Difference)),
   sprintf("  Adj. p-value: [%.2e, %.2f]", min(tad_df$adj_pvalue), max(tad_df$adj_pvalue)),
   ""
 )
@@ -392,14 +446,14 @@ summary_text <- c(
 for (result in results_list) {
   summary_text <- c(summary_text,
     "--------------------------------------------------------------",
-    sprintf("%s Thresholds (FDR < %.2f, |Diff| > %.2f)",
-            toupper(result$threshold_name), result$fdr, result$fc),
+    sprintf("%s Thresholds (FDR < %.2f, |%s| > %.2f)",
+            toupper(result$threshold_name), result$fdr, effect_label, result$fc),
     "--------------------------------------------------------------",
-    sprintf("  Both criteria (FDR & FC): %d", result$n_sig_both),
+    sprintf("  Both criteria (FDR & %s): %d", effect_label, result$n_sig_both),
     sprintf("  FDR significant only: %d", result$n_fdr_sig),
-    sprintf("  FC significant: %d", result$n_fc_up + result$n_fc_down),
-    sprintf("    - Increased in Mutant (Diff > %.2f): %d", result$fc, result$n_fc_up),
-    sprintf("    - Decreased in Mutant (Diff < -%.2f): %d", result$fc, result$n_fc_down),
+    sprintf("  %s significant: %d", effect_label, result$n_fc_up + result$n_fc_down),
+    sprintf("    - Increased in Mutant (%s > %.2f): %d", effect_label, result$fc, result$n_fc_up),
+    sprintf("    - Decreased in Mutant (%s < -%.2f): %d", effect_label, result$fc, result$n_fc_down),
     sprintf("  At least one criterion: %d (%.1f%%)", result$n_sig, 100 * result$n_sig / result$n_total),
     sprintf("  Non-significant: %d (%.1f%%)", result$n_ns, 100 * result$n_ns / result$n_total),
     ""
@@ -409,7 +463,7 @@ for (result in results_list) {
 # Add top 10 TADs by effect size
 summary_text <- c(summary_text,
   "--------------------------------------------------------------",
-  "Top 10 TADs by Effect Size (largest |Difference|):",
+  sprintf("Top 10 Boundaries by Effect Size (largest |%s|):", effect_label),
   "--------------------------------------------------------------"
 )
 
@@ -457,8 +511,10 @@ cat("========================================\n\n")
 cat(sprintf("Output directory: %s\n\n", output_dir))
 
 cat("Generated files:\n")
-cat(sprintf("  - tad_volcano_relaxed.pdf (FDR<0.15, |Diff|>0.15)\n"))
-cat(sprintf("  - tad_volcano_standard.pdf (FDR<0.05, |Diff|>0.30)\n"))
+cat(sprintf("  - tad_volcano_relaxed.pdf (FDR<%.2f, |%s|>%.2f)\n",
+            thresholds$relaxed$fdr, effect_label, thresholds$relaxed$fc))
+cat(sprintf("  - tad_volcano_standard.pdf (FDR<%.2f, |%s|>%.2f)\n",
+            thresholds$standard$fdr, effect_label, thresholds$standard$fc))
 cat(sprintf("  - tad_significant_relaxed.tsv (%d TADs)\n", results_list$relaxed$n_sig_both))
 cat(sprintf("  - tad_significant_standard.tsv (%d TADs)\n", results_list$standard$n_sig_both))
 cat("  - tad_volcano_summary.txt\n")
