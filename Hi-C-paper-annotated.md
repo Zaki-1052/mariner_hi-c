@@ -52,7 +52,7 @@
 | **Summary** | ✅ | `tads/tad-pc-analysis/output/compartment_analysis/compartment_volcano_summary.txt` |
 | **Script** | ✅ | `scripts/compartment_volcano_plot.R` |
 | **Contact map** | 🖥️ | Juicebox screenshot at differential compartment region |
-| **% genome calculation** | ❓ | Derivable from `compartment_significant_*.tsv` — sum of region widths / genome size |
+| **% genome calculation** | ✅ | `compartment_genome_pct_bar/`, `compartment_genome_pct_pie/`, `compartment_genome_pct_by_chr/`, `compartment_genome_percentage_summary.txt` |
 
 ### Panel 1E — Representative locus for differential TAD, triangular (probably Cntnap5a)
 
@@ -500,7 +500,7 @@
 |-------|---------------|-----------------|
 | **1A** Contact maps at P13 vs adult | Juicebox screenshots with insulation tracks | 🖥️ .hic files on HPC |
 | **1B** P13 TAD volcano | Early HOMER-style TAD volcano (TADCompare data exists) | ✅ `tads/results/early/tadcompare/` |
-| **1D** % genome calculation | Simple computation from compartment TSV | ✅ `compartment_significant_*.tsv` |
+| **1D** % genome calculation | ✅ Done — `compartment_genome_pct_bar/`, summary stats | ✅ `compartment_significant_*.tsv` |
 | **1E** Cntnap5a locus | Juicebox triangular heatmap | 🖥️ .hic files |
 | **2D** Example loop loci | Juicebox screenshots with BEDPE overlays | ✅ BEDPE files exist |
 | **3A** ARA heatmaps | deepTools heatmaps at anchors for 4 marks | 🖥️ bigwig files on HPC |
