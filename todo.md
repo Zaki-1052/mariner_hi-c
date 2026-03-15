@@ -17,14 +17,15 @@ Items where upstream data exists in this repo but the specific figure/analysis c
 **Reference script:** `scripts/tad_volcano_plot.R` (currently uses HOMER `getDiffExpression.pl` format — may need adaptation for TADCompare output columns)
 **Notes:** TADCompare output has different columns than HOMER differential (boundary type, gap score vs logFC/FDR). May need a TADCompare-specific volcano or a unified representation that works across both timepoints.
 
-### TODO 1.2 — % of Genome with Differential PC1
+### TODO 1.2 — % of Genome with Differential PC1 ✅ DONE
 **Paper panel:** 1D — "% of genome with differential PC1"
-**What's missing:** The compartment volcano and significant region TSVs exist, but no explicit calculation or figure showing the % of the genome affected.
+**What was missing:** The compartment volcano and significant region TSVs exist, but no explicit calculation or figure showing the % of the genome affected.
+**Resolution:** Created `scripts/compartment_genome_percentage.R`. Computed from 101,684 regions (25kb bins) across mm10 (2.73 Gb). Standard threshold: 7.46% of genome (203.8 Mb) — 2.63% A→B (more inactive), 4.84% B→A (more active), 8,154 regions. Relaxed threshold: 24.47% of genome (668.3 Mb) — 26,733 regions. chrX dramatically enriched (45.6% of chrX affected at standard). Output: `tads/tad-pc-analysis/output/compartment_analysis/` — stacked bar chart, pie charts, per-chromosome breakdown, summary statistics.
 **Upstream data:**
 - `tads/tad-pc-analysis/output/compartment_analysis/compartment_significant_relaxed.tsv`
 - `tads/tad-pc-analysis/output/compartment_analysis/compartment_significant_standard.tsv`
 - `tads/tad-pc-analysis/output/compartment_analysis/compartment_all_annotated.tsv`
-**Task:** Sum region widths from significant compartment shifts / mm10 genome size (~2.73 Gb). Produce a summary statistic and possibly a bar/pie chart showing % A-to-B vs B-to-A vs unchanged. Should be computed at both thresholds (relaxed and standard).
+**Reference script:** `scripts/compartment_genome_percentage.R`
 
 ---
 
