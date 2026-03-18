@@ -1,0 +1,87 @@
+================================================================================
+STEP 14: LOOP TYPE DECOMPOSITION AT ENHANCER SUBSETS
+================================================================================
+Date: 2026-03-17 18:25:28 
+
+INPUTS:
+  Characterized loops: 2910
+  Enhancers: 55697 total
+    Activity_Lost: 7503
+    K119ub_Only: 2479
+    Activity_Gain: 2851
+    Stable: 42864
+
+TOTAL ENHANCER-LOOP PAIRS: 4506
+
+PARTNER TYPE COMPOSITION:
+
+  Activity_Lost (n=1163 loops):
+    Active_Enhancer         545 ( 46.9%)
+    Poised_Enhancer         249 ( 21.4%)
+    Active_Promoter         211 ( 18.1%)
+    Other                   117 ( 10.1%)
+    Polycomb                 23 (  2.0%)
+    Repressed_Promoter        9 (  0.8%)
+    Bivalent_Promoter         9 (  0.8%)
+
+  K119ub_Only (n=304 loops):
+    Poised_Enhancer          83 ( 27.3%)
+    Active_Enhancer          73 ( 24.0%)
+    Active_Promoter          65 ( 21.4%)
+    Other                    59 ( 19.4%)
+    Polycomb                 15 (  4.9%)
+    Repressed_Promoter        7 (  2.3%)
+    Bivalent_Promoter         2 (  0.7%)
+
+  Activity_Gain (n=438 loops):
+    Polycomb                122 ( 27.9%)
+    Other                   121 ( 27.6%)
+    Poised_Enhancer         117 ( 26.7%)
+    Repressed_Promoter       42 (  9.6%)
+    Active_Promoter          23 (  5.3%)
+    Active_Enhancer           9 (  2.1%)
+    Bivalent_Promoter         4 (  0.9%)
+
+  Stable (n=2601 loops):
+    Other                   773 ( 29.7%)
+    Poised_Enhancer         588 ( 22.6%)
+    Polycomb                367 ( 14.1%)
+    Active_Enhancer         355 ( 13.6%)
+    Active_Promoter         322 ( 12.4%)
+    Repressed_Promoter      187 (  7.2%)
+    Bivalent_Promoter         9 (  0.3%)
+
+FUNCTIONAL GROUP PROPORTIONS:
+  Activity_Lost: Promoter=19.7%, Polycomb=2.0%, Enhancer=68.3%, Structural=10.1%
+  K119ub_Only: Promoter=24.3%, Polycomb=4.9%, Enhancer=51.3%, Structural=19.4%
+  Activity_Gain: Promoter=15.8%, Polycomb=27.9%, Enhancer=28.8%, Structural=27.6%
+  Stable: Promoter=19.9%, Polycomb=14.1%, Enhancer=36.3%, Structural=29.7%
+
+Chi-squared (partner type ~ class): p = 1.00e-04
+Chi-squared (functional group ~ class): p = 1.00e-04
+
+LOGFC BY PARTNER TYPE (K119ub_Only, n >= 5):
+  Active_Enhancer        n=73, median logFC=-0.3690, p = 5.42e-11
+  Polycomb               n=15, median logFC=0.3504, p = 3.81e-02
+  Active_Promoter        n=65, median logFC=-0.3237, p = 1.65e-02
+  Repressed_Promoter     n=7, median logFC=0.3217, p = 9.37e-01
+  Poised_Enhancer        n=83, median logFC=-0.3082, p = 6.03e-01
+  Other                  n=59, median logFC=-0.3080, p = 9.31e-01
+
+CONTRIBUTION ANALYSIS (K119ub_Only):
+  Total weighted logFC: -0.2789
+  Active_Enhancer        weight=0.242 x med=-0.3690 -> contrib=-0.08920 (32%)
+  Poised_Enhancer        weight=0.275 x med=-0.3082 -> contrib=-0.08470 (30%)
+  Active_Promoter        weight=0.215 x med=-0.3237 -> contrib=-0.06967 (25%)
+  Other                  weight=0.195 x med=-0.3080 -> contrib=-0.06017 (22%)
+  Polycomb               weight=0.050 x med=0.3504 -> contrib=0.01740 (-6%)
+  Repressed_Promoter     weight=0.023 x med=0.3217 -> contrib=0.00746 (-3%)
+
+K119ub_Only vs Activity_Lost PARTNER ENRICHMENT:
+  Active_Promoter        K119ub=21.4% vs ActLost=18.1%, OR=1.23, p = 2.16e-01
+  Repressed_Promoter     K119ub=2.3% vs ActLost=0.8%, OR=3.02, p = 3.12e-02
+  Bivalent_Promoter      K119ub=0.7% vs ActLost=0.8%, OR=0.85, p = 1.00e+00
+  Polycomb               K119ub=4.9% vs ActLost=2.0%, OR=2.57, p = 7.26e-03
+  Active_Enhancer        K119ub=24.0% vs ActLost=46.9%, OR=0.36, p = 2.64e-13
+  Poised_Enhancer        K119ub=27.3% vs ActLost=21.4%, OR=1.38, p = 3.12e-02
+  Other                  K119ub=19.4% vs ActLost=10.1%, OR=2.15, p = 2.56e-05
