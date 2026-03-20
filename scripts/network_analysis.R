@@ -507,10 +507,17 @@ build_network <- function(nodes, edges) {
 plot_network <- function(g, thresholds, colors, cfg_label) {
   set.seed(42)
 
-  ig <- as.igraph(g)
+  # Remove isolated nodes for cleaner visualization
+  g_connected <- g %>%
+    filter(centrality_degree() > 0)
 
-  # Add computed node aesthetics to the graph
-  g <- g %>%
+  n_total <- igraph::vcount(as.igraph(g))
+  n_shown <- igraph::vcount(as.igraph(g_connected))
+  n_edges <- igraph::ecount(as.igraph(g_connected))
+  cat(sprintf("  Plotting %d connected genes (%d isolated removed)\n", n_shown, n_total - n_shown))
+
+  # Add computed node aesthetics
+  g_connected <- g_connected %>%
     mutate(
       node_size = pmax(abs(replace_na(max_delta_unnorm, 0)), 0.005),
       border_width = case_when(
@@ -522,8 +529,8 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
       label_text = ifelse(show_label, name, NA_character_)
     )
 
-  # Compute layout once, then extract for hull data
-  layout <- create_layout(g, layout = "stress")
+  # Compute layout: Fruchterman-Reingold for better clustering of small components
+  layout <- create_layout(g_connected, layout = "fr")
 
   # Identify GO groups with 3+ genes for hull drawing
   hull_groups <- layout %>%
@@ -592,8 +599,8 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
     theme_graph(base_family = "") +
     labs(
       title = sprintf("Multi-Layer Structural Disruption Network (BAP1-KO, %s)", cfg_label),
-      subtitle = sprintf("%d genes (>=%d layers) | %d edges",
-                         igraph::vcount(ig), thresholds$min_layers, igraph::ecount(ig))
+      subtitle = sprintf("%d connected genes (%d total in >=%d layers) | %d edges",
+                         n_shown, n_total, thresholds$min_layers, n_edges)
     ) +
     theme(
       legend.position = "right",
