@@ -13,7 +13,8 @@
 #
 # Output:
 #   - Stacked bar chart: % genome A->B vs B->A vs unchanged (both thresholds)
-#   - Pie chart: compartment shift proportions per threshold
+#   - Pie chart (binary): compartment shift proportions per threshold
+#   - Pie chart (7-category): weakened/strengthened/flipped breakdown per threshold
 #   - Per-chromosome bar chart: % differential by chromosome (standard threshold)
 #   - Summary statistics text file
 #   - Summary table TSV
@@ -75,10 +76,10 @@ sig_relaxed  <- read.delim(INPUT_FILES$relaxed, stringsAsFactors = FALSE)
 all_regions  <- read.delim(INPUT_FILES$all, stringsAsFactors = FALSE)
 
 # Validate expected columns
-required_cols <- c("Region_size", "direction", "Chr")
+required_cols <- c("Region_size", "direction", "Chr", "ctrl_avg_PC1", "mut_avg_PC1")
 stopifnot("Missing columns in standard TSV" = all(required_cols %in% names(sig_standard)))
 stopifnot("Missing columns in relaxed TSV"  = all(required_cols %in% names(sig_relaxed)))
-stopifnot("Missing columns in all TSV"      = all(c("Region_size", "Chr") %in% names(all_regions)))
+stopifnot("Missing columns in all TSV"      = all(c("Region_size", "Chr", "ctrl_avg_PC1", "mut_avg_PC1") %in% names(all_regions)))
 
 cat(sprintf("  All regions analyzed: %d\n", nrow(all_regions)))
 cat(sprintf("  Significant (standard): %d\n", nrow(sig_standard)))
@@ -240,6 +241,215 @@ if (requireNamespace("patchwork", quietly = TRUE)) {
 }
 
 # =============================================================================
+# FIGURE 2B: 7-CATEGORY PIE CHARTS (weakened/strengthened/flipped)
+# =============================================================================
+
+cat("Generating 7-category pie charts...\n")
+
+# Classify each significant region by PC1 sign and direction of change
+# Classify by whether compartment identity flipped (sign change), weakened, or strengthened
+# Convention: PC1 >= 0 = A compartment, PC1 < 0 = B compartment
+classify_compartment <- function(ctrl_pc1, mut_pc1) {
+  ctrl_is_A <- ctrl_pc1 >= 0
+  mut_is_A  <- mut_pc1 >= 0
+  sign_flip <- ctrl_is_A != mut_is_A
+  dplyr::case_when(
+    sign_flip & ctrl_is_A              ~ "Flipped A->B",
+    sign_flip & !ctrl_is_A             ~ "Flipped B->A",
+    !sign_flip & ctrl_is_A & mut_pc1 < ctrl_pc1  ~ "Weakened A",
+    !sign_flip & ctrl_is_A & mut_pc1 >= ctrl_pc1 ~ "Strengthened A",
+    !sign_flip & !ctrl_is_A & mut_pc1 > ctrl_pc1 ~ "Weakened B",
+    !sign_flip & !ctrl_is_A & mut_pc1 <= ctrl_pc1 ~ "Strengthened B",
+    TRUE ~ "Unclassified"
+  )
+}
+
+compute_pct_7cat <- function(sig_df, all_df, label) {
+  sig_df$compartment_category <- classify_compartment(sig_df$ctrl_avg_PC1,
+                                                       sig_df$mut_avg_PC1)
+
+  cat_levels <- c("Weakened A", "Strengthened A", "Flipped A->B",
+                   "Weakened B", "Strengthened B", "Flipped B->A",
+                   "No Change")
+
+  # Tally bp and region counts per category
+  cat_summary <- sig_df %>%
+    group_by(compartment_category) %>%
+    summarise(bp = sum(Region_size), n_regions = n(), .groups = "drop")
+
+  # Build full table including "No Change"
+  sig_bp <- sum(cat_summary$bp)
+  unchanged_bp <- MM10_GENOME_SIZE - sig_bp
+  unchanged_n  <- nrow(all_df) - nrow(sig_df)
+
+  result <- data.frame(
+    threshold = label,
+    category = cat_summary$compartment_category,
+    bp = cat_summary$bp,
+    n_regions = cat_summary$n_regions,
+    stringsAsFactors = FALSE
+  )
+  result <- rbind(result, data.frame(
+    threshold = label,
+    category = "No Change",
+    bp = unchanged_bp,
+    n_regions = unchanged_n,
+    stringsAsFactors = FALSE
+  ))
+
+  result$pct_genome <- result$bp / MM10_GENOME_SIZE * 100
+  result$category <- factor(result$category, levels = cat_levels)
+  result
+}
+
+pct_7cat_std <- compute_pct_7cat(sig_standard, all_regions,
+                                  "Standard (FDR<0.05, |Diff|>0.30)")
+pct_7cat_rlx <- compute_pct_7cat(sig_relaxed, all_regions,
+                                  "Relaxed (FDR<0.15, |Diff|>0.15)")
+
+# Print 7-category results
+for (pct_df in list(pct_7cat_std, pct_7cat_rlx)) {
+  cat(sprintf("\n  7-Category — %s:\n", pct_df$threshold[1]))
+  for (i in seq_len(nrow(pct_df))) {
+    cat(sprintf("    %-18s: %8.1f Mb (%6.2f%%, %5d regions)\n",
+                as.character(pct_df$category[i]),
+                pct_df$bp[i] / 1e6,
+                pct_df$pct_genome[i],
+                pct_df$n_regions[i]))
+  }
+}
+
+# Color scheme for 7 categories
+cat_colors <- c(
+  "Weakened A"      = "#FCBBA1",
+  "Strengthened A"  = "#A50F15",
+  "Flipped A->B"    = "#2166AC",
+  "Weakened B"      = "#9ECAE1",
+  "Strengthened B"  = "#08306B",
+  "Flipped B->A"    = "#B2182B",
+  "No Change"       = "#E0E0E0"
+)
+
+make_pie_7cat <- function(pct_df, title_suffix) {
+  # Label significant slices with category + stats; "No Change" gets simple label
+  pct_df$label <- ifelse(
+    pct_df$category == "No Change",
+    sprintf("%.1f%%", pct_df$pct_genome),
+    sprintf("%s\n%.2f%%\n(%d)", pct_df$category, pct_df$pct_genome, pct_df$n_regions)
+  )
+  # Suppress labels for tiny slices
+  pct_df$label[pct_df$pct_genome < 0.1 & pct_df$category != "No Change"] <-
+    sprintf("%s\n%.2f%%", pct_df$category[pct_df$pct_genome < 0.1 & pct_df$category != "No Change"],
+            pct_df$pct_genome[pct_df$pct_genome < 0.1 & pct_df$category != "No Change"])
+
+  ggplot(pct_df, aes(x = "", y = pct_genome, fill = category)) +
+    geom_bar(stat = "identity", width = 1, color = "white", linewidth = 0.5) +
+    coord_polar("y", start = 0) +
+    geom_text(aes(label = label),
+              position = position_stack(vjust = 0.5), size = 2.8) +
+    scale_fill_manual(values = cat_colors, name = "Category", drop = FALSE) +
+    labs(title = sprintf("Compartment Shifts — %s", title_suffix)) +
+    theme_void(base_size = 13) +
+    theme(
+      plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
+      legend.position = "bottom",
+      legend.text = element_text(size = 9),
+      legend.key.size = unit(0.4, "cm")
+    ) +
+    guides(fill = guide_legend(nrow = 2))
+}
+
+p_pie7_std <- make_pie_7cat(pct_7cat_std, "Standard (FDR<0.05, |Diff|>0.30)")
+p_pie7_rlx <- make_pie_7cat(pct_7cat_rlx, "Relaxed (FDR<0.15, |Diff|>0.15)")
+
+if (requireNamespace("patchwork", quietly = TRUE)) {
+  library(patchwork)
+  p_pie7_combined <- p_pie7_std + p_pie7_rlx +
+    plot_annotation(
+      title = "PC1 Compartment Changes: Weakened vs Strengthened vs Flipped",
+      subtitle = "BAP1-KO vs Wildtype | mm10 genome (2.73 Gb)",
+      theme = theme(
+        plot.title = element_text(face = "bold", size = 15, hjust = 0.5),
+        plot.subtitle = element_text(size = 11, hjust = 0.5, color = "grey40")
+      )
+    )
+  save_multiformat_ggplot(p_pie7_combined,
+                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat"),
+                          width = 14, height = 7)
+} else {
+  save_multiformat_ggplot(p_pie7_std,
+                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_standard"),
+                          width = 8, height = 7)
+  save_multiformat_ggplot(p_pie7_rlx,
+                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_relaxed"),
+                          width = 8, height = 7)
+}
+
+# Sig-only version (exclude No Change for readability)
+make_pie_7cat_sigonly <- function(pct_df, title_suffix) {
+  pct_sig <- pct_df[pct_df$category != "No Change", ]
+  pct_sig$pct_of_sig <- pct_sig$bp / sum(pct_sig$bp) * 100
+  pct_sig$label <- sprintf("%s\n%.1f%%\n(%d regions)",
+                           pct_sig$category, pct_sig$pct_of_sig, pct_sig$n_regions)
+
+  total_pct <- sum(pct_sig$pct_genome)
+
+  ggplot(pct_sig, aes(x = "", y = bp, fill = category)) +
+    geom_bar(stat = "identity", width = 1, color = "white", linewidth = 0.5) +
+    coord_polar("y", start = 0) +
+    geom_text(aes(label = label),
+              position = position_stack(vjust = 0.5), size = 3.5) +
+    scale_fill_manual(values = cat_colors, name = "Category", drop = FALSE) +
+    labs(title = sprintf("Significant Compartment Shifts -- %s", title_suffix),
+         subtitle = sprintf("%.1f%% of genome affected", total_pct)) +
+    theme_void(base_size = 13) +
+    theme(
+      plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
+      plot.subtitle = element_text(size = 10, hjust = 0.5, color = "grey40"),
+      legend.position = "bottom",
+      legend.text = element_text(size = 9),
+      legend.key.size = unit(0.4, "cm")
+    ) +
+    guides(fill = guide_legend(nrow = 1))
+}
+
+p_pie7_sig_std <- make_pie_7cat_sigonly(pct_7cat_std, "Standard (FDR<0.05, |Diff|>0.30)")
+p_pie7_sig_rlx <- make_pie_7cat_sigonly(pct_7cat_rlx, "Relaxed (FDR<0.15, |Diff|>0.15)")
+
+if (requireNamespace("patchwork", quietly = TRUE)) {
+  p_pie7_sig_combined <- p_pie7_sig_std + p_pie7_sig_rlx +
+    plot_annotation(
+      title = "Differential PC1 Categories (Significant Regions Only)",
+      subtitle = "BAP1-KO vs Wildtype | Proportion of significant compartment changes",
+      theme = theme(
+        plot.title = element_text(face = "bold", size = 15, hjust = 0.5),
+        plot.subtitle = element_text(size = 11, hjust = 0.5, color = "grey40")
+      )
+    )
+  save_multiformat_ggplot(p_pie7_sig_combined,
+                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_sigonly"),
+                          width = 14, height = 7)
+} else {
+  save_multiformat_ggplot(p_pie7_sig_std,
+                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_sigonly_standard"),
+                          width = 8, height = 7)
+  save_multiformat_ggplot(p_pie7_sig_rlx,
+                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_sigonly_relaxed"),
+                          width = 8, height = 7)
+}
+
+# Save 7-category table
+pct_7cat_export <- rbind(
+  transform(pct_7cat_std, threshold = as.character(threshold)),
+  transform(pct_7cat_rlx, threshold = as.character(threshold))
+)
+pct_7cat_export$category <- as.character(pct_7cat_export$category)
+write.table(pct_7cat_export,
+            file.path(OUTPUT_DIR, "compartment_genome_pct_7cat_table.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("  Saved: %s\n", file.path(OUTPUT_DIR, "compartment_genome_pct_7cat_table.tsv")))
+
+# =============================================================================
 # FIGURE 3: PER-CHROMOSOME BREAKDOWN (standard threshold)
 # =============================================================================
 
@@ -374,6 +584,26 @@ for (chr in chr_order) {
             nrow(chr_sig)))
 }
 
+# 7-category breakdown
+for (pct_7 in list(pct_7cat_std, pct_7cat_rlx)) {
+  thresh_name <- as.character(pct_7$threshold[1])
+  summary_lines <- c(summary_lines,
+    "",
+    "------------------------------------------------------------",
+    sprintf("7-Category Breakdown — %s", thresh_name),
+    "------------------------------------------------------------",
+    sprintf("  %-18s  %10s  %8s  %8s", "Category", "bp (Mb)", "% Genome", "Regions")
+  )
+  for (i in seq_len(nrow(pct_7))) {
+    summary_lines <- c(summary_lines,
+      sprintf("  %-18s  %10.1f  %7.2f%%  %7d",
+              as.character(pct_7$category[i]),
+              pct_7$bp[i] / 1e6,
+              pct_7$pct_genome[i],
+              pct_7$n_regions[i]))
+  }
+}
+
 summary_file <- file.path(OUTPUT_DIR, "compartment_genome_percentage_summary.txt")
 writeLines(summary_lines, summary_file)
 cat(sprintf("  Saved: %s\n", summary_file))
@@ -395,11 +625,13 @@ cat("================================================\n\n")
 
 cat(sprintf("Output directory: %s\n\n", OUTPUT_DIR))
 cat("Generated files:\n")
-cat("  - compartment_genome_pct_bar/{pdf,svg,jpg}     (stacked bar chart)\n")
-cat("  - compartment_genome_pct_pie/{pdf,svg,jpg}     (pie charts)\n")
-cat("  - compartment_genome_pct_by_chr/{pdf,svg,jpg}  (per-chromosome breakdown)\n")
-cat("  - compartment_genome_percentage_summary.txt     (summary statistics)\n")
-cat("  - compartment_genome_percentage_table.tsv       (summary table)\n\n")
+cat("  - compartment_genome_pct_bar/{pdf,svg,jpg}          (stacked bar chart)\n")
+cat("  - compartment_genome_pct_pie/{pdf,svg,jpg}          (binary pie charts)\n")
+cat("  - compartment_genome_pct_pie_7cat/{pdf,svg,jpg}     (7-category pie charts)\n")
+cat("  - compartment_genome_pct_by_chr/{pdf,svg,jpg}       (per-chromosome breakdown)\n")
+cat("  - compartment_genome_percentage_summary.txt          (summary statistics)\n")
+cat("  - compartment_genome_percentage_table.tsv            (binary summary table)\n")
+cat("  - compartment_genome_pct_7cat_table.tsv              (7-category summary table)\n\n")
 
 # Print key numbers for quick reference
 sig_std_bp <- sum(sig_standard$Region_size)

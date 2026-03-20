@@ -3,7 +3,8 @@ Figure 1: Progressive intensification of 3D genome phenotype \- TADs, boundaries
 - Contact map of similar site in P13 vs adult where changes are present in both, but more subtle at P13, differential insulation track below each map  
 - Volcano plot \- Differential TAD IDs at P13 and adult  
 - GENOVA insulation plot \- Differential TAD boundaries  
-- % of genome with differential PC1  
+- % of genome with differential PC1 (pie chart)
+  - Sig weakened A cmpt PC1, Sig weakened B cmpt PC1, Sig strengthened A cmpt PC1, Sig strengthened B cmpt PC1, Flipped PC1 (complete +PC1 → -PC1 and vice versa), no change
   - Smaller contact map of obvious differential region  
 - Representative locus for differential TAD, triangular (probably Cntnap5a)  
 - Permutation test of differential TADs and differential boundaries in K27ac/K27me3/K119ub

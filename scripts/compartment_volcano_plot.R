@@ -197,6 +197,20 @@ cat(sprintf("Identified key columns:\n"))
 cat(sprintf("  Peak ID: %s\n", peak_id_col))
 cat(sprintf("  Difference (effect size): %s\n", difference_col))
 cat(sprintf("  Adjusted p-value: %s\n", adj_pvalue_col))
+
+# Identify per-sample PC1 columns (bedGraph avg columns) for ctrl/mut averages
+bedgraph_cols <- grep("bedGraph avg", names(comp_data), value = TRUE)
+stopifnot("Expected 6 bedGraph avg columns (3 ctrl + 3 mut)" = length(bedgraph_cols) == 6)
+ctrl_pc1_cols <- grep("ctrl", bedgraph_cols, value = TRUE)
+mut_pc1_cols  <- grep("mut", bedgraph_cols, value = TRUE)
+stopifnot("Expected 3 ctrl PC1 columns" = length(ctrl_pc1_cols) == 3)
+stopifnot("Expected 3 mut PC1 columns"  = length(mut_pc1_cols) == 3)
+
+ctrl_avg_PC1 <- rowMeans(sapply(ctrl_pc1_cols, function(col) as.numeric(comp_data[[col]])))
+mut_avg_PC1  <- rowMeans(sapply(mut_pc1_cols, function(col) as.numeric(comp_data[[col]])))
+
+cat(sprintf("  Ctrl PC1 columns: %d identified\n", length(ctrl_pc1_cols)))
+cat(sprintf("  Mut PC1 columns:  %d identified\n", length(mut_pc1_cols)))
 cat("\n")
 
 # Create clean working dataframe with standardized column names
@@ -218,6 +232,8 @@ comp_df <- data.frame(
   Difference = as.numeric(comp_data[[difference_col]]),
   pvalue = if (!is.na(pvalue_col)) as.numeric(comp_data[[pvalue_col]]) else NA,
   adj_pvalue = as.numeric(comp_data[[adj_pvalue_col]]),
+  ctrl_avg_PC1 = ctrl_avg_PC1,
+  mut_avg_PC1 = mut_avg_PC1,
   stringsAsFactors = FALSE
 )
 
