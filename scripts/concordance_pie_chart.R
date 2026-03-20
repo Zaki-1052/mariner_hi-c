@@ -70,13 +70,13 @@ cat(sprintf("  Loaded %d dysregulated genes\n", nrow(genes)))
 # 4-way classification
 genes$category <- case_when(
   genes$concordance == "Concordant" & genes$log2FC > 0 ~
-    "Concordant Up",
+    "Gained enhancer +\nupregulated gene",
   genes$concordance == "Concordant" & genes$log2FC < 0 ~
-    "Concordant Down",
+    "Lost enhancer +\ndownregulated gene",
   genes$concordance == "Discordant" & genes$max_delta_abc > 0 ~
-    "Discordant\n(ABC up / RNA down)",
+    "Gained enhancer +\ndownregulated gene",
   genes$concordance == "Discordant" & genes$max_delta_abc < 0 ~
-    "Discordant\n(ABC down / RNA up)",
+    "Lost enhancer +\nupregulated gene",
   TRUE ~ "Other"
 )
 
@@ -125,26 +125,28 @@ binary_colors <- c(
   "Discordant" = "#E41A1C"
 )
 
+binary_df$bar_label <- sprintf("%d\n(%.1f%%)", binary_df$n, binary_df$pct)
+
 p_binary <- ggplot(binary_df,
-                   aes(x = "", y = n, fill = concordance)) +
-  geom_bar(stat = "identity", width = 1,
-           color = "white", linewidth = 1) +
-  coord_polar("y", start = 0) +
-  geom_text(aes(label = label),
-            position = position_stack(vjust = 0.5),
-            size = 4.5, fontface = "bold") +
-  scale_fill_manual(values = binary_colors,
-                    name = NULL) +
-  labs(title = "ABC-RNA Concordance",
-       subtitle = sprintf("%d Dysregulated Genes",
-                          sum(binary_df$n))) +
-  theme_void(base_size = 14) +
+                   aes(x = concordance, y = n, fill = concordance)) +
+  geom_col(width = 0.6, color = "white", linewidth = 0.5) +
+  geom_text(aes(label = bar_label),
+            vjust = -0.3, size = 5, fontface = "bold") +
+  scale_fill_manual(values = binary_colors, name = NULL) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(title = "Dysregulated Genes",
+       subtitle = sprintf(
+         "%d genes (|log2FC|>0.5, padj<0.05, |dABC|>0.01)",
+         sum(binary_df$n)),
+       x = NULL, y = "Number of Genes") +
+  theme_bw(base_size = 14) +
   theme(
     plot.title = element_text(
       face = "bold", size = 16, hjust = 0.5),
     plot.subtitle = element_text(
-      size = 12, hjust = 0.5, color = "grey40"),
-    legend.position = "none"
+      size = 11, hjust = 0.5, color = "grey40"),
+    legend.position = "none",
+    panel.grid.major.x = element_blank()
   )
 
 save_multiformat_ggplot(
@@ -159,18 +161,18 @@ save_multiformat_ggplot(
 
 # Order categories: concordant first, then discordant
 cat_order <- c(
-  "Concordant Up",
-  "Concordant Down",
-  "Discordant\n(ABC up / RNA down)",
-  "Discordant\n(ABC down / RNA up)"
+  "Gained enhancer +\nupregulated gene",
+  "Lost enhancer +\ndownregulated gene",
+  "Gained enhancer +\ndownregulated gene",
+  "Lost enhancer +\nupregulated gene"
 )
 cat4_df$category <- factor(cat4_df$category, levels = cat_order)
 
 cat4_colors <- c(
-  "Concordant Up"                    = "#D6604D",
-  "Concordant Down"                  = "#4393C3",
-  "Discordant\n(ABC up / RNA down)"  = "#FDB863",
-  "Discordant\n(ABC down / RNA up)"  = "#B2ABD2"
+  "Gained enhancer +\nupregulated gene"   = "#D6604D",
+  "Lost enhancer +\ndownregulated gene"    = "#4393C3",
+  "Gained enhancer +\ndownregulated gene"  = "#FDB863",
+  "Lost enhancer +\nupregulated gene"      = "#B2ABD2"
 )
 
 p_4cat <- ggplot(cat4_df,
@@ -205,6 +207,7 @@ save_multiformat_ggplot(
 # =============================================================================
 
 p_combined <- p_binary + p_4cat +
+  plot_layout(widths = c(1, 1.3)) +
   plot_annotation(
     title = "ABC-RNA Concordance Analysis",
     subtitle = sprintf(
