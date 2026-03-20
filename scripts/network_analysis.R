@@ -33,6 +33,7 @@ suppressPackageStartupMessages({
   library(clusterProfiler)
   library(org.Mm.eg.db)
   library(AnnotationDbi)
+  library(readxl)
 })
 
 source("scripts/utils/multi_format_output.R")
@@ -46,19 +47,25 @@ BASE_DIR <- getwd()
 TIMEPOINT_CONFIG <- list(
   late = list(
     gene_summary      = file.path(BASE_DIR, "abc/results/gene_level_summary.tsv"),
-    loops_genes       = file.path(BASE_DIR, "abc/results/loops_with_gene_assignments.tsv"),
+    loops_file        = file.path(BASE_DIR, "abc/results/loops_with_gene_assignments.tsv"),
+    loops_gene_cols   = c(anchor1 = "anchor1_gene", anchor2 = "anchor2_gene"),
     boundary_genes    = file.path(BASE_DIR, "tads/results/visualizations/late/enrichment/boundary_genes.tsv"),
     delta_abc_pairs   = file.path(BASE_DIR, "abc/results/delta_abc_with_rnaseq.tsv"),
+    rnaseq_file       = NULL,
     output_dir        = file.path(BASE_DIR, "output/network_analysis/late"),
-    label             = "Late Timepoint (Adult)"
+    label             = "Late Timepoint (Adult)",
+    has_abc           = TRUE
   ),
   early = list(
-    gene_summary      = file.path(BASE_DIR, "abc/results/gene_level_summary.tsv"),
-    loops_genes       = NA,
+    gene_summary      = NULL,
+    loops_file        = file.path(BASE_DIR, "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"),
+    loops_gene_cols   = c(anchor1 = "anchor1_nearest_gene", anchor2 = "anchor2_nearest_gene"),
     boundary_genes    = file.path(BASE_DIR, "tads/results/visualizations/early/enrichment/boundary_genes.tsv"),
-    delta_abc_pairs   = NA,
+    delta_abc_pairs   = NULL,
+    rnaseq_file       = file.path(BASE_DIR, "tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),
     output_dir        = file.path(BASE_DIR, "output/network_analysis/early"),
-    label             = "Early Timepoint (P13)"
+    label             = "Early Timepoint (P13)",
+    has_abc           = FALSE
   )
 )
 
@@ -126,10 +133,6 @@ parse_arguments <- function() {
                  params$timepoint, paste(names(TIMEPOINT_CONFIG), collapse = ", ")))
   }
 
-  if (params$timepoint == "early") {
-    stop("Early timepoint data not yet available for network analysis.")
-  }
-
   if (!is.null(params$min_layers)) THRESHOLDS$min_layers <<- params$min_layers
   if (!is.null(params$max_nodes))  THRESHOLDS$max_nodes  <<- params$max_nodes
 
@@ -151,13 +154,50 @@ load_gene_summary <- function(path) {
   df
 }
 
-load_loop_gene_pairs <- function(path) {
+load_loop_gene_pairs <- function(path, gene_cols) {
   stopifnot(file.exists(path))
   df <- read_tsv(path, show_col_types = FALSE)
-  required <- c("loop_id", "anchor1_gene", "anchor2_gene", "logFC", "FDR", "direction")
+  required <- c("loop_id", gene_cols[["anchor1"]], gene_cols[["anchor2"]], "logFC", "FDR", "direction")
   missing <- setdiff(required, colnames(df))
-  if (length(missing) > 0) stop(sprintf("loops_with_gene_assignments missing columns: %s", paste(missing, collapse = ", ")))
+  if (length(missing) > 0) stop(sprintf("Loop file missing columns: %s", paste(missing, collapse = ", ")))
+  # Standardize gene column names
+  df <- df %>% dplyr::rename(anchor1_gene = !!gene_cols[["anchor1"]],
+                              anchor2_gene = !!gene_cols[["anchor2"]])
+  # Convert Entrez IDs to symbols if gene columns are numeric
+  if (is.numeric(df$anchor1_gene)) {
+    cat("  Converting Entrez IDs to gene symbols...\n")
+    all_ids <- unique(c(as.character(df$anchor1_gene), as.character(df$anchor2_gene)))
+    id_map <- AnnotationDbi::select(org.Mm.eg.db, keys = all_ids,
+                                     columns = "SYMBOL", keytype = "ENTREZID")
+    id_map <- id_map %>% filter(!is.na(SYMBOL)) %>% distinct(ENTREZID, .keep_all = TRUE)
+    df <- df %>%
+      mutate(anchor1_gene = as.character(anchor1_gene),
+             anchor2_gene = as.character(anchor2_gene)) %>%
+      left_join(id_map, by = c("anchor1_gene" = "ENTREZID")) %>%
+      dplyr::rename(anchor1_symbol = SYMBOL) %>%
+      left_join(id_map, by = c("anchor2_gene" = "ENTREZID")) %>%
+      dplyr::rename(anchor2_symbol = SYMBOL) %>%
+      mutate(anchor1_gene = coalesce(anchor1_symbol, anchor1_gene),
+             anchor2_gene = coalesce(anchor2_symbol, anchor2_gene)) %>%
+      dplyr::select(-anchor1_symbol, -anchor2_symbol)
+    cat(sprintf("    Mapped %d/%d Entrez IDs to symbols\n", nrow(id_map), length(all_ids)))
+  }
   cat(sprintf("  Loop-gene pairs: %d rows (%d unique loops)\n", nrow(df), n_distinct(df$loop_id)))
+  df
+}
+
+load_rnaseq_excel <- function(path) {
+  stopifnot(file.exists(path))
+  df <- read_excel(path, sheet = "Output")
+  df <- df %>%
+    transmute(
+      TargetGene = ensembl_gene_id,
+      log2FC     = log2FoldChange,
+      padj       = padj,
+      baseMean   = baseMean
+    ) %>%
+    filter(!is.na(TargetGene))
+  cat(sprintf("  RNA-seq (Excel): %d genes loaded\n", nrow(df)))
   df
 }
 
@@ -811,14 +851,19 @@ main <- function() {
 
   # --- Validate inputs ---
   cat("Validating input files...\n")
-  input_files <- list(
-    gene_summary    = cfg$gene_summary,
-    loops_genes     = cfg$loops_genes,
-    boundary_genes  = cfg$boundary_genes,
-    delta_abc_pairs = cfg$delta_abc_pairs
+  required_files <- list(
+    loops_file     = cfg$loops_file,
+    boundary_genes = cfg$boundary_genes
   )
-  for (nm in names(input_files)) {
-    stopifnot(file.exists(input_files[[nm]]))
+  if (cfg$has_abc) {
+    required_files$gene_summary    <- cfg$gene_summary
+    required_files$delta_abc_pairs <- cfg$delta_abc_pairs
+  }
+  if (!is.null(cfg$rnaseq_file)) {
+    required_files$rnaseq_file <- cfg$rnaseq_file
+  }
+  for (nm in names(required_files)) {
+    stopifnot(file.exists(required_files[[nm]]))
     cat(sprintf("  [OK] %s\n", nm))
   }
 
@@ -826,16 +871,35 @@ main <- function() {
   # SECTION 1: Load Data
   # ==========================================================================
   cat("\n=== Section 1: Loading input data ===\n")
-  gene_summary   <- load_gene_summary(cfg$gene_summary)
-  loops          <- load_loop_gene_pairs(cfg$loops_genes)
+  loops          <- load_loop_gene_pairs(cfg$loops_file, cfg$loops_gene_cols)
   boundary_genes <- load_boundary_genes(cfg$boundary_genes)
-  delta_abc      <- load_delta_abc_pairs(cfg$delta_abc_pairs)
+
+  if (cfg$has_abc) {
+    gene_summary <- load_gene_summary(cfg$gene_summary)
+    delta_abc    <- load_delta_abc_pairs(cfg$delta_abc_pairs)
+  } else {
+    # Build gene universe from RNA-seq Excel + loop/boundary genes
+    rnaseq <- load_rnaseq_excel(cfg$rnaseq_file)
+    # Create a minimal gene_summary-like table (no ABC columns)
+    gene_summary <- rnaseq %>%
+      mutate(
+        max_delta_unnorm = NA_real_,
+        sum_delta_unnorm = NA_real_,
+        n_enhancers = NA_integer_,
+        n_gained = NA_integer_,
+        n_lost = NA_integer_,
+        dysregulated = FALSE
+      )
+    delta_abc <- NULL
+    cat("  ABC data: not available for this timepoint\n")
+  }
 
   # ==========================================================================
   # SECTION 2: Build Gene Profile
   # ==========================================================================
   cat("\n=== Section 2: Building per-gene structural profile ===\n")
-  profile <- build_gene_structural_profile(gene_summary, loops, boundary_genes, THRESHOLDS$abc_delta_min)
+  abc_min <- if (cfg$has_abc) THRESHOLDS$abc_delta_min else Inf
+  profile <- build_gene_structural_profile(gene_summary, loops, boundary_genes, abc_min)
   write_tsv(profile, file.path(tables_dir, "gene_structural_profile_all.tsv"))
   cat(sprintf("  Saved: gene_structural_profile_all.tsv (%d genes)\n", nrow(profile)))
 
@@ -843,7 +907,13 @@ main <- function() {
   # SECTION 3: Filter Network Genes
   # ==========================================================================
   cat("\n=== Section 3: Filtering genes for network ===\n")
-  filtered <- filter_network_genes(profile, THRESHOLDS)
+  # For early (2 layers only), allow min_layers=1 if needed
+  early_thresholds <- THRESHOLDS
+  if (!cfg$has_abc && THRESHOLDS$min_layers > 2) {
+    cat("  Note: max 2 layers available (no ABC). Setting min_layers=2\n")
+    early_thresholds$min_layers <- 2L
+  }
+  filtered <- filter_network_genes(profile, early_thresholds)
   write_tsv(filtered, file.path(tables_dir, "gene_structural_profile_filtered.tsv"))
 
   # ==========================================================================
@@ -851,11 +921,17 @@ main <- function() {
   # ==========================================================================
   cat("\n=== Section 4: Building edge list ===\n")
   loop_edges <- build_loop_edges(filtered$gene, loops)
-  enh_edges  <- build_shared_enhancer_edges(filtered$gene, delta_abc, THRESHOLDS$shared_enh_delta_min)
-  all_edges  <- bind_rows(
-    loop_edges %>% dplyr::select(from, to, weight, edge_type),
-    enh_edges  %>% dplyr::select(from, to, weight, edge_type)
-  )
+
+  if (!is.null(delta_abc)) {
+    enh_edges <- build_shared_enhancer_edges(filtered$gene, delta_abc, THRESHOLDS$shared_enh_delta_min)
+    all_edges <- bind_rows(
+      loop_edges %>% dplyr::select(from, to, weight, edge_type),
+      enh_edges  %>% dplyr::select(from, to, weight, edge_type)
+    )
+  } else {
+    cat("  Shared enhancer edges: skipped (no ABC data)\n")
+    all_edges <- loop_edges %>% dplyr::select(from, to, weight, edge_type)
+  }
   write_tsv(all_edges, file.path(tables_dir, "edge_list.tsv"))
   cat(sprintf("  Total edges: %d\n", nrow(all_edges)))
 
