@@ -42,7 +42,12 @@ cran_packages <- c(
   "viridis",           # Perceptually uniform color scales (apa_analysis.R)
   "VennDiagram",       # Venn diagram generation (compare_resolutions.R)
   "Matrix",            # Sparse matrix operations (aggregate.R)
-  "scales"             # Scale functions for ggplot2 (visualizations.R)
+  "scales",            # Scale functions for ggplot2 (visualizations.R)
+  "igraph",            # Graph construction and layout (network_analysis.R)
+  "ggraph",            # ggplot2-based network visualization (network_analysis.R)
+  "tidygraph",         # Tidy graph manipulation (network_analysis.R)
+  "ggforce",           # Extended ggplot2 geoms incl. mark_hull (network_analysis.R)
+  "ggnewscale"         # Multiple fill/color scales in one plot (network_analysis.R)
 )
 
 for (pkg in cran_packages) {
