@@ -65,7 +65,7 @@ TIMEPOINT_CONFIG <- list(
 THRESHOLDS <- list(
   min_layers           = 2L,
   max_nodes            = 150L,
-  abc_delta_min        = 0.01,
+  abc_delta_min        = 0.05,
   baseMean_min         = 10,
   shared_enh_delta_min = 0.005,
   go_pvalue_cutoff     = 0.05,
