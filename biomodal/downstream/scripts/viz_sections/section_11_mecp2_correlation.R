@@ -439,6 +439,210 @@ if (is.null(mecp2_annotated) || is.null(mecp2_up_gr) || is.null(mecp2_down_gr)) 
   cat("  Saved: mecp2_coordinated_genes.tsv\n")
 
   # -----------------------------------------------------------------------
+  # FIGURE 11h: Fisher's Exact on Binary MeCP2 Gain (Coordinated vs Other)
+  # -----------------------------------------------------------------------
+  # Tests whether coordinated genes (mC up/hmC down) are enriched for
+  # significant MeCP2 binding increase compared to non-coordinated genes.
+  cat("\nCreating Figure 11h: Fisher's exact on binary MeCP2 gain...\n")
+
+  # Define binary MeCP2 significant gain per gene
+  mecp2_gene_binary <- mecp2_gene %>%
+    mutate(mecp2_sig_gain = nearest_fdr < 0.05 & nearest_fold > 0)
+
+  # Classify genes: coordinated vs non-coordinated
+  mecp2_gene_binary <- mecp2_gene_binary %>%
+    mutate(gene_category = ifelse(SYMBOL %in% coord_gene_list,
+                                  "Coordinated\n(mC\u2191/hmC\u2193)",
+                                  "Non-coordinated"))
+
+  # Counts for 2x2 table
+  coord_gain    <- sum(mecp2_gene_binary$gene_category == "Coordinated\n(mC\u2191/hmC\u2193)" &
+                       mecp2_gene_binary$mecp2_sig_gain)
+  coord_no_gain <- sum(mecp2_gene_binary$gene_category == "Coordinated\n(mC\u2191/hmC\u2193)" &
+                       !mecp2_gene_binary$mecp2_sig_gain)
+  other_gain    <- sum(mecp2_gene_binary$gene_category == "Non-coordinated" &
+                       mecp2_gene_binary$mecp2_sig_gain)
+  other_no_gain <- sum(mecp2_gene_binary$gene_category == "Non-coordinated" &
+                       !mecp2_gene_binary$mecp2_sig_gain)
+
+  fisher_binary_mat <- matrix(c(coord_gain, other_gain, coord_no_gain, other_no_gain),
+                              nrow = 2,
+                              dimnames = list(c("Coordinated", "Non-coordinated"),
+                                              c("MeCP2 Gain", "No MeCP2 Gain")))
+  fisher_binary <- fisher.test(fisher_binary_mat)
+
+  cat(sprintf("  Coordinated: %d/%d (%.1f%%) with MeCP2 sig gain\n",
+              coord_gain, coord_gain + coord_no_gain,
+              100 * coord_gain / (coord_gain + coord_no_gain)))
+  cat(sprintf("  Non-coordinated: %d/%d (%.1f%%) with MeCP2 sig gain\n",
+              other_gain, other_gain + other_no_gain,
+              100 * other_gain / (other_gain + other_no_gain)))
+  cat(sprintf("  Fisher's exact test: OR = %.2f, p = %.2e\n",
+              fisher_binary$estimate, fisher_binary$p.value))
+
+  # Build plot data
+  binary_plot_df <- data.frame(
+    gene_category = c("Coordinated\n(mC\u2191/hmC\u2193)", "Coordinated\n(mC\u2191/hmC\u2193)",
+                       "Non-coordinated", "Non-coordinated"),
+    mecp2_status = rep(c("MeCP2 Sig Gain", "No MeCP2 Sig Gain"), 2),
+    count = c(coord_gain, coord_no_gain, other_gain, other_no_gain),
+    total = c(coord_gain + coord_no_gain, coord_gain + coord_no_gain,
+              other_gain + other_no_gain, other_gain + other_no_gain),
+    stringsAsFactors = FALSE
+  ) %>%
+    mutate(percentage = 100 * count / total)
+
+  binary_plot_df$gene_category <- factor(binary_plot_df$gene_category,
+                                          levels = c("Coordinated\n(mC\u2191/hmC\u2193)",
+                                                     "Non-coordinated"))
+  binary_plot_df$mecp2_status <- factor(binary_plot_df$mecp2_status,
+                                         levels = c("MeCP2 Sig Gain", "No MeCP2 Sig Gain"))
+
+  p_11h <- ggplot(binary_plot_df %>% dplyr::filter(mecp2_status == "MeCP2 Sig Gain"),
+                  aes(x = gene_category, y = percentage, fill = gene_category)) +
+    geom_bar(stat = "identity", width = 0.6, color = "black", linewidth = 0.3) +
+    geom_text(aes(label = sprintf("%.1f%%\n(%d/%d)", percentage, count, total)),
+              vjust = -0.3, size = 3.5) +
+    scale_fill_manual(values = c("Coordinated\n(mC\u2191/hmC\u2193)" = "#D95F02",
+                                  "Non-coordinated" = "grey70")) +
+    scale_y_continuous(limits = c(0, max(binary_plot_df$percentage[binary_plot_df$mecp2_status == "MeCP2 Sig Gain"]) * 1.4),
+                       expand = c(0, 0)) +
+    labs(
+      title = "Binary MeCP2 Gain Enrichment at Coordinated Genes",
+      subtitle = sprintf("Fisher's exact test: OR = %.2f, p = %.2e | MeCP2 sig gain = FDR < 0.05 & Fold > 0",
+                         fisher_binary$estimate, fisher_binary$p.value),
+      x = "Gene Category", y = "% of Genes with MeCP2 Significant Gain"
+    ) +
+    theme_biomodal() +
+    theme(legend.position = "none")
+
+  save_multiformat_ggplot(p_11h, file.path(OUTPUT_DIR, "11h_mecp2_binary_gain_fisher"),
+                          width = 8, height = 7)
+
+  # Save Fisher's exact table
+  fisher_binary_export <- data.frame(
+    gene_category = c("Coordinated", "Coordinated", "Non-coordinated", "Non-coordinated"),
+    mecp2_gain = c(TRUE, FALSE, TRUE, FALSE),
+    count = c(coord_gain, coord_no_gain, other_gain, other_no_gain),
+    total = c(coord_gain + coord_no_gain, coord_gain + coord_no_gain,
+              other_gain + other_no_gain, other_gain + other_no_gain),
+    percentage = c(100 * coord_gain / (coord_gain + coord_no_gain),
+                   100 * coord_no_gain / (coord_gain + coord_no_gain),
+                   100 * other_gain / (other_gain + other_no_gain),
+                   100 * other_no_gain / (other_gain + other_no_gain)),
+    fisher_OR = fisher_binary$estimate,
+    fisher_pvalue = fisher_binary$p.value,
+    stringsAsFactors = FALSE
+  )
+  write.table(fisher_binary_export, file.path(TABLES_DIR, "mecp2_binary_gain_coordinated_fisher.tsv"),
+              sep = "\t", quote = FALSE, row.names = FALSE)
+  cat("  Saved: mecp2_binary_gain_coordinated_fisher.tsv\n")
+
+  # -----------------------------------------------------------------------
+  # FIGURE 11i: Scatter Stratified by Coordinated vs Discordant
+  # -----------------------------------------------------------------------
+  # Tests whether the mC-to-MeCP2 relationship is stronger among
+  # coordinated genes (mC up/hmC down) vs discordant or mC-only genes.
+  cat("\nCreating Figure 11i: mC vs MeCP2 scatter stratified by coordination status...\n")
+
+  # Build hmC-significant gene lookup for stratification
+  hmc_sig_genes <- hmc_sig_coord$gene
+
+  # For each significant mC DMR gene, determine coordination status
+  stratified_scatter <- mc_dmr_mecp2 %>%
+    dplyr::filter(significant) %>%
+    mutate(mc_pct = mod_difference * 100) %>%
+    left_join(
+      coordinated %>% dplyr::select(gene, hmc_diff, coordinated_pattern),
+      by = "gene"
+    ) %>%
+    mutate(
+      coord_status = case_when(
+        !is.na(coordinated_pattern) & coordinated_pattern ~ "Coordinated\n(mC\u2191/hmC\u2193)",
+        !is.na(coordinated_pattern) & !coordinated_pattern ~ "Discordant",
+        TRUE ~ "mC-only"
+      )
+    )
+
+  stratified_scatter$coord_status <- factor(stratified_scatter$coord_status,
+                                             levels = c("Coordinated\n(mC\u2191/hmC\u2193)",
+                                                        "Discordant", "mC-only"))
+
+  # Per-group Spearman correlations
+  strat_groups <- levels(stratified_scatter$coord_status)
+  strat_cor_results <- data.frame(
+    group = character(), n_genes = integer(),
+    spearman_rho = numeric(), spearman_p = numeric(),
+    median_mc_diff = numeric(), median_mecp2_fold = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  for (grp in strat_groups) {
+    grp_data <- stratified_scatter %>% dplyr::filter(coord_status == grp)
+    if (nrow(grp_data) >= 5) {
+      ct <- cor.test(grp_data$mc_pct, grp_data$nearest_fold, method = "spearman")
+      strat_cor_results <- rbind(strat_cor_results, data.frame(
+        group = grp,
+        n_genes = nrow(grp_data),
+        spearman_rho = ct$estimate,
+        spearman_p = ct$p.value,
+        median_mc_diff = median(grp_data$mc_pct, na.rm = TRUE),
+        median_mecp2_fold = median(grp_data$nearest_fold, na.rm = TRUE),
+        stringsAsFactors = FALSE
+      ))
+      cat(sprintf("  %s (n=%d): rho = %.3f, p = %.2e\n",
+                  grp, nrow(grp_data), ct$estimate, ct$p.value))
+    } else {
+      cat(sprintf("  %s (n=%d): too few genes for correlation\n", grp, nrow(grp_data)))
+    }
+  }
+
+  # Color palette for coordination status
+  coord_colors <- c(
+    "Coordinated\n(mC\u2191/hmC\u2193)" = "#4DAF4A",
+    "Discordant" = "#984EA3",
+    "mC-only" = "grey60"
+  )
+
+  # Build annotation label for rho values
+  rho_labels <- paste(
+    sapply(seq_len(nrow(strat_cor_results)), function(i) {
+      sprintf("%s: \u03C1=%.3f, p=%.1e (n=%d)",
+              gsub("\n", " ", strat_cor_results$group[i]),
+              strat_cor_results$spearman_rho[i],
+              strat_cor_results$spearman_p[i],
+              strat_cor_results$n_genes[i])
+    }),
+    collapse = "\n"
+  )
+
+  p_11i <- ggplot(stratified_scatter, aes(x = mc_pct, y = nearest_fold, color = coord_status)) +
+    geom_point(alpha = 0.3, size = 1.2) +
+    geom_smooth(method = "lm", se = TRUE, alpha = 0.12, linewidth = 0.9) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.4) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.4) +
+    scale_color_manual(values = coord_colors, name = "Coordination Status") +
+    annotate("text", x = min(stratified_scatter$mc_pct, na.rm = TRUE) * 0.5,
+             y = max(stratified_scatter$nearest_fold, na.rm = TRUE) * 0.95,
+             label = rho_labels, size = 3, hjust = 0, vjust = 1, lineheight = 1.2) +
+    labs(
+      title = "5mC Change vs MeCP2 Fold Change: Stratified by Coordination Status",
+      subtitle = "Prediction: Coordinated genes (mC\u2191/hmC\u2193) show stronger mC\u2192MeCP2 relationship",
+      x = "5mC Change (Mutant - Control, %)",
+      y = "MeCP2 log2 Fold Change (Mutant/Control)"
+    ) +
+    theme_biomodal() +
+    theme(legend.position = "top")
+
+  save_multiformat_ggplot(p_11i, file.path(OUTPUT_DIR, "11i_mc_vs_mecp2_stratified"),
+                          width = 12, height = 9)
+
+  # Save per-group correlation table
+  write.table(strat_cor_results, file.path(TABLES_DIR, "mecp2_stratified_correlations.tsv"),
+              sep = "\t", quote = FALSE, row.names = FALSE)
+  cat("  Saved: mecp2_stratified_correlations.tsv\n")
+
+  # -----------------------------------------------------------------------
   # FIGURE 11e: Summary Heatmap - mC Direction x MeCP2 Direction
   # -----------------------------------------------------------------------
   cat("\nCreating Figure 11e: Integration heatmap...\n")
@@ -770,6 +974,8 @@ if (is.null(mecp2_annotated) || is.null(mecp2_up_gr) || is.null(mecp2_down_gr)) 
   cat(sprintf("Fold change correlation: Spearman rho = %.3f, p = %.2e\n",
               cor_test$estimate, cor_test$p.value))
   cat(sprintf("Coordinated vs other: Wilcoxon p = %.2e\n", wilcox_coord$p.value))
+  cat(sprintf("Binary MeCP2 gain (coordinated vs other): Fisher OR = %.2f, p = %.2e\n",
+              fisher_binary$estimate, fisher_binary$p.value))
   cat(sprintf("Integration: Fisher OR = %.2f, p = %.2e\n",
               fisher_quad$estimate, fisher_quad$p.value))
   cat(sprintf("\nMedian MeCP2 fold change:\n"))
