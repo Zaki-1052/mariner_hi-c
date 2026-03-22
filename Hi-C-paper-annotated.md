@@ -194,7 +194,7 @@
 | **H2AK119ub enrichment** | ✅ | `output/h2ak119ub_loop_integration/late/09_enrichment_dotplot_by_chromatin_state/` |
 | **H2AK119ub scatter** | ✅ | `output/h2ak119ub_loop_integration/late/12_scatter_loopFC_vs_k119ub_FC/` |
 | **K119ub enrichment data** | ✅ | `output/h2ak119ub_loop_integration/late/k119ub_enrichment_summary.tsv` |
-| **K119ub signal data** | ✅ | `data/k119ub_anchor_signal.tsv` |
+| **K119ub signal data** | ✅ | `peaks/k119ub_anchor_signal.tsv` |
 | **Scripts** | ✅ | `scripts/h2ak119ub_loop_integration.R`, `scripts/preprocess_k119ub_anchor_signal.R` |
 
 ### Panel 3B — Histone marks at differential TAD boundaries
@@ -528,7 +528,7 @@
 | `gene_level_summary.tsv` | `abc/results/` | 13.6K | Gene-level strongest enhancer + DE |
 | `tadcompare_final_annotated.tsv` | `tads/results/late/final/` | — | Final TAD boundaries with annotations |
 | `boundaries_with_chromatin_state.tsv` | `tads/results/visualizations/chip/late/` | — | TAD boundaries + ChIP-seq states |
-| `k119ub_anchor_signal.tsv` | `data/` | — | K119ub signal at loop anchors |
+| `k119ub_anchor_signal.tsv` | `peaks/` | — | K119ub signal at loop anchors |
 | `k119ub_abc_enhancer_merged.tsv` | `abc/results/` | ~9K | Enhancer K119ub + ABC scores |
 | `anchor_type_summary.tsv` | `peaks/loop_annotation_extended/late/` | 7 | Anchor category counts |
 | `loop_type_summary.tsv` | `peaks/loop_annotation_extended/late/` | ~28 | Loop type pair counts |
