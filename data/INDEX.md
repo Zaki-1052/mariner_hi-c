@@ -12,14 +12,14 @@ Consolidated ground-truth data and publication figures for the BAP1 Hi-C paper. 
 ```
 data/
 ├── tsvs/                              # Tabular data files (TSV, BED, TXT)
-│   ├── figure_1_tads_boundaries_compartments/   (16 files)
+│   ├── figure_1_tads_boundaries_compartments/   (19 files)
 │   ├── figure_2_loop_rewiring/                  (38 files)
 │   ├── figure_3_epigenetic_integration/         (15 files)
 │   ├── figure_4_abc_analysis/                   (19 files)
 │   ├── figure_5_model_functional/               (18 files)
 │   └── supplemental/                            (25 files)
 ├── plots/                             # Publication figures (SVG preferred, JPG for heavy plots)
-│   ├── figure_1_tads_boundaries_compartments/   (10 files)
+│   ├── figure_1_tads_boundaries_compartments/   (12 files)
 │   ├── figure_2_loop_rewiring/                  (64 files)
 │   ├── figure_3_epigenetic_integration/         (28 files)
 │   ├── figure_4_abc_analysis/                   (24 files)
@@ -32,7 +32,7 @@ data/
 └── INDEX.md                           # This file
 ```
 
-**Totals:** 137 data files + 158 plot files + 6 upstream = **295 files**
+**Totals:** 140 data files + 160 plot files + 6 upstream = **301 files** (includes 5 non-index files)
 
 ## Naming Convention
 
@@ -51,9 +51,12 @@ TADs, boundaries, and compartment changes between BAP1-KO and wildtype.
 
 | File | Panel | Description | Source |
 |------|-------|-------------|--------|
-| `1B_tad_all_annotated.tsv` | 1B | All TADs with differential statistics | `tads/tad-pc-analysis/output/tad_analysis/` |
-| `1B_tad_significant_relaxed.tsv` | 1B | Significant TADs (FDR<0.15, \|Diff\|>0.15) | same |
-| `1B_tad_significant_standard.tsv` | 1B | Significant TADs (FDR<0.05, \|Diff\|>0.30) | same |
+| `1B_early_tad_all_annotated.tsv` | 1B | All TADs with differential statistics (P13, 5074 TADs) | `tads/tad-pc-analysis/output/tad_analysis/early/` |
+| `1B_early_tad_significant_relaxed.tsv` | 1B | Significant TADs, P13 (FDR<0.15, \|Diff\|>0.15; 45 TADs) | same |
+| `1B_early_tad_significant_standard.tsv` | 1B | Significant TADs, P13 (FDR<0.05, \|Diff\|>0.30; 0 TADs) | same |
+| `1B_late_tad_all_annotated.tsv` | 1B | All TADs with differential statistics (Adult, 4366 TADs) | `tads/tad-pc-analysis/output/tad_analysis/late/` |
+| `1B_late_tad_significant_relaxed.tsv` | 1B | Significant TADs, Adult (FDR<0.15, \|Diff\|>0.15; 1283 TADs) | same |
+| `1B_late_tad_significant_standard.tsv` | 1B | Significant TADs, Adult (FDR<0.05, \|Diff\|>0.30; 355 TADs) | same |
 | `1B_early_tadcompare_differential.tsv` | 1B | TADCompare results, P13 timepoint | `tads/results/early/tadcompare/` |
 | `1B_late_tadcompare_differential.tsv` | 1B | TADCompare results, adult timepoint | `tads/results/late/tadcompare/` |
 | `1C_early_differential_boundaries.bed` | 1C | Differential boundaries (P13) | `tads/results/early/final/` |
@@ -72,8 +75,10 @@ TADs, boundaries, and compartment changes between BAP1-KO and wildtype.
 
 | File | Panel | Description |
 |------|-------|-------------|
-| `1B_tad_volcano_relaxed.pdf` | 1B | TAD volcano plot (relaxed thresholds) |
-| `1B_tad_volcano_standard.pdf` | 1B | TAD volcano plot (standard thresholds) |
+| `1B_early_tad_volcano_relaxed.svg` | 1B | TAD volcano, P13 (relaxed thresholds) |
+| `1B_early_tad_volcano_standard.svg` | 1B | TAD volcano, P13 (standard thresholds) |
+| `1B_late_tad_volcano_relaxed.svg` | 1B | TAD volcano, Adult (relaxed thresholds) |
+| `1B_late_tad_volcano_standard.svg` | 1B | TAD volcano, Adult (standard thresholds) |
 | `1D_compartment_volcano_relaxed.jpg` | 1D | Compartment volcano (JPG - heavy plot) |
 | `1D_compartment_volcano_standard.jpg` | 1D | Compartment volcano (JPG - heavy plot) |
 | `1D_compartment_genome_pct_pie.svg` | 1D | % genome pie chart by compartment shift |
@@ -314,6 +319,6 @@ GO analysis, DEG integration, network analysis, top gene heatmaps.
 ## Notes
 
 - **Panels not included:** 1A, 1E (Cntnap5a), 2D, 3A (deepTools ARA), 3E (H2Az), 4C (K27ac/ATAC volcanos), 5E (schematic) require HPC-generated screenshots, deepTools heatmaps, or BioRender schematics not stored in this repository.
-- **Plot formats:** SVG preferred for editability. JPG used for compartment/loop volcanos and heavy scatter plots. PDF used for TAD volcanos (only format available).
+- **Plot formats:** SVG preferred for editability. JPG used for compartment/loop volcanos and heavy scatter plots.
 - **Duplicate data:** Some files appear in multiple figure folders (e.g., boundary chromatin state in both Fig 1F and 3B) for self-contained reference.
 - **Original locations:** See `docs/Hi-C-paper-annotated.md` for complete source paths and generation scripts.
