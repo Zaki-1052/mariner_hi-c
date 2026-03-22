@@ -61,7 +61,7 @@ INPUT_FILES <- list(
   shared_anchors   = "output/shared_anchor_analysis/late/tables/shared_anchors.tsv",
   shared_loops     = "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv",
   polycomb_shared  = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv",
-  signal           = "data/k119ub_anchor_signal.tsv"
+  signal           = "peaks/k119ub_anchor_signal.tsv"
 )
 
 PEAK_FILES <- list(

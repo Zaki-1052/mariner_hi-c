@@ -12,7 +12,7 @@
 #     --ctrl /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_ctrl_merged.bw \
 #     --mut /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_mut_merged.bw \
 #     --loops 25042-late_outputs/merged_loops/characterized_loops.tsv \
-#     --output data/k119ub_anchor_signal.tsv
+#     --output peaks/k119ub_anchor_signal.tsv
 
 # =============================================================================
 # PARSE CLI ARGUMENTS
@@ -24,7 +24,7 @@ parse_args <- function() {
     ctrl   = "/expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_ctrl_merged.bw",
     mut    = "/expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_mut_merged.bw",
     loops  = "25042-late_outputs/merged_loops/characterized_loops.tsv",
-    output = "data/k119ub_anchor_signal.tsv"
+    output = "peaks/k119ub_anchor_signal.tsv"
   )
 
   i <- 1
