@@ -579,7 +579,7 @@ wrap_go_label <- function(label, width = 22) {
 compute_clustered_layout <- function(g, go_groups_df,
                                      base_radius = 2.5,
                                      center_spacing = 10.0,
-                                     other_ring_factor = 1.6) {
+                                     other_ring_factor = 2.0) {
   set.seed(42)
   node_df <- as_tibble(g)
 
@@ -709,8 +709,18 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
   edge_df <- as_tibble(g, "edges")
 
   # Edge from/to are integer indices in tidygraph — map to node names
-  genes_with_edges <- unique(c(node_df$name[edge_df$from], node_df$name[edge_df$to]))
-  show_node <- (node_df$go_group != "Other") | (node_df$name %in% genes_with_edges)
+  clustered_genes <- node_df$name[node_df$go_group != "Other"]
+  # Only keep "Other" genes that connect to at least one clustered gene
+  edges_touching_cluster <- edge_df %>%
+    filter(node_df$name[from] %in% clustered_genes |
+           node_df$name[to] %in% clustered_genes)
+  other_genes_near_cluster <- setdiff(
+    unique(c(node_df$name[edges_touching_cluster$from],
+             node_df$name[edges_touching_cluster$to])),
+    clustered_genes
+  )
+  show_node <- (node_df$go_group != "Other") |
+    (node_df$name %in% other_genes_near_cluster)
 
   g_show <- g %>%
     mutate(show = show_node) %>%
@@ -751,6 +761,18 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
       show_label = (cluster_rank <= thresholds$label_top_n) | (other_rank <= 5),
       label_text = ifelse(show_label, name, NA_character_)
     )
+
+  # Add edge-level attribute: de-emphasize edges involving "Other" genes
+  show_node_df <- as_tibble(g_show)
+  g_show <- g_show %>%
+    activate(edges) %>%
+    mutate(
+      from_clustered = show_node_df$go_group[from] != "Other",
+      to_clustered   = show_node_df$go_group[to] != "Other",
+      edge_alpha = ifelse(from_clustered & to_clustered, 0.40, 0.15),
+      edge_width_mult = ifelse(from_clustered & to_clustered, 1.0, 0.5)
+    ) %>%
+    activate(nodes)
 
   # Create manual layout using precomputed x, y
   layout <- create_layout(g_show, layout = "manual", x = x, y = y)
@@ -805,15 +827,15 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
       )
   }
 
-  # Layer 3: Edges (uniform, no type distinction)
+  # Layer 3: Edges (uniform color, de-emphasize edges to "Other" genes)
   p <- p +
     geom_edge_link(
-      aes(edge_width = weight),
+      aes(edge_width = weight, edge_alpha = edge_alpha),
       edge_colour = colors$edge_color,
-      alpha = 0.30,
       show.legend = FALSE
     ) +
-    scale_edge_width(range = c(0.2, 1.5), guide = "none")
+    scale_edge_width(range = c(0.2, 1.5), guide = "none") +
+    scale_edge_alpha_identity()
 
   # Layer 4: Nodes
   p <- p +
