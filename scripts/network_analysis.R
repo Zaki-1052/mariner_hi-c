@@ -77,7 +77,8 @@ THRESHOLDS <- list(
   shared_enh_delta_min = 0.005,
   go_pvalue_cutoff     = 0.05,
   go_qvalue_cutoff     = 0.1,
-  top_go_terms         = 8L,
+  top_go_terms         = 10L,
+  min_go_genes         = 3L,
   label_top_n          = 25L
 )
 
@@ -85,9 +86,8 @@ COLORS <- list(
   expression_low  = "#4575b4",
   expression_mid  = "white",
   expression_high = "#d73027",
-  edge_loop       = "#333333",
-  edge_enhancer   = "#FF7F00",
-  hull_alpha      = 0.12
+  edge_color      = "grey60",
+  cluster_alpha   = 0.10
 )
 
 THEME_PUB <- theme_bw(base_size = 11) +
@@ -483,11 +483,26 @@ assign_go_groups <- function(gene_symbols, top_n) {
   ego_df <- as.data.frame(ego)
   cat(sprintf("  Found %d significant GO BP terms\n", nrow(ego_df)))
 
-  top_terms <- ego_df %>% slice_head(n = top_n)
+  # Filter to terms with >= min_go_genes network genes, then take top N
+  term_network_counts <- ego_df %>%
+    mutate(genes_list = str_split(geneID, "/")) %>%
+    unnest(genes_list) %>%
+    filter(genes_list %in% gene_symbols) %>%
+    count(ID, Description, p.adjust, name = "n_network_genes") %>%
+    filter(n_network_genes >= THRESHOLDS$min_go_genes) %>%
+    arrange(p.adjust)
+
+  top_terms <- ego_df %>%
+    filter(ID %in% term_network_counts$ID[seq_len(min(top_n, nrow(term_network_counts)))]) %>%
+    arrange(p.adjust)
+
+  cat(sprintf("  GO terms with >=%d network genes: %d (using top %d)\n",
+              THRESHOLDS$min_go_genes, nrow(term_network_counts), nrow(top_terms)))
 
   gene_to_term <- top_terms %>%
     mutate(genes = str_split(geneID, "/")) %>%
     unnest(genes) %>%
+    filter(genes %in% gene_symbols) %>%
     group_by(genes) %>%
     slice_head(n = 1) %>%
     ungroup() %>%
@@ -496,6 +511,19 @@ assign_go_groups <- function(gene_symbols, top_n) {
   result <- tibble(gene = gene_symbols) %>%
     left_join(gene_to_term, by = "gene") %>%
     mutate(go_group = replace_na(go_group, "Other"))
+
+  # Re-filter: move genes in under-populated clusters back to "Other"
+  cluster_sizes <- result %>%
+    filter(go_group != "Other") %>%
+    count(go_group)
+  small_clusters <- cluster_sizes$go_group[cluster_sizes$n < THRESHOLDS$min_go_genes]
+  if (length(small_clusters) > 0) {
+    cat(sprintf("  Removing %d under-populated clusters (<%d genes): %s\n",
+                length(small_clusters), THRESHOLDS$min_go_genes,
+                paste(small_clusters, collapse = ", ")))
+    result <- result %>%
+      mutate(go_group = ifelse(go_group %in% small_clusters, "Other", go_group))
+  }
 
   cat(sprintf("  Assigned %d genes to GO groups (%d to 'Other')\n",
               sum(result$go_group != "Other"), sum(result$go_group == "Other")))
@@ -541,23 +569,168 @@ build_network <- function(nodes, edges) {
 }
 
 # ==============================================================================
-# 10. NETWORK VISUALIZATION (FIGURE 5C)
+# 10A. CLUSTERED LAYOUT HELPERS
+# ==============================================================================
+
+wrap_go_label <- function(label, width = 22) {
+  str_wrap(label, width = width)
+}
+
+compute_clustered_layout <- function(g, go_groups_df,
+                                     base_radius = 2.5,
+                                     center_spacing = 10.0,
+                                     other_ring_factor = 1.6) {
+  set.seed(42)
+  node_df <- as_tibble(g)
+
+  # Identify GO clusters (exclude "Other")
+  cluster_names <- go_groups_df %>%
+    filter(go_group != "Other") %>%
+    count(go_group, name = "n_genes") %>%
+    filter(n_genes >= 1) %>%
+    arrange(desc(n_genes))
+
+  n_clusters <- nrow(cluster_names)
+  if (n_clusters == 0) {
+    stop("No GO clusters found — cannot compute clustered layout")
+  }
+
+  # Compute per-cluster radius (area proportional to gene count)
+  cluster_names <- cluster_names %>%
+    mutate(
+      radius = base_radius * sqrt(n_genes / pi),
+      radius = pmax(radius, 1.5)
+    )
+
+  # Position cluster centers on a circle
+  center_ring_radius <- center_spacing * n_clusters / (2 * pi)
+  center_angles <- seq(0, 2 * pi, length.out = n_clusters + 1)[1:n_clusters]
+
+  cluster_centers <- cluster_names %>%
+    mutate(
+      cx = center_ring_radius * cos(center_angles),
+      cy = center_ring_radius * sin(center_angles)
+    )
+
+  # Ensure no overlap: scale outward if any cluster circles intersect
+  min_gap <- 2.0
+  needs_scaling <- TRUE
+  max_iter <- 10
+  iter <- 0
+  while (needs_scaling && iter < max_iter) {
+    needs_scaling <- FALSE
+    iter <- iter + 1
+    for (i in seq_len(nrow(cluster_centers) - 1)) {
+      for (j in (i + 1):nrow(cluster_centers)) {
+        dist_ij <- sqrt(
+          (cluster_centers$cx[i] - cluster_centers$cx[j])^2 +
+          (cluster_centers$cy[i] - cluster_centers$cy[j])^2
+        )
+        min_dist <- cluster_centers$radius[i] + cluster_centers$radius[j] + min_gap
+        if (dist_ij < min_dist) {
+          scale <- (min_dist / dist_ij) * 1.05
+          cluster_centers <- cluster_centers %>%
+            mutate(cx = cx * scale, cy = cy * scale)
+          needs_scaling <- TRUE
+          break
+        }
+      }
+      if (needs_scaling) break
+    }
+  }
+
+  # Position genes within each cluster in a circle
+  positions <- list()
+  for (i in seq_len(nrow(cluster_centers))) {
+    grp <- cluster_centers$go_group[i]
+    genes_in_group <- go_groups_df$gene[go_groups_df$go_group == grp]
+    n <- length(genes_in_group)
+    r <- cluster_centers$radius[i]
+    cx <- cluster_centers$cx[i]
+    cy <- cluster_centers$cy[i]
+
+    # Order genes by combined_score for consistent placement
+    gene_order <- node_df %>%
+      filter(name %in% genes_in_group) %>%
+      arrange(desc(combined_score)) %>%
+      pull(name)
+
+    # Handle any genes not in node_df (shouldn't happen, but defensive)
+    gene_order <- c(gene_order, setdiff(genes_in_group, gene_order))
+
+    if (n == 1) {
+      positions[[grp]] <- tibble(name = gene_order, x = cx, y = cy)
+    } else {
+      angles <- seq(0, 2 * pi, length.out = n + 1)[1:n]
+      positions[[grp]] <- tibble(
+        name = gene_order,
+        x = cx + r * 0.80 * cos(angles),
+        y = cy + r * 0.80 * sin(angles)
+      )
+    }
+  }
+
+  # Position "Other" genes on an outer ring
+  other_genes <- go_groups_df$gene[go_groups_df$go_group == "Other"]
+  if (length(other_genes) > 0) {
+    outer_radius <- max(sqrt(cluster_centers$cx^2 + cluster_centers$cy^2)) +
+                    max(cluster_centers$radius) * other_ring_factor + 3
+    # Sort "Other" genes by combined_score
+    other_order <- node_df %>%
+      filter(name %in% other_genes) %>%
+      arrange(desc(combined_score)) %>%
+      pull(name)
+    other_order <- c(other_order, setdiff(other_genes, other_order))
+
+    other_angles <- seq(0, 2 * pi, length.out = length(other_order) + 1)[1:length(other_order)]
+    positions[["Other"]] <- tibble(
+      name = other_order,
+      x = outer_radius * cos(other_angles),
+      y = outer_radius * sin(other_angles)
+    )
+  }
+
+  all_positions <- bind_rows(positions)
+
+  list(
+    node_positions = all_positions,
+    cluster_centers = cluster_centers
+  )
+}
+
+# ==============================================================================
+# 10B. NETWORK VISUALIZATION (FIGURE 5C)
 # ==============================================================================
 
 plot_network <- function(g, thresholds, colors, cfg_label) {
   set.seed(42)
 
-  # Remove isolated nodes for cleaner visualization
-  g_connected <- g %>%
-    filter(centrality_degree() > 0)
+  node_df <- as_tibble(g)
+  edge_df <- as_tibble(g, "edges")
+
+  # Edge from/to are integer indices in tidygraph — map to node names
+  genes_with_edges <- unique(c(node_df$name[edge_df$from], node_df$name[edge_df$to]))
+  show_node <- (node_df$go_group != "Other") | (node_df$name %in% genes_with_edges)
+
+  g_show <- g %>%
+    mutate(show = show_node) %>%
+    filter(show)
 
   n_total <- igraph::vcount(as.igraph(g))
-  n_shown <- igraph::vcount(as.igraph(g_connected))
-  n_edges <- igraph::ecount(as.igraph(g_connected))
-  cat(sprintf("  Plotting %d connected genes (%d isolated removed)\n", n_shown, n_total - n_shown))
+  n_shown <- igraph::vcount(as.igraph(g_show))
+  n_edges <- igraph::ecount(as.igraph(g_show))
+  n_clustered <- sum(as_tibble(g_show)$go_group != "Other")
+  n_peripheral <- n_shown - n_clustered
+  cat(sprintf("  Plotting %d nodes (%d in clusters, %d peripheral, %d removed)\n",
+              n_shown, n_clustered, n_peripheral, n_total - n_shown))
 
-  # Add computed node aesthetics
-  g_connected <- g_connected %>%
+  # Compute clustered layout
+  go_groups_df <- as_tibble(g_show) %>% dplyr::select(gene = name, go_group)
+  layout_result <- compute_clustered_layout(g_show, go_groups_df)
+
+  # Join positions onto graph node attributes
+  g_show <- g_show %>%
+    left_join(layout_result$node_positions, by = "name") %>%
     mutate(
       node_size = pmax(abs(replace_na(max_delta_unnorm, 0)), 0.005),
       border_width = case_when(
@@ -565,55 +738,89 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
         n_layers == 2 ~ 0.7,
         TRUE          ~ 0.3
       ),
-      show_label = rank(-combined_score, ties.method = "first") <= thresholds$label_top_n,
+      is_other = (go_group == "Other"),
+      display_size = ifelse(is_other, node_size * 0.5, node_size),
+      display_alpha = ifelse(is_other, 0.4, 1.0),
+      # Label top genes in clusters + a few "Other"
+      cluster_rank = ifelse(!is_other,
+                            rank(-combined_score, ties.method = "first"),
+                            Inf),
+      other_rank = ifelse(is_other,
+                          rank(-combined_score, ties.method = "first"),
+                          Inf),
+      show_label = (cluster_rank <= thresholds$label_top_n) | (other_rank <= 5),
       label_text = ifelse(show_label, name, NA_character_)
     )
 
-  # Compute layout: Fruchterman-Reingold for better clustering of small components
-  layout <- create_layout(g_connected, layout = "fr")
+  # Create manual layout using precomputed x, y
+  layout <- create_layout(g_show, layout = "manual", x = x, y = y)
 
-  # Identify GO groups with 3+ genes for hull drawing
-  hull_groups <- layout %>%
-    filter(go_group != "Other") %>%
-    count(go_group) %>%
-    filter(n >= 3) %>%
-    pull(go_group)
+  # Cluster background data
+  cluster_centers <- layout_result$cluster_centers
+  circle_data <- cluster_centers %>%
+    mutate(
+      label = sapply(go_group, wrap_go_label, width = 22),
+      label_y = cy + radius + 1.2
+    )
 
-  hull_data <- layout %>% filter(go_group %in% hull_groups)
+  # Get Set2 colors for clusters
+  n_clusters <- nrow(circle_data)
+  cluster_colors <- scales::brewer_pal(palette = "Set2")(max(3, n_clusters))[1:n_clusters]
+  names(cluster_colors) <- circle_data$go_group
 
-  # Build plot using the pre-computed layout
+  # --- Build plot layer by layer ---
   p <- ggraph(layout) +
-    scale_x_continuous(expand = expansion(mult = 0.15)) +
-    scale_y_continuous(expand = expansion(mult = 0.15))
+    scale_x_continuous(expand = expansion(mult = 0.12)) +
+    scale_y_continuous(expand = expansion(mult = 0.12))
 
-  # Hull layer (behind everything)
-  if (nrow(hull_data) > 0) {
+  # Layer 1: Cluster background circles
+  if (nrow(circle_data) > 0) {
     p <- p +
-      geom_mark_hull(
-        data = hull_data,
-        aes(x = x, y = y, fill = go_group),
-        alpha = colors$hull_alpha,
-        expand = unit(4, "mm"),
-        radius = unit(4, "mm"),
-        show.legend = TRUE
+      ggforce::geom_circle(
+        data = circle_data,
+        aes(x0 = cx, y0 = cy, r = radius, fill = go_group),
+        alpha = colors$cluster_alpha,
+        color = "grey70",
+        linewidth = 0.4,
+        inherit.aes = FALSE
       ) +
-      scale_fill_brewer(palette = "Set2", name = "GO Group")
+      scale_fill_manual(
+        values = cluster_colors,
+        name = "GO Group",
+        guide = guide_legend(order = 1)
+      )
   }
 
+  # Layer 2: Cluster labels above circles
+  if (nrow(circle_data) > 0) {
+    p <- p +
+      geom_text(
+        data = circle_data,
+        aes(x = cx, y = label_y, label = label),
+        size = 2.8,
+        fontface = "bold",
+        color = "grey25",
+        lineheight = 0.9,
+        inherit.aes = FALSE
+      )
+  }
+
+  # Layer 3: Edges (uniform, no type distinction)
   p <- p +
     geom_edge_link(
-      aes(edge_width = weight, edge_colour = edge_type),
-      alpha = 0.35,
-      show.legend = TRUE
+      aes(edge_width = weight),
+      edge_colour = colors$edge_color,
+      alpha = 0.30,
+      show.legend = FALSE
     ) +
-    scale_edge_colour_manual(
-      values = c("loop" = colors$edge_loop, "shared_enhancer" = colors$edge_enhancer),
-      name = "Edge Type"
-    ) +
-    scale_edge_width(range = c(0.2, 2.0), guide = "none") +
-    new_scale_fill() +
+    scale_edge_width(range = c(0.2, 1.5), guide = "none")
+
+  # Layer 4: Nodes
+  p <- p +
+    ggnewscale::new_scale_fill() +
     geom_node_point(
-      aes(size = node_size, fill = log2FC, stroke = border_width),
+      aes(size = display_size, fill = log2FC,
+          stroke = border_width, alpha = display_alpha),
       shape = 21,
       colour = "black"
     ) +
@@ -627,20 +834,27 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
       oob = squish
     ) +
     scale_size_continuous(range = c(2, 12), name = "|max delta AxC|") +
+    scale_alpha_identity()
+
+  # Layer 5: Gene labels
+  p <- p +
     geom_node_text(
       aes(label = label_text),
       repel = TRUE,
       size = 2.5,
-      max.overlaps = 25,
+      max.overlaps = 30,
       segment.size = 0.2,
       segment.alpha = 0.4,
       na.rm = TRUE
-    ) +
+    )
+
+  # Layer 6: Theme and titles
+  p <- p +
     theme_graph(base_family = "") +
     labs(
       title = sprintf("Multi-Layer Structural Disruption Network (BAP1-KO, %s)", cfg_label),
-      subtitle = sprintf("%d connected genes (%d total in >=%d layers) | %d edges",
-                         n_shown, n_total, thresholds$min_layers, n_edges)
+      subtitle = sprintf("%d genes in %d GO clusters + %d peripheral | %d edges",
+                         n_clustered, n_clusters, n_peripheral, n_edges)
     ) +
     theme(
       legend.position = "right",
@@ -780,6 +994,23 @@ write_summary_statistics <- function(profile, filtered, edges, g, ego, output_di
     sprintf("Upregulated (log2FC > 0): %d\n", sum(filtered$log2FC > 0, na.rm = TRUE)),
     sprintf("Downregulated (log2FC < 0): %d\n", sum(filtered$log2FC < 0, na.rm = TRUE)),
     sprintf("DEGs (padj < 0.05): %d\n\n", sum(filtered$padj < 0.05, na.rm = TRUE)),
+
+    "--- GO Clusters ---\n",
+    sprintf("Clustered genes: %d\n", sum(node_df$go_group != "Other")),
+    sprintf("Peripheral genes (Other): %d\n", sum(node_df$go_group == "Other")),
+    sprintf("Number of GO clusters: %d\n",
+            n_distinct(node_df$go_group[node_df$go_group != "Other"])),
+    paste0(
+      paste(
+        sapply(
+          sort(unique(node_df$go_group[node_df$go_group != "Other"])),
+          function(grp) sprintf("  - %s: %d genes", grp,
+                                sum(node_df$go_group == grp))
+        ),
+        collapse = "\n"
+      ),
+      "\n\n"
+    ),
 
     "--- Network Edges ---\n",
     sprintf("Loop edges: %d\n", loop_edges_n),
