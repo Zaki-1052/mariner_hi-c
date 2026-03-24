@@ -721,11 +721,6 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
     left_join(layout_result$node_positions, by = "name") %>%
     mutate(
       node_size = pmax(abs(replace_na(max_delta_unnorm, 0)), 0.005),
-      border_width = case_when(
-        n_layers == 3 ~ 1.5,
-        n_layers == 2 ~ 0.7,
-        TRUE          ~ 0.3
-      ),
       is_other = (go_group == "Other"),
       display_size = ifelse(is_other, node_size * 0.5, node_size),
       display_alpha = ifelse(is_other, 0.4, 1.0),
@@ -815,14 +810,14 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
     scale_edge_width(range = c(0.2, 1.5), guide = "none") +
     scale_edge_alpha_identity()
 
-  # Layer 4: Nodes
+  # Layer 4: Node fills (borders drawn separately with linetype)
   p <- p +
     ggnewscale::new_scale_fill() +
     geom_node_point(
-      aes(size = display_size, fill = log2FC,
-          stroke = border_width, alpha = display_alpha),
+      aes(size = display_size, fill = log2FC, alpha = display_alpha),
       shape = 21,
-      colour = "black"
+      colour = NA,
+      stroke = 0
     ) +
     scale_fill_gradient2(
       low = colors$expression_low,
@@ -835,6 +830,41 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
     ) +
     scale_size_continuous(range = c(2, 12), name = "|max delta AxC|") +
     scale_alpha_identity()
+
+  # Layer 4b: Node borders with linetype encoding structural layers
+  # Convert geom_node_point size (mm) to data-coordinate radii for ggforce circles
+  border_df <- as.data.frame(layout) %>%
+    transmute(
+      x0 = x, y0 = y,
+      r = {
+        x_extent <- diff(range(x, na.rm = TRUE))
+        effective_width_mm <- 14 * 25.4 * (1 - 2 * 0.12)
+        size_mm <- scales::rescale(display_size, to = c(2, 12))
+        (size_mm / 2) * (x_extent / effective_width_mm)
+      },
+      border_lty = factor(
+        case_when(
+          n_layers >= 3 ~ "3 layers",
+          n_layers == 2 ~ "2 layers",
+          TRUE ~ "1 layer"
+        ),
+        levels = c("1 layer", "2 layers", "3 layers")
+      ),
+      border_alpha = display_alpha
+    )
+
+  p <- p +
+    ggforce::geom_circle(
+      data = border_df,
+      aes(x0 = x0, y0 = y0, r = r, linetype = border_lty, alpha = border_alpha),
+      fill = NA, colour = "black", linewidth = 0.5,
+      inherit.aes = FALSE
+    ) +
+    scale_linetype_manual(
+      values = c("1 layer" = "dotted", "2 layers" = "dashed", "3 layers" = "solid"),
+      name = "Structural\nLayers",
+      guide = guide_legend(order = 4)
+    )
 
   # Layer 5: Gene labels
   p <- p +
@@ -850,6 +880,7 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
 
   # Layer 6: Theme and titles
   p <- p +
+    coord_fixed() +
     theme_graph(base_family = "") +
     labs(
       title = sprintf("Multi-Layer Structural Disruption Network (BAP1-KO, %s)", cfg_label),
