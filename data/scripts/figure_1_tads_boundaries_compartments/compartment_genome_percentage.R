@@ -35,14 +35,20 @@ cat("================================================\n\n")
 MM10_GENOME_SIZE <- 2730871774
 
 # Input files (from compartment_volcano_plot.R)
-BASE_DIR <- "tads/tad-pc-analysis/output/compartment_analysis"
+# Original: BASE_DIR <- "tads/tad-pc-analysis/output/compartment_analysis"
+TSV_DIR <- "data/tsvs/figure_1_tads_boundaries_compartments"
+PLOT_DIR <- "data/plots/figure_1_tads_boundaries_compartments"
 INPUT_FILES <- list(
-  standard = file.path(BASE_DIR, "compartment_significant_standard.tsv"),
-  relaxed  = file.path(BASE_DIR, "compartment_significant_relaxed.tsv"),
-  all      = file.path(BASE_DIR, "compartment_all_annotated.tsv")
+  # Original: file.path(BASE_DIR, "compartment_significant_standard.tsv")
+  standard = file.path(TSV_DIR, "1D_compartment_significant_standard.tsv"),
+  # Original: file.path(BASE_DIR, "compartment_significant_relaxed.tsv")
+  relaxed  = file.path(TSV_DIR, "1D_compartment_significant_relaxed.tsv"),
+  # Original: file.path(BASE_DIR, "compartment_all_annotated.tsv")
+  all      = file.path(TSV_DIR, "1D_compartment_all_annotated.tsv")
 )
-
-OUTPUT_DIR <- BASE_DIR
+# Original: OUTPUT_DIR <- BASE_DIR
+dir.create(TSV_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(PLOT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # Validate all inputs exist
 for (name in names(INPUT_FILES)) {
@@ -63,7 +69,8 @@ suppressPackageStartupMessages({
   library(scales)
 })
 
-source("scripts/utils/multi_format_output.R")
+# Original: source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")
 
 # =============================================================================
 # LOAD DATA
@@ -181,7 +188,7 @@ p_bar <- ggplot(pct_sig, aes(x = threshold, y = pct_genome, fill = category)) +
   )
 
 save_multiformat_ggplot(p_bar,
-                        file.path(OUTPUT_DIR, "compartment_genome_pct_bar"),
+                        file.path(PLOT_DIR, "1D_compartment_genome_pct_bar"),  # Original: file.path(OUTPUT_DIR, "compartment_genome_pct_bar")
                         width = 7, height = 7)
 
 # =============================================================================
@@ -229,14 +236,14 @@ if (requireNamespace("patchwork", quietly = TRUE)) {
       )
     )
   save_multiformat_ggplot(p_pie_combined,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie"),  # Original: file.path(OUTPUT_DIR, "compartment_genome_pct_pie")
                           width = 12, height = 6)
 } else {
   save_multiformat_ggplot(p_pie_std,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_standard"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie_standard"),  # Original: file.path(OUTPUT_DIR, ...)
                           width = 7, height = 6)
   save_multiformat_ggplot(p_pie_rlx,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_relaxed"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie_relaxed"),  # Original: file.path(OUTPUT_DIR, ...)
                           width = 7, height = 6)
 }
 
@@ -374,14 +381,14 @@ if (requireNamespace("patchwork", quietly = TRUE)) {
       )
     )
   save_multiformat_ggplot(p_pie7_combined,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie_7cat"),  # Original: file.path(OUTPUT_DIR, ...)
                           width = 14, height = 7)
 } else {
   save_multiformat_ggplot(p_pie7_std,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_standard"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie_7cat_standard"),  # Original: file.path(OUTPUT_DIR, ...)
                           width = 8, height = 7)
   save_multiformat_ggplot(p_pie7_rlx,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_relaxed"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie_7cat_relaxed"),  # Original: file.path(OUTPUT_DIR, ...)
                           width = 8, height = 7)
 }
 
@@ -427,14 +434,14 @@ if (requireNamespace("patchwork", quietly = TRUE)) {
       )
     )
   save_multiformat_ggplot(p_pie7_sig_combined,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_sigonly"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie_7cat_sigonly"),  # Original: file.path(OUTPUT_DIR, ...)
                           width = 14, height = 7)
 } else {
   save_multiformat_ggplot(p_pie7_sig_std,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_sigonly_standard"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie_7cat_sigonly_standard"),  # Original: file.path(OUTPUT_DIR, ...)
                           width = 8, height = 7)
   save_multiformat_ggplot(p_pie7_sig_rlx,
-                          file.path(OUTPUT_DIR, "compartment_genome_pct_pie_7cat_sigonly_relaxed"),
+                          file.path(PLOT_DIR, "1D_compartment_genome_pct_pie_7cat_sigonly_relaxed"),  # Original: file.path(OUTPUT_DIR, ...)
                           width = 8, height = 7)
 }
 
@@ -444,10 +451,11 @@ pct_7cat_export <- rbind(
   transform(pct_7cat_rlx, threshold = as.character(threshold))
 )
 pct_7cat_export$category <- as.character(pct_7cat_export$category)
+# Original: file.path(OUTPUT_DIR, "compartment_genome_pct_7cat_table.tsv")
 write.table(pct_7cat_export,
-            file.path(OUTPUT_DIR, "compartment_genome_pct_7cat_table.tsv"),
+            file.path(TSV_DIR, "1D_compartment_genome_pct_7cat_table.tsv"),
             sep = "\t", quote = FALSE, row.names = FALSE)
-cat(sprintf("  Saved: %s\n", file.path(OUTPUT_DIR, "compartment_genome_pct_7cat_table.tsv")))
+cat(sprintf("  Saved: %s\n", file.path(TSV_DIR, "1D_compartment_genome_pct_7cat_table.tsv")))
 
 # =============================================================================
 # FIGURE 3: PER-CHROMOSOME BREAKDOWN (standard threshold)
@@ -505,7 +513,7 @@ p_chr <- ggplot(chr_summary, aes(x = Chr, y = pct_chr, fill = direction_label)) 
   )
 
 save_multiformat_ggplot(p_chr,
-                        file.path(OUTPUT_DIR, "compartment_genome_pct_by_chr"),
+                        file.path(PLOT_DIR, "1D_compartment_genome_pct_by_chr"),  # Original: file.path(OUTPUT_DIR, "compartment_genome_pct_by_chr")
                         width = 10, height = 6)
 
 # =============================================================================
@@ -604,12 +612,14 @@ for (pct_7 in list(pct_7cat_std, pct_7cat_rlx)) {
   }
 }
 
-summary_file <- file.path(OUTPUT_DIR, "compartment_genome_percentage_summary.txt")
+# Original: summary_file <- file.path(OUTPUT_DIR, "compartment_genome_percentage_summary.txt")
+summary_file <- file.path(TSV_DIR, "1D_compartment_genome_percentage_summary.txt")
 writeLines(summary_lines, summary_file)
 cat(sprintf("  Saved: %s\n", summary_file))
 
 # Save summary table as TSV
-table_file <- file.path(OUTPUT_DIR, "compartment_genome_percentage_table.tsv")
+# Original: table_file <- file.path(OUTPUT_DIR, "compartment_genome_percentage_table.tsv")
+table_file <- file.path(TSV_DIR, "1D_compartment_genome_percentage_table.tsv")
 pct_export <- pct_combined
 pct_export$threshold <- gsub("\n", " ", pct_export$threshold)
 write.table(pct_export, table_file, sep = "\t", quote = FALSE, row.names = FALSE)
@@ -623,7 +633,8 @@ cat("\n================================================\n")
 cat("ANALYSIS COMPLETE\n")
 cat("================================================\n\n")
 
-cat(sprintf("Output directory: %s\n\n", OUTPUT_DIR))
+cat(sprintf("Output directory (TSVs): %s\n", TSV_DIR))  # Original: OUTPUT_DIR
+cat(sprintf("Output directory (plots): %s\n\n", PLOT_DIR))
 cat("Generated files:\n")
 cat("  - compartment_genome_pct_bar/{pdf,svg,jpg}          (stacked bar chart)\n")
 cat("  - compartment_genome_pct_pie/{pdf,svg,jpg}          (binary pie charts)\n")

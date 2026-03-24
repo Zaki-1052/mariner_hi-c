@@ -38,7 +38,7 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility for PDF + SVG + JPEG output
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # Load paths configuration
 cat("\nLoading paths configuration...\n")
@@ -68,6 +68,7 @@ RESOLUTIONS <- if (!is.null(TARGET_RESOLUTION)) {
 }
 
 # .hic file paths from config (match extract_counts.R pattern)
+# TODO: not in data/ — .hic files are HPC-only, paths read from config
 HIC_FILES <- c(
   ctrl_M1 = config$hic_files$ctrl_M1,
   ctrl_M2 = config$hic_files$ctrl_M2,
@@ -80,10 +81,15 @@ HIC_FILES <- c(
 # Sample groups for statistical comparison
 GROUPS <- factor(c("ctrl", "ctrl", "ctrl", "mut", "mut", "mut"))
 
-# Output base directory
-OUTPUT_BASE <- "outputs/apa_results"
-if (!dir.exists(OUTPUT_BASE)) {
-  dir.create(OUTPUT_BASE, recursive = TRUE)
+# Output directories
+# Original: OUTPUT_BASE <- "outputs/apa_results"
+APA_PLOT_DIR <- "data/plots/figure_2_loop_rewiring/apa"
+APA_TSV_DIR  <- "data/tsvs/figure_2_loop_rewiring"
+if (!dir.exists(APA_PLOT_DIR)) {
+  dir.create(APA_PLOT_DIR, recursive = TRUE)
+}
+if (!dir.exists(APA_TSV_DIR)) {
+  dir.create(APA_TSV_DIR, recursive = TRUE)
 }
 
 cat("\n========================================\n")
@@ -91,7 +97,8 @@ cat("Aggregate Peak Analysis (APA) Pipeline\n")
 cat("========================================\n\n")
 cat(sprintf("Resolutions to process: %s\n", paste(RESOLUTIONS/1000, "kb", collapse = ", ")))
 cat(sprintf("Loop sets: %s\n", TARGET_LOOPS))
-cat(sprintf("Output directory: %s\n\n", OUTPUT_BASE))
+cat(sprintf("Plot directory: %s\n", APA_PLOT_DIR))
+cat(sprintf("TSV directory: %s\n\n", APA_TSV_DIR))
 
 # ============================================================================
 # Core Functions
@@ -159,7 +166,7 @@ extract_apa_matrices <- function(loops, hic_files, resolution, buffer, norm = "K
   cat(sprintf("  Buffer: %d bins (%dkb window)\n", buffer, (buffer * 2 + 1) * resolution / 1000))
 
   # Create temporary HDF5 directory for on-disk storage
-  hdf5_dir <- file.path(OUTPUT_BASE, sprintf("temp_hdf5_res_%dkb", resolution/1000))
+  hdf5_dir <- file.path(APA_PLOT_DIR, sprintf("temp_hdf5_res_%dkb", resolution/1000))  # Original: file.path(OUTPUT_BASE, ...)
   if (dir.exists(hdf5_dir)) {
     unlink(hdf5_dir, recursive = TRUE)
   }
@@ -584,16 +591,17 @@ run_apa_for_loop_set <- function(resolution, loops_gi, loop_set_name, direction,
   cat(sprintf("\n--- Processing: %s %s-regulated loops at %dkb ---\n",
               loop_set_name, direction, resolution/1000))
 
-  # Create output directory
-  output_dir <- file.path(
-    OUTPUT_BASE,
-    sprintf("res_%dkb", resolution/1000),
-    loop_set_name,
-    sprintf("%s_loops", direction)
-  )
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
+  # Create output directories
+  # Original: output_dir <- file.path(OUTPUT_BASE, sprintf("res_%dkb", resolution/1000), loop_set_name, sprintf("%s_loops", direction))
+  plot_subdir <- file.path(APA_PLOT_DIR, sprintf("res_%dkb", resolution/1000), loop_set_name, sprintf("%s_loops", direction))
+  if (!dir.exists(plot_subdir)) {
+    dir.create(plot_subdir, recursive = TRUE)
   }
+  if (!dir.exists(APA_TSV_DIR)) {
+    dir.create(APA_TSV_DIR, recursive = TRUE)
+  }
+  # Prefix for flat TSV filenames
+  tsv_prefix <- sprintf("2C_%dkb_%s_%s", resolution/1000, loop_set_name, direction)
 
   # Check minimum loop count
   n_loops <- length(loops_gi)
@@ -625,7 +633,7 @@ run_apa_for_loop_set <- function(resolution, loops_gi, loop_set_name, direction,
   enrichment_df <- calculate_enrichment_scores(pixels)
 
   if (!is.null(enrichment_df)) {
-    enrichment_file <- file.path(output_dir, "enrichment_scores.tsv")
+    enrichment_file <- file.path(APA_TSV_DIR, sprintf("%s_enrichment_scores.tsv", tsv_prefix))  # Original: file.path(output_dir, "enrichment_scores.tsv")
     write.table(enrichment_df, enrichment_file, sep = "\t",
                 quote = FALSE, row.names = FALSE)
     cat(sprintf("  ✓ Saved: %s\n", enrichment_file))
@@ -640,19 +648,19 @@ run_apa_for_loop_set <- function(resolution, loops_gi, loop_set_name, direction,
 
   p_ctrl <- plot_apa_heatmap(agg_matrices, "Control", ctrl_indices, resolution)
   if (!is.null(p_ctrl)) {
-    save_multiformat_ggplot(p_ctrl, file.path(output_dir, "aggregate_heatmap_ctrl"), width = 6, height = 5)
+    save_multiformat_ggplot(p_ctrl, file.path(plot_subdir, "2C_aggregate_heatmap_ctrl"), width = 6, height = 5)  # Original: file.path(output_dir, "aggregate_heatmap_ctrl")
   }
 
   # 4b. Mutant aggregate heatmap
   p_mut <- plot_apa_heatmap(agg_matrices, "BAP1-KO", mut_indices, resolution)
   if (!is.null(p_mut)) {
-    save_multiformat_ggplot(p_mut, file.path(output_dir, "aggregate_heatmap_mut"), width = 6, height = 5)
+    save_multiformat_ggplot(p_mut, file.path(plot_subdir, "2C_aggregate_heatmap_mut"), width = 6, height = 5)  # Original: file.path(output_dir, "aggregate_heatmap_mut")
   }
 
   # 4c. Difference heatmap
   p_diff <- plot_difference_heatmap(agg_matrices, ctrl_indices, mut_indices, resolution)
   if (!is.null(p_diff)) {
-    save_multiformat_ggplot(p_diff, file.path(output_dir, "difference_heatmap"), width = 6, height = 5)
+    save_multiformat_ggplot(p_diff, file.path(plot_subdir, "2C_difference_heatmap"), width = 6, height = 5)  # Original: file.path(output_dir, "difference_heatmap")
   }
 
   # 4d. Enrichment box plot
@@ -660,10 +668,10 @@ run_apa_for_loop_set <- function(resolution, loops_gi, loop_set_name, direction,
   enrichment_result <- plot_enrichment_comparison(enrichment_df, direction_label)
 
   if (!is.null(enrichment_result)) {
-    save_multiformat_ggplot(enrichment_result$plot, file.path(output_dir, "enrichment_boxplot"), width = 6, height = 5)
+    save_multiformat_ggplot(enrichment_result$plot, file.path(plot_subdir, "2C_enrichment_boxplot"), width = 6, height = 5)  # Original: file.path(output_dir, "enrichment_boxplot")
 
     # Save statistical test results
-    test_file <- file.path(output_dir, "statistical_tests.tsv")
+    test_file <- file.path(APA_TSV_DIR, sprintf("%s_statistical_tests.tsv", tsv_prefix))  # Original: file.path(output_dir, "statistical_tests.tsv")
     test_df <- data.frame(
       test = "Wilcoxon rank-sum",
       statistic = enrichment_result$test$statistic,
@@ -679,13 +687,13 @@ run_apa_for_loop_set <- function(resolution, loops_gi, loop_set_name, direction,
   # 4e. Per-replicate heatmaps
   p_replicates <- plot_replicate_heatmaps(agg_matrices, resolution, names(hic_files))
   if (!is.null(p_replicates)) {
-    save_multiformat_ggplot(p_replicates, file.path(output_dir, "replicate_heatmaps"), width = 12, height = 8)
+    save_multiformat_ggplot(p_replicates, file.path(plot_subdir, "2C_replicate_heatmaps"), width = 12, height = 8)  # Original: file.path(output_dir, "replicate_heatmaps")
   }
 
-  cat(sprintf("  ✓ All outputs saved to: %s\n", output_dir))
+  cat(sprintf("  ✓ All outputs saved to: %s (plots), %s (TSVs)\n", plot_subdir, APA_TSV_DIR))
 
   # Cleanup HDF5 temporary files
-  hdf5_dir <- file.path(OUTPUT_BASE, sprintf("temp_hdf5_res_%dkb", resolution/1000))
+  hdf5_dir <- file.path(APA_PLOT_DIR, sprintf("temp_hdf5_res_%dkb", resolution/1000))  # Original: file.path(OUTPUT_BASE, ...)
   if (dir.exists(hdf5_dir)) {
     unlink(hdf5_dir, recursive = TRUE)
   }
@@ -732,7 +740,7 @@ main <- function() {
 
       cat("\n## Processing MERGED loops ##\n")
 
-      merged_file <- "outputs/merged_loops/non_redundant_loops.rds"
+      merged_file <- "outputs/merged_loops/non_redundant_loops.rds"  # TODO: not in data/
 
       if (!file.exists(merged_file)) {
         cat(sprintf("  ⚠ Merged loops file not found: %s\n", merged_file))
@@ -783,9 +791,9 @@ main <- function() {
 
       cat("\n## Processing RESOLUTION-SPECIFIC loops ##\n")
 
-      binned_file <- file.path("outputs", sprintf("res_%dkb", res_kb), "03_binned.rds")
+      binned_file <- file.path("outputs", sprintf("res_%dkb", res_kb), "03_binned.rds")  # TODO: not in data/
       results_file <- file.path("outputs", sprintf("edgeR_results_res_%dkb", res_kb),
-                                "primary_analysis", "all_results_primary.tsv")
+                                "primary_analysis", "all_results_primary.tsv")  # TODO: not in data/
 
       if (!file.exists(binned_file) || !file.exists(results_file)) {
         cat(sprintf("  ⚠ Required files not found:\n"))
@@ -874,10 +882,11 @@ main <- function() {
   cat("APA Analysis Complete\n")
   cat("========================================\n")
   cat(sprintf("Successful analyses: %d / %d\n", success_count, total_analyses))
-  cat(sprintf("Results directory: %s\n", OUTPUT_BASE))
+  cat(sprintf("Plot directory: %s\n", APA_PLOT_DIR))
+  cat(sprintf("TSV directory: %s\n", APA_TSV_DIR))
 
   # Write summary report
-  summary_file <- file.path(OUTPUT_BASE, "summary_report.txt")
+  summary_file <- file.path(APA_TSV_DIR, "2C_apa_summary_report.txt")  # Original: file.path(OUTPUT_BASE, "summary_report.txt")
   sink(summary_file)
   cat("APA Analysis Summary Report\n")
   cat(sprintf("Generated: %s\n\n", Sys.time()))
@@ -888,7 +897,8 @@ main <- function() {
   cat(sprintf("Successful analyses: %d / %d\n\n", success_count, total_analyses))
 
   cat("Output structure:\n")
-  cat(sprintf("  %s/\n", OUTPUT_BASE))
+  cat(sprintf("  Plots: %s/\n", APA_PLOT_DIR))
+  cat(sprintf("  TSVs:  %s/\n", APA_TSV_DIR))
   for (res in RESOLUTIONS) {
     cat(sprintf("    res_%dkb/\n", res/1000))
     if (TARGET_LOOPS %in% c("both", "merged")) {

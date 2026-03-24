@@ -37,14 +37,14 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility for PDF + SVG + JPEG output
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # Load paths configuration
 cat("\n========================================\n")
 cat("APA Analysis: Shared Anchor Loop Subsets\n")
 cat("========================================\n\n")
 
-config <- yaml::read_yaml("config/paths_config.yaml")
+config <- yaml::read_yaml("config/paths_config.yaml")  # TODO: not in data/ (config file with HPC .hic file paths)
 
 # Parse command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -85,17 +85,21 @@ CTRL_INDICES <- which(GROUPS == "ctrl")
 MUT_INDICES <- which(GROUPS == "mut")
 
 # Input files
-INPUT_DIR <- file.path("output/shared_anchor_analysis", TIMEPOINT, "apa_subsets")
+INPUT_DIR <- file.path("data/tsvs/supplemental/apa_subsets")  # Original: file.path("output/shared_anchor_analysis", TIMEPOINT, "apa_subsets")
 INPUT_FILES <- list(
-  lost_longrange = file.path(INPUT_DIR, "shared_lost_longrange.rds"),
-  gained_shortrange = file.path(INPUT_DIR, "shared_gained_shortrange.rds")
+  lost_longrange = file.path(INPUT_DIR, "shared_lost_longrange.rds"),  # Original: output/shared_anchor_analysis/{TIMEPOINT}/apa_subsets/shared_lost_longrange.rds
+  gained_shortrange = file.path(INPUT_DIR, "shared_gained_shortrange.rds")  # Original: output/shared_anchor_analysis/{TIMEPOINT}/apa_subsets/shared_gained_shortrange.rds
 )
 
-# Output directory
-OUTPUT_BASE <- "outputs/apa_shared_anchors"
-OUTPUT_DIR <- file.path(OUTPUT_BASE, TIMEPOINT)
-if (!dir.exists(OUTPUT_DIR)) {
-  dir.create(OUTPUT_DIR, recursive = TRUE)
+# Output directories
+OUTPUT_DIR_TSVS <- "data/tsvs/supplemental"  # Original: outputs/apa_shared_anchors/{TIMEPOINT} (TSVs)
+OUTPUT_DIR_PLOTS <- "data/plots/supplemental"  # Original: outputs/apa_shared_anchors/{TIMEPOINT} (plots)
+OUTPUT_DIR <- OUTPUT_DIR_PLOTS  # For plot-centric functions that use OUTPUT_DIR
+if (!dir.exists(OUTPUT_DIR_TSVS)) {
+  dir.create(OUTPUT_DIR_TSVS, recursive = TRUE)
+}
+if (!dir.exists(OUTPUT_DIR_PLOTS)) {
+  dir.create(OUTPUT_DIR_PLOTS, recursive = TRUE)
 }
 
 cat(sprintf("Output directory: %s\n\n", OUTPUT_DIR))
@@ -744,7 +748,7 @@ main <- function() {
   cat(sprintf("Results directory: %s\n", OUTPUT_DIR))
 
   # Write summary report
-  summary_file <- file.path(OUTPUT_DIR, "summary_report.txt")
+  summary_file <- file.path(OUTPUT_DIR_TSVS, "apa_shared_summary_report.txt")  # Original: file.path(OUTPUT_DIR, "summary_report.txt")
   sink(summary_file)
   cat("APA Analysis Summary Report: Shared Anchor Loop Subsets\n")
   cat(sprintf("Generated: %s\n", Sys.time()))

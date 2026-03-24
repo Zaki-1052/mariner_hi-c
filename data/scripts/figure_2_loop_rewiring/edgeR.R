@@ -12,6 +12,7 @@
 # Parse command-line arguments for resolution
 args <- commandArgs(trailingOnly = TRUE)
 RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
+RES_KB <- RESOLUTION / 1000
 
 cat("\n========================================\n")
 cat("edgeR Differential Loop Analysis\n")
@@ -50,18 +51,23 @@ cat("Loading configuration...\n")
 config <- yaml::read_yaml("config/edgeR_config.yaml")
 
 # Override config paths to use resolution-specific directories
-input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
-config$paths$input$counts_matrix <- file.path(input_dir, "06_counts_matrix.rds")
-config$paths$input$coordinates <- file.path(input_dir, "03_binned.rds")
-config$paths$input$merged_loops <- file.path(input_dir, "02_merged.rds")
-config$paths$input$qc_summary <- file.path(input_dir, "qc_report/qc_report_summary.rds")
+input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)  # TODO: not in data/
+config$paths$input$counts_matrix <- file.path(input_dir, "06_counts_matrix.rds")  # TODO: not in data/
+config$paths$input$coordinates <- file.path(input_dir, "03_binned.rds")  # TODO: not in data/
+config$paths$input$merged_loops <- file.path(input_dir, "02_merged.rds")  # TODO: not in data/
+config$paths$input$qc_summary <- file.path(input_dir, "qc_report/qc_report_summary.rds")  # TODO: not in data/
 
 # Update output paths to be resolution-specific
-config$paths$output$base <- file.path("outputs", sprintf("edgeR_results_res_%dkb", RESOLUTION/1000))
-config$paths$output$primary <- file.path(config$paths$output$base, "primary_analysis")
-config$paths$output$comparison <- file.path(config$paths$output$base, "hiccups_comparison")
-config$paths$output$plots <- file.path(config$paths$output$base, "plots")
-config$paths$output$logs <- file.path(config$paths$output$base, "logs")
+# Original: config$paths$output$base <- file.path("outputs", sprintf("edgeR_results_res_%dkb", RESOLUTION/1000))
+config$paths$output$base <- file.path("outputs", sprintf("edgeR_results_res_%dkb", RESOLUTION/1000))  # TODO: not in data/ (logs/RDS intermediates)
+# Original: config$paths$output$primary <- file.path(config$paths$output$base, "primary_analysis")
+config$paths$output$primary <- "data/tsvs/figure_2_loop_rewiring"
+# Original: config$paths$output$comparison <- file.path(config$paths$output$base, "hiccups_comparison")
+config$paths$output$comparison <- file.path(config$paths$output$base, "hiccups_comparison")  # TODO: not in data/
+# Original: config$paths$output$plots <- file.path(config$paths$output$base, "plots")
+config$paths$output$plots <- "data/plots/figure_2_loop_rewiring"
+# Original: config$paths$output$logs <- file.path(config$paths$output$base, "logs")
+config$paths$output$logs <- file.path(config$paths$output$base, "logs")  # TODO: not in data/
 
 # Set working directory to base
 setwd(config$paths$base_dir)
@@ -313,7 +319,7 @@ save_multiformat(quote({
     pt.cex = 2,
     bty = "n"
   )
-}), file.path(config$paths$output$plots, "mds_plot"), width = 8, height = 6)
+}), file.path(config$paths$output$plots, sprintf("2A_mds_plot_%dkb", RES_KB)), width = 8, height = 6)  # Original: "mds_plot"
 
 cat("   ✓ MDS plot saved\n")
 cat("   - Check plot to verify:\n")
@@ -351,7 +357,7 @@ cat(sprintf("     - Median tagwise BCV: %.3f\n\n",
 cat("   Generating BCV plot...\n")
 save_multiformat(quote({
   plotBCV(y, main = "Biological Coefficient of Variation")
-}), file.path(config$paths$output$plots, "bcv_plot"), width = 8, height = 6)
+}), file.path(config$paths$output$plots, sprintf("2A_bcv_plot_%dkb", RES_KB)), width = 8, height = 6)  # Original: "bcv_plot"
 cat("   ✓ BCV plot saved\n\n")
 
 # =============================================================================
@@ -376,7 +382,7 @@ cat(sprintf("     - Residual df: %d\n", min(fit$df.residual)))
 cat("\n   Generating QL dispersion plot...\n")
 save_multiformat(quote({
   plotQLDisp(fit, main = "Quasi-Likelihood Dispersions")
-}), file.path(config$paths$output$plots, "ql_dispersion_plot"), width = 8, height = 6)
+}), file.path(config$paths$output$plots, sprintf("2A_ql_dispersion_plot_%dkb", RES_KB)), width = 8, height = 6)  # Original: "ql_dispersion_plot"
 cat("   ✓ QL dispersion plot saved\n\n")
 
 # =============================================================================
@@ -574,7 +580,7 @@ save_multiformat(quote({
     pt.cex = 1.5,
     bty = "n"
   )
-}), file.path(config$paths$output$plots, "ma_plot_primary"),
+}), file.path(config$paths$output$plots, sprintf("2A_ma_plot_primary_%dkb", RES_KB)),  # Original: "ma_plot_primary"
    width = config$visualization$width, height = config$visualization$height)
 cat("✓\n")
 
@@ -629,7 +635,7 @@ save_multiformat(quote({
     lwd = 1.5,
     bty = "n"
   )
-}), file.path(config$paths$output$plots, "volcano_plot_primary"),
+}), file.path(config$paths$output$plots, sprintf("2A_volcano_plot_primary_%dkb", RES_KB)),  # Original: "volcano_plot_primary"
    width = config$visualization$width, height = config$visualization$height)
 cat("✓\n")
 
@@ -675,7 +681,7 @@ save_multiformat(quote({
     labels = summary_counts,
     cex = 1.2
   )
-}), file.path(config$paths$output$plots, "results_summary"), width = 8, height = 6)
+}), file.path(config$paths$output$plots, sprintf("2A_results_summary_%dkb", RES_KB)), width = 8, height = 6)  # Original: "results_summary"
 cat("✓\n")
 
 # 4. Shifted Loop Enrichment Plot (if shift data available)
@@ -723,7 +729,7 @@ if (!is.null(shift_status) && !is.null(fisher_result)) {
       ),
       cex = 0.8
     )
-  }), file.path(config$paths$output$plots, "shifted_loop_enrichment"), width = 8, height = 6)
+  }), file.path(config$paths$output$plots, sprintf("2A_shifted_loop_enrichment_%dkb", RES_KB)), width = 8, height = 6)  # Original: "shifted_loop_enrichment"
   cat("✓\n")
 } else {
   cat("   - Skipping shifted loop enrichment plot (no shift data)\n")
@@ -738,13 +744,13 @@ cat("\n   All plots generated\n\n")
 cat("Saving results...\n")
 
 # Save DGEList object
-saveRDS(y, file.path(config$paths$output$primary, "edgeR_dge_object.rds"))
+saveRDS(y, file.path(config$paths$output$primary, sprintf("2A_edgeR_dge_object_%dkb.rds", RES_KB)))  # Original: "edgeR_dge_object.rds"
 cat("   ✓ DGEList object saved\n")
 
 # Save primary results (all formats)
 write.table(
   results,
-  file = file.path(config$paths$output$primary, "all_results_primary.tsv"),
+  file = file.path(config$paths$output$primary, sprintf("2A_all_results_primary_%dkb.tsv", RES_KB)),  # Original: "all_results_primary.tsv"
   sep = "\t",
   quote = FALSE,
   row.names = FALSE
@@ -753,7 +759,7 @@ cat("   ✓ Primary results saved (TSV)\n")
 
 saveRDS(
   results,
-  file.path(config$paths$output$primary, "all_results_primary.rds")
+  file.path(config$paths$output$primary, sprintf("2A_all_results_primary_%dkb.rds", RES_KB))  # Original: "all_results_primary.rds"
 )
 cat("   ✓ Primary results saved (RDS)\n")
 
@@ -761,7 +767,7 @@ cat("   ✓ Primary results saved (RDS)\n")
 sig_results <- results[results$significant, ]
 write.table(
   sig_results,
-  file = file.path(config$paths$output$primary, "significant_loops_fdr05.tsv"),
+  file = file.path(config$paths$output$primary, sprintf("2A_significant_loops_fdr05_%dkb.tsv", RES_KB)),  # Original: "significant_loops_fdr05.tsv"
   sep = "\t",
   quote = FALSE,
   row.names = FALSE
@@ -772,7 +778,7 @@ cat("   ✓ Significant loops saved (", nrow(sig_results), " loops)\n", sep = ""
 top100 <- results[order(abs(results$logFC), decreasing = TRUE)[1:min(100, nrow(results))], ]
 write.table(
   top100,
-  file = file.path(config$paths$output$primary, "top100_differential.tsv"),
+  file = file.path(config$paths$output$primary, sprintf("2A_top100_differential_%dkb.tsv", RES_KB)),  # Original: "top100_differential.tsv"
   sep = "\t",
   quote = FALSE,
   row.names = FALSE
@@ -783,7 +789,7 @@ cat("   ✓ Top 100 by effect size saved\n")
 final_results <- results[abs(results$logFC) > 0.3 & results$FDR < 0.03, ]
 write.table(
   final_results,
-  file = file.path(config$paths$output$primary, "final_results.tsv"),
+  file = file.path(config$paths$output$primary, sprintf("2A_final_results_%dkb.tsv", RES_KB)),  # Original: "final_results.tsv"
   sep = "\t",
   quote = FALSE,
   row.names = FALSE
@@ -794,7 +800,7 @@ cat("   ✓ Final results saved (|logFC| > 0.3, FDR < 0.03): ", nrow(final_resul
 dt_summary <- summary(decideTests(qlf))
 write.table(
   dt_summary,
-  file = file.path(config$paths$output$primary, "decideTests_summary.txt"),
+  file = file.path(config$paths$output$primary, sprintf("2A_decideTests_summary_%dkb.txt", RES_KB)),  # Original: "decideTests_summary.txt"
   sep = "\t",
   quote = FALSE
 )
@@ -861,7 +867,7 @@ summary_text <- capture.output({
   cat("Odds ratio:", round(summary_stats$shifted_odds_ratio, 3), "\n\n")
 })
 
-writeLines(summary_text, file.path(config$paths$output$primary, "summary_statistics.txt"))
+writeLines(summary_text, file.path(config$paths$output$primary, sprintf("2A_summary_statistics_%dkb.txt", RES_KB)))  # Original: "summary_statistics.txt"
 cat("   ✓ Summary statistics saved\n")
 
 # Save session info

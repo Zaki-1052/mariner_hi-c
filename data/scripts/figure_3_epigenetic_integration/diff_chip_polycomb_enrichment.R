@@ -41,7 +41,7 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R") # Original: source("scripts/utils/multi_format_output.R")
 
 cat("=",'%>%' |> rep(79) |> paste(collapse=""), "\n")
 cat("Task 3f: Differential H3K27me3/H2AK119ub Overlap with Loop Categories\n")
@@ -51,24 +51,26 @@ cat("=",'%>%' |> rep(79) |> paste(collapse=""), "\n\n")
 # CONFIGURATION
 # ==============================================================================
 
-# Output directory
-OUTPUT_DIR <- "output/diff_chip_polycomb_enrichment"
+# Output directories
+TSV_DIR  <- "data/tsvs/figure_3_epigenetic_integration"   # Original: OUTPUT_DIR <- "output/diff_chip_polycomb_enrichment"
+PLOT_DIR <- "data/plots/figure_3_epigenetic_integration"   # Original: (plots went under OUTPUT_DIR/plots)
+OUTPUT_DIR <- TSV_DIR  # kept for summary text file writes
 
 # Input files
 # Use merged_all_results.tsv which contains ALL loops (including unchanged) across resolutions
 LOOP_FILES <- list(
   # All loops merged across resolutions (includes unchanged)
-  all_loops = "25042-late_outputs/merged_loops/merged_all_results.tsv",
+  all_loops = "25042-late_outputs/merged_loops/merged_all_results.tsv",  # TODO: not in data/
   # Polycomb shared from task 3c (differential only)
-  polycomb_shared = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv"
+  polycomb_shared = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv"  # TODO: not in data/
 )
 
 # Differential peak files (late timepoint for K27me3, H2AK119ub is not timepoint-specific)
 DIFF_PEAK_FILES <- list(
-  K27me3_down = "peaks/new/adult_K27me3_down.bed",
-  K27me3_up = "peaks/new/adult_K27me3_up.bed",
-  H2AK119ub_down = "peaks/new/H2AK119ub_down.bed",
-  H2AK119ub_up = "peaks/new/H2AK119ub_up.bed"
+  K27me3_down = "peaks/new/adult_K27me3_down.bed",       # TODO: not in data/
+  K27me3_up = "peaks/new/adult_K27me3_up.bed",           # TODO: not in data/
+  H2AK119ub_down = "peaks/new/H2AK119ub_down.bed",      # TODO: not in data/
+  H2AK119ub_up = "peaks/new/H2AK119ub_up.bed"           # TODO: not in data/
 )
 
 # Analysis parameters
@@ -520,10 +522,7 @@ create_overlap_heatmap <- function(summary_df, title = "Overlap Heatmap") {
 run_analysis <- function() {
 
   # Create output directories
-  dirs <- c(
-    file.path(OUTPUT_DIR, "tables"),
-    file.path(OUTPUT_DIR, "plots")
-  )
+  dirs <- c(TSV_DIR, PLOT_DIR)  # Original: file.path(OUTPUT_DIR, "tables"), file.path(OUTPUT_DIR, "plots")
   for (d in dirs) {
     dir.create(d, recursive = TRUE, showWarnings = FALSE)
   }
@@ -589,10 +588,10 @@ run_analysis <- function() {
 
   # Save summary tables
   write.table(summary_all,
-              file.path(OUTPUT_DIR, "tables", "overlap_summary_all_loops.tsv"),
+              file.path(TSV_DIR, "3C_overlap_summary_all_loops.tsv"),  # Original: file.path(OUTPUT_DIR, "tables", "overlap_summary_all_loops.tsv")
               sep = "\t", quote = FALSE, row.names = FALSE)
   write.table(summary_polycomb,
-              file.path(OUTPUT_DIR, "tables", "overlap_summary_polycomb_shared.tsv"),
+              file.path(TSV_DIR, "3C_overlap_summary_polycomb.tsv"),  # Original: file.path(OUTPUT_DIR, "tables", "overlap_summary_polycomb_shared.tsv")
               sep = "\t", quote = FALSE, row.names = FALSE)
 
   cat("  Saved overlap summary tables\n")
@@ -605,20 +604,20 @@ run_analysis <- function() {
 
   # Save enrichment test results
   write.table(enrichment_all,
-              file.path(OUTPUT_DIR, "tables", "enrichment_tests_all_loops.tsv"),
+              file.path(TSV_DIR, "3C_enrichment_tests_all_loops.tsv"),  # Original: file.path(OUTPUT_DIR, "tables", "enrichment_tests_all_loops.tsv")
               sep = "\t", quote = FALSE, row.names = FALSE)
   write.table(enrichment_polycomb,
-              file.path(OUTPUT_DIR, "tables", "enrichment_tests_polycomb_shared.tsv"),
+              file.path(TSV_DIR, "3C_enrichment_tests_polycomb.tsv"),  # Original: file.path(OUTPUT_DIR, "tables", "enrichment_tests_polycomb_shared.tsv")
               sep = "\t", quote = FALSE, row.names = FALSE)
 
   cat("  Saved enrichment test results\n")
 
   # Save loops with overlap annotations
   write.table(all_loops,
-              file.path(OUTPUT_DIR, "tables", "all_loops_with_diff_chip_overlap.tsv"),
+              file.path(TSV_DIR, "3C_all_loops_with_diff_chip_overlap.tsv"),  # Original: file.path(OUTPUT_DIR, "tables", "all_loops_with_diff_chip_overlap.tsv")
               sep = "\t", quote = FALSE, row.names = FALSE)
   write.table(polycomb_loops,
-              file.path(OUTPUT_DIR, "tables", "polycomb_loops_with_diff_chip_overlap.tsv"),
+              file.path(TSV_DIR, "3C_polycomb_loops_with_diff_chip_overlap.tsv"),  # Original: file.path(OUTPUT_DIR, "tables", "polycomb_loops_with_diff_chip_overlap.tsv")
               sep = "\t", quote = FALSE, row.names = FALSE)
 
   # --------------------------------------------------------------------------
@@ -630,66 +629,66 @@ run_analysis <- function() {
   p_bar_all <- create_overlap_barplot(summary_all,
                                        "Differential ChIP-seq Peak Overlap - All Loops")
   save_multiformat_ggplot(p_bar_all,
-                          file.path(OUTPUT_DIR, "plots", "01_overlap_barplot_all_loops"),
+                          file.path(PLOT_DIR, "3C_01_overlap_barplot_all_loops"),  # Original: file.path(OUTPUT_DIR, "plots", "01_overlap_barplot_all_loops")
                           width = 10, height = 7)
 
   # Bar plots - Polycomb shared
   p_bar_polycomb <- create_overlap_barplot(summary_polycomb,
                                             "Differential ChIP-seq Peak Overlap - Polycomb Shared Loops")
   save_multiformat_ggplot(p_bar_polycomb,
-                          file.path(OUTPUT_DIR, "plots", "01_overlap_barplot_polycomb_shared"),
+                          file.path(PLOT_DIR, "3C_01_overlap_barplot_polycomb_shared"),  # Original: file.path(OUTPUT_DIR, "plots", "01_overlap_barplot_polycomb_shared")
                           width = 10, height = 7)
 
   # Enrichment dot plots - All loops
   p_enrich_all <- create_enrichment_dotplot(enrichment_all,
                                              "Enrichment Analysis - All Loops")
   save_multiformat_ggplot(p_enrich_all,
-                          file.path(OUTPUT_DIR, "plots", "02_enrichment_dotplot_all_loops"),
+                          file.path(PLOT_DIR, "3C_02_enrichment_dotplot_all_loops"),  # Original: file.path(OUTPUT_DIR, "plots", "02_enrichment_dotplot_all_loops")
                           width = 9, height = 7)
 
   # Enrichment dot plots - Polycomb shared
   p_enrich_polycomb <- create_enrichment_dotplot(enrichment_polycomb,
                                                   "Enrichment Analysis - Polycomb Shared Loops")
   save_multiformat_ggplot(p_enrich_polycomb,
-                          file.path(OUTPUT_DIR, "plots", "02_enrichment_dotplot_polycomb_shared"),
+                          file.path(PLOT_DIR, "3C_02_enrichment_dotplot_polycomb_shared"),  # Original: file.path(OUTPUT_DIR, "plots", "02_enrichment_dotplot_polycomb_shared")
                           width = 9, height = 7)
 
   # Heatmaps - create directly to avoid scoping issues with quote()
   # All loops heatmap
-  heatmap_dir_all <- file.path(OUTPUT_DIR, "plots", "03_heatmap_overlap_all_loops")
+  heatmap_dir_all <- file.path(PLOT_DIR, "3C_03_heatmap_overlap_all_loops")  # Original: file.path(OUTPUT_DIR, "plots", "03_heatmap_overlap_all_loops")
   dir.create(heatmap_dir_all, recursive = TRUE, showWarnings = FALSE)
 
-  pdf(file.path(heatmap_dir_all, "03_heatmap_overlap_all_loops.pdf"), width = 8, height = 5)
+  pdf(file.path(heatmap_dir_all, "3C_03_heatmap_overlap_all_loops.pdf"), width = 8, height = 5)
   create_overlap_heatmap(summary_all, "Overlap % - All Loops")
   dev.off()
 
-  svglite::svglite(file.path(heatmap_dir_all, "03_heatmap_overlap_all_loops.svg"), width = 8, height = 5)
+  svglite::svglite(file.path(heatmap_dir_all, "3C_03_heatmap_overlap_all_loops.svg"), width = 8, height = 5)
   create_overlap_heatmap(summary_all, "Overlap % - All Loops")
   dev.off()
 
-  jpeg(file.path(heatmap_dir_all, "03_heatmap_overlap_all_loops.jpg"), width = 8*300, height = 5*300, res = 300, quality = 95)
+  jpeg(file.path(heatmap_dir_all, "3C_03_heatmap_overlap_all_loops.jpg"), width = 8*300, height = 5*300, res = 300, quality = 95)
   create_overlap_heatmap(summary_all, "Overlap % - All Loops")
   dev.off()
   cat("  Saved: 03_heatmap_overlap_all_loops/{pdf,svg,jpg}\n")
 
   # Polycomb shared heatmap (only if there are non-zero categories)
   if (sum(pc_counts) > 0 && length(unique(summary_polycomb$loop_category[summary_polycomb$n_total > 0])) >= 2) {
-    heatmap_dir_pc <- file.path(OUTPUT_DIR, "plots", "03_heatmap_overlap_polycomb_shared")
+    heatmap_dir_pc <- file.path(PLOT_DIR, "3C_03_heatmap_overlap_polycomb_shared")  # Original: file.path(OUTPUT_DIR, "plots", "03_heatmap_overlap_polycomb_shared")
     dir.create(heatmap_dir_pc, recursive = TRUE, showWarnings = FALSE)
 
     # Filter to categories with data
     summary_polycomb_filtered <- summary_polycomb %>%
       filter(n_total > 0)
 
-    pdf(file.path(heatmap_dir_pc, "03_heatmap_overlap_polycomb_shared.pdf"), width = 8, height = 5)
+    pdf(file.path(heatmap_dir_pc, "3C_03_heatmap_overlap_polycomb_shared.pdf"), width = 8, height = 5)
     create_overlap_heatmap(summary_polycomb_filtered, "Overlap % - Polycomb Shared")
     dev.off()
 
-    svglite::svglite(file.path(heatmap_dir_pc, "03_heatmap_overlap_polycomb_shared.svg"), width = 8, height = 5)
+    svglite::svglite(file.path(heatmap_dir_pc, "3C_03_heatmap_overlap_polycomb_shared.svg"), width = 8, height = 5)
     create_overlap_heatmap(summary_polycomb_filtered, "Overlap % - Polycomb Shared")
     dev.off()
 
-    jpeg(file.path(heatmap_dir_pc, "03_heatmap_overlap_polycomb_shared.jpg"), width = 8*300, height = 5*300, res = 300, quality = 95)
+    jpeg(file.path(heatmap_dir_pc, "3C_03_heatmap_overlap_polycomb_shared.jpg"), width = 8*300, height = 5*300, res = 300, quality = 95)
     create_overlap_heatmap(summary_polycomb_filtered, "Overlap % - Polycomb Shared")
     dev.off()
     cat("  Saved: 03_heatmap_overlap_polycomb_shared/{pdf,svg,jpg}\n")
@@ -818,7 +817,7 @@ run_analysis <- function() {
     "  plots/03_heatmap_overlap_polycomb_shared/{pdf,svg,jpg}"
   )
 
-  writeLines(report_lines, file.path(OUTPUT_DIR, "enrichment_analysis_summary.txt"))
+  writeLines(report_lines, file.path(TSV_DIR, "3C_enrichment_analysis_summary.txt"))  # Original: file.path(OUTPUT_DIR, "enrichment_analysis_summary.txt")
   cat("  Saved summary report\n")
 
   cat("\n", "=",'%>%' |> rep(50) |> paste(collapse=""), "\n")

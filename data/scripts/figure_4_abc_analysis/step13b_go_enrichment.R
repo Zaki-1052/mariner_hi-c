@@ -19,15 +19,17 @@ cat(sprintf("  Started: %s\n\n", Sys.time()))
 # CONFIGURATION
 # =============================================================================
 
-DISCORDANT_FILE <- "results/discordant_gene_characteristics.tsv"
-OUTPUT_DIR      <- "results/figures/discordant_analysis"
-UTIL_PATH       <- "../scripts/utils/multi_format_output.R"
+DISCORDANT_FILE <- "data/tsvs/figure_4_abc_analysis/4B_discordant_gene_characteristics.tsv"  # Original: results/discordant_gene_characteristics.tsv
+OUTPUT_DIR      <- "data/plots/figure_4_abc_analysis"  # Original: results/figures/discordant_analysis
+TSV_DIR         <- "data/tsvs/figure_4_abc_analysis"  # Original: results/figures/discordant_analysis (TSV outputs)
+UTIL_PATH       <- "data/scripts/_shared/multi_format_output.R"  # Original: ../scripts/utils/multi_format_output.R
 
 stopifnot(file.exists(DISCORDANT_FILE))
 stopifnot(file.exists(UTIL_PATH))
 source(UTIL_PATH)
 
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(TSV_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # Shared aesthetics
 theme_pub <- theme_bw(base_size = 11) +
@@ -116,7 +118,7 @@ cat(sprintf("  GO BP enriched terms: %d\n", n_bp_terms))
 if (n_bp_terms > 0) {
   # Save results table
   bp_df <- as.data.frame(cc_bp)
-  write.table(bp_df, file.path(OUTPUT_DIR, "go_bp_enrichment_results.tsv"),
+  write.table(bp_df, file.path(TSV_DIR, "4B_discordant_go_bp.tsv"),  # Original: OUTPUT_DIR/go_bp_enrichment_results.tsv
               sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Concordant-specific terms: %d\n",
               sum(bp_df$Cluster == "Concordant")))
@@ -130,7 +132,7 @@ if (n_bp_terms > 0) {
     theme_pub +
     theme(axis.text.y = element_text(size = 9))
 
-  save_plot(p_bp, "09_go_bp_compareCluster", w = 10, h = 8)
+  save_plot(p_bp, "4B_go_bp_compareCluster", w = 10, h = 8)  # Original: 09_go_bp_compareCluster
 } else {
   cat("  No significant GO BP terms — skipping plot.\n")
 }
@@ -162,7 +164,7 @@ if (n_kegg_terms > 0) {
   cc_kegg_read <- setReadable(cc_kegg, OrgDb = org.Mm.eg.db,
                               keyType = "ENTREZID")
   kegg_df <- as.data.frame(cc_kegg_read)
-  write.table(kegg_df, file.path(OUTPUT_DIR, "kegg_enrichment_results.tsv"),
+  write.table(kegg_df, file.path(TSV_DIR, "4B_discordant_kegg.tsv"),  # Original: OUTPUT_DIR/kegg_enrichment_results.tsv
               sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Concordant-specific pathways: %d\n",
               sum(kegg_df$Cluster == "Concordant")))
@@ -175,7 +177,7 @@ if (n_kegg_terms > 0) {
     theme_pub +
     theme(axis.text.y = element_text(size = 9))
 
-  save_plot(p_kegg, "10_kegg_compareCluster", w = 10, h = 8)
+  save_plot(p_kegg, "4B_kegg_compareCluster", w = 10, h = 8)  # Original: 10_kegg_compareCluster
 } else {
   cat("  No significant KEGG pathways — skipping plot.\n")
 }

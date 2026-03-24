@@ -25,20 +25,21 @@
 # =============================================================================
 
 ENHANCER_FILES <- c(
-  Activity_Lost = "enhancer_subsets/enhancer_classes_activity_lost.tsv",
-  K119ub_Only   = "enhancer_subsets/enhancer_classes_k119ub_only.tsv",
-  Activity_Gain = "enhancer_subsets/enhancer_classes_activity_gain.tsv",
-  Stable        = "enhancer_subsets/enhancer_classes_stable.tsv"
+  Activity_Lost = "data/tsvs/figure_4_abc_analysis/4D_enhancer_classes_activity_lost.tsv",  # Original: enhancer_subsets/enhancer_classes_activity_lost.tsv
+  K119ub_Only   = "data/tsvs/figure_4_abc_analysis/4D_enhancer_classes_k119ub_only.tsv",  # Original: enhancer_subsets/enhancer_classes_k119ub_only.tsv
+  Activity_Gain = "data/tsvs/figure_4_abc_analysis/4D_enhancer_classes_activity_gain.tsv",  # Original: enhancer_subsets/enhancer_classes_activity_gain.tsv
+  Stable        = "data/tsvs/figure_4_abc_analysis/4D_enhancer_classes_stable.tsv"  # Original: enhancer_subsets/enhancer_classes_stable.tsv
 )
 
-LOOPS_FILE       <- "../outputs/250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"
-CHAR_LOOPS_FILE  <- "characterized_loops.tsv"
-ABC_PAIRS_FILE   <- "results/delta_abc_all_pairs.tsv"
-ABC_RNASEQ_FILE  <- "results/delta_abc_with_rnaseq.tsv"
-GENE_SUMMARY_FILE <- "results/gene_level_summary.tsv"
-TSS_FILE         <- "reference/mm10_tss.bed"
+LOOPS_FILE       <- "../outputs/250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"  # TODO: not in data/
+CHAR_LOOPS_FILE  <- "characterized_loops.tsv"  # TODO: not in data/
+ABC_PAIRS_FILE   <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv"  # Original: results/delta_abc_all_pairs.tsv
+ABC_RNASEQ_FILE  <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_with_rnaseq.tsv"  # Original: results/delta_abc_with_rnaseq.tsv
+GENE_SUMMARY_FILE <- "results/gene_level_summary.tsv"  # TODO: not in data/
+TSS_FILE         <- "reference/mm10_tss.bed"  # TODO: not in data/
 
-OUTPUT_DIR <- "results/enhancer_subset_analysis"
+OUTPUT_DIR <- "data/plots/figure_4_abc_analysis"  # Original: results/enhancer_subset_analysis
+TSV_DIR    <- "data/tsvs/figure_4_abc_analysis"  # Original: results/enhancer_subset_analysis (TSV outputs)
 
 CLASS_COLORS <- c(
   Activity_Lost = "#2166AC",
@@ -90,6 +91,7 @@ stopifnot(file.exists(TSS_FILE))
 cat(sprintf("  [OK] TSS: %s\n", TSS_FILE))
 
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(TSV_DIR, recursive = TRUE, showWarnings = FALSE)
 cat(sprintf("\nOutput directory: %s\n\n", OUTPUT_DIR))
 
 # =============================================================================
@@ -106,7 +108,7 @@ theme_pub <- theme_bw(base_size = 11) +
   )
 
 # Multi-format save (PDF + SVG + JPG in subfolders)
-UTIL_PATH <- "../scripts/utils/multi_format_output.R"
+UTIL_PATH <- "data/scripts/_shared/multi_format_output.R"  # Original: ../scripts/utils/multi_format_output.R
 stopifnot(file.exists(UTIL_PATH))
 source(UTIL_PATH)
 
@@ -322,7 +324,7 @@ p01 <- ggplot(enh_metrics, aes(x = enhancer_class, y = n_loops,
   ) +
   theme_pub +
   theme(legend.position = "none")
-save_plot(p01, "01_loops_per_enhancer_boxplot")
+save_plot(p01, "4D_loops_per_enhancer_boxplot")  # Original: 01_loops_per_enhancer_boxplot
 
 # --- Plot 02: Violin of loop distance ---
 p02 <- ggplot(enh_with_loops, aes(x = enhancer_class, y = mean_loop_distance / 1e6,
@@ -337,7 +339,7 @@ p02 <- ggplot(enh_with_loops, aes(x = enhancer_class, y = mean_loop_distance / 1
   ) +
   theme_pub +
   theme(legend.position = "none")
-save_plot(p02, "02_loop_distance_violin")
+save_plot(p02, "4D_loop_distance_violin")  # Original: 02_loop_distance_violin
 
 
 # #############################################################################
@@ -485,7 +487,7 @@ p03 <- ggplot(prom_bar_data, aes(x = enhancer_class, y = count, fill = loop_type
     title = "Promoter vs non-promoter loops by enhancer class"
   ) +
   theme_pub
-save_plot(p03, "03_promoter_loop_proportion")
+save_plot(p03, "4D_promoter_loop_proportion")  # Original: 03_promoter_loop_proportion
 
 # --- Plot 04: Boxplot of gene logFC by class ---
 plot_gene_de <- promoter_gene_de[!is.na(promoter_gene_de$log2FC), ]
@@ -504,7 +506,7 @@ if (nrow(plot_gene_de) > 0) {
     ) +
     theme_pub +
     theme(legend.position = "none")
-  save_plot(p04, "04_gene_logfc_by_class")
+  save_plot(p04, "4D_gene_logfc_by_class")  # Original: 04_gene_logfc_by_class
 }
 
 
@@ -577,7 +579,7 @@ p05 <- ggplot(loop_logfc_data, aes(x = enhancer_class, y = loop_logFC,
   ) +
   theme_pub +
   theme(legend.position = "none")
-save_plot(p05, "05_loop_logfc_violin")
+save_plot(p05, "4D_loop_logfc_violin")  # Original: 05_loop_logfc_violin
 
 # --- Plot 06: Overlaid density curves ---
 p06 <- ggplot(loop_logfc_data, aes(x = loop_logFC, color = enhancer_class,
@@ -593,7 +595,7 @@ p06 <- ggplot(loop_logfc_data, aes(x = loop_logFC, color = enhancer_class,
     title = "Loop logFC density by enhancer class"
   ) +
   theme_pub
-save_plot(p06, "06_loop_logfc_density")
+save_plot(p06, "4D_loop_logfc_density")  # Original: 06_loop_logfc_density
 
 
 # #############################################################################
@@ -717,7 +719,7 @@ p07 <- ggplot(enh_abc_metrics, aes(x = enhancer_class, y = mean_delta_abc,
   ) +
   theme_pub +
   theme(legend.position = "none")
-save_plot(p07, "07_delta_abc_boxplot")
+save_plot(p07, "4D_delta_abc_boxplot")  # Original: 07_delta_abc_boxplot
 
 # --- Plot 08: Boxplot of mean delta_unnorm ---
 p08 <- ggplot(enh_abc_metrics, aes(x = enhancer_class, y = mean_delta_unnorm,
@@ -732,7 +734,7 @@ p08 <- ggplot(enh_abc_metrics, aes(x = enhancer_class, y = mean_delta_unnorm,
   ) +
   theme_pub +
   theme(legend.position = "none")
-save_plot(p08, "08_delta_unnorm_boxplot")
+save_plot(p08, "4D_delta_unnorm_boxplot")  # Original: 08_delta_unnorm_boxplot
 
 # --- Plot 09: Stacked bar of gained/lost/unchanged ---
 abc_dir_summary <- data.frame(
@@ -768,7 +770,7 @@ p09 <- ggplot(abc_dir_summary, aes(x = enhancer_class, y = count,
     title = "ABC pair directionality by enhancer class"
   ) +
   theme_pub
-save_plot(p09, "09_abc_direction_stacked_bar")
+save_plot(p09, "4D_abc_direction_stacked_bar")  # Original: 09_abc_direction_stacked_bar
 
 
 # #############################################################################
@@ -817,7 +819,7 @@ p10 <- ggplot(decay_agg, aes(x = dist_bin, y = hic_contact_WT,
   ) +
   theme_pub +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-save_plot(p10, "10_contact_decay_wt")
+save_plot(p10, "4E_contact_decay_wt")  # Original: 10_contact_decay_wt
 
 # --- Plot 11: Line plot of mean delta_contact by distance ---
 p11 <- ggplot(decay_agg, aes(x = dist_bin, y = delta_contact,
@@ -833,7 +835,7 @@ p11 <- ggplot(decay_agg, aes(x = dist_bin, y = delta_contact,
   ) +
   theme_pub +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-save_plot(p11, "11_contact_decay_delta")
+save_plot(p11, "4E_contact_decay_delta")  # Original: 11_contact_decay_delta
 
 
 # #############################################################################
@@ -967,7 +969,7 @@ p12 <- (p05 + p08) / (p06 + p11) +
     title = "Enhancer class stratified analysis: key metrics",
     theme = theme(plot.title = element_text(size = 14, face = "bold"))
   )
-save_plot(p12, "12_summary_patchwork", w = 14, h = 12)
+save_plot(p12, "4E_summary_patchwork", w = 14, h = 12)  # Original: 12_summary_patchwork
 
 
 # #############################################################################
@@ -1100,7 +1102,7 @@ p13 <- ggplot(k119_loop, aes(x = tertile, y = loop_logFC, fill = tertile)) +
   ) +
   theme_pub +
   theme(legend.position = "none")
-save_plot(p13, "13_k119ub_tertile_loop_logfc", w = 6, h = 6)
+save_plot(p13, "4F_k119ub_tertile_loop_logfc", w = 6, h = 6)  # Original: 13_k119ub_tertile_loop_logfc
 
 # --- Plot 14: Boxplot of mean delta_ABC by tertile ---
 k119_abc$tertile <- factor(k119_abc$tertile,
@@ -1118,7 +1120,7 @@ p14 <- ggplot(k119_abc, aes(x = tertile, y = mean_delta_abc, fill = tertile)) +
   ) +
   theme_pub +
   theme(legend.position = "none")
-save_plot(p14, "14_k119ub_tertile_delta_abc", w = 6, h = 6)
+save_plot(p14, "4F_k119ub_tertile_delta_abc", w = 6, h = 6)  # Original: 14_k119ub_tertile_delta_abc
 
 # --- Plot 15: Continuous scatter: log2FC_K119ub vs loop_logFC ---
 p15 <- ggplot(k119_loop, aes(x = log2FC_K119ub, y = loop_logFC)) +
@@ -1133,7 +1135,7 @@ p15 <- ggplot(k119_loop, aes(x = log2FC_K119ub, y = loop_logFC)) +
                         cor_cont$estimate, fmt_p(cor_cont$p.value))
   ) +
   theme_pub
-save_plot(p15, "15_k119ub_vs_loop_logfc_scatter", w = 7, h = 6)
+save_plot(p15, "4F_k119ub_vs_loop_logfc_scatter", w = 7, h = 6)  # Original: 15_k119ub_vs_loop_logfc_scatter
 
 
 # #############################################################################
@@ -1257,7 +1259,7 @@ p16 <- ggplot(conc_bar, aes(x = enhancer_class, y = count, fill = type)) +
                         100 * binom_k119$estimate, fmt_p(binom_k119$p.value))
   ) +
   theme_pub
-save_plot(p16, "16_abc_rnaseq_concordance_bar", w = 7, h = 6)
+save_plot(p16, "4F_abc_rnaseq_concordance_bar", w = 7, h = 6)  # Original: 16_abc_rnaseq_concordance_bar
 
 # --- Plot 17: Scatter delta_ABC vs gene log2FC colored by class ---
 # Downsample Stable to 3K for visibility
@@ -1285,7 +1287,7 @@ p17 <- ggplot(scatter_data, aes(x = delta_ABC, y = log2FC, color = enhancer_clas
     subtitle = "Each point = one enhancer-gene pair"
   ) +
   theme_pub
-save_plot(p17, "17_delta_abc_vs_gene_logfc_scatter", w = 8, h = 7)
+save_plot(p17, "4F_delta_abc_vs_gene_logfc_scatter", w = 8, h = 7)  # Original: 17_delta_abc_vs_gene_logfc_scatter
 
 # --- Plot 18: Histogram of K119ub_Only target gene log2FC ---
 k119_gene_logfc <- unique(k119_rna[, c("target_gene", "log2FC", "padj")])
@@ -1308,7 +1310,7 @@ p18 <- ggplot(k119_gene_logfc, aes(x = log2FC, fill = is_de)) +
                         100 * mean(k119_gene_logfc$is_de))
   ) +
   theme_pub
-save_plot(p18, "18_k119ub_target_gene_logfc_hist", w = 7, h = 5)
+save_plot(p18, "4F_k119ub_target_gene_logfc_hist", w = 7, h = 5)  # Original: 18_k119ub_target_gene_logfc_hist
 
 
 # #############################################################################
@@ -1317,7 +1319,7 @@ save_plot(p18, "18_k119ub_target_gene_logfc_hist", w = 7, h = 5)
 
 cat("\n=== PART I: Motif Enrichment BED Export ===\n\n")
 
-bed_dir <- file.path(OUTPUT_DIR, "beds_for_homer")
+bed_dir <- file.path(TSV_DIR, "beds_for_homer")  # Original: file.path(OUTPUT_DIR, "beds_for_homer")
 dir.create(bed_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Export 4 class-level BED files (BED6: chr, start, end, name, score, strand)
@@ -1432,7 +1434,7 @@ cat("\n=== Saving output files ===\n\n")
 # 1. Per-enhancer loop metrics
 loop_out <- enh_metrics[, c("chr", "start", "end", "enhancer_class",
                              "n_loops", "mean_loop_distance", "n_promoter_loops")]
-write.table(loop_out, file.path(OUTPUT_DIR, "enhancer_class_loop_metrics.tsv"),
+write.table(loop_out, file.path(TSV_DIR, "4D_enhancer_class_loop_metrics.tsv"),  # Original: OUTPUT_DIR/enhancer_class_loop_metrics.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  enhancer_class_loop_metrics.tsv: %d rows\n", nrow(loop_out)))
 
@@ -1440,29 +1442,29 @@ cat(sprintf("  enhancer_class_loop_metrics.tsv: %d rows\n", nrow(loop_out)))
 abc_out <- enh_abc_metrics[, c("chr", "start", "end", "enhancer_class",
                                 "n_abc_pairs", "mean_delta_abc",
                                 "mean_delta_unnorm", "n_gained", "n_lost")]
-write.table(abc_out, file.path(OUTPUT_DIR, "enhancer_class_abc_metrics.tsv"),
+write.table(abc_out, file.path(TSV_DIR, "4D_enhancer_class_abc_metrics.tsv"),  # Original: OUTPUT_DIR/enhancer_class_abc_metrics.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  enhancer_class_abc_metrics.tsv: %d rows\n", nrow(abc_out)))
 
 # 3. Class-level summary
-write.table(class_summary, file.path(OUTPUT_DIR, "class_level_summary.tsv"),
+write.table(class_summary, file.path(TSV_DIR, "4D_class_level_summary.tsv"),  # Original: OUTPUT_DIR/class_level_summary.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  class_level_summary.tsv: %d rows\n", nrow(class_summary)))
 
 # 4. Statistical tests
-write.table(stat_tests, file.path(OUTPUT_DIR, "statistical_tests.tsv"),
+write.table(stat_tests, file.path(TSV_DIR, "4D_statistical_tests.tsv"),  # Original: OUTPUT_DIR/statistical_tests.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  statistical_tests.tsv: %d rows\n", nrow(stat_tests)))
 
 # 5. Contact decay table
-write.table(decay_agg, file.path(OUTPUT_DIR, "contact_decay_by_class.tsv"),
+write.table(decay_agg, file.path(TSV_DIR, "4E_contact_decay_by_class.tsv"),  # Original: OUTPUT_DIR/contact_decay_by_class.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  contact_decay_by_class.tsv: %d rows\n", nrow(decay_agg)))
 
 # 6. Promoter-loop gene logFC
 if (nrow(promoter_gene_de) > 0) {
   write.table(promoter_gene_de[, c("gene_name", "enhancer_class", "log2FC", "padj")],
-              file.path(OUTPUT_DIR, "promoter_loop_gene_logfc.tsv"),
+              file.path(TSV_DIR, "4D_promoter_loop_gene_logfc.tsv"),  # Original: OUTPUT_DIR/promoter_loop_gene_logfc.tsv
               sep = "\t", row.names = FALSE, quote = FALSE)
   cat(sprintf("  promoter_loop_gene_logfc.tsv: %d rows\n", nrow(promoter_gene_de)))
 }
@@ -1472,7 +1474,7 @@ k119_tert_out <- data.frame(
   chr = k119_enh$chr, start = k119_enh$start, end = k119_enh$end,
   tertile = k119_enh$tertile, log2FC_K119ub = k119_enh$log2FC_K119ub
 )
-write.table(k119_tert_out, file.path(OUTPUT_DIR, "k119ub_tertile_assignments.tsv"),
+write.table(k119_tert_out, file.path(TSV_DIR, "4F_k119ub_tertile_assignments.tsv"),  # Original: OUTPUT_DIR/k119ub_tertile_assignments.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  k119ub_tertile_assignments.tsv: %d rows\n", nrow(k119_tert_out)))
 
@@ -1488,17 +1490,17 @@ for (i in 1:3) {
   tert_loop_summary$n_abc_enhancers[i] <- nrow(sub_abc_t)
   tert_loop_summary$median_delta_abc[i] <- median(sub_abc_t$mean_delta_abc)
 }
-write.table(tert_loop_summary, file.path(OUTPUT_DIR, "k119ub_tertile_loop_summary.tsv"),
+write.table(tert_loop_summary, file.path(TSV_DIR, "4F_k119ub_tertile_loop_summary.tsv"),  # Original: OUTPUT_DIR/k119ub_tertile_loop_summary.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  k119ub_tertile_loop_summary.tsv: %d rows\n", nrow(tert_loop_summary)))
 
 # 9. ABC-RNA concordance by class
-write.table(conc_by_class, file.path(OUTPUT_DIR, "abc_rnaseq_concordance_by_class.tsv"),
+write.table(conc_by_class, file.path(TSV_DIR, "4F_abc_rnaseq_concordance_by_class.tsv"),  # Original: OUTPUT_DIR/abc_rnaseq_concordance_by_class.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  abc_rnaseq_concordance_by_class.tsv: %d rows\n", nrow(conc_by_class)))
 
 # 10. K119ub_Only target gene DE
-write.table(k119_gene_logfc, file.path(OUTPUT_DIR, "k119ub_only_target_gene_de.tsv"),
+write.table(k119_gene_logfc, file.path(TSV_DIR, "4F_k119ub_only_target_gene_de.tsv"),  # Original: OUTPUT_DIR/k119ub_only_target_gene_de.tsv
             sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  k119ub_only_target_gene_de.tsv: %d rows\n", nrow(k119_gene_logfc)))
 

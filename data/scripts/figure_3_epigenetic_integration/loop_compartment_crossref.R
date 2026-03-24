@@ -18,19 +18,21 @@ suppressPackageStartupMessages({
   library(tidyr)
 })
 
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R") # Original: source("scripts/utils/multi_format_output.R")
 
 # --- Input paths ---
-LOOPS_FILE <- "outputs/250402-late_outputs/loop_annotation_extended/late/extended_characterized_loops.tsv"
-DIFFPC_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/diffcompartments.txt"
-ASHIFT_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/regions.Up_mut_vs_ctrl.regions.txt"
-BSHIFT_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/regions.Down_mut_vs_ctrl.regions.txt"
-DIFFTAD_FILE <- "tads/tad-pc-analysis/inputs/late/diffTAD/Bap1.diff.tad.txt"
+LOOPS_FILE <- "data/upstream/loop_calls/late_characterized_loops.tsv"  # Original: "outputs/250402-late_outputs/loop_annotation_extended/late/extended_characterized_loops.tsv"
+DIFFPC_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/diffcompartments.txt"                   # TODO: not in data/
+ASHIFT_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/regions.Up_mut_vs_ctrl.regions.txt"     # TODO: not in data/
+BSHIFT_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/regions.Down_mut_vs_ctrl.regions.txt"   # TODO: not in data/
+DIFFTAD_FILE <- "tads/tad-pc-analysis/inputs/late/diffTAD/Bap1.diff.tad.txt"                    # TODO: not in data/
 
-# --- Output directory ---
-OUTPUT_DIR <- "output/loop_compartment_crossref"
-TABLES_DIR <- file.path(OUTPUT_DIR, "tables")
-PLOTS_DIR <- file.path(OUTPUT_DIR, "plots")
+# --- Output directories ---
+TSV_DIR  <- "data/tsvs/figure_3_epigenetic_integration"   # Original: OUTPUT_DIR <- "output/loop_compartment_crossref"
+PLOT_DIR <- "data/plots/figure_3_epigenetic_integration"   # Original: (plots went under OUTPUT_DIR/plots)
+OUTPUT_DIR <- TSV_DIR  # kept for summary text file writes
+TABLES_DIR <- TSV_DIR   # Original: file.path(OUTPUT_DIR, "tables")
+PLOTS_DIR  <- PLOT_DIR  # Original: file.path(OUTPUT_DIR, "plots")
 
 dir.create(TABLES_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(PLOTS_DIR, recursive = TRUE, showWarnings = FALSE)
@@ -307,7 +309,7 @@ p_shift <- ggplot(shift_plot_df, aes(x = region, y = pct, fill = direction)) +
         plot.subtitle = element_text(size = 10))
 
 save_multiformat_ggplot(p_shift,
-                        file.path(PLOTS_DIR, "q1_shift_overlap_barplot"),
+                        file.path(PLOTS_DIR, "3C_loop_cmpt_q1_shift_overlap_barplot"),
                         width = 9, height = 7)
 
 # ============================================================================
@@ -420,7 +422,7 @@ p_pc1diff <- ggplot(violin_df, aes(x = direction, y = pc1_diff, fill = direction
         plot.title = element_text(face = "bold", size = 14))
 
 save_multiformat_ggplot(p_pc1diff,
-                        file.path(PLOTS_DIR, "q2_pc1_diff_violin"),
+                        file.path(PLOTS_DIR, "3C_loop_cmpt_q2_pc1_diff_violin"),
                         width = 7, height = 7)
 
 # --- Visualization 5b: Violin — baseline ctrl PC1 ---
@@ -444,7 +446,7 @@ p_ctrl_pc1 <- ggplot(violin_ctrl_df, aes(x = direction, y = ctrl_pc1, fill = dir
         plot.title = element_text(face = "bold", size = 14))
 
 save_multiformat_ggplot(p_ctrl_pc1,
-                        file.path(PLOTS_DIR, "q2_ctrl_pc1_violin"),
+                        file.path(PLOTS_DIR, "3C_loop_cmpt_q2_ctrl_pc1_violin"),
                         width = 7, height = 7)
 
 # --- Visualization 5c: Scatter — distance vs PC1 difference ---
@@ -470,7 +472,7 @@ p_scatter <- ggplot(scatter_df, aes(x = loop_distance / 1e6, y = pc1_diff, color
         plot.title = element_text(face = "bold", size = 14))
 
 save_multiformat_ggplot(p_scatter,
-                        file.path(PLOTS_DIR, "q2_distance_vs_pc1diff_scatter"),
+                        file.path(PLOTS_DIR, "3C_loop_cmpt_q2_distance_vs_pc1diff_scatter"),
                         width = 9, height = 7)
 
 # ============================================================================
@@ -534,7 +536,7 @@ p_ir <- ggplot(ir_df, aes(x = direction, y = ir_diff, fill = direction)) +
         plot.title = element_text(face = "bold", size = 14))
 
 save_multiformat_ggplot(p_ir,
-                        file.path(PLOTS_DIR, "q3_tad_ir_boxplot"),
+                        file.path(PLOTS_DIR, "3C_loop_cmpt_q3_tad_ir_boxplot"),
                         width = 7, height = 7)
 
 # ============================================================================
@@ -607,7 +609,7 @@ p_dist_pc1 <- ggplot(all_dist_pc1, aes(x = direction, y = pc1_diff, fill = direc
         plot.title = element_text(face = "bold", size = 14))
 
 save_multiformat_ggplot(p_dist_pc1,
-                        file.path(PLOTS_DIR, "q4_distance_pc1_violin"),
+                        file.path(PLOTS_DIR, "3C_loop_cmpt_q4_distance_pc1_violin"),
                         width = 12, height = 7)
 
 # ============================================================================
@@ -682,7 +684,7 @@ p_poly <- ggplot(poly_violin_df, aes(x = category, y = ctrl_pc1, fill = category
         plot.title = element_text(face = "bold", size = 14))
 
 save_multiformat_ggplot(p_poly,
-                        file.path(PLOTS_DIR, "q5_polycomb_pc1_violin"),
+                        file.path(PLOTS_DIR, "3C_loop_cmpt_q5_polycomb_pc1_violin"),
                         width = 7, height = 7)
 
 # ============================================================================
@@ -703,7 +705,7 @@ loops_annotated$overlaps_Ashift <- countOverlaps(all_a1, ashift_gr) > 0 |
 loops_annotated$overlaps_Bshift <- countOverlaps(all_a1, bshift_gr) > 0 |
                                    countOverlaps(all_a2, bshift_gr) > 0
 
-write_tsv(loops_annotated, file.path(TABLES_DIR, "loop_compartment_annotated.tsv"))
+write_tsv(loops_annotated, file.path(TABLES_DIR, "3C_loop_compartment_annotated.tsv"))  # Original: "loop_compartment_annotated.tsv"
 cat(sprintf("  Saved: loop_compartment_annotated.tsv (%d rows x %d cols)\n",
             nrow(loops_annotated), ncol(loops_annotated)))
 
@@ -924,7 +926,7 @@ report_lines <- c(report_lines,
   "================================================================="
 )
 
-writeLines(report_lines, file.path(OUTPUT_DIR, "summary_report.txt"))
+writeLines(report_lines, file.path(TSV_DIR, "3C_loop_cmpt_summary_report.txt"))  # Original: file.path(OUTPUT_DIR, "summary_report.txt")
 cat("  Saved: summary_report.txt\n")
 
 cat("\n=================================================================\n")

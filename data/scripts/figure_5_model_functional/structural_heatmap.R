@@ -37,17 +37,16 @@ suppressPackageStartupMessages({
   library(pheatmap)
 })
 
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R") # Original: source("scripts/utils/multi_format_output.R")
 
 # ==============================================================================
 # 2. CONFIGURATION
 # ==============================================================================
 
-PROFILE_FILE   <- "output/network_analysis/late/tables/gene_structural_profile_all.tsv"
-ABC_FILE       <- "abc/results/gene_level_summary.tsv"
-OUTPUT_DIR     <- "output/structural_heatmap"
-PLOT_DIR       <- file.path(OUTPUT_DIR, "plots")
-TABLE_DIR      <- file.path(OUTPUT_DIR, "tables")
+PROFILE_FILE   <- "data/tsvs/figure_5_model_functional/5C_gene_structural_profile_all.tsv" # Original: output/network_analysis/late/tables/gene_structural_profile_all.tsv
+ABC_FILE       <- "data/tsvs/figure_5_model_functional/5B_gene_level_summary.tsv" # Original: abc/results/gene_level_summary.tsv
+PLOT_DIR       <- "data/plots/figure_5_model_functional" # Original: output/structural_heatmap/plots
+TABLE_DIR      <- "data/tsvs/figure_5_model_functional" # Original: output/structural_heatmap/tables
 
 TOP_N          <- 100
 BASEMEAN_MIN   <- 10
@@ -62,15 +61,15 @@ DYSREG_COLORS <- c("TRUE" = "#31A354", "FALSE" = "#D9D9D9")
 
 # --- DiffBind files (per-peak fold-changes, all same column format) ---
 DIFFBIND_FILES <- list(
-  H2AK119ub = "peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt",
-  H3K27me3  = "peaks/diffbind/K27me3_diffbind_results_summit_appended_ap.txt",
-  H3K27ac   = "peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt",
-  ATAC      = "peaks/diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt"
+  H2AK119ub = "peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt", # TODO: not in data/
+  H3K27me3  = "peaks/diffbind/K27me3_diffbind_results_summit_appended_ap.txt", # TODO: not in data/
+  H3K27ac   = "peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt", # TODO: not in data/
+  ATAC      = "peaks/diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt" # TODO: not in data/
 )
 
 # Peak-to-gene linkage
-ABC_PAIRS_FILE     <- "abc/results/delta_abc_all_pairs.tsv"
-LOOP_ASSIGN_FILE   <- "abc/results/loops_with_gene_assignments.tsv"
+ABC_PAIRS_FILE     <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv" # Original: abc/results/delta_abc_all_pairs.tsv
+LOOP_ASSIGN_FILE   <- "data/tsvs/figure_5_model_functional/5C_loops_with_gene_assignments.tsv" # Original: abc/results/loops_with_gene_assignments.tsv
 USE_ABC            <- TRUE
 USE_LOOP_FALLBACK  <- FALSE
 
@@ -479,12 +478,12 @@ make_combined_score_heatmap <- function(df, mod_fc) {
   render_heatmap(
     mat, annotation_row, annotation_colors,
     title     = "Top 100 Genes by Combined Structural Score",
-    base_path = file.path(PLOT_DIR, "combined_score_heatmap"),
+    base_path = file.path(PLOT_DIR, "5D_combined_score_heatmap"), # Original: "combined_score_heatmap"
     width     = hm_width, height = 22,
     gaps_col  = length(struct_columns)
   )
 
-  write_tsv(top, file.path(TABLE_DIR, "top100_combined_score.tsv"))
+  write_tsv(top, file.path(TABLE_DIR, "5D_top100_combined_score.tsv")) # Original: "top100_combined_score.tsv"
   cat(sprintf("  Saved table: %d genes\n", nrow(top)))
 
   top
@@ -534,11 +533,11 @@ make_abc_only_heatmap <- function(df) {
   render_heatmap(
     mat, annotation_row, annotation_colors,
     title     = "Top 100 Genes by |AxC Change|",
-    base_path = file.path(PLOT_DIR, "abc_only_heatmap"),
+    base_path = file.path(PLOT_DIR, "5D_abc_only_heatmap"), # Original: "abc_only_heatmap"
     width     = 8, height = 22
   )
 
-  write_tsv(top, file.path(TABLE_DIR, "top100_abc_only.tsv"))
+  write_tsv(top, file.path(TABLE_DIR, "5D_top100_abc_only.tsv")) # Original: "top100_abc_only.tsv"
   cat(sprintf("  Saved table: %d genes\n", nrow(top)))
 
   top
@@ -549,7 +548,7 @@ make_abc_only_heatmap <- function(df) {
 # ==============================================================================
 
 write_summary <- function(df, top_combined, top_abc, mod_fc) {
-  sink(file.path(TABLE_DIR, "heatmap_summary.txt"))
+  sink(file.path(TABLE_DIR, "5D_heatmap_summary.txt")) # Original: "heatmap_summary.txt"
 
   cat("=== Structural Heatmap Summary (Figure 5D) ===\n\n")
   cat(sprintf("Total genes in profile: %d\n", nrow(df)))
@@ -627,7 +626,8 @@ main <- function() {
   write_summary(df, top_combined, top_abc, mod_fc)
 
   cat("\n=== Done ===\n")
-  cat(sprintf("Output: %s\n", OUTPUT_DIR))
+  cat(sprintf("Output plots: %s\n", PLOT_DIR)) # Original: cat(sprintf("Output: %s\n", OUTPUT_DIR))
+  cat(sprintf("Output tables: %s\n", TABLE_DIR))
 }
 
 main()

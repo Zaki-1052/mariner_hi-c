@@ -78,8 +78,10 @@ cat("================================================\n\n")
 args <- commandArgs(trailingOnly = TRUE)
 
 # Default parameters
-input_file <- "tad_analysis/diffcompartments.txt"
-output_dir <- "outputs/compartment_analysis"
+input_file <- "tad_analysis/diffcompartments.txt"  # TODO: not in data/
+# Original: output_dir <- "outputs/compartment_analysis"
+tsv_dir <- "data/tsvs/figure_1_tads_boundaries_compartments"
+plot_dir <- "data/plots/figure_1_tads_boundaries_compartments"
 custom_title <- NULL
 plot_width <- 12
 plot_height <- 10
@@ -96,7 +98,7 @@ thresholds <- list(
 i <- 1
 while (i <= length(args)) {
   if (args[i] == "--output" && i < length(args)) {
-    output_dir <- args[i + 1]
+    tsv_dir <- args[i + 1]  # Original: output_dir <- args[i + 1]
     i <- i + 2
   } else if (args[i] == "--title" && i < length(args)) {
     custom_title <- args[i + 1]
@@ -129,7 +131,8 @@ if (!file.exists(input_file)) {
 
 cat(sprintf("Configuration:\n"))
 cat(sprintf("  Input file: %s\n", input_file))
-cat(sprintf("  Output directory: %s\n", output_dir))
+cat(sprintf("  Output directory (TSVs): %s\n", tsv_dir))  # Original: output_dir
+cat(sprintf("  Output directory (plots): %s\n", plot_dir))
 cat(sprintf("  Plot dimensions: %.1f x %.1f inches\n", plot_width, plot_height))
 cat(sprintf("  Label genes: %s\n", ifelse(label_genes, "Yes", "No")))
 cat(sprintf("  Threshold sets: relaxed (FDR<0.15, |Diff|>0.15), "))
@@ -144,10 +147,13 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility for PDF + SVG + JPEG output
-source("scripts/utils/multi_format_output.R")
+# Original: source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")
 
-# Create output directory
-dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+# Create output directories
+# Original: dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
 
 # =============================================================================
 # LOAD AND PREPARE DATA
@@ -289,8 +295,9 @@ cat(sprintf("  -log10(adj. p-value): [%.2f, %.2f]\n\n",
 # =============================================================================
 
 generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_name,
-                                  plot_title_base, output_dir, plot_width,
+                                  plot_title_base, tsv_dir, plot_dir, plot_width,
                                   plot_height, label_genes, n_labels) {
+                                  # Original: output_dir parameter split into tsv_dir + plot_dir
 
   cat(sprintf("\n--- Generating %s threshold plot ", threshold_name))
   cat(sprintf("(FDR < %.2f, |Diff| > %.2f) ---\n", fdr_threshold, fc_threshold))
@@ -420,7 +427,8 @@ generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_nam
     )
 
   # Save plot in multiple formats (PDF, SVG, JPEG)
-  output_base <- file.path(output_dir, sprintf("compartment_volcano_%s", threshold_name))
+  # Original: output_base <- file.path(output_dir, sprintf("compartment_volcano_%s", threshold_name))
+  output_base <- file.path(plot_dir, sprintf("1D_compartment_volcano_%s", threshold_name))
   save_multiformat_ggplot(p, output_base, width = plot_width, height = plot_height)
 
   # Save significant regions for this threshold
@@ -429,8 +437,9 @@ generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_nam
   sig_regions <- df[df$significant, ]
   sig_regions <- sig_regions[order(sig_regions$adj_pvalue), ]
 
-  output_sig <- file.path(output_dir,
-                          sprintf("compartment_significant_%s.tsv", threshold_name))
+  # Original: output_sig <- file.path(output_dir, sprintf("compartment_significant_%s.tsv", threshold_name))
+  output_sig <- file.path(tsv_dir,
+                          sprintf("1D_compartment_significant_%s.tsv", threshold_name))
   write.table(sig_regions, output_sig, sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Saved: %s (%d regions)\n", output_sig, nrow(sig_regions)))
 
@@ -466,7 +475,8 @@ for (thresh in thresholds) {
     fc_threshold = thresh$fc,
     threshold_name = thresh$name,
     plot_title_base = custom_title,
-    output_dir = output_dir,
+    tsv_dir = tsv_dir,  # Original: output_dir = output_dir
+    plot_dir = plot_dir,
     plot_width = plot_width,
     plot_height = plot_height,
     label_genes = label_genes,
@@ -490,7 +500,8 @@ summary_text <- c(
   "",
   sprintf("Analysis Date: %s", Sys.Date()),
   sprintf("Input File: %s", input_file),
-  sprintf("Output Directory: %s", output_dir),
+  sprintf("Output Directory (TSVs): %s", tsv_dir),  # Original: output_dir
+  sprintf("Output Directory (plots): %s", plot_dir),
   "",
   sprintf("Total regions analyzed: %d", n_total),
   "",
@@ -610,12 +621,14 @@ if (any(!is.na(comp_df$Gene_Name) & comp_df$Gene_Name != "" &
   }
 }
 
-output_summary <- file.path(output_dir, "compartment_volcano_summary.txt")
+# Original: output_summary <- file.path(output_dir, "compartment_volcano_summary.txt")
+output_summary <- file.path(tsv_dir, "1D_compartment_volcano_summary.txt")
 writeLines(summary_text, output_summary)
 cat(sprintf("Saved summary: %s\n", output_summary))
 
 # Save full annotated dataset
-output_all <- file.path(output_dir, "compartment_all_annotated.tsv")
+# Original: output_all <- file.path(output_dir, "compartment_all_annotated.tsv")
+output_all <- file.path(tsv_dir, "1D_compartment_all_annotated.tsv")
 write.table(comp_df, output_all, sep = "\t", quote = FALSE, row.names = FALSE)
 cat(sprintf("Saved full dataset: %s\n\n", output_all))
 
@@ -627,7 +640,8 @@ cat("================================================\n")
 cat("ANALYSIS COMPLETE\n")
 cat("================================================\n\n")
 
-cat(sprintf("Output directory: %s\n\n", output_dir))
+cat(sprintf("Output directory (TSVs): %s\n", tsv_dir))  # Original: output_dir
+cat(sprintf("Output directory (plots): %s\n\n", plot_dir))
 
 cat("Generated files:\n")
 cat("  - compartment_volcano_relaxed.pdf (FDR<0.15, |Diff|>0.15)\n")

@@ -36,7 +36,7 @@ suppressPackageStartupMessages({
   library(scales)
 })
 
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # ==============================================================================
 # SECTION 2: CONFIGURATION
@@ -91,12 +91,14 @@ MARK_CONFIG <- list(
 
 # Input files by timepoint (extended_characterized_loops.tsv with pre-computed overlaps)
 INPUT_FILES <- list(
-  late = "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv",
-  early = "peaks/loop_annotation_extended/early/extended_characterized_loops.tsv"
+  late = "data/upstream/loop_calls/late_characterized_loops.tsv",  # Original: "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"
+  early = "peaks/loop_annotation_extended/early/extended_characterized_loops.tsv"  # TODO: not in data/
 )
 
-# Output base directory
-OUTPUT_BASE <- "output/loops_mark_filtered"
+# Output directories
+# Original: OUTPUT_BASE <- "output/loops_mark_filtered"
+PLOT_DIR <- "data/plots/figure_2_loop_rewiring"
+TSV_DIR  <- "data/tsvs/figure_2_loop_rewiring"
 
 # Color scheme (consistent with loop_distance_analysis.R)
 COLORS <- list(
@@ -434,14 +436,13 @@ generate_density_plot <- function(loops_df, subset_name, output_path, colors, ma
 #' @param mark_name Character: name of mark (e.g., "H3K27ac")
 #' @param mark_config List: configuration for this mark
 #' @param loops_directional Data frame: pre-loaded directional loops
-#' @param output_base Output base directory for this timepoint
 #' @return List with statistics for both filter modes
-run_mark_analysis <- function(timepoint, mark_name, mark_config, loops_directional, output_base) {
+run_mark_analysis <- function(timepoint, mark_name, mark_config, loops_directional) {
   cat(sprintf("\n--- %s (%s) ---\n", mark_config$display_name, mark_config$biological_role))
 
-  # Create output directory for this mark
-  mark_dir <- file.path(output_base, mark_config$dir_name)
-  dir.create(mark_dir, showWarnings = FALSE, recursive = TRUE)
+  # Original: mark_dir <- file.path(output_base, mark_config$dir_name); dir.create(mark_dir, ...)
+  dir.create(PLOT_DIR, showWarnings = FALSE, recursive = TRUE)
+  dir.create(TSV_DIR, showWarnings = FALSE, recursive = TRUE)
 
   # Check that required columns exist
   if (!mark_config$col1 %in% names(loops_directional) ||
@@ -468,14 +469,14 @@ run_mark_analysis <- function(timepoint, mark_name, mark_config, loops_direction
     generate_cdf_plot(
       loops_one,
       subset_name_one,
-      file.path(mark_dir, "01_cdf_one_anchor"),
+      file.path(PLOT_DIR, sprintf("2E_%s_cdf_one_anchor", mark_config$dir_name)),  # Original: file.path(mark_dir, "01_cdf_one_anchor")
       COLORS,
       mark_config
     )
     generate_density_plot(
       loops_one,
       subset_name_one,
-      file.path(mark_dir, "03_density_one_anchor"),
+      file.path(PLOT_DIR, sprintf("2I_%s_density_one_anchor", mark_config$dir_name)),  # Original: file.path(mark_dir, "03_density_one_anchor")
       COLORS,
       mark_config
     )
@@ -511,14 +512,14 @@ run_mark_analysis <- function(timepoint, mark_name, mark_config, loops_direction
     generate_cdf_plot(
       loops_both,
       subset_name_both,
-      file.path(mark_dir, "01_cdf_both_anchors"),
+      file.path(PLOT_DIR, sprintf("2E_%s_cdf_both_anchors", mark_config$dir_name)),  # Original: file.path(mark_dir, "01_cdf_both_anchors")
       COLORS,
       mark_config
     )
     generate_density_plot(
       loops_both,
       subset_name_both,
-      file.path(mark_dir, "03_density_both_anchors"),
+      file.path(PLOT_DIR, sprintf("2I_%s_density_both_anchors", mark_config$dir_name)),  # Original: file.path(mark_dir, "03_density_both_anchors")
       COLORS,
       mark_config
     )
@@ -543,11 +544,12 @@ run_timepoint_analysis <- function(timepoint) {
 
   # Set paths
   input_file <- INPUT_FILES[[timepoint]]
-  output_base <- file.path(OUTPUT_BASE, timepoint)
-  dir.create(output_base, showWarnings = FALSE, recursive = TRUE)
+  dir.create(PLOT_DIR, showWarnings = FALSE, recursive = TRUE)  # Original: output_base <- file.path(OUTPUT_BASE, timepoint); dir.create(output_base, ...)
+  dir.create(TSV_DIR, showWarnings = FALSE, recursive = TRUE)
 
   cat("Input file:", input_file, "\n")
-  cat("Output directory:", output_base, "\n\n")
+  cat("Plot directory:", PLOT_DIR, "\n")
+  cat("TSV directory:", TSV_DIR, "\n\n")
 
   # Validate input
   if (!file.exists(input_file)) {
@@ -595,7 +597,7 @@ run_timepoint_analysis <- function(timepoint) {
   for (mark_name in MARKS_TO_RUN) {
     mark_config <- MARK_CONFIG[[mark_name]]
     tryCatch({
-      stats <- run_mark_analysis(timepoint, mark_name, mark_config, loops_directional, output_base)
+      stats <- run_mark_analysis(timepoint, mark_name, mark_config, loops_directional)
       if (!is.null(stats)) {
         all_stats[[mark_name]] <- stats
       }
@@ -610,7 +612,7 @@ run_timepoint_analysis <- function(timepoint) {
 
   cat("\n=== Step 3: Writing Summary ===\n")
 
-  summary_file <- file.path(output_base, "filter_summary.txt")
+  summary_file <- file.path(TSV_DIR, "2E_mark_filter_summary.txt")  # Original: file.path(output_base, "filter_summary.txt")
   sink(summary_file)
   cat("=== Mark-Filtered Loop Distance Analysis Summary ===\n")
   cat("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
@@ -697,7 +699,8 @@ run_timepoint_analysis <- function(timepoint) {
   # ==========================================================================
 
   cat("\n=== Analysis Complete for", toupper(timepoint), "===\n")
-  cat("Output directory:", output_base, "\n")
+  cat("Plot directory:", PLOT_DIR, "\n")
+  cat("TSV directory:", TSV_DIR, "\n")
   cat("Marks analyzed:", paste(names(all_stats), collapse = ", "), "\n")
 
   invisible(NULL)
@@ -717,8 +720,7 @@ for (tp in TIMEPOINTS_TO_RUN) {
 
 cat("\n=== All analyses complete ===\n")
 cat("Output directories:\n")
-for (tp in TIMEPOINTS_TO_RUN) {
-  cat(sprintf("  - %s/%s/\n", OUTPUT_BASE, tp))
-}
+cat(sprintf("  Plots: %s\n", PLOT_DIR))
+cat(sprintf("  TSVs:  %s\n", TSV_DIR))
 cat("\nMarks processed:", paste(MARKS_TO_RUN, collapse = ", "), "\n")
 cat("\nEnd time:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")

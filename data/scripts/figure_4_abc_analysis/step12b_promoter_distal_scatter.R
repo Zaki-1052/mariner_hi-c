@@ -22,10 +22,10 @@ cat(sprintf("  Started: %s\n\n", Sys.time()))
 # CONFIGURATION
 # =============================================================================
 
-ABC_PAIRS_FILE <- "results/delta_abc_all_pairs.tsv"
-ENH_CLASS_FILE <- "results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv"
-OUTPUT_DIR     <- "results/figures/activity_contact_scatter"
-UTIL_PATH      <- "../scripts/utils/multi_format_output.R"
+ABC_PAIRS_FILE <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv"       # Original: results/delta_abc_all_pairs.tsv
+ENH_CLASS_FILE <- "data/tsvs/figure_4_abc_analysis/4E_enhancer_class_abc_metrics.tsv" # Original: results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv
+OUTPUT_DIR     <- "data/plots/figure_4_abc_analysis"                                  # Original: results/figures/activity_contact_scatter
+UTIL_PATH      <- "data/scripts/_shared/multi_format_output.R"                        # Original: ../scripts/utils/multi_format_output.R
 
 stopifnot(file.exists(ABC_PAIRS_FILE))
 stopifnot(file.exists(ENH_CLASS_FILE))
@@ -250,7 +250,7 @@ p8 <- ggplot(abc_classified,
   theme_pub +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
-save_plot(p8, "08_raw_delta_promoter_distal", w = 12, h = 6.5)
+save_plot(p8, "4A_raw_delta_promoter_distal", w = 12, h = 6.5)  # Original: 08_raw_delta_promoter_distal
 
 # =============================================================================
 # PLOT 09: LOG2FC — FACETED BY PROMOTER/DISTAL
@@ -314,7 +314,7 @@ p9 <- ggplot(abc_log2,
   theme_pub +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
-save_plot(p9, "09_log2fc_promoter_distal", w = 12, h = 6.5)
+save_plot(p9, "4A_log2fc_promoter_distal", w = 12, h = 6.5)  # Original: 09_log2fc_promoter_distal
 
 # =============================================================================
 # PLOT 10: CLASS COMPOSITION BAR — BY ABC CLASS
@@ -374,7 +374,7 @@ p10 <- ggplot(comp_df, aes(x = class, y = pct, fill = enhancer_class)) +
   theme_pub +
   theme(axis.text.x = element_text(size = 11))
 
-save_plot(p10, "10_class_composition_bar", w = 7, h = 6)
+save_plot(p10, "4A_class_composition_bar", w = 7, h = 6)  # Original: 10_class_composition_bar
 
 # =============================================================================
 # SAVE CORRELATION TABLE
@@ -388,7 +388,7 @@ cors_combined <- bind_rows(
 )
 
 write.table(cors_combined,
-            file.path(OUTPUT_DIR, "promoter_distal_correlations.tsv"),
+            "data/tsvs/figure_4_abc_analysis/4A_promoter_distal_correlations.tsv",  # Original: file.path(OUTPUT_DIR, "promoter_distal_correlations.tsv")
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 cat(sprintf("  Saved: %d rows to promoter_distal_correlations.tsv\n",

@@ -35,8 +35,10 @@ suppressPackageStartupMessages({
 # 2. CONFIGURATION
 # ==============================================================================
 
-# Base directory (run from tads/)
+# Base directory (run from repo root)
 BASE_DIR <- getwd()
+
+source("data/scripts/_shared/multi_format_output.R") # Original: (none — added for multi-format output)
 
 # Parameters
 DEG_PADJ_THRESHOLD <- 0.05      # Significance threshold for DEGs
@@ -51,16 +53,18 @@ GREAT_MAX_EXTENSION <- 100000   # 100kb maximum extension
 # NOTE: Early timepoint direction correction is now applied upstream in 05_filter_blacklist.R
 TIMEPOINT_CONFIG <- list(
   late = list(
-    tad_file = file.path(BASE_DIR, "results/late/final/tadcompare_final_filtered.tsv"),
-    rna_file = file.path(BASE_DIR, "adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx"),
-    output_dir = file.path(BASE_DIR, "results/visualizations/late/deg_violin"),
+    tad_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_late_tadcompare_differential.tsv"), # Original: results/late/final/tadcompare_final_filtered.tsv  # TODO: not in data/ — mapped to closest available boundary TSV
+    rna_file = file.path(BASE_DIR, "data/upstream/rna_seq/adult_rnaseq_results.xlsx"), # Original: adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx
+    output_dir = file.path(BASE_DIR, "data/plots/figure_5_model_functional"), # Original: results/visualizations/late/deg_violin
+    tsv_dir    = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"), # Original: (same as output_dir)
     label = "Late (Adult)",
     flip_directions = FALSE
   ),
   early = list(
-    tad_file = file.path(BASE_DIR, "results/early/final/tadcompare_final_filtered.tsv"),
-    rna_file = file.path(BASE_DIR, "young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),
-    output_dir = file.path(BASE_DIR, "results/visualizations/early/deg_violin"),
+    tad_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_early_tadcompare_differential.tsv"), # Original: results/early/final/tadcompare_final_filtered.tsv  # TODO: not in data/ — mapped to closest available boundary TSV
+    rna_file = file.path(BASE_DIR, "young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"), # TODO: not in data/ — early RNA-seq xlsx not in data/upstream/rna_seq/
+    output_dir = file.path(BASE_DIR, "data/plots/figure_5_model_functional"), # Original: results/visualizations/early/deg_violin
+    tsv_dir    = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"), # Original: (same as output_dir)
     label = "Early (Young)",
     flip_directions = FALSE  # Correction now applied upstream in 05_filter_blacklist.R
   )
@@ -452,37 +456,32 @@ generate_statistics <- function(plot_data, test_result, timepoint, flip = FALSE)
 #' Save outputs for a single timepoint
 #' @param plot_result List containing plot, test, and counts
 #' @param plot_data Merged DEG-boundary data
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
+#' @param tsv_dir Output directory for TSVs
 #' @param timepoint Timepoint name
 #' @param flip Logical; whether directions were flipped
 #' @param suffix Optional suffix for filenames (e.g., "_flipped", "_original")
-save_outputs <- function(plot_result, plot_data, output_dir, timepoint, flip = FALSE, suffix = "") {
-  # Create output directory
-  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+save_outputs <- function(plot_result, plot_data, output_dir, tsv_dir, timepoint, flip = FALSE, suffix = "") {
+  # Create output directories
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE) # Original: single output_dir
+  dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE) # Original: (same as output_dir)
 
-  # Build filename base with optional suffix
-  base_name <- sprintf("deg_tad_violin_%s%s", timepoint, suffix)
+  # Build filename base with optional suffix and 5B_ prefix
+  base_name <- sprintf("5B_deg_tad_violin_%s%s", timepoint, suffix) # Original: "deg_tad_violin_%s%s"
 
   # Save plot in multiple formats
-  pdf_file <- file.path(output_dir, sprintf("%s.pdf", base_name))
-  svg_file <- file.path(output_dir, sprintf("%s.svg", base_name))
-  jpg_file <- file.path(output_dir, sprintf("%s.jpg", base_name))
+  save_multiformat_ggplot(plot_result$plot, file.path(output_dir, base_name), # Original: ggsave to output_dir with pdf/svg/jpg
+                          width = 5, height = 6)
 
-  ggsave(pdf_file, plot_result$plot, width = 5, height = 6, dpi = 300)
-  ggsave(svg_file, plot_result$plot, width = 5, height = 6, dpi = 300)
-  ggsave(jpg_file, plot_result$plot, width = 5, height = 6, dpi = 300)
-
-  cat(sprintf("  Saved: %s\n", pdf_file))
-  cat(sprintf("  Saved: %s\n", svg_file))
-  cat(sprintf("  Saved: %s\n", jpg_file))
+  cat(sprintf("  Saved plots: %s\n", file.path(output_dir, base_name)))
 
   # Save gene list
-  gene_file <- file.path(output_dir, sprintf("deg_boundary_genes_%s%s.tsv", timepoint, suffix))
+  gene_file <- file.path(tsv_dir, sprintf("5B_deg_boundary_genes_%s%s.tsv", timepoint, suffix)) # Original: file.path(output_dir, sprintf("deg_boundary_genes_%s%s.tsv", ...))
   write_tsv(plot_data, gene_file)
   cat(sprintf("  Saved: %s\n", gene_file))
 
   # Save statistics
-  stats_file <- file.path(output_dir, sprintf("deg_tad_statistics_%s%s.txt", timepoint, suffix))
+  stats_file <- file.path(tsv_dir, sprintf("5B_deg_tad_statistics_%s%s.txt", timepoint, suffix)) # Original: file.path(output_dir, sprintf("deg_tad_statistics_%s%s.txt", ...))
   stats_lines <- generate_statistics(plot_data, plot_result$test, timepoint, flip = flip)
   writeLines(stats_lines, stats_file)
   cat(sprintf("  Saved: %s\n", stats_file))
@@ -555,7 +554,7 @@ process_timepoint <- function(timepoint) {
       # Step 7: Save outputs with version suffix
       cat("\n[Step 7] Saving outputs...\n")
       suffix <- sprintf("_%s", version)
-      save_outputs(plot_result, plot_data, config$output_dir, timepoint,
+      save_outputs(plot_result, plot_data, config$output_dir, config$tsv_dir, timepoint,
                    flip = flip, suffix = suffix)
 
       cat("\n")
@@ -598,7 +597,7 @@ process_timepoint <- function(timepoint) {
 
     # Step 7: Save outputs
     cat("\n[Step 7] Saving outputs...\n")
-    save_outputs(plot_result, plot_data, config$output_dir, timepoint, flip = FALSE, suffix = "")
+    save_outputs(plot_result, plot_data, config$output_dir, config$tsv_dir, timepoint, flip = FALSE, suffix = "")
 
     cat("\n")
     cat(sprintf("Completed %s timepoint\n", timepoint))

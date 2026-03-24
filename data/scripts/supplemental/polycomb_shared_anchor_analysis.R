@@ -37,7 +37,7 @@ suppressPackageStartupMessages({
   library(patchwork)
 })
 
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # ==============================================================================
 # 2. CONFIGURATION
@@ -45,20 +45,26 @@ source("scripts/utils/multi_format_output.R")
 
 # Input files by timepoint (from shared_anchor_analysis.R output)
 SHARED_LOOP_FILES <- list(
-  late = "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv",
-  early = "output/shared_anchor_analysis/early/tables/shared_anchor_loops.tsv"
+  late = "data/tsvs/supplemental/shared_anchor_loops.tsv",  # Original: output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv
+  early = "output/shared_anchor_analysis/early/tables/shared_anchor_loops.tsv"  # TODO: not in data/
 )
 
 # Background files for enrichment testing (all characterized loops)
 BACKGROUND_FILES <- list(
-  late = "25042-late_outputs/merged_loops/characterized_loops.tsv",
-  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"
+  late = "data/upstream/loop_calls/late_characterized_loops.tsv",  # Original: 25042-late_outputs/merged_loops/characterized_loops.tsv
+  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/
 )
 
 # Output base directories
 OUTPUT_BASE <- list(
-  late = "output/shared_anchor_analysis/late/polycomb_specific",
-  early = "output/shared_anchor_analysis/early/polycomb_specific"
+  late = list(
+    tsvs = "data/tsvs/supplemental",    # Original: output/shared_anchor_analysis/late/polycomb_specific (tables)
+    plots = "data/plots/supplemental"    # Original: output/shared_anchor_analysis/late/polycomb_specific (plots)
+  ),
+  early = list(
+    tsvs = "data/tsvs/supplemental",    # Original: output/shared_anchor_analysis/early/polycomb_specific (tables)
+    plots = "data/plots/supplemental"    # Original: output/shared_anchor_analysis/early/polycomb_specific (plots)
+  )
 )
 
 # Polycomb anchor types (can be extended with --include-bivalent)
@@ -777,17 +783,19 @@ run_polycomb_analysis <- function(timepoint) {
   # Set paths
   shared_file <- SHARED_LOOP_FILES[[timepoint]]
   background_file <- BACKGROUND_FILES[[timepoint]]
-  output_dir <- OUTPUT_BASE[[timepoint]]
+  output_base <- OUTPUT_BASE[[timepoint]]
 
   # Create output directories
-  tables_dir <- file.path(output_dir, "tables")
-  plots_dir <- file.path(output_dir, "plots")
+  tables_dir <- output_base$tsvs   # Original: file.path(output_dir, "tables")
+  plots_dir <- output_base$plots   # Original: file.path(output_dir, "plots")
+  output_dir <- output_base$tsvs   # For summary report path compatibility
   dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(plots_dir, recursive = TRUE, showWarnings = FALSE)
 
   cat("Input file:", shared_file, "\n")
   cat("Background file:", background_file, "\n")
-  cat("Output directory:", output_dir, "\n\n")
+  cat("Output TSVs:", tables_dir, "\n")
+  cat("Output plots:", plots_dir, "\n\n")
 
   # ============================================================================
   # Step 1: Load and validate data
@@ -933,13 +941,13 @@ run_polycomb_analysis <- function(timepoint) {
   cat("=== Step 6: Saving Tables ===\n")
 
   # Polycomb-anchored loops
-  write_tsv(polycomb_loops, file.path(tables_dir, "polycomb_shared_loops.tsv"))
+  write_tsv(polycomb_loops, file.path(tables_dir, "polycomb_shared_loops.tsv"))  # Original: tables/polycomb_shared_loops.tsv
   cat("  Saved: polycomb_shared_loops.tsv\n")
 
   # Both-Polycomb loops
   if (nrow(both_polycomb) > 0) {
-    write_tsv(both_polycomb, file.path(tables_dir, "both_polycomb_shared_loops.tsv"))
-    cat("  Saved: both_polycomb_shared_loops.tsv\n")
+    write_tsv(both_polycomb, file.path(tables_dir, "polycomb_both_shared_loops.tsv"))  # Original: tables/both_polycomb_shared_loops.tsv
+    cat("  Saved: polycomb_both_shared_loops.tsv\n")
   }
 
   # Distance statistics
@@ -949,8 +957,8 @@ run_polycomb_analysis <- function(timepoint) {
     as_tibble(stats_non_polycomb),
     as_tibble(stats_both_polycomb)
   )
-  write_tsv(stats_df, file.path(tables_dir, "distance_statistics.tsv"))
-  cat("  Saved: distance_statistics.tsv\n")
+  write_tsv(stats_df, file.path(tables_dir, "polycomb_distance_statistics.tsv"))  # Original: tables/distance_statistics.tsv
+  cat("  Saved: polycomb_distance_statistics.tsv\n")
 
   # Interaction test results
   interaction_df <- tibble(
@@ -961,8 +969,8 @@ run_polycomb_analysis <- function(timepoint) {
     main_direction_p = interaction_result$main_direction_p,
     interpretation = interaction_result$interpretation
   )
-  write_tsv(interaction_df, file.path(tables_dir, "interaction_test.tsv"))
-  cat("  Saved: interaction_test.tsv\n")
+  write_tsv(interaction_df, file.path(tables_dir, "polycomb_interaction_test.tsv"))  # Original: tables/interaction_test.tsv
+  cat("  Saved: polycomb_interaction_test.tsv\n")
 
   # Enrichment statistics
   if (!is.null(enrichment_result)) {
@@ -974,8 +982,8 @@ run_polycomb_analysis <- function(timepoint) {
       shared_polycomb_pct = enrichment_result$shared_polycomb_pct,
       background_polycomb_pct = enrichment_result$background_polycomb_pct
     )
-    write_tsv(enrichment_df, file.path(tables_dir, "enrichment_statistics.tsv"))
-    cat("  Saved: enrichment_statistics.tsv\n")
+    write_tsv(enrichment_df, file.path(tables_dir, "polycomb_enrichment_statistics.tsv"))  # Original: tables/enrichment_statistics.tsv
+    cat("  Saved: polycomb_enrichment_statistics.tsv\n")
   }
   cat("\n")
 

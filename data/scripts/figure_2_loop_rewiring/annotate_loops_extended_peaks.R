@@ -60,7 +60,7 @@ suppressPackageStartupMessages({
 
 # Load multi-format output utility
 # Note: script runs from peaks/ directory, so path goes up one level
-source("../scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("../scripts/utils/multi_format_output.R")
 
 # =============================================================================
 # CONFIGURATION
@@ -72,60 +72,68 @@ source("../scripts/utils/multi_format_output.R")
 # CTCF: Control ChIP-seq from Bing Ren's lab (adult mouse cerebellum)
 PEAK_FILES <- list(
   early = list(
-    h3k27ac    = "beds/H3K27acCerebellumEarly2.bed",
-    h3k27me3   = "beds/H3K27me3CerebellumEarly1.bed",
-    h3k4me1    = "beds/H3K4me1CerebellumEarly1.bed",
-    h3k4me3    = "beds/H3K4me3CerebellumEarly2.bed",
-    bivalent   = "beds/Bivalent_Cerebellum_Early.bed",
-    ctcf       = "CTCF.bed",
-    ctcf_motif = "ctcf_motifs_mm10.bed"
+    h3k27ac    = "beds/H3K27acCerebellumEarly2.bed",    # TODO: not in data/
+    h3k27me3   = "beds/H3K27me3CerebellumEarly1.bed",   # TODO: not in data/
+    h3k4me1    = "beds/H3K4me1CerebellumEarly1.bed",    # TODO: not in data/
+    h3k4me3    = "beds/H3K4me3CerebellumEarly2.bed",    # TODO: not in data/
+    bivalent   = "beds/Bivalent_Cerebellum_Early.bed",   # TODO: not in data/
+    ctcf       = "CTCF.bed",                             # TODO: not in data/
+    ctcf_motif = "ctcf_motifs_mm10.bed"                  # TODO: not in data/
   ),
   late = list(
-    h3k27ac    = "beds/H3K27acCerebellumLate2.bed",
-    h3k27me3   = "beds/H3K27me3CerebellumLate1.bed",
-    h3k4me1    = "beds/H3K4me1CerebellumLate1.bed",
-    h3k4me3    = "beds/H3K4me3CerebellumLate2.bed",
-    bivalent   = "beds/Bivalent_Cerebellum_Late.bed",
-    ctcf       = "CTCF.bed",
-    ctcf_motif = "ctcf_motifs_mm10.bed"
+    h3k27ac    = "beds/H3K27acCerebellumLate2.bed",     # TODO: not in data/
+    h3k27me3   = "beds/H3K27me3CerebellumLate1.bed",    # TODO: not in data/
+    h3k4me1    = "beds/H3K4me1CerebellumLate1.bed",     # TODO: not in data/
+    h3k4me3    = "beds/H3K4me3CerebellumLate2.bed",     # TODO: not in data/
+    bivalent   = "beds/Bivalent_Cerebellum_Late.bed",    # TODO: not in data/
+    ctcf       = "CTCF.bed",                             # TODO: not in data/
+    ctcf_motif = "ctcf_motifs_mm10.bed"                  # TODO: not in data/
   ),
   # Consensus-based for comparison (uses 4-replicate H3K4me3 for both bivalent AND Active_Promoter)
   late_consensus = list(
-    h3k27ac    = "beds/H3K27acCerebellumLate2.bed",
-    h3k27me3   = "beds/H3K27me3CerebellumLate1.bed",
-    h3k4me1    = "beds/H3K4me1CerebellumLate1.bed",
-    h3k4me3    = "old/peaks-v1/consensus_H3K4me3_late_peaks.bed",  # 9,651 peaks (4-replicate consensus)
-    bivalent   = "beds/Bivalent_Consensus_Late.bed",               # 688 peaks (from consensus H3K4me3)
-    ctcf       = "CTCF.bed",
-    ctcf_motif = "ctcf_motifs_mm10.bed"
+    h3k27ac    = "beds/H3K27acCerebellumLate2.bed",                    # TODO: not in data/
+    h3k27me3   = "beds/H3K27me3CerebellumLate1.bed",                  # TODO: not in data/
+    h3k4me1    = "beds/H3K4me1CerebellumLate1.bed",                   # TODO: not in data/
+    h3k4me3    = "old/peaks-v1/consensus_H3K4me3_late_peaks.bed",     # TODO: not in data/  # 9,651 peaks (4-replicate consensus)
+    bivalent   = "beds/Bivalent_Consensus_Late.bed",                   # TODO: not in data/  # 688 peaks (from consensus H3K4me3)
+    ctcf       = "CTCF.bed",                                           # TODO: not in data/
+    ctcf_motif = "ctcf_motifs_mm10.bed"                                # TODO: not in data/
   ),
   # P12_ctrl peaks for early comparison (more lenient peak calling than Cerebellum)
   # Demonstrates lack of single source of truth for ChIP-seq annotations
   early_p12ctrl = list(
-    h3k27ac    = "old/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # 28,042 peaks (vs 18,178 Cerebellum)
-    h3k27me3   = "old/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # 23,491 peaks (vs 12,473 Cerebellum)
-    h3k4me1    = "beds/H3K4me1CerebellumEarly1.bed",                   # same (no P12_ctrl version)
-    h3k4me3    = "beds/H3K4me3CerebellumEarly2.bed",                   # same (no P12_ctrl version)
-    bivalent   = "old/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed", # 933 peaks (Addison)
-    ctcf       = "CTCF.bed",
-    ctcf_motif = "ctcf_motifs_mm10.bed"
+    h3k27ac    = "old/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # TODO: not in data/  # 28,042 peaks (vs 18,178 Cerebellum)
+    h3k27me3   = "old/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # TODO: not in data/  # 23,491 peaks (vs 12,473 Cerebellum)
+    h3k4me1    = "beds/H3K4me1CerebellumEarly1.bed",                   # TODO: not in data/  # same (no P12_ctrl version)
+    h3k4me3    = "beds/H3K4me3CerebellumEarly2.bed",                   # TODO: not in data/  # same (no P12_ctrl version)
+    bivalent   = "old/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed", # TODO: not in data/  # 933 peaks (Addison)
+    ctcf       = "CTCF.bed",                                           # TODO: not in data/
+    ctcf_motif = "ctcf_motifs_mm10.bed"                                # TODO: not in data/
   )
 )
 
-# Default input files by timepoint (relative to peaks/ directory)
+# Default input files by timepoint
 DEFAULT_INPUT_FILES <- list(
-  early = "../250831-early_outputs/merged_loops/non_redundant_loops.tsv",
-  late  = "../25042-late_outputs/merged_loops/non_redundant_loops.tsv",
-  late_consensus = "../25042-late_outputs/merged_loops/non_redundant_loops.tsv",
-  early_p12ctrl = "../250831-early_outputs/merged_loops/non_redundant_loops.tsv"
+  early = "data/upstream/loop_calls/early_characterized_loops.tsv",           # Original: ../250831-early_outputs/merged_loops/non_redundant_loops.tsv
+  late  = "data/upstream/loop_calls/late_characterized_loops.tsv",            # Original: ../25042-late_outputs/merged_loops/non_redundant_loops.tsv
+  late_consensus = "data/upstream/loop_calls/late_characterized_loops.tsv",   # Original: ../25042-late_outputs/merged_loops/non_redundant_loops.tsv
+  early_p12ctrl = "data/upstream/loop_calls/early_characterized_loops.tsv"    # Original: ../250831-early_outputs/merged_loops/non_redundant_loops.tsv
 )
 
-# Default output directories by timepoint (relative to peaks/ directory)
+# Default output directories by timepoint
 DEFAULT_OUTPUT_DIRS <- list(
-  early = "loop_annotation_extended/early",
-  late  = "loop_annotation_extended/late",
-  late_consensus = "loop_annotation_extended/extra/late_consensus",
-  early_p12ctrl = "loop_annotation_extended/extra/early_p12ctrl"
+  early = "data/tsvs/figure_2_loop_rewiring",           # Original: loop_annotation_extended/early
+  late  = "data/tsvs/figure_2_loop_rewiring",           # Original: loop_annotation_extended/late
+  late_consensus = "data/tsvs/figure_2_loop_rewiring",  # Original: loop_annotation_extended/extra/late_consensus
+  early_p12ctrl = "data/tsvs/figure_2_loop_rewiring"    # Original: loop_annotation_extended/extra/early_p12ctrl
+)
+
+# Default plot output directories by timepoint
+DEFAULT_PLOT_DIRS <- list(
+  early = "data/plots/figure_2_loop_rewiring",           # Original: loop_annotation_extended/early/plots
+  late  = "data/plots/figure_2_loop_rewiring",           # Original: loop_annotation_extended/late/plots
+  late_consensus = "data/plots/figure_2_loop_rewiring",  # Original: loop_annotation_extended/extra/late_consensus/plots
+  early_p12ctrl = "data/plots/figure_2_loop_rewiring"    # Original: loop_annotation_extended/extra/early_p12ctrl/plots
 )
 
 # Anchor type hierarchy (for consistent loop type ordering)
@@ -363,6 +371,7 @@ annotate_loops_extended <- function(
   timepoint = "late",
   input_file = NULL,
   output_dir = NULL,
+  plot_dir = NULL,
   peak_files = NULL,
   tss_threshold = 2000
 ) {
@@ -374,6 +383,7 @@ annotate_loops_extended <- function(
   # Use defaults if not specified
   if (is.null(input_file)) input_file <- DEFAULT_INPUT_FILES[[timepoint]]
   if (is.null(output_dir)) output_dir <- DEFAULT_OUTPUT_DIRS[[timepoint]]
+  if (is.null(plot_dir))   plot_dir   <- DEFAULT_PLOT_DIRS[[timepoint]]
   if (is.null(peak_files)) peak_files <- PEAK_FILES[[timepoint]]
 
   cat("\n")
@@ -385,11 +395,12 @@ annotate_loops_extended <- function(
   cat(sprintf("  Timepoint:      %s\n", timepoint))
   cat(sprintf("  Input file:     %s\n", input_file))
   cat(sprintf("  Output dir:     %s\n", output_dir))
+  cat(sprintf("  Plot dir:       %s\n", plot_dir))
   cat(sprintf("  TSS threshold:  %d bp\n\n", tss_threshold))
 
-  # Create output directory
-  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  dir.create(file.path(output_dir, "plots"), recursive = TRUE, showWarnings = FALSE)
+  # Create output directories
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)  # Original: dir.create(output_dir, ...)
+  dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)    # Original: dir.create(file.path(output_dir, "plots"), ...)
 
   # --- Step 1: Load input data ---
   cat("Step 1: Loading input data...\n")
@@ -638,7 +649,7 @@ annotate_loops_extended <- function(
   # --- Step 9: Save annotated data ---
   cat("Step 9: Saving annotated data...\n")
 
-  output_file <- file.path(output_dir, "extended_characterized_loops.tsv")
+  output_file <- file.path(output_dir, sprintf("2G_%s_extended_characterized_loops.tsv", timepoint))  # Original: file.path(output_dir, "extended_characterized_loops.tsv")
   write.table(loops_df, output_file, sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Saved: %s\n", output_file))
 
@@ -653,7 +664,7 @@ annotate_loops_extended <- function(
   )
   anchor_summary$percentage <- 100 * anchor_summary$count / nrow(loops_df)
 
-  anchor_summary_file <- file.path(output_dir, "anchor_type_summary.tsv")
+  anchor_summary_file <- file.path(output_dir, sprintf("2F_%s_anchor_type_summary.tsv", timepoint))  # Original: file.path(output_dir, "anchor_type_summary.tsv")
   write.table(anchor_summary, anchor_summary_file, sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Saved: %s\n", anchor_summary_file))
 
@@ -664,7 +675,7 @@ annotate_loops_extended <- function(
     percentage = 100 * as.numeric(loop_type_counts) / nrow(loops_df)
   )
 
-  loop_type_summary_file <- file.path(output_dir, "loop_type_summary.tsv")
+  loop_type_summary_file <- file.path(output_dir, sprintf("2G_%s_loop_type_summary.tsv", timepoint))  # Original: file.path(output_dir, "loop_type_summary.tsv")
   write.table(loop_type_summary, loop_type_summary_file, sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Saved: %s\n\n", loop_type_summary_file))
 
@@ -672,13 +683,13 @@ annotate_loops_extended <- function(
   cat("Step 10: Generating visualizations...\n")
 
   # 10a. Side-by-side pie charts
-  create_loop_type_piechart_comparison(loops_df, output_dir)
+  create_loop_type_piechart_comparison(loops_df, plot_dir, timepoint)  # Original: (loops_df, output_dir)
 
   # 10b. Anchor type bar chart
-  create_anchor_type_barplot(loops_df, output_dir)
+  create_anchor_type_barplot(loops_df, plot_dir, timepoint)  # Original: (loops_df, output_dir)
 
   # 10c. Loop type by direction bar chart
-  create_loop_type_direction_barplot(loops_df, output_dir)
+  create_loop_type_direction_barplot(loops_df, plot_dir, timepoint)  # Original: (loops_df, output_dir)
 
   # --- Step 11: Save summary statistics ---
   cat("\nStep 11: Saving summary statistics...\n")
@@ -753,7 +764,7 @@ annotate_loops_extended <- function(
 
   summary_text <- c(summary_text, "", "========================================")
 
-  summary_file <- file.path(output_dir, "summary_statistics.txt")
+  summary_file <- file.path(output_dir, sprintf("2F_%s_summary_statistics.txt", timepoint))  # Original: file.path(output_dir, "summary_statistics.txt")
   writeLines(summary_text, summary_file)
   cat(sprintf("  Saved: %s\n", summary_file))
 
@@ -772,7 +783,7 @@ annotate_loops_extended <- function(
 #'
 #' @param loops_df Annotated loops data.frame
 #' @param output_dir Output directory
-create_loop_type_piechart_comparison <- function(loops_df, output_dir) {
+create_loop_type_piechart_comparison <- function(loops_df, output_dir, timepoint = "late") {
   cat("  Creating side-by-side pie charts...\n")
 
   # Generate colors for loop types
@@ -873,7 +884,7 @@ create_loop_type_piechart_comparison <- function(loops_df, output_dir) {
       )
     )
 
-  output_file <- file.path(output_dir, "plots", "loop_type_piechart_comparison")
+  output_file <- file.path(output_dir, sprintf("2G_%s_loop_type_piechart", timepoint))  # Original: file.path(output_dir, "plots", "loop_type_piechart_comparison")
   save_multiformat_ggplot(p_combined, output_file, width = 14, height = 12)
 }
 
@@ -881,7 +892,8 @@ create_loop_type_piechart_comparison <- function(loops_df, output_dir) {
 #'
 #' @param loops_df Annotated loops data.frame
 #' @param output_dir Output directory
-create_anchor_type_barplot <- function(loops_df, output_dir) {
+#' @param timepoint Timepoint name
+create_anchor_type_barplot <- function(loops_df, output_dir, timepoint = "late") {
   cat("  Creating anchor type bar chart...\n")
 
   # Reshape data
@@ -924,7 +936,7 @@ create_anchor_type_barplot <- function(loops_df, output_dir) {
       legend.position = "right"
     )
 
-  output_file <- file.path(output_dir, "plots", "anchor_type_distribution")
+  output_file <- file.path(output_dir, sprintf("2F_%s_anchor_type_distribution", timepoint))  # Original: file.path(output_dir, "plots", "anchor_type_distribution")
   save_multiformat_ggplot(p, output_file, width = 10, height = 6)
 }
 
@@ -932,7 +944,8 @@ create_anchor_type_barplot <- function(loops_df, output_dir) {
 #'
 #' @param loops_df Annotated loops data.frame
 #' @param output_dir Output directory
-create_loop_type_direction_barplot <- function(loops_df, output_dir) {
+#' @param timepoint Timepoint name
+create_loop_type_direction_barplot <- function(loops_df, output_dir, timepoint = "late") {
   cat("  Creating loop type by direction bar chart...\n")
 
   loop_summary <- loops_df %>%
@@ -976,7 +989,7 @@ create_loop_type_direction_barplot <- function(loops_df, output_dir) {
     ) +
     coord_flip()
 
-  output_file <- file.path(output_dir, "plots", "loop_type_by_direction")
+  output_file <- file.path(output_dir, sprintf("2G_%s_loop_type_by_direction", timepoint))  # Original: file.path(output_dir, "plots", "loop_type_by_direction")
   save_multiformat_ggplot(p, output_file, width = 10, height = 10)
 }
 
@@ -1032,17 +1045,14 @@ parse_arguments <- function() {
       cat("    - Active_Promoter, Repressed_Promoter, Bivalent_Promoter, Polycomb,\n")
       cat("      Active_Enhancer, Poised_Enhancer, Other\n\n")
       cat("Output structure:\n")
-      cat("  outputs/loop_annotation_extended/\n")
-      cat("  ├── early/           (Early, Cerebellum peaks)\n")
-      cat("  ├── late/            (Late, Cerebellum peaks)\n")
-      cat("  ├── late_consensus/  (Late, Consensus H3K4me3)\n")
-      cat("  └── early_p12ctrl/   (Early, P12_ctrl peaks)\n\n")
+      cat("  data/tsvs/figure_2_loop_rewiring/   (TSVs with 2F_/2G_ prefix)\n")
+      cat("  data/plots/figure_2_loop_rewiring/   (Plots with 2F_/2G_ prefix)\n\n")
       cat("Output files (per timepoint):\n")
-      cat("  - extended_characterized_loops.tsv  Full annotation table\n")
-      cat("  - anchor_type_summary.tsv           Per-anchor statistics\n")
-      cat("  - loop_type_summary.tsv             Loop type counts\n")
-      cat("  - plots/                            Visualization PDFs\n")
-      cat("  - summary_statistics.txt            Text summary\n\n")
+      cat("  - 2G_{tp}_extended_characterized_loops.tsv  Full annotation table\n")
+      cat("  - 2F_{tp}_anchor_type_summary.tsv           Per-anchor statistics\n")
+      cat("  - 2G_{tp}_loop_type_summary.tsv             Loop type counts\n")
+      cat("  - 2F_{tp}_anchor_type_distribution.*        Visualization plots\n")
+      cat("  - 2F_{tp}_summary_statistics.txt            Text summary\n\n")
       cat("Peak source comparison (demonstrates lack of single source of truth):\n")
       cat("  early vs early_p12ctrl: Cerebellum (strict) vs P12_ctrl (lenient)\n")
       cat("  late vs late_consensus: Cerebellum H3K4me3 vs 4-rep consensus\n\n")

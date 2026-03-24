@@ -29,8 +29,8 @@ cat("================================================\n")
 cat("Concordance Pie Charts (Figure 4B)\n")
 cat("================================================\n\n")
 
-INPUT_FILE <- "abc/results/discordant_gene_characteristics.tsv"
-OUTPUT_DIR <- "abc/results/figures/concordance_pie"
+INPUT_FILE <- "data/tsvs/figure_4_abc_analysis/4B_discordant_gene_characteristics.tsv"  # Original: abc/results/discordant_gene_characteristics.tsv
+OUTPUT_DIR <- "data/plots/figure_4_abc_analysis"                                       # Original: abc/results/figures/concordance_pie
 
 if (!file.exists(INPUT_FILE)) {
   stop(sprintf("Input file not found: %s", INPUT_FILE))
@@ -47,7 +47,7 @@ suppressPackageStartupMessages({
   library(patchwork)
 })
 
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: scripts/utils/multi_format_output.R
 
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
@@ -151,7 +151,7 @@ p_binary <- ggplot(binary_df,
 
 save_multiformat_ggplot(
   p_binary,
-  file.path(OUTPUT_DIR, "concordance_pie_binary"),
+  file.path(OUTPUT_DIR, "4B_concordance_pie_binary"),  # Original: concordance_pie_binary
   width = 6, height = 6
 )
 
@@ -198,7 +198,7 @@ p_4cat <- ggplot(cat4_df,
 
 save_multiformat_ggplot(
   p_4cat,
-  file.path(OUTPUT_DIR, "concordance_pie_4cat"),
+  file.path(OUTPUT_DIR, "4B_concordance_pie_4cat"),  # Original: concordance_pie_4cat
   width = 7, height = 6
 )
 
@@ -224,7 +224,7 @@ p_combined <- p_binary + p_4cat +
 
 save_multiformat_ggplot(
   p_combined,
-  file.path(OUTPUT_DIR, "concordance_pie_combined"),
+  file.path(OUTPUT_DIR, "4B_concordance_pie_combined"),  # Original: concordance_pie_combined
   width = 13, height = 6
 )
 
@@ -258,8 +258,7 @@ for (i in seq_len(nrow(cat4_df))) {
             cat4_df$n[i], cat4_df$pct[i]))
 }
 
-summary_file <- file.path(OUTPUT_DIR,
-                          "concordance_pie_summary.txt")
+summary_file <- "data/tsvs/figure_4_abc_analysis/4B_concordance_pie_summary.txt"  # Original: file.path(OUTPUT_DIR, "concordance_pie_summary.txt")
 writeLines(summary_lines, summary_file)
 cat(sprintf("  Saved: %s\n", summary_file))
 

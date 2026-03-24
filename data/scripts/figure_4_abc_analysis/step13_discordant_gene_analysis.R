@@ -20,10 +20,10 @@
 # CONFIGURATION
 # =============================================================================
 
-GENE_SUMMARY_FILE <- "results/gene_level_summary.tsv"
-ABC_PAIRS_FILE    <- "results/delta_abc_all_pairs.tsv"
-ENH_CLASS_FILE    <- "results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv"
-OUTPUT_DIR        <- "results/figures/discordant_analysis"
+GENE_SUMMARY_FILE <- "results/gene_level_summary.tsv"                                  # TODO: not in data/
+ABC_PAIRS_FILE    <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv"       # Original: results/delta_abc_all_pairs.tsv
+ENH_CLASS_FILE    <- "data/tsvs/figure_4_abc_analysis/4E_enhancer_class_abc_metrics.tsv" # Original: results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv
+OUTPUT_DIR        <- "data/plots/figure_4_abc_analysis"                                  # Original: results/figures/discordant_analysis
 
 CLASS_COLORS <- c(
   Activity_Lost = "#2166AC",
@@ -83,7 +83,7 @@ theme_pub <- theme_bw(base_size = 11) +
     legend.position = "bottom"
   )
 
-UTIL_PATH <- "../scripts/utils/multi_format_output.R"
+UTIL_PATH <- "data/scripts/_shared/multi_format_output.R"  # Original: ../scripts/utils/multi_format_output.R
 stopifnot(file.exists(UTIL_PATH))
 source(UTIL_PATH)
 
@@ -490,16 +490,16 @@ p_composite <- (p_conflict | p_dabc_mag | p_lfc_mag) /
     theme = theme(plot.title = element_text(size = 14, face = "bold"))
   )
 
-save_plot(p_composite, "01_discordant_composite", w = 14, h = 14)
+save_plot(p_composite, "4B_discordant_composite", w = 14, h = 14)  # Original: 01_discordant_composite
 
 # Also save individual panels
-save_plot(p_conflict, "02_enhancer_agreement", w = 5, h = 5)
-save_plot(p_dabc_mag, "03_dabc_magnitude", w = 5, h = 5)
-save_plot(p_lfc_mag, "04_log2fc_magnitude", w = 5, h = 5)
-save_plot(p_class_enrich, "05_class_enrichment", w = 6, h = 5)
-save_plot(p_distance, "06_distance", w = 5, h = 5)
-save_plot(p_nenh, "07_n_enhancers", w = 5, h = 5)
-save_plot(p_enh_width, "15_enhancer_width", w = 5, h = 5)
+save_plot(p_conflict, "4B_enhancer_agreement", w = 5, h = 5)    # Original: 02_enhancer_agreement
+save_plot(p_dabc_mag, "4B_dabc_magnitude", w = 5, h = 5)       # Original: 03_dabc_magnitude
+save_plot(p_lfc_mag, "4B_log2fc_magnitude", w = 5, h = 5)      # Original: 04_log2fc_magnitude
+save_plot(p_class_enrich, "4B_class_enrichment", w = 6, h = 5)  # Original: 05_class_enrichment
+save_plot(p_distance, "4B_distance", w = 5, h = 5)              # Original: 06_distance
+save_plot(p_nenh, "4B_n_enhancers", w = 5, h = 5)               # Original: 07_n_enhancers
+save_plot(p_enh_width, "4B_enhancer_width", w = 5, h = 5)       # Original: 15_enhancer_width
 
 # =============================================================================
 # SCATTER: max_delta_abc vs log2FC colored by concordance
@@ -526,7 +526,7 @@ p_scatter <- ggplot(dysreg,
   theme_pub +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
-save_plot(p_scatter, "08_dabc_vs_log2fc_scatter", w = 7, h = 6)
+save_plot(p_scatter, "4B_dabc_vs_log2fc_scatter", w = 7, h = 6)  # Original: 08_dabc_vs_log2fc_scatter
 
 # =============================================================================
 # OUTPUT TABLE
@@ -548,7 +548,7 @@ out_df <- left_join(
 out_df <- left_join(out_df, strongest_enh, by = "TargetGene")
 names(out_df)[names(out_df) == "enh_class_label"] <- "strongest_enh_class"
 
-out_tsv <- "results/discordant_gene_characteristics.tsv"
+out_tsv <- "data/tsvs/figure_4_abc_analysis/4B_discordant_gene_characteristics.tsv"  # Original: results/discordant_gene_characteristics.tsv
 write.table(out_df, out_tsv, sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  Saved: %s (%d rows)\n", out_tsv, nrow(out_df)))
 
