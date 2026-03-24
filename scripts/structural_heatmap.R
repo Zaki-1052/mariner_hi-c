@@ -284,6 +284,21 @@ link_distal_peaks_to_genes <- function(peaks_df) {
     }
   }
 
+  # Nearest-gene fallback: assign remaining distal peaks to ChIPseeker gene.
+  # Biologically correct for repressive marks (H3K27me3) that act locally
+  # and won't overlap ABC enhancers (built from ATAC + H3K27ac).
+  if (length(remaining_idx) > 0) {
+    nearest_fallback <- distal[remaining_idx, ] %>%
+      filter(!is.na(chipseeker_gene)) %>%
+      mutate(assigned_gene = chipseeker_gene)
+
+    if (nrow(nearest_fallback) > 0) {
+      assigned_rows <- append(assigned_rows, list(nearest_fallback))
+      cat(sprintf("    Nearest-gene fallback linked %d additional peaks\n",
+                  nrow(nearest_fallback)))
+    }
+  }
+
   if (length(assigned_rows) == 0) {
     return(distal %>% slice(0) %>% mutate(assigned_gene = character(0)))
   }

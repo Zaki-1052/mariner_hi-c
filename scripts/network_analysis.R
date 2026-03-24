@@ -82,7 +82,7 @@ THRESHOLDS <- list(
   go_qvalue_cutoff     = 0.1,
   top_go_terms         = 10L,
   min_go_genes         = 3L,
-  label_top_n          = 25L
+  label_top_n          = 10L
 )
 
 # Pre-defined GO grouping from curated gene sets
@@ -731,7 +731,7 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
       other_rank = ifelse(is_other,
                           rank(-combined_score, ties.method = "first"),
                           Inf),
-      show_label = (cluster_rank <= thresholds$label_top_n) | (other_rank <= 5),
+      show_label = (cluster_rank <= thresholds$label_top_n) | (other_rank <= 3),
       label_text = ifelse(show_label, name, NA_character_)
     )
 
@@ -890,7 +890,6 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
 
   # Layer 6: Theme and titles
   p <- p +
-    coord_fixed() +
     theme_graph(base_family = "") +
     labs(
       title = sprintf("Multi-Layer Structural Disruption Network (BAP1-KO, %s)", cfg_label),
