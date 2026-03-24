@@ -5,22 +5,32 @@ After baseMean >= 10 filter: 12035
 
 --- Heatmap A: Combined Structural Score ---
 Ranking: combined_score (z_boundary + z_loop_count + z_loop_strength + z_abc)
-Top 50 score range: 11.76 to 27.95
-Layer distribution in top 50:
+Top 100 score range: 9.27 to 27.95
+Layer distribution in top 100:
 
  1  2  3 
- 5 29 16 
-Dysregulated in top 50: 26 / 50
+12 50 38 
+Dysregulated in top 100: 43 / 100
 
-Overlap with ABC-only top 50: 9 genes
-  Shared: Col15a1, Ankrd37, Cln8, Ptgds, Nyx, Gm28401, Mcemp1, Plxna2, Rbm25
+Overlap with ABC-only top 100: 18 genes
+  Shared: Col15a1, Ankrd37, Cln8, Ptgds, Nyx, Gm28401, Mcemp1, Plxna2, Gm15663, Rbm25, Gnat2, Gsdme, Casc3, Zfp462, Adgrl3, Dcun1d4, Paxx, Plekhf1
 
 --- Heatmap B: ABC-Only ---
 Ranking: |max_delta_unnorm|
-Top 50 |ΔABC| range: 1.4790 to 5.4915
-Dysregulated in top 50: 9 / 50
+Top 100 |ΔABC| range: 1.1758 to 5.4915
+Dysregulated in top 100: 24 / 100
+
+--- Modification-Gene Linkage ---
+Linkage mode: ABC=TRUE, Loop fallback=FALSE
+Total genes with modification FC: 22214
+  H2AK119ub: 15763 total genes, 90 in top 100
+  H3K27me3: 4059 total genes, 40 in top 100
+  H3K27ac: 19894 total genes, 97 in top 100
+  ATAC: 21813 total genes, 100 in top 100
 
 --- Columns ---
-Heatmap A: mRNA logFC, AxC logFC, Loop logFC, Boundary (all z-scored)
+Heatmap A: mRNA logFC, AxC logFC, Loop logFC, Boundary | H2AK119ub FC, H3K27me3 FC, H3K27ac FC, ATAC-seq FC (all z-scored)
 Heatmap B: mRNA logFC, AxC logFC (z-scored)
 logFC_AxC = log2((ABC.Score_KO + 1e-6) / (ABC.Score_WT + 1e-6))
+Modification FC = DiffBind Fold (log2 mut/ctrl), strongest peak per gene
+Peak-gene linkage: promoter peaks -> ChIPseeker gene; distal peaks -> ABC TargetGene
