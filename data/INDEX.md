@@ -36,11 +36,12 @@ data/
 ├── upstream/                          # Reference input data
 │   ├── rna_seq/                                 (1 file)
 │   ├── chip_peaks/                              (2 files)
+│   ├── diffbind/                                (4 files)
 │   └── loop_calls/                              (3 files)
 └── INDEX.md                           # This file
 ```
 
-**Totals:** 140 data files + 160 plot files + 39 scripts + 6 upstream = **345 files**
+**Totals:** 140 data files + 160 plot files + 39 scripts + 10 upstream = **349 files**
 
 ## Naming Convention
 
@@ -338,6 +339,10 @@ GO analysis, DEG integration, network analysis, top gene heatmaps.
 | `loop_calls/late_characterized_loops.tsv` | Loops | Merged characterized loops (adult) |
 | `loop_calls/late_merged_final.bedpe` | Loops | Final loop calls BEDPE (adult) |
 | `loop_calls/early_merged_final.bedpe` | Loops | Final loop calls BEDPE (P13) |
+| `diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt` | DiffBind | ATAC-seq differential accessibility (all peaks) |
+| `diffbind/K119ub_diffbind_results_summit_appended_ap.txt` | DiffBind | H2AK119ub differential binding |
+| `diffbind/K27ac_diffbind_results_summit_appended_ap.txt` | DiffBind | H3K27ac differential binding |
+| `diffbind/K27me3_diffbind_results_summit_appended_ap.txt` | DiffBind | H3K27me3 differential binding |
 
 ---
 
