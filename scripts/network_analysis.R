@@ -810,14 +810,41 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
     scale_edge_width(range = c(0.2, 1.5), guide = "none") +
     scale_edge_alpha_identity()
 
-  # Layer 4: Node fills (borders drawn separately with linetype)
+  # Layer 4: Nodes as ggforce circles (fill=log2FC, linetype=n_layers)
+  # Compute radii in data coordinates
+  node_df <- as.data.frame(layout)
+  x_extent <- diff(range(node_df$x, na.rm = TRUE))
+  y_extent <- diff(range(node_df$y, na.rm = TRUE))
+  eff_w_mm <- 14 * 25.4 * (1 - 2 * 0.12)
+  eff_h_mm <- 12 * 25.4 * (1 - 2 * 0.12)
+  mm_per_data <- min(eff_w_mm / x_extent, eff_h_mm / y_extent)
+
+  node_circles <- node_df %>%
+    transmute(
+      x0 = x, y0 = y,
+      size_mm = scales::rescale(display_size, to = c(2, 12)),
+      r = (size_mm / 2) / mm_per_data * 1.15,
+      log2FC = log2FC,
+      border_lty = factor(
+        case_when(
+          n_layers >= 3 ~ "3 layers",
+          n_layers == 2 ~ "2 layers",
+          TRUE ~ "1 layer"
+        ),
+        levels = c("1 layer", "2 layers", "3 layers")
+      ),
+      node_alpha = display_alpha,
+      display_size = display_size
+    )
+
   p <- p +
     ggnewscale::new_scale_fill() +
-    geom_node_point(
-      aes(size = display_size, fill = log2FC, alpha = display_alpha),
-      shape = 21,
-      colour = NA,
-      stroke = 0
+    ggforce::geom_circle(
+      data = node_circles,
+      aes(x0 = x0, y0 = y0, r = r, fill = log2FC,
+          linetype = border_lty, alpha = node_alpha),
+      colour = "black", linewidth = 0.5,
+      inherit.aes = FALSE
     ) +
     scale_fill_gradient2(
       low = colors$expression_low,
@@ -828,49 +855,25 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
       limits = c(-3, 3),
       oob = squish
     ) +
-    scale_size_continuous(range = c(2, 12), name = "|max delta AxC|") +
-    scale_alpha_identity()
-
-  # Layer 4b: Node borders with linetype encoding structural layers
-  # Convert geom_node_point size (mm) to data-coordinate radii for ggforce circles
-  border_df <- as.data.frame(layout) %>%
-    transmute(
-      x0 = x, y0 = y,
-      r = {
-        # With coord_fixed(), one data unit = same mm in x and y.
-        # The constraining dimension determines mm_per_data_unit.
-        x_extent <- diff(range(x, na.rm = TRUE))
-        y_extent <- diff(range(y, na.rm = TRUE))
-        eff_w_mm <- 14 * 25.4 * (1 - 2 * 0.12)  # ~270 mm
-        eff_h_mm <- 12 * 25.4 * (1 - 2 * 0.12)   # ~232 mm
-        # coord_fixed: mm_per_data = min of both directions
-        mm_per_data <- min(eff_w_mm / x_extent, eff_h_mm / y_extent)
-        size_mm <- scales::rescale(display_size, to = c(2, 12))
-        # 1.15x accounts for panel being smaller than full plot (legend, title)
-        (size_mm / 2) / mm_per_data * 1.15
-      },
-      border_lty = factor(
-        case_when(
-          n_layers >= 3 ~ "3 layers",
-          n_layers == 2 ~ "2 layers",
-          TRUE ~ "1 layer"
-        ),
-        levels = c("1 layer", "2 layers", "3 layers")
-      ),
-      border_alpha = display_alpha
-    )
-
-  p <- p +
-    ggforce::geom_circle(
-      data = border_df,
-      aes(x0 = x0, y0 = y0, r = r, linetype = border_lty, alpha = border_alpha),
-      fill = NA, colour = "black", linewidth = 0.5,
-      inherit.aes = FALSE
-    ) +
     scale_linetype_manual(
       values = c("1 layer" = "dotted", "2 layers" = "dashed", "3 layers" = "solid"),
       name = "Structural\nLayers",
       guide = guide_legend(order = 4)
+    ) +
+    scale_alpha_identity() +
+    # Hidden point layer for the size legend
+    geom_point(
+      data = node_circles,
+      aes(x = x0, y = y0, size = display_size),
+      alpha = 0, inherit.aes = FALSE
+    ) +
+    scale_size_continuous(
+      range = c(2, 12), name = "|max delta AxC|",
+      guide = guide_legend(
+        order = 5,
+        override.aes = list(alpha = 1, shape = 21, fill = "white",
+                            colour = "black", stroke = 0.5)
+      )
     )
 
   # Layer 5: Gene labels
