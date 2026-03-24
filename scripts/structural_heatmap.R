@@ -144,17 +144,30 @@ load_diffbind_file <- function(mark_name, file_path) {
 annotate_peaks_promoter_distal <- function(peaks_df) {
   cat("  Annotating peaks with ChIPseeker...\n")
 
+  peaks_df <- peaks_df %>% mutate(.peak_idx = row_number())
+
   gr <- GRanges(
     seqnames = peaks_df$Summit_Chr,
     ranges   = IRanges(start = peaks_df$Summit_Start, end = peaks_df$Summit_End)
   )
+  names(gr) <- peaks_df$.peak_idx
 
   anno <- annotatePeak(gr, tssRegion = TSS_REGION, TxDb = TXDB,
                        annoDb = "org.Mm.eg.db", verbose = FALSE)
-  anno_df <- as.data.frame(anno)
+  anno_df <- as.data.frame(anno) %>%
+    mutate(.peak_idx = as.integer(names(gr)[seq_len(nrow(.))])) %>%
+    select(.peak_idx, annotation, SYMBOL) %>%
+    # Keep first mapping per peak if 1:many
+    distinct(.peak_idx, .keep_all = TRUE)
 
-  peaks_df$is_promoter    <- grepl("Promoter", anno_df$annotation)
-  peaks_df$chipseeker_gene <- anno_df$SYMBOL
+  peaks_df <- peaks_df %>%
+    left_join(anno_df, by = ".peak_idx") %>%
+    mutate(
+      is_promoter    = grepl("Promoter", annotation),
+      chipseeker_gene = SYMBOL,
+      is_promoter     = replace_na(is_promoter, FALSE)
+    ) %>%
+    select(-.peak_idx, -annotation, -SYMBOL)
 
   n_prom <- sum(peaks_df$is_promoter, na.rm = TRUE)
   cat(sprintf("  %d promoter / %d distal peaks\n", n_prom, nrow(peaks_df) - n_prom))

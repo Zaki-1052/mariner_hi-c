@@ -837,10 +837,17 @@ plot_network <- function(g, thresholds, colors, cfg_label) {
     transmute(
       x0 = x, y0 = y,
       r = {
+        # With coord_fixed(), one data unit = same mm in x and y.
+        # The constraining dimension determines mm_per_data_unit.
         x_extent <- diff(range(x, na.rm = TRUE))
-        effective_width_mm <- 14 * 25.4 * (1 - 2 * 0.12)
+        y_extent <- diff(range(y, na.rm = TRUE))
+        eff_w_mm <- 14 * 25.4 * (1 - 2 * 0.12)  # ~270 mm
+        eff_h_mm <- 12 * 25.4 * (1 - 2 * 0.12)   # ~232 mm
+        # coord_fixed: mm_per_data = min of both directions
+        mm_per_data <- min(eff_w_mm / x_extent, eff_h_mm / y_extent)
         size_mm <- scales::rescale(display_size, to = c(2, 12))
-        (size_mm / 2) * (x_extent / effective_width_mm)
+        # 1.15x accounts for panel being smaller than full plot (legend, title)
+        (size_mm / 2) / mm_per_data * 1.15
       },
       border_lty = factor(
         case_when(
