@@ -32,7 +32,7 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # Suppress VennDiagram logging
 flog.threshold(ERROR)
@@ -48,15 +48,19 @@ DEFAULT_TOLERANCE <- 25000  # 25kb for anchor-stripe overlap matching
 # Timepoint-specific file mappings
 TIMEPOINT_CONFIG <- list(
   late = list(
-    loops_file = file.path(BASE_DIR, "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"),
-    stripes_dir = file.path(BASE_DIR, "stripes/outputs/late"),
-    output_dir = file.path(BASE_DIR, "output/ctcf_stripe_crossref/late"),
+    loops_file = file.path(BASE_DIR, "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"),  # TODO: not in data/
+    stripes_dir = file.path(BASE_DIR, "stripes/outputs/late"),  # TODO: not in data/
+    output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/ctcf_stripe_crossref/late
+    output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/ctcf_stripe_crossref/late (tables)
+    output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/ctcf_stripe_crossref/late (plots)
     label = "Late Timepoint"
   ),
   early = list(
-    loops_file = file.path(BASE_DIR, "peaks/loop_annotation_extended/early/extended_characterized_loops.tsv"),
-    stripes_dir = file.path(BASE_DIR, "stripes/outputs/early"),
-    output_dir = file.path(BASE_DIR, "output/ctcf_stripe_crossref/early"),
+    loops_file = file.path(BASE_DIR, "peaks/loop_annotation_extended/early/extended_characterized_loops.tsv"),  # TODO: not in data/
+    stripes_dir = file.path(BASE_DIR, "stripes/outputs/early"),  # TODO: not in data/
+    output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/ctcf_stripe_crossref/early
+    output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/ctcf_stripe_crossref/early (tables)
+    output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/ctcf_stripe_crossref/early (plots)
     label = "Early Timepoint"
   )
 )
@@ -597,8 +601,8 @@ process_timepoint <- function(timepoint, tolerance = 25000) {
   }
 
   # Create output directories
-  tables_dir <- file.path(config$output_dir, "tables")
-  plots_dir <- file.path(config$output_dir, "plots")
+  tables_dir <- config$output_dir_tsvs  # Original: file.path(config$output_dir, "tables")
+  plots_dir <- config$output_dir_plots  # Original: file.path(config$output_dir, "plots")
   dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(plots_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -728,20 +732,20 @@ process_timepoint <- function(timepoint, tolerance = 25000) {
   # CTCF loops with stripe overlap
   ctcf_with_stripe <- ctcf_lost_loops %>%
     filter(loop_id %in% ctcf_lost_overlap$loop_ids_with_stripe)
-  write_tsv(ctcf_with_stripe, file.path(tables_dir, "ctcf_loops_with_stripe_overlap.tsv"))
-  cat(sprintf("  Saved: ctcf_loops_with_stripe_overlap.tsv (%d rows)\n", nrow(ctcf_with_stripe)))
+  write_tsv(ctcf_with_stripe, file.path(tables_dir, "ctcf_stripe_ctcf_loops_with_stripe_overlap.tsv"))  # Original: tables/ctcf_loops_with_stripe_overlap.tsv
+  cat(sprintf("  Saved: ctcf_stripe_ctcf_loops_with_stripe_overlap.tsv (%d rows)\n", nrow(ctcf_with_stripe)))
 
   # CTCF loops without stripe overlap
   ctcf_without_stripe <- ctcf_lost_loops %>%
     filter(!loop_id %in% ctcf_lost_overlap$loop_ids_with_stripe)
-  write_tsv(ctcf_without_stripe, file.path(tables_dir, "ctcf_loops_without_stripe_overlap.tsv"))
-  cat(sprintf("  Saved: ctcf_loops_without_stripe_overlap.tsv (%d rows)\n", nrow(ctcf_without_stripe)))
+  write_tsv(ctcf_without_stripe, file.path(tables_dir, "ctcf_stripe_ctcf_loops_without_stripe_overlap.tsv"))  # Original: tables/ctcf_loops_without_stripe_overlap.tsv
+  cat(sprintf("  Saved: ctcf_stripe_ctcf_loops_without_stripe_overlap.tsv (%d rows)\n", nrow(ctcf_without_stripe)))
 
   # Stripes with loop overlap
   stripes_with_loop <- stripes$lost %>%
     filter(stripe_id %in% ctcf_lost_overlap$stripe_ids_with_loop)
-  write_tsv(stripes_with_loop, file.path(tables_dir, "stripes_with_loop_overlap.tsv"))
-  cat(sprintf("  Saved: stripes_with_loop_overlap.tsv (%d rows)\n", nrow(stripes_with_loop)))
+  write_tsv(stripes_with_loop, file.path(tables_dir, "ctcf_stripe_stripes_with_loop_overlap.tsv"))  # Original: tables/stripes_with_loop_overlap.tsv
+  cat(sprintf("  Saved: ctcf_stripe_stripes_with_loop_overlap.tsv (%d rows)\n", nrow(stripes_with_loop)))
 
   # Enrichment statistics
   enrichment_stats <- tibble(
@@ -755,13 +759,13 @@ process_timepoint <- function(timepoint, tolerance = 25000) {
     null_mean = c(NA, perm_result$null_mean),
     null_sd = c(NA, perm_result$null_sd)
   )
-  write_tsv(enrichment_stats, file.path(tables_dir, "enrichment_statistics.tsv"))
-  cat("  Saved: enrichment_statistics.tsv\n")
+  write_tsv(enrichment_stats, file.path(tables_dir, "ctcf_stripe_enrichment_statistics.tsv"))  # Original: tables/enrichment_statistics.tsv
+  cat("  Saved: ctcf_stripe_enrichment_statistics.tsv\n")
 
   # Distance distribution
   if (nrow(distance_data) > 0) {
-    write_tsv(distance_data, file.path(tables_dir, "distance_to_nearest_stripe.tsv"))
-    cat(sprintf("  Saved: distance_to_nearest_stripe.tsv (%d rows)\n", nrow(distance_data)))
+    write_tsv(distance_data, file.path(tables_dir, "ctcf_stripe_distance_to_nearest_stripe.tsv"))  # Original: tables/distance_to_nearest_stripe.tsv
+    cat(sprintf("  Saved: ctcf_stripe_distance_to_nearest_stripe.tsv (%d rows)\n", nrow(distance_data)))
   }
 
   # Summary by loop type
@@ -771,8 +775,8 @@ process_timepoint <- function(timepoint, tolerance = 25000) {
     summarize(n_loops = n(), .groups = "drop") %>%
     pivot_wider(names_from = has_stripe_overlap, values_from = n_loops,
                 names_prefix = "stripe_overlap_", values_fill = 0)
-  write_tsv(loop_type_summary, file.path(tables_dir, "summary_by_loop_type.tsv"))
-  cat("  Saved: summary_by_loop_type.tsv\n")
+  write_tsv(loop_type_summary, file.path(tables_dir, "ctcf_stripe_summary_by_loop_type.tsv"))  # Original: tables/summary_by_loop_type.tsv
+  cat("  Saved: ctcf_stripe_summary_by_loop_type.tsv\n")
 
   # ===========================================================================
   # Step 8: Create Visualizations
@@ -896,9 +900,9 @@ process_timepoint <- function(timepoint, tolerance = 25000) {
     "================================================================="
   )
 
-  report_path <- file.path(config$output_dir, "summary_report.txt")
+  report_path <- file.path(config$output_dir_tsvs, "ctcf_stripe_summary_report.txt")  # Original: file.path(config$output_dir, "summary_report.txt")
   writeLines(report_lines, report_path)
-  cat(sprintf("  Saved: summary_report.txt\n"))
+  cat(sprintf("  Saved: ctcf_stripe_summary_report.txt\n"))
 
   cat("\n")
   cat(sprintf("Completed %s timepoint\n", timepoint))

@@ -36,7 +36,7 @@ suppressPackageStartupMessages({
   library(readxl)
 })
 
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R") # Original: source("scripts/utils/multi_format_output.R")
 
 # ==============================================================================
 # 2. CONFIGURATION
@@ -46,24 +46,26 @@ BASE_DIR <- getwd()
 
 TIMEPOINT_CONFIG <- list(
   late = list(
-    gene_summary      = file.path(BASE_DIR, "abc/results/gene_level_summary.tsv"),
-    loops_file        = file.path(BASE_DIR, "abc/results/loops_with_gene_assignments.tsv"),
+    gene_summary      = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional/5B_gene_level_summary.tsv"), # Original: abc/results/gene_level_summary.tsv
+    loops_file        = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional/5C_loops_with_gene_assignments.tsv"), # Original: abc/results/loops_with_gene_assignments.tsv
     loops_gene_cols   = c(anchor1 = "anchor1_gene", anchor2 = "anchor2_gene"),
-    boundary_genes    = file.path(BASE_DIR, "tads/results/visualizations/late/enrichment/boundary_genes.tsv"),
-    delta_abc_pairs   = file.path(BASE_DIR, "abc/results/delta_abc_with_rnaseq.tsv"),
+    boundary_genes    = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional/5A_boundary_genes.tsv"), # Original: tads/results/visualizations/late/enrichment/boundary_genes.tsv
+    delta_abc_pairs   = file.path(BASE_DIR, "data/tsvs/figure_4_abc_analysis/4A_delta_abc_with_rnaseq.tsv"), # Original: abc/results/delta_abc_with_rnaseq.tsv
     rnaseq_file       = NULL,
-    output_dir        = file.path(BASE_DIR, "output/network_analysis/late"),
+    output_dir        = file.path(BASE_DIR, "data/plots/figure_5_model_functional"), # Original: output/network_analysis/late
+    tsv_dir           = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"), # Original: output/network_analysis/late/tables
     label             = "Late Timepoint (Adult)",
     has_abc           = TRUE
   ),
   early = list(
     gene_summary      = NULL,
-    loops_file        = file.path(BASE_DIR, "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"),
+    loops_file        = file.path(BASE_DIR, "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"), # TODO: not in data/
     loops_gene_cols   = c(anchor1 = "anchor1_nearest_gene", anchor2 = "anchor2_nearest_gene"),
-    boundary_genes    = file.path(BASE_DIR, "tads/results/visualizations/early/enrichment/boundary_genes.tsv"),
+    boundary_genes    = file.path(BASE_DIR, "tads/results/visualizations/early/enrichment/boundary_genes.tsv"), # TODO: not in data/
     delta_abc_pairs   = NULL,
-    rnaseq_file       = file.path(BASE_DIR, "tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),
-    output_dir        = file.path(BASE_DIR, "output/network_analysis/early"),
+    rnaseq_file       = file.path(BASE_DIR, "tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"), # TODO: not in data/
+    output_dir        = file.path(BASE_DIR, "data/plots/figure_5_model_functional"), # Original: output/network_analysis/early
+    tsv_dir           = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"), # Original: output/network_analysis/early/tables
     label             = "Early Timepoint (P13)",
     has_abc           = FALSE
   )
@@ -87,7 +89,7 @@ THRESHOLDS <- list(
 
 # Pre-defined GO grouping from curated gene sets
 GO_GROUPS_CONFIG <- list(
-  excel_path = file.path(BASE_DIR, "peaks/Go_term_selction.xlsx"),
+  excel_path = file.path(BASE_DIR, "peaks/Go_term_selction.xlsx"), # TODO: not in data/
   sheet      = "Sheet1",
   skip_rows  = 2L,
   categories = list(
@@ -1115,7 +1117,7 @@ write_summary_statistics <- function(profile, filtered, edges, g, output_dir) {
     THRESHOLDS$baseMean_min, THRESHOLDS$shared_enh_delta_min
   ))
 
-  write(summary_text, file = file.path(output_dir, "tables", "summary_report.txt"))
+  write(summary_text, file = file.path(output_dir, "5C_summary_report.txt")) # Original: file.path(output_dir, "tables", "summary_report.txt")
   cat(summary_text)
 }
 
@@ -1136,8 +1138,8 @@ main <- function() {
   cat(sprintf("Min layers: %d | Max nodes: %d\n\n", THRESHOLDS$min_layers, THRESHOLDS$max_nodes))
 
   # --- Create output directories ---
-  tables_dir <- file.path(cfg$output_dir, "tables")
-  plots_dir  <- file.path(cfg$output_dir, "plots")
+  tables_dir <- cfg$tsv_dir # Original: file.path(cfg$output_dir, "tables")
+  plots_dir  <- cfg$output_dir # Original: file.path(cfg$output_dir, "plots")
   dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(plots_dir,  recursive = TRUE, showWarnings = FALSE)
 
@@ -1193,7 +1195,7 @@ main <- function() {
   cat("\n=== Section 2: Building per-gene structural profile ===\n")
   abc_min <- if (cfg$has_abc) THRESHOLDS$abc_delta_min else Inf
   profile <- build_gene_structural_profile(gene_summary, loops, boundary_genes, abc_min)
-  write_tsv(profile, file.path(tables_dir, "gene_structural_profile_all.tsv"))
+  write_tsv(profile, file.path(tables_dir, "5C_gene_structural_profile_all.tsv")) # Original: "gene_structural_profile_all.tsv"
   cat(sprintf("  Saved: gene_structural_profile_all.tsv (%d genes)\n", nrow(profile)))
 
   # ==========================================================================
@@ -1231,13 +1233,13 @@ main <- function() {
   filtered  <- filtered %>% left_join(go_result$groups, by = "gene")
 
   cat(sprintf("  Expanded network: %d total genes\n", nrow(filtered)))
-  write_tsv(filtered, file.path(tables_dir, "gene_structural_profile_filtered.tsv"))
+  write_tsv(filtered, file.path(tables_dir, "5C_gene_structural_profile_filtered.tsv")) # Original: "gene_structural_profile_filtered.tsv"
 
   # Write GO group assignments
   go_assignment_df <- go_result$groups %>%
     filter(go_group != "Other") %>%
     arrange(go_group, gene)
-  write_tsv(go_assignment_df, file.path(tables_dir, "go_group_assignments.tsv"))
+  write_tsv(go_assignment_df, file.path(tables_dir, "5C_go_group_assignments.tsv")) # Original: "go_group_assignments.tsv"
   cat(sprintf("  Saved: go_group_assignments.tsv (%d assigned genes)\n", nrow(go_assignment_df)))
 
   # ==========================================================================
@@ -1256,7 +1258,7 @@ main <- function() {
     cat("  Shared enhancer edges: skipped (no ABC data)\n")
     all_edges <- loop_edges %>% dplyr::select(from, to, weight, edge_type)
   }
-  write_tsv(all_edges, file.path(tables_dir, "edge_list.tsv"))
+  write_tsv(all_edges, file.path(tables_dir, "5C_edge_list.tsv")) # Original: "edge_list.tsv"
   cat(sprintf("  Total edges: %d\n", nrow(all_edges)))
 
   # ==========================================================================
@@ -1266,7 +1268,7 @@ main <- function() {
   g <- build_network(filtered, all_edges)
 
   centrality <- as_tibble(g) %>% dplyr::select(name, degree, betweenness, closeness)
-  write_tsv(centrality, file.path(tables_dir, "network_centrality_metrics.tsv"))
+  write_tsv(centrality, file.path(tables_dir, "5C_network_centrality_metrics.tsv")) # Original: "network_centrality_metrics.tsv"
 
   # ==========================================================================
   # SECTION 7: Visualize
@@ -1275,39 +1277,39 @@ main <- function() {
 
   cat("  Rendering network figure...\n")
   p_network <- plot_network(g, THRESHOLDS, COLORS, cfg$label)
-  save_multiformat_ggplot(p_network, file.path(plots_dir, "network_figure5c"),
+  save_multiformat_ggplot(p_network, file.path(plots_dir, "5C_network_figure"), # Original: "network_figure5c"
                           width = 14, height = 12)
 
   cat("  Rendering layer distribution...\n")
   p_layers <- plot_layer_distribution(profile)
-  save_multiformat_ggplot(p_layers, file.path(plots_dir, "layer_distribution"),
+  save_multiformat_ggplot(p_layers, file.path(plots_dir, "5C_layer_distribution"), # Original: "layer_distribution"
                           width = 8, height = 6)
 
   cat("  Rendering combined score distribution...\n")
   p_scores <- plot_combined_score_distribution(filtered)
-  save_multiformat_ggplot(p_scores, file.path(plots_dir, "combined_score_distribution"),
+  save_multiformat_ggplot(p_scores, file.path(plots_dir, "5C_combined_score_distribution"), # Original: "combined_score_distribution"
                           width = 8, height = 6)
 
   cat("  Rendering edge type breakdown...\n")
   p_edges <- plot_edge_type_breakdown(all_edges)
-  save_multiformat_ggplot(p_edges, file.path(plots_dir, "edge_type_breakdown"),
+  save_multiformat_ggplot(p_edges, file.path(plots_dir, "5C_edge_type_breakdown"), # Original: "edge_type_breakdown"
                           width = 8, height = 6)
 
   cat("  Rendering degree distribution...\n")
   p_degree <- plot_degree_distribution(g)
-  save_multiformat_ggplot(p_degree, file.path(plots_dir, "degree_distribution"),
+  save_multiformat_ggplot(p_degree, file.path(plots_dir, "5C_degree_distribution"), # Original: "degree_distribution"
                           width = 8, height = 6)
 
   cat("  Rendering GO group summary...\n")
   p_go <- plot_go_group_summary(go_result$groups)
-  save_multiformat_ggplot(p_go, file.path(plots_dir, "go_group_summary"),
+  save_multiformat_ggplot(p_go, file.path(plots_dir, "5C_go_group_summary"), # Original: "go_group_summary"
                           width = 10, height = 6)
 
   # ==========================================================================
   # SECTION 8: Summary
   # ==========================================================================
   cat("\n=== Section 8: Writing summary ===\n")
-  write_summary_statistics(profile, filtered, all_edges, g, cfg$output_dir)
+  write_summary_statistics(profile, filtered, all_edges, g, tables_dir) # Original: cfg$output_dir
 
   cat(sprintf("\nDone! %s\n", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
   cat(sprintf("  Tables: %s\n", tables_dir))

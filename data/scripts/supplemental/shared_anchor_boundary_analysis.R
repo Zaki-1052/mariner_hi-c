@@ -39,7 +39,7 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # ==============================================================================
 # 2. CONFIGURATION
@@ -60,19 +60,23 @@ CONTROL_EXCLUSION_TOLERANCE <- 10000
 # Timepoint-specific file mappings
 TIMEPOINT_CONFIG <- list(
   late = list(
-    shared_anchors_file = file.path(BASE_DIR, "output/shared_anchor_analysis/late/tables/shared_anchors.tsv"),
-    shared_loops_file = file.path(BASE_DIR, "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv"),
-    boundaries_file = file.path(BASE_DIR, "tads/results/late/final/tadcompare_final_filtered.tsv"),
-    all_loops_file = file.path(BASE_DIR, "outputs/250402-late_outputs/merged_loops/characterized_loops.tsv"),
-    output_dir = file.path(BASE_DIR, "output/shared_anchor_boundary_analysis/late"),
+    shared_anchors_file = file.path(BASE_DIR, "data/tsvs/supplemental/shared_anchors.tsv"),  # Original: output/shared_anchor_analysis/late/tables/shared_anchors.tsv
+    shared_loops_file = file.path(BASE_DIR, "data/tsvs/supplemental/shared_anchor_loops.tsv"),  # Original: output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv
+    boundaries_file = file.path(BASE_DIR, "tads/results/late/final/tadcompare_final_filtered.tsv"),  # TODO: not in data/
+    all_loops_file = file.path(BASE_DIR, "data/upstream/loop_calls/late_characterized_loops.tsv"),  # Original: outputs/250402-late_outputs/merged_loops/characterized_loops.tsv
+    output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_boundary_analysis/late
+    output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_boundary_analysis/late (tables)
+    output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/shared_anchor_boundary_analysis/late (plots)
     label = "Late Timepoint"
   ),
   early = list(
-    shared_anchors_file = file.path(BASE_DIR, "output/shared_anchor_analysis/early/tables/shared_anchors.tsv"),
-    shared_loops_file = file.path(BASE_DIR, "output/shared_anchor_analysis/early/tables/shared_anchor_loops.tsv"),
-    boundaries_file = file.path(BASE_DIR, "tads/results/early/final/tadcompare_final_filtered.tsv"),
-    all_loops_file = file.path(BASE_DIR, "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"),
-    output_dir = file.path(BASE_DIR, "output/shared_anchor_boundary_analysis/early"),
+    shared_anchors_file = file.path(BASE_DIR, "output/shared_anchor_analysis/early/tables/shared_anchors.tsv"),  # TODO: not in data/
+    shared_loops_file = file.path(BASE_DIR, "output/shared_anchor_analysis/early/tables/shared_anchor_loops.tsv"),  # TODO: not in data/
+    boundaries_file = file.path(BASE_DIR, "tads/results/early/final/tadcompare_final_filtered.tsv"),  # TODO: not in data/
+    all_loops_file = file.path(BASE_DIR, "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"),  # TODO: not in data/
+    output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_boundary_analysis/early
+    output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_boundary_analysis/early (tables)
+    output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/shared_anchor_boundary_analysis/early (plots)
     label = "Early Timepoint"
   )
 )
@@ -1158,7 +1162,7 @@ create_combined_panel <- function(plots, label) {
 
 #' Write summary report as plain text
 generate_report <- function(q1, q2, q3, q4, config, output_dir) {
-  report_path <- file.path(output_dir, "summary_report.txt")
+  report_path <- file.path(config$output_dir_tsvs, "shared_boundary_summary_report.txt")  # Original: file.path(output_dir, "summary_report.txt")
   label <- config$label
 
   lines <- c(
@@ -1272,8 +1276,8 @@ run_analysis <- function(config) {
   cat(sprintf("\n*** Running analysis for %s ***\n\n", config$label))
 
   # Create output directories
-  tables_dir <- file.path(config$output_dir, "tables")
-  plots_dir <- file.path(config$output_dir, "plots")
+  tables_dir <- config$output_dir_tsvs  # Original: file.path(config$output_dir, "tables")
+  plots_dir <- config$output_dir_plots  # Original: file.path(config$output_dir, "plots")
   dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(plots_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -1295,10 +1299,10 @@ run_analysis <- function(config) {
   q1 <- q1_proximity_comparison(shared_gr, control_gr, boundaries_gr, boundaries_df)
 
   # Save Q1 tables
-  write_tsv(q1$shared_dist_df, file.path(tables_dir, "shared_anchor_boundary_distances.tsv"))
-  write_tsv(q1$control_dist_df, file.path(tables_dir, "nonshared_anchor_boundary_distances.tsv"))
-  write_tsv(q1$proximity_stats, file.path(tables_dir, "proximity_comparison_stats.tsv"))
-  write_tsv(q1$fisher_df, file.path(tables_dir, "fisher_threshold_results.tsv"))
+  write_tsv(q1$shared_dist_df, file.path(tables_dir, "shared_boundary_shared_anchor_boundary_distances.tsv"))  # Original: tables/shared_anchor_boundary_distances.tsv
+  write_tsv(q1$control_dist_df, file.path(tables_dir, "shared_boundary_nonshared_anchor_boundary_distances.tsv"))  # Original: tables/nonshared_anchor_boundary_distances.tsv
+  write_tsv(q1$proximity_stats, file.path(tables_dir, "shared_boundary_proximity_comparison_stats.tsv"))  # Original: tables/proximity_comparison_stats.tsv
+  write_tsv(q1$fisher_df, file.path(tables_dir, "shared_boundary_fisher_threshold_results.tsv"))  # Original: tables/fisher_threshold_results.tsv
 
   # Save permutation null distribution
   perm_df <- tibble(
@@ -1314,7 +1318,7 @@ run_analysis <- function(config) {
     threshold_bp = q1$permutation$threshold
   )
   write_tsv(bind_rows(perm_summary, tibble(note = "Null distribution below")),
-            file.path(tables_dir, "permutation_results.tsv"))
+            file.path(tables_dir, "shared_boundary_permutation_results.tsv"))  # Original: tables/permutation_results.tsv
 
   cat("  Q1 tables saved.\n")
 
@@ -1323,8 +1327,8 @@ run_analysis <- function(config) {
 
   # Save Q2 tables
   if (q2$status == "success") {
-    write_tsv(q2$per_type_fisher, file.path(tables_dir, "merge_enrichment_results.tsv"))
-    write_tsv(q2$comparison, file.path(tables_dir, "boundary_type_comparison.tsv"))
+    write_tsv(q2$per_type_fisher, file.path(tables_dir, "shared_boundary_merge_enrichment_results.tsv"))  # Original: tables/merge_enrichment_results.tsv
+    write_tsv(q2$comparison, file.path(tables_dir, "shared_boundary_boundary_type_comparison.tsv"))  # Original: tables/boundary_type_comparison.tsv
   }
   cat("  Q2 tables saved.\n")
 
@@ -1332,8 +1336,8 @@ run_analysis <- function(config) {
   q3 <- q3_partner_proximity(shared_loops, shared_gr, boundaries_gr)
 
   # Save Q3 tables
-  write_tsv(q3$partner_df, file.path(tables_dir, "partner_distances.tsv"))
-  write_tsv(q3$test_result, file.path(tables_dir, "partner_distance_test.tsv"))
+  write_tsv(q3$partner_df, file.path(tables_dir, "shared_boundary_partner_distances.tsv"))  # Original: tables/partner_distances.tsv
+  write_tsv(q3$test_result, file.path(tables_dir, "shared_boundary_partner_distance_test.tsv"))  # Original: tables/partner_distance_test.tsv
   cat("  Q3 tables saved.\n")
 
   # --- Q4: Direction concordance ---
@@ -1342,8 +1346,8 @@ run_analysis <- function(config) {
 
   # Save Q4 tables
   if (q4$status == "success") {
-    write_tsv(q4$concordance_df, file.path(tables_dir, "direction_concordance.tsv"))
-    write_tsv(q4$concordance_summary, file.path(tables_dir, "concordance_summary.tsv"))
+    write_tsv(q4$concordance_df, file.path(tables_dir, "shared_boundary_direction_concordance.tsv"))  # Original: tables/direction_concordance.tsv
+    write_tsv(q4$concordance_summary, file.path(tables_dir, "shared_boundary_concordance_summary.tsv"))  # Original: tables/concordance_summary.tsv
   }
   cat("  Q4 tables saved.\n")
 
@@ -1380,7 +1384,7 @@ run_analysis <- function(config) {
   }
 
   # --- Generate report ---
-  generate_report(q1, q2, q3, q4, config, config$output_dir)
+  generate_report(q1, q2, q3, q4, config, config$output_dir_tsvs)  # Original: config$output_dir
 
   cat(sprintf("\n*** %s analysis complete ***\n", config$label))
   cat(sprintf("Output directory: %s\n", config$output_dir))

@@ -21,9 +21,9 @@
 # CONFIGURATION
 # =============================================================================
 
-ABC_PAIRS_FILE  <- "results/delta_abc_all_pairs.tsv"
-ENH_CLASS_FILE  <- "results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv"
-OUTPUT_DIR      <- "results/figures/activity_contact_scatter"
+ABC_PAIRS_FILE  <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv"       # Original: results/delta_abc_all_pairs.tsv
+ENH_CLASS_FILE  <- "data/tsvs/figure_4_abc_analysis/4E_enhancer_class_abc_metrics.tsv" # Original: results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv
+OUTPUT_DIR      <- "data/plots/figure_4_abc_analysis"                                  # Original: results/figures/activity_contact_scatter
 
 CLASS_COLORS <- c(
   Activity_Lost = "#2166AC",
@@ -78,7 +78,7 @@ theme_pub <- theme_bw(base_size = 11) +
     legend.position = "bottom"
   )
 
-UTIL_PATH <- "../scripts/utils/multi_format_output.R"
+UTIL_PATH <- "data/scripts/_shared/multi_format_output.R"  # Original: ../scripts/utils/multi_format_output.R
 stopifnot(file.exists(UTIL_PATH))
 source(UTIL_PATH)
 
@@ -287,7 +287,7 @@ p1 <- ggplot(abc_classified,
   theme_pub +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
-save_plot(p1, "01_raw_delta_classified", w = 7, h = 6.5)
+save_plot(p1, "4A_raw_delta_classified", w = 7, h = 6.5)  # Original: 01_raw_delta_classified
 
 # =============================================================================
 # PLOT 2: RAW DELTA — ALL PAIRS (UNCLASSIFIED AS GRAY REFERENCE)
@@ -337,7 +337,7 @@ p2 <- ggplot(abc_ordered,
   theme_pub +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
-save_plot(p2, "02_raw_delta_all_pairs", w = 7, h = 6.5)
+save_plot(p2, "4A_raw_delta_all_pairs", w = 7, h = 6.5)  # Original: 02_raw_delta_all_pairs
 
 # =============================================================================
 # PLOT 3: LOG2FC — CLASSIFIED ONLY
@@ -400,7 +400,7 @@ p3 <- ggplot(valid_lfc,
   theme_pub +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
-save_plot(p3, "03_log2fc_classified", w = 7, h = 6.5)
+save_plot(p3, "4A_log2fc_classified", w = 7, h = 6.5)  # Original: 03_log2fc_classified
 
 # =============================================================================
 # PLOT 4: LOG2FC — ALL PAIRS
@@ -456,7 +456,7 @@ p4 <- ggplot(valid_all_ordered,
   theme_pub +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
-save_plot(p4, "04_log2fc_all_pairs", w = 7, h = 6.5)
+save_plot(p4, "4A_log2fc_all_pairs", w = 7, h = 6.5)  # Original: 04_log2fc_all_pairs
 
 # =============================================================================
 # FACETED PANELS BY CLASS
@@ -490,7 +490,7 @@ p5 <- p5 +
             hjust = -0.05, vjust = 1.2, size = 3, color = "black",
             inherit.aes = FALSE)
 
-save_plot(p5, "05_raw_delta_faceted", w = 10, h = 8)
+save_plot(p5, "4A_raw_delta_faceted", w = 10, h = 8)  # Original: 05_raw_delta_faceted
 
 # Faceted log2FC
 p6 <- ggplot(valid_lfc,
@@ -517,7 +517,7 @@ p6 <- p6 +
             hjust = -0.05, vjust = 1.2, size = 3, color = "black",
             inherit.aes = FALSE)
 
-save_plot(p6, "06_log2fc_faceted", w = 10, h = 8)
+save_plot(p6, "4A_log2fc_faceted", w = 10, h = 8)  # Original: 06_log2fc_faceted
 
 # =============================================================================
 # MARGINAL DENSITY RIDGES BY CLASS
@@ -551,7 +551,7 @@ p_marginals <- p_act_dens / p_con_dens +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
 
-save_plot(p_marginals, "07_marginal_densities", w = 8, h = 8)
+save_plot(p_marginals, "4A_marginal_densities", w = 8, h = 8)  # Original: 07_marginal_densities
 
 # =============================================================================
 # STATISTICAL SUMMARY TABLE
@@ -602,7 +602,7 @@ stats_all <- rbind(stats_raw, stats_lfc)
 names(stats_all) <- gsub("delta_x", "activity", gsub("delta_y", "contact",
                           names(stats_all)))
 
-out_tsv <- file.path(OUTPUT_DIR, "activity_contact_summary.tsv")
+out_tsv <- "data/tsvs/figure_4_abc_analysis/4A_activity_contact_summary.tsv"  # Original: file.path(OUTPUT_DIR, "activity_contact_summary.tsv")
 write.table(stats_all, out_tsv, sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  Summary table saved: %s\n", out_tsv))
 

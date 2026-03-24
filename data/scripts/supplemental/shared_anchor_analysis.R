@@ -34,7 +34,7 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # ==============================================================================
 # 2. CONFIGURATION
@@ -58,15 +58,19 @@ GREAT_MAX_EXTENSION <- 100000
 # Timepoint-specific file mappings
 TIMEPOINT_CONFIG <- list(
   late = list(
-    loops_file = file.path(BASE_DIR, "25042-late_outputs/merged_loops/characterized_loops.tsv"),
-    rna_file = file.path(BASE_DIR, "tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx"),
-    output_dir = file.path(BASE_DIR, "output/shared_anchor_analysis/late"),
+    loops_file = file.path(BASE_DIR, "data/upstream/loop_calls/late_characterized_loops.tsv"),  # Original: 25042-late_outputs/merged_loops/characterized_loops.tsv
+    rna_file = file.path(BASE_DIR, "data/upstream/rna_seq/adult_rnaseq_results.xlsx"),  # Original: tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx
+    output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_analysis/late (tables)
+    output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/shared_anchor_analysis/late (plots)
+    output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_analysis/late
     label = "Late Timepoint"
   ),
   early = list(
-    loops_file = file.path(BASE_DIR, "250831-early_outputs/merged_loops/characterized_loops.tsv"),
-    rna_file = file.path(BASE_DIR, "tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),
-    output_dir = file.path(BASE_DIR, "output/shared_anchor_analysis/early"),
+    loops_file = file.path(BASE_DIR, "250831-early_outputs/merged_loops/characterized_loops.tsv"),  # TODO: not in data/
+    rna_file = file.path(BASE_DIR, "tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),  # TODO: not in data/
+    output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_analysis/early (tables)
+    output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/shared_anchor_analysis/early (plots)
+    output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_analysis/early
     label = "Early Timepoint"
   )
 )
@@ -993,8 +997,8 @@ process_timepoint <- function(timepoint, tolerance = 10000) {
   }
 
   # Create output directories
-  tables_dir <- file.path(config$output_dir, "tables")
-  plots_dir <- file.path(config$output_dir, "plots")
+  tables_dir <- config$output_dir_tsvs  # Original: file.path(config$output_dir, "tables")
+  plots_dir <- config$output_dir_plots  # Original: file.path(config$output_dir, "plots")
   dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(plots_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -1006,15 +1010,15 @@ process_timepoint <- function(timepoint, tolerance = 10000) {
   shared_result <- identify_shared_anchors(loops, tolerance)
 
   # Save shared anchor tables
-  write_tsv(shared_result$shared_anchor_df, file.path(tables_dir, "shared_anchors.tsv"))
-  cat(sprintf("  Saved: tables/shared_anchors.tsv\n"))
+  write_tsv(shared_result$shared_anchor_df, file.path(tables_dir, "shared_anchors.tsv"))  # Original: tables/shared_anchors.tsv
+  cat(sprintf("  Saved: shared_anchors.tsv\n"))
 
   shared_loop_df <- bind_rows(
     shared_result$lost_at_shared %>% mutate(anchor_status = "shared"),
     shared_result$gained_at_shared %>% mutate(anchor_status = "shared")
   )
-  write_tsv(shared_loop_df, file.path(tables_dir, "shared_anchor_loops.tsv"))
-  cat(sprintf("  Saved: tables/shared_anchor_loops.tsv\n"))
+  write_tsv(shared_loop_df, file.path(tables_dir, "shared_anchor_loops.tsv"))  # Original: tables/shared_anchor_loops.tsv
+  cat(sprintf("  Saved: shared_anchor_loops.tsv\n"))
 
   # Create and save anchor overlap plot
   overlap_plot <- create_anchor_overlap_plot(shared_result)
@@ -1030,9 +1034,9 @@ process_timepoint <- function(timepoint, tolerance = 10000) {
     statistic = c(char_result$chisq_result$statistic, char_result$tss_wilcox$statistic),
     p_value = c(char_result$chisq_result$p.value, char_result$tss_wilcox$p.value)
   )
-  write_tsv(char_summary, file.path(tables_dir, "anchor_characterization.tsv"))
+  write_tsv(char_summary, file.path(tables_dir, "anchor_characterization.tsv"))  # Original: tables/anchor_characterization.tsv
   if (nrow(char_result$chip_results) > 0) {
-    write_tsv(char_result$chip_results, file.path(tables_dir, "chip_enrichment_results.tsv"))
+    write_tsv(char_result$chip_results, file.path(tables_dir, "shared_anchor_chip_enrichment.tsv"))  # Original: tables/chip_enrichment_results.tsv
   }
 
   # Create and save characterization plots
@@ -1050,7 +1054,7 @@ process_timepoint <- function(timepoint, tolerance = 10000) {
   distance_result <- paired_distance_analysis(shared_result, tolerance)
 
   if (nrow(distance_result$paired_data) > 0) {
-    write_tsv(distance_result$paired_data, file.path(tables_dir, "paired_distance_stats.tsv"))
+    write_tsv(distance_result$paired_data, file.path(tables_dir, "shared_anchor_paired_distance.tsv"))  # Original: tables/paired_distance_stats.tsv
 
     # Create and save distance plots
     scatter_plot <- create_paired_scatter_plot(distance_result)
@@ -1067,7 +1071,7 @@ process_timepoint <- function(timepoint, tolerance = 10000) {
   }
 
   # Task 1d: APA subsets
-  apa_result <- export_apa_subsets(shared_result, config$output_dir)
+  apa_result <- export_apa_subsets(shared_result, config$output_dir_tsvs)  # Original: config$output_dir
 
   # Task 1e: Gene expression
   deg_df <- load_rnaseq_degs(config$rna_file)
@@ -1078,7 +1082,7 @@ process_timepoint <- function(timepoint, tolerance = 10000) {
                             width = 5, height = 6)
   }
   if (nrow(expr_result$data) > 0) {
-    write_tsv(expr_result$data, file.path(tables_dir, "shared_anchor_genes.tsv"))
+    write_tsv(expr_result$data, file.path(tables_dir, "shared_anchor_genes.tsv"))  # Original: tables/shared_anchor_genes.tsv
   }
 
   # Generate summary report
@@ -1159,7 +1163,7 @@ generate_summary_report <- function(shared_result, char_result, distance_result,
     "================================================================="
   )
 
-  report_path <- file.path(config$output_dir, "summary_report.txt")
+  report_path <- file.path(config$output_dir_tsvs, "summary_report.txt")  # Original: file.path(config$output_dir, "summary_report.txt")
   writeLines(report_lines, report_path)
   cat(sprintf("\n  Saved: summary_report.txt\n"))
 }
@@ -1222,8 +1226,10 @@ main <- function() {
 
   for (tp in names(results)) {
     if (!is.null(results[[tp]])) {
-      cat(sprintf("\n%s timepoint output: %s\n", toupper(tp),
-                  TIMEPOINT_CONFIG[[tp]]$output_dir))
+      cat(sprintf("\n%s timepoint TSVs: %s\n", toupper(tp),
+                  TIMEPOINT_CONFIG[[tp]]$output_dir_tsvs))
+      cat(sprintf("%s timepoint plots: %s\n", toupper(tp),
+                  TIMEPOINT_CONFIG[[tp]]$output_dir_plots))
     }
   }
 }

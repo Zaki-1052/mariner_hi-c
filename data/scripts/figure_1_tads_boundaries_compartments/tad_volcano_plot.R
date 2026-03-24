@@ -65,8 +65,10 @@ cat("========================================\n\n")
 args <- commandArgs(trailingOnly = TRUE)
 
 # Default parameters
-input_file <- "tad_analysis/Bap1.diff.tad.txt"
-output_dir <- "outputs/tad_analysis"
+input_file <- "tad_analysis/Bap1.diff.tad.txt"  # TODO: not in data/
+# Original: output_dir <- "outputs/tad_analysis"
+tsv_dir <- "data/tsvs/figure_1_tads_boundaries_compartments"
+plot_dir <- "data/plots/figure_1_tads_boundaries_compartments"
 custom_title <- NULL
 plot_width <- 10
 plot_height <- 8
@@ -77,7 +79,7 @@ plot_height <- 8
 i <- 1
 while (i <= length(args)) {
   if (args[i] == "--output" && i < length(args)) {
-    output_dir <- args[i + 1]
+    tsv_dir <- args[i + 1]
     i <- i + 2
   } else if (args[i] == "--title" && i < length(args)) {
     custom_title <- args[i + 1]
@@ -104,7 +106,7 @@ if (!file.exists(input_file)) {
 
 cat(sprintf("Configuration:\n"))
 cat(sprintf("  Input file: %s\n", input_file))
-cat(sprintf("  Output directory: %s\n", output_dir))
+cat(sprintf("  Output directory: %s\n", tsv_dir))
 cat(sprintf("  Plot dimensions: %.1f x %.1f inches\n\n", plot_width, plot_height))
 
 # Load required libraries
@@ -116,10 +118,13 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility for PDF + SVG + JPEG output
-source("scripts/utils/multi_format_output.R")
+# Original: source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")
 
-# Create output directory
-dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+# Create output directories
+# Original: dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(plot_dir, recursive = TRUE, showWarnings = FALSE)
 
 # =============================================================================
 # LOAD AND PREPARE DATA
@@ -262,7 +267,7 @@ cat(sprintf("  -log10(adj. p-value): [%.2f, %.2f]\n\n",
 # =============================================================================
 
 generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_name,
-                                  plot_title_base, output_dir, plot_width, plot_height,
+                                  plot_title_base, tsv_dir, plot_dir, plot_width, plot_height,  # Original: output_dir
                                   x_label = bquote(bold('Ctrl vs Mut Difference')),
                                   analysis_type = "TAD Inclusion Ratio Analysis",
                                   effect_label = "Difference") {
@@ -362,7 +367,7 @@ generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_nam
     )
 
   # Save plot in multiple formats (PDF, SVG, JPEG)
-  output_base <- file.path(output_dir, sprintf("tad_volcano_%s", threshold_name))
+  output_base <- file.path(plot_dir, sprintf("tad_volcano_%s", threshold_name))  # Original: file.path(output_dir, ...)
   save_multiformat_ggplot(p, output_base, width = plot_width, height = plot_height)
 
   # Save significant TADs for this threshold
@@ -370,7 +375,7 @@ generate_volcano_plot <- function(df, fdr_threshold, fc_threshold, threshold_nam
   sig_tads <- df[df$significant, ]
   sig_tads <- sig_tads[order(sig_tads$adj_pvalue), ]
 
-  output_sig <- file.path(output_dir, sprintf("tad_significant_%s.tsv", threshold_name))
+  output_sig <- file.path(tsv_dir, sprintf("tad_significant_%s.tsv", threshold_name))  # Original: file.path(output_dir, ...)
   write.table(sig_tads, output_sig, sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Saved: %s (%d TADs)\n", output_sig, nrow(sig_tads)))
 
@@ -406,7 +411,8 @@ for (thresh in thresholds) {
     fc_threshold = thresh$fc,
     threshold_name = thresh$name,
     plot_title_base = custom_title,
-    output_dir = output_dir,
+    tsv_dir = tsv_dir,        # Original: output_dir = output_dir
+    plot_dir = plot_dir,
     plot_width = plot_width,
     plot_height = plot_height,
     x_label = x_axis_label,
@@ -432,7 +438,7 @@ summary_text <- c(
   sprintf("Analysis Date: %s", Sys.Date()),
   sprintf("Input File: %s", input_file),
   sprintf("Input Format: %s", toupper(input_format)),
-  sprintf("Output Directory: %s", output_dir),
+  sprintf("Output Directory: %s", tsv_dir),  # Original: output_dir
   "",
   sprintf("Total boundaries analyzed: %d", n_total),
   "",
@@ -491,12 +497,12 @@ for (i in 1:nrow(top_tads_p)) {
             top_tads_p$adj_pvalue[i], top_tads_p$direction[i]))
 }
 
-output_summary <- file.path(output_dir, "tad_volcano_summary.txt")
+output_summary <- file.path(tsv_dir, "tad_volcano_summary.txt")  # Original: file.path(output_dir, ...)
 writeLines(summary_text, output_summary)
 cat(sprintf("Saved summary: %s\n", output_summary))
 
 # Save full annotated dataset
-output_all <- file.path(output_dir, "tad_all_annotated.tsv")
+output_all <- file.path(tsv_dir, "tad_all_annotated.tsv")  # Original: file.path(output_dir, ...)
 write.table(tad_df, output_all, sep = "\t", quote = FALSE, row.names = FALSE)
 cat(sprintf("Saved full dataset: %s\n\n", output_all))
 
@@ -508,7 +514,7 @@ cat("========================================\n")
 cat("ANALYSIS COMPLETE\n")
 cat("========================================\n\n")
 
-cat(sprintf("Output directory: %s\n\n", output_dir))
+cat(sprintf("Output directory: %s\n\n", tsv_dir))
 
 cat("Generated files:\n")
 cat(sprintf("  - tad_volcano_relaxed.pdf (FDR<%.2f, |%s|>%.2f)\n",

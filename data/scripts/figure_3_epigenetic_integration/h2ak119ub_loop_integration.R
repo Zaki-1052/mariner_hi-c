@@ -42,7 +42,7 @@ suppressPackageStartupMessages({
   library(pheatmap)
 })
 
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R") # Original: source("scripts/utils/multi_format_output.R")
 
 cat("================================================================================\n")
 cat("H2AK119ub Loop Integration Analysis\n")
@@ -53,22 +53,24 @@ cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 # CONFIGURATION
 # ==============================================================================
 
-OUTPUT_DIR <- "output/h2ak119ub_loop_integration/late"
+TSV_DIR  <- "data/tsvs/figure_3_epigenetic_integration"   # Original: OUTPUT_DIR <- "output/h2ak119ub_loop_integration/late"
+PLOT_DIR <- "data/plots/figure_3_epigenetic_integration"  # Original: (plots went under OUTPUT_DIR/plots)
+OUTPUT_DIR <- TSV_DIR  # kept for summary text file writes
 
 INPUT_FILES <- list(
-  all_loops        = "25042-late_outputs/merged_loops/merged_all_results.tsv",
-  diff_loops       = "25042-late_outputs/merged_loops/characterized_loops.tsv",
-  shared_anchors   = "output/shared_anchor_analysis/late/tables/shared_anchors.tsv",
-  shared_loops     = "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv",
-  polycomb_shared  = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv",
-  signal           = "peaks/k119ub_anchor_signal.tsv"
+  all_loops        = "25042-late_outputs/merged_loops/merged_all_results.tsv",  # TODO: not in data/
+  diff_loops       = "data/upstream/loop_calls/late_characterized_loops.tsv",   # Original: "25042-late_outputs/merged_loops/characterized_loops.tsv"
+  shared_anchors   = "output/shared_anchor_analysis/late/tables/shared_anchors.tsv",  # TODO: not in data/
+  shared_loops     = "data/tsvs/supplemental/shared_anchor_loops.tsv",          # Original: "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv"
+  polycomb_shared  = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv",  # TODO: not in data/
+  signal           = "data/upstream/chip_peaks/k119ub_anchor_signal.tsv"        # Original: "peaks/k119ub_anchor_signal.tsv"
 )
 
 PEAK_FILES <- list(
-  K119ub_up   = "peaks/new/H2AK119ub_up.bed",
-  K119ub_down = "peaks/new/H2AK119ub_down.bed",
-  K119ub_ctrl = "peaks/intersect/P51_K119ub_ctrl_intersect.bed",
-  K119ub_mut  = "peaks/intersect/P51_K119ub_mut_intersect.bed"
+  K119ub_up   = "peaks/new/H2AK119ub_up.bed",                   # TODO: not in data/
+  K119ub_down = "peaks/new/H2AK119ub_down.bed",                 # TODO: not in data/
+  K119ub_ctrl = "peaks/intersect/P51_K119ub_ctrl_intersect.bed", # TODO: not in data/
+  K119ub_mut  = "peaks/intersect/P51_K119ub_mut_intersect.bed"   # TODO: not in data/
 )
 
 DISTANCE_THRESHOLD <- 500000
@@ -322,8 +324,8 @@ generate_k119ub_density <- function(loops_df, subset_name, output_path) {
 run_analysis <- function() {
 
   # Create output directories
-  tables_dir <- file.path(OUTPUT_DIR, "tables")
-  plots_dir  <- file.path(OUTPUT_DIR, "plots")
+  tables_dir <- TSV_DIR   # Original: file.path(OUTPUT_DIR, "tables")
+  plots_dir  <- PLOT_DIR  # Original: file.path(OUTPUT_DIR, "plots")
   dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(plots_dir,  recursive = TRUE, showWarnings = FALSE)
 
@@ -402,7 +404,7 @@ run_analysis <- function() {
   }
 
   # Save annotated all loops
-  write.table(all_loops, file.path(tables_dir, "loops_with_k119ub_annotation.tsv"),
+  write.table(all_loops, file.path(tables_dir, "3A_loops_with_k119ub_annotation.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
   cat("\n  Saved: loops_with_k119ub_annotation.tsv\n")
 
@@ -428,17 +430,17 @@ run_analysis <- function() {
   one_up <- directional %>% filter(anchor1_K119ub_up | anchor2_K119ub_up)
   cat(sprintf("  K119ub_up one+ anchor: %d loops\n", nrow(one_up)))
   generate_k119ub_cdf(one_up, "K119ub-Gained Anchors (One+)",
-                       file.path(plots_dir, "01_cdf_k119ub_up_one_anchor"))
+                       file.path(plots_dir, "3A_01_cdf_k119ub_up_one_anchor"))
   generate_k119ub_density(one_up, "K119ub-Gained Anchors (One+)",
-                           file.path(plots_dir, "05_density_k119ub_up_one_anchor"))
+                           file.path(plots_dir, "3A_05_density_k119ub_up_one_anchor"))
 
   # Both-anchors
   both_up <- directional %>% filter(anchor1_K119ub_up & anchor2_K119ub_up)
   cat(sprintf("  K119ub_up both anchors: %d loops\n", nrow(both_up)))
   generate_k119ub_cdf(both_up, "K119ub-Gained Anchors (Both)",
-                       file.path(plots_dir, "02_cdf_k119ub_up_both_anchors"))
+                       file.path(plots_dir, "3A_02_cdf_k119ub_up_both_anchors"))
   generate_k119ub_density(both_up, "K119ub-Gained Anchors (Both)",
-                           file.path(plots_dir, "06_density_k119ub_up_both_anchors"))
+                           file.path(plots_dir, "3A_06_density_k119ub_up_both_anchors"))
 
   # K119ub_down filtered analyses
   cat("\n  --- K119ub_down (lost ubiquitination) ---\n")
@@ -446,16 +448,16 @@ run_analysis <- function() {
   one_down <- directional %>% filter(anchor1_K119ub_down | anchor2_K119ub_down)
   cat(sprintf("  K119ub_down one+ anchor: %d loops\n", nrow(one_down)))
   generate_k119ub_cdf(one_down, "K119ub-Lost Anchors (One+)",
-                       file.path(plots_dir, "03_cdf_k119ub_down_one_anchor"))
+                       file.path(plots_dir, "3A_03_cdf_k119ub_down_one_anchor"))
   generate_k119ub_density(one_down, "K119ub-Lost Anchors (One+)",
-                           file.path(plots_dir, "07_density_k119ub_down_one_anchor"))
+                           file.path(plots_dir, "3A_07_density_k119ub_down_one_anchor"))
 
   both_down <- directional %>% filter(anchor1_K119ub_down & anchor2_K119ub_down)
   cat(sprintf("  K119ub_down both anchors: %d loops\n", nrow(both_down)))
   generate_k119ub_cdf(both_down, "K119ub-Lost Anchors (Both)",
-                       file.path(plots_dir, "04_cdf_k119ub_down_both_anchors"))
+                       file.path(plots_dir, "3A_04_cdf_k119ub_down_both_anchors"))
   generate_k119ub_density(both_down, "K119ub-Lost Anchors (Both)",
-                           file.path(plots_dir, "08_density_k119ub_down_both_anchors"))
+                           file.path(plots_dir, "3A_08_density_k119ub_down_both_anchors"))
 
   # Collect distance statistics
   subsets <- list(
@@ -485,7 +487,7 @@ run_analysis <- function() {
     )
   }))
 
-  write.table(dist_stats, file.path(tables_dir, "distance_stats_by_k119ub.tsv"),
+  write.table(dist_stats, file.path(tables_dir, "3A_distance_stats_by_k119ub.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
   cat("\n  Saved: distance_stats_by_k119ub.tsv\n")
 
@@ -631,11 +633,11 @@ run_analysis <- function() {
   cat(sprintf("  Distance-stratified: %d tests\n", nrow(distance_results)))
 
   # Save enrichment tables
-  write.table(global_results, file.path(tables_dir, "enrichment_global.tsv"),
+  write.table(global_results, file.path(tables_dir, "3A_enrichment_global.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
-  write.table(chromstate_results, file.path(tables_dir, "enrichment_by_chromatin_state.tsv"),
+  write.table(chromstate_results, file.path(tables_dir, "3A_enrichment_by_chromatin_state.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
-  write.table(distance_results, file.path(tables_dir, "enrichment_by_distance.tsv"),
+  write.table(distance_results, file.path(tables_dir, "3A_enrichment_by_distance.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
 
   # --- C Plots ---
@@ -668,7 +670,7 @@ run_analysis <- function() {
             strip.background = element_rect(fill = "gray90"),
             strip.text = element_text(face = "bold"))
 
-    save_multiformat_ggplot(p09, file.path(plots_dir, "09_enrichment_dotplot_by_chromatin_state"),
+    save_multiformat_ggplot(p09, file.path(plots_dir, "3A_09_enrichment_dotplot_by_chromatin_state"),
                              width = 9, height = 8)
   }
 
@@ -687,11 +689,11 @@ run_analysis <- function() {
         column_to_rownames("chromatin_state") %>%
         as.matrix()
 
-      heatmap_dir <- file.path(plots_dir, "10_enrichment_heatmap_category_x_chromstate")
+      heatmap_dir <- file.path(plots_dir, "3A_10_enrichment_heatmap_category_x_chromstate")
       dir.create(heatmap_dir, recursive = TRUE, showWarnings = FALSE)
 
       for (fmt in c("pdf", "svg", "jpg")) {
-        fpath <- file.path(heatmap_dir, paste0("10_enrichment_heatmap_category_x_chromstate.", fmt))
+        fpath <- file.path(heatmap_dir, paste0("3A_10_enrichment_heatmap_category_x_chromstate.", fmt))
         if (fmt == "pdf") pdf(fpath, width = 6, height = 6)
         else if (fmt == "svg") svglite::svglite(fpath, width = 6, height = 6)
         else jpeg(fpath, width = 6 * 300, height = 6 * 300, res = 300, quality = 95)
@@ -733,7 +735,7 @@ run_analysis <- function() {
               strip.background = element_rect(fill = "gray90"),
               strip.text = element_text(face = "bold", size = 9))
 
-      save_multiformat_ggplot(p11, file.path(plots_dir, "11_enrichment_dotplot_by_distance"),
+      save_multiformat_ggplot(p11, file.path(plots_dir, "3A_11_enrichment_dotplot_by_distance"),
                                width = 10, height = 8)
     }
   }
@@ -821,7 +823,7 @@ run_analysis <- function() {
               legend.position = c(0.15, 0.15),
               legend.background = element_rect(fill = alpha("white", 0.8)))
 
-      save_multiformat_ggplot(p12, file.path(plots_dir, "12_scatter_loopFC_vs_k119ub_FC"),
+      save_multiformat_ggplot(p12, file.path(plots_dir, "3A_12_scatter_loopFC_vs_k119ub_FC"),
                                width = 9, height = 8)
 
       # Plot 13: Faceted by chromatin state
@@ -849,7 +851,7 @@ run_analysis <- function() {
                   strip.text = element_text(face = "bold"),
                   legend.position = "none")
 
-          save_multiformat_ggplot(p13, file.path(plots_dir, "13_scatter_by_chromatin_state"),
+          save_multiformat_ggplot(p13, file.path(plots_dir, "3A_13_scatter_by_chromatin_state"),
                                    width = 12, height = 5)
         }
       }
@@ -874,7 +876,7 @@ run_analysis <- function() {
         theme(plot.title = element_text(face = "bold", size = 14),
               legend.position = "none")
 
-      save_multiformat_ggplot(p14, file.path(plots_dir, "14_boxplot_k119ub_by_loop_direction"),
+      save_multiformat_ggplot(p14, file.path(plots_dir, "3A_14_boxplot_k119ub_by_loop_direction"),
                                width = 6, height = 7)
 
       # Stratified correlations for summary
@@ -914,11 +916,11 @@ run_analysis <- function() {
             column_to_rownames("dist_bin") %>%
             as.matrix()
 
-          heatmap_dir_15 <- file.path(plots_dir, "15_correlation_summary_heatmap")
+          heatmap_dir_15 <- file.path(plots_dir, "3A_15_correlation_summary_heatmap")
           dir.create(heatmap_dir_15, recursive = TRUE, showWarnings = FALSE)
 
           for (fmt in c("pdf", "svg", "jpg")) {
-            fpath <- file.path(heatmap_dir_15, paste0("15_correlation_summary_heatmap.", fmt))
+            fpath <- file.path(heatmap_dir_15, paste0("3A_15_correlation_summary_heatmap.", fmt))
             if (fmt == "pdf") pdf(fpath, width = 7, height = 5)
             else if (fmt == "svg") svglite::svglite(fpath, width = 7, height = 5)
             else jpeg(fpath, width = 7 * 300, height = 5 * 300, res = 300, quality = 95)
@@ -935,7 +937,7 @@ run_analysis <- function() {
         }
       }
 
-      write.table(corr_results, file.path(tables_dir, "correlation_results.tsv"),
+      write.table(corr_results, file.path(tables_dir, "3A_correlation_results.tsv"),
                   sep = "\t", quote = FALSE, row.names = FALSE)
 
       # "Ubiquitination buffer" logistic regression
@@ -957,7 +959,7 @@ run_analysis <- function() {
         logistic_results$odds_ratio <- exp(logistic_results$estimate)
         logistic_results$signal_file <- INPUT_FILES$signal
 
-        write.table(logistic_results, file.path(tables_dir, "logistic_regression_results.tsv"),
+        write.table(logistic_results, file.path(tables_dir, "3A_logistic_regression_results.tsv"),
                     sep = "\t", quote = FALSE, row.names = FALSE)
         cat(sprintf("    K119ub coefficient: %.4f (p = %.4e, OR = %.3f)\n",
                     logistic_results$estimate[logistic_results$term == "mean_anchor_k119ub_fc"],
@@ -1038,7 +1040,7 @@ run_analysis <- function() {
   }
   shared_comparison$fdr <- p.adjust(shared_comparison$p_value, method = "BH")
 
-  write.table(shared_comparison, file.path(tables_dir, "shared_anchor_k119ub_comparison.tsv"),
+  write.table(shared_comparison, file.path(tables_dir, "3A_shared_anchor_k119ub_comparison.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
 
   cat("  Shared vs non-shared K119ub enrichment:\n")
@@ -1068,7 +1070,7 @@ run_analysis <- function() {
     theme_bw(base_size = 12) +
     theme(plot.title = element_text(face = "bold", size = 14))
 
-  save_multiformat_ggplot(p16, file.path(plots_dir, "16_k119ub_shared_vs_nonshared"),
+  save_multiformat_ggplot(p16, file.path(plots_dir, "3A_16_k119ub_shared_vs_nonshared"),
                            width = 7, height = 6)
 
   # E2: K119ub at shared anchor loops — lost-end vs gained-end
@@ -1113,7 +1115,7 @@ run_analysis <- function() {
       theme_bw(base_size = 12) +
       theme(plot.title = element_text(face = "bold", size = 14))
 
-    save_multiformat_ggplot(p17, file.path(plots_dir, "17_paired_k119ub_at_shared_anchors"),
+    save_multiformat_ggplot(p17, file.path(plots_dir, "3A_17_paired_k119ub_at_shared_anchors"),
                              width = 7, height = 6)
   }
 
@@ -1147,7 +1149,7 @@ run_analysis <- function() {
       theme_bw(base_size = 12) +
       theme(plot.title = element_text(face = "bold", size = 14))
 
-    save_multiformat_ggplot(p18, file.path(plots_dir, "18_polycomb_shared_k119ub"),
+    save_multiformat_ggplot(p18, file.path(plots_dir, "3A_18_polycomb_shared_k119ub"),
                              width = 7, height = 6)
   } else {
     cat("    Insufficient Polycomb shared loops for plotting\n")
@@ -1187,7 +1189,7 @@ run_analysis <- function() {
       theme_bw(base_size = 12) +
       theme(plot.title = element_text(face = "bold", size = 14))
 
-    save_multiformat_ggplot(p19, file.path(plots_dir, "19_shared_anchor_k119ub_direction"),
+    save_multiformat_ggplot(p19, file.path(plots_dir, "3A_19_shared_anchor_k119ub_direction"),
                              width = 8, height = 6)
   }
 
@@ -1323,7 +1325,7 @@ run_analysis <- function() {
     "================================================================================"
   )
 
-  writeLines(summary_lines, file.path(OUTPUT_DIR, "analysis_summary.txt"))
+  writeLines(summary_lines, file.path(TSV_DIR, "3A_analysis_summary.txt")) # Original: file.path(OUTPUT_DIR, "analysis_summary.txt")
   cat("  Saved: analysis_summary.txt\n")
 
   cat("\n================================================================================\n")

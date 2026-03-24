@@ -21,15 +21,16 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility
-tads_dir <- getwd()
-base_dir <- dirname(tads_dir)
-source(file.path(base_dir, "scripts/utils/multi_format_output.R"))
+source("data/scripts/_shared/multi_format_output.R") # Original: source(file.path(base_dir, "scripts/utils/multi_format_output.R"))
 
 # Define paths
-early_file <- "results/early/final/tadcompare_final_filtered.tsv"
-late_file <- "results/late/final/tadcompare_final_filtered.tsv"
-output_dir <- "results/visualizations/comparison"
-dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+early_file <- "results/early/final/tadcompare_final_filtered.tsv"  # TODO: not in data/
+late_file <- "results/late/final/tadcompare_final_filtered.tsv"    # TODO: not in data/
+TSV_DIR  <- "data/tsvs/figure_3_epigenetic_integration"   # Original: output_dir <- "results/visualizations/comparison"
+PLOT_DIR <- "data/plots/figure_3_epigenetic_integration"   # Original: (same)
+output_dir <- PLOT_DIR  # kept for save_multiformat_ggplot calls
+dir.create(TSV_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(PLOT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # =============================================================================
 # LOAD DATA
@@ -156,7 +157,7 @@ p1a <- ggplot(enrich_data, aes(x = timepoint, y = percentage, fill = direction))
   ) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 105))
 
-save_multiformat_ggplot(p1a, file.path(output_dir, "enrichment_direction_flip"),
+save_multiformat_ggplot(p1a, file.path(output_dir, "3D_enrichment_direction_flip"),
                         width = 8, height = 6)
 
 # 1B: Side-by-side grouped bar chart (raw counts)
@@ -185,7 +186,7 @@ p1b <- ggplot(enrich_data, aes(x = timepoint, y = count, fill = direction)) +
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
 
-save_multiformat_ggplot(p1b, file.path(output_dir, "enrichment_direction_counts"),
+save_multiformat_ggplot(p1b, file.path(output_dir, "3D_enrichment_direction_counts"),
                         width = 8, height = 6)
 
 # =============================================================================
@@ -224,7 +225,7 @@ p2 <- ggplot(net_data, aes(x = timepoint, y = net_pct, fill = net_pct > 0)) +
   ) +
   scale_y_continuous(limits = c(-20, 20), breaks = seq(-20, 20, 10))
 
-save_multiformat_ggplot(p2, file.path(output_dir, "net_direction_diverging"),
+save_multiformat_ggplot(p2, file.path(output_dir, "3D_net_direction_diverging"),
                         width = 8, height = 6)
 
 # =============================================================================
@@ -281,7 +282,7 @@ p3 <- ggplot(type_data_filtered, aes(x = Type, y = percentage, fill = timepoint)
   ) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
 
-save_multiformat_ggplot(p3, file.path(output_dir, "boundary_type_comparison"),
+save_multiformat_ggplot(p3, file.path(output_dir, "3D_boundary_type_comparison"),
                         width = 10, height = 6)
 
 # =============================================================================
@@ -379,7 +380,7 @@ combined <- (p4a | p4b | p4c) +
     )
   )
 
-save_multiformat_ggplot(combined, file.path(output_dir, "combined_comparison_summary"),
+save_multiformat_ggplot(combined, file.path(output_dir, "3D_combined_comparison_summary"),
                         width = 14, height = 6)
 
 # =============================================================================
@@ -434,7 +435,7 @@ geom_text(aes(label = sprintf("%.1f%%\n(n=%d)", pct, count), group = direction),
   ) +
   scale_y_continuous(limits = c(0, 75), expand = c(0, 0))
 
-save_multiformat_ggplot(p5, file.path(output_dir, "enrichment_direction_comparison"),
+save_multiformat_ggplot(p5, file.path(output_dir, "3D_enrichment_direction_comparison"),
                         width = 10, height = 7)
 
 # =============================================================================
@@ -489,7 +490,7 @@ comparison_table <- data.frame(
   )
 )
 
-write.table(comparison_table, file.path(output_dir, "timepoint_comparison_stats.tsv"),
+write.table(comparison_table, file.path(TSV_DIR, "3D_timepoint_comparison_stats.tsv"),  # Original: file.path(output_dir, "timepoint_comparison_stats.tsv")
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 # =============================================================================

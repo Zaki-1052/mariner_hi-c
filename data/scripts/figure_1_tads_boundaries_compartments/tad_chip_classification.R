@@ -14,14 +14,17 @@
 #   - Enrichment direction (Control vs Mutant)
 #
 # Usage:
-#   cd tads/
-#   Rscript scripts/tad_chip_classification.R                    # Default: both
-#   Rscript scripts/tad_chip_classification.R --timepoint late   # Late only
-#   Rscript scripts/tad_chip_classification.R --timepoint early  # Early only
-#   Rscript scripts/tad_chip_classification.R --timepoint both   # Both timepoints
+#   Rscript data/scripts/figure_1_tads_boundaries_compartments/tad_chip_classification.R                    # Default: both
+#   Rscript data/scripts/figure_1_tads_boundaries_compartments/tad_chip_classification.R --timepoint late   # Late only
+#   Rscript data/scripts/figure_1_tads_boundaries_compartments/tad_chip_classification.R --timepoint early  # Early only
+#   Rscript data/scripts/figure_1_tads_boundaries_compartments/tad_chip_classification.R --timepoint both   # Both timepoints
+#   Original usage: cd tads/ && Rscript scripts/tad_chip_classification.R
 #
 # Output:
-#   results/visualizations/chip/{early,late}/
+#   data/plots/figure_3_epigenetic_integration/tad_chip_{early,late}/  (plots)
+#   data/tsvs/figure_1_tads_boundaries_compartments/                   (1F TSVs)
+#   data/tsvs/figure_3_epigenetic_integration/                         (3B TSVs)
+#   Original: results/visualizations/chip/{early,late}/
 
 # =============================================================================
 # SECTION 1: SETUP AND CONFIGURATION
@@ -44,44 +47,53 @@ suppressPackageStartupMessages({
 
 # Load multi-format output utility
 # Script runs from tads/ directory
-source("../scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("../scripts/utils/multi_format_output.R")
 
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
 
-# Input files by timepoint (relative to tads/ directory)
+# Input files by timepoint
 INPUT_FILES <- list(
-  early = "results/early/final/tadcompare_final_annotated.tsv",
-  late  = "results/late/final/tadcompare_final_annotated.tsv"
+  early = "data/tsvs/figure_1_tads_boundaries_compartments/tadcompare_final_annotated_early.tsv",  # Original: results/early/final/tadcompare_final_annotated.tsv
+  late  = "data/tsvs/figure_1_tads_boundaries_compartments/tadcompare_final_annotated_late.tsv"    # Original: results/late/final/tadcompare_final_annotated.tsv
 )
 
-# ChIP-seq peak files by timepoint (relative to tads/ directory)
+# ChIP-seq peak files by timepoint
 CHIP_PEAK_FILES <- list(
   early = list(
-    H3K27ac  = "../peaks/beds/H3K27acCerebellumEarly2.bed",
-    H3K27me3 = "../peaks/beds/H3K27me3CerebellumEarly1.bed",
-    H3K4me1  = "../peaks/beds/H3K4me1CerebellumEarly1.bed",
-    H3K4me3  = "../peaks/beds/H3K4me3CerebellumEarly2.bed",
-    bivalent = "../peaks/beds/Bivalent_Cerebellum_Early.bed",
-    ctcf     = "../peaks/CTCF.bed",
-    ctcf_motif = "../peaks/ctcf_motifs_mm10.bed"
+    H3K27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",       # TODO: not in data/  # Original: ../peaks/beds/H3K27acCerebellumEarly2.bed
+    H3K27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",      # TODO: not in data/  # Original: ../peaks/beds/H3K27me3CerebellumEarly1.bed
+    H3K4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",       # TODO: not in data/  # Original: ../peaks/beds/H3K4me1CerebellumEarly1.bed
+    H3K4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",       # TODO: not in data/  # Original: ../peaks/beds/H3K4me3CerebellumEarly2.bed
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed",      # TODO: not in data/  # Original: ../peaks/beds/Bivalent_Cerebellum_Early.bed
+    ctcf     = "peaks/CTCF.bed",                                # TODO: not in data/  # Original: ../peaks/CTCF.bed
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"                   # TODO: not in data/  # Original: ../peaks/ctcf_motifs_mm10.bed
   ),
   late = list(
-    H3K27ac  = "../peaks/beds/H3K27acCerebellumLate2.bed",
-    H3K27me3 = "../peaks/beds/H3K27me3CerebellumLate1.bed",
-    H3K4me1  = "../peaks/beds/H3K4me1CerebellumLate1.bed",
-    H3K4me3  = "../peaks/beds/H3K4me3CerebellumLate2.bed",
-    bivalent = "../peaks/beds/Bivalent_Cerebellum_Late.bed",
-    ctcf     = "../peaks/CTCF.bed",
-    ctcf_motif = "../peaks/ctcf_motifs_mm10.bed"
+    H3K27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",        # TODO: not in data/  # Original: ../peaks/beds/H3K27acCerebellumLate2.bed
+    H3K27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",       # TODO: not in data/  # Original: ../peaks/beds/H3K27me3CerebellumLate1.bed
+    H3K4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",        # TODO: not in data/  # Original: ../peaks/beds/H3K4me1CerebellumLate1.bed
+    H3K4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",        # TODO: not in data/  # Original: ../peaks/beds/H3K4me3CerebellumLate2.bed
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed",       # TODO: not in data/  # Original: ../peaks/beds/Bivalent_Cerebellum_Late.bed
+    ctcf     = "peaks/CTCF.bed",                                # TODO: not in data/  # Original: ../peaks/CTCF.bed
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"                   # TODO: not in data/  # Original: ../peaks/ctcf_motifs_mm10.bed
   )
 )
 
-# Output directories by timepoint
-OUTPUT_DIRS <- list(
-  early = "results/visualizations/chip/early",
-  late  = "results/visualizations/chip/late"
+# Output directories by timepoint (split plots vs TSVs)
+# Original: results/visualizations/chip/{early,late}
+OUTPUT_PLOT_DIRS <- list(
+  early = "data/plots/figure_3_epigenetic_integration/tad_chip_early",
+  late  = "data/plots/figure_3_epigenetic_integration/tad_chip_late"
+)
+OUTPUT_TSV_DIRS <- list(
+  early = "data/tsvs/figure_1_tads_boundaries_compartments",
+  late  = "data/tsvs/figure_1_tads_boundaries_compartments"
+)
+OUTPUT_TSV_3B_DIRS <- list(
+  early = "data/tsvs/figure_3_epigenetic_integration",
+  late  = "data/tsvs/figure_3_epigenetic_integration"
 )
 
 # 8-category chromatin state system (priority order)
@@ -273,11 +285,17 @@ run_tad_chip_classification <- function(timepoint) {
   # Set paths for this timepoint
   input_file <- INPUT_FILES[[timepoint]]
   chip_files <- CHIP_PEAK_FILES[[timepoint]]
-  OUTPUT_DIR <- OUTPUT_DIRS[[timepoint]]
-  dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
+  PLOT_DIR <- OUTPUT_PLOT_DIRS[[timepoint]]   # Original: OUTPUT_DIRS[[timepoint]]
+  TSV_DIR  <- OUTPUT_TSV_DIRS[[timepoint]]    # Original: OUTPUT_DIRS[[timepoint]]
+  TSV_3B_DIR <- OUTPUT_TSV_3B_DIRS[[timepoint]]  # Original: OUTPUT_DIRS[[timepoint]]
+  dir.create(PLOT_DIR, showWarnings = FALSE, recursive = TRUE)   # Original: dir.create(OUTPUT_DIR, ...)
+  dir.create(TSV_DIR, showWarnings = FALSE, recursive = TRUE)    # Original: (was same dir)
+  dir.create(TSV_3B_DIR, showWarnings = FALSE, recursive = TRUE) # Original: (was same dir)
 
   cat("Input file:", input_file, "\n")
-  cat("Output directory:", OUTPUT_DIR, "\n\n")
+  cat("Output plot directory:", PLOT_DIR, "\n")
+  cat("Output TSV directory (1F):", TSV_DIR, "\n")
+  cat("Output TSV directory (3B):", TSV_3B_DIR, "\n\n")
 
   # Validate input file exists
   if (!file.exists(input_file)) {
@@ -464,27 +482,27 @@ run_tad_chip_classification <- function(timepoint) {
 
   # Figure 1: Overall Chromatin State Distribution
   cat("  Creating Figure 1: Overall distribution...\n")
-  create_chromatin_state_distribution(tad_df, OUTPUT_DIR, timepoint)
+  create_chromatin_state_distribution(tad_df, PLOT_DIR, timepoint)  # Original: OUTPUT_DIR
 
   # Figure 2: By Differential Status
   cat("  Creating Figure 2: By differential status...\n")
-  create_chromatin_by_differential(tad_df, OUTPUT_DIR, timepoint)
+  create_chromatin_by_differential(tad_df, PLOT_DIR, timepoint)  # Original: OUTPUT_DIR
 
   # Figure 3: By TAD Boundary Type
   cat("  Creating Figure 3: By boundary type...\n")
-  create_chromatin_by_boundary_type(tad_df, OUTPUT_DIR, timepoint)
+  create_chromatin_by_boundary_type(tad_df, PLOT_DIR, timepoint)  # Original: OUTPUT_DIR
 
   # Figure 4: By Enrichment Direction
   cat("  Creating Figure 4: By enrichment direction...\n")
-  create_chromatin_by_enrichment(tad_df, OUTPUT_DIR, timepoint)
+  create_chromatin_by_enrichment(tad_df, PLOT_DIR, timepoint)  # Original: OUTPUT_DIR
 
   # Figure 5: ChIP Mark Overlap Heatmap
   cat("  Creating Figure 5: ChIP mark heatmap...\n")
-  create_chip_overlap_heatmap(tad_df, OUTPUT_DIR, timepoint)
+  create_chip_overlap_heatmap(tad_df, PLOT_DIR, timepoint)  # Original: OUTPUT_DIR
 
   # Figure 6: Combined Summary
   cat("  Creating Figure 6: Combined summary...\n")
-  create_combined_summary(tad_df, OUTPUT_DIR, timepoint)
+  create_combined_summary(tad_df, PLOT_DIR, timepoint)  # Original: OUTPUT_DIR
 
   cat("\n")
 
@@ -494,12 +512,12 @@ run_tad_chip_classification <- function(timepoint) {
 
   cat("=== Step 9: Exporting Results ===\n")
 
-  # Save full annotated data
-  annotated_file <- file.path(OUTPUT_DIR, "boundaries_with_chromatin_state.tsv")
+  # Save full annotated data (1F TSV)
+  annotated_file <- file.path(TSV_DIR, sprintf("boundaries_with_chromatin_state_%s.tsv", timepoint))  # Original: file.path(OUTPUT_DIR, "boundaries_with_chromatin_state.tsv")
   write.table(tad_df, annotated_file, sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Saved: %s\n", annotated_file))
 
-  # Save chromatin state summary
+  # Save chromatin state summary (3B TSV)
   state_summary <- tad_df %>%
     group_by(chromatin_state) %>%
     summarise(
@@ -510,12 +528,12 @@ run_tad_chip_classification <- function(timepoint) {
       .groups = "drop"
     )
 
-  summary_file <- file.path(OUTPUT_DIR, "boundary_chromatin_state_summary.tsv")
+  summary_file <- file.path(TSV_3B_DIR, sprintf("boundary_chromatin_state_summary_%s.tsv", timepoint))  # Original: file.path(OUTPUT_DIR, "boundary_chromatin_state_summary.tsv")
   write.table(state_summary, summary_file, sep = "\t", quote = FALSE, row.names = FALSE)
   cat(sprintf("  Saved: %s\n", summary_file))
 
-  # Save statistics report
-  stats_file <- file.path(OUTPUT_DIR, "chip_classification_statistics.txt")
+  # Save statistics report (3B TSV)
+  stats_file <- file.path(TSV_3B_DIR, sprintf("chip_classification_statistics_%s.txt", timepoint))  # Original: file.path(OUTPUT_DIR, "chip_classification_statistics.txt")
   create_statistics_report(tad_df, timepoint, chip_files, stats_file)
   cat(sprintf("  Saved: %s\n", stats_file))
 
@@ -524,17 +542,21 @@ run_tad_chip_classification <- function(timepoint) {
   # ==========================================================================
 
   cat("\n=== Analysis Complete for", toupper(timepoint), "===\n")
-  cat("Output directory:", OUTPUT_DIR, "\n")
+  cat("Plot directory:", PLOT_DIR, "\n")
+  cat("TSV directory (1F):", TSV_DIR, "\n")
+  cat("TSV directory (3B):", TSV_3B_DIR, "\n")
   cat("Files generated:\n")
+  cat("  Plots:\n")
   cat("  - 01_boundary_chromatin_state_distribution.{pdf,svg,jpg}\n")
   cat("  - 02_chromatin_state_by_differential.{pdf,svg,jpg}\n")
   cat("  - 03_chromatin_state_by_boundary_type.{pdf,svg,jpg}\n")
   cat("  - 04_chromatin_state_by_enrichment.{pdf,svg,jpg}\n")
   cat("  - 05_chip_mark_overlap_heatmap.{pdf,svg,jpg}\n")
   cat("  - 06_summary_comparison.{pdf,svg,jpg}\n")
-  cat("  - boundary_chromatin_state_summary.tsv\n")
-  cat("  - boundaries_with_chromatin_state.tsv\n")
-  cat("  - chip_classification_statistics.txt\n\n")
+  cat("  TSVs:\n")
+  cat(sprintf("  - boundaries_with_chromatin_state_%s.tsv (1F)\n", timepoint))
+  cat(sprintf("  - boundary_chromatin_state_summary_%s.tsv (3B)\n", timepoint))
+  cat(sprintf("  - chip_classification_statistics_%s.txt (3B)\n\n", timepoint))
 
   return(list(
     timepoint = timepoint,
@@ -1114,7 +1136,9 @@ parse_arguments <- function() {
       cat("  --timepoint TP  Timepoint: 'early', 'late', or 'both' (default: both)\n")
       cat("  --help, -h      Show this help message\n\n")
       cat("Output:\n")
-      cat("  results/visualizations/chip/{early,late}/\n\n")
+      cat("  data/plots/figure_3_epigenetic_integration/tad_chip_{early,late}/\n")  # Original: results/visualizations/chip/{early,late}/
+      cat("  data/tsvs/figure_1_tads_boundaries_compartments/\n")
+      cat("  data/tsvs/figure_3_epigenetic_integration/\n\n")
       cat("8-Category Chromatin State System:\n")
       cat("  1. Active_Promoter    - H3K4me3+ AND NOT H3K27me3 AND <=2kb TSS\n")
       cat("  2. Repressed_Promoter - H3K27me3+ AND NOT H3K27ac AND <=2kb TSS\n")
@@ -1165,7 +1189,9 @@ for (tp in TIMEPOINTS_TO_RUN) {
 cat("\n=== All Timepoints Complete ===\n")
 cat("Output directories:\n")
 for (tp in TIMEPOINTS_TO_RUN) {
-  cat(sprintf("  - %s\n", OUTPUT_DIRS[[tp]]))
+  cat(sprintf("  - Plots: %s\n", OUTPUT_PLOT_DIRS[[tp]]))   # Original: OUTPUT_DIRS[[tp]]
+  cat(sprintf("  - TSVs (1F): %s\n", OUTPUT_TSV_DIRS[[tp]]))
+  cat(sprintf("  - TSVs (3B): %s\n", OUTPUT_TSV_3B_DIRS[[tp]]))
 }
 
 if (length(results) > 0) {

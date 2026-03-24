@@ -15,24 +15,29 @@ suppressPackageStartupMessages({
   library(org.Mm.eg.db)
 })
 
-source("../scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R") # Original: source("../scripts/utils/multi_format_output.R")
 
 # === CONFIGURATION ===
-ALL_LOOPS_FILE  <- "../outputs//250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"
-DIFF_LOOPS_FILE <- "../outputs/250402-late_outputs/merged_loops/non_redundant_loops.tsv"
-ABC_FILE        <- "results/delta_abc_all_pairs.tsv"
-TSS_FILE        <- "reference/mm10_tss.bed"
-RNASEQ_FILE     <- "results/gene_level_summary.tsv"
-K119UB_FILE     <- "results/k119ub_abc_enhancer_merged.tsv"
-OUT_DIR         <- "results"
-PLOT_DIR        <- "results/paired_anchor_plots"
+ALL_LOOPS_FILE  <- "../outputs//250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe" # TODO: not in data/
+DIFF_LOOPS_FILE <- "data/upstream/loop_calls/late_characterized_loops.tsv" # Original: ../outputs/250402-late_outputs/merged_loops/non_redundant_loops.tsv
+ABC_FILE        <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv" # Original: results/delta_abc_all_pairs.tsv
+TSS_FILE        <- "reference/mm10_tss.bed" # TODO: not in data/
+RNASEQ_FILE     <- "data/tsvs/figure_5_model_functional/5B_gene_level_summary.tsv" # Original: results/gene_level_summary.tsv
+K119UB_FILE     <- "data/tsvs/figure_4_abc_analysis/4F_k119ub_abc_enhancer_merged.tsv" # Original: results/k119ub_abc_enhancer_merged.tsv
+OUT_TSV_DIR     <- "data/tsvs/figure_5_model_functional" # Original: results
+PLOT_DIR        <- "data/plots/figure_5_model_functional" # Original: results/paired_anchor_plots
+SUPP_PLOT_DIR   <- "data/plots/supplemental" # Original: (new — for paired_anchor_panel)
+FIG4_PLOT_DIR   <- "data/plots/figure_4_abc_analysis" # Original: (new — for 4E logFC_vs_deltaABC)
 ABC_DELTA_THRESH <- 0.01
 
 # === VALIDATE INPUTS ===
 for (f in c(ALL_LOOPS_FILE, DIFF_LOOPS_FILE, ABC_FILE, TSS_FILE, RNASEQ_FILE, K119UB_FILE)) {
   if (!file.exists(f)) stop(sprintf("FATAL: Required input not found: %s", f))
 }
-dir.create(PLOT_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(PLOT_DIR, recursive = TRUE, showWarnings = FALSE) # Original: dir.create("results/paired_anchor_plots", ...)
+dir.create(OUT_TSV_DIR, recursive = TRUE, showWarnings = FALSE) # Original: (OUT_DIR was "results" — already existed)
+dir.create(SUPP_PLOT_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(FIG4_PLOT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 cat("=== Step 9b: Paired-Anchor Loop-ABC Analysis (v2) ===\n\n")
 
@@ -558,7 +563,7 @@ if (length(up_entrez) >= 5 && length(down_entrez) >= 5) {
   if (!is.null(go_result) && nrow(go_result@compareClusterResult) > 0) {
     cat(sprintf("  GO BP significant terms: %d\n", nrow(go_result@compareClusterResult)))
     fwrite(as.data.table(go_result@compareClusterResult),
-           file.path(OUT_DIR, "paired_anchor_go_enrichment.tsv"), sep = "\t")
+           file.path(OUT_TSV_DIR, "5A_abc_go_enrichment.tsv"), sep = "\t") # Original: file.path(OUT_DIR, "paired_anchor_go_enrichment.tsv")
     cat("  Wrote paired_anchor_go_enrichment.tsv\n")
 
     # Top 5 per cluster
@@ -592,7 +597,7 @@ if (length(up_entrez) >= 5 && length(down_entrez) >= 5) {
   if (!is.null(kegg_result) && nrow(kegg_result@compareClusterResult) > 0) {
     cat(sprintf("  KEGG significant pathways: %d\n", nrow(kegg_result@compareClusterResult)))
     fwrite(as.data.table(kegg_result@compareClusterResult),
-           file.path(OUT_DIR, "paired_anchor_kegg_enrichment.tsv"), sep = "\t")
+           file.path(OUT_TSV_DIR, "5A_abc_kegg_enrichment.tsv"), sep = "\t") # Original: file.path(OUT_DIR, "paired_anchor_kegg_enrichment.tsv")
     cat("  Wrote paired_anchor_kegg_enrichment.tsv\n")
 
     kegg_top <- as.data.table(kegg_result@compareClusterResult)
@@ -616,7 +621,7 @@ if (length(up_entrez) >= 5 && length(down_entrez) >= 5) {
 cat("\nSaving results...\n")
 
 # All matches (full background)
-fwrite(all_result, file.path(OUT_DIR, "paired_anchor_all_matches.tsv"), sep = "\t")
+fwrite(all_result, file.path(OUT_TSV_DIR, "5C_paired_anchor_all_matches.tsv"), sep = "\t") # Original: file.path(OUT_DIR, "paired_anchor_all_matches.tsv")
 cat(sprintf("  Wrote paired_anchor_all_matches.tsv (%d rows)\n", nrow(all_result)))
 
 # Differential matches only (backward-compatible output)
@@ -631,7 +636,7 @@ diff_out_cols <- c("loop_id", "loop_chr1", "loop_start1", "loop_end1",
                    "distance", "match_case")
 diff_export <- result[, ..diff_out_cols]
 setnames(diff_export, "diff_significant", "loop_significant")
-fwrite(diff_export, file.path(OUT_DIR, "paired_anchor_matches.tsv"), sep = "\t")
+fwrite(diff_export, file.path(OUT_TSV_DIR, "5C_paired_anchor_matches.tsv"), sep = "\t") # Original: file.path(OUT_DIR, "paired_anchor_matches.tsv")
 cat(sprintf("  Wrote paired_anchor_matches.tsv (%d rows)\n", nrow(diff_export)))
 
 # Summary text
@@ -758,7 +763,7 @@ summary_lines <- c(summary_lines, "",
           median(matched_unnorm), median(all_unnorm), wt2$p.value)
 )
 
-writeLines(summary_lines, file.path(OUT_DIR, "paired_anchor_summary.txt"))
+writeLines(summary_lines, file.path(OUT_TSV_DIR, "5C_paired_anchor_summary.txt")) # Original: file.path(OUT_DIR, "paired_anchor_summary.txt")
 cat(sprintf("  Wrote paired_anchor_summary.txt\n"))
 
 # === STEP 8: PLOTS ===
@@ -791,7 +796,7 @@ p_conc <- ggplot(conc_df, aes(x = method, y = concordance, fill = method)) +
   theme_paired +
   theme(panel.grid.major.x = element_blank())
 
-save_multiformat_ggplot(p_conc, file.path(PLOT_DIR, "paired_anchor_concordance"), width = 5, height = 5)
+save_multiformat_ggplot(p_conc, file.path(PLOT_DIR, "5A_paired_anchor_concordance"), width = 5, height = 5) # Original: file.path(PLOT_DIR, "paired_anchor_concordance")
 
 # --- Plot 2: FDR-stratified concordance ---
 fdr_label_map <- c("significant" = "FDR < 0.05", "exploratory" = "FDR 0.05-0.15")
@@ -817,7 +822,7 @@ p_fdr <- ggplot(fdr_plot_df, aes(x = stratum, y = concordance, fill = stratum)) 
   theme_paired +
   theme(panel.grid.major.x = element_blank())
 
-save_multiformat_ggplot(p_fdr, file.path(PLOT_DIR, "fdr_stratified_concordance"), width = 4, height = 5)
+save_multiformat_ggplot(p_fdr, file.path(PLOT_DIR, "5A_fdr_stratified_concordance"), width = 4, height = 5) # Original: file.path(PLOT_DIR, "fdr_stratified_concordance")
 
 # --- Plot 3: Loop logFC vs dABC scatter (with background) ---
 # Subsample background for rendering if too large
@@ -851,7 +856,7 @@ p_scatter1 <- p_scatter1 + annotate("text", x = Inf, y = Inf,
                                    cor_abc$estimate, cor_abc$p.value),
                    hjust = 1.1, vjust = 1.5, size = 3.5)
 
-save_multiformat_ggplot(p_scatter1, file.path(PLOT_DIR, "logFC_vs_deltaABC"), width = 6, height = 5)
+save_multiformat_ggplot(p_scatter1, file.path(FIG4_PLOT_DIR, "4E_logFC_vs_deltaABC"), width = 6, height = 5) # Original: file.path(PLOT_DIR, "logFC_vs_deltaABC")
 
 # --- Plot 4: Loop logFC vs d(AxC) scatter (with background) ---
 p_scatter2 <- ggplot() +
@@ -880,7 +885,7 @@ p_scatter2 <- p_scatter2 + annotate("text", x = Inf, y = Inf,
                                    cor_unnorm$estimate, cor_unnorm$p.value),
                    hjust = 1.1, vjust = 1.5, size = 3.5)
 
-save_multiformat_ggplot(p_scatter2, file.path(PLOT_DIR, "logFC_vs_delta_unnorm"), width = 6, height = 5)
+save_multiformat_ggplot(p_scatter2, file.path(PLOT_DIR, "5A_logFC_vs_delta_unnorm"), width = 6, height = 5) # Original: file.path(PLOT_DIR, "logFC_vs_delta_unnorm")
 
 # --- Plot 5: RNA-seq 3-way concordance ---
 if (!is.null(three_way) && nrow(three_way) > 0) {
@@ -906,7 +911,7 @@ if (!is.null(three_way) && nrow(three_way) > 0) {
     theme_paired +
     theme(panel.grid.major.x = element_blank())
 
-  save_multiformat_ggplot(p_rnaseq, file.path(PLOT_DIR, "rnaseq_concordance"), width = 4, height = 5)
+  save_multiformat_ggplot(p_rnaseq, file.path(PLOT_DIR, "5A_rnaseq_concordance"), width = 4, height = 5) # Original: file.path(PLOT_DIR, "rnaseq_concordance")
 } else {
   p_rnaseq <- NULL
   cat("  Skipped rnaseq_concordance.pdf (no data)\n")
@@ -931,7 +936,7 @@ if (!is.null(k119_quant) && nrow(k119_quant) > 0) {
     theme(legend.position = c(0.85, 0.15),
           legend.background = element_rect(fill = "white", color = "grey80"))
 
-  save_multiformat_ggplot(p_k119ub, file.path(PLOT_DIR, "k119ub_at_paired_enhancers"), width = 6, height = 5)
+  save_multiformat_ggplot(p_k119ub, file.path(PLOT_DIR, "5A_k119ub_at_paired_enhancers"), width = 6, height = 5) # Original: file.path(PLOT_DIR, "k119ub_at_paired_enhancers")
 } else {
   p_k119ub <- NULL
   cat("  Skipped k119ub_at_paired_enhancers.pdf (no data)\n")
@@ -958,7 +963,7 @@ if (!is.null(k119_type_summary) && nrow(k119_type_summary) > 0) {
     theme(axis.text.x = element_text(angle = 45, hjust = 1),
           legend.position = "top")
 
-  save_multiformat_ggplot(p_k119_type, file.path(PLOT_DIR, "k119ub_by_loop_type"), width = 10, height = 6)
+  save_multiformat_ggplot(p_k119_type, file.path(PLOT_DIR, "5A_k119ub_by_loop_type"), width = 10, height = 6) # Original: file.path(PLOT_DIR, "k119ub_by_loop_type")
 } else {
   cat("  Skipped k119ub_by_loop_type (insufficient data)\n")
 }
@@ -978,7 +983,7 @@ p_dist <- ggplot(dist_conc, aes(x = dist_bin, y = pct, fill = dist_bin)) +
   theme_paired +
   theme(panel.grid.major.x = element_blank())
 
-save_multiformat_ggplot(p_dist, file.path(PLOT_DIR, "distance_concordance"), width = 6, height = 5)
+save_multiformat_ggplot(p_dist, file.path(PLOT_DIR, "5A_distance_concordance"), width = 6, height = 5) # Original: file.path(PLOT_DIR, "distance_concordance")
 
 # --- Plot 9: GO BP dotplot ---
 if (!is.null(go_result) && nrow(go_result@compareClusterResult) > 0) {
@@ -988,7 +993,7 @@ if (!is.null(go_result) && nrow(go_result@compareClusterResult) > 0) {
     theme(plot.title = element_text(size = 12, face = "bold"),
           plot.subtitle = element_text(size = 9, color = "grey40"))
 
-  save_multiformat_ggplot(p_go, file.path(PLOT_DIR, "go_bp_dotplot"), width = 10, height = 9)
+  save_multiformat_ggplot(p_go, file.path(PLOT_DIR, "5A_go_bp_dotplot"), width = 10, height = 9) # Original: file.path(PLOT_DIR, "go_bp_dotplot")
 } else {
   cat("  Skipped go_bp_dotplot (no significant terms)\n")
 }
@@ -1001,7 +1006,7 @@ if (!is.null(kegg_result) && nrow(kegg_result@compareClusterResult) > 0) {
     theme(plot.title = element_text(size = 12, face = "bold"),
           plot.subtitle = element_text(size = 9, color = "grey40"))
 
-  save_multiformat_ggplot(p_kegg, file.path(PLOT_DIR, "kegg_dotplot"), width = 10, height = 9)
+  save_multiformat_ggplot(p_kegg, file.path(PLOT_DIR, "5A_kegg_dotplot"), width = 10, height = 9) # Original: file.path(PLOT_DIR, "kegg_dotplot")
 } else {
   cat("  Skipped kegg_dotplot (no significant pathways)\n")
 }
@@ -1036,6 +1041,6 @@ if (n_plots == 6) {
   panel_h <- 11
 }
 
-save_multiformat_ggplot(combined, file.path(PLOT_DIR, "paired_anchor_panel"), width = panel_w, height = panel_h)
+save_multiformat_ggplot(combined, file.path(SUPP_PLOT_DIR, "paired_anchor_panel"), width = panel_w, height = panel_h) # Original: file.path(PLOT_DIR, "paired_anchor_panel")
 
 cat("\n=== Step 9b complete ===\n")

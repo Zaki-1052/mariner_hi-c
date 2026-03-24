@@ -84,7 +84,7 @@ suppressPackageStartupMessages({
 cat("✓ Packages loaded\n\n")
 
 # Load multi-format output utility for PDF + SVG + JPEG output
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # Load paths configuration and set working directory
 config <- yaml::read_yaml("config/paths_config.yaml")
@@ -98,9 +98,10 @@ if (dir.exists(base_dir)) {
 }
 
 # Create output directories
-output_dir <- "outputs/visualizations"
+output_dir <- "outputs/visualizations"  # TODO: not in data/ (features/enrichment/loop_classification outputs)
+volcano_output_dir <- "data/plots/figure_2_loop_rewiring"  # Original: file.path(output_dir, "volcano")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-dir.create(file.path(output_dir, "volcano"), recursive = TRUE, showWarnings = FALSE)
+dir.create(volcano_output_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(output_dir, "features"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(output_dir, "enrichment"), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(output_dir, "loop_classification"), recursive = TRUE, showWarnings = FALSE)
@@ -119,7 +120,7 @@ cat("Loading Input Data\n")
 cat("\n========================================\n")
 
 # Load characterized loops from downstream analysis
-characterized_file <- "outputs/merged_loops/characterized_loops.tsv"
+characterized_file <- "outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/
 if (!file.exists(characterized_file)) {
   stop("ERROR: characterized_loops.tsv not found. Run downstream_analysis.R first.")
 }
@@ -130,7 +131,7 @@ cat(sprintf("  Up-regulated: %d\n", sum(loops_df$logFC > 0)))
 cat(sprintf("  Down-regulated: %d\n\n", sum(loops_df$logFC < 0)))
 
 # Load GInteractions object
-gi_file <- "outputs/merged_loops/non_redundant_loops.rds"
+gi_file <- "outputs/merged_loops/non_redundant_loops.rds"  # TODO: not in data/
 if (file.exists(gi_file)) {
   loops_gi <- readRDS(gi_file)
   cat(sprintf("✓ Loaded GInteractions object: %d interactions\n\n", length(loops_gi)))
@@ -267,15 +268,15 @@ create_publication_volcano <- function(results_file, output_path, title_suffix =
 
 # Legacy function for backward compatibility
 create_volcano_plot <- function(resolution_kb, output_path) {
-  results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv",
-                          resolution_kb)
+  # Original: sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv", resolution_kb)
+  results_file <- file.path("data/tsvs/figure_2_loop_rewiring", sprintf("2A_all_results_primary_%dkb.tsv", resolution_kb))
   title_suffix <- sprintf("%dkb", resolution_kb)
   return(create_publication_volcano(results_file, output_path, title_suffix))
 }
 
 # Generate volcano plots for each resolution
 for (res_kb in c(5, 10, 25)) {
-  output_file <- file.path(output_dir, "volcano", sprintf("volcano_%dkb.pdf", res_kb))
+  output_file <- file.path(volcano_output_dir, sprintf("2A_volcano_%dkb.pdf", res_kb))  # Original: file.path(output_dir, "volcano", sprintf("volcano_%dkb.pdf", res_kb))
   create_volcano_plot(res_kb, output_file)
 }
 
@@ -283,10 +284,10 @@ for (res_kb in c(5, 10, 25)) {
 cat("Creating merged multi-resolution volcano plot...\n")
 
 # Check if merged_all_results exists (created by downstream_analysis.R)
-merged_all_results_file <- "outputs/merged_loops/merged_all_results.tsv"
+merged_all_results_file <- "outputs/merged_loops/merged_all_results.tsv"  # TODO: not in data/
 if (file.exists(merged_all_results_file)) {
   # Use the properly merged non-redundant dataset
-  output_file <- file.path(output_dir, "volcano", "volcano_merged_multiresolution.pdf")
+  output_file <- file.path(volcano_output_dir, "2A_volcano_merged_multiresolution.pdf")  # Original: file.path(output_dir, "volcano", "volcano_merged_multiresolution.pdf")
   create_publication_volcano(merged_all_results_file, output_file, "Multi-Resolution")
 } else {
   # Fallback: create simple merged dataset
@@ -294,8 +295,8 @@ if (file.exists(merged_all_results_file)) {
 
   all_resolutions <- list()
   for (res_kb in c(5, 10, 25)) {
-    results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv",
-                            res_kb)
+    # Original: sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv", res_kb)
+    results_file <- file.path("data/tsvs/figure_2_loop_rewiring", sprintf("2A_all_results_primary_%dkb.tsv", res_kb))
     if (file.exists(results_file)) {
       df <- read.table(results_file, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
       df$resolution <- sprintf("%dkb", res_kb)
@@ -310,7 +311,7 @@ if (file.exists(merged_all_results_file)) {
     temp_file <- tempfile(fileext = ".tsv")
     write.table(merged_df, temp_file, sep = "\t", quote = FALSE, row.names = FALSE)
 
-    output_file <- file.path(output_dir, "volcano", "volcano_merged_multiresolution.pdf")
+    output_file <- file.path(volcano_output_dir, "2A_volcano_merged_multiresolution.pdf")  # Original: file.path(output_dir, "volcano", "volcano_merged_multiresolution.pdf")
     create_publication_volcano(temp_file, output_file, "Multi-Resolution")
 
     # Clean up
@@ -323,9 +324,9 @@ if (file.exists(merged_all_results_file)) {
 # Create volcano plot for merged non-redundant loops
 cat("Creating volcano plot for merged non-redundant loops...\n")
 
-characterized_file <- "outputs/merged_loops/characterized_loops.tsv"
+characterized_file <- "outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/ (already declared above)
 if (file.exists(characterized_file)) {
-  output_file <- file.path(output_dir, "volcano", "volcano_nonredundant.pdf")
+  output_file <- file.path(volcano_output_dir, "2A_volcano_nonredundant.pdf")  # Original: file.path(output_dir, "volcano", "volcano_nonredundant.pdf")
   create_publication_volcano(characterized_file, output_file, "Non-Redundant")
 } else {
   cat("  ⚠ characterized_loops.tsv not found. Skipping non-redundant volcano plot.\n\n")

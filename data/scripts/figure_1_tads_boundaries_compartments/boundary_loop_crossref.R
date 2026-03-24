@@ -43,7 +43,8 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility
-source("scripts/utils/multi_format_output.R")
+# Original: source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")
 
 # ==============================================================================
 # 2. CONFIGURATION
@@ -63,15 +64,22 @@ set.seed(42)  # For reproducibility
 # Timepoint-specific file mappings
 TIMEPOINT_CONFIG <- list(
   late = list(
-    loops_file = file.path(BASE_DIR, "25042-late_outputs/merged_loops/characterized_loops.tsv"),
-    boundaries_file = file.path(BASE_DIR, "tads/results/late/final/tadcompare_final_filtered.tsv"),
-    output_dir = file.path(BASE_DIR, "tads/results/late/boundary_loop_analysis"),
+    # Original: file.path(BASE_DIR, "25042-late_outputs/merged_loops/characterized_loops.tsv")
+    loops_file = file.path(BASE_DIR, "data/upstream/loop_calls/late_characterized_loops.tsv"),
+    # Original: file.path(BASE_DIR, "tads/results/late/final/tadcompare_final_filtered.tsv")
+    boundaries_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_late_tadcompare_differential.tsv"),
+    # Original: file.path(BASE_DIR, "tads/results/late/boundary_loop_analysis")
+    tsv_dir = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments"),
+    plots_dir = file.path(BASE_DIR, "data/plots/figure_1_tads_boundaries_compartments"),
     label = "Late Timepoint"
   ),
   early = list(
-    loops_file = file.path(BASE_DIR, "250831-early_outputs/merged_loops/characterized_loops.tsv"),
-    boundaries_file = file.path(BASE_DIR, "tads/results/early/final/tadcompare_final_filtered.tsv"),
-    output_dir = file.path(BASE_DIR, "tads/results/early/boundary_loop_analysis"),
+    loops_file = file.path(BASE_DIR, "250831-early_outputs/merged_loops/characterized_loops.tsv"),  # TODO: not in data/
+    # Original: file.path(BASE_DIR, "tads/results/early/final/tadcompare_final_filtered.tsv")
+    boundaries_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_early_tadcompare_differential.tsv"),
+    # Original: file.path(BASE_DIR, "tads/results/early/boundary_loop_analysis")
+    tsv_dir = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments"),
+    plots_dir = file.path(BASE_DIR, "data/plots/figure_1_tads_boundaries_compartments"),
     label = "Early Timepoint"
   )
 )
@@ -947,7 +955,8 @@ generate_report <- function(distance_df, fisher_results, wilcox_result,
                            perm_results_df, concordance_result, type_results,
                            timepoint_label, output_dir) {
 
-  report_path <- file.path(output_dir, "analysis_report.txt")
+  # Original: file.path(output_dir, "analysis_report.txt")
+  report_path <- file.path(output_dir, "1F_analysis_report.txt")
 
   sink(report_path)
 
@@ -1076,8 +1085,10 @@ run_analysis <- function(timepoint) {
   config <- TIMEPOINT_CONFIG[[timepoint]]
 
   # Create output directories
-  output_dir <- config$output_dir
-  plots_dir <- file.path(output_dir, "plots")
+  # Original: output_dir <- config$output_dir; plots_dir <- file.path(output_dir, "plots")
+  tsv_dir <- config$tsv_dir
+  plots_dir <- config$plots_dir
+  dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(plots_dir, recursive = TRUE, showWarnings = FALSE)
 
   # -------------------------------------------------------------------------
@@ -1101,8 +1112,9 @@ run_analysis <- function(timepoint) {
   distance_df <- compute_boundary_distances(loops_gr, boundaries_gr)
 
   # Save distance summary
-  write_tsv(distance_df, file.path(output_dir, "boundary_loop_overlap_summary.tsv"))
-  cat(sprintf("  Saved: boundary_loop_overlap_summary.tsv\n"))
+  # Original: write_tsv(distance_df, file.path(output_dir, "boundary_loop_overlap_summary.tsv"))
+  write_tsv(distance_df, file.path(tsv_dir, "1F_boundary_loop_overlap_summary.tsv"))
+  cat(sprintf("  Saved: 1F_boundary_loop_overlap_summary.tsv\n"))
 
   # -------------------------------------------------------------------------
   # Step 3: Statistical tests
@@ -1147,8 +1159,9 @@ run_analysis <- function(timepoint) {
     )
   })
 
-  write_tsv(perm_results_df, file.path(output_dir, "permutation_test_results.tsv"))
-  cat(sprintf("  Saved: permutation_test_results.tsv\n"))
+  # Original: write_tsv(perm_results_df, file.path(output_dir, "permutation_test_results.tsv"))
+  write_tsv(perm_results_df, file.path(tsv_dir, "1F_permutation_test_results.tsv"))
+  cat(sprintf("  Saved: 1F_permutation_test_results.tsv\n"))
 
   # Combine enrichment statistics
   enrichment_stats <- fisher_results %>%
@@ -1161,8 +1174,9 @@ run_analysis <- function(timepoint) {
         slice(rep(1, nrow(fisher_results)))
     )
 
-  write_tsv(enrichment_stats, file.path(output_dir, "enrichment_statistics.tsv"))
-  cat(sprintf("  Saved: enrichment_statistics.tsv\n"))
+  # Original: write_tsv(enrichment_stats, file.path(output_dir, "enrichment_statistics.tsv"))
+  write_tsv(enrichment_stats, file.path(tsv_dir, "1F_enrichment_statistics.tsv"))
+  cat(sprintf("  Saved: 1F_enrichment_statistics.tsv\n"))
 
   # -------------------------------------------------------------------------
   # Step 4: Direction concordance
@@ -1170,8 +1184,9 @@ run_analysis <- function(timepoint) {
   cat("\n[Step 4] Analyzing direction concordance...\n")
   concordance_result <- analyze_direction_concordance(distance_df, threshold = 50000)
 
-  write_tsv(concordance_result$summary, file.path(output_dir, "direction_concordance.tsv"))
-  cat(sprintf("  Saved: direction_concordance.tsv\n"))
+  # Original: write_tsv(concordance_result$summary, file.path(output_dir, "direction_concordance.tsv"))
+  write_tsv(concordance_result$summary, file.path(tsv_dir, "1F_direction_concordance.tsv"))
+  cat(sprintf("  Saved: 1F_direction_concordance.tsv\n"))
 
   # -------------------------------------------------------------------------
   # Step 5: Boundary type associations
@@ -1180,8 +1195,9 @@ run_analysis <- function(timepoint) {
   type_results <- analyze_boundary_types(distance_df, threshold = 50000)
 
   if (nrow(type_results) > 0) {
-    write_tsv(type_results, file.path(output_dir, "boundary_type_association.tsv"))
-    cat(sprintf("  Saved: boundary_type_association.tsv\n"))
+    # Original: write_tsv(type_results, file.path(output_dir, "boundary_type_association.tsv"))
+    write_tsv(type_results, file.path(tsv_dir, "1F_boundary_type_association.tsv"))
+    cat(sprintf("  Saved: 1F_boundary_type_association.tsv\n"))
   }
 
   # -------------------------------------------------------------------------
@@ -1191,27 +1207,32 @@ run_analysis <- function(timepoint) {
 
   # 6a. Distance violin plot
   p_violin <- create_distance_violin(distance_df, config$label)
-  save_multiformat_ggplot(p_violin, file.path(plots_dir, "distance_violin"),
+  # Original: file.path(plots_dir, "distance_violin")
+  save_multiformat_ggplot(p_violin, file.path(plots_dir, "1F_distance_violin"),
                          width = 8, height = 6)
 
   # 6b. Enrichment bar plot
   p_barplot <- create_enrichment_barplot(fisher_results, config$label)
-  save_multiformat_ggplot(p_barplot, file.path(plots_dir, "enrichment_barplot"),
+  # Original: file.path(plots_dir, "enrichment_barplot")
+  save_multiformat_ggplot(p_barplot, file.path(plots_dir, "1F_enrichment_barplot"),
                          width = 10, height = 6)
 
   # 6c. Boundary type heatmap
   p_heatmap <- create_type_heatmap(type_results, config$label)
-  save_multiformat_ggplot(p_heatmap, file.path(plots_dir, "type_heatmap"),
+  # Original: file.path(plots_dir, "type_heatmap")
+  save_multiformat_ggplot(p_heatmap, file.path(plots_dir, "1F_type_heatmap"),
                          width = 6, height = 6)
 
   # 6d. Concordance plot
   p_concordance <- create_concordance_plot(concordance_result, config$label)
-  save_multiformat_ggplot(p_concordance, file.path(plots_dir, "concordance_heatmap"),
+  # Original: file.path(plots_dir, "concordance_heatmap")
+  save_multiformat_ggplot(p_concordance, file.path(plots_dir, "1F_concordance_heatmap"),
                          width = 8, height = 6)
 
   # 6e. Permutation test plot
   p_permutation <- create_permutation_plot(perm_results, config$label)
-  save_multiformat_ggplot(p_permutation, file.path(plots_dir, "permutation_test"),
+  # Original: file.path(plots_dir, "permutation_test")
+  save_multiformat_ggplot(p_permutation, file.path(plots_dir, "1F_permutation_test"),
                          width = 10, height = 5)
 
   # 6f. Combined summary figure
@@ -1220,7 +1241,8 @@ run_analysis <- function(timepoint) {
       title = sprintf("Boundary-Loop Cross-Reference: %s", config$label),
       theme = theme(plot.title = element_text(size = 16, face = "bold", hjust = 0.5))
     )
-  save_multiformat_ggplot(p_combined, file.path(plots_dir, "combined_summary"),
+  # Original: file.path(plots_dir, "combined_summary")
+  save_multiformat_ggplot(p_combined, file.path(plots_dir, "1F_combined_summary"),
                          width = 14, height = 12)
 
   # -------------------------------------------------------------------------
@@ -1235,11 +1257,13 @@ run_analysis <- function(timepoint) {
     concordance_result = concordance_result,
     type_results = type_results,
     timepoint_label = config$label,
-    output_dir = output_dir
+    # Original: output_dir = output_dir
+    output_dir = tsv_dir
   )
 
   cat(sprintf("\n✅ Analysis complete for %s\n", timepoint))
-  cat(sprintf("   Output directory: %s\n", output_dir))
+  cat(sprintf("   TSV directory: %s\n", tsv_dir))
+  cat(sprintf("   Plots directory: %s\n", plots_dir))
 
   return(list(
     distance_df = distance_df,

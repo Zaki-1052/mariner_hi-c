@@ -75,25 +75,32 @@ suppressPackageStartupMessages({
 cat("Packages loaded\n\n")
 
 # Load multi-format output utility
-# Note: path is relative to base_dir (mariner_hi-c/)
-source(file.path(dirname(getwd()), "scripts/utils/multi_format_output.R"))
+# Original: source(file.path(dirname(getwd()), "scripts/utils/multi_format_output.R"))
+source("data/scripts/_shared/multi_format_output.R")
 
 # Define base directories
-# Script is run from tads/ directory via: cd tads && Rscript scripts/tad_visualizations.R
-tads_dir <- getwd()  # Should be tads/
-base_dir <- dirname(tads_dir)  # Parent = mariner_hi-c/
+# Original: Script was run from tads/ directory via: cd tads && Rscript scripts/tad_visualizations.R
+# Now run from repo root (mariner_hi-c/)
+base_dir <- getwd()
 
-cat(sprintf("  Working directory: %s\n", tads_dir))
-cat(sprintf("  Base directory: %s\n", base_dir))
+cat(sprintf("  Working directory: %s\n", base_dir))
 
-# Input/output paths (relative to tads/)
+# Output directories for figure-specific outputs
+plots_dir_fig1 <- "data/plots/figure_1_tads_boundaries_compartments"
+tsvs_dir_fig1 <- "data/tsvs/figure_1_tads_boundaries_compartments"
+plots_dir_fig3 <- "data/plots/figure_3_epigenetic_integration"
+tsvs_dir_fig3 <- "data/tsvs/figure_3_epigenetic_integration"
+plots_dir_fig5 <- "data/plots/figure_5_model_functional"
+tsvs_dir_fig5 <- "data/tsvs/figure_5_model_functional"
+
+# Input/output paths
 # Use timepoint-specific input directory
-input_file <- file.path("results", timepoint, "final/tadcompare_final_annotated.tsv")
-output_base <- file.path("results/visualizations", timepoint)
+input_file <- file.path("results", timepoint, "final/tadcompare_final_annotated.tsv")  # TODO: not in data/
+output_base <- file.path("results/visualizations", timepoint)  # TODO: not in data/ (intermediate plots)
 
 # ChIP-seq peak paths (in parent directory peaks/beds/)
 # Timepoint-specific Cerebellum peaks (standardized)
-peaks_dir <- file.path(base_dir, "peaks", "beds")
+peaks_dir <- file.path(base_dir, "peaks", "beds")  # TODO: not in data/
 
 if (timepoint == "late") {
   h3k27ac_path <- file.path(peaks_dir, "H3K27acCerebellumLate2.bed")
@@ -113,11 +120,20 @@ cat(sprintf("  H3K27me3: %s\n", basename(h3k27me3_path)))
 cat(sprintf("  H3K4me1:  %s\n", if (!is.null(h3k4me1_path)) basename(h3k4me1_path) else "NOT AVAILABLE"))
 
 # Create output directories
+# Original: subdirs under output_base (tads/results/visualizations/{timepoint}/)
 subdirs <- c("overview", "classification", "shift_analysis", "robustness",
              "chromosome", "chipseq", "enrichment", "syt1_nav3_focus", "summary")
 for (subdir in subdirs) {
-  dir.create(file.path(output_base, subdir), recursive = TRUE, showWarnings = FALSE)
+  dir.create(file.path(output_base, subdir), recursive = TRUE, showWarnings = FALSE)  # TODO: not in data/
 }
+
+# Create data/ output directories for figure-specific outputs
+dir.create(plots_dir_fig1, recursive = TRUE, showWarnings = FALSE)
+dir.create(tsvs_dir_fig1, recursive = TRUE, showWarnings = FALSE)
+dir.create(plots_dir_fig3, recursive = TRUE, showWarnings = FALSE)
+dir.create(tsvs_dir_fig3, recursive = TRUE, showWarnings = FALSE)
+dir.create(plots_dir_fig5, recursive = TRUE, showWarnings = FALSE)
+dir.create(tsvs_dir_fig5, recursive = TRUE, showWarnings = FALSE)
 
 cat(sprintf("Output directory: %s\n\n", output_base))
 
@@ -902,9 +918,10 @@ if (nrow(gene_df) > 0) {
   })
   gene_df$symbol <- symbol_map$SYMBOL[match(gene_df$gene_id, symbol_map$ENTREZID)]
 
-  write.table(gene_df, file.path(output_base, "enrichment", "boundary_genes.tsv"),
+  # Original: file.path(output_base, "enrichment", "boundary_genes.tsv")
+  write.table(gene_df, file.path(tsvs_dir_fig5, "5A_boundary_genes.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
-  cat("  Saved: boundary_genes.tsv\n")
+  cat("  Saved: 5A_boundary_genes.tsv\n")
 }
 
 # Create gene list for enrichment
@@ -935,8 +952,9 @@ if (length(gene_list) > 0) {
     p_go_bp <- dotplot(go_bp, showCategory = 15) +
       labs(title = "GO Biological Process Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+    # Original: file.path(output_base, "enrichment", "go_bp_dotplot")
     save_multiformat_ggplot(p_go_bp,
-                            file.path(output_base, "enrichment", "go_bp_dotplot"),
+                            file.path(plots_dir_fig5, "5A_go_bp_dotplot_boundaries"),
                             width = 12, height = 10)
   } else {
     cat("  No significant GO BP terms found\n")
@@ -964,7 +982,7 @@ if (length(gene_list) > 0) {
       labs(title = "GO Cellular Component Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
     save_multiformat_ggplot(p_go_cc,
-                            file.path(output_base, "enrichment", "go_cc_dotplot"),
+                            file.path(output_base, "enrichment", "go_cc_dotplot"),  # TODO: not in data/
                             width = 10, height = 8)
   } else {
     cat("  No significant GO CC terms found\n")
@@ -992,7 +1010,7 @@ if (length(gene_list) > 0) {
       labs(title = "GO Molecular Function Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
     save_multiformat_ggplot(p_go_mf,
-                            file.path(output_base, "enrichment", "go_mf_dotplot"),
+                            file.path(output_base, "enrichment", "go_mf_dotplot"),  # TODO: not in data/
                             width = 10, height = 8)
   } else {
     cat("  No significant GO MF terms found\n")
@@ -1018,8 +1036,9 @@ if (length(gene_list) > 0) {
     p_kegg <- dotplot(kegg, showCategory = 15) +
       labs(title = "KEGG Pathway Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+    # Original: file.path(output_base, "enrichment", "kegg_dotplot")
     save_multiformat_ggplot(p_kegg,
-                            file.path(output_base, "enrichment", "kegg_dotplot"),
+                            file.path(plots_dir_fig5, "5A_kegg_dotplot_boundaries"),
                             width = 12, height = 10)
   } else {
     cat("  No significant KEGG pathways found\n")
@@ -1096,8 +1115,12 @@ if (nrow(regional_df) > 0) {
     ) +
     theme_tad()
 
+  # Original: file.path(output_base, "syt1_nav3_focus", "syt1_nav3_regional_overview")
   save_multiformat_ggplot(p_regional,
-                          file.path(output_base, "syt1_nav3_focus", "syt1_nav3_regional_overview"),
+                          file.path(plots_dir_fig1, "1E_syt1_nav3_regional_overview"),
+                          width = 12, height = 6)
+  save_multiformat_ggplot(p_regional,
+                          file.path(plots_dir_fig3, "3F_syt1_nav3_regional_overview"),
                           width = 12, height = 6)
 
   # 8.2 Regional Statistics Table
@@ -1106,10 +1129,14 @@ if (nrow(regional_df) > 0) {
            Differential, Enriched_In, Type, robustness,
            shift_distance_kb, anchor_type)
 
+  # Original: file.path(output_base, "syt1_nav3_focus", "syt1_nav3_statistics.tsv")
   write.table(regional_stats,
-              file.path(output_base, "syt1_nav3_focus", "syt1_nav3_statistics.tsv"),
+              file.path(tsvs_dir_fig1, "1E_syt1_nav3_statistics.tsv"),
               sep = "\t", quote = FALSE, row.names = FALSE)
-  cat("  Saved: syt1_nav3_statistics.tsv\n")
+  write.table(regional_stats,
+              file.path(tsvs_dir_fig3, "3F_syt1_nav3_statistics.tsv"),
+              sep = "\t", quote = FALSE, row.names = FALSE)
+  cat("  Saved: 1E_syt1_nav3_statistics.tsv, 3F_syt1_nav3_statistics.tsv\n")
 
 } else {
   cat("  No boundaries found in specified region.\n")
@@ -1237,7 +1264,7 @@ summary_lines <- c(summary_lines,
                    "==========================================")
 
 # Write summary
-summary_file <- file.path(output_base, "summary", "visualization_summary.txt")
+summary_file <- file.path(output_base, "summary", "visualization_summary.txt")  # TODO: not in data/
 writeLines(summary_lines, summary_file)
 cat(sprintf("Summary saved: %s\n\n", summary_file))
 

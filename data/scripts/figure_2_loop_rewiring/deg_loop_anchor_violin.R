@@ -60,15 +60,19 @@ PERMUTATION_SEED <- 42  # For reproducibility
 # Timepoint-specific file mappings
 TIMEPOINT_CONFIG <- list(
   late = list(
-    loops_file = file.path(BASE_DIR, "25042-late_outputs/merged_loops/characterized_loops.tsv"),
-    rna_file = file.path(BASE_DIR, "tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx"),
-    output_dir = file.path(BASE_DIR, "output/deg_loop_violin/late"),
+    loops_file = file.path(BASE_DIR, "data/upstream/loop_calls/late_characterized_loops.tsv"),       # Original: 25042-late_outputs/merged_loops/characterized_loops.tsv
+    rna_file = file.path(BASE_DIR, "data/upstream/rna_seq/adult_rnaseq_results.xlsx"),               # Original: tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx
+    output_dir = file.path(BASE_DIR, "data/plots/figure_2_loop_rewiring"),                           # Original: output/deg_loop_violin/late
+    fig5_plot_dir = file.path(BASE_DIR, "data/plots/figure_5_model_functional"),                     # Original: output/deg_loop_violin/late (subfolder)
+    tsv_dir = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"),                            # Original: output/deg_loop_violin/late/tables
     label = "Late (Adult)"
   ),
   early = list(
-    loops_file = file.path(BASE_DIR, "250831-early_outputs/merged_loops/characterized_loops.tsv"),
-    rna_file = file.path(BASE_DIR, "tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),
-    output_dir = file.path(BASE_DIR, "output/deg_loop_violin/early"),
+    loops_file = file.path(BASE_DIR, "data/upstream/loop_calls/early_characterized_loops.tsv"),      # Original: 250831-early_outputs/merged_loops/characterized_loops.tsv
+    rna_file = file.path(BASE_DIR, "data/upstream/rna_seq/young_rnaseq_results.xlsx"),               # Original: tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx
+    output_dir = file.path(BASE_DIR, "data/plots/figure_2_loop_rewiring"),                           # Original: output/deg_loop_violin/early
+    fig5_plot_dir = file.path(BASE_DIR, "data/plots/figure_5_model_functional"),                     # Original: output/deg_loop_violin/early (subfolder)
+    tsv_dir = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"),                            # Original: output/deg_loop_violin/early/tables
     label = "Early (Young)"
   )
 )
@@ -592,31 +596,26 @@ generate_statistics <- function(plot_data, test_result, timepoint, analysis_type
 #' Save outputs in multiple formats
 #' @param plot_result List containing plot, test, and counts
 #' @param plot_data Merged DEG-anchor data
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param base_name Base filename (without extension)
 #' @param timepoint Timepoint name
 #' @param analysis_type Analysis type for statistics file
-save_outputs <- function(plot_result, plot_data, output_dir, base_name, timepoint, analysis_type = "basic") {
+#' @param tsv_dir Output directory for TSVs (default: output_dir)
+save_outputs <- function(plot_result, plot_data, output_dir, base_name, timepoint, analysis_type = "basic", tsv_dir = NULL) {
+  if (is.null(tsv_dir)) tsv_dir <- output_dir
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
 
   # Save plot in multiple formats to subfolder
-  save_plot_multiformat(plot_result$plot, output_dir, base_name, width = 5, height = 6)
+  save_plot_multiformat(plot_result$plot, output_dir, base_name, width = 5, height = 6)  # Original: save_plot_multiformat(plot_result$plot, output_dir, base_name, ...)
 
-  # Create tables directory for data files
-  tables_dir <- file.path(output_dir, "tables")
-  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
-
-  # Save gene list to tables directory
-  gene_file <- file.path(tables_dir, sprintf("%s_genes.tsv", base_name))
+  # Save gene list to TSV directory
+  gene_file <- file.path(tsv_dir, sprintf("%s_genes.tsv", base_name))  # Original: file.path(output_dir, "tables", sprintf("%s_genes.tsv", base_name))
   write_tsv(plot_data, gene_file)
   cat(sprintf("  Saved: %s\n", gene_file))
 
-  # Create statistics directory for stats files
-  stats_dir <- file.path(output_dir, "statistics")
-  dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
-
-  # Save statistics to statistics directory
-  stats_file <- file.path(stats_dir, sprintf("%s_statistics.txt", base_name))
+  # Save statistics to TSV directory
+  stats_file <- file.path(tsv_dir, sprintf("%s_statistics.txt", base_name))  # Original: file.path(output_dir, "statistics", sprintf("%s_statistics.txt", base_name))
   stats_lines <- generate_statistics(plot_data, plot_result$test, timepoint, analysis_type)
   writeLines(stats_lines, stats_file)
   cat(sprintf("  Saved: %s\n", stats_file))
@@ -628,9 +627,10 @@ save_outputs <- function(plot_result, plot_data, output_dir, base_name, timepoin
 
 #' Task 2b: Basic violin plot - DEGs near lost vs gained anchors
 #' @param plot_data Merged DEG-anchor data
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param timepoint Timepoint label
-run_basic_analysis <- function(plot_data, output_dir, timepoint) {
+#' @param tsv_dir Output directory for TSVs
+run_basic_analysis <- function(plot_data, output_dir, timepoint, tsv_dir = NULL) {
   cat("\n=== Task 2b: Basic Lost vs Gained Analysis ===\n")
 
   plot_result <- create_violin_plot(
@@ -640,7 +640,7 @@ run_basic_analysis <- function(plot_data, output_dir, timepoint) {
     colors = DIRECTION_COLORS
   )
 
-  save_outputs(plot_result, plot_data, output_dir, "deg_loop_anchor_violin", timepoint, "basic")
+  save_outputs(plot_result, plot_data, output_dir, "5B_deg_loop_anchor_violin", timepoint, "basic", tsv_dir = tsv_dir)  # Original: "deg_loop_anchor_violin"
 
   cat(sprintf("  Mann-Whitney p-value: %.2e\n", plot_result$p_value))
 
@@ -649,9 +649,10 @@ run_basic_analysis <- function(plot_data, output_dir, timepoint) {
 
 #' Task 2c-i: Focused comparison - Long-range lost vs Short-range gained
 #' @param plot_data Merged DEG-anchor data with distance info
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param timepoint Timepoint label
-run_distance_focused_analysis <- function(plot_data, output_dir, timepoint) {
+#' @param tsv_dir Output directory for TSVs
+run_distance_focused_analysis <- function(plot_data, output_dir, timepoint, tsv_dir = NULL) {
   cat("\n=== Task 2c-i: Long-Range Lost vs Short-Range Gained ===\n")
 
   # Create focused comparison categories
@@ -683,16 +684,17 @@ run_distance_focused_analysis <- function(plot_data, output_dir, timepoint) {
   )
 
   save_outputs(plot_result, focused_data, output_dir,
-               "deg_loop_violin_longrange_lost_vs_shortrange_gained", timepoint, "distance_focused")
+               "5B_deg_longrange_vs_shortrange", timepoint, "distance_focused", tsv_dir = tsv_dir)  # Original: "deg_loop_violin_longrange_lost_vs_shortrange_gained"
 
   return(plot_result)
 }
 
 #' Task 2c-ii: Full 2x2 stratification by distance and direction
 #' @param plot_data Merged DEG-anchor data with distance info
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param timepoint Timepoint label
-run_distance_stratified_analysis <- function(plot_data, output_dir, timepoint) {
+#' @param tsv_dir Output directory for TSVs
+run_distance_stratified_analysis <- function(plot_data, output_dir, timepoint, tsv_dir = NULL) {
   cat("\n=== Task 2c-ii: Full Distance Stratification (2x2) ===\n")
 
   # Create 4-category stratification
@@ -789,21 +791,19 @@ run_distance_stratified_analysis <- function(plot_data, output_dir, timepoint) {
       panel.grid = element_blank()
     )
 
-  # Save plot to subfolder
+  # Save plot
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  save_plot_multiformat(p, output_dir, "deg_loop_violin_distance_2x2_stratified", width = 8, height = 6)
+  save_plot_multiformat(p, output_dir, "5B_deg_loop_violin_distance_2x2_stratified", width = 8, height = 6)  # Original: "deg_loop_violin_distance_2x2_stratified"
 
-  # Save gene list to tables directory
-  tables_dir <- file.path(output_dir, "tables")
-  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
-  gene_file <- file.path(tables_dir, "deg_loop_distance_stratified_genes.tsv")
+  # Save gene list to TSV directory
+  if (is.null(tsv_dir)) tsv_dir <- output_dir
+  dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
+  gene_file <- file.path(tsv_dir, "5B_deg_loop_distance_stratified_genes.tsv")  # Original: file.path(output_dir, "tables", "deg_loop_distance_stratified_genes.tsv")
   write_tsv(stratified_data, gene_file)
   cat(sprintf("  Saved: %s\n", gene_file))
 
-  # Save statistics with pairwise comparisons
-  stats_dir <- file.path(output_dir, "statistics")
-  dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
-  stats_file <- file.path(stats_dir, "deg_loop_violin_distance_statistics.txt")
+  # Save statistics
+  stats_file <- file.path(tsv_dir, "5B_deg_loop_violin_distance_statistics.txt")  # Original: file.path(output_dir, "statistics", "deg_loop_violin_distance_statistics.txt")
   stats_lines <- c(
     "===========================================",
     sprintf("Distance-Stratified DEG Analysis: %s", timepoint),
@@ -848,9 +848,10 @@ run_distance_stratified_analysis <- function(plot_data, output_dir, timepoint) {
 
 #' Task 2d: Polycomb-focused analysis
 #' @param plot_data Merged DEG-anchor data with chromatin state info
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param timepoint Timepoint label
-run_polycomb_analysis <- function(plot_data, output_dir, timepoint) {
+#' @param tsv_dir Output directory for TSVs
+run_polycomb_analysis <- function(plot_data, output_dir, timepoint, tsv_dir = NULL) {
   cat("\n=== Task 2d: Polycomb-Focused Analysis ===\n")
 
   # Filter for Polycomb-marked anchors
@@ -874,16 +875,17 @@ run_polycomb_analysis <- function(plot_data, output_dir, timepoint) {
   )
 
   save_outputs(plot_result, polycomb_data, output_dir,
-               "deg_loop_anchor_violin_polycomb", timepoint, "polycomb")
+               "5B_deg_loop_anchor_violin_polycomb", timepoint, "polycomb", tsv_dir = tsv_dir)  # Original: "deg_loop_anchor_violin_polycomb"
 
   return(plot_result)
 }
 
 #' Task 2d extended: Analysis by all chromatin states
 #' @param plot_data Merged DEG-anchor data with chromatin state info
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param timepoint Timepoint label
-run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint) {
+#' @param tsv_dir Output directory for TSVs
+run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint, tsv_dir = NULL) {
   cat("\n=== Task 2d Extended: All Chromatin States ===\n")
 
   # Count genes per chromatin state
@@ -963,13 +965,13 @@ run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint) {
   n_panels <- length(valid_states)
   plot_width <- min(12, max(6, n_panels * 3))
 
-  save_plot_multiformat(p, output_dir, "deg_loop_anchor_violin_by_chromatin_state",
+  save_plot_multiformat(p, output_dir, "5B_deg_loop_anchor_violin_by_chromatin_state",  # Original: "deg_loop_anchor_violin_by_chromatin_state"
                         width = plot_width, height = 6)
 
-  # Save summary to tables directory
-  tables_dir <- file.path(output_dir, "tables")
-  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
-  summary_file <- file.path(tables_dir, "deg_loop_chromatin_state_summary.tsv")
+  # Save summary to TSV directory
+  if (is.null(tsv_dir)) tsv_dir <- output_dir
+  dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
+  summary_file <- file.path(tsv_dir, "5B_deg_loop_chromatin_state_summary.tsv")  # Original: file.path(output_dir, "tables", "deg_loop_chromatin_state_summary.tsv")
   write_tsv(state_summary, summary_file)
   cat(sprintf("  Saved: %s\n", summary_file))
 
@@ -991,7 +993,7 @@ run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint) {
       significant = p_adj < 0.05
     )
 
-  tests_file <- file.path(tables_dir, "deg_loop_chromatin_state_tests.tsv")
+  tests_file <- file.path(tsv_dir, "5B_deg_loop_chromatin_state_tests.tsv")  # Original: file.path(tables_dir, "deg_loop_chromatin_state_tests.tsv")
   write_tsv(state_tests, tests_file)
   cat(sprintf("  Saved: %s\n", tests_file))
 
@@ -1000,10 +1002,11 @@ run_chromatin_state_analysis <- function(plot_data, output_dir, timepoint) {
 
 #' Task 2e: Permutation test for statistical robustness
 #' @param plot_data Merged DEG-anchor data
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param timepoint Timepoint label
 #' @param n_permutations Number of permutations (default: N_PERMUTATIONS config)
-run_permutation_test <- function(plot_data, output_dir, timepoint, n_permutations = N_PERMUTATIONS) {
+#' @param tsv_dir Output directory for TSVs
+run_permutation_test <- function(plot_data, output_dir, timepoint, n_permutations = N_PERMUTATIONS, tsv_dir = NULL) {
   cat("\n=== Task 2e: Permutation Testing ===\n")
 
   # Check data requirements
@@ -1069,13 +1072,13 @@ run_permutation_test <- function(plot_data, output_dir, timepoint, n_permutation
   # Save outputs
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-  # Save plot to subfolder
-  save_plot_multiformat(p, output_dir, "deg_loop_permutation_test", width = 7, height = 5)
+  # Save plot
+  save_plot_multiformat(p, output_dir, "5B_deg_loop_permutation_test", width = 7, height = 5)  # Original: "deg_loop_permutation_test"
 
-  # Save statistics to statistics directory
-  stats_dir <- file.path(output_dir, "statistics")
-  dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
-  stats_file <- file.path(stats_dir, "deg_loop_permutation_statistics.txt")
+  # Save statistics to TSV directory
+  if (is.null(tsv_dir)) tsv_dir <- output_dir
+  dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
+  stats_file <- file.path(tsv_dir, "5B_deg_loop_permutation_statistics.txt")  # Original: file.path(output_dir, "statistics", "deg_loop_permutation_statistics.txt")
   stats_lines <- c(
     "===========================================",
     sprintf("Permutation Test Results: %s", timepoint),
@@ -1133,9 +1136,10 @@ classify_loop_type <- function(loop_type) {
 
 #' Task 2f: Loop type stratified analysis
 #' @param plot_data Merged DEG-anchor data with loop_type
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param timepoint Timepoint label
-run_loop_type_analysis <- function(plot_data, output_dir, timepoint) {
+#' @param tsv_dir Output directory for TSVs
+run_loop_type_analysis <- function(plot_data, output_dir, timepoint, tsv_dir = NULL) {
   cat("\n=== Task 2f: Loop Type Analysis (P-E, E-E, P-P, Polycomb) ===\n")
 
   # Check if loop_type column exists
@@ -1232,14 +1236,14 @@ run_loop_type_analysis <- function(plot_data, output_dir, timepoint) {
   n_panels <- length(valid_categories)
   plot_width <- min(12, max(6, n_panels * 3))
 
-  # Save plot to subfolder
-  save_plot_multiformat(p, output_dir, "deg_loop_violin_by_loop_type",
+  # Save plot
+  save_plot_multiformat(p, output_dir, "2H_late_deg_violin_by_loop_type",  # Original: "deg_loop_violin_by_loop_type"
                         width = plot_width, height = 6)
 
-  # Save summary to tables directory
-  tables_dir <- file.path(output_dir, "tables")
-  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
-  summary_file <- file.path(tables_dir, "deg_loop_type_summary.tsv")
+  # Save summary to TSV directory
+  if (is.null(tsv_dir)) tsv_dir <- output_dir
+  dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
+  summary_file <- file.path(tsv_dir, "5B_deg_loop_type_summary.tsv")  # Original: file.path(output_dir, "tables", "deg_loop_type_summary.tsv")
   write_tsv(type_summary, summary_file)
   cat(sprintf("  Saved: %s\n", summary_file))
 
@@ -1261,7 +1265,7 @@ run_loop_type_analysis <- function(plot_data, output_dir, timepoint) {
       significant = p_adj < 0.05
     )
 
-  tests_file <- file.path(tables_dir, "deg_loop_type_tests.tsv")
+  tests_file <- file.path(tsv_dir, "5B_deg_loop_type_tests.tsv")  # Original: file.path(tables_dir, "deg_loop_type_tests.tsv")
   write_tsv(type_tests, tests_file)
   cat(sprintf("  Saved: %s\n", tests_file))
 
@@ -1270,9 +1274,10 @@ run_loop_type_analysis <- function(plot_data, output_dir, timepoint) {
 
 #' Task 2g: Correlation between loop strength and gene expression
 #' @param plot_data Merged DEG-anchor data with logFC_loop
-#' @param output_dir Output directory
+#' @param output_dir Output directory for plots
 #' @param timepoint Timepoint label
-run_correlation_analysis <- function(plot_data, output_dir, timepoint) {
+#' @param tsv_dir Output directory for TSVs
+run_correlation_analysis <- function(plot_data, output_dir, timepoint, tsv_dir = NULL) {
   cat("\n=== Task 2g: Loop-Expression Correlation Analysis ===\n")
 
   # Check if logFC_loop column exists
@@ -1373,16 +1378,16 @@ run_correlation_analysis <- function(plot_data, output_dir, timepoint) {
   # Save outputs
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-  # Save main correlation plot to subfolder
-  save_plot_multiformat(p1, output_dir, "deg_loop_expression_correlation", width = 7, height = 6)
+  # Save main correlation plot
+  save_plot_multiformat(p1, output_dir, "5B_deg_loop_expression_correlation", width = 7, height = 6)  # Original: "deg_loop_expression_correlation"
 
-  # Save split correlation plot to subfolder
-  save_plot_multiformat(p2, output_dir, "deg_loop_expression_correlation_by_direction", width = 10, height = 5)
+  # Save split correlation plot
+  save_plot_multiformat(p2, output_dir, "5B_deg_loop_expression_correlation_by_direction", width = 10, height = 5)  # Original: "deg_loop_expression_correlation_by_direction"
 
-  # Save statistics to statistics directory
-  stats_dir <- file.path(output_dir, "statistics")
-  dir.create(stats_dir, recursive = TRUE, showWarnings = FALSE)
-  stats_file <- file.path(stats_dir, "deg_loop_correlation_statistics.txt")
+  # Save statistics to TSV directory
+  if (is.null(tsv_dir)) tsv_dir <- output_dir
+  dir.create(tsv_dir, recursive = TRUE, showWarnings = FALSE)
+  stats_file <- file.path(tsv_dir, "5B_deg_loop_correlation_statistics.txt")  # Original: file.path(output_dir, "statistics", "deg_loop_correlation_statistics.txt")
   stats_lines <- c(
     "===========================================",
     sprintf("Loop-Expression Correlation Analysis: %s", timepoint),
@@ -1504,39 +1509,38 @@ process_timepoint <- function(timepoint) {
     return(NULL)
   }
 
-  # Save complete merged dataset to tables directory
+  # Save complete merged dataset to TSV directory
   dir.create(config$output_dir, recursive = TRUE, showWarnings = FALSE)
-  tables_dir <- file.path(config$output_dir, "tables")
-  dir.create(tables_dir, recursive = TRUE, showWarnings = FALSE)
-  full_output_file <- file.path(tables_dir, "deg_anchor_genes.tsv")
+  dir.create(config$tsv_dir, recursive = TRUE, showWarnings = FALSE)        # Original: file.path(config$output_dir, "tables")
+  full_output_file <- file.path(config$tsv_dir, "5B_deg_anchor_genes.tsv")  # Original: file.path(tables_dir, "deg_anchor_genes.tsv")
   write_tsv(plot_data, full_output_file)
   cat(sprintf("\n[Saved] Complete gene list: %s\n", full_output_file))
 
   results <- list()
 
-  # Task 2b: Basic analysis
-  results$basic <- run_basic_analysis(plot_data, config$output_dir, config$label)
+  # Task 2b: Basic analysis (5B plots + TSVs go to figure_5)
+  results$basic <- run_basic_analysis(plot_data, config$fig5_plot_dir, config$label, tsv_dir = config$tsv_dir)  # Original: (plot_data, config$output_dir, config$label)
 
   # Task 2c-i: Distance-focused analysis (long-range lost vs short-range gained)
-  results$distance_focused <- run_distance_focused_analysis(plot_data, config$output_dir, config$label)
+  results$distance_focused <- run_distance_focused_analysis(plot_data, config$fig5_plot_dir, config$label, tsv_dir = config$tsv_dir)  # Original: (plot_data, config$output_dir, config$label)
 
   # Task 2c-ii: Full distance stratification
-  results$distance_stratified <- run_distance_stratified_analysis(plot_data, config$output_dir, config$label)
+  results$distance_stratified <- run_distance_stratified_analysis(plot_data, config$fig5_plot_dir, config$label, tsv_dir = config$tsv_dir)  # Original: (plot_data, config$output_dir, config$label)
 
   # Task 2d: Polycomb-focused analysis
-  results$polycomb <- run_polycomb_analysis(plot_data, config$output_dir, config$label)
+  results$polycomb <- run_polycomb_analysis(plot_data, config$fig5_plot_dir, config$label, tsv_dir = config$tsv_dir)  # Original: (plot_data, config$output_dir, config$label)
 
   # Task 2d extended: All chromatin states
-  results$chromatin_states <- run_chromatin_state_analysis(plot_data, config$output_dir, config$label)
+  results$chromatin_states <- run_chromatin_state_analysis(plot_data, config$fig5_plot_dir, config$label, tsv_dir = config$tsv_dir)  # Original: (plot_data, config$output_dir, config$label)
 
   # Task 2e: Permutation testing for statistical robustness
-  results$permutation <- run_permutation_test(plot_data, config$output_dir, config$label)
+  results$permutation <- run_permutation_test(plot_data, config$fig5_plot_dir, config$label, tsv_dir = config$tsv_dir)  # Original: (plot_data, config$output_dir, config$label)
 
-  # Task 2f: Loop type analysis (P-E, E-E, P-P, Polycomb)
-  results$loop_type <- run_loop_type_analysis(plot_data, config$output_dir, config$label)
+  # Task 2f: Loop type analysis (P-E, E-E, P-P, Polycomb) -- 2H plot goes to figure_2
+  results$loop_type <- run_loop_type_analysis(plot_data, config$output_dir, config$label, tsv_dir = config$tsv_dir)  # Original: (plot_data, config$output_dir, config$label)
 
   # Task 2g: Correlation between loop strength and gene expression
-  results$correlation <- run_correlation_analysis(plot_data, config$output_dir, config$label)
+  results$correlation <- run_correlation_analysis(plot_data, config$fig5_plot_dir, config$label, tsv_dir = config$tsv_dir)  # Original: (plot_data, config$output_dir, config$label)
 
   cat("\n")
   cat(sprintf("Completed %s timepoint\n", timepoint))

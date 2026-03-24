@@ -29,7 +29,7 @@ suppressPackageStartupMessages({
 })
 
 # Load multi-format output utility for PDF + SVG + JPEG output
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # ==============================================================================
 # TIMEPOINT CONFIGURATION
@@ -37,15 +37,24 @@ source("scripts/utils/multi_format_output.R")
 
 # Input files by timepoint
 INPUT_FILES <- list(
-  late = "25042-late_outputs/merged_loops/characterized_loops.tsv",
-  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"
+  late = "data/upstream/loop_calls/late_characterized_loops.tsv",  # Original: "25042-late_outputs/merged_loops/characterized_loops.tsv"
+  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/
 )
 
 # Output directories by timepoint (standalone, not via symlink)
+# Original: OUTPUT_DIRS <- list(late = "output/loops_visualization_extended/late", early = "output/loops_visualization_extended/early")
 OUTPUT_DIRS <- list(
-  late = "output/loops_visualization_extended/late",
-  early = "output/loops_visualization_extended/early"
+  late = "output/loops_visualization_extended/late",  # TODO: not in data/ (legacy base dir for non-mapped outputs)
+  early = "output/loops_visualization_extended/early"  # TODO: not in data/
 )
+
+# Mapped output directories for data/ layout
+PLOT_DIR_2B <- "data/plots/figure_2_loop_rewiring"   # CDF, bar, density, scatter, stratified volcano
+PLOT_DIR_2H <- "data/plots/figure_2_loop_rewiring"   # Looptype distance heatmap
+PLOT_DIR_5A <- "data/plots/figure_5_model_functional" # GO comparison
+PLOT_DIR_SUPP <- "data/plots/supplemental"            # Rewriting summary
+TSV_DIR_2B <- "data/tsvs/figure_2_loop_rewiring"     # Distance shift summary
+TSV_DIR_5A <- "data/tsvs/figure_5_model_functional"   # GO TSVs
 
 # Parse command line arguments
 parse_arguments <- function() {
@@ -119,6 +128,11 @@ run_distance_analysis <- function(timepoint) {
   input_file <- INPUT_FILES[[timepoint]]
   OUTPUT_DIR <- OUTPUT_DIRS[[timepoint]]
   dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
+  dir.create(PLOT_DIR_2B, showWarnings = FALSE, recursive = TRUE)
+  dir.create(PLOT_DIR_5A, showWarnings = FALSE, recursive = TRUE)
+  dir.create(PLOT_DIR_SUPP, showWarnings = FALSE, recursive = TRUE)
+  dir.create(TSV_DIR_2B, showWarnings = FALSE, recursive = TRUE)
+  dir.create(TSV_DIR_5A, showWarnings = FALSE, recursive = TRUE)
 
   cat("Input file:", input_file, "\n")
   cat("Output directory:", OUTPUT_DIR, "\n\n")
@@ -241,8 +255,8 @@ p1_cdf <- ggplot(loops_directional, aes(x = loop_distance_kb, color = direction_
     panel.grid.minor = element_blank()
   )
 
-save_multiformat_ggplot(p1_cdf, file.path(OUTPUT_DIR, "01_distance_cdf_by_direction"), width = 8, height = 6)
-cat("Saved: 01_distance_cdf_by_direction.pdf\n")
+save_multiformat_ggplot(p1_cdf, file.path(PLOT_DIR_2B, sprintf("2B_%s_distance_cdf_by_direction", timepoint)), width = 8, height = 6)  # Original: file.path(OUTPUT_DIR, "01_distance_cdf_by_direction")
+cat("Saved: 2B_", timepoint, "_distance_cdf_by_direction.pdf\n", sep = "")
 
 # ==============================================================================
 # FIGURE 2: Distance Category Bar Chart with Fold-Enrichment
@@ -307,8 +321,8 @@ p2_bar <- ggplot(category_summary,
     axis.text.x = element_text(size = 11)
   )
 
-save_multiformat_ggplot(p2_bar, file.path(OUTPUT_DIR, "02_distance_category_barplot"), width = 9, height = 7)
-cat("Saved: 02_distance_category_barplot.pdf\n")
+save_multiformat_ggplot(p2_bar, file.path(PLOT_DIR_2B, sprintf("2B_%s_distance_category_barplot", timepoint)), width = 9, height = 7)  # Original: file.path(OUTPUT_DIR, "02_distance_category_barplot")
+cat("Saved: 2B_", timepoint, "_distance_category_barplot.pdf\n", sep = "")
 
 # ==============================================================================
 # FIGURE 3: Density Plot with Median Annotations
@@ -354,8 +368,8 @@ p3_density <- ggplot(loops_directional, aes(x = loop_distance_kb, fill = directi
     panel.grid.minor = element_blank()
   )
 
-save_multiformat_ggplot(p3_density, file.path(OUTPUT_DIR, "03_distance_density_overlay"), width = 8, height = 6)
-cat("Saved: 03_distance_density_overlay.pdf\n")
+save_multiformat_ggplot(p3_density, file.path(PLOT_DIR_2B, sprintf("2B_%s_distance_density_overlay", timepoint)), width = 8, height = 6)  # Original: file.path(OUTPUT_DIR, "03_distance_density_overlay")
+cat("Saved: 2B_", timepoint, "_distance_density_overlay.pdf\n", sep = "")
 
 # ==============================================================================
 # FIGURE 4: LogFC vs Distance Scatter with Trend
@@ -395,8 +409,8 @@ p4_scatter <- ggplot(loops_directional,
     panel.grid.minor = element_blank()
   )
 
-save_multiformat_ggplot(p4_scatter, file.path(OUTPUT_DIR, "04_logfc_vs_distance_scatter"), width = 8, height = 6)
-cat("Saved: 04_logfc_vs_distance_scatter.pdf\n")
+save_multiformat_ggplot(p4_scatter, file.path(PLOT_DIR_2B, sprintf("2B_%s_logfc_vs_distance_scatter", timepoint)), width = 8, height = 6)  # Original: file.path(OUTPUT_DIR, "04_logfc_vs_distance_scatter")
+cat("Saved: 2B_", timepoint, "_logfc_vs_distance_scatter.pdf\n", sep = "")
 
 # ==============================================================================
 # FIGURE 5: Distance-Stratified Volcano Plots
@@ -444,8 +458,8 @@ p5_volcano <- ggplot(loops_directional,
     panel.grid.minor = element_blank()
   )
 
-save_multiformat_ggplot(p5_volcano, file.path(OUTPUT_DIR, "05_distance_stratified_volcano"), width = 10, height = 8)
-cat("Saved: 05_distance_stratified_volcano.pdf\n")
+save_multiformat_ggplot(p5_volcano, file.path(PLOT_DIR_2B, sprintf("2B_%s_distance_stratified_volcano", timepoint)), width = 10, height = 8)  # Original: file.path(OUTPUT_DIR, "05_distance_stratified_volcano")
+cat("Saved: 2B_", timepoint, "_distance_stratified_volcano.pdf\n", sep = "")
 
 # ==============================================================================
 # FIGURE 6: Loop Type x Distance Heatmap
@@ -498,8 +512,8 @@ p6_heatmap <- ggplot(looptype_distance,
     panel.grid = element_blank()
   )
 
-save_multiformat_ggplot(p6_heatmap, file.path(OUTPUT_DIR, "06_looptype_distance_heatmap"), width = 9, height = 8)
-cat("Saved: 06_looptype_distance_heatmap.pdf\n")
+save_multiformat_ggplot(p6_heatmap, file.path(PLOT_DIR_2H, sprintf("2H_%s_looptype_distance_heatmap", timepoint)), width = 9, height = 8)  # Original: file.path(OUTPUT_DIR, "06_looptype_distance_heatmap")
+cat("Saved: 2H_", timepoint, "_looptype_distance_heatmap.pdf\n", sep = "")
 
 # ==============================================================================
 # FIGURE 7: ChIP-seq Mark x Distance x Direction Analysis
@@ -590,8 +604,8 @@ p7_combined <- p7a / p7b +
     )
   )
 
-save_multiformat_ggplot(p7_combined, file.path(OUTPUT_DIR, "07_chipseq_distance_analysis"), width = 11, height = 10)
-cat("Saved: 07_chipseq_distance_analysis.pdf\n")
+save_multiformat_ggplot(p7_combined, file.path(PLOT_DIR_2B, sprintf("2B_%s_chipseq_distance_analysis", timepoint)), width = 11, height = 10)  # Original: file.path(OUTPUT_DIR, "07_chipseq_distance_analysis")
+cat("Saved: 2B_", timepoint, "_chipseq_distance_analysis.pdf\n", sep = "")
 
 # ==============================================================================
 # FIGURE 8: GO Enrichment Comparison (Long Lost vs Short Gained)
@@ -659,13 +673,13 @@ tryCatch({
   # Save GO results
   if (nrow(as.data.frame(go_long_lost)) > 0) {
     write_tsv(as.data.frame(go_long_lost),
-              file.path(OUTPUT_DIR, "go_long_lost_loops.tsv"))
+              file.path(TSV_DIR_5A, sprintf("5A_%s_go_long_lost_loops.tsv", timepoint)))  # Original: file.path(OUTPUT_DIR, "go_long_lost_loops.tsv")
     cat("Saved GO results for long lost loops\n")
   }
 
   if (nrow(as.data.frame(go_short_gained)) > 0) {
     write_tsv(as.data.frame(go_short_gained),
-              file.path(OUTPUT_DIR, "go_short_gained_loops.tsv"))
+              file.path(TSV_DIR_5A, sprintf("5A_%s_go_short_gained_loops.tsv", timepoint)))  # Original: file.path(OUTPUT_DIR, "go_short_gained_loops.tsv")
     cat("Saved GO results for short gained loops\n")
   }
 
@@ -708,8 +722,8 @@ tryCatch({
       ) +
       guides(color = "none")
 
-    save_multiformat_ggplot(p8_go, file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short"), width = 14, height = 8)
-    cat("Saved: 08_go_comparison_long_vs_short.pdf\n")
+    save_multiformat_ggplot(p8_go, file.path(PLOT_DIR_5A, sprintf("5A_%s_go_comparison_long_vs_short", timepoint)), width = 14, height = 8)  # Original: file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short")
+    cat("Saved: 5A_", timepoint, "_go_comparison_long_vs_short.pdf\n", sep = "")
   } else {
     cat("Insufficient GO terms for comparison plot\n")
     # Create a placeholder figure
@@ -720,7 +734,7 @@ tryCatch({
       theme_void() +
       labs(title = "GO Enrichment Analysis")
 
-    save_multiformat_ggplot(p8_placeholder, file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short"), width = 10, height = 6)
+    save_multiformat_ggplot(p8_placeholder, file.path(PLOT_DIR_5A, sprintf("5A_%s_go_comparison_long_vs_short", timepoint)), width = 10, height = 6)  # Original: file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short")
   }
 
 }, error = function(e) {
@@ -735,7 +749,7 @@ tryCatch({
     theme_void() +
     labs(title = "GO Enrichment Analysis")
 
-  save_multiformat_ggplot(p8_error, file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short"), width = 10, height = 6)
+  save_multiformat_ggplot(p8_error, file.path(PLOT_DIR_5A, sprintf("5A_%s_go_comparison_long_vs_short", timepoint)), width = 10, height = 6)  # Original: file.path(OUTPUT_DIR, "08_go_comparison_long_vs_short")
 })
 
 # ==============================================================================
@@ -860,8 +874,8 @@ p9_combined <- (p9a | p9b) / (p9c | p9d) / p_legend +
     )
   )
 
-save_multiformat_ggplot(p9_combined, file.path(OUTPUT_DIR, "09_loop_rewriting_summary"), width = 11, height = 10)
-cat("Saved: 09_loop_rewriting_summary.pdf\n")
+save_multiformat_ggplot(p9_combined, file.path(PLOT_DIR_SUPP, sprintf("loop_rewriting_summary_%s", timepoint)), width = 11, height = 10)  # Original: file.path(OUTPUT_DIR, "09_loop_rewriting_summary")
+cat("Saved: loop_rewriting_summary_", timepoint, ".pdf\n", sep = "")
 
 # ==============================================================================
 # EXPORT STATISTICS AND SUMMARY TABLES
@@ -893,11 +907,11 @@ distance_shift_summary <- loops_directional %>%
   ) %>%
   arrange(match(distance_category, DISTANCE_ORDER))
 
-write_tsv(distance_shift_summary, file.path(OUTPUT_DIR, "distance_shift_summary.tsv"))
-cat("Saved: distance_shift_summary.tsv\n")
+write_tsv(distance_shift_summary, file.path(TSV_DIR_2B, sprintf("2B_%s_distance_shift_summary.tsv", timepoint)))  # Original: file.path(OUTPUT_DIR, "distance_shift_summary.tsv")
+cat("Saved: 2B_", timepoint, "_distance_shift_summary.tsv\n", sep = "")
 
 # Statistics text file
-stats_file <- file.path(OUTPUT_DIR, "distance_shift_statistics.txt")
+stats_file <- file.path(TSV_DIR_2B, sprintf("2B_%s_distance_shift_statistics.txt", timepoint))  # Original: file.path(OUTPUT_DIR, "distance_shift_statistics.txt")
 sink(stats_file)
 cat("=== LOOP DISTANCE SHIFT ANALYSIS: STATISTICAL SUMMARY ===\n")
 cat("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")

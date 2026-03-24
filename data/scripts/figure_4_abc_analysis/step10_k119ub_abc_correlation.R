@@ -25,12 +25,12 @@
 # CONFIGURATION
 # =============================================================================
 
-ABC_PAIRS_FILE   <- "results/delta_abc_all_pairs.tsv"
-DIFFBIND_FILE    <- "K119ub_allATAC_diffbind_results_summit_appended_ap.txt"
-ANNOTATED_FILE   <- "results/delta_abc_annotated.tsv"
-FIGURE_DIR       <- "results/figures/k119ub_correlation"
-RESULTS_DIR      <- "results"
-MULTIFORMAT_UTIL <- "../scripts/utils/multi_format_output.R"
+ABC_PAIRS_FILE   <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv"  # Original: results/delta_abc_all_pairs.tsv
+DIFFBIND_FILE    <- "data/upstream/chip_peaks/k119ub_enhancer_signal.tsv"  # Original: K119ub_allATAC_diffbind_results_summit_appended_ap.txt
+ANNOTATED_FILE   <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_with_rnaseq.tsv"  # Original: results/delta_abc_annotated.tsv
+FIGURE_DIR       <- "data/plots/figure_4_abc_analysis"  # Original: results/figures/k119ub_correlation
+RESULTS_DIR      <- "data/tsvs/figure_4_abc_analysis"  # Original: results
+MULTIFORMAT_UTIL <- "data/scripts/_shared/multi_format_output.R"  # Original: ../scripts/utils/multi_format_output.R
 
 cat("================================================================================\n")
 cat("STEP 10: K119UB-ABC ENHANCER CORRELATION ANALYSIS (DiffBind)\n")
@@ -65,6 +65,7 @@ stopifnot(file.exists(DIFFBIND_FILE))
 stopifnot(file.exists(ANNOTATED_FILE))
 
 dir.create(FIGURE_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(RESULTS_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # =============================================================================
 # LOAD DATA
@@ -207,7 +208,7 @@ dist_agg <- tapply(abc$distance, abc$enh_key, median)
 enh_merged$median_distance <- dist_agg[enh_merged$enh_key]
 
 # Save merged enhancer data
-merged_out <- file.path(RESULTS_DIR, "k119ub_abc_enhancer_merged.tsv")
+merged_out <- file.path(RESULTS_DIR, "4F_k119ub_abc_enhancer_merged.tsv")  # Original: k119ub_abc_enhancer_merged.tsv
 write.table(enh_merged, merged_out, sep = "\t", quote = FALSE, row.names = FALSE)
 cat(sprintf("  Saved merged data: %s (%d rows)\n", merged_out, nrow(enh_merged)))
 
@@ -415,7 +416,7 @@ for (sig_class in levels(enh_merged$k119ub_sig)) {
 # SAVE CORRELATION SUMMARY
 # =============================================================================
 
-summary_out <- file.path(RESULTS_DIR, "k119ub_abc_correlation_summary.tsv")
+summary_out <- file.path(RESULTS_DIR, "4F_k119ub_abc_correlation_summary.tsv")  # Original: k119ub_abc_correlation_summary.tsv
 write.table(corr_table, summary_out, sep = "\t", quote = FALSE, row.names = FALSE)
 cat(sprintf("\n  Saved correlation summary: %s\n", summary_out))
 
@@ -458,7 +459,7 @@ p01 <- ggplot(enh_merged, aes(x = delta_activity, y = Fold)) +
     title = "Enhancer activity change vs K119ub change"
   ) +
   theme_pub
-save_multiformat_ggplot(p01, file.path(FIGURE_DIR, "01_delta_activity_vs_k119ub"), width = 7, height = 6)
+save_multiformat_ggplot(p01, file.path(FIGURE_DIR, "4F_delta_activity_vs_k119ub"), width = 7, height = 6)  # Original: 01_delta_activity_vs_k119ub
 
 # --- Panel 02: mean delta_unnorm vs K119ub Fold ---
 p02 <- ggplot(enh_merged, aes(x = mean_delta_unnorm, y = Fold)) +
@@ -476,7 +477,7 @@ p02 <- ggplot(enh_merged, aes(x = mean_delta_unnorm, y = Fold)) +
     title = "Unnormalized ABC change vs K119ub change"
   ) +
   theme_pub
-save_multiformat_ggplot(p02, file.path(FIGURE_DIR, "02_delta_unnorm_vs_k119ub"), width = 7, height = 6)
+save_multiformat_ggplot(p02, file.path(FIGURE_DIR, "4F_delta_unnorm_vs_k119ub"), width = 7, height = 6)  # Original: 02_delta_unnorm_vs_k119ub
 
 # --- Panel 03: mean delta_ABC vs K119ub Fold ---
 p03 <- ggplot(enh_merged, aes(x = mean_delta_abc, y = Fold)) +
@@ -494,7 +495,7 @@ p03 <- ggplot(enh_merged, aes(x = mean_delta_abc, y = Fold)) +
     title = "Normalized ABC change vs K119ub change"
   ) +
   theme_pub
-save_multiformat_ggplot(p03, file.path(FIGURE_DIR, "03_delta_abc_vs_k119ub"), width = 7, height = 6)
+save_multiformat_ggplot(p03, file.path(FIGURE_DIR, "4F_delta_abc_vs_k119ub"), width = 7, height = 6)  # Original: 03_delta_abc_vs_k119ub
 
 # --- Panel 04: Boxplot K119ub Fold by ABC category ---
 p04 <- ggplot(enh_merged, aes(x = abc_category, y = Fold, fill = abc_category)) +
@@ -508,7 +509,7 @@ p04 <- ggplot(enh_merged, aes(x = abc_category, y = Fold, fill = abc_category)) 
     subtitle = sprintf("Kruskal-Wallis p = %.2e", kw$p.value)
   ) +
   theme_pub
-save_multiformat_ggplot(p04, file.path(FIGURE_DIR, "04_boxplot_k119ub_by_abc_category"), width = 7, height = 6)
+save_multiformat_ggplot(p04, file.path(FIGURE_DIR, "4F_boxplot_k119ub_by_abc_category"), width = 7, height = 6)  # Original: 04_boxplot_k119ub_by_abc_category
 
 # --- Panel 05: Boxplot K119ub Conc_mut by ABC category (log2 scale, no log1p) ---
 p05 <- ggplot(enh_merged, aes(x = abc_category, y = Conc_mut, fill = abc_category)) +
@@ -520,7 +521,7 @@ p05 <- ggplot(enh_merged, aes(x = abc_category, y = Conc_mut, fill = abc_categor
     title = "Absolute K119ub level in KO by ABC category"
   ) +
   theme_pub
-save_multiformat_ggplot(p05, file.path(FIGURE_DIR, "05_boxplot_k119ub_mut_by_category"), width = 7, height = 6)
+save_multiformat_ggplot(p05, file.path(FIGURE_DIR, "4F_boxplot_k119ub_mut_by_category"), width = 7, height = 6)  # Original: 05_boxplot_k119ub_mut_by_category
 
 # --- Panel 06: Violin + box overlay ---
 p06 <- ggplot(enh_merged, aes(x = abc_category, y = Fold, fill = abc_category)) +
@@ -534,7 +535,7 @@ p06 <- ggplot(enh_merged, aes(x = abc_category, y = Fold, fill = abc_category)) 
     title = "K119ub change distribution by ABC category"
   ) +
   theme_pub
-save_multiformat_ggplot(p06, file.path(FIGURE_DIR, "06_violin_k119ub_by_category"), width = 7, height = 6)
+save_multiformat_ggplot(p06, file.path(FIGURE_DIR, "4F_violin_k119ub_by_category"), width = 7, height = 6)  # Original: 06_violin_k119ub_by_category
 
 # --- Panel 07: Faceted scatter by distance bin ---
 enh_dist <- enh_merged[!is.na(enh_merged$dist_bin), ]
@@ -571,7 +572,7 @@ p07 <- ggplot(enh_dist, aes(x = delta_activity, y = Fold)) +
   ) +
   theme_pub +
   theme(strip.text = element_text(size = 9))
-save_multiformat_ggplot(p07, file.path(FIGURE_DIR, "07_scatter_by_distance"), width = 14, height = 4)
+save_multiformat_ggplot(p07, file.path(FIGURE_DIR, "4F_scatter_by_distance"), width = 14, height = 4)  # Original: 07_scatter_by_distance
 
 # --- Panel 08: Faceted scatter by H3K27ac status ---
 enh_h3k <- enh_merged[!is.na(enh_merged$has_H3K27ac), ]
@@ -606,7 +607,7 @@ p08 <- ggplot(enh_h3k, aes(x = delta_activity, y = Fold)) +
     title = "Activity-K119ub correlation by H3K27ac status"
   ) +
   theme_pub
-save_multiformat_ggplot(p08, file.path(FIGURE_DIR, "08_scatter_by_h3k27ac"), width = 10, height = 5)
+save_multiformat_ggplot(p08, file.path(FIGURE_DIR, "4F_scatter_by_h3k27ac"), width = 10, height = 5)  # Original: 08_scatter_by_h3k27ac
 
 # --- Panel 09: K119ub volcano at ABC enhancers ---
 p09 <- ggplot(enh_merged, aes(x = Fold, y = -log10(FDR))) +
@@ -625,7 +626,7 @@ p09 <- ggplot(enh_merged, aes(x = Fold, y = -log10(FDR))) +
     title = "K119ub differential signal at ABC enhancers"
   ) +
   theme_pub
-save_multiformat_ggplot(p09, file.path(FIGURE_DIR, "09_k119ub_volcano_at_enhancers"), width = 7, height = 6)
+save_multiformat_ggplot(p09, file.path(FIGURE_DIR, "4C_k119ub_volcano_at_enhancers"), width = 7, height = 6)  # Original: 09_k119ub_volcano_at_enhancers
 
 # --- Panel 10: Contingency heatmap — ABC category × K119ub significance ---
 # Reshape log2(O/E) matrix for ggplot
@@ -657,7 +658,7 @@ p10 <- ggplot(heatmap_df, aes(x = k119ub_sig, y = abc_category, fill = log2_oe))
   ) +
   theme_pub +
   theme(panel.grid = element_blank())
-save_multiformat_ggplot(p10, file.path(FIGURE_DIR, "10_contingency_heatmap"), width = 7, height = 5)
+save_multiformat_ggplot(p10, file.path(FIGURE_DIR, "4F_contingency_heatmap"), width = 7, height = 5)  # Original: 10_contingency_heatmap
 
 # --- Panel 11: delta_activity by K119ub significance class ---
 # Kruskal-Wallis for this grouping
@@ -674,7 +675,7 @@ p11 <- ggplot(enh_merged, aes(x = k119ub_sig, y = delta_activity, fill = k119ub_
     subtitle = sprintf("Kruskal-Wallis p = %.2e", kw_sig$p.value)
   ) +
   theme_pub
-save_multiformat_ggplot(p11, file.path(FIGURE_DIR, "11_delta_activity_by_k119ub_sig"), width = 7, height = 6)
+save_multiformat_ggplot(p11, file.path(FIGURE_DIR, "4F_delta_activity_by_k119ub_sig"), width = 7, height = 6)  # Original: 11_delta_activity_by_k119ub_sig
 
 # --- Panel 12: delta_activity vs K119ub Fold colored by significance ---
 p12 <- ggplot(enh_merged, aes(x = delta_activity, y = Fold, color = k119ub_sig)) +
@@ -694,7 +695,7 @@ p12 <- ggplot(enh_merged, aes(x = delta_activity, y = Fold, color = k119ub_sig))
   ) +
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))) +
   theme_pub
-save_multiformat_ggplot(p12, file.path(FIGURE_DIR, "12_scatter_colored_by_significance"), width = 8, height = 6)
+save_multiformat_ggplot(p12, file.path(FIGURE_DIR, "4F_scatter_colored_by_significance"), width = 8, height = 6)  # Original: 12_scatter_colored_by_significance
 
 # =============================================================================
 # FINAL SUMMARY

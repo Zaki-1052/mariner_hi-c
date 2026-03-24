@@ -38,7 +38,7 @@ suppressPackageStartupMessages({
   library(GenomicRanges)
 })
 
-source("scripts/utils/multi_format_output.R")
+source("data/scripts/_shared/multi_format_output.R")  # Original: source("scripts/utils/multi_format_output.R")
 
 # ==============================================================================
 # SECTION 2: CONFIGURATION
@@ -46,27 +46,26 @@ source("scripts/utils/multi_format_output.R")
 
 # Input files by timepoint (characterized_loops.tsv from downstream_analysis.R)
 INPUT_FILES <- list(
-  late = "25042-late_outputs/merged_loops/characterized_loops.tsv",
-  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"
+  late = "data/upstream/loop_calls/late_characterized_loops.tsv",  # Original: "25042-late_outputs/merged_loops/characterized_loops.tsv"
+  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/
 )
 
 # ChIP-seq peak files by timepoint
 PEAK_FILES <- list(
   late = list(
-    h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",
-    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed"
+    h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",  # TODO: not in data/
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed"  # TODO: not in data/
   ),
   early = list(
-    h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",
-    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed"
+    h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",  # TODO: not in data/
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed"  # TODO: not in data/
   )
 )
 
 # Output directories by timepoint
-OUTPUT_DIRS <- list(
-  late = "output/loops_k27me3_filtered/late",
-  early = "output/loops_k27me3_filtered/early"
-)
+# Original: OUTPUT_DIRS <- list(late = "output/loops_k27me3_filtered/late", early = "output/loops_k27me3_filtered/early")
+PLOT_DIR <- "data/plots/figure_2_loop_rewiring"
+TSV_DIR  <- "data/tsvs/figure_2_loop_rewiring"
 
 # Color scheme (consistent with loop_distance_analysis.R)
 COLORS <- list(
@@ -311,11 +310,12 @@ run_k27me3_filtered_analysis <- function(timepoint) {
   # Set paths
   input_file <- INPUT_FILES[[timepoint]]
   peak_files <- PEAK_FILES[[timepoint]]
-  OUTPUT_DIR <- OUTPUT_DIRS[[timepoint]]
-  dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
+  dir.create(PLOT_DIR, showWarnings = FALSE, recursive = TRUE)  # Original: dir.create(OUTPUT_DIRS[[timepoint]], ...)
+  dir.create(TSV_DIR, showWarnings = FALSE, recursive = TRUE)  # Original: dir.create(OUTPUT_DIRS[[timepoint]], ...)
 
   cat("Input file:", input_file, "\n")
-  cat("Output directory:", OUTPUT_DIR, "\n\n")
+  cat("Plot directory:", PLOT_DIR, "\n")
+  cat("TSV directory:", TSV_DIR, "\n\n")
 
   # Validate input
   if (!file.exists(input_file)) {
@@ -448,13 +448,13 @@ run_k27me3_filtered_analysis <- function(timepoint) {
   generate_cdf_plot(
     loops_k27me3_anchored,
     "K27me3-Anchored Loops",
-    file.path(OUTPUT_DIR, "01_cdf_k27me3_anchored"),
+    file.path(PLOT_DIR, "2E_cdf_k27me3_anchored"),  # Original: file.path(OUTPUT_DIR, "01_cdf_k27me3_anchored")
     COLORS
   )
   generate_density_plot(
     loops_k27me3_anchored,
     "K27me3-Anchored Loops",
-    file.path(OUTPUT_DIR, "03_density_k27me3_anchored"),
+    file.path(PLOT_DIR, "2E_density_k27me3_anchored"),  # Original: file.path(OUTPUT_DIR, "03_density_k27me3_anchored")
     COLORS
   )
 
@@ -463,13 +463,13 @@ run_k27me3_filtered_analysis <- function(timepoint) {
   generate_cdf_plot(
     loops_k27me3_both,
     "K27me3-K27me3 Loops (Both Anchors)",
-    file.path(OUTPUT_DIR, "01_cdf_k27me3_both"),
+    file.path(PLOT_DIR, "2E_cdf_k27me3_both"),  # Original: file.path(OUTPUT_DIR, "01_cdf_k27me3_both")
     COLORS
   )
   generate_density_plot(
     loops_k27me3_both,
     "K27me3-K27me3 Loops (Both Anchors)",
-    file.path(OUTPUT_DIR, "03_density_k27me3_both"),
+    file.path(PLOT_DIR, "2E_density_k27me3_both"),  # Original: file.path(OUTPUT_DIR, "03_density_k27me3_both")
     COLORS
   )
 
@@ -478,13 +478,13 @@ run_k27me3_filtered_analysis <- function(timepoint) {
   generate_cdf_plot(
     loops_bivalent,
     "Bivalent-Anchored Loops",
-    file.path(OUTPUT_DIR, "01_cdf_bivalent"),
+    file.path(PLOT_DIR, "2E_cdf_bivalent"),  # Original: file.path(OUTPUT_DIR, "01_cdf_bivalent")
     COLORS
   )
   generate_density_plot(
     loops_bivalent,
     "Bivalent-Anchored Loops",
-    file.path(OUTPUT_DIR, "03_density_bivalent"),
+    file.path(PLOT_DIR, "2E_density_bivalent"),  # Original: file.path(OUTPUT_DIR, "03_density_bivalent")
     COLORS
   )
 
@@ -540,7 +540,7 @@ run_k27me3_filtered_analysis <- function(timepoint) {
   stats_bivalent <- calc_subset_stats(loops_bivalent, "Bivalent")
 
   # Write summary file
-  summary_file <- file.path(OUTPUT_DIR, "filter_summary.txt")
+  summary_file <- file.path(TSV_DIR, "2E_k27me3_filter_summary.txt")  # Original: file.path(OUTPUT_DIR, "filter_summary.txt")
   sink(summary_file)
   cat("=== H3K27me3-Filtered Loop Distance Analysis Summary ===\n")
   cat("Generated:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")
@@ -610,15 +610,16 @@ run_k27me3_filtered_analysis <- function(timepoint) {
   # ============================================================================
 
   cat("\n=== Analysis Complete for", toupper(timepoint), "===\n")
-  cat("Output directory:", OUTPUT_DIR, "\n")
+  cat("Plot directory:", PLOT_DIR, "\n")
+  cat("TSV directory:", TSV_DIR, "\n")
   cat("Files generated:\n")
-  cat("  - 01_cdf_k27me3_anchored.{pdf,svg,jpg}\n")
-  cat("  - 01_cdf_k27me3_both.{pdf,svg,jpg}\n")
-  cat("  - 01_cdf_bivalent.{pdf,svg,jpg}\n")
-  cat("  - 03_density_k27me3_anchored.{pdf,svg,jpg}\n")
-  cat("  - 03_density_k27me3_both.{pdf,svg,jpg}\n")
-  cat("  - 03_density_bivalent.{pdf,svg,jpg}\n")
-  cat("  - filter_summary.txt\n")
+  cat("  - 2E_cdf_k27me3_anchored.{pdf,svg,jpg}\n")
+  cat("  - 2E_cdf_k27me3_both.{pdf,svg,jpg}\n")
+  cat("  - 2E_cdf_bivalent.{pdf,svg,jpg}\n")
+  cat("  - 2E_density_k27me3_anchored.{pdf,svg,jpg}\n")
+  cat("  - 2E_density_k27me3_both.{pdf,svg,jpg}\n")
+  cat("  - 2E_density_bivalent.{pdf,svg,jpg}\n")
+  cat("  - 2E_k27me3_filter_summary.txt\n")
 }
 
 # ==============================================================================
@@ -635,7 +636,6 @@ for (tp in TIMEPOINTS_TO_RUN) {
 
 cat("\n=== All timepoints complete ===\n")
 cat("Output directories:\n")
-for (tp in TIMEPOINTS_TO_RUN) {
-  cat(sprintf("  - %s\n", OUTPUT_DIRS[[tp]]))
-}
+cat(sprintf("  Plots: %s\n", PLOT_DIR))
+cat(sprintf("  TSVs:  %s\n", TSV_DIR))
 cat("\nEnd time:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n")

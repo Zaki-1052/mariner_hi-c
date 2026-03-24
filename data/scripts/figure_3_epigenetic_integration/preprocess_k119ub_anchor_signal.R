@@ -23,8 +23,8 @@ parse_args <- function() {
   defaults <- list(
     ctrl   = "/expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_ctrl_merged.bw",
     mut    = "/expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_mut_merged.bw",
-    loops  = "25042-late_outputs/merged_loops/characterized_loops.tsv",
-    output = "peaks/k119ub_anchor_signal.tsv"
+    loops  = "data/upstream/loop_calls/late_characterized_loops.tsv",    # Original: "25042-late_outputs/merged_loops/characterized_loops.tsv"
+    output = "data/upstream/chip_peaks/k119ub_anchor_signal.tsv"         # Original: "peaks/k119ub_anchor_signal.tsv"
   )
 
   i <- 1

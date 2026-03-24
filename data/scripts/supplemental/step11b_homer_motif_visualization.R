@@ -18,7 +18,7 @@
 # CONFIGURATION
 # =============================================================================
 
-HOMER_BASE <- "results/enhancer_subset_analysis/homer_results/homer_results"
+HOMER_BASE <- "results/enhancer_subset_analysis/homer_results/homer_results"  # TODO: not in data/ (HOMER motif results from abc/ working dir)
 
 COMPARISONS <- c(
   "Activity_Lost_vs_Stable",
@@ -58,7 +58,7 @@ TF_FAMILY_COLORS <- c(
 )
 FAMILY_ORDER <- names(TF_FAMILY_COLORS)
 
-OUTPUT_DIR <- "results/enhancer_subset_analysis/homer_motif_viz"
+OUTPUT_DIR <- "data/plots/supplemental"  # Original: results/enhancer_subset_analysis/homer_motif_viz
 
 cat("================================================================================\n")
 cat("STEP 11B: HOMER MOTIF ENRICHMENT VISUALIZATION\n")
@@ -110,7 +110,7 @@ theme_pub <- theme_bw(base_size = 11) +
     legend.position = "bottom"
   )
 
-UTIL_PATH <- "../scripts/utils/multi_format_output.R"
+UTIL_PATH <- "data/scripts/_shared/multi_format_output.R"  # Original: UTIL_PATH <- "../scripts/utils/multi_format_output.R"
 stopifnot(file.exists(UTIL_PATH))
 source(UTIL_PATH)
 
@@ -694,7 +694,7 @@ summary_stats$dominant_family[is.na(summary_stats$dominant_family)] <- "None (no
 summary_stats$comparison_label <- COMPARISON_LABELS[summary_stats$comparison]
 
 write.table(summary_stats,
-            file.path(OUTPUT_DIR, "homer_motif_summary_stats.tsv"),
+            file.path("data/tsvs/supplemental", "homer_motif_summary_stats.tsv"),  # Original: file.path(OUTPUT_DIR, "homer_motif_summary_stats.tsv")
             sep = "\t", quote = FALSE, row.names = FALSE)
 cat("  Saved: homer_motif_summary_stats.tsv\n")
 

@@ -22,12 +22,13 @@ cat(sprintf("  Started: %s\n\n", Sys.time()))
 # CONFIGURATION
 # =============================================================================
 
-K119UB_FILE     <- "results/k119ub_abc_enhancer_merged.tsv"
-DISCORDANT_FILE <- "results/discordant_gene_characteristics.tsv"
-ABC_PAIRS_FILE  <- "results/delta_abc_all_pairs.tsv"
-ENH_CLASS_FILE  <- "results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv"
-OUTPUT_DIR      <- "results/figures/discordant_analysis"
-UTIL_PATH       <- "../scripts/utils/multi_format_output.R"
+K119UB_FILE     <- "data/upstream/chip_peaks/k119ub_enhancer_signal.tsv"  # Original: results/k119ub_abc_enhancer_merged.tsv
+DISCORDANT_FILE <- "data/tsvs/figure_4_abc_analysis/4B_discordant_gene_characteristics.tsv"  # Original: results/discordant_gene_characteristics.tsv
+ABC_PAIRS_FILE  <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv"  # Original: results/delta_abc_all_pairs.tsv
+ENH_CLASS_FILE  <- "data/tsvs/figure_4_abc_analysis/4D_enhancer_class_abc_metrics.tsv"  # Original: results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv
+OUTPUT_DIR      <- "data/plots/figure_4_abc_analysis"  # Original: results/figures/discordant_analysis
+TSV_DIR         <- "data/tsvs/figure_4_abc_analysis"  # Original: results/figures/discordant_analysis (TSV outputs)
+UTIL_PATH       <- "data/scripts/_shared/multi_format_output.R"  # Original: ../scripts/utils/multi_format_output.R
 
 stopifnot(file.exists(K119UB_FILE))
 stopifnot(file.exists(DISCORDANT_FILE))
@@ -37,6 +38,7 @@ stopifnot(file.exists(UTIL_PATH))
 source(UTIL_PATH)
 
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(TSV_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # Shared aesthetics
 theme_pub <- theme_bw(base_size = 11) +
@@ -213,7 +215,7 @@ p11 <- ggplot(merged, aes(x = linkage_group, y = Fold,
   theme_pub +
   theme(axis.text.x = element_text(size = 10))
 
-save_plot(p11, "11_k119ub_by_concordance_boxplot", w = 6, h = 5.5)
+save_plot(p11, "4B_k119ub_by_concordance_boxplot", w = 6, h = 5.5)  # Original: 11_k119ub_by_concordance_boxplot
 
 # =============================================================================
 # PLOT 12: K119ub SIGNIFICANCE RATE — BAR PLOT
@@ -265,7 +267,7 @@ p12 <- ggplot(sig_rate, aes(x = linkage_group, y = pct_sig,
   theme_pub +
   theme(axis.text.x = element_text(size = 10))
 
-save_plot(p12, "12_k119ub_significance_rate", w = 6, h = 5.5)
+save_plot(p12, "4B_k119ub_significance_rate", w = 6, h = 5.5)  # Original: 12_k119ub_significance_rate
 
 # =============================================================================
 # PLOT 13: K119ub vs DELTA ACTIVITY SCATTER
@@ -317,7 +319,7 @@ p13 <- ggplot(merged, aes(x = delta_activity, y = Fold,
   theme_pub +
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 2)))
 
-save_plot(p13, "13_k119ub_vs_delta_activity_scatter", w = 7, h = 6)
+save_plot(p13, "4B_k119ub_vs_delta_activity_scatter", w = 7, h = 6)  # Original: 13_k119ub_vs_delta_activity_scatter
 
 # =============================================================================
 # PLOT 14: K119ub FOLD × CONCORDANCE, FACETED BY ENHANCER CLASS
@@ -384,7 +386,7 @@ p14 <- ggplot(merged_cls,
   theme(axis.text.x = element_text(size = 8, angle = 30, hjust = 1),
         strip.text = element_text(size = 9))
 
-save_plot(p14, "14_k119ub_by_concordance_x_class", w = 9, h = 8)
+save_plot(p14, "4B_k119ub_by_concordance_x_class", w = 9, h = 8)  # Original: 14_k119ub_by_concordance_x_class
 
 # =============================================================================
 # SAVE SUMMARY TABLE
@@ -405,7 +407,7 @@ summary_tbl <- merged %>%
   )
 
 write.table(summary_tbl,
-            file.path(OUTPUT_DIR, "k119ub_concordance_summary.tsv"),
+            file.path(TSV_DIR, "4B_k119ub_concordance_summary.tsv"),  # Original: OUTPUT_DIR/k119ub_concordance_summary.tsv
             sep = "\t", quote = FALSE, row.names = FALSE)
 
 # =============================================================================
