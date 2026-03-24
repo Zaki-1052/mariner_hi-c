@@ -506,7 +506,7 @@ assign_go_groups_from_excel <- function(gene_symbols, config = GO_GROUPS_CONFIG)
   cat(sprintf("  Assigned %d genes to GO groups (%d to 'Other')\n",
               sum(result$go_group != "Other"), sum(result$go_group == "Other")))
 
-  list(groups = result, ego = NULL)
+  list(groups = result, ego = NULL, gene_sets = gene_sets)
 }
 
 # ==============================================================================
@@ -1167,12 +1167,43 @@ main <- function() {
     early_thresholds$min_layers <- 2L
   }
   filtered <- filter_network_genes(profile, early_thresholds)
-  write_tsv(filtered, file.path(tables_dir, "gene_structural_profile_filtered.tsv"))
 
   # ==========================================================================
-  # SECTION 4: Build Edges
+  # SECTION 4: Expand network with all GO top-set genes
   # ==========================================================================
-  cat("\n=== Section 4: Building edge list ===\n")
+  cat("\n=== Section 4: Expanding network with GO top-set genes ===\n")
+  go_result <- assign_go_groups_from_excel(filtered$gene)
+
+  # Add all top-set genes from the profile that aren't already in filtered
+  all_topset_genes <- unique(unlist(go_result$gene_sets))
+  missing_from_network <- setdiff(all_topset_genes, filtered$gene)
+  missing_in_profile <- profile %>% filter(gene %in% missing_from_network)
+  cat(sprintf("  Top-set genes not in structural top-%d: %d\n",
+              THRESHOLDS$max_nodes, length(missing_from_network)))
+  cat(sprintf("  Of those, found in gene profile: %d\n", nrow(missing_in_profile)))
+
+  if (nrow(missing_in_profile) > 0) {
+    filtered <- bind_rows(filtered, missing_in_profile)
+  }
+
+  # Re-run GO assignment on the expanded gene list
+  go_result <- assign_go_groups_from_excel(filtered$gene)
+  filtered  <- filtered %>% left_join(go_result$groups, by = "gene")
+
+  cat(sprintf("  Expanded network: %d total genes\n", nrow(filtered)))
+  write_tsv(filtered, file.path(tables_dir, "gene_structural_profile_filtered.tsv"))
+
+  # Write GO group assignments
+  go_assignment_df <- go_result$groups %>%
+    filter(go_group != "Other") %>%
+    arrange(go_group, gene)
+  write_tsv(go_assignment_df, file.path(tables_dir, "go_group_assignments.tsv"))
+  cat(sprintf("  Saved: go_group_assignments.tsv (%d assigned genes)\n", nrow(go_assignment_df)))
+
+  # ==========================================================================
+  # SECTION 5: Build Edges
+  # ==========================================================================
+  cat("\n=== Section 5: Building edge list ===\n")
   loop_edges <- build_loop_edges(filtered$gene, loops)
 
   if (!is.null(delta_abc)) {
@@ -1187,20 +1218,6 @@ main <- function() {
   }
   write_tsv(all_edges, file.path(tables_dir, "edge_list.tsv"))
   cat(sprintf("  Total edges: %d\n", nrow(all_edges)))
-
-  # ==========================================================================
-  # SECTION 5: GO Grouping
-  # ==========================================================================
-  cat("\n=== Section 5: Pre-defined GO gene grouping ===\n")
-  go_result <- assign_go_groups_from_excel(filtered$gene)
-  filtered  <- filtered %>% left_join(go_result$groups, by = "gene")
-
-  # Write GO group assignments
-  go_assignment_df <- go_result$groups %>%
-    filter(go_group != "Other") %>%
-    arrange(go_group, gene)
-  write_tsv(go_assignment_df, file.path(tables_dir, "go_group_assignments.tsv"))
-  cat(sprintf("  Saved: go_group_assignments.tsv (%d assigned genes)\n", nrow(go_assignment_df)))
 
   # ==========================================================================
   # SECTION 6: Build Network
