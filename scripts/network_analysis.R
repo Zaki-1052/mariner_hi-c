@@ -75,11 +75,26 @@ THRESHOLDS <- list(
   abc_delta_min        = 0.05,
   baseMean_min         = 10,
   shared_enh_delta_min = 0.005,
+  # NOTE: GO enrichment thresholds unused since switching to pre-defined
+
+  # GO groups from Go_term_selction.xlsx. Retained for reference/rollback.
   go_pvalue_cutoff     = 0.05,
   go_qvalue_cutoff     = 0.1,
   top_go_terms         = 10L,
   min_go_genes         = 3L,
   label_top_n          = 25L
+)
+
+# Pre-defined GO grouping from curated gene sets
+GO_GROUPS_CONFIG <- list(
+  excel_path = file.path(BASE_DIR, "peaks/Go_term_selction.xlsx"),
+  sheet      = "Sheet1",
+  skip_rows  = 2L,
+  categories = list(
+    "Cell Fate Commitment" = list(col_idx = 5L),
+    "Synapse Assembly"     = list(col_idx = 6L),
+    "Axon Guidance"        = list(col_idx = 7L)
+  )
 )
 
 COLORS <- list(
@@ -431,104 +446,67 @@ build_shared_enhancer_edges <- function(filtered_gene_set, delta_abc_pairs, delt
 }
 
 # ==============================================================================
-# 8. GO-BASED NODE GROUPING
+# 8. PRE-DEFINED GO-BASED NODE GROUPING
 # ==============================================================================
 
-assign_go_groups <- function(gene_symbols, top_n) {
-  mapping <- tryCatch({
-    AnnotationDbi::select(
-      org.Mm.eg.db,
-      keys = unique(gene_symbols),
-      columns = "ENTREZID",
-      keytype = "SYMBOL"
-    ) %>%
-      filter(!is.na(ENTREZID)) %>%
-      distinct(SYMBOL, .keep_all = TRUE)
-  }, error = function(e) {
-    cat(sprintf("  WARNING: Symbol-to-Entrez mapping failed: %s\n", e$message))
-    return(tibble(SYMBOL = character(), ENTREZID = character()))
-  })
+assign_go_groups_from_excel <- function(gene_symbols, config = GO_GROUPS_CONFIG) {
+  stopifnot(file.exists(config$excel_path))
 
-  if (nrow(mapping) == 0) {
-    cat("  WARNING: No gene mappings found. Assigning all to 'Other'\n")
-    return(tibble(gene = gene_symbols, go_group = "Other"))
+  cat(sprintf("  Loading curated GO gene sets from: %s\n", basename(config$excel_path)))
+
+  # Read sheet, skipping merged header rows to reach data
+  raw <- read_excel(config$excel_path, sheet = config$sheet,
+                    skip = config$skip_rows, col_names = FALSE)
+
+  # Extract gene lists from configured columns
+  gene_sets <- list()
+  for (category_name in names(config$categories)) {
+    col_idx <- config$categories[[category_name]]$col_idx
+    genes <- raw[[col_idx]]
+    genes <- genes[!is.na(genes)]
+    genes <- trimws(as.character(genes))
+    genes <- genes[!grepl("^Top sets", genes, ignore.case = TRUE)]
+    gene_sets[[category_name]] <- genes
+    cat(sprintf("    %s: %d genes in curated set\n", category_name, length(genes)))
   }
 
-  cat(sprintf("  Mapped %d/%d gene symbols to Entrez IDs\n", nrow(mapping), length(gene_symbols)))
+  # Check for overlaps (defensive -- currently none exist)
+  all_genes_flat <- unlist(gene_sets)
+  if (any(duplicated(all_genes_flat))) {
+    dup_genes <- unique(all_genes_flat[duplicated(all_genes_flat)])
+    cat(sprintf("  WARNING: %d genes in multiple categories: %s\n",
+                length(dup_genes), paste(dup_genes, collapse = ", ")))
+    cat("  Priority assignment: first listed category wins\n")
+  }
 
-  ego <- tryCatch({
-    enrichGO(
-      gene          = mapping$ENTREZID,
-      OrgDb         = org.Mm.eg.db,
-      keyType       = "ENTREZID",
-      ont           = "BP",
-      pAdjustMethod = "BH",
-      pvalueCutoff  = THRESHOLDS$go_pvalue_cutoff,
-      qvalueCutoff  = THRESHOLDS$go_qvalue_cutoff,
-      readable      = TRUE
+  # Build gene-to-category mapping (first match wins for overlaps)
+  gene_to_group <- tibble(gene = character(), go_group = character())
+  assigned <- character()
+  for (category_name in names(gene_sets)) {
+    new_genes <- setdiff(gene_sets[[category_name]], assigned)
+    gene_to_group <- bind_rows(
+      gene_to_group,
+      tibble(gene = new_genes, go_group = category_name)
     )
-  }, error = function(e) {
-    cat(sprintf("  WARNING: enrichGO failed: %s\n", e$message))
-    return(NULL)
-  })
-
-  if (is.null(ego) || nrow(as.data.frame(ego)) == 0) {
-    cat("  WARNING: No significant GO terms found. Assigning all to 'Other'\n")
-    return(list(
-      groups = tibble(gene = gene_symbols, go_group = "Other"),
-      ego = NULL
-    ))
+    assigned <- c(assigned, new_genes)
   }
 
-  ego_df <- as.data.frame(ego)
-  cat(sprintf("  Found %d significant GO BP terms\n", nrow(ego_df)))
-
-  # Filter to terms with >= min_go_genes network genes, then take top N
-  term_network_counts <- ego_df %>%
-    mutate(genes_list = str_split(geneID, "/")) %>%
-    unnest(genes_list) %>%
-    filter(genes_list %in% gene_symbols) %>%
-    count(ID, Description, p.adjust, name = "n_network_genes") %>%
-    filter(n_network_genes >= THRESHOLDS$min_go_genes) %>%
-    arrange(p.adjust)
-
-  top_terms <- ego_df %>%
-    filter(ID %in% term_network_counts$ID[seq_len(min(top_n, nrow(term_network_counts)))]) %>%
-    arrange(p.adjust)
-
-  cat(sprintf("  GO terms with >=%d network genes: %d (using top %d)\n",
-              THRESHOLDS$min_go_genes, nrow(term_network_counts), nrow(top_terms)))
-
-  gene_to_term <- top_terms %>%
-    mutate(genes = str_split(geneID, "/")) %>%
-    unnest(genes) %>%
-    filter(genes %in% gene_symbols) %>%
-    group_by(genes) %>%
-    slice_head(n = 1) %>%
-    ungroup() %>%
-    transmute(gene = genes, go_group = Description)
-
+  # Join with network genes
   result <- tibble(gene = gene_symbols) %>%
-    left_join(gene_to_term, by = "gene") %>%
+    left_join(gene_to_group, by = "gene") %>%
     mutate(go_group = replace_na(go_group, "Other"))
 
-  # Re-filter: move genes in under-populated clusters back to "Other"
-  cluster_sizes <- result %>%
-    filter(go_group != "Other") %>%
-    count(go_group)
-  small_clusters <- cluster_sizes$go_group[cluster_sizes$n < THRESHOLDS$min_go_genes]
-  if (length(small_clusters) > 0) {
-    cat(sprintf("  Removing %d under-populated clusters (<%d genes): %s\n",
-                length(small_clusters), THRESHOLDS$min_go_genes,
-                paste(small_clusters, collapse = ", ")))
-    result <- result %>%
-      mutate(go_group = ifelse(go_group %in% small_clusters, "Other", go_group))
+  # Report overlap with network
+  for (category_name in names(gene_sets)) {
+    n_in_network <- sum(result$go_group == category_name)
+    n_in_set <- length(gene_sets[[category_name]])
+    cat(sprintf("    %s: %d/%d genes found in network\n",
+                category_name, n_in_network, n_in_set))
   }
-
   cat(sprintf("  Assigned %d genes to GO groups (%d to 'Other')\n",
               sum(result$go_group != "Other"), sum(result$go_group == "Other")))
 
-  list(groups = result, ego = ego)
+  list(groups = result, ego = NULL)
 }
 
 # ==============================================================================
@@ -968,22 +946,56 @@ plot_degree_distribution <- function(g) {
     THEME_PUB
 }
 
-plot_go_enrichment <- function(ego) {
-  if (is.null(ego)) {
-    return(ggplot() + annotate("text", x = 0.5, y = 0.5, label = "No significant GO terms") + theme_void())
+plot_go_group_summary <- function(go_groups) {
+  if (is.null(go_groups) || nrow(go_groups) == 0) {
+    return(ggplot() + annotate("text", x = 0.5, y = 0.5,
+           label = "No GO group data") + theme_void())
   }
 
-  dotplot(ego, showCategory = 20) +
-    labs(title = "GO Biological Process Enrichment (Network Genes)") +
+  group_counts <- go_groups %>%
+    count(go_group) %>%
+    mutate(is_other = (go_group == "Other"))
+
+  # Order by count but keep "Other" last
+  category_order <- group_counts %>%
+    filter(!is_other) %>%
+    arrange(desc(n)) %>%
+    pull(go_group)
+  category_order <- c(category_order, "Other")
+  group_counts <- group_counts %>%
+    mutate(go_group = factor(go_group, levels = category_order))
+
+  n_categories <- sum(!group_counts$is_other)
+  fill_colors <- c(
+    scales::brewer_pal(palette = "Set2")(max(3, n_categories))[seq_len(n_categories)],
+    "grey80"
+  )
+  names(fill_colors) <- levels(group_counts$go_group)
+
+  n_assigned <- sum(group_counts$n[!group_counts$is_other])
+  n_other <- group_counts$n[group_counts$is_other]
+
+  ggplot(group_counts, aes(x = go_group, y = n, fill = go_group)) +
+    geom_col(width = 0.7) +
+    geom_text(aes(label = n), vjust = -0.3, size = 4) +
+    scale_fill_manual(values = fill_colors, guide = "none") +
+    labs(
+      title = "GO Category Membership (Pre-defined Gene Sets)",
+      subtitle = sprintf("%d genes assigned to categories | %d in 'Other'",
+                         n_assigned, n_other),
+      x = NULL,
+      y = "Number of Network Genes"
+    ) +
     THEME_PUB +
-    theme(axis.text.y = element_text(size = 9))
+    scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+    theme(axis.text.x = element_text(angle = 15, hjust = 1))
 }
 
 # ==============================================================================
 # 12. SUMMARY STATISTICS
 # ==============================================================================
 
-write_summary_statistics <- function(profile, filtered, edges, g, ego, output_dir) {
+write_summary_statistics <- function(profile, filtered, edges, g, output_dir) {
   ig <- as.igraph(g)
   node_df <- as_tibble(g)
   comp <- igraph::components(ig)
@@ -1017,7 +1029,7 @@ write_summary_statistics <- function(profile, filtered, edges, g, ego, output_di
     sprintf("Downregulated (log2FC < 0): %d\n", sum(filtered$log2FC < 0, na.rm = TRUE)),
     sprintf("DEGs (padj < 0.05): %d\n\n", sum(filtered$padj < 0.05, na.rm = TRUE)),
 
-    "--- GO Clusters ---\n",
+    "--- GO Clusters (Pre-defined from Go_term_selction.xlsx) ---\n",
     sprintf("Clustered genes: %d\n", sum(node_df$go_group != "Other")),
     sprintf("Peripheral genes (Other): %d\n", sum(node_df$go_group == "Other")),
     sprintf("Number of GO clusters: %d\n",
@@ -1055,19 +1067,6 @@ write_summary_statistics <- function(profile, filtered, edges, g, ego, output_di
       ifelse(is.na(row$log2FC), 0, row$log2FC),
       row$combined_score, row$n_layers
     ))
-  }
-
-  if (!is.null(ego)) {
-    ego_df <- as.data.frame(ego)
-    summary_text <- paste0(summary_text, sprintf(
-      "\n--- GO Enrichment ---\nTotal significant terms: %d\nTop 5 terms:\n", nrow(ego_df)
-    ))
-    for (i in seq_len(min(5, nrow(ego_df)))) {
-      summary_text <- paste0(summary_text, sprintf(
-        "  %d. %s (p.adj=%.2e, %d genes)\n",
-        i, ego_df$Description[i], ego_df$p.adjust[i], ego_df$Count[i]
-      ))
-    }
   }
 
   summary_text <- paste0(summary_text, sprintf(
@@ -1115,6 +1114,7 @@ main <- function() {
   if (!is.null(cfg$rnaseq_file)) {
     required_files$rnaseq_file <- cfg$rnaseq_file
   }
+  required_files$go_groups_excel <- GO_GROUPS_CONFIG$excel_path
   for (nm in names(required_files)) {
     stopifnot(file.exists(required_files[[nm]]))
     cat(sprintf("  [OK] %s\n", nm))
@@ -1191,14 +1191,16 @@ main <- function() {
   # ==========================================================================
   # SECTION 5: GO Grouping
   # ==========================================================================
-  cat("\n=== Section 5: GO enrichment & gene grouping ===\n")
-  go_result <- assign_go_groups(filtered$gene, THRESHOLDS$top_go_terms)
+  cat("\n=== Section 5: Pre-defined GO gene grouping ===\n")
+  go_result <- assign_go_groups_from_excel(filtered$gene)
   filtered  <- filtered %>% left_join(go_result$groups, by = "gene")
 
-  if (!is.null(go_result$ego)) {
-    ego_df <- as.data.frame(go_result$ego)
-    write_tsv(ego_df, file.path(tables_dir, "go_enrichment_results.tsv"))
-  }
+  # Write GO group assignments
+  go_assignment_df <- go_result$groups %>%
+    filter(go_group != "Other") %>%
+    arrange(go_group, gene)
+  write_tsv(go_assignment_df, file.path(tables_dir, "go_group_assignments.tsv"))
+  cat(sprintf("  Saved: go_group_assignments.tsv (%d assigned genes)\n", nrow(go_assignment_df)))
 
   # ==========================================================================
   # SECTION 6: Build Network
@@ -1239,16 +1241,16 @@ main <- function() {
   save_multiformat_ggplot(p_degree, file.path(plots_dir, "degree_distribution"),
                           width = 8, height = 6)
 
-  cat("  Rendering GO enrichment dotplot...\n")
-  p_go <- plot_go_enrichment(go_result$ego)
-  save_multiformat_ggplot(p_go, file.path(plots_dir, "go_enrichment_dotplot"),
-                          width = 10, height = 8)
+  cat("  Rendering GO group summary...\n")
+  p_go <- plot_go_group_summary(go_result$groups)
+  save_multiformat_ggplot(p_go, file.path(plots_dir, "go_group_summary"),
+                          width = 10, height = 6)
 
   # ==========================================================================
   # SECTION 8: Summary
   # ==========================================================================
   cat("\n=== Section 8: Writing summary ===\n")
-  write_summary_statistics(profile, filtered, all_edges, g, go_result$ego, cfg$output_dir)
+  write_summary_statistics(profile, filtered, all_edges, g, cfg$output_dir)
 
   cat(sprintf("\nDone! %s\n", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
   cat(sprintf("  Tables: %s\n", tables_dir))
