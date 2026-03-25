@@ -740,7 +740,7 @@ main <- function() {
 
       cat("\n## Processing MERGED loops ##\n")
 
-      merged_file <- "outputs/merged_loops/non_redundant_loops.rds"  # TODO: not in data/
+      merged_file <- "outputs/250402-late_outputs/merged_loops/non_redundant_loops.rds"  # Note: repo-relative path, not bundled in data/
 
       if (!file.exists(merged_file)) {
         cat(sprintf("  ⚠ Merged loops file not found: %s\n", merged_file))

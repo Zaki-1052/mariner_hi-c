@@ -38,14 +38,14 @@ source("data/scripts/_shared/multi_format_output.R")  # Original: source("script
 # Input files by timepoint
 INPUT_FILES <- list(
   late = "data/upstream/loop_calls/late_characterized_loops.tsv",  # Original: "25042-late_outputs/merged_loops/characterized_loops.tsv"
-  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/
+  early = "data/upstream/loop_calls/early_characterized_loops.tsv"  # Original: 250831-early_outputs/merged_loops/characterized_loops.tsv
 )
 
 # Output directories by timepoint (standalone, not via symlink)
 # Original: OUTPUT_DIRS <- list(late = "output/loops_visualization_extended/late", early = "output/loops_visualization_extended/early")
 OUTPUT_DIRS <- list(
-  late = "output/loops_visualization_extended/late",  # TODO: not in data/ (legacy base dir for non-mapped outputs)
-  early = "output/loops_visualization_extended/early"  # TODO: not in data/
+  late = "output/loops_visualization_extended/late",  # Note: repo-relative path, not bundled in data/ (legacy base dir for non-mapped outputs)
+  early = "output/loops_visualization_extended/early"  # Note: repo-relative path, not bundled in data/
 )
 
 # Mapped output directories for data/ layout

@@ -59,11 +59,11 @@ TIMEPOINT_CONFIG <- list(
   ),
   early = list(
     gene_summary      = NULL,
-    loops_file        = file.path(BASE_DIR, "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"), # TODO: not in data/
+    loops_file        = file.path(BASE_DIR, "data/upstream/loop_calls/early_characterized_loops.tsv"), # Original: outputs/250831-early_outputs/merged_loops/characterized_loops.tsv
     loops_gene_cols   = c(anchor1 = "anchor1_nearest_gene", anchor2 = "anchor2_nearest_gene"),
-    boundary_genes    = file.path(BASE_DIR, "tads/results/visualizations/early/enrichment/boundary_genes.tsv"), # TODO: not in data/
+    boundary_genes    = file.path(BASE_DIR, "tads/results/visualizations/early/enrichment/boundary_genes.tsv"), # Note: repo-relative path, not bundled in data/
     delta_abc_pairs   = NULL,
-    rnaseq_file       = file.path(BASE_DIR, "tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"), # TODO: not in data/
+    rnaseq_file       = file.path(BASE_DIR, "data/upstream/rna_seq/young_rnaseq_results.xlsx"), # Original: tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx
     output_dir        = file.path(BASE_DIR, "data/plots/figure_5_model_functional"), # Original: output/network_analysis/early
     tsv_dir           = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"), # Original: output/network_analysis/early/tables
     label             = "Early Timepoint (P13)",
@@ -89,7 +89,7 @@ THRESHOLDS <- list(
 
 # Pre-defined GO grouping from curated gene sets
 GO_GROUPS_CONFIG <- list(
-  excel_path = file.path(BASE_DIR, "peaks/Go_term_selction.xlsx"), # TODO: not in data/
+  excel_path = file.path(BASE_DIR, "data/upstream/Go_term_selction.xlsx"), # Original: peaks/Go_term_selction.xlsx
   sheet      = "Sheet1",
   skip_rows  = 2L,
   categories = list(

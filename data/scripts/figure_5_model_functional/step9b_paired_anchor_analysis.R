@@ -18,10 +18,10 @@ suppressPackageStartupMessages({
 source("data/scripts/_shared/multi_format_output.R") # Original: source("../scripts/utils/multi_format_output.R")
 
 # === CONFIGURATION ===
-ALL_LOOPS_FILE  <- "../outputs//250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe" # TODO: not in data/
+ALL_LOOPS_FILE  <- "outputs/250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe" # Note: repo-relative path, not bundled in data/
 DIFF_LOOPS_FILE <- "data/upstream/loop_calls/late_characterized_loops.tsv" # Original: ../outputs/250402-late_outputs/merged_loops/non_redundant_loops.tsv
 ABC_FILE        <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv" # Original: results/delta_abc_all_pairs.tsv
-TSS_FILE        <- "reference/mm10_tss.bed" # TODO: not in data/
+TSS_FILE        <- "abc/reference/mm10_tss.bed" # Note: repo-relative path, not bundled in data/
 RNASEQ_FILE     <- "data/tsvs/figure_5_model_functional/5B_gene_level_summary.tsv" # Original: results/gene_level_summary.tsv
 K119UB_FILE     <- "data/tsvs/figure_4_abc_analysis/4F_k119ub_abc_enhancer_merged.tsv" # Original: results/k119ub_abc_enhancer_merged.tsv
 OUT_TSV_DIR     <- "data/tsvs/figure_5_model_functional" # Original: results

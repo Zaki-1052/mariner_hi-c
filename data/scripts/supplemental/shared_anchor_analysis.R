@@ -66,8 +66,8 @@ TIMEPOINT_CONFIG <- list(
     label = "Late Timepoint"
   ),
   early = list(
-    loops_file = file.path(BASE_DIR, "250831-early_outputs/merged_loops/characterized_loops.tsv"),  # TODO: not in data/
-    rna_file = file.path(BASE_DIR, "tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"),  # TODO: not in data/
+    loops_file = file.path(BASE_DIR, "data/upstream/loop_calls/early_characterized_loops.tsv"),  # Original: 250831-early_outputs/merged_loops/characterized_loops.tsv
+    rna_file = file.path(BASE_DIR, "data/upstream/rna_seq/young_rnaseq_results.xlsx"),  # Original: tads/young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx
     output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_analysis/early (tables)
     output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/shared_anchor_analysis/early (plots)
     output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_analysis/early

@@ -65,7 +65,7 @@ cat("========================================\n\n")
 args <- commandArgs(trailingOnly = TRUE)
 
 # Default parameters
-input_file <- "tad_analysis/Bap1.diff.tad.txt"  # TODO: not in data/
+input_file <- "data/upstream/homer/Bap1.diff.tad.txt"  # Original: tad_analysis/Bap1.diff.tad.txt
 # Original: output_dir <- "outputs/tad_analysis"
 tsv_dir <- "data/tsvs/figure_1_tads_boundaries_compartments"
 plot_dir <- "data/plots/figure_1_tads_boundaries_compartments"

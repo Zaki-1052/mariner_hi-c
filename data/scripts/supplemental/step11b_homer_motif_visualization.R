@@ -18,7 +18,7 @@
 # CONFIGURATION
 # =============================================================================
 
-HOMER_BASE <- "results/enhancer_subset_analysis/homer_results/homer_results"  # TODO: not in data/ (HOMER motif results from abc/ working dir)
+HOMER_BASE <- "abc/results/enhancer_subset_analysis/homer_results/homer_results"  # Note: repo-relative path, not bundled in data/
 
 COMPARISONS <- c(
   "Activity_Lost_vs_Stable",

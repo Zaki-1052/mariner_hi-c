@@ -47,18 +47,18 @@ source("data/scripts/_shared/multi_format_output.R")  # Original: source("script
 # Input files by timepoint (characterized_loops.tsv from downstream_analysis.R)
 INPUT_FILES <- list(
   late = "data/upstream/loop_calls/late_characterized_loops.tsv",  # Original: "25042-late_outputs/merged_loops/characterized_loops.tsv"
-  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/
+  early = "data/upstream/loop_calls/early_characterized_loops.tsv"  # Original: 250831-early_outputs/merged_loops/characterized_loops.tsv
 )
 
 # ChIP-seq peak files by timepoint
 PEAK_FILES <- list(
   late = list(
-    h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",  # TODO: not in data/
-    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed"  # TODO: not in data/
+    h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",  # Note: repo-relative path, not bundled in data/
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed"  # Note: repo-relative path, not bundled in data/
   ),
   early = list(
-    h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",  # TODO: not in data/
-    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed"  # TODO: not in data/
+    h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",  # Note: repo-relative path, not bundled in data/
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed"  # Note: repo-relative path, not bundled in data/
   )
 )
 

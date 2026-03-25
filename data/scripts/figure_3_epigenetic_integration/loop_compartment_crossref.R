@@ -22,10 +22,10 @@ source("data/scripts/_shared/multi_format_output.R") # Original: source("scripts
 
 # --- Input paths ---
 LOOPS_FILE <- "data/upstream/loop_calls/late_characterized_loops.tsv"  # Original: "outputs/250402-late_outputs/loop_annotation_extended/late/extended_characterized_loops.tsv"
-DIFFPC_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/diffcompartments.txt"                   # TODO: not in data/
-ASHIFT_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/regions.Up_mut_vs_ctrl.regions.txt"     # TODO: not in data/
-BSHIFT_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/regions.Down_mut_vs_ctrl.regions.txt"   # TODO: not in data/
-DIFFTAD_FILE <- "tads/tad-pc-analysis/inputs/late/diffTAD/Bap1.diff.tad.txt"                    # TODO: not in data/
+DIFFPC_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/diffcompartments.txt"                   # Note: repo-relative path, not bundled in data/
+ASHIFT_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/regions.Up_mut_vs_ctrl.regions.txt"     # Note: repo-relative path, not bundled in data/
+BSHIFT_FILE <- "tads/tad-pc-analysis/inputs/late/diffPC/regions.Down_mut_vs_ctrl.regions.txt"   # Note: repo-relative path, not bundled in data/
+DIFFTAD_FILE <- "tads/tad-pc-analysis/inputs/late/diffTAD/Bap1.diff.tad.txt"                    # Note: repo-relative path, not bundled in data/
 
 # --- Output directories ---
 TSV_DIR  <- "data/tsvs/figure_3_epigenetic_integration"   # Original: OUTPUT_DIR <- "output/loop_compartment_crossref"

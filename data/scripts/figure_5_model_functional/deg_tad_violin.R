@@ -53,7 +53,7 @@ GREAT_MAX_EXTENSION <- 100000   # 100kb maximum extension
 # NOTE: Early timepoint direction correction is now applied upstream in 05_filter_blacklist.R
 TIMEPOINT_CONFIG <- list(
   late = list(
-    tad_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_late_tadcompare_differential.tsv"), # Original: results/late/final/tadcompare_final_filtered.tsv  # TODO: not in data/ — mapped to closest available boundary TSV
+    tad_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_late_tadcompare_filtered.tsv"), # Original: results/late/final/tadcompare_final_filtered.tsv
     rna_file = file.path(BASE_DIR, "data/upstream/rna_seq/adult_rnaseq_results.xlsx"), # Original: adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx
     output_dir = file.path(BASE_DIR, "data/plots/figure_5_model_functional"), # Original: results/visualizations/late/deg_violin
     tsv_dir    = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"), # Original: (same as output_dir)
@@ -61,8 +61,8 @@ TIMEPOINT_CONFIG <- list(
     flip_directions = FALSE
   ),
   early = list(
-    tad_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_early_tadcompare_differential.tsv"), # Original: results/early/final/tadcompare_final_filtered.tsv  # TODO: not in data/ — mapped to closest available boundary TSV
-    rna_file = file.path(BASE_DIR, "young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx"), # TODO: not in data/ — early RNA-seq xlsx not in data/upstream/rna_seq/
+    tad_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_early_tadcompare_filtered.tsv"), # Original: results/early/final/tadcompare_final_filtered.tsv
+    rna_file = file.path(BASE_DIR, "data/upstream/rna_seq/young_rnaseq_results.xlsx"), # Original: young_timepoint_rna-seq-Bap1Math1paired_ctrl_mut_Results.xlsx
     output_dir = file.path(BASE_DIR, "data/plots/figure_5_model_functional"), # Original: results/visualizations/early/deg_violin
     tsv_dir    = file.path(BASE_DIR, "data/tsvs/figure_5_model_functional"), # Original: (same as output_dir)
     label = "Early (Young)",

@@ -62,22 +62,22 @@ INPUT_FILES <- list(
 # ChIP-seq peak files by timepoint
 CHIP_PEAK_FILES <- list(
   early = list(
-    H3K27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",       # TODO: not in data/  # Original: ../peaks/beds/H3K27acCerebellumEarly2.bed
-    H3K27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",      # TODO: not in data/  # Original: ../peaks/beds/H3K27me3CerebellumEarly1.bed
-    H3K4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",       # TODO: not in data/  # Original: ../peaks/beds/H3K4me1CerebellumEarly1.bed
-    H3K4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",       # TODO: not in data/  # Original: ../peaks/beds/H3K4me3CerebellumEarly2.bed
-    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed",      # TODO: not in data/  # Original: ../peaks/beds/Bivalent_Cerebellum_Early.bed
-    ctcf     = "peaks/CTCF.bed",                                # TODO: not in data/  # Original: ../peaks/CTCF.bed
-    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"                   # TODO: not in data/  # Original: ../peaks/ctcf_motifs_mm10.bed
+    H3K27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",       # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/H3K27acCerebellumEarly2.bed
+    H3K27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",      # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/H3K27me3CerebellumEarly1.bed
+    H3K4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",       # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/H3K4me1CerebellumEarly1.bed
+    H3K4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",       # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/H3K4me3CerebellumEarly2.bed
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed",      # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/Bivalent_Cerebellum_Early.bed
+    ctcf     = "peaks/CTCF.bed",                                # Note: repo-relative path, not bundled in data/  # Original: ../peaks/CTCF.bed
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"                   # Note: repo-relative path, not bundled in data/  # Original: ../peaks/ctcf_motifs_mm10.bed
   ),
   late = list(
-    H3K27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",        # TODO: not in data/  # Original: ../peaks/beds/H3K27acCerebellumLate2.bed
-    H3K27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",       # TODO: not in data/  # Original: ../peaks/beds/H3K27me3CerebellumLate1.bed
-    H3K4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",        # TODO: not in data/  # Original: ../peaks/beds/H3K4me1CerebellumLate1.bed
-    H3K4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",        # TODO: not in data/  # Original: ../peaks/beds/H3K4me3CerebellumLate2.bed
-    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed",       # TODO: not in data/  # Original: ../peaks/beds/Bivalent_Cerebellum_Late.bed
-    ctcf     = "peaks/CTCF.bed",                                # TODO: not in data/  # Original: ../peaks/CTCF.bed
-    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"                   # TODO: not in data/  # Original: ../peaks/ctcf_motifs_mm10.bed
+    H3K27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",        # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/H3K27acCerebellumLate2.bed
+    H3K27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",       # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/H3K27me3CerebellumLate1.bed
+    H3K4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",        # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/H3K4me1CerebellumLate1.bed
+    H3K4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",        # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/H3K4me3CerebellumLate2.bed
+    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed",       # Note: repo-relative path, not bundled in data/  # Original: ../peaks/beds/Bivalent_Cerebellum_Late.bed
+    ctcf     = "peaks/CTCF.bed",                                # Note: repo-relative path, not bundled in data/  # Original: ../peaks/CTCF.bed
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"                   # Note: repo-relative path, not bundled in data/  # Original: ../peaks/ctcf_motifs_mm10.bed
   )
 )
 

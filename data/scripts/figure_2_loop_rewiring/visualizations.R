@@ -98,7 +98,7 @@ if (dir.exists(base_dir)) {
 }
 
 # Create output directories
-output_dir <- "outputs/visualizations"  # TODO: not in data/ (features/enrichment/loop_classification outputs)
+output_dir <- "outputs/visualizations"  # Note: repo-relative path, not bundled in data/ (features/enrichment/loop_classification outputs)
 volcano_output_dir <- "data/plots/figure_2_loop_rewiring"  # Original: file.path(output_dir, "volcano")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(volcano_output_dir, recursive = TRUE, showWarnings = FALSE)
@@ -120,7 +120,7 @@ cat("Loading Input Data\n")
 cat("\n========================================\n")
 
 # Load characterized loops from downstream analysis
-characterized_file <- "outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/
+characterized_file <- "outputs/250402-late_outputs/merged_loops/characterized_loops.tsv"  # Note: repo-relative path, not bundled in data/
 if (!file.exists(characterized_file)) {
   stop("ERROR: characterized_loops.tsv not found. Run downstream_analysis.R first.")
 }
@@ -131,7 +131,7 @@ cat(sprintf("  Up-regulated: %d\n", sum(loops_df$logFC > 0)))
 cat(sprintf("  Down-regulated: %d\n\n", sum(loops_df$logFC < 0)))
 
 # Load GInteractions object
-gi_file <- "outputs/merged_loops/non_redundant_loops.rds"  # TODO: not in data/
+gi_file <- "outputs/250402-late_outputs/merged_loops/non_redundant_loops.rds"  # Note: repo-relative path, not bundled in data/
 if (file.exists(gi_file)) {
   loops_gi <- readRDS(gi_file)
   cat(sprintf("✓ Loaded GInteractions object: %d interactions\n\n", length(loops_gi)))
@@ -284,7 +284,7 @@ for (res_kb in c(5, 10, 25)) {
 cat("Creating merged multi-resolution volcano plot...\n")
 
 # Check if merged_all_results exists (created by downstream_analysis.R)
-merged_all_results_file <- "outputs/merged_loops/merged_all_results.tsv"  # TODO: not in data/
+merged_all_results_file <- "outputs/250402-late_outputs/merged_loops/merged_all_results.tsv"  # Note: repo-relative path, not bundled in data/
 if (file.exists(merged_all_results_file)) {
   # Use the properly merged non-redundant dataset
   output_file <- file.path(volcano_output_dir, "2A_volcano_merged_multiresolution.pdf")  # Original: file.path(output_dir, "volcano", "volcano_merged_multiresolution.pdf")
@@ -324,7 +324,7 @@ if (file.exists(merged_all_results_file)) {
 # Create volcano plot for merged non-redundant loops
 cat("Creating volcano plot for merged non-redundant loops...\n")
 
-characterized_file <- "outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/ (already declared above)
+characterized_file <- "outputs/250402-late_outputs/merged_loops/characterized_loops.tsv"  # Note: repo-relative path, not bundled in data/ (already declared above)
 if (file.exists(characterized_file)) {
   output_file <- file.path(volcano_output_dir, "2A_volcano_nonredundant.pdf")  # Original: file.path(output_dir, "volcano", "volcano_nonredundant.pdf")
   create_publication_volcano(characterized_file, output_file, "Non-Redundant")

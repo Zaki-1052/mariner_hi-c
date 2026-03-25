@@ -333,16 +333,20 @@ GO analysis, DEG integration, network analysis, top gene heatmaps.
 
 | File | Category | Description |
 |------|----------|-------------|
-| `rna_seq/adult_rnaseq_results.xlsx` | RNA-seq | BAP1 WT vs KO differential expression |
+| `rna_seq/adult_rnaseq_results.xlsx` | RNA-seq | BAP1 WT vs KO differential expression (adult) |
+| `rna_seq/young_rnaseq_results.xlsx` | RNA-seq | BAP1 WT vs KO differential expression (P13) |
 | `chip_peaks/k119ub_anchor_signal.tsv` | ChIP-seq | H2AK119ub signal at loop anchors |
 | `chip_peaks/k119ub_enhancer_signal.tsv` | ChIP-seq | H2AK119ub signal at enhancers |
 | `loop_calls/late_characterized_loops.tsv` | Loops | Merged characterized loops (adult) |
+| `loop_calls/early_characterized_loops.tsv` | Loops | Merged characterized loops (P13) |
 | `loop_calls/late_merged_final.bedpe` | Loops | Final loop calls BEDPE (adult) |
 | `loop_calls/early_merged_final.bedpe` | Loops | Final loop calls BEDPE (P13) |
+| `homer/Bap1.diff.tad.txt` | HOMER | TAD differential expression input |
 | `diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt` | DiffBind | ATAC-seq differential accessibility (all peaks) |
 | `diffbind/K119ub_diffbind_results_summit_appended_ap.txt` | DiffBind | H2AK119ub differential binding |
 | `diffbind/K27ac_diffbind_results_summit_appended_ap.txt` | DiffBind | H3K27ac differential binding |
 | `diffbind/K27me3_diffbind_results_summit_appended_ap.txt` | DiffBind | H3K27me3 differential binding |
+| `Go_term_selction.xlsx` | Reference | GO term selection for network analysis |
 
 ---
 
