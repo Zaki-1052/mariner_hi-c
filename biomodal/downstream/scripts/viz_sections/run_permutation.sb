@@ -1,0 +1,80 @@
+#!/bin/bash
+#SBATCH --job-name=biomodal_perm
+#SBATCH --output=logs/biomodal_perm_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=128G
+#SBATCH --time=48:00:00
+#SBATCH --account=csd940
+
+# Biomodal Permutation Test Runner
+# Runs a single permutation section with configurable ntimes on HPC.
+#
+# Usage:
+#   sbatch scripts/viz_sections/run_permutation.sb 34 5000
+#   sbatch scripts/viz_sections/run_permutation.sb 35 5000
+#   sbatch scripts/viz_sections/run_permutation.sb 36 5000
+#   sbatch scripts/viz_sections/run_permutation.sb 37 10000
+#
+# Args:
+#   $1 = section number (34, 35, 36, or 37)
+#   $2 = number of permutations (e.g., 5000 or 10000)
+
+SECTION=${1:?"Error: section number required (34, 35, 36, or 37)"}
+NTIMES=${2:?"Error: number of permutations required (e.g., 5000)"}
+
+echo "========================================="
+echo "Biomodal Permutation Test: Section ${SECTION}"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Permutations: ${NTIMES}"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which Rscript
+Rscript --version
+echo ""
+
+# Run from downstream/ directory (required by _shared_config.R)
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream
+echo "Working directory: $(pwd)"
+echo ""
+
+# Map section number to script file
+case ${SECTION} in
+  34) SCRIPT="scripts/viz_sections/section_34_permutation_dmr_chromatin_marks.R" ;;
+  35) SCRIPT="scripts/viz_sections/section_35_permutation_atac_loops.R" ;;
+  36) SCRIPT="scripts/viz_sections/section_36_permutation_domains.R" ;;
+  37) SCRIPT="scripts/viz_sections/section_37_permutation_gene_level.R" ;;
+  *)  echo "ERROR: Unknown section ${SECTION}. Must be 34, 35, 36, or 37."
+      exit 1 ;;
+esac
+
+if [ ! -f "${SCRIPT}" ]; then
+  echo "ERROR: Script not found: ${SCRIPT}"
+  exit 1
+fi
+
+echo "Running: Rscript ${SCRIPT} ${NTIMES}"
+echo "--------------------------------------------------------------------------------"
+
+# FORCE_RERUN bypasses early-exit skip logic and internal RDS cache checks
+export FORCE_RERUN=1
+Rscript "${SCRIPT}" "${NTIMES}"
+EXIT_CODE=$?
+
+echo "--------------------------------------------------------------------------------"
+echo "Exit code: ${EXIT_CODE}"
+echo "End time: $(date)"
+echo "========================================="
+
+exit ${EXIT_CODE}
