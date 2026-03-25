@@ -68,6 +68,14 @@ H3K27AC_FILES <- list(
   mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P60_K27ac_mut_intersect.bed"
 )
 
+# DiffBind quantitative differential binding results (4 marks)
+DIFFBIND_FILES <- list(
+  atac   = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt",
+  k27ac  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt",
+  k27me3 = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/diffbind/K27me3_diffbind_results_summit_appended_ap.txt",
+  k119ub = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt"
+)
+
 # Hi-C loop annotation files (from mariner pipeline)
 LOOP_FILES <- list(
   late = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"
