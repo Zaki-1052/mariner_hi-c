@@ -60,17 +60,17 @@ OUTPUT_DIR <- TSV_DIR  # kept for summary text file writes
 # Use merged_all_results.tsv which contains ALL loops (including unchanged) across resolutions
 LOOP_FILES <- list(
   # All loops merged across resolutions (includes unchanged)
-  all_loops = "25042-late_outputs/merged_loops/merged_all_results.tsv",  # TODO: not in data/
+  all_loops = "outputs/250402-late_outputs/merged_loops/merged_all_results.tsv",  # Note: repo-relative path, not bundled in data/
   # Polycomb shared from task 3c (differential only)
-  polycomb_shared = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv"  # TODO: not in data/
+  polycomb_shared = "data/tsvs/supplemental/polycomb_shared_loops.tsv"  # Original: output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv
 )
 
 # Differential peak files (late timepoint for K27me3, H2AK119ub is not timepoint-specific)
 DIFF_PEAK_FILES <- list(
-  K27me3_down = "peaks/new/adult_K27me3_down.bed",       # TODO: not in data/
-  K27me3_up = "peaks/new/adult_K27me3_up.bed",           # TODO: not in data/
-  H2AK119ub_down = "peaks/new/H2AK119ub_down.bed",      # TODO: not in data/
-  H2AK119ub_up = "peaks/new/H2AK119ub_up.bed"           # TODO: not in data/
+  K27me3_down = "peaks/new/adult_K27me3_down.bed",       # Note: repo-relative path, not bundled in data/
+  K27me3_up = "peaks/new/adult_K27me3_up.bed",           # Note: repo-relative path, not bundled in data/
+  H2AK119ub_down = "peaks/new/H2AK119ub_down.bed",      # Note: repo-relative path, not bundled in data/
+  H2AK119ub_up = "peaks/new/H2AK119ub_up.bed"           # Note: repo-relative path, not bundled in data/
 )
 
 # Analysis parameters

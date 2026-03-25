@@ -78,7 +78,7 @@ cat("================================================\n\n")
 args <- commandArgs(trailingOnly = TRUE)
 
 # Default parameters
-input_file <- "tad_analysis/diffcompartments.txt"  # TODO: not in data/
+input_file <- "tads/tad-pc-analysis/inputs/late/diffPC/diffcompartments.txt"  # Note: repo-relative path, not bundled in data/
 # Original: output_dir <- "outputs/compartment_analysis"
 tsv_dir <- "data/tsvs/figure_1_tads_boundaries_compartments"
 plot_dir <- "data/plots/figure_1_tads_boundaries_compartments"

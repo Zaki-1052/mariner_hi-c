@@ -92,7 +92,7 @@ MARK_CONFIG <- list(
 # Input files by timepoint (extended_characterized_loops.tsv with pre-computed overlaps)
 INPUT_FILES <- list(
   late = "data/upstream/loop_calls/late_characterized_loops.tsv",  # Original: "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"
-  early = "peaks/loop_annotation_extended/early/extended_characterized_loops.tsv"  # TODO: not in data/
+  early = "peaks/loop_annotation_extended/early/extended_characterized_loops.tsv"  # Note: repo-relative path, not bundled in data/
 )
 
 # Output directories

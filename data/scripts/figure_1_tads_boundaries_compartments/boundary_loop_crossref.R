@@ -74,7 +74,7 @@ TIMEPOINT_CONFIG <- list(
     label = "Late Timepoint"
   ),
   early = list(
-    loops_file = file.path(BASE_DIR, "250831-early_outputs/merged_loops/characterized_loops.tsv"),  # TODO: not in data/
+    loops_file = file.path(BASE_DIR, "data/upstream/loop_calls/early_characterized_loops.tsv"),  # Original: 250831-early_outputs/merged_loops/characterized_loops.tsv
     # Original: file.path(BASE_DIR, "tads/results/early/final/tadcompare_final_filtered.tsv")
     boundaries_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_early_tadcompare_differential.tsv"),
     # Original: file.path(BASE_DIR, "tads/results/early/boundary_loop_analysis")

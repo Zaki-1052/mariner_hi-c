@@ -58,19 +58,19 @@ PLOT_DIR <- "data/plots/figure_3_epigenetic_integration"  # Original: (plots wen
 OUTPUT_DIR <- TSV_DIR  # kept for summary text file writes
 
 INPUT_FILES <- list(
-  all_loops        = "25042-late_outputs/merged_loops/merged_all_results.tsv",  # TODO: not in data/
+  all_loops        = "outputs/250402-late_outputs/merged_loops/merged_all_results.tsv",  # Note: repo-relative path, not bundled in data/
   diff_loops       = "data/upstream/loop_calls/late_characterized_loops.tsv",   # Original: "25042-late_outputs/merged_loops/characterized_loops.tsv"
-  shared_anchors   = "output/shared_anchor_analysis/late/tables/shared_anchors.tsv",  # TODO: not in data/
+  shared_anchors   = "data/tsvs/supplemental/shared_anchors.tsv",  # Original: output/shared_anchor_analysis/late/tables/shared_anchors.tsv
   shared_loops     = "data/tsvs/supplemental/shared_anchor_loops.tsv",          # Original: "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv"
-  polycomb_shared  = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv",  # TODO: not in data/
+  polycomb_shared  = "data/tsvs/supplemental/polycomb_shared_loops.tsv",  # Original: output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv
   signal           = "data/upstream/chip_peaks/k119ub_anchor_signal.tsv"        # Original: "peaks/k119ub_anchor_signal.tsv"
 )
 
 PEAK_FILES <- list(
-  K119ub_up   = "peaks/new/H2AK119ub_up.bed",                   # TODO: not in data/
-  K119ub_down = "peaks/new/H2AK119ub_down.bed",                 # TODO: not in data/
-  K119ub_ctrl = "peaks/intersect/P51_K119ub_ctrl_intersect.bed", # TODO: not in data/
-  K119ub_mut  = "peaks/intersect/P51_K119ub_mut_intersect.bed"   # TODO: not in data/
+  K119ub_up   = "peaks/new/H2AK119ub_up.bed",                   # Note: repo-relative path, not bundled in data/
+  K119ub_down = "peaks/new/H2AK119ub_down.bed",                 # Note: repo-relative path, not bundled in data/
+  K119ub_ctrl = "peaks/intersect/P51_K119ub_ctrl_intersect.bed", # Note: repo-relative path, not bundled in data/
+  K119ub_mut  = "peaks/intersect/P51_K119ub_mut_intersect.bed"   # Note: repo-relative path, not bundled in data/
 )
 
 DISTANCE_THRESHOLD <- 500000

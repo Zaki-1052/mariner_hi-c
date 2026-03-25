@@ -72,43 +72,43 @@ source("data/scripts/_shared/multi_format_output.R")  # Original: source("../scr
 # CTCF: Control ChIP-seq from Bing Ren's lab (adult mouse cerebellum)
 PEAK_FILES <- list(
   early = list(
-    h3k27ac    = "beds/H3K27acCerebellumEarly2.bed",    # TODO: not in data/
-    h3k27me3   = "beds/H3K27me3CerebellumEarly1.bed",   # TODO: not in data/
-    h3k4me1    = "beds/H3K4me1CerebellumEarly1.bed",    # TODO: not in data/
-    h3k4me3    = "beds/H3K4me3CerebellumEarly2.bed",    # TODO: not in data/
-    bivalent   = "beds/Bivalent_Cerebellum_Early.bed",   # TODO: not in data/
-    ctcf       = "CTCF.bed",                             # TODO: not in data/
-    ctcf_motif = "ctcf_motifs_mm10.bed"                  # TODO: not in data/
+    h3k27ac    = "beds/H3K27acCerebellumEarly2.bed",    # Note: repo-relative path, not bundled in data/
+    h3k27me3   = "beds/H3K27me3CerebellumEarly1.bed",   # Note: repo-relative path, not bundled in data/
+    h3k4me1    = "beds/H3K4me1CerebellumEarly1.bed",    # Note: repo-relative path, not bundled in data/
+    h3k4me3    = "beds/H3K4me3CerebellumEarly2.bed",    # Note: repo-relative path, not bundled in data/
+    bivalent   = "beds/Bivalent_Cerebellum_Early.bed",   # Note: repo-relative path, not bundled in data/
+    ctcf       = "CTCF.bed",                             # Note: repo-relative path, not bundled in data/
+    ctcf_motif = "ctcf_motifs_mm10.bed"                  # Note: repo-relative path, not bundled in data/
   ),
   late = list(
-    h3k27ac    = "beds/H3K27acCerebellumLate2.bed",     # TODO: not in data/
-    h3k27me3   = "beds/H3K27me3CerebellumLate1.bed",    # TODO: not in data/
-    h3k4me1    = "beds/H3K4me1CerebellumLate1.bed",     # TODO: not in data/
-    h3k4me3    = "beds/H3K4me3CerebellumLate2.bed",     # TODO: not in data/
-    bivalent   = "beds/Bivalent_Cerebellum_Late.bed",    # TODO: not in data/
-    ctcf       = "CTCF.bed",                             # TODO: not in data/
-    ctcf_motif = "ctcf_motifs_mm10.bed"                  # TODO: not in data/
+    h3k27ac    = "beds/H3K27acCerebellumLate2.bed",     # Note: repo-relative path, not bundled in data/
+    h3k27me3   = "beds/H3K27me3CerebellumLate1.bed",    # Note: repo-relative path, not bundled in data/
+    h3k4me1    = "beds/H3K4me1CerebellumLate1.bed",     # Note: repo-relative path, not bundled in data/
+    h3k4me3    = "beds/H3K4me3CerebellumLate2.bed",     # Note: repo-relative path, not bundled in data/
+    bivalent   = "beds/Bivalent_Cerebellum_Late.bed",    # Note: repo-relative path, not bundled in data/
+    ctcf       = "CTCF.bed",                             # Note: repo-relative path, not bundled in data/
+    ctcf_motif = "ctcf_motifs_mm10.bed"                  # Note: repo-relative path, not bundled in data/
   ),
   # Consensus-based for comparison (uses 4-replicate H3K4me3 for both bivalent AND Active_Promoter)
   late_consensus = list(
-    h3k27ac    = "beds/H3K27acCerebellumLate2.bed",                    # TODO: not in data/
-    h3k27me3   = "beds/H3K27me3CerebellumLate1.bed",                  # TODO: not in data/
-    h3k4me1    = "beds/H3K4me1CerebellumLate1.bed",                   # TODO: not in data/
-    h3k4me3    = "old/peaks-v1/consensus_H3K4me3_late_peaks.bed",     # TODO: not in data/  # 9,651 peaks (4-replicate consensus)
-    bivalent   = "beds/Bivalent_Consensus_Late.bed",                   # TODO: not in data/  # 688 peaks (from consensus H3K4me3)
-    ctcf       = "CTCF.bed",                                           # TODO: not in data/
-    ctcf_motif = "ctcf_motifs_mm10.bed"                                # TODO: not in data/
+    h3k27ac    = "beds/H3K27acCerebellumLate2.bed",                    # Note: repo-relative path, not bundled in data/
+    h3k27me3   = "beds/H3K27me3CerebellumLate1.bed",                  # Note: repo-relative path, not bundled in data/
+    h3k4me1    = "beds/H3K4me1CerebellumLate1.bed",                   # Note: repo-relative path, not bundled in data/
+    h3k4me3    = "peaks/old/peaks-v1/consensus_H3K4me3_late_peaks.bed",     # Note: repo-relative path, not bundled in data/  # 9,651 peaks (4-replicate consensus)
+    bivalent   = "beds/Bivalent_Consensus_Late.bed",                   # Note: repo-relative path, not bundled in data/  # 688 peaks (from consensus H3K4me3)
+    ctcf       = "CTCF.bed",                                           # Note: repo-relative path, not bundled in data/
+    ctcf_motif = "ctcf_motifs_mm10.bed"                                # Note: repo-relative path, not bundled in data/
   ),
   # P12_ctrl peaks for early comparison (more lenient peak calling than Cerebellum)
   # Demonstrates lack of single source of truth for ChIP-seq annotations
   early_p12ctrl = list(
-    h3k27ac    = "old/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # TODO: not in data/  # 28,042 peaks (vs 18,178 Cerebellum)
-    h3k27me3   = "old/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # TODO: not in data/  # 23,491 peaks (vs 12,473 Cerebellum)
-    h3k4me1    = "beds/H3K4me1CerebellumEarly1.bed",                   # TODO: not in data/  # same (no P12_ctrl version)
-    h3k4me3    = "beds/H3K4me3CerebellumEarly2.bed",                   # TODO: not in data/  # same (no P12_ctrl version)
-    bivalent   = "old/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed", # TODO: not in data/  # 933 peaks (Addison)
-    ctcf       = "CTCF.bed",                                           # TODO: not in data/
-    ctcf_motif = "ctcf_motifs_mm10.bed"                                # TODO: not in data/
+    h3k27ac    = "peaks/old/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # Note: repo-relative path, not bundled in data/  # 28,042 peaks (vs 18,178 Cerebellum)
+    h3k27me3   = "peaks/old/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # Note: repo-relative path, not bundled in data/  # 23,491 peaks (vs 12,473 Cerebellum)
+    h3k4me1    = "beds/H3K4me1CerebellumEarly1.bed",                   # Note: repo-relative path, not bundled in data/  # same (no P12_ctrl version)
+    h3k4me3    = "beds/H3K4me3CerebellumEarly2.bed",                   # Note: repo-relative path, not bundled in data/  # same (no P12_ctrl version)
+    bivalent   = "peaks/old/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed", # Note: repo-relative path, not bundled in data/  # 933 peaks (Addison)
+    ctcf       = "CTCF.bed",                                           # Note: repo-relative path, not bundled in data/
+    ctcf_motif = "ctcf_motifs_mm10.bed"                                # Note: repo-relative path, not bundled in data/
   )
 )
 

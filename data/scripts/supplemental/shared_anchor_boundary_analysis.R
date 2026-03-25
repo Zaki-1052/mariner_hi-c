@@ -62,7 +62,7 @@ TIMEPOINT_CONFIG <- list(
   late = list(
     shared_anchors_file = file.path(BASE_DIR, "data/tsvs/supplemental/shared_anchors.tsv"),  # Original: output/shared_anchor_analysis/late/tables/shared_anchors.tsv
     shared_loops_file = file.path(BASE_DIR, "data/tsvs/supplemental/shared_anchor_loops.tsv"),  # Original: output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv
-    boundaries_file = file.path(BASE_DIR, "tads/results/late/final/tadcompare_final_filtered.tsv"),  # TODO: not in data/
+    boundaries_file = file.path(BASE_DIR, "data/tsvs/figure_1_tads_boundaries_compartments/1B_late_tadcompare_filtered.tsv"),  # Original: tads/results/late/final/tadcompare_final_filtered.tsv
     all_loops_file = file.path(BASE_DIR, "data/upstream/loop_calls/late_characterized_loops.tsv"),  # Original: outputs/250402-late_outputs/merged_loops/characterized_loops.tsv
     output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_boundary_analysis/late
     output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_boundary_analysis/late (tables)
@@ -70,10 +70,10 @@ TIMEPOINT_CONFIG <- list(
     label = "Late Timepoint"
   ),
   early = list(
-    shared_anchors_file = file.path(BASE_DIR, "output/shared_anchor_analysis/early/tables/shared_anchors.tsv"),  # TODO: not in data/
-    shared_loops_file = file.path(BASE_DIR, "output/shared_anchor_analysis/early/tables/shared_anchor_loops.tsv"),  # TODO: not in data/
-    boundaries_file = file.path(BASE_DIR, "tads/results/early/final/tadcompare_final_filtered.tsv"),  # TODO: not in data/
-    all_loops_file = file.path(BASE_DIR, "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"),  # TODO: not in data/
+    shared_anchors_file = file.path(BASE_DIR, "output/shared_anchor_analysis/early/tables/shared_anchors.tsv"),  # Note: repo-relative path, not bundled in data/
+    shared_loops_file = file.path(BASE_DIR, "output/shared_anchor_analysis/early/tables/shared_anchor_loops.tsv"),  # Note: repo-relative path, not bundled in data/
+    boundaries_file = file.path(BASE_DIR, "tads/results/early/final/tadcompare_final_filtered.tsv"),  # Note: repo-relative path, not bundled in data/
+    all_loops_file = file.path(BASE_DIR, "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"),  # Note: repo-relative path, not bundled in data/
     output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_boundary_analysis/early
     output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/shared_anchor_boundary_analysis/early (tables)
     output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/shared_anchor_boundary_analysis/early (plots)

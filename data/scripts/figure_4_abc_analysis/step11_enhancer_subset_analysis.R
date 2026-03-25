@@ -31,12 +31,12 @@ ENHANCER_FILES <- c(
   Stable        = "data/tsvs/figure_4_abc_analysis/4D_enhancer_classes_stable.tsv"  # Original: enhancer_subsets/enhancer_classes_stable.tsv
 )
 
-LOOPS_FILE       <- "../outputs/250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"  # TODO: not in data/
-CHAR_LOOPS_FILE  <- "characterized_loops.tsv"  # TODO: not in data/
+LOOPS_FILE       <- "outputs/250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe"  # Note: repo-relative path, not bundled in data/
+CHAR_LOOPS_FILE  <- "outputs/250402-late_outputs/merged_loops/characterized_loops.tsv"  # Note: repo-relative path, not bundled in data/
 ABC_PAIRS_FILE   <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv"  # Original: results/delta_abc_all_pairs.tsv
 ABC_RNASEQ_FILE  <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_with_rnaseq.tsv"  # Original: results/delta_abc_with_rnaseq.tsv
-GENE_SUMMARY_FILE <- "results/gene_level_summary.tsv"  # TODO: not in data/
-TSS_FILE         <- "reference/mm10_tss.bed"  # TODO: not in data/
+GENE_SUMMARY_FILE <- "data/tsvs/figure_5_model_functional/5B_gene_level_summary.tsv"  # Original: results/gene_level_summary.tsv
+TSS_FILE         <- "abc/reference/mm10_tss.bed"  # Note: repo-relative path, not bundled in data/
 
 OUTPUT_DIR <- "data/plots/figure_4_abc_analysis"  # Original: results/enhancer_subset_analysis
 TSV_DIR    <- "data/tsvs/figure_4_abc_analysis"  # Original: results/enhancer_subset_analysis (TSV outputs)

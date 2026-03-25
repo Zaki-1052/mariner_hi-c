@@ -24,8 +24,8 @@ suppressPackageStartupMessages({
 source("data/scripts/_shared/multi_format_output.R") # Original: source(file.path(base_dir, "scripts/utils/multi_format_output.R"))
 
 # Define paths
-early_file <- "results/early/final/tadcompare_final_filtered.tsv"  # TODO: not in data/
-late_file <- "results/late/final/tadcompare_final_filtered.tsv"    # TODO: not in data/
+early_file <- "data/tsvs/figure_1_tads_boundaries_compartments/1B_early_tadcompare_filtered.tsv"  # Original: results/early/final/tadcompare_final_filtered.tsv
+late_file <- "data/tsvs/figure_1_tads_boundaries_compartments/1B_late_tadcompare_filtered.tsv"    # Original: results/late/final/tadcompare_final_filtered.tsv
 TSV_DIR  <- "data/tsvs/figure_3_epigenetic_integration"   # Original: output_dir <- "results/visualizations/comparison"
 PLOT_DIR <- "data/plots/figure_3_epigenetic_integration"   # Original: (same)
 output_dir <- PLOT_DIR  # kept for save_multiformat_ggplot calls

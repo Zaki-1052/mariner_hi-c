@@ -95,12 +95,13 @@ tsvs_dir_fig5 <- "data/tsvs/figure_5_model_functional"
 
 # Input/output paths
 # Use timepoint-specific input directory
-input_file <- file.path("results", timepoint, "final/tadcompare_final_annotated.tsv")  # TODO: not in data/
-output_base <- file.path("results/visualizations", timepoint)  # TODO: not in data/ (intermediate plots)
+input_file <- file.path("data/tsvs/figure_1_tads_boundaries_compartments",
+                        sprintf("1B_%s_tadcompare_annotated.tsv", timepoint))  # Original: results/{timepoint}/final/tadcompare_final_annotated.tsv
+output_base <- file.path("results/visualizations", timepoint)  # Note: repo-relative path, not bundled in data/ (intermediate plots)
 
 # ChIP-seq peak paths (in parent directory peaks/beds/)
 # Timepoint-specific Cerebellum peaks (standardized)
-peaks_dir <- file.path(base_dir, "peaks", "beds")  # TODO: not in data/
+peaks_dir <- file.path(base_dir, "peaks", "beds")  # Note: repo-relative path, not bundled in data/
 
 if (timepoint == "late") {
   h3k27ac_path <- file.path(peaks_dir, "H3K27acCerebellumLate2.bed")
@@ -124,7 +125,7 @@ cat(sprintf("  H3K4me1:  %s\n", if (!is.null(h3k4me1_path)) basename(h3k4me1_pat
 subdirs <- c("overview", "classification", "shift_analysis", "robustness",
              "chromosome", "chipseq", "enrichment", "syt1_nav3_focus", "summary")
 for (subdir in subdirs) {
-  dir.create(file.path(output_base, subdir), recursive = TRUE, showWarnings = FALSE)  # TODO: not in data/
+  dir.create(file.path(output_base, subdir), recursive = TRUE, showWarnings = FALSE)  # Note: repo-relative path, not bundled in data/
 }
 
 # Create data/ output directories for figure-specific outputs
@@ -982,7 +983,7 @@ if (length(gene_list) > 0) {
       labs(title = "GO Cellular Component Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
     save_multiformat_ggplot(p_go_cc,
-                            file.path(output_base, "enrichment", "go_cc_dotplot"),  # TODO: not in data/
+                            file.path(output_base, "enrichment", "go_cc_dotplot"),  # Note: repo-relative path, not bundled in data/
                             width = 10, height = 8)
   } else {
     cat("  No significant GO CC terms found\n")
@@ -1010,7 +1011,7 @@ if (length(gene_list) > 0) {
       labs(title = "GO Molecular Function Enrichment") +
       theme(plot.title = element_text(hjust = 0.5, face = "bold"))
     save_multiformat_ggplot(p_go_mf,
-                            file.path(output_base, "enrichment", "go_mf_dotplot"),  # TODO: not in data/
+                            file.path(output_base, "enrichment", "go_mf_dotplot"),  # Note: repo-relative path, not bundled in data/
                             width = 10, height = 8)
   } else {
     cat("  No significant GO MF terms found\n")
@@ -1264,7 +1265,7 @@ summary_lines <- c(summary_lines,
                    "==========================================")
 
 # Write summary
-summary_file <- file.path(output_base, "summary", "visualization_summary.txt")  # TODO: not in data/
+summary_file <- file.path(output_base, "summary", "visualization_summary.txt")  # Note: repo-relative path, not bundled in data/
 writeLines(summary_lines, summary_file)
 cat(sprintf("Summary saved: %s\n\n", summary_file))
 

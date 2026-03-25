@@ -20,7 +20,7 @@
 # CONFIGURATION
 # =============================================================================
 
-GENE_SUMMARY_FILE <- "results/gene_level_summary.tsv"                                  # TODO: not in data/
+GENE_SUMMARY_FILE <- "data/tsvs/figure_5_model_functional/5B_gene_level_summary.tsv"    # Original: results/gene_level_summary.tsv
 ABC_PAIRS_FILE    <- "data/tsvs/figure_4_abc_analysis/4A_delta_abc_all_pairs.tsv"       # Original: results/delta_abc_all_pairs.tsv
 ENH_CLASS_FILE    <- "data/tsvs/figure_4_abc_analysis/4E_enhancer_class_abc_metrics.tsv" # Original: results/enhancer_subset_analysis/enhancer_class_abc_metrics.tsv
 OUTPUT_DIR        <- "data/plots/figure_4_abc_analysis"                                  # Original: results/figures/discordant_analysis

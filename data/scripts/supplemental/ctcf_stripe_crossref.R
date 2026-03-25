@@ -48,16 +48,16 @@ DEFAULT_TOLERANCE <- 25000  # 25kb for anchor-stripe overlap matching
 # Timepoint-specific file mappings
 TIMEPOINT_CONFIG <- list(
   late = list(
-    loops_file = file.path(BASE_DIR, "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"),  # TODO: not in data/
-    stripes_dir = file.path(BASE_DIR, "stripes/outputs/late"),  # TODO: not in data/
+    loops_file = file.path(BASE_DIR, "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"),  # Note: repo-relative path, not bundled in data/
+    stripes_dir = file.path(BASE_DIR, "stripes/outputs/late"),  # Note: repo-relative path, not bundled in data/
     output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/ctcf_stripe_crossref/late
     output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/ctcf_stripe_crossref/late (tables)
     output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/ctcf_stripe_crossref/late (plots)
     label = "Late Timepoint"
   ),
   early = list(
-    loops_file = file.path(BASE_DIR, "peaks/loop_annotation_extended/early/extended_characterized_loops.tsv"),  # TODO: not in data/
-    stripes_dir = file.path(BASE_DIR, "stripes/outputs/early"),  # TODO: not in data/
+    loops_file = file.path(BASE_DIR, "peaks/loop_annotation_extended/early/extended_characterized_loops.tsv"),  # Note: repo-relative path, not bundled in data/
+    stripes_dir = file.path(BASE_DIR, "stripes/outputs/early"),  # Note: repo-relative path, not bundled in data/
     output_dir = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/ctcf_stripe_crossref/early
     output_dir_tsvs = file.path(BASE_DIR, "data/tsvs/supplemental"),  # Original: output/ctcf_stripe_crossref/early (tables)
     output_dir_plots = file.path(BASE_DIR, "data/plots/supplemental"),  # Original: output/ctcf_stripe_crossref/early (plots)

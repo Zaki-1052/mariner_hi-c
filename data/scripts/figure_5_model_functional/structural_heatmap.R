@@ -61,10 +61,10 @@ DYSREG_COLORS <- c("TRUE" = "#31A354", "FALSE" = "#D9D9D9")
 
 # --- DiffBind files (per-peak fold-changes, all same column format) ---
 DIFFBIND_FILES <- list(
-  H2AK119ub = "peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt", # TODO: not in data/
-  H3K27me3  = "peaks/diffbind/K27me3_diffbind_results_summit_appended_ap.txt", # TODO: not in data/
-  H3K27ac   = "peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt", # TODO: not in data/
-  ATAC      = "peaks/diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt" # TODO: not in data/
+  H2AK119ub = "data/upstream/diffbind/K119ub_diffbind_results_summit_appended_ap.txt",
+  H3K27me3  = "data/upstream/diffbind/K27me3_diffbind_results_summit_appended_ap.txt",
+  H3K27ac   = "data/upstream/diffbind/K27ac_diffbind_results_summit_appended_ap.txt",
+  ATAC      = "data/upstream/diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt"
 )
 
 # Peak-to-gene linkage

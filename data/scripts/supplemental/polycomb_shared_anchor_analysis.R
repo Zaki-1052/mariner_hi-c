@@ -46,13 +46,13 @@ source("data/scripts/_shared/multi_format_output.R")  # Original: source("script
 # Input files by timepoint (from shared_anchor_analysis.R output)
 SHARED_LOOP_FILES <- list(
   late = "data/tsvs/supplemental/shared_anchor_loops.tsv",  # Original: output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv
-  early = "output/shared_anchor_analysis/early/tables/shared_anchor_loops.tsv"  # TODO: not in data/
+  early = "output/shared_anchor_analysis/early/tables/shared_anchor_loops.tsv"  # Note: repo-relative path, not bundled in data/
 )
 
 # Background files for enrichment testing (all characterized loops)
 BACKGROUND_FILES <- list(
   late = "data/upstream/loop_calls/late_characterized_loops.tsv",  # Original: 25042-late_outputs/merged_loops/characterized_loops.tsv
-  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"  # TODO: not in data/
+  early = "data/upstream/loop_calls/early_characterized_loops.tsv"  # Original: 250831-early_outputs/merged_loops/characterized_loops.tsv
 )
 
 # Output base directories
