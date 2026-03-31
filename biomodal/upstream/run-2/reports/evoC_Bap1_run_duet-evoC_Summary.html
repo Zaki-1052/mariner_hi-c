@@ -1,0 +1,2457 @@
+<!--
+  Copyright (C) 2024-2025 biomodal Ltd. All rights reserved.
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chart Renderer</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "DM Sans", sans-serif;
+        color: #262a2c; /* Dark grey */
+      }
+      .card-header {
+        background-color: #05868e; /* Main teal */
+        color: white;
+      }
+      .card {
+        margin-bottom: 1rem;
+        border-color: #dbdee7; /* Light grey */
+      }
+      .bg-light-teal {
+        background-color: #9cdbd9; /* Pale teal */
+      }
+
+      .multiselect {
+        width: 100%;
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        background-color: #9cdbd9; /* Pale teal */
+      }
+      .multiselect-group {
+        padding: 0.375rem 0.75rem;
+        font-weight: bold;
+        background-color: #f8f9fa;
+        color: #003b49; /* Deep teal */
+      }
+
+      .multiselect-item {
+        padding: 0.375rem 0.75rem;
+        cursor: pointer;
+        color: #262a2c; /* Dark grey */
+      }
+      .multiselect-item:hover {
+        background-color: #e9ecef;
+      }
+      .multiselect-item.selected {
+        background-color: #dce1e6;
+      }
+      .dropdown-toggle {
+        background-color: #05868e; /* Main teal */
+        color: white;
+      }
+      .btn-secondary:focus,
+      .btn-secondary.focus {
+        box-shadow: 0 0 0 0.2rem rgba(5, 134, 142, 0.25);
+      }
+      .form-control:focus {
+        border-color: #05868e;
+        box-shadow: 0 0 0 0.2rem rgba(5, 134, 142, 0.25);
+      }
+      .card-header .fas {
+        color: #eeeff2; /* Lightest grey */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>biomodal duet multiomics solution</h1>
+          <p>Accurate genetic and epigenetic data from a single sample in a single run</p>
+          <h1>sequencing run metrics report</h1>
+          <p>Use this report to select metrics to compare across samples in your run. Selected metrics will be plotted for all samples on the run. Plots can be downloaded as image files.</p>
+        </div>
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-md-12">
+          <div class="card h-100">
+            <div class="card-header text-center text-light">
+              Key Quality Metrics
+            </div>
+            <div class="card-body">
+              <div class="dropdown">
+                <button
+                  class="btn btn-secondary dropdown-toggle w-100"
+                  type="button"
+                  id="metricsDropdownButton"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Select Metrics
+                </button>
+                <ul
+                  class="dropdown-menu w-100"
+                  aria-labelledby="metricsDropdownButton"
+                  id="metricsDropdown"
+                  style="max-height: 300px; overflow-y: auto"
+                >
+                  <!-- The content will be populated by JavaScript -->
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" id="metrics-container"></div>
+    </div>
+
+    <script>
+      const data = {
+    "sections": [
+        {
+            "section_name": "Modified Cytosine Accuracy: Control DNA (Methylated Lambda Phage & Unmethylated pUC19)",
+            "description": "",
+            "doc_link": null,
+            "fields": [
+                {
+                    "field_name": "dqs_lambda_modc_sensitivity",
+                    "friendly_name": "Methylated lambda modC sensitivity ",
+                    "description": "Sensitivity for measuring modC at mC sites calculated from a fully methylated lambda control. modC refers to a call of mC, hmC or undifferentiated modC. The value should be >= 95%",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.989169
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.989529
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.989994
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.98922
+                        }
+                    ]
+                },
+                {
+                    "field_name": "dqs_puc19_modc_specificity",
+                    "friendly_name": "Non-methylated pUC19 control modC specificity",
+                    "description": "Specificity for measuring modC at C sites calculated from an unmethylated pUC19 control. modC refers to a call of mC, hmC or undifferentiated modC. The value should be >= 99%",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.999411
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.999129
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.998451
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.998553
+                        }
+                    ]
+                },
+                {
+                    "field_name": "dqs_lambda_mc_sensitivity",
+                    "friendly_name": "Methylated lambda control mC sensitivity",
+                    "description": "Sensitivity for measuring mC calculated from a fully methylated lambda control. The value should be >= 93%",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.986421
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.98685
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.987251
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.986247
+                        }
+                    ]
+                },
+                {
+                    "field_name": "dqs_lambda_hmc_specificity",
+                    "friendly_name": "Methylated lambda control hmC specificity",
+                    "description": "Specificity for measuring hmC calculated from a fully methylated lambda control",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.997265
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.997332
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.99727
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.99704
+                        }
+                    ]
+                },
+                {
+                    "field_name": "dqs_puc19_mc_specificity",
+                    "friendly_name": "Non-methylated pUC19 mC specificity",
+                    "description": "Specificity for measuring mC calculated from an unmethylated pUC19 control",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.999853
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.99959
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.999101
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.999252
+                        }
+                    ]
+                },
+                {
+                    "field_name": "dqs_puc19_hmc_specificity",
+                    "friendly_name": "Non-methylated pUC19 hmC specificity",
+                    "description": "Specificity for measuring hmC calculated from an unmethylated pUC19 control",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.999607
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.999539
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.99935
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.999302
+                        }
+                    ]
+                },
+                {
+                    "field_name": "dqs_lambda_other_perc",
+                    "friendly_name": "Non-C calls at CpG sites on fully methylated lambda control",
+                    "description": "Non-C calls at CpG sites on fully methylated lambda control",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.09410874227324334
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.090760482585019
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.08871464294241088
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.10155288146898123
+                        }
+                    ]
+                },
+                {
+                    "field_name": "dqs_puc19_other_perc",
+                    "friendly_name": "Non-C calls at CpG sites on fully unmethylated pUC19 control",
+                    "description": "Non-C calls at CpG sites on fully unmethylated pUC19 control",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.0637473642916687
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.08187493603520622
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.05492859282932188
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.06978714919495539
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "section_name": "SQ2hmC (Hydroxymethylated Oligo) Control Accuracy",
+            "description": "",
+            "doc_link": null,
+            "fields": [
+                {
+                    "field_name": "dqs_ss_sq2hmc_percent_hmc_at_hmc",
+                    "friendly_name": "Percent hmC called as hmC on 80bp SQ2hmC mixed C/hmC short control",
+                    "description": "The percentage of hmC sites correctly called as hmC on an 80bp synthetic oligo with a variety of different C and hmC states at CpGs. The value should be >= 95%",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.9865979436981649
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.9864826724945364
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9866927411503399
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9867882839103044
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "section_name": "Genetic Accuracy: Control DNA (Lambda Phage)",
+            "description": "",
+            "doc_link": null,
+            "fields": [
+                {
+                    "field_name": "gen_acc_long_ctrl_overall_accuracy",
+                    "friendly_name": "Genetic accuracy lambda control",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads as a percentage calculated relative to a lambda truth set. The value should be >= 99.9%",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.9997473759325066
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.9997487557898401
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9997477584685969
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9997357939337281
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_overall_qscore",
+                    "friendly_name": "Genetic accuracy lambda control Q-score",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads as a q-score calculated relative to a lambda truth set.",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 35.97525276576995
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 35.99903937629527
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 35.981834055732264
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 35.78057215040372
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_a_accuracy",
+                    "friendly_name": "Genetic accuracy lambda control A",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads  of A bases as a percentage calculated relative to a lambda truth set.",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.9998735308602942
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.9998814006401933
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9998669859812942
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9998659767806288
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_c_accuracy",
+                    "friendly_name": "Genetic accuracy lambda control C",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads  of C bases as a percentage calculated relative to a lambda truth set.",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.9996154686416379
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.9996039859966183
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9996419049840993
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9995936972800139
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_g_accuracy",
+                    "friendly_name": "Genetic accuracy lambda control G",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads  of G bases as a percentage calculated relative to a lambda truth set.",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.999873944755353
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.9998712924291968
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9998744051342187
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9998771703015159
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_t_accuracy",
+                    "friendly_name": "Genetic accuracy lambda control T",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads  of T bases as a percentage calculated relative to a lambda truth set.",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.9996144717956651
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.9996242940910254
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9995984552770383
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9995925612983549
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_a_qscore",
+                    "friendly_name": "Genetic accuracy lambda control Q-score A",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads  of A bases as a q-score calculated relative to a lambda truth set.",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 38.98015435678166
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 39.25917655264774
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 38.76102585155219
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 38.728199540889406
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_c_qscore",
+                    "friendly_name": "Genetic accuracy lambda control Q-score C",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads  of C bases as a q-score calculated relative to a lambda truth set.",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 34.150682378955246
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 34.022894567919344
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 34.46001723617806
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 33.91150270287425
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_g_qscore",
+                    "friendly_name": "Genetic accuracy lambda control Q-score G",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads  of G bases as a q-score calculated relative to a lambda truth set.",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 38.99439080381154
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 38.90395906387419
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 39.010281138504695
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 39.10696614234149
+                        }
+                    ]
+                },
+                {
+                    "field_name": "gen_acc_long_ctrl_t_qscore",
+                    "friendly_name": "Genetic accuracy lambda control Q-score T",
+                    "description": "The overall genetic accuracy from the lambda-aligned reads  of T bases as a q-score calculated relative to a lambda truth set.",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 34.13943844489935
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 34.25151974447152
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 33.962660771503984
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 33.89937720763955
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "section_name": "Quantification of Modified Cytosines",
+            "description": "",
+            "doc_link": null,
+            "fields": [
+                {
+                    "field_name": "modality_summary_cg_MT_c",
+                    "friendly_name": "Mitochondrial genome rate of C at CpG",
+                    "description": "The rate of observing an unmethylated C for C calls at CpG sites in the mitochondrial genome",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 99.8565925728293
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 99.86181636560393
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 99.73455759599332
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 99.85852903483514
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_cg_autosomes_c",
+                    "friendly_name": "Autosomal chromosomes rate of C at CpG",
+                    "description": "The rate of observing an unmethylated C for C calls at autosomal CpG sites",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 17.48670326733721
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 17.22190882376665
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 17.532656522936254
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 17.481622972772286
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_cg_autosomes_modc",
+                    "friendly_name": "Autosomal chromosomes rate of modC at CpG",
+                    "description": "The rate of observing a modified C (mC or hmC) for C calls at autosomal CpG sites",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 82.513297
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 82.778091
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 82.467343
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 82.518377
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_cg_autosomes_mc",
+                    "friendly_name": "Autosomal chromosomes rate of mC at CpG",
+                    "description": "The rate of observing an mC for C calls at autosomal CpG sites",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 72.09390365517567
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 72.42784856159264
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 72.62280332617082
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 72.51621466136707
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_cg_autosomes_hmc",
+                    "friendly_name": "Autosomal chromosomes rate of hmC at CpG",
+                    "description": "The rate of observing a hmC for C calls at autosomal CpG sites",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 10.251570430556932
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 10.188803226396876
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 9.679515402753145
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 9.83422104269024
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_chg_MT_c",
+                    "friendly_name": "Mitochondrial genome rate of C at CHG",
+                    "description": "The rate of observing an unmethylated C for C calls at CHG sites in the mitochondrial genome",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 99.94153681909458
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 99.92648456809684
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 99.92998536057539
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 99.92383757092627
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_chg_autosomes_c",
+                    "friendly_name": "Autosomal chromosomes rate of C at CHG",
+                    "description": "The rate of observing an unmethylated C for C calls at autosomal CHG sites",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 99.37865212034411
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 99.37455753361819
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 99.35564206005762
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 99.3452950967047
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_chg_autosomes_modc",
+                    "friendly_name": "Autosomal chromosomes rate of modC at CHG",
+                    "description": "The rate of observing a modified C (mC or hmC) for C calls at autosomal CHG sites",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.6181019614366112
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.6224358008855703
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.6410695671046008
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.6511118698715666
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_chh_MT_c",
+                    "friendly_name": "Mitochondrial genome rate of C at CHH",
+                    "description": "The rate of observing an unmethylated C for C calls at CHH sites in the mitochondrial genome",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 99.92997198879551
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 99.93068021878925
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 99.94703636694899
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 99.92889455294296
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_chh_autosomes_c",
+                    "friendly_name": "Autosomal chromosomes rate of C at CHH",
+                    "description": "The rate of observing an unmethylated C for C calls at autosomal CHH sites",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 99.14556002080204
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 99.14057081066693
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 99.1292161310649
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 99.11509943039002
+                        }
+                    ]
+                },
+                {
+                    "field_name": "modality_summary_chh_autosomes_modc",
+                    "friendly_name": "Autosomal chromosomes rate of modC at CHH",
+                    "description": "The rate of observing a modified C (mC or hmC) for C calls at autosomal CHH sites",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.8519533009766255
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.8572201533143683
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.868244526467326
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.8821680623890857
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "section_name": "Allele-specific methylation",
+            "description": "",
+            "doc_link": null,
+            "fields": [
+                {
+                    "field_name": "asm_pass_modc_count",
+                    "friendly_name": "modC sites passing filters",
+                    "description": "Number of ASM sites passing all filters (modC)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 12669.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 13055.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 34315.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 32059.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_low_meth_diff_modc_count",
+                    "friendly_name": "modC sites with low methylation difference",
+                    "description": "Number of ASM sites that had low difference in methylation status of the 2 alleles (modC)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 23975.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 22955.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 69716.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 65842.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_pass_mc_count",
+                    "friendly_name": "mC sites passing filters",
+                    "description": "Number of ASM sites passing all filters (mC)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 12279.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 12700.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 33229.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 31134.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_low_meth_diff_mc_count",
+                    "friendly_name": "mC sites with low methylation difference",
+                    "description": "Number of ASM sites that had low difference in methylation status of the 2 alleles (mC)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 24365.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 23310.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 70802.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 66767.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_pass_hmc_count",
+                    "friendly_name": "hmC sites passing filters",
+                    "description": "Number of ASM sites passing all filters (hmC)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 744.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 641.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 1751.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 1622.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_low_meth_diff_hmc_count",
+                    "friendly_name": "hmC sites with low methylation difference",
+                    "description": "Number of ASM sites that had low difference in methylation status of the 2 alleles (hmC)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 35900.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 35369.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 102280.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 96279.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_low_cpg_coverage_al1_al2_count",
+                    "friendly_name": "Sites with low CpG coverage at both alleles",
+                    "description": "Number of ASM sites that had low CpG coverage",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 55779.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 57130.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 50260.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 59203.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_low_cpg_coverage_al1_count",
+                    "friendly_name": "Sites with low CpG coverage at allele 1",
+                    "description": "Number of ASM sites that had low CpG coverage at allele 1",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 29319.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 4697.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 10534.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 12324.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_low_cpg_coverage_al2_count",
+                    "friendly_name": "Sites with low CpG coverage at allele 2",
+                    "description": "Number of ASM sites that had low CpG coverage at allele 2",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 69847.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 105789.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 48915.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 63241.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_no_cpg_reads_count",
+                    "friendly_name": "Sites with no CpG coverage at both alleles",
+                    "description": "Number of ASM sites that had no CpG coverage at both allele",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 49659.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 56106.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 59408.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 58055.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_no_cpg_coverage_al1_count",
+                    "friendly_name": "Sites with no CpG coverage at allele 1",
+                    "description": "Number of ASM sites that had no CpG coverage at allele 1",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 490.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 96.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 126.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 144.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_no_cpg_coverage_al2_count",
+                    "friendly_name": "Sites with no CpG coverage at allele 2",
+                    "description": "Number of ASM sites that had no CpG coverage at allele 2",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 3750.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 4786.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 3594.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 3435.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "asm_no_reads_count",
+                    "friendly_name": "Sites with no reads",
+                    "description": "Number of ASM sites that had no reads",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 1045.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 1008.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 1066.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 1046.0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "section_name": "Genome Deduplication & Coverage",
+            "description": "",
+            "doc_link": null,
+            "fields": [
+                {
+                    "field_name": "bamlet_inc_duplicates_reads_genome",
+                    "friendly_name": "Genome-mapped reads (including duplicates)",
+                    "description": "The total number of genome-aligned reads including duplicates",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 524620181.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 465236581.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 681119262.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 573792430.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "bamlet_duplicate_reads_genome",
+                    "friendly_name": "Genome-mapped read duplicates",
+                    "description": "The number of resolved genome-aligned reads identified and removed as potential duplicates",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 157246602.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 129150791.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 205536201.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 168159014.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "bamlet_prop_duplicated_reads_genome",
+                    "friendly_name": "Genome-mapped duplication rate",
+                    "description": "The duplication rate in the genome-aligned reads",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.29973418426310977
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.2776023990254541
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.30176242615202975
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.2930659332678892
+                        }
+                    ]
+                },
+                {
+                    "field_name": "bamlet_mapped_reads_genome",
+                    "friendly_name": "Genome deduplicated reads",
+                    "description": "The total number of reads in the deduplicated genome primary assembly-aligned BAM file",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 367373579.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 336085790.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 475583061.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 405633416.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "bamlet_mapped_bases_cigar_genome",
+                    "friendly_name": "Genome deduplicated bases",
+                    "description": "The total number of bases in the deduplicated genome primary assembly-aligned BAM file",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 47734066780.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 44399237513.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 61469646933.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 53226176282.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "fraction_of_pipeline_input_bamlet_mapped_bases_cigar_genome",
+                    "friendly_name": "Percent of input bases aligned to genome primary assembly",
+                    "description": "The percentage of deduplicated primary genome assembly aligned bases, not including soft-clipped bases",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.492412
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.507964
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.488199
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.493674
+                        }
+                    ]
+                },
+                {
+                    "field_name": "bamlet_mean_mapped_length_genome",
+                    "friendly_name": "Genome mean mapped bases per read",
+                    "description": "The average number of bases in trimmed, resolved, genome aligned and deduplicated reads, excluding soft-clipped bases",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 129.93331450218417
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 132.10685733841945
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 129.2511276657938
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 131.21743471450094
+                        }
+                    ]
+                },
+                {
+                    "field_name": "bamlet_mean_phred_genome",
+                    "friendly_name": "Genome reads mean quality",
+                    "description": "The average quality of trimmed, resolved, genome-aligned, deduplicated reads (excluding soft-clipped bases)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 34.36792207250941
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 34.29775319058417
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 34.36041008360024
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 34.3374136798377
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_mean_cov_incl_ns",
+                    "friendly_name": "Mean coverage including Ns",
+                    "description": "The mean genome-wide coverage (including Ns)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 17.47578990795926
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 16.254991605475507
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 22.504641918057334
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 19.486592831143305
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_mean_cov_excl_ns",
+                    "friendly_name": "Mean coverage excluding Ns",
+                    "description": "The mean genome-wide coverage (excluding Ns)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 17.358118605315372
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 16.143209988738196
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 22.35301637454326
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 19.35319649797662
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_perc_cov_0000",
+                    "friendly_name": "Genome percentage no coverage",
+                    "description": "Percentage of the genome with no coverage (including Ns)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 10.689999999999998
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 10.219999999999999
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 10.61
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 10.11
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_perc_cov_0001",
+                    "friendly_name": "Genome percentage 1x",
+                    "description": "Percentage of the genome covered at 1X or above (including Ns)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 89.31
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 89.78
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 89.39
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 89.89
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_perc_cov_0002",
+                    "friendly_name": "Genome percentage 2x",
+                    "description": "Percentage of the genome covered at 2X or above (including Ns)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 88.86
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 89.13
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 89.03
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 89.37
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_perc_cov_0005",
+                    "friendly_name": "Genome percentage 5x",
+                    "description": "Percentage of the genome covered at 5X or above (including Ns)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 87.02
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 86.39
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 87.77
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 87.51
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_perc_cov_0010",
+                    "friendly_name": "Genome percentage 10x",
+                    "description": "Percentage of the genome covered at 10X or above (including Ns)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 79.97
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 76.53
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 83.81
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 81.1
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_perc_cov_0025",
+                    "friendly_name": "Genome percentage 25x",
+                    "description": "Percentage of the genome covered at 25X or above",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 23.89
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 19.09
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 48.79
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 35.4
+                        }
+                    ]
+                },
+                {
+                    "field_name": "qlmap_perc_cov_0030",
+                    "friendly_name": "Genome percentage 30x",
+                    "description": "Percentage of the genome covered at 30X or above (including Ns)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 8.28
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 6.02
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 31.08
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 18.09
+                        }
+                    ]
+                },
+                {
+                    "field_name": "cpg_cov_to_gw_cov_incl_ns",
+                    "friendly_name": "CpG to genome-wide coverage ratio (including Ns)",
+                    "description": "Ratio of mean coverage at CpGs to mean coverage genome-wide (including Ns). Because CpGs are stranded, a 'perfect' value for the metric would be 0.5. Values > 0.5 indicate bias towards CpG; values < 0.5 indicate bias away from CpGs",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.45096
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.451708
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.448684
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.45364
+                        }
+                    ]
+                },
+                {
+                    "field_name": "tss_coverage_bias_ratio",
+                    "friendly_name": "TSS to non-TSS coverage ratio",
+                    "description": "Ratio of mean coverage near transcription start sites (TSS regions) to mean coverage at regions not near transcription start sites. A 'perfect' value for the metric would be 1.0. Values > 1.0 indicate bias towards TSS regions; values < 1.0 indicate bias away from TSS regions",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": NaN
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": NaN
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": NaN
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": NaN
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "section_name": "Read Pair Resolution (Prelude)",
+            "description": "",
+            "doc_link": null,
+            "fields": [
+                {
+                    "field_name": "prelude_naive_resolve_attempted_resolve_reads",
+                    "friendly_name": "Reads after trimming and quality filtering",
+                    "description": "The total number of read-pairs (R1/R2 read-pairs) remaining after trimming and quality filtering",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 631556756.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 568035847.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 821386803.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 702597941.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_naive_resolve_attempted_resolve_bases",
+                    "friendly_name": "Bases after trimming and quality filtering",
+                    "description": "The total number of base-pairs (R1/R2 base-pairs) remaining after trimming and quality filtering",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 85908429066.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 78284529530.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 110844458895.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 96333319065.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_naive_resolve_resolved_reads",
+                    "friendly_name": "Reads that resolve naively",
+                    "description": "The total number of reads that can be resolved into genetic and epigenetic sequences without prior pairwise alignment",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 545857554.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 491101113.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 713083003.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 606738916.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_naive_resolve_resolved_reads_percentage",
+                    "friendly_name": "Percentage of reads that resolve naively",
+                    "description": "The percentage of trimmed reads that can be resolved into genetic and epigenetic sequences without prior pairwise alignment",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.8643048290025734
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.8645600723857133
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.8681451910300536
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.8635648933676565
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_biopython_resolve_attempted_resolve_reads",
+                    "friendly_name": "Reads to rescue via pairwise alignment",
+                    "description": "The total number of reads for which a pairwise alignment will be attempted in order to resolve into genetic and epigenetic sequences",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 85699202.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 76934734.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 108303800.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 95859025.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_biopython_resolve_attempted_resolve_reads_percentage",
+                    "friendly_name": "Percentage of reads to rescue via pairwise alignment",
+                    "description": "The percentage of trimmed reads for which a pairwise alignment will be attempted in order to resolve into genetic and epigenetic sequences",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.13569517099742656
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.13543992761428664
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.1318548089699464
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.1364351066323435
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_biopython_resolve_resolved_reads",
+                    "friendly_name": "Reads rescued via pairwise alignment",
+                    "description": "The number of reads that were able to be resolved into genetic and epigenetic sequences after a pairwise alignment",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 71284690.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 63391473.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 89691566.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 79763351.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_biopython_resolve_resolved_reads_percentage",
+                    "friendly_name": "Percentage of reads rescued via pairwise alignment",
+                    "description": "The percentage of reads for which a pairwise alignment was attempted that were able to be resolved into genetic and epigenetic sequences after a pairwise alignment",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.8318010942505626
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.8239642838045037
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.8281479135542797
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.8320901553087985
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_general_stats_total_reads_retained",
+                    "friendly_name": "Total resolved reads",
+                    "description": "The total number of resolved reads usable for downstream analysis (made up of those that resolved naively and those that were rescued)",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 617142244.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 554492586.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 802774569.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 686502267.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_general_stats_reads_remaining_before_compute_mm_tag_percentage",
+                    "friendly_name": "Percentage of trimmed reads that resolve",
+                    "description": "The percentage of trimmed, quality-filtered reads usable for downstream analysis (made up of those that resolved naively and those that were rescued)",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.97717622072275
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.9761577353409528
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9773404759706128
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9770912024349356
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_general_stats_total_reads_retained_percentage",
+                    "friendly_name": "Percentage of input reads that resolve",
+                    "description": "The percentage of the total input read pairs in the initial input FASTQ files that remains as resolved reads after processing through the resolution algorithm",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.9613070880183131
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.957921767554551
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9627340283376307
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9614665950970009
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_general_stats_create_resolved_read_discarded",
+                    "friendly_name": "Total discarded reads in resolution",
+                    "description": "The total number of trimmed, quality-filtered reads discarded as not representing the expected construct / format to resolve into genetic / epigenetic sequences",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 14414512.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 13543261.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 18612234.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 16095674.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_general_stats_create_resolved_read_discarded_percentage",
+                    "friendly_name": "Percentage of trimmed reads that are discarded",
+                    "description": "The percentage of trimmed, quality-filtered reads discarded as not representing the expected construct / format to resolve into genetic / epigenetic sequences",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.022823779277249944
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.023842264659047124
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.022659524029387163
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.022908797565064313
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_general_stats_rr_total_bases_retained_percentage",
+                    "friendly_name": "Percentage of trimmed bases that resolve",
+                    "description": "The percentage of trimmed, quality-filtered bases available for downstream analysis after resolution and further trimming",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.9485702927519994
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.9483884566304808
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.9492618777062415
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.9484375390652902
+                        }
+                    ]
+                },
+                {
+                    "field_name": "fraction_of_pipeline_input_prelude_general_stats_rr_total_bases_retained",
+                    "friendly_name": "Percentage of input bases that resolve",
+                    "description": "The percentage of the total input base-pairs in the initial input FASTQ files that remains as resolved bases after processing through the resolution algorithm",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.840631
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.849414
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.835672
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.847424
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "section_name": "Trimming (Prelude)",
+            "description": "",
+            "doc_link": null,
+            "fields": [
+                {
+                    "field_name": "prelude_general_stats_total_reads_processed",
+                    "friendly_name": "Total input read pairs",
+                    "description": "The total number of read-pairs (R1/R2 read-pairs) provided as input to the pipeline ",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 641982413.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 578849552.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 833848753.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 714015724.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_trimming_reads_discarded",
+                    "friendly_name": "Reads discarded during trimming",
+                    "description": "Number of read-pairs filtered out after trimming as too short or having too many N",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 10425657.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 10813705.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 12461950.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 11417783.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_general_stats_r1_total_bases_processed",
+                    "friendly_name": "R1 processed bases",
+                    "description": "Total number of R1 bases provided as input to the pipeline",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 96939344363.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 87406282352.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 125911161703.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 107816374324.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_general_stats_r2_total_bases_processed",
+                    "friendly_name": "R2 processed bases",
+                    "description": "Total number of R2 bases provided as input to the pipeline",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 96939344363.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 87406282352.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 125911161703.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 107816374324.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_hp_trim_r1_adapters_found",
+                    "friendly_name": "R1 hairpins trimmed",
+                    "description": "Total number of hairpins trimmed from R1",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 249580987.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 206848195.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 342276939.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 270131642.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_hp_trim_r2_adapters_found",
+                    "friendly_name": "R2 hairpins trimmed",
+                    "description": "Total number of hairpins trimmed from R2",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 265436971.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 222801274.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 361286223.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 288240203.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_polyg_trim_r1_adapters_found",
+                    "friendly_name": "R1 poly-G tails trimmed",
+                    "description": "Total number of R1 poly-G tails trimmed. If 9 or more consecutive G's are observed at the end of a read, then these as inferred to be an artefact of sequencing and are trimmed off.",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 390413.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 588188.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 461771.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 439907.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "prelude_polyg_trim_r2_adapters_found",
+                    "friendly_name": "R2 poly-G tails trimmed",
+                    "description": "Total number of R2 poly-G tails trimmed. If 9 or more consecutive G's are observed at the end of a read, then these as inferred to be an artefact of sequencing and are trimmed off.",
+                    "num_format": null,
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 10434797.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 10958162.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 12463412.0
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 11392974.0
+                        }
+                    ]
+                },
+                {
+                    "field_name": "fraction_of_pipeline_input_prelude_naive_resolve_attempted_resolve_reads",
+                    "friendly_name": "Percentage of input reads remaining after trimming and quality filtering",
+                    "description": "The percentage of the total input reads in the initial input FASTQ files that is remaining after initial trimming and quality filtering in the prelude module",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.98376
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.981319
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.985055
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.984009
+                        }
+                    ]
+                },
+                {
+                    "field_name": "fraction_of_pipeline_input_prelude_naive_resolve_attempted_resolve_bases",
+                    "friendly_name": "Percentage of input bases remaining after trimming and quality filtering",
+                    "description": "The percentage of the total input bases in the initial input FASTQ files that is remaining after initial trimming and quality filtering in the prelude module",
+                    "num_format": "percent",
+                    "data": [
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-F",
+                            "value": 0.886208
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-ctrl-M",
+                            "value": 0.89564
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-F",
+                            "value": 0.880339
+                        },
+                        {
+                            "sample_id": "evoC-Bap1-mut-M",
+                            "value": 0.893494
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+};
+      document.addEventListener("DOMContentLoaded", function () {
+        const metricsDropdown = document.getElementById("metricsDropdown");
+        const metricsContainer = document.getElementById("metrics-container");
+        const dropdownButton = document.getElementById("metricsDropdownButton");
+
+        // Function to toggle the selection of a metric
+        function toggleMetricSelection(item) {
+          const checkboxState = item.classList.contains('selected'); // Check if the item is selected
+          if (checkboxState) {
+              // Your logic for showing the graph
+              updateCharts();
+          } else {
+              // Logic for removing the graph or handling deselection
+              updateCharts();
+          }
+      }
+
+        // Initialize the dropdown
+        const dropdownToggle = new bootstrap.Dropdown(dropdownButton, {
+          autoClose: false,
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", function (event) {
+          if (
+            !dropdownButton.contains(event.target) &&
+            !metricsDropdown.contains(event.target)
+          ) {
+            dropdownToggle.hide();
+          }
+        });
+
+        // Populate the dropdown with metrics
+        data.sections.forEach((section) => {
+          const group = document.createElement("li");
+          group.className =
+            "dropdown-item-text font-weight-bold text-center bg-light-teal";
+          group.textContent = section.section_name || "Section";
+
+          metricsDropdown.appendChild(group);
+
+          section.fields.forEach(field => {
+            const item = document.createElement('li');
+            item.className = 'dropdown-item multiselect-item d-flex align-items-center';
+            item.dataset.section = JSON.stringify(section);
+            item.dataset.field = JSON.stringify(field);
+            item.title = field.description; //tooltip
+
+            // Create a span to hold the text
+            const labelText = document.createElement('span');
+            labelText.textContent = field.friendly_name || field.field_name;
+            labelText.className = 'flex-grow-1'; // Make the span take up available space
+
+            // Append text to item
+            item.appendChild(labelText);
+
+            // Handle click on the entire item
+            item.onclick = () => {
+                item.classList.toggle('selected'); // Toggle selected class
+                toggleMetricSelection(item); // Call the custom event
+            };
+
+            metricsDropdown.appendChild(item);
+        });
+
+        });
+
+        // Filter functionality
+        document
+          .getElementById("metricsSearch")
+          .addEventListener("input", function () {
+            const filter = this.value.toLowerCase();
+            const items = metricsDropdown.querySelectorAll(".multiselect-item");
+
+            items.forEach((item) => {
+              const label = item
+                .querySelector("label")
+                .textContent.toLowerCase();
+              if (label.includes(filter)) {
+                item.style.display = "";
+              } else {
+                item.style.display = "none";
+              }
+            });
+          });
+
+        // Function to update charts based on selected metrics
+        function updateCharts() {
+          // Clear existing charts
+          metricsContainer.innerHTML = "";
+
+          // Get selected metrics
+          const selectedItems = metricsDropdown.querySelectorAll(
+            ".multiselect-item.selected"
+          );
+
+          selectedItems.forEach((item) => {
+            const section = JSON.parse(item.dataset.section);
+            const field = JSON.parse(item.dataset.field);
+
+            const card = document.createElement("div");
+            card.className = "col-md-6";
+
+            card.innerHTML = `
+                  <div class="card">
+                      <div class="card-header">
+                          ${field.friendly_name}
+                          <a href="${section.doc_link}" target="_blank" class="float-right">
+                              <i class="fas fa-info-circle" style="color: var(--lightest-grey);"></i>
+                          </a>
+                      </div>
+                      <div class="card-body">
+                          <div id="${field.field_name}" class="chart"></div>
+                          <p>${field.description}</p>
+                      </div>
+                  </div>
+              `;
+
+            metricsContainer.appendChild(card);
+
+            const chartData = field.data.map((item) => {
+              let value = parseFloat(item.value);
+              if (field.num_format === "percent") {
+                value = value * 100;
+              }
+              return {
+                x: item.sample_id,
+                y: value.toFixed(3),
+              };
+            });
+
+            const options = {
+              series: [
+                {
+                  name: field.friendly_name,
+                  data: chartData,
+                },
+              ],
+              chart: {
+                height: 350,
+                type: "scatter",
+                zoom: {
+                  enabled: true,
+                  type: "xy",
+                },
+              },
+              xaxis: {
+                type: "category",
+                title: {
+                  text: "Sample ID",
+                },
+              },
+              yaxis: {
+                title: {
+                  text: field.num_format === "percent" ? "Percentage" : "Value",
+                },
+              },
+              markers: {
+                size: 5,
+                colors: ["#f87c56"],
+              },
+              tooltip: {
+                y: {
+                  formatter: function (value) {
+                    return field.num_format === "percent"
+                      ? `${value.toFixed(3)}%`
+                      : value.toFixed(3);
+                  },
+                },
+              },
+            };
+
+            const chart = new ApexCharts(
+              document.getElementById(field.field_name),
+              options
+            );
+            chart.render();
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
