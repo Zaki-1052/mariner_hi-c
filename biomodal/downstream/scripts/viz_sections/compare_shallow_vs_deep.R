@@ -1,50 +1,50 @@
 # biomodal/downstream/scripts/viz_sections/compare_shallow_vs_deep.R
-# Standalone comparison: shallow-seq (run-2) vs deep-seq (run-3)
+# Standalone comparison: deep-4 (run-3, 4 samples) vs deep-8 (run-4, 8 samples)
 # NOT a section_*.R — will not be picked up by run_all_sections.sh
 # Run manually: cd downstream/ && Rscript scripts/viz_sections/compare_shallow_vs_deep.R
 
-# Source shared config for packages, helpers, colors, and deep-seq DATA_PATHS
+# Source shared config for packages, helpers, colors, and deep-8 DATA_PATHS
 source("scripts/viz_sections/_shared_config.R")
 
 cat("================================================================================\n")
-cat("SHALLOW-SEQ (RUN-2) vs DEEP-SEQ (RUN-3) COMPARISON\n")
+cat("DEEP-4 (RUN-3, 4 samples) vs DEEP-8 (RUN-4, 8 samples) COMPARISON\n")
 cat("================================================================================\n\n")
 
 # =============================================================================
-# SHALLOW-SEQ PATHS (run-2, hardcoded timestamps)
+# DEEP-4 PATHS (run-3, 4 samples, hardcoded timestamps)
 # =============================================================================
 
 SHALLOW_PATHS <- list(
-  mc_dmr = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260121_172049/DMR_mc_control__mutant_20260121_172049.bed"),
-  hmc_dmr = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260121_172049/DMR_hmc_control__mutant_20260121_172049.bed"),
-  cpg_islands_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/DMR_20260121_171455/DMR_mc_control__mutant_20260121_171455.bed"),
-  cpg_shores_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/DMR_20260121_171910/DMR_mc_control__mutant_20260121_171910.bed"),
-  cpg_shelves_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/DMR_20260121_171718/DMR_mc_control__mutant_20260121_171718.bed"),
-  promoters_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/DMR_20260121_172220/DMR_mc_control__mutant_20260121_172220.bed"),
-  tss_mc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260121_172333/DMR_mc_control__mutant_20260121_172333.bed"),
-  cpg_islands_hmc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/DMR_20260121_171455/DMR_hmc_control__mutant_20260121_171455.bed"),
-  cpg_shores_hmc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/DMR_20260121_171910/DMR_hmc_control__mutant_20260121_171910.bed"),
-  cpg_shelves_hmc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/DMR_20260121_171718/DMR_hmc_control__mutant_20260121_171718.bed"),
-  promoters_hmc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/DMR_20260121_172220/DMR_hmc_control__mutant_20260121_172220.bed"),
-  tss_hmc = file.path(BASE_DIR, "modality/outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260121_172333/DMR_hmc_control__mutant_20260121_172333.bed")
+  mc_dmr = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260221_190322/DMR_mc_control__mutant_20260221_190322.bed"),
+  hmc_dmr = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260221_190322/DMR_hmc_control__mutant_20260221_190322.bed"),
+  cpg_islands_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/DMR_20260221_185728/DMR_mc_control__mutant_20260221_185728.bed"),
+  cpg_shores_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/DMR_20260221_190122/DMR_mc_control__mutant_20260221_190122.bed"),
+  cpg_shelves_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/DMR_20260221_185914/DMR_mc_control__mutant_20260221_185914.bed"),
+  promoters_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/DMR_20260221_190510/DMR_mc_control__mutant_20260221_190510.bed"),
+  tss_mc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260221_190652/DMR_mc_control__mutant_20260221_190652.bed"),
+  cpg_islands_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_islands.annotation/DMR_20260221_185728/DMR_hmc_control__mutant_20260221_185728.bed"),
+  cpg_shores_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_shores.annotation/DMR_20260221_190122/DMR_hmc_control__mutant_20260221_190122.bed"),
+  cpg_shelves_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.cpg_shelves.annotation/DMR_20260221_185914/DMR_hmc_control__mutant_20260221_185914.bed"),
+  promoters_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.promoters.annotation/DMR_20260221_190510/DMR_hmc_control__mutant_20260221_190510.bed"),
+  tss_hmc = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results/gencode.vM25.mouse.tss_region.annotation/DMR_20260221_190652/DMR_hmc_control__mutant_20260221_190652.bed")
 )
 
-# Deep-seq paths come from DATA_PATHS (loaded via _shared_config.R, now run-3)
+# Deep-8 paths come from DATA_PATHS (loaded via _shared_config.R, now run-4)
 DEEP_PATHS <- DATA_PATHS
 
 # =============================================================================
 # VALIDATE ALL PATHS (no fallbacks per project rules)
 # =============================================================================
 
-cat("Validating shallow-seq (run-2) paths...\n")
+cat("Validating deep-4 (run-3) paths...\n")
 for (name in names(SHALLOW_PATHS)) {
   if (!file.exists(SHALLOW_PATHS[[name]])) {
-    stop(sprintf("Shallow-seq file missing: %s\n  Path: %s", name, SHALLOW_PATHS[[name]]))
+    stop(sprintf("Deep-4 file missing: %s\n  Path: %s", name, SHALLOW_PATHS[[name]]))
   }
 }
-cat("  All shallow-seq paths validated.\n")
+cat("  All deep-4 paths validated.\n")
 
-cat("Validating deep-seq (run-3) paths...\n")
+cat("Validating deep-8 (run-4) paths...\n")
 deep_dmr_keys <- c("mc_dmr", "hmc_dmr",
                     "cpg_islands_mc", "cpg_shores_mc", "cpg_shelves_mc",
                     "promoters_mc", "tss_mc",
@@ -52,13 +52,13 @@ deep_dmr_keys <- c("mc_dmr", "hmc_dmr",
                     "promoters_hmc", "tss_hmc")
 for (name in deep_dmr_keys) {
   if (!file.exists(DEEP_PATHS[[name]])) {
-    stop(sprintf("Deep-seq file missing: %s\n  Path: %s", name, DEEP_PATHS[[name]]))
+    stop(sprintf("Deep-8 file missing: %s\n  Path: %s", name, DEEP_PATHS[[name]]))
   }
 }
-cat("  All deep-seq paths validated.\n\n")
+cat("  All deep-8 paths validated.\n\n")
 
 # Color palette for run comparison
-RUN_COLORS <- c("Shallow (run-2)" = "#FF8C00", "Deep (run-3)" = "#1E90FF")
+RUN_COLORS <- c("Deep-4 (run-3)" = "#FF8C00", "Deep-8 (run-4)" = "#1E90FF")
 
 # Output subdirectory for comparison plots
 COMP_DIR <- file.path(OUTPUT_DIR, "comparison_shallow_vs_deep")
@@ -68,7 +68,7 @@ dir.create(COMP_DIR, recursive = TRUE, showWarnings = FALSE)
 # LOAD ALL DATA
 # =============================================================================
 
-cat("Loading shallow-seq and deep-seq DMR data...\n")
+cat("Loading deep-4 and deep-8 DMR data...\n")
 
 # Deduplicate DMR BED: some genes have multiple regions annotated to the same
 # gene name. Keep the entry with the lowest q-value per gene.
@@ -88,9 +88,9 @@ deep_hmc <- dedup_by_gene(hmc_dmr)
 stopifnot(!is.null(shallow_mc), !is.null(shallow_hmc),
           !is.null(deep_mc), !is.null(deep_hmc))
 
-cat(sprintf("  Shallow gene body: %d mC genes, %d hmC genes (deduplicated)\n",
+cat(sprintf("  Deep-4 gene body: %d mC genes, %d hmC genes (deduplicated)\n",
             nrow(shallow_mc), nrow(shallow_hmc)))
-cat(sprintf("  Deep gene body:    %d mC genes, %d hmC genes (deduplicated)\n",
+cat(sprintf("  Deep-8 gene body: %d mC genes, %d hmC genes (deduplicated)\n",
             nrow(deep_mc), nrow(deep_hmc)))
 
 # Regional DMRs — organized as list keyed by region name
@@ -136,7 +136,7 @@ for (region in names(REGION_KEYS)) {
     count_rows[[length(count_rows) + 1]] <- data.frame(
       Region = region,
       Modification = paste0("5", mod),
-      Run = "Shallow (run-2)",
+      Run = "Deep-4 (run-3)",
       Significant = sum(s_df$significant),
       Total = nrow(s_df),
       stringsAsFactors = FALSE
@@ -144,7 +144,7 @@ for (region in names(REGION_KEYS)) {
     count_rows[[length(count_rows) + 1]] <- data.frame(
       Region = region,
       Modification = paste0("5", mod),
-      Run = "Deep (run-3)",
+      Run = "Deep-8 (run-4)",
       Significant = sum(d_df$significant),
       Total = nrow(d_df),
       stringsAsFactors = FALSE
@@ -153,7 +153,7 @@ for (region in names(REGION_KEYS)) {
 }
 dmr_counts <- do.call(rbind, count_rows)
 dmr_counts$Percentage <- 100 * dmr_counts$Significant / dmr_counts$Total
-dmr_counts$Run <- factor(dmr_counts$Run, levels = c("Shallow (run-2)", "Deep (run-3)"))
+dmr_counts$Run <- factor(dmr_counts$Run, levels = c("Deep-4 (run-3)", "Deep-8 (run-4)"))
 
 # Save counts table
 write.table(dmr_counts, file.path(TABLES_DIR, "dmr_counts_shallow_vs_deep.tsv"),
@@ -168,7 +168,7 @@ p_counts <- ggplot(dmr_counts, aes(x = Region, y = Significant, fill = Run)) +
   scale_fill_manual(values = RUN_COLORS) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(
-    title = "Significant DMRs: Shallow-Seq vs Deep-Seq",
+    title = "Significant DMRs: Deep-4 vs Deep-8",
     subtitle = "DMR count by genomic region and modification type (q < 0.05)",
     x = "", y = "Number of Significant DMRs"
   ) +
@@ -250,8 +250,8 @@ p_status <- ggplot(status_summary, aes(x = modification, y = n, fill = status)) 
   geom_text(aes(label = n), position = position_stack(vjust = 0.5), size = 3.5) +
   scale_fill_manual(values = status_colors, name = "Gene Status") +
   labs(
-    title = "Gene Status: Shallow-Seq vs Deep-Seq",
-    subtitle = "How gene significance changed with deeper sequencing",
+    title = "Gene Status: Deep-4 vs Deep-8",
+    subtitle = "How gene significance changed with additional replicates",
     x = "Modification", y = "Number of Genes"
   ) +
   theme_biomodal()
@@ -318,11 +318,11 @@ p_effect <- ggplot(scatter_data,
   scale_color_manual(values = status_colors, name = "Gene Status") +
   facet_wrap(~modification, scales = "free") +
   labs(
-    title = "Effect Size Stability: Shallow vs Deep Sequencing",
+    title = "Effect Size Stability: Deep-4 vs Deep-8",
     subtitle = sprintf("5mC r=%.3f | 5hmC r=%.3f | Dashed line = identity",
                        mc_cor, hmc_cor),
-    x = "Shallow-Seq Effect Size (%)",
-    y = "Deep-Seq Effect Size (%)"
+    x = "Deep-4 Effect Size (%)",
+    y = "Deep-8 Effect Size (%)"
   ) +
   theme_biomodal()
 
@@ -360,9 +360,9 @@ p_delta_hist <- ggplot(qval_data, aes(x = delta_q, fill = modification)) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
   scale_fill_manual(values = COLORS$methylation, name = "Modification") +
   labs(
-    title = "Change in Q-values: Deep - Shallow",
-    subtitle = sprintf("%.1f%% of genes improved (negative = better in deep-seq)", pct_improved),
-    x = "Delta Q-value (deep - shallow)",
+    title = "Change in Q-values: Deep-8 - Deep-4",
+    subtitle = sprintf("%.1f%% of genes improved (negative = better in deep-8)", pct_improved),
+    x = "Delta Q-value (deep-8 - deep-4)",
     y = "Number of Genes"
   ) +
   theme_biomodal()
@@ -374,21 +374,21 @@ p_nlog10 <- ggplot(qval_data, aes(x = shallow_nlog10, y = deep_nlog10)) +
   scale_color_manual(values = COLORS$methylation, name = "Modification") +
   labs(
     title = "-log10(Q) Comparison",
-    subtitle = "Points above diagonal = more significant in deep-seq",
-    x = "-log10(q) Shallow-Seq",
-    y = "-log10(q) Deep-Seq"
+    subtitle = "Points above diagonal = more significant in deep-8",
+    x = "-log10(q) Deep-4",
+    y = "-log10(q) Deep-8"
   ) +
   theme_biomodal()
 
 p_qval_combined <- p_delta_hist / p_nlog10 +
   plot_annotation(
-    title = "Statistical Power Improvement with Deeper Sequencing",
+    title = "Statistical Power Improvement with Additional Replicates",
     theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16))
   )
 
 save_multiformat_ggplot(p_qval_combined, file.path(COMP_DIR, "20e_qvalue_improvement"),
                         width = 12, height = 12)
-cat(sprintf("  %.1f%% of genes have improved q-values in deep-seq\n", pct_improved))
+cat(sprintf("  %.1f%% of genes have improved q-values in deep-8 vs deep-4\n", pct_improved))
 cat("  Saved 20e_qvalue_improvement\n")
 
 # =============================================================================
@@ -419,17 +419,17 @@ p_coverage <- ggplot(cov_data, aes(x = shallow_coverage, y = deep_coverage)) +
   scale_x_log10() +
   scale_y_log10() +
   labs(
-    title = "Coverage Comparison: Shallow vs Deep Sequencing (5mC)",
-    subtitle = sprintf("Median coverage: %.1f (shallow) vs %.1f (deep) | r=%.3f",
+    title = "Coverage Comparison: Deep-4 vs Deep-8 (5mC)",
+    subtitle = sprintf("Median coverage: %.1f (deep-4) vs %.1f (deep-8) | r=%.3f",
                        median_shallow, median_deep, cov_cor),
-    x = "Mean Coverage (Shallow-Seq, log10)",
-    y = "Mean Coverage (Deep-Seq, log10)"
+    x = "Mean Coverage (Deep-4, log10)",
+    y = "Mean Coverage (Deep-8, log10)"
   ) +
   theme_biomodal()
 
 save_multiformat_ggplot(p_coverage, file.path(COMP_DIR, "20f_coverage_comparison"),
                         width = 10, height = 9)
-cat(sprintf("  Median coverage: %.1f (shallow) vs %.1f (deep)\n",
+cat(sprintf("  Median coverage: %.1f (deep-4) vs %.1f (deep-8)\n",
             median_shallow, median_deep))
 cat("  Saved 20f_coverage_comparison\n")
 
@@ -463,20 +463,20 @@ shared_coord <- intersect(shallow_coord_genes, deep_coord_genes)
 shallow_only_coord <- setdiff(shallow_coord_genes, deep_coord_genes)
 deep_only_coord <- setdiff(deep_coord_genes, shallow_coord_genes)
 
-cat(sprintf("  Shallow coordinated genes: %d (%.1f%% of co-significant)\n",
+cat(sprintf("  Deep-4 coordinated genes: %d (%.1f%% of co-significant)\n",
             length(shallow_coord_genes),
             100 * mean(shallow_coord$coordinated)))
-cat(sprintf("  Deep coordinated genes:    %d (%.1f%% of co-significant)\n",
+cat(sprintf("  Deep-8 coordinated genes: %d (%.1f%% of co-significant)\n",
             length(deep_coord_genes),
             100 * mean(deep_coord$coordinated)))
 cat(sprintf("  Shared:       %d\n", length(shared_coord)))
-cat(sprintf("  Shallow only: %d\n", length(shallow_only_coord)))
-cat(sprintf("  Deep only:    %d\n", length(deep_only_coord)))
+cat(sprintf("  Deep-4 only:  %d\n", length(shallow_only_coord)))
+cat(sprintf("  Deep-8 only:  %d\n", length(deep_only_coord)))
 
 # Bar chart: coordinated pattern percentage comparison
 pattern_pct <- data.frame(
-  Run = factor(c("Shallow (run-2)", "Deep (run-3)"),
-               levels = c("Shallow (run-2)", "Deep (run-3)")),
+  Run = factor(c("Deep-4 (run-3)", "Deep-8 (run-4)"),
+               levels = c("Deep-4 (run-3)", "Deep-8 (run-4)")),
   Co_significant = c(nrow(shallow_coord), nrow(deep_coord)),
   Coordinated = c(length(shallow_coord_genes), length(deep_coord_genes)),
   Pct_coordinated = c(100 * mean(shallow_coord$coordinated),
@@ -500,8 +500,8 @@ p_pattern_bar <- ggplot(pattern_pct, aes(x = Run, y = Pct_coordinated, fill = Ru
 
 # Venn diagram of coordinated gene overlap
 venn_list <- list(
-  "Shallow (run-2)" = shallow_coord_genes,
-  "Deep (run-3)" = deep_coord_genes
+  "Deep-4 (run-3)" = shallow_coord_genes,
+  "Deep-8 (run-4)" = deep_coord_genes
 )
 
 p_venn <- ggVennDiagram(venn_list, label_alpha = 0) +
@@ -569,16 +569,16 @@ cat("===========================================================================
 cat("Output plots:  ", COMP_DIR, "\n")
 cat("Output tables: ", TABLES_DIR, "\n\n")
 cat("Key findings:\n")
-cat(sprintf("  mC significant: %d (shallow) -> %d (deep)\n",
+cat(sprintf("  mC significant: %d (deep-4) -> %d (deep-8)\n",
             sum(shallow_mc$significant), sum(deep_mc$significant)))
-cat(sprintf("  hmC significant: %d (shallow) -> %d (deep)\n",
+cat(sprintf("  hmC significant: %d (deep-4) -> %d (deep-8)\n",
             sum(shallow_hmc$significant), sum(deep_hmc$significant)))
 cat(sprintf("  Newly significant mC genes: %d\n", nrow(newly_sig_mc)))
 cat(sprintf("  Newly significant hmC genes: %d\n", nrow(newly_sig_hmc)))
 cat(sprintf("  Effect size correlation: mC r=%.3f, hmC r=%.3f\n", mc_cor, hmc_cor))
-cat(sprintf("  Coordinated pattern: %.1f%% (shallow) -> %.1f%% (deep)\n",
+cat(sprintf("  Coordinated pattern: %.1f%% (deep-4) -> %.1f%% (deep-8)\n",
             100 * mean(shallow_coord$coordinated),
             100 * mean(deep_coord$coordinated)))
-cat(sprintf("  Coverage increase: %.1fx -> %.1fx median\n",
+cat(sprintf("  Coverage: %.1fx (deep-4) -> %.1fx (deep-8) median\n",
             median_shallow, median_deep))
 cat("\n")

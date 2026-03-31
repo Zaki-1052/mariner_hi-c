@@ -91,12 +91,17 @@ KEY_GENES <- c("Syt1", "Zbtb20", "Trpm3", "Epha3", "Mcu", "Cntnap2", "Lpp", "Dlg
 # Statistical thresholds
 Q_THRESHOLD <- 0.05
 
-# Sample metadata
+# Sample metadata (8 samples: batch 1 + batch 2 replicates)
 SAMPLES <- data.frame(
-  sample_id = c("evoC-Bap1-ctrl-F", "evoC-Bap1-ctrl-M", "evoC-Bap1-mut-F", "evoC-Bap1-mut-M"),
-  condition = c("Control", "Control", "Mutant", "Mutant"),
-  sex = c("Female", "Male", "Female", "Male"),
-  short_name = c("ctrl-F", "ctrl-M", "mut-F", "mut-M"),
+  sample_id = c("evoC-Bap1-ctrl-F", "evoC-Bap1-ctrl-M", "evoC-Bap1-mut-F", "evoC-Bap1-mut-M",
+                "evoC-Bap1-ctrl-F-B2", "evoC-Bap1-ctrl-M-B2", "evoC-Bap1-mut-F-B2", "evoC-Bap1-mut-M-B2"),
+  condition = c("Control", "Control", "Mutant", "Mutant",
+                "Control", "Control", "Mutant", "Mutant"),
+  sex = c("Female", "Male", "Female", "Male",
+          "Female", "Male", "Female", "Male"),
+  batch = c(1, 1, 1, 1, 2, 2, 2, 2),
+  short_name = c("ctrl-F", "ctrl-M", "mut-F", "mut-M",
+                 "ctrl-F-B2", "ctrl-M-B2", "mut-F-B2", "mut-M-B2"),
   stringsAsFactors = FALSE
 )
 
