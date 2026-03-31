@@ -8,6 +8,7 @@
 
 # Base paths - run from downstream/ directory
 BASE_DIR <- getwd()
+REPO_ROOT <- normalizePath(file.path(BASE_DIR, "../.."))  # mariner_hi-c/
 
 # Data file paths
 DATA_PATHS <- list(
@@ -33,52 +34,52 @@ DATA_PATHS <- list(
 # ChIP-seq peak file paths (from peaks/beds/)
 # Use Late timepoint peaks to match the adult BAP1-KO analysis
 CHIP_PEAK_FILES <- list(
-  ctcf     = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/CTCF.bed",
-  h3k27ac  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/H3K27acCerebellumLate2.bed",
-  h3k27me3 = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/H3K27me3CerebellumLate1.bed",
-  h3k4me1  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/H3K4me1CerebellumLate1.bed",
-  h3k4me3  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/H3K4me3CerebellumLate2.bed",
-  bivalent = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/beds/Bivalent_Cerebellum_Late.bed"
+  ctcf     = file.path(REPO_ROOT, "peaks/CTCF.bed"),
+  h3k27ac  = file.path(REPO_ROOT, "peaks/beds/H3K27acCerebellumLate2.bed"),
+  h3k27me3 = file.path(REPO_ROOT, "peaks/beds/H3K27me3CerebellumLate1.bed"),
+  h3k4me1  = file.path(REPO_ROOT, "peaks/beds/H3K4me1CerebellumLate1.bed"),
+  h3k4me3  = file.path(REPO_ROOT, "peaks/beds/H3K4me3CerebellumLate2.bed"),
+  bivalent = file.path(REPO_ROOT, "peaks/beds/Bivalent_Cerebellum_Late.bed")
 )
 
 # MeCP2 differential binding files (from peaks/mecp2/)
 MECP2_FILES <- list(
-  annotated = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/mecp2/MeCP2_annotated.txt",
-  up   = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/mecp2/MeCP2_up.bed",
-  down = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/mecp2/MeCP2_down.bed"
+  annotated = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_annotated.txt"),
+  up   = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_up.bed"),
+  down = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_down.bed")
 )
 
 # ATAC-seq differential and consensus peak files (from peaks/atac_seq/)
 ATAC_FILES <- list(
-  up   = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/ATAC_up.bed",
-  down = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/ATAC_down.bed",
-  consensus_ctrl = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/consensus_control.bed",
-  consensus_mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/atac_seq/consensus_mutant.bed"
+  up   = file.path(REPO_ROOT, "peaks/atac_seq/ATAC_up.bed"),
+  down = file.path(REPO_ROOT, "peaks/atac_seq/ATAC_down.bed"),
+  consensus_ctrl = file.path(REPO_ROOT, "peaks/atac_seq/consensus_control.bed"),
+  consensus_mut  = file.path(REPO_ROOT, "peaks/atac_seq/consensus_mutant.bed")
 )
 
 # H2AK119ub condition-specific peak files (from peaks/intersect/)
 K119UB_FILES <- list(
-  ctrl = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P51_K119ub_ctrl_intersect.bed",
-  mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P51_K119ub_mut_intersect.bed"
+  ctrl = file.path(REPO_ROOT, "peaks/intersect/P51_K119ub_ctrl_intersect.bed"),
+  mut  = file.path(REPO_ROOT, "peaks/intersect/P51_K119ub_mut_intersect.bed")
 )
 
 # H3K27ac condition-specific peak files (from peaks/intersect/)
 H3K27AC_FILES <- list(
-  ctrl = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P60_K27ac_ctrl_intersect.bed",
-  mut  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/intersect/P60_K27ac_mut_intersect.bed"
+  ctrl = file.path(REPO_ROOT, "peaks/intersect/P60_K27ac_ctrl_intersect.bed"),
+  mut  = file.path(REPO_ROOT, "peaks/intersect/P60_K27ac_mut_intersect.bed")
 )
 
 # DiffBind quantitative differential binding results (4 marks)
 DIFFBIND_FILES <- list(
-  atac   = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt",
-  k27ac  = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt",
-  k27me3 = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/diffbind/K27me3_diffbind_results_summit_appended_ap.txt",
-  k119ub = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt"
+  atac   = file.path(REPO_ROOT, "peaks/diffbind/ATAC_allATAC_diffbind_results_summit_appended_ap.txt"),
+  k27ac  = file.path(REPO_ROOT, "peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt"),
+  k27me3 = file.path(REPO_ROOT, "peaks/diffbind/K27me3_diffbind_results_summit_appended_ap.txt"),
+  k119ub = file.path(REPO_ROOT, "peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt")
 )
 
 # Hi-C loop annotation files (from mariner pipeline)
 LOOP_FILES <- list(
-  late = "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"
+  late = file.path(REPO_ROOT, "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv")
 )
 
 # Output directory
@@ -171,10 +172,7 @@ suppressPackageStartupMessages({
 })
 
 # Source multi-format output utility
-util_path <- file.path(dirname(BASE_DIR), "scripts/utils/multi_format_output.R")
-if (!file.exists(util_path)) {
-  util_path <- "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/scripts/utils/multi_format_output.R"
-}
+util_path <- file.path(REPO_ROOT, "scripts/utils/multi_format_output.R")
 source(util_path)
 
 # Create output directories
