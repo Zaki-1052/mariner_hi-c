@@ -66,7 +66,7 @@ FDR_THRESHOLD <- 0.05
 txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
 
 # RNA-seq and compartment file paths
-RNA_SEQ_FILE <- "/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx"
+RNA_SEQ_FILE <- file.path(BASE_DIR, "../../tads/adult_timepoint_rna-seq-BAP1_WT_KO_v2_Results.xlsx")
 COMPARTMENT_FILE <- file.path(BASE_DIR, "../../tads/tad-pc-analysis/inputs/late/diffPC/diffcompartments.txt")
 
 # Compartment shift thresholds (matching section 29)
