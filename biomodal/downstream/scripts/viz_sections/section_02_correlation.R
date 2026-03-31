@@ -34,7 +34,7 @@ if (!is.null(bioqc)) {
     sample_names_short <- gsub("evoC-Bap1-", "", sample_names)
 
     # Fill upper triangle by symmetry (matrices have NA in upper triangle)
-    n_samples <- 4
+    n_samples <- length(sample_names)
     for (i in 1:n_samples) {
       for (j in 1:n_samples) {
         if (is.na(mc_corr_mat[i, j]) && !is.na(mc_corr_mat[j, i])) {
@@ -52,7 +52,7 @@ if (!is.null(bioqc)) {
     # Create annotation for heatmap (match order from JSON)
     annotation_df <- data.frame(
       Condition = ifelse(grepl("ctrl", sample_names_short), "Control", "Mutant"),
-      Sex = ifelse(grepl("F$", sample_names_short), "Female", "Male"),
+      Sex = ifelse(grepl("-F", sample_names_short), "Female", "Male"),
       row.names = sample_names_short
     )
 
@@ -104,32 +104,42 @@ if (!is.null(bioqc)) {
     # Combined correlation comparison
     cat("Creating combined correlation comparison...\n")
 
-    # Extract correlations using named indexing for robustness
-    get_corr <- function(mat, s1, s2) {
-      mat[s1, s2]
-    }
+    # Build all pairwise comparisons dynamically
+    ctrl_samples <- sample_names_short[grepl("ctrl", sample_names_short)]
+    mut_samples <- sample_names_short[grepl("mut", sample_names_short)]
 
-    corr_summary <- data.frame(
-      Type = c(rep("5mC", 6), rep("5hmC", 6)),
-      Comparison = rep(c("ctrl-F vs ctrl-M", "ctrl-F vs mut-F", "ctrl-F vs mut-M",
-                         "ctrl-M vs mut-F", "ctrl-M vs mut-M", "mut-F vs mut-M"), 2),
-      Correlation = c(
-        get_corr(mc_corr_mat, "ctrl-F", "ctrl-M"),
-        get_corr(mc_corr_mat, "ctrl-F", "mut-F"),
-        get_corr(mc_corr_mat, "ctrl-F", "mut-M"),
-        get_corr(mc_corr_mat, "ctrl-M", "mut-F"),
-        get_corr(mc_corr_mat, "ctrl-M", "mut-M"),
-        get_corr(mc_corr_mat, "mut-F", "mut-M"),
-        get_corr(hmc_corr_mat, "ctrl-F", "ctrl-M"),
-        get_corr(hmc_corr_mat, "ctrl-F", "mut-F"),
-        get_corr(hmc_corr_mat, "ctrl-F", "mut-M"),
-        get_corr(hmc_corr_mat, "ctrl-M", "mut-F"),
-        get_corr(hmc_corr_mat, "ctrl-M", "mut-M"),
-        get_corr(hmc_corr_mat, "mut-F", "mut-M")
-      ),
-      Group = rep(c("Within-Control", "Between", "Between",
-                    "Between", "Between", "Within-Mutant"), 2)
-    )
+    corr_rows <- list()
+    for (mod_type in c("5mC", "5hmC")) {
+      mat <- if (mod_type == "5mC") mc_corr_mat else hmc_corr_mat
+      # Within-Control
+      if (length(ctrl_samples) >= 2) {
+        for (pair in combn(ctrl_samples, 2, simplify = FALSE)) {
+          corr_rows[[length(corr_rows) + 1]] <- data.frame(
+            Type = mod_type, Comparison = paste(pair[1], "vs", pair[2]),
+            Correlation = mat[pair[1], pair[2]], Group = "Within-Control",
+            stringsAsFactors = FALSE)
+        }
+      }
+      # Within-Mutant
+      if (length(mut_samples) >= 2) {
+        for (pair in combn(mut_samples, 2, simplify = FALSE)) {
+          corr_rows[[length(corr_rows) + 1]] <- data.frame(
+            Type = mod_type, Comparison = paste(pair[1], "vs", pair[2]),
+            Correlation = mat[pair[1], pair[2]], Group = "Within-Mutant",
+            stringsAsFactors = FALSE)
+        }
+      }
+      # Between
+      for (c_s in ctrl_samples) {
+        for (m_s in mut_samples) {
+          corr_rows[[length(corr_rows) + 1]] <- data.frame(
+            Type = mod_type, Comparison = paste(c_s, "vs", m_s),
+            Correlation = mat[c_s, m_s], Group = "Between",
+            stringsAsFactors = FALSE)
+        }
+      }
+    }
+    corr_summary <- do.call(rbind, corr_rows)
 
     p_corr <- ggplot(corr_summary, aes(x = Comparison, y = Correlation, fill = Type)) +
       geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
@@ -138,14 +148,14 @@ if (!is.null(bioqc)) {
       facet_wrap(~Group, scales = "free_x") +
       labs(
         title = "Sample Correlations: 5mC vs 5hmC",
-        subtitle = "5mC shows higher within-group correlation than 5hmC",
+        subtitle = sprintf("%d samples — within-group vs between-group correlations", n_samples),
         x = "", y = "Pearson Correlation"
       ) +
       theme_biomodal() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 7))
 
     save_multiformat_ggplot(p_corr, file.path(OUTPUT_DIR, "02c_correlation_comparison"),
-                            width = 14, height = 7)
+                            width = 16, height = 7)
   }
 }
 
