@@ -11,7 +11,7 @@ set -e
 # Base directories
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(dirname "$SCRIPT_DIR")"
-INPUT_DIR="$BASE_DIR/outputs/run-3"
+INPUT_DIR="$BASE_DIR/outputs/run-4"
 OUTPUT_DIR="$BASE_DIR/DMR_processed"
 CHROM_SIZES="$OUTPUT_DIR/mm10.chrom.sizes"
 BEDTOBIGBED="$SCRIPT_DIR/bedToBigBed"
