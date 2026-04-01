@@ -77,6 +77,22 @@ DIFFBIND_FILES <- list(
   k119ub = file.path(REPO_ROOT, "peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt")
 )
 
+# H3K36me2 DiffBind results (MACS2 narrow peaks, 12 samples: 6 ctrl + 6 mut)
+H3K36ME2_FILES <- list(
+  master = file.path(BASE_DIR, "peaks/03_2026_H3K36me2 files/260221_H3K36me2_macs2_narrow_diffbind_withsummits_results copy.txt"),
+  up     = file.path(BASE_DIR, "peaks/03_2026_H3K36me2 files/diffbind  - using macs2 narrow/allreps_H3K36me2_up.bed"),
+  down   = file.path(BASE_DIR, "peaks/03_2026_H3K36me2 files/diffbind  - using macs2 narrow/allreps_H3K36me2_down.bed")
+)
+
+# H3K36me3 DiffBind results (SEACR stringent peaks, 12 samples: 6 ctrl + 6 mut)
+H3K36ME3_FILES <- list(
+  master_annotated = file.path(BASE_DIR, "peaks/03_2026_H3K36me3 files/260221_seacr_stringent_summits_diffbind_results.txt"),
+  sig_all          = file.path(BASE_DIR, "peaks/03_2026_H3K36me3 files/All Regions - DiffBind with summits/diffbind_H3K36me3_all_results.txt"),
+  sig_pc           = file.path(BASE_DIR, "peaks/03_2026_H3K36me3 files/Protein Coding Regions ONLY DiffBind/diffbind_H3K36me3_PC_results.txt"),
+  up               = file.path(BASE_DIR, "peaks/03_2026_H3K36me3 files/All Regions - DiffBind no summits/all regions H3K36me3 figures/allreps_H3K36me3_up.bed"),
+  down             = file.path(BASE_DIR, "peaks/03_2026_H3K36me3 files/All Regions - DiffBind no summits/all regions H3K36me3 figures/allreps_H3K36me3_down.bed")
+)
+
 # Hi-C loop annotation files (from mariner pipeline)
 LOOP_FILES <- list(
   late = file.path(REPO_ROOT, "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv")
@@ -118,7 +134,12 @@ COLORS <- list(
   k119ub = c("K119ub Gained" = "#756BB1", "K119ub Lost" = "#74C476",
              "Shared" = "grey70", "Not Significant" = "grey70"),
   h3k27ac = c("H3K27ac Gained" = "#FF7F00", "H3K27ac Lost" = "#1F78B4",
-              "Shared" = "grey70", "Not Significant" = "grey70")
+              "Shared" = "grey70", "Not Significant" = "grey70"),
+  h3k36me2 = c("H3K36me2 Gained" = "#E6AB02", "H3K36me2 Lost" = "#66A61E",
+               "Shared" = "grey70", "Not Significant" = "grey70"),
+  h3k36me3 = c("H3K36me3 Gained" = "#D95F02", "H3K36me3 Lost" = "#1B9E77",
+               "Shared" = "grey70", "Not Significant" = "grey70"),
+  h3k36_combined = c("H3K36me2" = "#E6AB02", "H3K36me3" = "#D95F02", "Both" = "#984EA3")
 )
 
 # Chromatin state classification (consistent with annotate_loops_extended.R)
@@ -303,6 +324,54 @@ compute_chip_overlaps <- function(dmr_gr, chip_peaks) {
     Bivalent_overlap = countOverlaps(dmr_gr, chip_peaks$bivalent) > 0
   )
   return(overlaps)
+}
+
+#' Load DiffBind results with flexible column schema
+#' Handles both summit-appended format (Summit_Chr/Summit_Start/Summit_End)
+#' and raw DiffBind format (seqnames/start/end) as used by H3K36me2/me3 files.
+#' @param filepath Path to DiffBind TSV
+#' @param mark_name Display name for logging
+#' @param fdr_threshold FDR threshold for significance counts
+#' @return data.frame with standardized columns: Chr, Start, End, Fold, FDR, p.value
+load_diffbind_flex <- function(filepath, mark_name = "Mark", fdr_threshold = 0.05) {
+  stopifnot(file.exists(filepath))
+  df <- read.table(filepath, header = TRUE, sep = "\t", stringsAsFactors = FALSE,
+                   quote = "", fill = TRUE)
+
+  # Detect schema and standardize coordinate columns
+  if ("Summit_Chr" %in% colnames(df)) {
+    df$Chr <- df$Summit_Chr
+    df$Start <- df$Summit_Start
+    df$End <- df$Summit_End
+  } else if ("seqnames" %in% colnames(df)) {
+    df$Chr <- df$seqnames
+    df$Start <- df$start
+    df$End <- df$end
+  } else if ("Chr" %in% colnames(df)) {
+    # Already standard
+  } else {
+    stop(sprintf("Unrecognized DiffBind column schema in %s. Expected Summit_Chr, seqnames, or Chr.", filepath))
+  }
+
+  # Normalize p-value column name (some files use p-value with hyphen)
+  if ("p.value" %in% colnames(df)) {
+    # already correct
+  } else if ("p-value" %in% colnames(df)) {
+    df$p.value <- df[["p-value"]]
+  }
+
+  # Validate required columns
+  required <- c("Chr", "Start", "End", "Fold", "FDR")
+  missing <- setdiff(required, colnames(df))
+  if (length(missing) > 0) {
+    stop(sprintf("Missing required columns in %s: %s", filepath, paste(missing, collapse = ", ")))
+  }
+
+  n_up   <- sum(df$FDR < fdr_threshold & df$Fold > 0, na.rm = TRUE)
+  n_down <- sum(df$FDR < fdr_threshold & df$Fold < 0, na.rm = TRUE)
+  cat(sprintf("  %s: %d peaks (%d sig up, %d sig down at FDR<%.2f)\n",
+              mark_name, nrow(df), n_up, n_down, fdr_threshold))
+  df
 }
 
 #' Classify chromatin state using 7-category priority system
