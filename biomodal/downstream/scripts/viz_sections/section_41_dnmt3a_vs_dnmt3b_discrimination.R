@@ -60,8 +60,8 @@ if (file.exists(COMBINED_TABLE)) {
     left_join(me2_gene %>% dplyr::select(gene, me2_fold, me2_fdr, me2_n_peaks), by = "gene")
 }
 
-# Ensure K119ub data is present
-if (!"k119ub_fold" %in% colnames(full_profile)) {
+# Ensure K119ub FDR data is present (combined table may have fold but not fdr)
+if (!"k119ub_fdr" %in% colnames(full_profile)) {
   multi_mark_table <- file.path(TABLES_DIR, "diffbind_gene_level_all_marks.tsv")
   stopifnot(file.exists(multi_mark_table))
   multi_marks <- read.table(multi_mark_table, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
