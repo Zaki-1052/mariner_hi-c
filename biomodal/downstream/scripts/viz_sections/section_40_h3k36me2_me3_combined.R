@@ -458,7 +458,8 @@ export_combined <- combined %>%
   dplyr::select(gene, mc_diff, mc_sig, hmc_diff, hmc_sig, delta_ratio, dmr_status,
                 chromatin_state, me3_fold, me3_fdr, me3_n_peaks,
                 me2_fold, me2_fdr, me2_n_peaks,
-                any_of(c("k119ub_fold", "k27me3_fold", "k27ac_fold", "atac_fold")))
+                any_of(c("k119ub_fold", "k27me3_fold", "k27ac_fold", "atac_fold",
+                         "k119ub_fdr", "k27me3_fdr", "k27ac_fdr", "atac_fdr")))
 
 write.table(export_combined, file.path(TABLES_DIR, "h3k36_combined_gene_profile.tsv"),
             sep = "\t", quote = FALSE, row.names = FALSE)
