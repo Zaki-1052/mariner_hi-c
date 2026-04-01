@@ -60,17 +60,23 @@ if (file.exists(COMBINED_TABLE)) {
     left_join(me2_gene %>% dplyr::select(gene, me2_fold, me2_fdr, me2_n_peaks), by = "gene")
 }
 
-# Ensure K119ub FDR data is present (combined table may have fold but not fdr)
-if (!"k119ub_fdr" %in% colnames(full_profile)) {
+# Ensure K119ub fold+fdr data is present (combined table may lack fdr columns)
+needed_cols <- c("atac_fold", "k27ac_fold", "k27me3_fold", "k119ub_fold",
+                 "atac_fdr", "k27ac_fdr", "k27me3_fdr", "k119ub_fdr")
+missing_cols <- setdiff(needed_cols, colnames(full_profile))
+
+if (length(missing_cols) > 0) {
   multi_mark_table <- file.path(TABLES_DIR, "diffbind_gene_level_all_marks.tsv")
   stopifnot(file.exists(multi_mark_table))
   multi_marks <- read.table(multi_mark_table, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-  full_profile <- full_profile %>%
-    left_join(multi_marks %>% dplyr::select(gene, any_of(c("atac_fold", "k27ac_fold",
-                                                            "k27me3_fold", "k119ub_fold",
-                                                            "atac_fdr", "k27ac_fdr",
-                                                            "k27me3_fdr", "k119ub_fdr"))),
-              by = "gene")
+  # Only select gene + columns that are actually missing to avoid .x/.y duplicates
+  cols_to_add <- intersect(missing_cols, colnames(multi_marks))
+  if (length(cols_to_add) > 0) {
+    full_profile <- full_profile %>%
+      left_join(multi_marks %>% dplyr::select(gene, all_of(cols_to_add)), by = "gene")
+    cat(sprintf("  Loaded %d missing columns from multi-mark table: %s\n",
+                length(cols_to_add), paste(cols_to_add, collapse = ", ")))
+  }
 }
 
 # Define key binary classifications
