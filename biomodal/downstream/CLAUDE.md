@@ -78,17 +78,24 @@ Each section script is independent and sources `_shared_config.R` for shared sta
 | `section_09_summary.R` | Key findings and summary tables |
 | `section_10_chromatin_state.R` | ChIP-seq integration, 7-state classification |
 | `section_11` through `section_19` | MeCP2, ATAC-seq, H2AK119ub, H3K27ac integrations |
+| `section_20` through `section_37` | Demethylation ratio, compartments, Polycomb, permutation tests |
+| `section_38_h3k36me3_gene_body_analysis.R` | H3K36me3 (SETD2/DNMT3B axis): volcano, O/E heatmaps, fold correlations, chromatin state |
+| `section_39_h3k36me2_boundary_analysis.R` | H3K36me2 (NSD/DNMT3A axis): PRC2 boundary integrity, K27me3 cross-mark, genic vs intergenic |
+| `section_40_h3k36me2_me3_combined.R` | Combined me2/me3: expanded correlation heatmap, conversion dynamics, Venn, GO comparison |
+| `section_41_dnmt3a_vs_dnmt3b_discrimination.R` | DNMT3A vs DNMT3B discrimination: logistic regression, pathway attribution, decision matrix |
 | `compare_shallow_vs_deep.R` | Standalone: shallow-seq (run-2) vs deep-seq (run-3) comparison |
 
 ### Shared Config (`_shared_config.R`)
 
 Central configuration loaded by every section script. Contains:
-- `DATA_PATHS` — Hardcoded paths to run-3 (deep-seq) DMR BED files (timestamped filenames)
+- `DATA_PATHS` — Hardcoded paths to run-4 (deep-seq, 8 samples) DMR BED files (timestamped filenames)
 - `CHIP_PEAK_FILES` — ChIP-seq BED paths for chromatin state classification
+- `H3K36ME2_FILES`, `H3K36ME3_FILES` — H3K36me2/me3 DiffBind results and differential BED files
 - `load_dmr_bed()` — Parses modality DMR BED format (13-14 columns)
+- `load_diffbind_flex()` — Loads DiffBind results with flexible column schema (seqnames or Summit_Chr)
 - `theme_biomodal()` — Consistent ggplot2 theme
 - `classify_chromatin_state()` — 7-category priority system matching Hi-C pipeline
-- `COLORS` — Standardized color palettes for condition, direction, methylation type
+- `COLORS` — Standardized color palettes for condition, direction, methylation type, h3k36me2, h3k36me3
 - Pre-loaded data: `mc_dmr`, `hmc_dmr`, `bioqc` (JSON), `region_dmrs` (6 regions)
 
 ### DMR BED Format (modality output)
