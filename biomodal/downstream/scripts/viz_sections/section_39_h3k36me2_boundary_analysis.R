@@ -503,7 +503,8 @@ me2_status_colors <- c("me2 Gained" = "#E6AB02", "me2 Lost" = "#66A61E",
 
 p_39f <- ggplot(state_bar_data, aes(x = chromatin_state, y = pct, fill = me2_status)) +
   geom_bar(stat = "identity", color = "white", linewidth = 0.3) +
-  geom_text(data = state_bar_data %>% group_by(chromatin_state) %>% slice(1),
+  geom_text(data = state_bar_data %>% group_by(chromatin_state) %>%
+              summarise(total = total[1], .groups = "drop"),
             aes(x = chromatin_state, y = 105, label = sprintf("n=%d", total)),
             inherit.aes = FALSE, size = 2.8, color = "grey40") +
   scale_fill_manual(values = me2_status_colors, name = "H3K36me2 Status") +
