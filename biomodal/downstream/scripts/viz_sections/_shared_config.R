@@ -438,6 +438,55 @@ classify_chromatin_state <- function(overlaps, distance_to_tss, tss_threshold = 
 }
 
 # =============================================================================
+# regioneReloaded BUG FIX: chooseHclustMet crashes with <=2 rows
+# =============================================================================
+
+#' Patch regioneReloaded::chooseHclustMet for small matrices
+#'
+#' chooseHclustMet computes cophenetic correlation to pick the best hclust method.
+#' With <=2 rows, dist() returns a single value, cor() returns NA (undefined for
+#' n=1), and which(NA == max(NA)) yields integer(0), crashing the [[ indexer.
+#' This patch short-circuits to use the first specified method when nrow <= 2.
+#'
+#' Call this AFTER library(regioneReloaded) in permutation sections (34-36).
+patch_chooseHclustMet <- function() {
+  safe_fn <- function(GM, scale = TRUE, vecMet = NULL, distHC = "euclidean") {
+    if (scale == TRUE) GM <- scale(GM)
+    if (is.null(vecMet)) {
+      vecMet <- c("complete", "average", "single", "ward.D2",
+                   "median", "centroid", "mcquitty")
+    }
+    mat_dist <- stats::dist(x = GM, method = distHC)
+
+    # With <=2 rows, cophenetic correlation is undefined (single distance value).
+    # Just use the first specified method directly.
+    if (nrow(GM) <= 2) {
+      model <- stats::hclust(d = mat_dist, method = vecMet[1])
+      methods::show(paste0("method for hclustering (<=2 elements, skipping cophenetic): ", vecMet[1]))
+      return(model)
+    }
+
+    # Original logic for >2 rows
+    resMetList <- lapply(seq_along(vecMet), FUN = function(i, mat_dist, vecMet) {
+      stats::hclust(d = mat_dist, method = vecMet[[i]])
+    }, mat_dist, vecMet)
+    names(resMetList) <- vecMet
+    resMetVec <- unlist(lapply(seq_along(resMetList), FUN = function(i, mat_dist, resMetList) {
+      stats::cor(x = mat_dist, stats::cophenetic(resMetList[[i]]))
+    }, mat_dist, resMetList))
+    names(resMetVec) <- vecMet
+    name_model <- vecMet[which(resMetVec == max(resMetVec))]
+    if (length(name_model) > 1) name_model <- name_model[1]
+    model <- resMetList[[name_model]]
+    methods::show(paste0("method selected for hclustering: ", name_model))
+    methods::show(resMetVec)
+    return(model)
+  }
+  assignInNamespace("chooseHclustMet", safe_fn, ns = "regioneReloaded")
+  cat("  Patched regioneReloaded::chooseHclustMet for small-matrix safety.\n")
+}
+
+# =============================================================================
 # LOAD DATA
 # =============================================================================
 

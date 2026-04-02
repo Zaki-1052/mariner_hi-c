@@ -42,6 +42,7 @@ suppressPackageStartupMessages({
   library(regioneReloaded)
   library(BSgenome.Mmusculus.UCSC.mm10)
 })
+patch_chooseHclustMet()
 
 cat("\n")
 cat("===========================================================================\n")
@@ -276,8 +277,7 @@ if (file.exists(CACHE_PATH) && !.force_rerun) {
     mc.cores       = PERM_CORES,
     per.chromosome = PERM_PER_CHR
   )
-  # symm_matrix=FALSE + hc.method="average": non-square design, <=2 Blist
-  # elements makes chooseHclustMet crash (cophenetic corr undefined for 1x1 dist)
+  # symm_matrix=FALSE: non-square design (patched chooseHclustMet handles <=2 dim)
   cw_36a <- makeCrosswiseMatrix(cw_36a, pvcut = 1,
                                  symm_matrix = FALSE, hc.method = "average")
   cat("  36A complete.\n")
