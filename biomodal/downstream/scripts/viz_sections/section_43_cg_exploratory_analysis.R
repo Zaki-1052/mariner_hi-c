@@ -607,6 +607,91 @@ save_multiformat_ggplot(p_effect_chr, file.path(OUTPUT_DIR, SECTION_DIR, "43l_cg
 cat("  Saved 43l_cg_mc_effect_size_by_chr\n")
 
 # =============================================================================
+# FIGURE 43m: chrX REMOVAL EFFECT ON DIRECTION ASYMMETRY
+# =============================================================================
+
+cat("\n--- Figure 43m: chrX Removal Effect on Direction Asymmetry ---\n")
+
+mc_all_sig <- mc_dmr %>% dplyr::filter(significant)
+hmc_all_sig <- hmc_dmr %>% dplyr::filter(significant)
+mc_no_x <- mc_all_sig %>% dplyr::filter(chr != "chrX")
+hmc_no_x <- hmc_all_sig %>% dplyr::filter(chr != "chrX")
+
+n_mc_x <- nrow(mc_all_sig) - nrow(mc_no_x)
+n_hmc_x <- nrow(hmc_all_sig) - nrow(hmc_no_x)
+
+direction_chrx <- data.frame(
+  Modification = rep(c("5mC", "5mC", "5hmC", "5hmC"), 2),
+  Direction = rep(c("Increased", "Decreased"), 4),
+  Filter = rep(c("All chromosomes", "Excluding chrX"), each = 4),
+  Count = c(
+    sum(mc_all_sig$direction == "Hypermethylated"),
+    sum(mc_all_sig$direction == "Hypomethylated"),
+    sum(hmc_all_sig$direction == "Hypermethylated"),
+    sum(hmc_all_sig$direction == "Hypomethylated"),
+    sum(mc_no_x$direction == "Hypermethylated"),
+    sum(mc_no_x$direction == "Hypomethylated"),
+    sum(hmc_no_x$direction == "Hypermethylated"),
+    sum(hmc_no_x$direction == "Hypomethylated")
+  ),
+  stringsAsFactors = FALSE
+)
+
+direction_chrx <- direction_chrx %>%
+  dplyr::group_by(Modification, Filter) %>%
+  dplyr::mutate(
+    Total = sum(Count),
+    Percentage = 100 * Count / Total
+  ) %>%
+  dplyr::ungroup()
+
+direction_chrx$Modification <- factor(direction_chrx$Modification, levels = c("5mC", "5hmC"))
+direction_chrx$Direction <- factor(direction_chrx$Direction, levels = c("Increased", "Decreased"))
+direction_chrx$Filter <- factor(direction_chrx$Filter, levels = c("All chromosomes", "Excluding chrX"))
+
+p_chrx_direction <- ggplot(direction_chrx,
+                           aes(x = Modification, y = Percentage, fill = Direction)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black",
+           linewidth = 0.5, width = 0.7) +
+  geom_text(aes(label = sprintf("%.1f%%\n(n=%d)", Percentage, Count)),
+            position = position_dodge(width = 0.7), vjust = -0.3,
+            size = 3.5, fontface = "bold") +
+  facet_wrap(~Filter) +
+  scale_fill_manual(values = c("Increased" = "#D7191C", "Decreased" = "#2C7BB6"),
+                    name = "Direction in\nBAP1-KO Mutant") +
+  scale_y_continuous(limits = c(0, 108), expand = c(0, 0)) +
+  labs(
+    title = "Effect of Removing chrX on Direction Asymmetry",
+    subtitle = sprintf("chrX contributes %d/%d mC DMRs (%.1f%%) and %d/%d hmC DMRs (%.1f%%) -- minimal impact",
+                       n_mc_x, nrow(mc_all_sig),
+                       100 * n_mc_x / nrow(mc_all_sig),
+                       n_hmc_x, nrow(hmc_all_sig),
+                       100 * n_hmc_x / nrow(hmc_all_sig)),
+    x = "Methylation Type",
+    y = "Percentage of Significant DMRs (%)"
+  ) +
+  theme_biomodal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(size = 13, face = "bold"),
+    strip.text = element_text(size = 13, face = "bold")
+  )
+
+save_multiformat_ggplot(p_chrx_direction,
+                        file.path(OUTPUT_DIR, SECTION_DIR, "43m_chrX_direction_comparison"),
+                        width = 12, height = 7)
+
+cat(sprintf("  chrX mC: %d DMRs (%d hyper, %d hypo)\n",
+            n_mc_x,
+            sum(mc_all_sig$chr == "chrX" & mc_all_sig$direction == "Hypermethylated"),
+            sum(mc_all_sig$chr == "chrX" & mc_all_sig$direction == "Hypomethylated")))
+cat(sprintf("  chrX hmC: %d DMRs (%d inc, %d dec)\n",
+            n_hmc_x,
+            sum(hmc_all_sig$chr == "chrX" & hmc_all_sig$direction == "Hypermethylated"),
+            sum(hmc_all_sig$chr == "chrX" & hmc_all_sig$direction == "Hypomethylated")))
+cat("  Saved 43m_chrX_direction_comparison\n")
+
+# =============================================================================
 # TABLE EXPORTS
 # =============================================================================
 
