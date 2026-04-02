@@ -185,24 +185,23 @@ cat(sprintf("  Genes matched in mC matrix: %d / %d\n", nrow(mc_sub), length(gene
 cat(sprintf("  Genes matched in hmC matrix: %d / %d\n", nrow(hmc_sub), length(gene_list)))
 
 # Helper: run PCA on a gene x sample matrix and return a ggplot
-run_pca_plot <- function(df, sample_cols, meta, meth_label) {
-  # Genes as rows, samples as columns => transpose for prcomp (samples as rows)
+run_pca_plot <- function(df, sample_cols, meta, meth_label,
+                         title_prefix = "PCA", subtitle_detail = NULL) {
   mat <- as.matrix(df[, sample_cols])
   rownames(mat) <- df$Name
 
-  # Remove genes with zero variance (constant across samples)
-  var_filter <- apply(mat, 1, var, na.rm = TRUE) > 0
-  mat <- mat[var_filter, , drop = FALSE]
-
-  # Replace any NAs with row means
+  # Replace any NAs with row means before variance check
   for (i in seq_len(nrow(mat))) {
     na_idx <- is.na(mat[i, ])
-    if (any(na_idx)) mat[i, na_idx] <- mean(mat[i, !na_idx])
+    if (any(na_idx)) mat[i, na_idx] <- mean(mat[i, !na_idx], na.rm = TRUE)
   }
 
-  pca <- prcomp(t(mat), center = TRUE, scale. = TRUE)
+  # Remove genes with zero/near-zero variance (constant across samples)
+  gene_vars <- apply(mat, 1, var, na.rm = TRUE)
+  mat <- mat[!is.na(gene_vars) & gene_vars > 1e-10, , drop = FALSE]
 
-  var_explained <- summary(pca)$importance[2, ] * 100  # % variance
+  pca <- prcomp(t(mat), center = TRUE, scale. = TRUE)
+  var_explained <- summary(pca)$importance[2, ] * 100
 
   pca_df <- data.frame(
     PC1 = pca$x[, 1],
@@ -213,14 +212,16 @@ run_pca_plot <- function(df, sample_cols, meta, meth_label) {
     label     = meta$short
   )
 
+  sub <- subtitle_detail %||% sprintf("%d genes", nrow(mat))
+
   ggplot(pca_df, aes(x = PC1, y = PC2, color = condition, shape = batch)) +
     geom_point(size = 4, stroke = 1.2) +
     ggrepel::geom_text_repel(aes(label = label), size = 3, show.legend = FALSE) +
     scale_color_manual(values = COLORS$condition, name = "Condition") +
     scale_shape_manual(values = c("Batch 1" = 16, "Batch 2" = 17), name = "Batch") +
     labs(
-      title = sprintf("PCA: %s at Max-Significance Genes", meth_label),
-      subtitle = sprintf("%d genes | q < 1e-300", nrow(mat)),
+      title = sprintf("%s: %s", title_prefix, meth_label),
+      subtitle = sub,
       x = sprintf("PC1 (%.1f%% variance)", var_explained[1]),
       y = sprintf("PC2 (%.1f%% variance)", var_explained[2])
     ) +
@@ -228,16 +229,21 @@ run_pca_plot <- function(df, sample_cols, meta, meth_label) {
     theme(legend.position = "right")
 }
 
-# Build PCA plots
-p_pca_mc  <- run_pca_plot(mc_sub,  sample_cols, sample_meta, "5mC")
-
-# hmC sample columns have different suffix
 hmc_sample_cols <- colnames(hmc_frac)[4:11]
-p_pca_hmc <- run_pca_plot(hmc_sub, hmc_sample_cols, sample_meta, "5hmC")
 
-# Combined panel
-p_pca_combined <- p_pca_mc | p_pca_hmc
-p_pca_combined <- p_pca_combined +
+SECTION_DIR <- file.path(OUTPUT_DIR, "42_max_significance")
+dir.create(SECTION_DIR, recursive = TRUE, showWarnings = FALSE)
+
+# ---- PCA 1: Max-significance genes only ------------------------------------
+
+max_sig_sub <- sprintf("%d genes | q < 1e-300", length(gene_list))
+
+p_pca_mc  <- run_pca_plot(mc_sub,  sample_cols,     sample_meta, "5mC",
+                          title_prefix = "Max-Significance", subtitle_detail = max_sig_sub)
+p_pca_hmc <- run_pca_plot(hmc_sub, hmc_sample_cols, sample_meta, "5hmC",
+                          title_prefix = "Max-Significance", subtitle_detail = max_sig_sub)
+
+p_pca_combined <- (p_pca_mc | p_pca_hmc) +
   patchwork::plot_annotation(
     title = "PCA of Max-Significance Genes: 5mC vs 5hmC",
     subtitle = "Per-sample regional methylation fraction | BAP1-KO vs Control",
@@ -247,14 +253,35 @@ p_pca_combined <- p_pca_combined +
     )
   )
 
-# Save
-SECTION_DIR <- file.path(OUTPUT_DIR, "42_max_significance")
-dir.create(SECTION_DIR, recursive = TRUE, showWarnings = FALSE)
-
 save_multiformat_ggplot(p_pca_combined,
                         file.path(SECTION_DIR, "42_pca_max_significance_genes"),
                         width = 16, height = 7)
+cat(sprintf("  Saved max-significance PCA to: %s\n", SECTION_DIR))
 
-cat(sprintf("  Saved PCA plot to: %s\n", SECTION_DIR))
+# ---- PCA 2: All genes (genome-wide) ----------------------------------------
+
+cat("\n--- PCA of all genes (genome-wide) ---\n\n")
+
+all_genes_sub <- sprintf("%d genes | all gene bodies", nrow(mc_frac))
+
+p_all_mc  <- run_pca_plot(mc_frac,  sample_cols,     sample_meta, "5mC",
+                          title_prefix = "All Genes", subtitle_detail = all_genes_sub)
+p_all_hmc <- run_pca_plot(hmc_frac, hmc_sample_cols, sample_meta, "5hmC",
+                          title_prefix = "All Genes", subtitle_detail = all_genes_sub)
+
+p_all_combined <- (p_all_mc | p_all_hmc) +
+  patchwork::plot_annotation(
+    title = "PCA of All Gene Bodies: 5mC vs 5hmC",
+    subtitle = "Per-sample regional methylation fraction | BAP1-KO vs Control",
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+      plot.subtitle = element_text(hjust = 0.5, size = 12)
+    )
+  )
+
+save_multiformat_ggplot(p_all_combined,
+                        file.path(SECTION_DIR, "42_pca_all_genes"),
+                        width = 16, height = 7)
+cat(sprintf("  Saved all-genes PCA to: %s\n", SECTION_DIR))
 
 cat("\n✅ Section 42 complete.\n")
