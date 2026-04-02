@@ -592,7 +592,11 @@ cat(sprintf("  ASM sites in hmC hypo-DMRs: %d\n", n_hmc_hypo_ol))
 cat(sprintf("  No DMR overlap: %d\n", n_no_dmr))
 
 overlap_df <- data.frame(
-  category = c("mC Hyper-DMR", "mC Hypo-DMR", "hmC Hyper-DMR", "hmC Hypo-DMR", "No DMR Overlap"),
+  category = c("In mC Hyper-DMR\nGene Body",
+               "In mC Hypo-DMR\nGene Body",
+               "In hmC Hyper-DMR\nGene Body",
+               "In hmC Hypo-DMR\nGene Body",
+               "No DMR\nOverlap"),
   count = c(n_mc_hyper_ol, n_mc_hypo_ol, n_hmc_hyper_ol, n_hmc_hypo_ol, n_no_dmr),
   stringsAsFactors = FALSE
 )
@@ -603,19 +607,21 @@ p_overlap <- ggplot(overlap_df, aes(x = category, y = count, fill = category)) +
   geom_bar(stat = "identity", width = 0.7) +
   geom_text(aes(label = sprintf("%d (%.1f%%)", count, pct)), vjust = -0.3, size = 3.5) +
   scale_fill_manual(
-    values = c("mC Hyper-DMR" = "#D7191C", "mC Hypo-DMR" = "#2C7BB6",
-               "hmC Hyper-DMR" = "#FDB863", "hmC Hypo-DMR" = "#5E4FA2",
-               "No DMR Overlap" = "grey70"),
+    values = c("In mC Hyper-DMR\nGene Body" = "#D7191C",
+               "In mC Hypo-DMR\nGene Body" = "#2C7BB6",
+               "In hmC Hyper-DMR\nGene Body" = "#FDB863",
+               "In hmC Hypo-DMR\nGene Body" = "#5E4FA2",
+               "No DMR\nOverlap" = "grey70"),
     name = ""
   ) +
   labs(
-    title = "Significant ASM Sites Overlapping Gene Body DMRs",
-    subtitle = sprintf("%s unique ASM loci | DMR q < %.2f",
+    title = "mC ASM Loci Located Within Significant Gene Body DMRs",
+    subtitle = sprintf("%s unique mC ASM loci tested | DMR q < %.2f | Categories are DMR types at the locus",
                        scales::comma(n_asm), Q_THRESHOLD),
-    x = "", y = "ASM Loci Count"
+    x = "DMR Type at ASM Locus", y = "mC ASM Loci Count"
   ) +
   theme_biomodal() +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+  theme(axis.text.x = element_text(size = 9),
         legend.position = "none")
 
 # Panel B: For genes with both DMR and ASM, scatter DMR effect vs ASM bias
@@ -662,15 +668,15 @@ if (length(ol_mc) > 0) {
 
   p_dmr_overlap <- p_overlap + p_scatter +
     plot_annotation(
-      title = "ASM and Gene Body DMR Integration",
-      theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16))
+      title = "mC Allele-Specific Methylation Sites Within Gene Body DMR Regions",
+      theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
     )
 } else {
   cat("  No ASM-DMR overlaps found for scatter plot\n")
   p_dmr_overlap <- p_overlap +
     plot_annotation(
-      title = "ASM and Gene Body DMR Integration",
-      theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16))
+      title = "mC Allele-Specific Methylation Sites Within Gene Body DMR Regions",
+      theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
     )
 }
 
