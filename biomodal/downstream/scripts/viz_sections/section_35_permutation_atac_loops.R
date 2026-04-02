@@ -221,33 +221,6 @@ cat(sprintf("35C: %d x %d = %d pairwise tests\n",
             length(Alist_35c), length(Blist_35c),
             length(Alist_35c) * length(Blist_35c)))
 
-# Helper: build ggplot heatmap from a crosswisePermTest object
-# (makeCrosswiseMatrix / plotCrosswiseMatrix require a square matrix, but our
-# Alist x Blist designs are intentionally non-square)
-plot_cw_heatmap <- function(cw_obj, title = "", subtitle = "") {
-  mo <- cw_obj@multiOverlaps
-  df <- do.call(rbind, lapply(names(mo), function(a_name) {
-    row <- mo[[a_name]]
-    data.frame(Alist = a_name, Blist = row$name,
-               zscore = row$z_score, pvalue = row$p_value,
-               stringsAsFactors = FALSE)
-  }))
-  df$sig_label <- ifelse(df$pvalue < 0.001, "***",
-                   ifelse(df$pvalue < 0.01, "**",
-                   ifelse(df$pvalue < 0.05, "*", "")))
-  max_z <- max(abs(df$zscore), na.rm = TRUE)
-  ggplot(df, aes(x = Alist, y = Blist, fill = zscore)) +
-    geom_tile(color = "white", linewidth = 0.5) +
-    geom_text(aes(label = sprintf("%.1f", zscore)), size = 3.5) +
-    geom_text(aes(label = sig_label), vjust = -0.3, size = 4, fontface = "bold") +
-    scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
-                         midpoint = 0, limits = c(-max_z, max_z),
-                         name = "Z-Score") +
-    labs(title = title, subtitle = subtitle, x = "", y = "") +
-    theme_biomodal() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-}
-
 cat(sprintf("\nTotal pairwise permutation tests: %d\n",
             length(Alist_35a) * length(Blist_35a) +
             length(Alist_35b) * length(Blist_35b) +
@@ -283,6 +256,10 @@ if (file.exists(CACHE_PATH) && !.force_rerun) {
     mc.cores       = PERM_CORES,
     per.chromosome = PERM_PER_CHR
   )
+  # symm_matrix=FALSE + hc.method="average": non-square design, <=2 Alist
+  # elements makes chooseHclustMet crash (cophenetic corr undefined for 1x1 dist)
+  cw_35a <- makeCrosswiseMatrix(cw_35a, pvcut = 1,
+                                 symm_matrix = FALSE, hc.method = "average")
   cat("  35A complete.\n")
 
   # 35B: ATAC x chromatin states
@@ -298,6 +275,8 @@ if (file.exists(CACHE_PATH) && !.force_rerun) {
     mc.cores       = PERM_CORES,
     per.chromosome = PERM_PER_CHR
   )
+  cw_35b <- makeCrosswiseMatrix(cw_35b, pvcut = 1,
+                                 symm_matrix = FALSE, hc.method = "average")
   cat("  35B complete.\n")
 
   # 35C: Loop anchors x chromatin features
@@ -313,10 +292,10 @@ if (file.exists(CACHE_PATH) && !.force_rerun) {
     mc.cores       = PERM_CORES,
     per.chromosome = PERM_PER_CHR
   )
+  cw_35c <- makeCrosswiseMatrix(cw_35c, pvcut = 1,
+                                 symm_matrix = FALSE, hc.method = "average")
   cat("  35C complete.\n")
 
-  # Save raw objects immediately (makeCrosswiseMatrix requires square matrix,
-  # but our Alist x Blist designs are intentionally non-square)
   # Save cache
   cat("\nSaving permutation results to cache...\n")
   perm_35 <- list(cw_35a = cw_35a, cw_35b = cw_35b, cw_35c = cw_35c)
@@ -330,12 +309,11 @@ if (file.exists(CACHE_PATH) && !.force_rerun) {
 
 cat("\n--- Generating Figure 35a: ATAC x ChIP marks heatmap ---\n")
 
-p_35a <- plot_cw_heatmap(
-  cw_35a,
-  title = "Permutation Test: ATAC Peaks x ChIP Marks",
-  subtitle = sprintf("randomizeRegions, %d permutations, per.chromosome=TRUE",
-                     PERM_NTIMES)
-)
+p_35a <- plotCrosswiseMatrix(cw_35a, matrix_type = "association") +
+  ggtitle("Permutation Test: ATAC Peaks x ChIP Marks",
+          subtitle = sprintf("randomizeRegions, %d permutations, per.chromosome=TRUE",
+                             PERM_NTIMES)) +
+  theme_biomodal()
 
 save_multiformat_ggplot(
   p_35a,
@@ -349,12 +327,11 @@ save_multiformat_ggplot(
 
 cat("--- Generating Figure 35b: ATAC x chromatin states heatmap ---\n")
 
-p_35b <- plot_cw_heatmap(
-  cw_35b,
-  title = "Permutation Test: ATAC Peaks x Chromatin States",
-  subtitle = sprintf("randomizeRegions, %d permutations, per.chromosome=TRUE",
-                     PERM_NTIMES)
-)
+p_35b <- plotCrosswiseMatrix(cw_35b, matrix_type = "association") +
+  ggtitle("Permutation Test: ATAC Peaks x Chromatin States",
+          subtitle = sprintf("randomizeRegions, %d permutations, per.chromosome=TRUE",
+                             PERM_NTIMES)) +
+  theme_biomodal()
 
 save_multiformat_ggplot(
   p_35b,
@@ -368,12 +345,11 @@ save_multiformat_ggplot(
 
 cat("--- Generating Figure 35c: Loop anchors x chromatin features heatmap ---\n")
 
-p_35c <- plot_cw_heatmap(
-  cw_35c,
-  title = "Permutation Test: Loop Anchors x Chromatin Features",
-  subtitle = sprintf("randomizeRegions, %d permutations, per.chromosome=TRUE",
-                     PERM_NTIMES)
-)
+p_35c <- plotCrosswiseMatrix(cw_35c, matrix_type = "association") +
+  ggtitle("Permutation Test: Loop Anchors x Chromatin Features",
+          subtitle = sprintf("randomizeRegions, %d permutations, per.chromosome=TRUE",
+                             PERM_NTIMES)) +
+  theme_biomodal()
 
 save_multiformat_ggplot(
   p_35c,
