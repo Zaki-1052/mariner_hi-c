@@ -2,6 +2,7 @@
 # Section 42: Extract genes at maximum significance (q-value floor)
 # Identifies genes whose q-values hit the numerical floor (~0), appearing at
 # the -log10(q) = 300 ceiling in volcano plots. Exports merged mC/hmC table.
+# Also produces PCA of per-sample methylation across these genes.
 
 # Run from downstream/ directory
 source("scripts/viz_sections/_shared_config.R")
@@ -142,5 +143,118 @@ writeLines(gene_list,
 cat(sprintf("  Saved: %s (%d unique gene names)\n",
             file.path(TABLES_DIR, "max_significance_gene_names.txt"),
             length(gene_list)))
+
+# =============================================================================
+# PCA OF MAX-SIGNIFICANCE GENES (per-sample methylation)
+# =============================================================================
+
+cat("\n--- PCA of max-significance genes ---\n\n")
+
+# Per-sample regional fraction files from modality feature extraction
+EXTRACT_DIR <- file.path(BASE_DIR,
+  "modality/outputs/run-4/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260329_201021")
+
+mc_frac_file  <- file.path(EXTRACT_DIR, "Extract_mc_regional-frac_20260329_201021.tsv.gz")
+hmc_frac_file <- file.path(EXTRACT_DIR, "Extract_hmc_regional-frac_20260329_201021.tsv.gz")
+
+stopifnot(file.exists(mc_frac_file), file.exists(hmc_frac_file))
+
+# Load per-sample matrices
+mc_frac  <- read.table(mc_frac_file,  header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+hmc_frac <- read.table(hmc_frac_file, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+
+# Sample columns are columns 4:11 (between coordinates and annotation)
+sample_cols <- colnames(mc_frac)[4:11]
+
+# Build short sample labels and metadata from column names
+sample_meta <- data.frame(
+  col_name  = sample_cols,
+  condition = ifelse(grepl("ctrl", sample_cols), "Control", "Mutant"),
+  sex       = ifelse(grepl("_F", sample_cols), "Female", "Male"),
+  batch     = ifelse(grepl("B2", sample_cols), "Batch 2", "Batch 1"),
+  short     = gsub("evoC.Bap1.", "", sample_cols) %>%
+    gsub("_num_mc_region_frac|_num_hmc_region_frac", "", .),
+  stringsAsFactors = FALSE
+)
+
+# Subset to max-significance genes
+mc_sub  <- mc_frac[mc_frac$Name %in% gene_list, ]
+hmc_sub <- hmc_frac[hmc_frac$Name %in% gene_list, ]
+
+cat(sprintf("  Genes matched in mC matrix: %d / %d\n", nrow(mc_sub), length(gene_list)))
+cat(sprintf("  Genes matched in hmC matrix: %d / %d\n", nrow(hmc_sub), length(gene_list)))
+
+# Helper: run PCA on a gene x sample matrix and return a ggplot
+run_pca_plot <- function(df, sample_cols, meta, meth_label) {
+  # Genes as rows, samples as columns => transpose for prcomp (samples as rows)
+  mat <- as.matrix(df[, sample_cols])
+  rownames(mat) <- df$Name
+
+  # Remove genes with zero variance (constant across samples)
+  var_filter <- apply(mat, 1, var, na.rm = TRUE) > 0
+  mat <- mat[var_filter, , drop = FALSE]
+
+  # Replace any NAs with row means
+  for (i in seq_len(nrow(mat))) {
+    na_idx <- is.na(mat[i, ])
+    if (any(na_idx)) mat[i, na_idx] <- mean(mat[i, !na_idx])
+  }
+
+  pca <- prcomp(t(mat), center = TRUE, scale. = TRUE)
+
+  var_explained <- summary(pca)$importance[2, ] * 100  # % variance
+
+  pca_df <- data.frame(
+    PC1 = pca$x[, 1],
+    PC2 = pca$x[, 2],
+    condition = meta$condition,
+    sex       = meta$sex,
+    batch     = meta$batch,
+    label     = meta$short
+  )
+
+  ggplot(pca_df, aes(x = PC1, y = PC2, color = condition, shape = batch)) +
+    geom_point(size = 4, stroke = 1.2) +
+    ggrepel::geom_text_repel(aes(label = label), size = 3, show.legend = FALSE) +
+    scale_color_manual(values = COLORS$condition, name = "Condition") +
+    scale_shape_manual(values = c("Batch 1" = 16, "Batch 2" = 17), name = "Batch") +
+    labs(
+      title = sprintf("PCA: %s at Max-Significance Genes", meth_label),
+      subtitle = sprintf("%d genes | q < 1e-300", nrow(mat)),
+      x = sprintf("PC1 (%.1f%% variance)", var_explained[1]),
+      y = sprintf("PC2 (%.1f%% variance)", var_explained[2])
+    ) +
+    theme_biomodal() +
+    theme(legend.position = "right")
+}
+
+# Build PCA plots
+p_pca_mc  <- run_pca_plot(mc_sub,  sample_cols, sample_meta, "5mC")
+
+# hmC sample columns have different suffix
+hmc_sample_cols <- colnames(hmc_frac)[4:11]
+p_pca_hmc <- run_pca_plot(hmc_sub, hmc_sample_cols, sample_meta, "5hmC")
+
+# Combined panel
+p_pca_combined <- p_pca_mc | p_pca_hmc
+p_pca_combined <- p_pca_combined +
+  patchwork::plot_annotation(
+    title = "PCA of Max-Significance Genes: 5mC vs 5hmC",
+    subtitle = "Per-sample regional methylation fraction | BAP1-KO vs Control",
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+      plot.subtitle = element_text(hjust = 0.5, size = 12)
+    )
+  )
+
+# Save
+SECTION_DIR <- file.path(OUTPUT_DIR, "42_max_significance")
+dir.create(SECTION_DIR, recursive = TRUE, showWarnings = FALSE)
+
+save_multiformat_ggplot(p_pca_combined,
+                        file.path(SECTION_DIR, "42_pca_max_significance_genes"),
+                        width = 16, height = 7)
+
+cat(sprintf("  Saved PCA plot to: %s\n", SECTION_DIR))
 
 cat("\n✅ Section 42 complete.\n")
