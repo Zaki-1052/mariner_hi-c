@@ -42,6 +42,33 @@ suppressPackageStartupMessages({
 cat(sprintf("regioneR version: %s\n", packageVersion("regioneR")))
 cat(sprintf("regioneReloaded version: %s\n", packageVersion("regioneReloaded")))
 
+# Helper: build ggplot heatmap from a crosswisePermTest object
+# (makeCrosswiseMatrix / plotCrosswiseMatrix require a square matrix, but our
+# Alist x Blist designs are intentionally non-square)
+plot_cw_heatmap <- function(cw_obj, title = "", subtitle = "") {
+  mo <- cw_obj@multiOverlaps
+  df <- do.call(rbind, lapply(names(mo), function(a_name) {
+    row <- mo[[a_name]]
+    data.frame(Alist = a_name, Blist = row$name,
+               zscore = row$z_score, pvalue = row$p_value,
+               stringsAsFactors = FALSE)
+  }))
+  df$sig_label <- ifelse(df$pvalue < 0.001, "***",
+                   ifelse(df$pvalue < 0.01, "**",
+                   ifelse(df$pvalue < 0.05, "*", "")))
+  max_z <- max(abs(df$zscore), na.rm = TRUE)
+  ggplot(df, aes(x = Alist, y = Blist, fill = zscore)) +
+    geom_tile(color = "white", linewidth = 0.5) +
+    geom_text(aes(label = sprintf("%.1f", zscore)), size = 3.5) +
+    geom_text(aes(label = sig_label), vjust = -0.3, size = 4, fontface = "bold") +
+    scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
+                         midpoint = 0, limits = c(-max_z, max_z),
+                         name = "Z-Score") +
+    labs(title = title, subtitle = subtitle, x = "", y = "") +
+    theme_biomodal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
 # =============================================================================
 # BLOCK 2: PERMUTATION PARAMETERS
 # =============================================================================
@@ -194,9 +221,10 @@ if (file.exists(cache_path) && !.force_rerun) {
     per.chromosome = PERM_PER_CHR
   )
 
-  cat("  crosswisePermTest complete. Making crosswise matrix...\n")
-  cw_34 <- makeCrosswiseMatrix(cw_34, pvcut = 1)
+  cat("  crosswisePermTest complete.\n")
 
+  # Save raw object immediately (makeCrosswiseMatrix requires square matrix,
+  # but our 2x8 Alist x Blist design is intentionally non-square)
   saveRDS(cw_34, cache_path)
   cat("  Saved cache:", cache_path, "\n")
 }
@@ -229,19 +257,15 @@ cat(sprintf("  Z-score range: [%.2f, %.2f]\n",
 
 cat("\n--- FIGURE 34a: Crosswise Z-Score Heatmap ---\n")
 
-p_34a <- plotCrosswiseMatrix(cw_34, matrix_type = "association")
+p_34a <- plot_cw_heatmap(
+  cw_34,
+  title = "Section 34: DMR x Chromatin Mark Permutation Z-Scores",
+  subtitle = sprintf("%s permutations, per.chromosome=TRUE",
+                     format(PERM_NTIMES, big.mark = ","))
+)
 
-# plotCrosswiseMatrix returns a ggplot object
-if (is.ggplot(p_34a)) {
-  save_multiformat_ggplot(p_34a, file.path(SECTION_OUTPUT, "34a_crosswise_dmr_x_marks"),
-                          width = 12, height = 6)
-} else {
-  save_multiformat_base(
-    quote(plotCrosswiseMatrix(cw_34, matrix_type = "association")),
-    file.path(SECTION_OUTPUT, "34a_crosswise_dmr_x_marks"),
-    width = 12, height = 6
-  )
-}
+save_multiformat_ggplot(p_34a, file.path(SECTION_OUTPUT, "34a_crosswise_dmr_x_marks"),
+                        width = 12, height = 6)
 
 cat("  Saved: 34a_crosswise_dmr_x_marks\n")
 
