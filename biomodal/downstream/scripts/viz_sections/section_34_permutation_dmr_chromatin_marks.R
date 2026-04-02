@@ -38,6 +38,7 @@ suppressPackageStartupMessages({
   library(regioneReloaded)
   library(BSgenome.Mmusculus.UCSC.mm10)
 })
+patch_chooseHclustMet()
 
 cat(sprintf("regioneR version: %s\n", packageVersion("regioneR")))
 cat(sprintf("regioneReloaded version: %s\n", packageVersion("regioneReloaded")))
@@ -198,8 +199,7 @@ if (file.exists(cache_path) && !.force_rerun) {
   cat("  crosswisePermTest complete. Making crosswise matrix...\n")
 
   # symm_matrix=FALSE: non-square Alist(2) x Blist(8) design
-  # hc.method="average": explicit method avoids chooseHclustMet crash when
-  #   one dimension has <=2 elements (cophenetic correlation undefined for 1×1 dist)
+  # hc.method="average": single method (patched chooseHclustMet handles <=2 dim)
   cw_34 <- makeCrosswiseMatrix(cw_34, pvcut = 1,
                                 symm_matrix = FALSE, hc.method = "average")
 
