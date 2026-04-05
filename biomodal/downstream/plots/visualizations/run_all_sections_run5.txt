@@ -7152,3 +7152,577 @@ Top concordant genes (gene-body mC):
 ================================================================================
 All sections complete: Sat Apr  4 20:06:40 PDT 2026
 ================================================================================
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-04-04 20:12:52 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 genes
+Loading gene body hmC DMRs...
+  Loaded 20991 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10789 significant / 20991 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 22: 5hmC/(5mC+5hmC) DEMETHYLATION EFFICIENCY RATIO
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Loading per-sample feature extraction data ---
+  mC extract: 21673 genes x 13 columns
+  hmC extract: 21673 genes x 13 columns
+  Joined: 21650 genes with both mC and hmC data
+  Excluded 692 genes with NA values (20958 retained)
+
+--- Computing group-level demethylation ratios ---
+  Inner-joined mc_dmr (20991) + hmc_dmr (20991) = 20969 genes
+  Filtered 54 genes (near-zero denominators or non-finite ratios)
+  Valid ratio data: 20915 genes
+  DMR status breakdown:
+    Both mC+hmC DMR: 8370 genes
+    mC DMR only: 2404 genes
+    hmC DMR only: 3113 genes
+    Not DMR: 7028 genes
+
+--- Computing per-sample demethylation ratios ---
+  Valid per-sample ratios: 20862 genes
+  Per-sample median ratios:
+    ctrl-M: 0.1292
+    ctrl-F: 0.1278
+    mut-M: 0.1202
+    mut-F: 0.1168
+
+--- Annotating chromatin states ---
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+  TSS distance: 20136 genes with distance=0 (contain TSS)
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+  Chromatin state breakdown:
+    Active_Promoter: 6356 genes
+    Repressed_Promoter: 3240 genes
+    Bivalent_Promoter: 150 genes
+    Polycomb: 56 genes
+    Active_Enhancer: 49 genes
+    Poised_Enhancer: 92 genes
+    Other: 10972 genes
+
+--- Core statistical tests ---
+  Wilcoxon signed-rank (paired): p < 2.2e-16
+  Wilcoxon (delta vs 0): p < 2.2e-16
+  Cliff's delta: 0.4291 (medium)
+  Genes with decreased ratio (impaired TET): 71.4%
+  Genes with increased ratio: 28.4%
+Warning message:
+In cor.test.default(ratio_data$delta_ratio, ratio_data$mc_diff,  :
+  Cannot compute exact p-value with ties
+Warning message:
+In cor.test.default(ratio_data$delta_ratio, ratio_data$hmc_diff,  :
+  Cannot compute exact p-value with ties
+  Spearman rho (delta-ratio vs mc_diff): -0.810 (p < 2.2e-16)
+  Spearman rho (delta-ratio vs hmc_diff): 0.917 (p < 2.2e-16)
+
+--- Figure 22a: WT demethylation ratio density ---
+  Saved: 22a_wt_ratio_density/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'IQR = 0.1424 [0.0695–0.2119]' in 'mbcsToSbcs': - substituted for – (U+2013)
+--- Figure 22b: WT vs KO ratio comparison ---
+  Saved: 22b_wt_vs_ko_ratio/{pdf,svg,jpg}
+--- Figure 22c: Delta-ratio distribution ---
+  Saved: 22c_delta_ratio_histogram/{pdf,svg,jpg}
+--- Figure 22d: Delta-ratio vs methylation changes ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 22d_delta_ratio_vs_diff/{pdf,svg,jpg}
+--- Figure 22e: Delta-ratio by DMR status ---
+  Kruskal-Wallis: p < 2.2e-16
+  Saved: 22e_delta_ratio_by_dmr_status/{pdf,svg,jpg}
+--- Figure 22f: Delta-ratio by chromatin state ---
+  Per-state Wilcoxon vs 0 (BH-corrected):
+    Active_Promoter: median=-0.0281, n=6356, padj=p < 2.2e-16
+    Repressed_Promoter: median=0.0051, n=3240, padj=p < 2.2e-16
+    Bivalent_Promoter: median=-0.0046, n=150, padj=p = 2.22e-04
+    Polycomb: median=0.0022, n=56, padj=p = 1.26e-01
+    Active_Enhancer: median=-0.0248, n=49, padj=p = 8.94e-09
+    Poised_Enhancer: median=-0.0073, n=92, padj=p = 7.36e-05
+    Other: median=-0.0051, n=10972, padj=p < 2.2e-16
+  Saved: 22f_delta_ratio_by_chromatin_state/{pdf,svg,jpg}
+--- Figure 22g: Top 30 genes by most negative delta-ratio ---
+Warning message:
+Vectorized input to `element_text()` is not officially supported.
+ℹ Results may be unexpected or may change in future versions of ggplot2. 
+  Saved: 22g_top30_decreased_ratio/{pdf,svg,jpg}
+--- Figure 22h: Per-sample ratio distributions ---
+  Saved: 22h_per_sample_ratio/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved demethylation_ratio_all_genes.tsv (20915 rows)
+  Saved demethylation_ratio_per_sample.tsv (20862 rows)
+  Saved demethylation_ratio_top_genes.tsv (50 rows)
+  Saved demethylation_ratio_by_chromatin_state.tsv (7 rows)
+
+========================================================================
+SECTION 22 SUMMARY: DEMETHYLATION EFFICIENCY RATIO
+========================================================================
+
+Total genes in mc_dmr: 20991
+Total genes in hmc_dmr: 20991
+Valid ratio data: 20915 genes
+
+Group-level ratio statistics:
+  WT median ratio:  0.1275
+  KO median ratio:  0.1193
+  Delta median:     -0.0085
+  Paired Wilcoxon:  p < 2.2e-16
+  Cliff's delta:    0.4291 (medium)
+  % decreased:      71.4%
+
+Correlations:
+  delta-ratio vs mc_diff:  rho=-0.810 (p < 2.2e-16)
+  delta-ratio vs hmc_diff: rho=0.917 (p < 2.2e-16)
+
+Top 5 genes (most decreased ratio):
+  1. Fndc10: delta=-0.5429 (WT=1.0000, KO=0.4571) [Active_Promoter]
+  2. H2ac4: delta=-0.5000 (WT=1.0000, KO=0.5000) [Other]
+  3. Fam89b: delta=-0.3999 (WT=0.8854, KO=0.4854) [Active_Promoter]
+  4. H1f0: delta=-0.3627 (WT=0.8644, KO=0.5017) [Active_Promoter]
+  5. Naa38: delta=-0.3534 (WT=0.7404, KO=0.3870) [Active_Promoter]
+
+Per-chromatin-state median delta-ratios:
+  Active_Promoter: -0.0281 (n=6356, ***)
+  Repressed_Promoter: 0.0051 (n=3240, ***)
+  Bivalent_Promoter: -0.0046 (n=150, ***)
+  Polycomb: 0.0022 (n=56, ns)
+  Active_Enhancer: -0.0248 (n=49, ***)
+  Poised_Enhancer: -0.0073 (n=92, ***)
+  Other: -0.0051 (n=10972, ***)
+
+Literature comparison (TET triple-KO):
+  Published TET1/2/3 triple-KO: near-complete 5hmC loss (ratio -> 0)
+  BAP1-KO effect is indirect (via PRC1/H2AK119ub -> TET recruitment)
+  Observed WT median ratio: 0.1275
+  Observed KO median ratio: 0.1193
+  Partial reduction consistent with indirect TET impairment, not ablation
+
+Per-sample analysis (20862 genes):
+  ctrl-M: median ratio = 0.1292
+  ctrl-F: median ratio = 0.1278
+  mut-M: median ratio = 0.1202
+  mut-F: median ratio = 0.1168
+
+Delta-ratio column exported in demethylation_ratio_all_genes.tsv
+for reuse as response variable by other sections (Sections 1, 3, 8, 11).
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/22{a-h}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/demethylation_ratio_*.tsv (4 files)
+
+=== Section 22 complete ===
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-04-04 20:13:15 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 genes
+Loading gene body hmC DMRs...
+  Loaded 20991 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10789 significant / 20991 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 8: GO/KEGG ENRICHMENT ANALYSIS
+================================================================================
+
+Running enrichment on 7513 hypermethylated genes...
+'select()' returned 1:1 mapping between keys and columns
+  Converted 7217 genes to Entrez IDs
+Running GO Biological Process enrichment...
+  Saved: 08a_enrichment_go_bp/{pdf,svg,jpg}
+  Saved GO BP results
+Running GO Cellular Component enrichment...
+  Saved: 08b_enrichment_go_cc/{pdf,svg,jpg}
+  Saved GO CC results
+Running GO Molecular Function enrichment...
+  Saved: 08c_enrichment_go_mf/{pdf,svg,jpg}
+  Saved GO MF results
+Running KEGG pathway enrichment...
+Reading KEGG annotation online: "https://rest.kegg.jp/link/mmu/pathway"...
+Reading KEGG annotation online: "https://rest.kegg.jp/list/pathway/mmu"...
+  Saved: 08d_enrichment_kegg/{pdf,svg,jpg}
+  Saved KEGG results
+Warning message:
+In bitr(hyper_genes, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  3.94% of input gene IDs are fail to map...
+
+================================================================================
+DELTA-RATIO DECILE ENRICHMENT (Figures 08e-08h)
+================================================================================
+
+Loaded 20915 genes with delta_ratio values
+Top decile (D10, most TET-impaired): 2092 genes
+  delta_ratio range: [0.010, 0.423]
+Bottom decile (D1, least impaired): 2092 genes
+  delta_ratio range: [-0.543, -0.044]
+'select()' returned 1:1 mapping between keys and columns
+'select()' returned 1:1 mapping between keys and columns
+  D10 converted: 1929 / 2092 genes
+  D1 converted: 2002 / 2092 genes
+
+Creating Figure 08e: compareCluster GO BP...
+  Saved: 08e_enrichment_delta_ratio_compare_go_bp/{pdf,svg,jpg}
+  Saved GO BP compareCluster results
+Creating Figure 08f: compareCluster KEGG...
+  Saved: 08f_enrichment_delta_ratio_compare_kegg/{pdf,svg,jpg}
+  Saved KEGG compareCluster results
+Creating Figure 08g: GO BP for top decile (D10)...
+  Saved: 08g_enrichment_delta_ratio_top_decile_go_bp/{pdf,svg,jpg}
+  Saved D10 GO BP results
+Creating Figure 08h: GO BP for bottom decile (D1)...
+  Saved: 08h_enrichment_delta_ratio_bottom_decile_go_bp/{pdf,svg,jpg}
+  Saved D1 GO BP results
+Warning messages:
+1: In bitr(top_decile_genes, fromType = "SYMBOL", toType = "ENTREZID",  :
+  7.79% of input gene IDs are fail to map...
+2: In bitr(bottom_decile_genes, fromType = "SYMBOL", toType = "ENTREZID",  :
+  4.3% of input gene IDs are fail to map...
+3: `aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+Section 8 complete.
+
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-04-04 20:16:39 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 genes
+Loading gene body hmC DMRs...
+  Loaded 20991 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10789 significant / 20991 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Warning message:
+In inner_join(mc_sig_coord, hmc_sig_coord, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 165 of `x` matches multiple rows in `y`.
+ℹ Row 188 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship =
+  "many-to-many"` to silence this warning.
+================================================================================
+SECTION 11: MeCP2 CORRELATION AT DMRs
+================================================================================
+
+Loading MeCP2 differential binding data...
+  Loaded 202650 MeCP2 peaks
+  Significant (FDR < 0.05): 7686 up, 1200 down
+  MeCP2 Up: 7686 peaks
+  MeCP2 Down: 1200 peaks
+
+Aggregating MeCP2 peaks per gene...
+  21195 unique genes with MeCP2 peaks
+
+Creating Figure 11a: MeCP2 peak overlap at DMRs...
+  Hypermethylated DMRs: 539/7522 (7.2%) overlap MeCP2 Up, 142/7522 (1.9%) overlap MeCP2 Down
+  Hypomethylated DMRs: 168/3267 (5.1%) overlap MeCP2 Up, 225/3267 (6.9%) overlap MeCP2 Down
+  Fisher's exact test: OR = 5.07, p = 3.34e-33
+  Saved: 11a_mecp2_overlap/{pdf,svg,jpg}
+  Saved: mecp2_dmr_overlap_summary.tsv
+
+Creating Figure 11b: MeCP2 fold change by DMR direction...
+  16960 DMR genes matched to MeCP2 data
+  Median MeCP2 fold change - Hyper: -0.019, Hypo: -0.019, NS: -0.017
+  Wilcoxon Hyper vs Hypo: p = 6.33e-01
+  Wilcoxon Hyper vs NS: p = 2.46e-03
+  Saved: 11b_mecp2_fold_by_dmr_direction/{pdf,svg,jpg}
+
+Creating Figure 11c: mC change vs MeCP2 fold change scatter...
+  Spearman rho = 0.019, p = 5.55e-02
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 11c_mc_vs_mecp2_scatter/{pdf,svg,jpg}
+  Saved: mecp2_gene_level_correlation.tsv
+
+Creating Figure 11d: MeCP2 at coordinated genes...
+  6090 coordinated genes matched to MeCP2 data
+  Wilcoxon coordinated vs other: p = 2.25e-10
+  Saved: 11d_mecp2_coordinated_genes/{pdf,svg,jpg}
+  Saved: mecp2_coordinated_genes.tsv
+
+Creating Figure 11h: Fisher's exact on binary MeCP2 gain...
+  Coordinated: 48/6069 (0.8%) with MeCP2 sig gain
+  Non-coordinated: 115/15126 (0.8%) with MeCP2 sig gain
+  Fisher's exact test: OR = 1.04, p = 7.95e-01
+  Saved: 11h_mecp2_binary_gain_fisher/{pdf,svg,jpg}
+  Saved: mecp2_binary_gain_coordinated_fisher.tsv
+
+Creating Figure 11i: mC vs MeCP2 scatter stratified by coordination status...
+  Coordinated
+(mC↑/hmC↓) (n=6126): rho = 0.027, p = 3.47e-02
+  Discordant (n=1735): rho = 0.030, p = 2.08e-01
+  mC-only (n=2060): rho = 0.076, p = 5.52e-04
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 11i_mc_vs_mecp2_stratified/{pdf,svg,jpg}
+  Saved: mecp2_stratified_correlations.tsv
+
+Creating Figure 11e: Integration heatmap...
+  Contingency table:
+         
+          MeCP2 Down MeCP2 Up
+  mC Down       2024      942
+  mC Up         4810     2059
+  Fisher's exact test: OR = 0.92, p = 8.16e-02
+  Saved: 11e_mecp2_integration_heatmap/{pdf,svg,jpg}
+
+================================================================================
+DELTA-RATIO REGRESSION MODELS (Figures 11f-11g)
+================================================================================
+
+Loaded 20915 genes with delta_ratio values
+Regression dataset: 9835 significant DMR genes with delta_ratio + MeCP2 data
+
+Fitting linear model: nearest_fold ~ delta_ratio + mean_coverage...
+  R-squared: 0.0080, Adj R-squared: 0.0078
+  F-statistic: 39.75, p = 6.39e-18
+  Coefficients:
+    (Intercept): -0.1313 (SE=0.0141, p=1.96e-20)
+    delta_ratio: -0.3671 (SE=0.0760, p=1.38e-06)
+    mean_coverage: 0.0052 (SE=0.0007, p=1.12e-12)
+  Saved: mecp2_delta_ratio_lm_coefficients.tsv
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 11f_mecp2_delta_ratio_lm/{pdf,svg,jpg}
+
+Fitting logistic model: mecp2_up ~ delta_ratio + mean_coverage...
+  MeCP2 significant up: 75, other: 9760
+  AIC: 844.7, Deviance: 838.7
+  Odds ratios:
+    (Intercept): OR = 0.0001 (95% CI: 0.0000-0.0004, p = 3.45e-31)
+    delta_ratio: OR = 0.0000 (95% CI: 0.0000-0.0008, p = 2.02e-05)
+    mean_coverage: OR = 1.2266 (95% CI: 1.1397-1.3175, p = 3.21e-08)
+  Saved: mecp2_delta_ratio_glm_odds_ratios.tsv
+  Saved: 11g_mecp2_delta_ratio_glm/{pdf,svg,jpg}
+
+================================================================================
+SECTION 11 SUMMARY
+================================================================================
+Total MeCP2 peaks analyzed: 202650
+Genes with MeCP2 peaks: 21195
+DMR genes matched to MeCP2: 9835
+Coordinated genes with MeCP2 data: 6090
+
+Overlap analysis: Fisher OR = 5.07, p = 3.34e-33
+Fold change correlation: Spearman rho = 0.019, p = 5.55e-02
+Coordinated vs other: Wilcoxon p = 2.25e-10
+Binary MeCP2 gain (coordinated vs other): Fisher OR = 1.04, p = 7.95e-01
+Integration: Fisher OR = 0.92, p = 8.16e-02
+
+Median MeCP2 fold change:
+  Hypermethylated DMRs: -0.019
+  Hypomethylated DMRs:  -0.019
+  Not significant:      -0.017
+
+Delta-ratio linear model:
+  R-squared: 0.0080, F-statistic p = 6.39e-18
+  delta_ratio coefficient: -0.3671 (p = 1.38e-06)
+  Direction: NEGATIVE (consistent with prediction — more TET impairment -> more MeCP2)
+
+Delta-ratio logistic model:
+  Direction: OR < 1 (consistent with prediction — more TET impairment -> higher MeCP2 up probability)
+There were 46 warnings (use warnings() to see them)
+
+Section 11 complete.
+
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-04-04 20:17:03 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 genes
+Loading gene body hmC DMRs...
+  Loaded 20991 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10789 significant / 20991 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+================================================================================
+SECTION 34: DMR x CHROMATIN MARK INTERVAL PERMUTATION TESTING
+================================================================================
+
+  Patched regioneReloaded::chooseHclustMet for small-matrix safety.
+regioneR version: 1.40.1
+regioneReloaded version: 1.10.0
+
+Permutation parameters: ntimes=5000, cores=8, ranFUN=randomizeRegions, per.chr=TRUE
+
+Constructing mm10 genome object (standard chromosomes)...
+The masked version of 'mm10' is not installed. Using the unmasked version. This means that no automatic masking will be available.
+  Genome: 20 chromosomes, total length 2.6 Gb
+
+Constructing Alist (DMR direction sets)...
+  mC Hyper DMRs: 7522 regions
+  mC Hypo DMRs:  3267 regions
+
+Constructing Blist (chromatin mark peak sets)...
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+  K119ub Ctrl: 20592 peaks
+  K119ub Mut: 20399 peaks
+  K119ub Gained (mut-only): 6172 peaks
+  K119ub Lost (ctrl-only):  6103 peaks
+  H3K27ac Ctrl: 13635 peaks
+  H3K27ac Mut: 15663 peaks
+  ATAC Up: 7618 regions (after chr filter)
+  ATAC Down: 3744 regions (after chr filter)
+  K119ub Ctrl: 20582 regions (after chr filter)
+  K119ub Mut: 20396 regions (after chr filter)
+  K119ub Gained: 6172 regions (after chr filter)
+  K119ub Lost: 6096 regions (after chr filter)
+  H3K27ac Ctrl: 13629 regions (after chr filter)
+  H3K27ac Mut: 15657 regions (after chr filter)
+
+Running crosswisePermTest (ntimes=5000, cores=8)...
+  Estimated runtime: 20-30 minutes
+[1] "Performing permutation tests for mC Hyper DMRs (1 of 2)"
