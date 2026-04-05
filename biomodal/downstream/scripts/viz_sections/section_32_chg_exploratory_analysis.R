@@ -1,6 +1,6 @@
 # biomodal/downstream/scripts/viz_sections/section_32_chg_exploratory_analysis.R
 # Section 32: CHG Context Exploratory Analysis
-# Characterize 70 significant CHG mC DMRs and 7 hmC DMRs from run-3 (deep-seq)
+# Characterize significant CHG mC and hmC DMRs from current run (via CHG_DATA_PATHS)
 # Standalone script - sources shared config for all dependencies and data
 
 # Run from downstream/ directory
@@ -18,10 +18,7 @@ cat("===========================================================================
 # SETUP: Load CHG data
 # -----------------------------------------------------------------------------
 
-CHG_DATA_PATHS <- list(
-  mc_dmr = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CHG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260221_195318/DMR_mc_control__mutant_20260221_195318.bed"),
-  hmc_dmr = file.path(BASE_DIR, "modality/outputs/run-3/outputs_CHG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260221_195318/DMR_hmc_control__mutant_20260221_195318.bed")
-)
+# CHG_DATA_PATHS loaded from _shared_config.R
 
 stopifnot("CHG mC DMR file not found" = file.exists(CHG_DATA_PATHS$mc_dmr))
 stopifnot("CHG hmC DMR file not found" = file.exists(CHG_DATA_PATHS$hmc_dmr))

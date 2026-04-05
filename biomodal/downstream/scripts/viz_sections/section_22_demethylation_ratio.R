@@ -29,11 +29,9 @@ source("scripts/viz_sections/_shared_config.R")
 # SECTION 22 CONFIGURATION
 # =============================================================================
 
-# Feature extraction file paths (per-sample regional fractions, run-3 deep-seq)
-EXTRACT_DIR <- file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results",
-                         "gencode.vM25.mouse.genes.annotation/Extract_20260221_185106")
-MC_EXTRACT_FILE  <- file.path(EXTRACT_DIR, "Extract_mc_regional-frac_20260221_185106.tsv.gz")
-HMC_EXTRACT_FILE <- file.path(EXTRACT_DIR, "Extract_hmc_regional-frac_20260221_185106.tsv.gz")
+# Feature extraction file paths (per-sample regional fractions, from _shared_config.R)
+MC_EXTRACT_FILE  <- EXTRACT_PATHS$mc_regional_frac
+HMC_EXTRACT_FILE <- EXTRACT_PATHS$hmc_regional_frac
 
 # Minimum total methylation threshold (below this, ratio is meaningless)
 MIN_TOTAL_METHYLATION <- 0.01
