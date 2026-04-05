@@ -59,7 +59,7 @@ for MOD in mc hmc; do
         echo "  [${TOTAL}] ${SAMPLE}"
 
         # Decompress, sort, and filter to valid chromosomes
-        zcat "$BDG" | awk -F'\t' 'BEGIN{OFS="\t"} {if($1!~/^chr/) $1="chr"$1; print}' | sort -k1,1 -k2,2n > "$TMP_BDG"
+        zcat "$BDG" | awk -F'\t' 'BEGIN{OFS="\t"} {if($1!~/^chr/) $1="chr"$1; if($1~/^chr[0-9XYM]+$/) print}' | sort -k1,1 -k2,2n > "$TMP_BDG"
 
         if [[ ! -s "$TMP_BDG" ]]; then
             echo "    WARNING: empty after decompression, skipping"
