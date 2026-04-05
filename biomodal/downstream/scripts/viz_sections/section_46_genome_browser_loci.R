@@ -376,12 +376,13 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
   track_list$axis <- GenomeAxisTrack(name = "Position")
   sizes <- c(sizes, 0.5)
 
-  # Track 1: Gene model
+  # Track 1: Gene model (collapse to single meta-transcript per gene)
   txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
   track_list$gene <- GeneRegionTrack(
     txdb, genome = "mm10", chromosome = chr,
     name = paste0(gene_symbol, rnaseq_label),
     transcriptAnnotation = "symbol",
+    collapseTranscripts = "meta",
     col = TRACK_COL$gene,
     fill = TRACK_COL$gene,
     fontcolor.group = TRACK_COL$gene,
