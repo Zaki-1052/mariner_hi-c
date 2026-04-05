@@ -1,0 +1,1095 @@
+## ----init, echo=FALSE, results='hide'-----------------------------------------
+library(knitr)
+
+## 1. issue with too large vignette, maybe optimizing png?
+## unfortunately it requires additional system libs -> not feasible
+##           `pngquant=""`, `optipng = "-o7"` both in `opts_chunk`
+## SOLUTION: might be to use `fig.retina = 1` and only set it to 2 (default)
+##           for figures which requires higher resolution
+##           or even decrease res `dpi = 72`, also both in `opts_chunk`
+## 
+## knit_hooks$set(optipng = hook_optipng,
+##                pngquant = hook_pngquant)
+##
+## 2. crop=NULL or FALSE =>  fix vignette rendering based on yihui/knitr#1796
+## added also error=FALSE to include_graphics
+
+opts_chunk$set(
+  collapse = TRUE,
+  tidy = FALSE,
+  fig.retina = 1,
+  ## comment = "#>",
+  error = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  crop = NULL                           
+)
+
+## check the output type
+out_type <- opts_knit$get("rmarkdown.pandoc.to")
+if (is.null(out_type))
+    out_type <- "html"
+
+## add styling
+if (out_type == "html") {
+    BiocStyle::markdown()
+} else if (out_type == "latex") {
+    BiocStyle::latex()
+}
+
+## ----vignetteGvizSetup, echo=FALSE, results='hide'----------------------------
+source(system.file("scripts/documentation.R", package="Gviz"))
+xtabDetails <- details
+
+addParTable <- function(xtabDetails, class, 
+                        skip=c("showTitle", "size", "background.title"), 
+                        add=NULL, out_type="html") {
+  Parameters <- data.frame("Display Parameter"=names(xtabDetails[[class]]),
+                           "Description"=xtabDetails[[class]], 
+                           check.names=FALSE)
+  if(!is.null(add)) {
+    Parameters <- cbind(Parameters, add)
+  }
+  Parameters <- Parameters[order(Parameters[,1]),]  
+  sel <- !Parameters[,1] %in% skip
+  Parameters <- Parameters[sel,]
+  Parameters[,2] <- gsub("\\\\\\code\\{(.*?)\\}", "`\\1`", Parameters[,2])
+  Parameters[,2] <- gsub("\\\\\\link[sS]4[Cc]lass\\{(.*?)\\}", "\\1", 
+                         Parameters[,2])
+  Parameters[,2] <- gsub("\\\\\\link\\{(.*?)\\}", "\\1", Parameters[,2])
+  rownames(Parameters) <- NULL
+  if (out_type == "html") {
+     out <- kable(Parameters)
+  } else if (out_type == "latex") {
+     out <- kable(Parameters, format="latex", booktabs=TRUE, longtable=TRUE)
+  }
+  print(out)
+  return(invisible())
+}
+
+## hasUcscConnection <- !is(try(rtracklayer::browserSession(), silent=TRUE), "try-error")
+hasUcscConnection <- FALSE
+## oto <- options(timeout=5)
+hasBiomartConnection <- FALSE
+## hasBiomartConnection <- (!is(try(download.file("http://www.biomart.org", tempfile(), quiet=TRUE)), "try-error") &&
+##                          !is(try(biomaRt::listMarts(), silent=TRUE), "try-error"))
+## options(timeout=oto)
+
+## ## clear BiomaRt cache
+## biomaRt::biomartCacheClear()
+
+## ## Uncommenting this helps when the UCSC server has a hickup but still lets you connect:
+## hasUcscConnection <- !is(try(rtracklayer::browserSession(), silent=TRUE), "try-error") && 
+##   !is(try(IdeogramTrack(genome="hg19", chromosome=7), silent=TRUE), "try-error")
+
+## ----loadPackage, cache=FALSE-------------------------------------------------
+library(Gviz)
+
+## ----AnnotationTrack----------------------------------------------------------
+library(GenomicRanges)
+data(cpgIslands)
+class(cpgIslands)
+chr <- as.character(unique(seqnames(cpgIslands)))
+gen <- genome(cpgIslands)
+atrack <- AnnotationTrack(cpgIslands, name = "CpG")
+
+## ----plotAnnotationTrack, fig.width=7.5, fig.height=0.5-----------------------
+plotTracks(atrack)
+
+## ----GenomeAxisTrack----------------------------------------------------------
+gtrack <- GenomeAxisTrack()
+
+## ----plotGenomeAxisTrack, fig.width=7.5, fig.height=1.1-----------------------
+plotTracks(list(gtrack, atrack))
+
+## ----showIdeogramTrack, eval=FALSE--------------------------------------------
+# itrack <- IdeogramTrack(genome = gen, chromosome = chr)
+
+## ----doIdeogramTrack, echo=FALSE, results='hide'------------------------------
+if(hasUcscConnection) {
+  itrack <- IdeogramTrack(genome = gen, chromosome = chr)
+} else{
+  data(itrack)
+}
+
+## ----plotIdeogramTrack, fig.width=7.5, fig.height=1.5-------------------------
+plotTracks(list(itrack, gtrack, atrack))
+
+## ----GeneRegionTrack, fig.width=7.5, fig.height=3-----------------------------
+data(geneModels)
+grtrack <- GeneRegionTrack(geneModels, genome = gen,
+                           chromosome = chr, name = "Gene Model")
+plotTracks(list(itrack, gtrack, atrack, grtrack))
+
+## ----zooming, fig.width=7.5, fig.height=2.2-----------------------------------
+plotTracks(list(itrack, gtrack, atrack, grtrack),
+           from = 26700000, to = 26750000)
+
+## ----zooming2, fig.width=7.5, fig.height=3------------------------------------
+plotTracks(list(itrack, gtrack, atrack, grtrack),
+           extend.left = 0.5, extend.right = 1000000)
+
+## ----zooming3, fig.width=7.5, fig.height=3------------------------------------
+plotTracks(list(itrack, gtrack, atrack, grtrack), 
+           extend.left = 0.5, extend.right = 1000000, col = NULL)
+
+## ----zooming4, fig.width=7.5, fig.height=3.1----------------------------------
+library(BSgenome.Hsapiens.UCSC.hg19)
+strack <- SequenceTrack(Hsapiens, chromosome = chr)
+plotTracks(list(itrack, gtrack, atrack, grtrack, strack), 
+           from = 26591822, to = 26591852, cex = 0.8)
+
+## ----DataTrack, fig.width=7.5, fig.height=4-----------------------------------
+set.seed(255)
+lim <- c(26700000, 26750000)
+coords <- sort(c(lim[1], 
+                 sample(seq(from = lim[1], to = lim[2]), 99), 
+                 lim[2]))
+dat <- runif(100, min = -10, max = 10)
+dtrack <- DataTrack(data = dat, start = coords[-length(coords)],
+                    end = coords[-1], chromosome = chr, genome = gen, 
+                    name = "Uniform")
+plotTracks(list(itrack, gtrack, atrack, grtrack, dtrack), 
+           from = lim[1], to = lim[2])
+
+## ----DataTrackHist, fig.width=7.5, fig.height=4-------------------------------
+plotTracks(list(itrack, gtrack, atrack, grtrack, dtrack), 
+           from = lim[1], to = lim[2], type = "histogram")
+
+## ----displayPars1f, fig.width=7.5, fig.height=3-------------------------------
+grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, 
+                           name = "Gene Model",
+                           transcriptAnnotation = "symbol",
+                           background.title = "brown")
+head(displayPars(grtrack))
+displayPars(grtrack) <- list(background.panel = "#FFFEDB", col = NULL)
+head(displayPars(grtrack))
+
+plotTracks(list(itrack, gtrack, atrack, grtrack))
+
+## ----displayPars2f, fig.width=7.5, fig.height=3-------------------------------
+plotTracks(list(itrack, gtrack, atrack, grtrack), 
+           background.panel = "#FFFEDB", background.title = "darkblue")
+
+## ----displayPars3-------------------------------------------------------------
+dp <- availableDisplayPars(grtrack)
+tail(dp)
+
+## ----displayPars4, fig.width=7.5, fig.height=1.5------------------------------
+getOption("Gviz.scheme")
+scheme <- getScheme()
+scheme$GeneRegionTrack$fill <- "salmon"
+scheme$GeneRegionTrack$col <- NULL
+scheme$GeneRegionTrack$transcriptAnnotation <- "transcript"
+addScheme(scheme, "myScheme")
+options(Gviz.scheme = "myScheme")
+grtrack <- GeneRegionTrack(geneModels, genome = gen,
+                           chromosome = chr, name = "Gene Model")
+plotTracks(grtrack)
+options(Gviz.scheme="default")
+grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr,
+                           name = "Gene Model",
+                           transcriptAnnotation = "symbol")
+
+## ----schemes, eval=FALSE------------------------------------------------------
+# .GvizSchemes <- list(myScheme = list(
+#   GeneRegionTrack=list(fill = "salmon", col = NULL,
+#                        transcriptAnnotation = "transcript")))
+
+## ----plottingdirections, fig.width=7.5, fig.height=3--------------------------
+plotTracks(list(itrack, gtrack, atrack, grtrack), reverseStrand = TRUE)
+
+## ----GenomeAxisTrackClass1, fig.width=7.5, fig.height=0.75--------------------
+axisTrack <- GenomeAxisTrack()
+plotTracks(axisTrack, from = 1e6, to = 9e6)
+
+## ----GenomeAxisTrackClass2, fig.width=7.5, fig.height=0.75--------------------
+axisTrack <- GenomeAxisTrack(range=IRanges(start = c(2e6, 4e6),
+                                           end = c(3e6, 7e6),
+                                           names = rep("N-stretch", 2)))
+plotTracks(axisTrack, from = 1e6, to = 9e6)
+
+## ----GenomeAxisTrackClass2a, fig.width=7.5, fig.height=0.75-------------------
+plotTracks(axisTrack, from = 1e6, to = 9e6, showId = TRUE)
+
+## ----GenomeAxisTrackClass3, fig.width=7.5, fig.height=0.75--------------------
+plotTracks(axisTrack, from = 1e6, to = 9e6, add53 = TRUE, add35 = TRUE)
+
+## ----GenomeAxisTrackClass4, fig.width=7.5, fig.height=0.75--------------------
+plotTracks(axisTrack, from = 1e6, to = 9e6, add53 = TRUE,
+           add35 = TRUE, littleTicks = TRUE)
+
+## ----GenomeAxisTrackClass5, fig.width=7.5, fig.height=0.75--------------------
+plotTracks(axisTrack, from = 1e6, to = 9e6, exponent = 4)
+
+## ----GenomeAxisTrackClass6, fig.width=7.5, fig.height=0.75--------------------
+plotTracks(axisTrack, from = 1e6, to = 9e6, labelPos = "below")
+
+## ----GenomeAxisTrackClass7, fig.width=7.5, fig.height=0.5---------------------
+plotTracks(axisTrack, from = 1e6, to = 9e6, scale = 0.5)
+
+## ----GenomeAxisTrackClass8, fig.width=7.5, fig.height=0.5---------------------
+plotTracks(axisTrack, from = 1e6, to = 9e6, scale = 0.5, 
+           labelPos = "below")
+
+## ----GenomeAxisTrackClassTable, echo=FALSE, results='asis'--------------------
+addParTable(xtabDetails,"GenomeAxisTrack", out_type = out_type)
+
+## ----IdeogramTrackClass1Show, eval=FALSE--------------------------------------
+# ideoTrack <- IdeogramTrack(genome = "hg19", chromosome = "chrX")
+# plotTracks(ideoTrack, from = 85e6, to = 129e6)
+
+## ----IdeogramTrackClass1Do, fig.width=7.5, fig.height=0.5, echo=FALSE, results='hide'----
+if(hasUcscConnection) {
+  ideoTrack <- IdeogramTrack(genome = "hg19", chromosome = "chrX")
+} else{
+  data(ideoTrack)
+}
+plotTracks(ideoTrack, from = 85e6, to = 129e6)
+
+## ----IdeogramTrackClass2, fig.width=7.5, fig.height=0.5-----------------------
+plotTracks(ideoTrack, from = 85e6, to = 129e6, showId = FALSE)
+
+## ----IdeogramTrackClass3, fig.width=7.5, fig.height=0.5-----------------------
+plotTracks(ideoTrack, from = 85e6, to = 129e6, showId = FALSE, 
+           showBandId = TRUE, cex.bands = 0.5)
+
+## ----IdeogramTrackClass4, fig.width=7.5, fig.height=0.5-----------------------
+plotTracks(ideoTrack, from = 85e6, to = 129e6, showId = FALSE,
+           centromereShape = "circle")
+
+## ----IdeogramTrackClassTable, echo=FALSE, results='asis'----------------------
+addParTable(xtabDetails, "IdeogramTrack", out_type = out_type)
+
+## ----DataClass1, fig.width=7.5, fig.height=1.5--------------------------------
+data(twoGroups)
+dTrack <- DataTrack(twoGroups, name = "uniform")
+plotTracks(dTrack)
+
+## ----types, echo=FALSE, results='asis'----------------------------------------
+types <- data.frame(Value=c("p", "l", "b", "a", "s", "S", "g", "r", "h", "confint", "smooth", "histogram", "mountain", "polygon", "boxplot", "gradient", "heatmap", "horizon"),
+                    Type=c("dot plot", "lines plot", "dot and lines plot", "lines plot of average (i.e., mean) values", "stair steps (horizontal first)",
+                           "stair steps (vertical first)", "add grid lines", "add linear regression line", "histogram lines", "confidence intervals for average values", "add loess curve",
+                           "histogram (bar width equal to range with)", "'mountain-type' plot relative to a baseline",
+                           "'polygon-type' plot relative to a baseline", "box and whisker plot",
+                           "false color image of the summarized values", "false color image of the individual values",
+                           "Horizon plot indicating magnitude and direction of a change relative to a baseline"))
+
+if (out_type == "html") {
+  kable(types)
+} else if (out_type == "latex") {
+  kable(types, "latex", booktabs = TRUE, longtable = TRUE)
+}
+
+## ----typePlots, fig.width=7.5, fig.height=8.5, echo=FALSE, results='hide'-----
+pushViewport(viewport(layout = grid.layout(nrow = 9, ncol = 2)))
+i <- 1
+for(t in types$Value) {
+  pushViewport(viewport(layout.pos.col = ((i - 1) %% 2) + 1,
+                        layout.pos.row = ((i - 1) %/% 2)+1))
+    if(t != "horizon"){
+        names(dTrack) <- t
+        plotTracks(dTrack, type = t, add = TRUE, 
+                   cex.title = 0.8, margin = 0.5)
+    } else {
+        data(dtHoriz)
+        names(dtHoriz) <- "horizon *"
+        plotTracks(dtHoriz[8, ], type = "horizon", add = TRUE, 
+                   cex.title = 0.8, margin = 0.5, 
+                   showAxis = FALSE, horizon.origin = 0.7)
+    }
+    i <- i + 1
+    popViewport(1)
+}
+popViewport(1)
+names(dTrack) <- "uniform"
+
+## ----mutitype, results='hide', fig.width=7.5, fig.height=1.5------------------
+plotTracks(dTrack, type = c("boxplot", "a", "g"))
+
+## ----sampNames, fig.width=7.5, fig.height=1.5---------------------------------
+colnames(mcols(twoGroups))
+plotTracks(dTrack, type = c("heatmap"), showSampleNames = TRUE, 
+           cex.sampleNames = 0.6)
+
+## ----grouping, results='hide', fig.width=7.5, fig.height=1.5------------------
+plotTracks(dTrack, groups = rep(c("control", "treated"), each = 3),
+           type = c("a", "p", "confint"))
+
+## ----typeGroupedPlots, fig.width=7.5, fig.height=6, echo=FALSE, results='hide'----
+pushViewport(viewport(layout=grid.layout(nrow=9, ncol=1)))
+i <- 1
+for(t in c("a", "s", "confint", "smooth", "histogram", "boxplot", "heatmap", "horizon", "hor. type")) {
+  pushViewport(viewport(layout.pos.col=((i-1)%%1)+1, layout.pos.row=((i-1)%/%1)+1))
+  names(dTrack) <- t
+  if(!t %in% c("horizon", "hor. type")) {
+    plotTracks(dTrack, type=t, add=TRUE, cex.title=0.8, groups=rep(1:2, each=3), margin=0.5)
+  } else if (t == "horizon") {
+    plotTracks(dtHoriz[c(1,8),], type="horizon", add=TRUE, cex.title=0.8, margin=0.5, showAxis=FALSE, horizon.origin=0.3,
+               groups=1:2)
+  } else {
+    plotTracks(dTrack, type="histogram", stackedBars=FALSE, add=TRUE, cex.title=0.8, groups=rep(1:2, each=3), margin=0.5)
+  }
+  i <- i+1
+  popViewport(1)
+}
+popViewport(1)
+names(dTrack) <- "uniform"
+
+## ----groupingLegend, results='hide', fig.width=7.5, fig.height=1.5------------
+plotTracks(dTrack, groups = rep(c("control", "treated"), each = 3),
+           type = c("a", "p"), legend = TRUE)
+
+## ----horizLegend, results='hide', fig.width=7.5, fig.height=1.5---------------
+data(dtHoriz)
+dtHoriz <- dtHoriz[1:6, ]
+plotTracks(dtHoriz, type = "horiz", groups = rownames(values(dtHoriz)),
+           showSampleNames = TRUE, cex.sampleNames = 0.6, separator = 1)
+
+## ----filedt1, fig.width=7.5, fig.height=1-------------------------------------
+bgFile <- system.file("extdata/test.bedGraph", package = "Gviz")
+dTrack2 <- DataTrack(range = bgFile, genome = "hg19", type = "l", 
+                     chromosome = "chr19", name = "bedGraph")
+class(dTrack2)
+plotTracks(dTrack2)
+
+## ----filedt2------------------------------------------------------------------
+library(rtracklayer)
+dTrack3 <-  DataTrack(range = bgFile, genome = "hg19", type = "l", 
+                      chromosome = "chr19", name = "bedGraph",
+                      importFunction = function(file) import(con=file))
+identical(dTrack2, dTrack3)
+
+## ----filedt3, fig.width=7.5, fig.height=1-------------------------------------
+bamFile <- system.file("extdata/test.bam", package = "Gviz")
+dTrack4 <- DataTrack(range = bamFile, genome = "hg19", type = "l", 
+                     name = "Coverage", window = -1, 
+                     chromosome = "chr1")
+class(dTrack4)
+dTrack4
+plotTracks(dTrack4, from = 189990000, to = 190000000)
+
+## ----filedt4, fig.width=7.5, fig.height=1-------------------------------------
+plotTracks(dTrack4, chromosome = "chr1", from = 189891483, to = 190087517)
+
+## ----filedt5------------------------------------------------------------------
+myImportFun <- function(file, selection){
+    ## do something here
+}
+DataTrack(range = bamFile, genome = "hg19", type = "l",
+          name = "Coverage", window = -1, chromosome = "chr1",
+          importFunction = myImportFun, stream = TRUE)
+
+## ----biggerdata, results='hide', fig.width=7.5, fig.height=1.5----------------
+dat <- sin(seq(pi, 10*pi, len=500))
+dTrack.big <- DataTrack(start = seq(1, 100000, len = 500), width = 15, 
+                        chromosome = "chrX", genome = "hg19", 
+                        name = "sinus",
+                        data = sin(seq(pi, 5 * pi, len = 500)) * 
+                          runif(500, 0.5, 1.5))
+plotTracks(dTrack.big, type="hist")
+
+## ----aggregation, results='hide', fig.width=7.5, fig.height=1.5---------------
+plotTracks(dTrack.big, type = "hist", window = 50)
+
+## ----aggregation2, results='hide', fig.width=7.5, fig.height=1.5--------------
+plotTracks(dTrack.big, type = "hist", window = -1, windowSize = 2500)
+
+## ----transformation, results='hide', fig.width=7.5, fig.height=1.5------------
+plotTracks(dTrack.big, type = "l", 
+           transformation = function(x) { x[x < 0] <- 0; x })
+
+## ----groupingAv1, results='hide', fig.width=7.5, fig.height=1.5---------------
+plotTracks(dTrack, groups = rep(c("control", "treated"), each = 3), 
+           type = c("b"), aggregateGroups = TRUE)
+
+## ----groupingAv2, results='hide', fig.width=7.5, fig.height=1.5---------------
+plotTracks(dTrack, groups = rep(c("control", "treated"), each = 3), 
+           type = c("b"), aggregateGroups = TRUE, aggregation = "max")
+
+## ----DataTrackClassTable, echo=FALSE, results='asis'--------------------------
+addParTable(xtabDetails,"DataTrack", out_type = out_type)
+
+## ----anntrack1, results='hide', fig.width=7.5, fig.height=0.5-----------------
+aTrack <- AnnotationTrack(start = c(10, 40, 120), width = 15, 
+                          chromosome = "chrX", 
+                          strand = c("+", "*", "-"),
+                          id = c("Huey", "Dewey", "Louie"), 
+                          genome = "hg19", name = "foo")
+plotTracks(aTrack)
+
+## ----anntrack2, results='hide', fig.width=7.5, fig.height=0.5-----------------
+plotTracks(aTrack, shape = "box", featureAnnotation = "id")
+
+## ----anntrack3, results='hide', fig.width=7.5, fig.height=0.5-----------------
+plotTracks(aTrack, shape = "ellipse", featureAnnotation = "id", 
+           fontcolor.feature = "darkblue")
+
+## ----anntrack4f, results='hide', fig.width=7.5, fig.height=0.5----------------
+aTrack.groups <- AnnotationTrack(start = c(50, 180, 260, 460, 860, 1240), 
+                                 width = c(15, 20, 40, 100, 200, 20),
+                                 chromosome = "chrX",
+                                 strand = rep(c("+", "*", "-"), 
+                                              c(1, 3, 2)),
+                                 group = rep(c("Huey", "Dewey", "Louie"), 
+                                             c(1, 3, 2)),
+                                 genome = "hg19", name = "foo")
+plotTracks(aTrack.groups, groupAnnotation = "group")
+
+## ----anntrack4af, results='hide', fig.width=7.5, fig.height=0.5---------------
+plotTracks(aTrack.groups, groupAnnotation = "group", 
+           just.group = "right")
+
+## ----anntrack4bf, results='hide', fig.width=7.5, fig.height=0.5---------------
+plotTracks(aTrack.groups, groupAnnotation = "group", 
+           just.group = "above")
+
+## ----stacking1, results='hide', fig.width=7.5, fig.height=0.5-----------------
+aTrack.stacked <- AnnotationTrack(start = c(50, 180, 260, 800, 600, 1240),
+                                  width = c(15, 20, 40, 100, 500, 20),
+                                  chromosome = "chrX",
+                                  strand = "*",
+                                  group = rep(c("Huey", "Dewey", "Louie"), 
+                                              c(1, 3, 2)),
+                                  genome = "hg19", name = "foo")
+plotTracks(aTrack.stacked, groupAnnotation="group")
+
+## ----stacking2, results='hide', fig.width=7.5, fig.height=0.5-----------------
+plotTracks(aTrack.stacked, stacking = "dense")
+
+## ----features-----------------------------------------------------------------
+feature(aTrack.stacked)
+feature(aTrack.stacked) <- c("foo", "bar", "bar", "bar", "no", "no")
+
+## ----featuresIdPlot, results='hide', fig.width=7.5, fig.height=0.5------------
+plotTracks(aTrack.stacked, featureAnnotation = "feature", 
+           groupAnnotation = "feature", fontcolor.feature = 1, 
+           cex.feature = 0.7)
+
+## ----featuresPlotf, results='hide', fig.width=7.5, fig.height=0.5-------------
+plotTracks(aTrack.stacked, groupAnnotation = "group", 
+           foo = "darkred", bar = "darkgreen")
+
+## ----overplotting, results='hide', fig.width=7.5, fig.height=0.75-------------
+data("denseAnnTrack")
+plotTracks(denseAnnTrack, showOverplotting = TRUE)
+
+## ----collapse1f, results='hide', fig.width=7.5, fig.height=0.85---------------
+data(collapseTrack)
+plotTracks(ctrack)
+
+## ----collapse2f, results='hide', fig.width=7.5, fig.height=0.85---------------
+plotTracks(ctrack, min.width = 1)
+
+## ----collapse3f, results='hide', fig.width=7.5, fig.height=0.85---------------
+plotTracks(ctrack, min.width = 1, collapse = TRUE)
+
+## ----collapse4f, results='hide', fig.width=7.5, fig.height=0.85---------------
+plotTracks(ctrack, min.width = 3, min.distance = 5, collapse = TRUE)
+
+## ----collapse5f, results='hide', fig.width=7.5, fig.height=0.65---------------
+plotTracks(ctrack, min.width = 3, min.distance = 5, collapse = TRUE,
+           mergeGroups = TRUE, extend.left = 0.1)
+
+## ----fileat1, fig.width=7.5, fig.height=1-------------------------------------
+aTrack2 <- AnnotationTrack(range = bamFile, genome = "hg19", 
+                           name = "Reads", chromosome = "chr1")
+class(aTrack2)
+aTrack2
+plotTracks(aTrack2, from = 189995000, to = 190000000)
+
+## ----fileat2, fig.width=7.5, fig.height=1-------------------------------------
+aTrack3 <- AnnotationTrack(range = bamFile, genome = "hg19", 
+                           name = "Reads", chromosome = "chr1", 
+                           group = "id")
+aTrack3
+plotTracks(aTrack3, from = 189995000, to = 190000000)
+
+## ----fileat3------------------------------------------------------------------
+availableDefaultMapping(bamFile, "AnnotationTrack")
+
+## ----fileat4, fig.width=7.5, fig.height=2-------------------------------------
+plotTracks(list(dTrack4, aTrack2), from = 189990000, to = 190000000)
+
+## ----AnnotationTrackClassTable, echo=FALSE, results='asis'--------------------
+addParTable(xtabDetails,"AnnotationTrack", out_type = out_type)
+
+## ----generegtrackf, results='hide', fig.width=7.5, fig.height=1.5-------------
+data(geneModels)
+grtrack <- GeneRegionTrack(geneModels, genome = gen, chromosome = chr, 
+                           name = "foo")
+head(gene(grtrack))
+head(transcript(grtrack))
+head(exon(grtrack))
+head(symbol(grtrack))
+plotTracks(grtrack)
+
+## ----generegtrack2af, results='hide', fig.width=7.5, fig.height=2.5-----------
+plotTracks(grtrack, transcriptAnnotation = "symbol")
+
+## ----generegtrack2bf, results='hide', fig.width=7.5, fig.height=2.5-----------
+plotTracks(grtrack, transcriptAnnotation = "transcript")
+
+## ----generegtrack2cf, results='hide', fig.width=7.5, fig.height=1-------------
+plotTracks(grtrack, exonAnnotation = "exon", extend.left = -0.8, 
+           fontcolor.exon = 1)
+
+## ----generegtrack3f, results='hide', fig.width=7.5, fig.height=1--------------
+plotTracks(grtrack, collapseTranscripts = TRUE, shape = "arrow", 
+           transcriptAnnotation = "symbol")
+
+## ----generegtrack3g, results='hide', fig.width=7.5, fig.height=1--------------
+plotTracks(grtrack, collapseTranscripts = "longest", shape = "arrow", 
+           transcriptAnnotation = "symbol")
+
+## ----generegtrack3h, results='hide', fig.width=7.5, fig.height=1--------------
+plotTracks(grtrack, collapseTranscripts = "meta", shape = "arrow", 
+           transcriptAnnotation = "symbol")
+
+## ----tdb2grt1-----------------------------------------------------------------
+library(GenomicFeatures)
+samplefile <- system.file("extdata", "hg19_knownGene_sample.sqlite", 
+                          package = "GenomicFeatures")
+txdb <- loadDb(samplefile)
+GeneRegionTrack(txdb)
+
+## ----tdb2grt2-----------------------------------------------------------------
+txTr <- GeneRegionTrack(txdb, chromosome = "chr6", 
+                        start = 35000000,  end = 40000000)
+
+## ----generegtrack4f, results='hide', fig.width=7.5, fig.height=1--------------
+feature(txTr)
+plotTracks(txTr)
+
+## ----generegtrack4g, eval=FALSE, echo=FALSE, results='hide', fig.width=7.5, fig.height=1----
+# library(org.Hs.eg.db)
+# symbol(txTr) <- mapIds(org.Hs.eg.db,
+#                        keys=sub("\\.\\d+$", "", gene(txTr)),
+#                        keytype="ENSEMBL", column="SYMBOL")
+# symbol(txTr) <- ifelse(is.na(symbol(txTr)), gene(txTr), symbol(txTr))
+# plotTracks(txTr, transcriptAnnotation = "symbol")
+
+## ----ensDb, eval=FALSE--------------------------------------------------------
+# library(ensembldb)
+# library(EnsDb.Hsapiens.v75)
+# 
+# edb <- EnsDb.Hsapiens.v75
+# seqlevelsStyle(edb) <- "UCSC"
+# 
+# eTrack <- GeneRegionTrack(edb, chromosome = "chr6",
+#                           start = 35000000, end = 40000000)
+# 
+# plotTracks(eTrack)
+
+## ----GeneRegionTrackClassTable, echo=FALSE, results='asis'--------------------
+addParTable(xtabDetails,"GeneRegionTrack", out_type = out_type)
+
+## ----BiomartGeneRegionTrackShow, eval=FALSE-----------------------------------
+# library(biomaRt)
+# bm <- useEnsembl(host = "https://grch37.ensembl.org",
+#               biomart = "ENSEMBL_MART_ENSEMBL",
+#               dataset = "hsapiens_gene_ensembl")
+# biomTrack <- BiomartGeneRegionTrack(genome = "hg19", chromosome = chr,
+#                                     start = 20e6, end = 21e6,
+#                                     name = "ENSEMBL", biomart = bm)
+# plotTracks(biomTrack)
+
+## ----BiomartGeneRegionTrackDo, echo=FALSE, results='hide', fig.width=7.5, fig.height=1.25----
+library(biomaRt)
+if(hasBiomartConnection) {
+  bm <- useEnsembl(host = "https://grch37.ensembl.org", 
+                biomart = "ENSEMBL_MART_ENSEMBL", 
+                dataset = "hsapiens_gene_ensembl")
+  biomTrack <- BiomartGeneRegionTrack(genome = "hg19", chromosome = chr, 
+                                      start = 20e6, end = 21e6,
+                                      name = "ENSEMBL", biomart = bm)
+} else {
+    data(biomTrack)
+    biomTrack <- as(biomTrack, "GeneRegionTrack")
+}
+plotTracks(biomTrack)
+
+## ----BiomartGeneRegionTrackCol, fig.width=7.5, fig.height=1.25----------------
+plotTracks(biomTrack, col.line = NULL, col = NULL)
+
+## ----BiomartGeneRegionTrackHeight, fig.width=7.5, fig.height=1.25-------------
+plotTracks(biomTrack, col.line = NULL, col = NULL, stackHeight = 0.3)
+
+## ----BiomartGeneRegionTrackFilterShow, eval=FALSE-----------------------------
+# bm <- useEnsembl(host = "https://grch37.ensembl.org",
+#               biomart = "ENSEMBL_MART_ENSEMBL",
+#               dataset = "hsapiens_gene_ensembl")
+# biomTrack <- BiomartGeneRegionTrack(genome = "hg19", chromosome = chr,
+#                                     start = 20e6, end = 21e6,
+#                                     name = "ENSEMBL",
+#                                     filter = list(with_refseq_mrna=TRUE),
+#                                     biomart = bm)
+# plotTracks(biomTrack, col.line = NULL, col = NULL, stackHeight = 0.3)
+
+## ----BiomartGeneRegionTrackFilterDo, fig.width=7.5, fig.height=1.25, echo=FALSE, results='hide'----
+if(hasBiomartConnection) {
+  bm <- useEnsembl(host = "https://grch37.ensembl.org",
+                biomart = "ENSEMBL_MART_ENSEMBL",
+                dataset = "hsapiens_gene_ensembl")
+  biomTrack <- BiomartGeneRegionTrack(genome = "hg19", chromosome = chr, 
+                                      start = 20e6, end = 21e6,
+                                      name = "ENSEMBL",
+                                      filter = list(with_refseq_mrna=TRUE), 
+                                      biomart = bm)
+  plotTracks(biomTrack, col.line = NULL, col = NULL, stackHeight = 0.3)
+} else {
+  data(biomTrack2)
+  biomTrack2 <- as(biomTrack2, "GeneRegionTrack")
+  plotTracks(biomTrack2, col.line = NULL, col = NULL, stackHeight = 0.3)
+}
+
+## ----BiomartGeneRegionTrackSymbolShow, eval=FALSE-----------------------------
+# bm <- useEnsembl(host = "https://grch37.ensembl.org",
+#               biomart = "ENSEMBL_MART_ENSEMBL",
+#               dataset = "hsapiens_gene_ensembl")
+# biomTrack <- BiomartGeneRegionTrack(genome = "hg19", name = "ENSEMBL",
+#                                     symbol = "ABCB5", biomart = bm)
+# plotTracks(biomTrack, transcriptAnnotation = "symbol")
+
+## ----BiomartGeneRegionTrackSymbolDo, fig.width=7.5, fig.height=1.25, echo=FALSE, results='hide'----
+if(hasBiomartConnection) {
+  bm <- useEnsembl(host = "https://grch37.ensembl.org", 
+                biomart = "ENSEMBL_MART_ENSEMBL", 
+                dataset = "hsapiens_gene_ensembl")
+  biomTrack <- BiomartGeneRegionTrack(genome = "hg19", name = "ENSEMBL", 
+                                      symbol = "ABCB5", biomart = bm)
+} else {
+    ranges(biomTrack) <- ranges(biomTrack)[symbol(biomTrack) == "ABCB5"]
+}
+plotTracks(biomTrack, transcriptAnnotation="symbol")
+
+## ----BiomartGeneRegionTrackCustom, fig.width=7.5, fig.height=1.25, eval=FALSE, echo=FALSE----
+# library(biomaRt)
+# bm <- useEnsembl(host="dec2012.archive.ensembl.org", biomart="ENSEMBL_MART_ENSEMBL",
+#               dataset="hsapiens_gene_ensembl")
+# fm <- Gviz:::.getBMFeatureMap()
+# fm[["symbol"]] <- "external_gene_id"
+# biomTrack <- BiomartGeneRegionTrack(genome="hg19", chromosome="chr7", start=20e6, end=21e6,name="ENSEMBL",
+#                                     featureMap=fm, biomart=bm)
+# plotTracks(biomTrack, col.line=NULL, col=NULL, stackHeight=0.3)
+
+## ----BiomartGeneRegionTrackClassTable, echo=FALSE, results='asis'-------------
+addInfo <- t(data.frame(displayPars(biomTrack, names(details[["BiomartGeneRegionTrack"]]))))
+colnames(addInfo) <- "Color"
+addParTable(xtabDetails,"BiomartGeneRegionTrack", add=addInfo, out_type = out_type)
+
+## ----DetailsAnnotationTrack1--------------------------------------------------
+library(GenomicRanges)
+probes <- GRanges(seqnames = "chr7", ranges = IRanges(
+      start = c(2000000, 2070000, 2100000, 2160000),
+      end = c(2050000, 2130000, 2150000, 2170000)), 
+  strand = c("-", "+", "-", "-"))
+
+## ----DetailsAnnotationTrack2--------------------------------------------------
+methylation <- matrix(c(rgamma(400, 1)),
+                  ncol = 100,
+                  dimnames = list(paste("probe", 1:4, sep = ""), NULL))
+methylation[, 51:100] <- methylation[, 51:100] + 0:3
+sgroups <- rep(c("grp1", "grp2"), each = 50)
+
+## ----DetailsAnnotationTrack3--------------------------------------------------
+library(lattice)
+details <- function(identifier, ...) {
+  d <- data.frame(signal = methylation[identifier, ], group = sgroups)
+  print(densityplot(~signal, group = group, data = d, 
+                    main = list(label = identifier, cex = 0.7),
+                    scales = list(draw = FALSE, x = list(draw = TRUE)), 
+                    ylab = "", xlab = ""), 
+        newpage = FALSE, prefix = "plot")
+}
+
+## ----DetailsAnnotationTrack4, results='hide', fig.width=7.5, fig.height=5-----
+deTrack <- AnnotationTrack(range = probes, genome = "hg19", 
+                           chromosome = 7, id = rownames(methylation),
+                           name = "probe details", stacking = "squish",
+                           fun = details)
+plotTracks(deTrack)
+
+## ----DetailsAnnotationTrack5--------------------------------------------------
+selFun <- function(identifier, start, end, track, GdObject, ...){
+    gcount <- table(group(GdObject))
+    ## This computes the width of 2 pixels in genomic coordinates
+    pxRange <- Gviz:::.pxResolution(min.width = 20, coord = "x")
+    return((end - start) < pxRange && gcount[identifier] == 1)
+}
+
+## ----DetailsAnnotationTrack6--------------------------------------------------
+detFun <- function(identifier, GdObject.original, ...){
+  plotTracks(list(GenomeAxisTrack(scale = 0.3, size = 0.2, cex = 0.7), 
+        GdObject.original[group(GdObject.original) == identifier]),
+        add = TRUE, showTitle = FALSE)
+}
+
+## ----DetailsAnnotationTrack7f, results='hide', fig.width=7.5, fig.height=2----
+data(geneDetails)
+deTrack2 <- AnnotationTrack(geneDetails, fun = detFun, 
+                            selectFun = selFun,
+                            groupDetails = TRUE, details.size = 0.5, 
+                            detailsConnector.cex = 0.5, 
+                            detailsConnector.lty = "dotted",
+                            shape = c("smallArrow", "arrow"), 
+                            groupAnnotation = "group")
+plotTracks(deTrack2, extend.left = 90000)
+
+## ----DetailsAnnotationTrack8, results='hide', fig.width=7.5, fig.height=3-----
+plotTracks(deTrack, details.size = 0.75, detailsConnector.pch = NA, 
+           detailsConnector.col = "darkred", 
+           detailsBorder.fill = "#FFE3BF", 
+           detailsBorder.col = "darkred", shape ="box", 
+           detailsConnector.lty = "dotted")
+
+## ----DetailsAnnotationTrackClassTableSec, echo=FALSE, results='asis'----------
+addParTable(xtabDetails,"DetailsAnnotationTrack", out_type = out_type)
+
+## ----SequenceTrack1-----------------------------------------------------------
+library(BSgenome.Hsapiens.UCSC.hg19)
+sTrack <- SequenceTrack(Hsapiens)
+sTrack
+
+## ----SequenceTrack2, results='hide', fig.width=7.5, fig.height=0.5------------
+plotTracks(sTrack, chromosome = 1, from = 20000, to = 20050)
+
+## ----SequenceTrack3, results='hide', fig.width=7.5, fig.height=0.5------------
+fcol <- c(A="darkgray", C="darkgray", T="darkgray", G="darkgray")
+plotTracks(sTrack, chromosome = 1, from = 20000, to = 20050, 
+           fontcolor = fcol)
+
+## ----SequenceTrack4, results='hide', fig.width=7.5, fig.height=0.5------------
+plotTracks(sTrack, chromosome = 1, from = 20000, to = 20050,
+           add53 = TRUE)
+
+## ----SequenceTrack5, results='hide', fig.width=7.5, fig.height=0.3------------
+plotTracks(sTrack, chromosome = 1, from = 20000, to = 20050, 
+           add53 = TRUE, complement = TRUE)
+
+## ----SequenceTrack6, results='hide', fig.width=7.5, fig.height=0.3------------
+plotTracks(sTrack, chromosome = 1, from = 20000, to = 20100)
+
+## ----SequenceTrack7, results='hide', fig.width=7.5, fig.height=0.3------------
+plotTracks(sTrack, chromosome = 1, from = 20000, to = 201000)
+
+## ----SequenceTrack8, results='hide', fig.width=7.5, fig.height=0.3------------
+plotTracks(sTrack, chromosome = 1, from = 20000, to = 20100, cex = 0.5)
+
+## ----SequenceTrackClassTableSec, echo=FALSE, results='asis'-------------------
+addParTable(xtabDetails,"SequenceTrack", out_type = out_type)
+
+## ----alignmentstrack_1_do, echo=FALSE, results='hide'-------------------------
+afrom <- 2960000
+ato <- 3160000
+alTrack <- AlignmentsTrack(
+  system.file(package = "Gviz", "extdata", "gapped.bam"), 
+  isPaired = TRUE)
+data(alTrackGenes)
+
+## ----alignmentstrack_1_show, eval=FALSE---------------------------------------
+# afrom <- 2960000
+# ato <- 3160000
+# alTrack <- AlignmentsTrack(
+#   system.file(package = "Gviz", "extdata", "gapped.bam"),
+#   isPaired = TRUE)
+# bmt <- BiomartGeneRegionTrack(genome = "hg19", chromosome = "chr12",
+#                               start = afrom, end = ato,
+#                               filter = list(with_ox_refseq_mrna = TRUE),
+#                               stacking = "dense")
+
+## ----alignmentstrack_2, results='hide', fig.width=7.5, fig.height=5-----------
+plotTracks(c(bmt, alTrack), from = afrom, to = ato, 
+           chromosome = "chr12")
+
+## ----alignmentstrack_3, results='hide', fig.width=7.5, fig.height=5-----------
+plotTracks(c(bmt, alTrack), from = afrom, to = ato,
+           chromosome = "chr12", min.height = 0, 
+           coverageHeight = 0.08, minCoverageHeight = 0)
+
+## ----alignmentstrack_4, results='hide', fig.width=7.5, fig.height=2-----------
+plotTracks(c(alTrack, bmt), from = afrom, to = ato, 
+           chromosome = "chr12", type = "coverage")
+
+## ----alignmentstrack_5, results='hide', fig.width=7.5, fig.height=5-----------
+plotTracks(c(bmt, alTrack), from = afrom + 12700, 
+           to = afrom + 15200, chromosome = "chr12")
+
+## ----alignmentstrack_5_1, results='hide', fig.width=7.5, fig.height=2---------
+plotTracks(c(bmt, alTrack), from = afrom + 12700, 
+           to = afrom + 15200, chromosome = "chr12",
+           type = c("coverage", "sashimi"))
+
+## ----alignmentstrack_5_2, results='hide', fig.width=7.5, fig.height=2---------
+introns <- GRanges("chr12", IRanges(start = c(2973662, 2973919),
+                                    end = c(2973848, 2974520)))
+plotTracks(c(bmt, alTrack), from = afrom + 12700, to = afrom + 15200, 
+           chromosome = "chr12", type = c("coverage", "sashimi"), 
+           sashimiFilter = introns)
+
+## ----alignmentstrack_5_3, results='hide', fig.width=7.5, fig.height=2---------
+plotTracks(c(bmt, alTrack), from = afrom + 12700, to = afrom + 15200, 
+           chromosome = "chr12", type = c("coverage", "sashimi"), 
+           sashimiFilter = introns, sashimiFilterTolerance = 5L)
+
+## ----alignmentstrack_6, results='hide', fig.width=7.5, fig.height=5-----------
+plotTracks(c(bmt, alTrack), from = afrom + 12700, to = afrom + 15200,
+           chromosome = "chr12", reverseStacking = TRUE,
+           col.mates = "purple", col.gap = "orange", type = "pileup")
+
+## ----alignmentstrack_6_1, results='hide', fig.width=7.5, fig.height=5---------
+alTrack <- AlignmentsTrack(
+  system.file(package = "Gviz", "extdata", "gapped.bam"), 
+  isPaired = FALSE)
+plotTracks(c(bmt, alTrack), from = afrom + 12700, to = afrom + 15200, 
+           chromosome = "chr12")
+
+## ----alignmentstrack_7, results='hide', fig.width=7.5, fig.height=5-----------
+afrom <- 44945200
+ato <- 44947200
+alTrack <- AlignmentsTrack(
+  system.file(package = "Gviz", "extdata", "snps.bam"), isPaired = TRUE)
+plotTracks(alTrack, chromosome = "chr21", from = afrom, to = ato)
+
+## ----alignmentstrack_8, results='hide', fig.width=7.5, fig.height=5-----------
+plotTracks(c(alTrack, sTrack), chromosome = "chr21", 
+           from = afrom, to = ato)
+
+## ----alignmentstrack_9, results='hide', fig.width=7.5, fig.height=5-----------
+plotTracks(c(alTrack, sTrack), chromosome = "chr21",
+           from = 44946590, to = 44946660)
+
+## ----alignmentstrack_10, results='hide', fig.width=7.5, fig.height=5----------
+plotTracks(c(alTrack, sTrack), chromosome = "chr21", from = 44946590, 
+           to = 44946660, cex = 0.5, min.height = 8)
+
+## ----alignmentstrack_11, results='hide', fig.width=7.5, fig.height=5----------
+indelTrack1 <- AlignmentsTrack(
+  system.file(package = "Gviz", "extdata", "indels.bam"), 
+  name = "Standard")
+indelTrack2 <- AlignmentsTrack(
+  system.file(package = "Gviz", "extdata", "indels.bam"), 
+  showIndels=TRUE, name="Indels")
+plotTracks(c(indelTrack1, indelTrack2), 
+           chromosome = "chr2", from = 126442000, to = 126453000)
+
+## ----AlignmentsTrackClassTable, echo=FALSE, results='asis'--------------------
+addParTable(xtabDetails,"AlignmentsTrack", out_type = out_type)
+
+## ----UCSC1, echo=FALSE,fig.cap="A screen shot of a UCSC genome browser view around the FMR1 locus on the mouse chromosome."----
+include_graphics("ucsc1.png")
+
+## ----UCSC2, echo=FALSE, fig.cap="A screen shot of a UCSC table browser view on the UCSC Known Genes track."----
+include_graphics("ucsc2.png")
+
+## ----ucscTrack1, eval=FALSE---------------------------------------------------
+# from <- 65921878
+# to <- 65980988
+# knownGenes <- UcscTrack(genome = "mm9", chromosome = "chrX",
+#                         track = "UCSC Genes", table="knownGene",
+#                         from = from, to = to,
+#                         trackType = "GeneRegionTrack",
+#                         rstarts = "exonStarts", rends = "exonEnds",
+#                         gene = "name", symbol = "name",
+#                         transcript = "name", strand = "strand",
+#                         fill = "#8282d2", name = "UCSC Genes")
+
+## ----ucscTrack2, eval=FALSE---------------------------------------------------
+# refGenes <- UcscTrack(genome = "mm9", chromosome = "chrX",
+#                       track="Other RefSeq", table = "xenoRefGene",
+#                       from = from, to = to,
+#                       trackType = "GeneRegionTrack",
+#                       rstarts = "exonStarts", rends = "exonEnds",
+#                       gene = "name",  symbol = "name2",
+#                       transcript = "name", strand = "strand",
+#                       fill = "#8282d2", stacking = "dense",
+#                       name = "Other RefSeq")
+# 
+# ensGenes <- UcscTrack(genome = "mm9", chromosome = "chrX",
+#                       track="Ensembl Genes", table = "ensGene",
+#                       from = from, to = to,
+#                       trackType = "GeneRegionTrack",
+#                       rstarts = "exonStarts", rends = "exonEnds",
+#                       gene = "name", symbol = "name2",
+#                       transcript = "name", strand = "strand",
+#                       fill = "#960000", name = "Ensembl Genes")
+
+## ----ucscTrack3, eval=FALSE---------------------------------------------------
+# cpgIslands <- UcscTrack(genome = "mm9", chromosome = "chrX",
+#                         track="CpG Islands", table = "cpgIslandExt",
+#                         from = from, to = to,
+#                         trackType = "AnnotationTrack",
+#                         start = "chromStart", end = "chromEnd",
+#                         id = "name", shape = "box", fill = "#006400",
+#                         name = "CpG Islands")
+# 
+# snpLocations <-  UcscTrack(genome = "mm9", chromosome = "chrX",
+#                            track="SNPs (128)", table = "snp128",
+#                            from = from, to = to,
+#                            trackType = "AnnotationTrack",
+#                            start = "chromStart", end = "chromEnd",
+#                            id = "name", feature = "func",
+#                            strand = "strand", shape = "box",
+#                            stacking = "dense", fill = "black",
+#                            name = "SNPs")
+
+## ----ucscTrack4, eval=FALSE---------------------------------------------------
+# conservation <- UcscTrack(genome = "mm9", chromosome = "chrX",
+#                           track = "Conservation",
+#                           table = "phyloP30wayPlacental",
+#                           from = from, to = to, trackType = "DataTrack",
+#                           start = "start", end = "end", data = "value",
+#                           type = "hist", window = "auto",
+#                           col.histogram = "darkblue",
+#                           fill.histogram = "darkblue",
+#                           ylim = c(-3.7, 4), name = "Conservation")
+# 
+# gcContent <- UcscTrack(genome = "mm9", chromosome = "chrX",
+#                        track = "GC Percent", table = "gc5Base",
+#                        from = from, to = to, trackType = "DataTrack",
+#                        start = "start", end = "end", data = "value",
+#                        type = "hist", window = -1, windowSize = 1500,
+#                        fill.histogram = "black", col.histogram = "black",
+#                        ylim = c(30, 70), name = "GC Percent")
+
+## ----ucscTrack5, eval=FALSE---------------------------------------------------
+# axTrack <- GenomeAxisTrack()
+# idxTrack <- IdeogramTrack(genome="mm9", chromosome="chrX")
+
+## ----ucscTrackLoad, echo=FALSE, results='hide'--------------------------------
+data(ucscItems)
+
+## ----ucscTrack6, results='hide', fig.width=7.5, fig.height=5.5----------------
+plotTracks(list(idxTrack, axTrack, knownGenes, refGenes, ensGenes, 
+                cpgIslands, gcContent, conservation, snpLocations), 
+           from = from, to = to, showTitle = FALSE)
+
+## ----HighlightTrack, fig.width=7.5, fig.height=4------------------------------
+ht <- HighlightTrack(trackList = list(atrack, grtrack, dtrack),
+                     start = c(26705000, 26720000), width = 7000,
+                     chromosome = 7)
+plotTracks(list(itrack, gtrack, ht), from = lim[1], to = lim[2])
+
+## ----HighlightTrack2, fig.width=7.5, fig.height=4-----------------------------
+ht1 <- HighlightTrack(trackList=list(itrack, gtrack, atrack), 
+                      start = c(26705000, 26720000), width = 7000, 
+                      chromosome = 7)
+ht2 <- HighlightTrack(trackList = dtrack, start = c(26705000, 26720000),
+                      width = 7000, chromosome = 7)
+plotTracks(list(ht1, grtrack, ht2), from = lim[1], to = lim[2])
+
+## ----HighlightTrackClassTable, echo=FALSE, results='asis'---------------------
+addParTable(xtabDetails,"HighlightTrack", out_type = out_type)
+
+## ----OverlayTrack, fig.width=7.5, fig.height=3--------------------------------
+dat <- runif(100, min = -2, max = 22)
+dtrack2 <- DataTrack(data = dat, start = coords[-length(coords)], 
+                end = coords[-1], chromosome = chr, genome = gen, 
+                name = "Uniform2",  groups = factor("sample 2", 
+                  levels = c("sample 1", "sample 2")), legend = TRUE)
+displayPars(dtrack) <- list(groups = factor("sample 1", 
+              levels = c("sample 1", "sample 2")), legend = TRUE)
+ot <- OverlayTrack(trackList=list(dtrack2, dtrack))
+ylims <- extendrange(range(c(values(dtrack), values(dtrack2))))
+plotTracks(list(itrack, gtrack, ot), from = lim[1], to = lim[2], 
+           ylim = ylims, type = c("smooth", "p"))
+
+## ----OverlayTrack2, fig.width=7.5, fig.height=3-------------------------------
+displayPars(dtrack) <- list(alpha.title = 1, alpha = 0.5)
+displayPars(dtrack2) <- list(alpha.title = 1, alpha = 0.5)
+ot <- OverlayTrack(trackList = list(dtrack, dtrack2))
+plotTracks(list(itrack, gtrack, ot), from = lim[1], to = lim[2], 
+           ylim = ylims, type = c("hist"), window = 30)
+
+## ----multPlot1----------------------------------------------------------------
+chroms <- c("chr1", "chr2", "chr3", "chr4")
+maTrack <- AnnotationTrack(range=GRanges(seqnames = chroms, 
+    ranges = IRanges(start = 1,  width = c(100, 400, 200,1000)),
+    strand = c("+", "+", "-", "+")), genome = "mm9", 
+    chromosome = "chr1", name = "foo")
+
+mdTrack <- DataTrack(
+  range = GRanges(seqnames = rep(chroms, c(10, 40, 20, 100)),
+                  ranges = IRanges(start = c(seq(1, 100, len = 10),
+                                             seq(1, 400, len = 40), 
+                                             seq(1, 200, len = 20),
+                                             seq(1, 1000, len = 100)), 
+                                   width = 9), values = runif(170)),
+  data = "values", chromosome = "chr1", genome = "mm9", name = "bar")
+
+## ----multPlot2----------------------------------------------------------------
+mgTrack <- GenomeAxisTrack(scale = 50, labelPos = "below", exponent = 3)
+chromosome(itrack) <- "chr1"
+
+## ----multPlot3, results='hide', fig.width=7.5, fig.height=4-------------------
+ncols <- 2
+nrows <- length(chroms) %/% ncols
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(nrows, ncols)))
+for(i in seq_along(chroms)) {
+  pushViewport(viewport(layout.pos.col = ((i - 1) %% ncols) + 1,
+                        layout.pos.row = (((i) - 1) %/% ncols) + 1))
+    plotTracks(list(itrack, maTrack, mdTrack, mgTrack), 
+               chromosome = chroms[i], add = TRUE)
+    popViewport(1)
+}
+
+## ----multPlot4, results='hide', fig.width=7.5, fig.height=4-------------------
+library(lattice)
+chroms <- data.frame(chromosome = chroms)
+xyplot(1 ~ chromosome | chromosome, data = chroms, panel = function(x) {
+  plotTracks(list(itrack , maTrack, mdTrack, mgTrack), 
+             chromosome = x, add = TRUE, showId = FALSE) },
+  scales = list(draw = FALSE), xlab = NULL, ylab = NULL)
+
+## ----biocStruct1, echo=FALSE, results='asis'----------------------------------
+dt <- data.frame(`Gviz class` = rep(c("AnnotationTrack","GeneRegionTrack","DataTrack","SequenceTrack"), c(4,5,3,2)),
+                 `Bioconductor class`=c("data.frame","IRanges","GRanges","GRangesList",
+                                        "data.frame","IRanges","GRanges","GRangesList","TxDb",
+                                        "data.frame","IRanges","GRanges",
+                                        "DNAStringSet", "BSgenome"),
+                 `Method`=c("Constructor","Constructor + additional arguments","Constructor or setAs method, additional data in metadata columns","Constructor or setAs method",
+                            "Constructor","Constructor + additional arguments","Constructor or setAs method, additional data in metadata columns","Constructor or setAs method, additional data in metadata columns", "Constructor or setAs method",
+                             "Constructor","Constructor + additional data matrix","Constructor or setAs method, numeric data in metadata columns",
+                            "DNAStringSet & Constructor", "Constructor"), 
+                 stringsAsFactors = FALSE, check.names=FALSE)
+dt[duplicated(dt[,1]),1] <- "" 
+if (out_type == "html") {
+  kable(dt)
+} else if (out_type == "latex") {
+  kable(dt, "latex", booktabs=TRUE, longtable=TRUE)
+}
+
+## ----biocStruct2, echo=FALSE, results='asis'----------------------------------
+dt <- data.frame(`Gviz class`=rep(c("AnnotationTrack","GeneRegionTrack","DataTrack","SequenceTrack","AlignmentsTrack"), c(5, 4, 4, 2, 1)),
+                 `File type`=c("BED","GFF","GFF2","GFF3","BAM",
+                               "GTF","GFF","GFF2","GFF3",
+                               "BedGraph","WIG","BigWig","BAM",
+                               "FASTA","2Bit",
+                               "BAM"),
+                 `Extension`=c(".bed",".gff, .gff1, ",".gff2",".gff3",".bam",
+                               ".gtf",".gff, .gff1",".gff2",".gff3",
+                               ".bedGraph",".wig",".bigWig",".bam",
+                               ".fa, .fasta",".2bit",
+                               ".bam"),
+                 `Streaming`=c("no","no","no","no","YES",
+                               "no","no","no","no",
+                               "no","no","YES","YES",
+                               "YES","YES",
+                               "YES"),
+                 `Details`=c("Genomic locations from the mandatory `chrom`, `chromStart` and `chromEnd` fields, and optionally the strand from the strand field. If present, the information in the field is mapped to track item ids, and is mapped to track item feature type. All other fields are currently ignored.", "Only the following basic GFF fields are recognized: `seqname`, `start`, `end`, `strand`, (mapped to track item feature type) and `group` (to allow for track item grouping).", "Same as above, but feature grouping information may be provided either as `Group` or `Parent` attribute. Feature ids are mapped to one of the ID, Name or Alias attributes.", "Same as above, but feature grouping information has to be provided as the `Parent` attribute.", "Only start and end locations as well as the strand information for the reads are used. Read identifiers are used for track item grouping.", 
+                             "A somewhat looser format definition for `gtf` files is applied here where gene, transcript and exon identifiers and names can be parsed from the `gene_id`, `gene_name`, `transcript_id`, `transcript_name`, `exon_id`, or `exon_id attributes`", "This only supports very limited item grouping and thus complete gene models can not be properly encoded.", "In most instances this is identical to the `GTF` standard and it could make sense to rename the file accordingly.", "The gene-to-transcript and transcript-to- exon relationships are encoded in the parent and `type` attributes and the parser tries to accommodate most of the existing `GFF3` variants.",
+                             "", "", "", "Read coverage only is extracted from the bam file.",
+                             "Streaming only possible if an index file is found in the same directory as the original fasta file.", "",
+                             "Always needs an index file is found in the same directory as the original `BAM` file."),
+                 stringsAsFactors = FALSE, check.names=FALSE)
+dt[duplicated(dt[,1]),1] <- "" 
+if (out_type == "html") {
+  kable(dt)
+} else if (out_type == "latex") {
+  kable(dt, "latex", booktabs=TRUE, longtable=TRUE)
+}
+
+## ----session-info-------------------------------------------------------------
+sessionInfo()
+
