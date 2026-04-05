@@ -61,16 +61,14 @@ copy "$VIZ/07_effect_size_distributions/07_effect_size_distributions.jpg"   "eff
 # =============================================================================
 # KEY GENES & COORDINATED CHANGES (slides 12-14)
 # =============================================================================
-copy "$VIZ/05c_syt1_detail/05c_syt1_detail.jpg"                            "syt1_detail"
-copy "$VIZ/05d_zbtb20_detail/05d_zbtb20_detail.jpg"                        "zbtb20_detail"
 copy "$VIZ/05a_mc_hmc_scatter/05a_mc_hmc_scatter.jpg"                      "mc_hmc_scatter"
+copy "$VIZ/28b_mc_hmc_concordance_scatter/28b_mc_hmc_concordance_scatter.jpg" "mc_hmc_concordance_scatter"
 copy "$VIZ/05_coordinated_changes/05_coordinated_changes.jpg"              "coordinated_changes"
 
 # =============================================================================
 # VOLCANO PLOTS (slide 15)
 # =============================================================================
-copy "$VIZ/04a_volcano_mc/04a_volcano_mc.jpg"                              "volcano_mc"
-copy "$VIZ/04b_volcano_hmc/04b_volcano_hmc.jpg"                            "volcano_hmc"
+copy "$VIZ/04_volcano_plots/04_volcano_plots.jpg"                           "volcano_plots"
 
 # =============================================================================
 # TOP GENES & VENN (slides 16-17)
@@ -220,9 +218,7 @@ copy "$VIZ/26b_delta_ratio_density/26b_delta_ratio_density.jpg"            "delt
 # =============================================================================
 # A/B COMPARTMENT (slides 64-66)
 # =============================================================================
-copy "$VIZ/29_ab_compartment_methylation/29a_mc_violin_by_compartment/29a_mc_violin_by_compartment.jpg"   "mc_by_compartment"
-copy "$VIZ/29_ab_compartment_methylation/29b_hmc_violin_by_compartment/29b_hmc_violin_by_compartment.jpg" "hmc_by_compartment"
-copy "$VIZ/29_ab_compartment_methylation/29e_dmr_direction_stacked_bar/29e_dmr_direction_stacked_bar.jpg" "dmr_direction_by_compartment"
+copy "$VIZ/29_ab_compartment_methylation/29g_composite_compartment_summary/29g_composite_compartment_summary.jpg" "compartment_composite"
 copy "$VIZ/29_ab_compartment_methylation/29f_pc1_vs_mc_scatter/29f_pc1_vs_mc_scatter.jpg"                 "pc1_vs_mc_scatter"
 copy "$VIZ/29_ab_compartment_methylation/29c_mc_violin_by_shift/29c_mc_violin_by_shift.jpg"               "mc_by_compartment_shift"
 
