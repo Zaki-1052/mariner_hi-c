@@ -15,6 +15,9 @@
 
 mkdir -p logs
 
+source ~/.bashrc
+conda activate mariner_env
+
 echo "========================================="
 echo "bedGraph to BigWig Conversion (mC + hmC)"
 echo "========================================="
@@ -51,7 +54,7 @@ for MOD in mc hmc; do
 
         SAMPLE=$(basename "$BDG" .bdg.gz)
         BW="${OUTDIR}/${MOD}/${SAMPLE}.bw"
-        TMP_BDG="/scratch/$USER/$$_${SAMPLE}.bdg"
+        TMP_BDG="${OUTDIR}/${MOD}/tmp_${SAMPLE}.bdg"
 
         echo "  [${TOTAL}] ${SAMPLE}"
 
