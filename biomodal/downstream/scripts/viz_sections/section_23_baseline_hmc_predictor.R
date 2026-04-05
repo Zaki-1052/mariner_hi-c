@@ -33,10 +33,8 @@ suppressPackageStartupMessages({
 # SECTION 23 CONFIGURATION
 # =============================================================================
 
-# Feature extraction file path (per-sample hmC regional fractions, run-3)
-EXTRACT_DIR <- file.path(BASE_DIR, "modality/outputs/run-3/outputs_CG/Results",
-                         "gencode.vM25.mouse.genes.annotation/Extract_20260221_185106")
-HMC_EXTRACT_FILE <- file.path(EXTRACT_DIR, "Extract_hmc_regional-frac_20260221_185106.tsv.gz")
+# Feature extraction file path (per-sample hmC regional fractions, from _shared_config.R)
+HMC_EXTRACT_FILE <- EXTRACT_PATHS$hmc_regional_frac
 
 # K119ub gene signal file
 K119UB_SIGNAL_FILE <- file.path(BASE_DIR, "data/k119ub_gene_signal.tsv")

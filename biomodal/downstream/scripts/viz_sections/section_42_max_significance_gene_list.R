@@ -150,12 +150,9 @@ cat(sprintf("  Saved: %s (%d unique gene names)\n",
 
 cat("\n--- PCA of max-significance genes ---\n\n")
 
-# Per-sample regional fraction files from modality feature extraction
-EXTRACT_DIR <- file.path(BASE_DIR,
-  "modality/outputs/run-4/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260329_201021")
-
-mc_frac_file  <- file.path(EXTRACT_DIR, "Extract_mc_regional-frac_20260329_201021.tsv.gz")
-hmc_frac_file <- file.path(EXTRACT_DIR, "Extract_hmc_regional-frac_20260329_201021.tsv.gz")
+# Per-sample regional fraction files (from _shared_config.R)
+mc_frac_file  <- EXTRACT_PATHS$mc_regional_frac
+hmc_frac_file <- EXTRACT_PATHS$hmc_regional_frac
 
 stopifnot(file.exists(mc_frac_file), file.exists(hmc_frac_file))
 
