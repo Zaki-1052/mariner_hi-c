@@ -1,0 +1,86 @@
+#!/bin/bash
+#SBATCH --job-name=bdg_to_bw
+#SBATCH --output=logs/bedgraph_to_bigwig_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=4:00:00
+#SBATCH --account=csd940
+
+# Convert per-sample mC/hmC bedGraphs to BigWig for genome browser
+# Usage: sbatch bedgraph_to_bigwig.sb
+# Requires: bedGraphToBigWig (UCSC Kent tools)
+
+mkdir -p logs
+
+echo "========================================="
+echo "bedGraph to BigWig Conversion (mC + hmC)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+BASEDIR="/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports"
+INDIR="${BASEDIR}/bedgraph"
+OUTDIR="${BASEDIR}/bigwig"
+CHROM_SIZES="${BASEDIR}/mm10.chrom.sizes"
+
+mkdir -p "${OUTDIR}/mc" "${OUTDIR}/hmc"
+
+# Download chrom.sizes if not present
+if [[ ! -f "$CHROM_SIZES" ]]; then
+    echo "Downloading mm10.chrom.sizes..."
+    wget -q -O "$CHROM_SIZES" \
+      "https://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes"
+fi
+
+TOTAL=0
+CONVERTED=0
+
+for MOD in mc hmc; do
+    echo ""
+    echo "--- Converting ${MOD} bedGraphs ---"
+
+    for BDG in "${INDIR}/${MOD}"/*.bdg.gz; do
+        [[ -f "$BDG" ]] || continue
+        TOTAL=$((TOTAL + 1))
+
+        SAMPLE=$(basename "$BDG" .bdg.gz)
+        BW="${OUTDIR}/${MOD}/${SAMPLE}.bw"
+        TMP_BDG="/scratch/$USER/$$_${SAMPLE}.bdg"
+
+        echo "  [${TOTAL}] ${SAMPLE}"
+
+        # Decompress, sort, and filter to valid chromosomes
+        zcat "$BDG" | sort -k1,1 -k2,2n > "$TMP_BDG"
+
+        if [[ ! -s "$TMP_BDG" ]]; then
+            echo "    WARNING: empty after decompression, skipping"
+            rm -f "$TMP_BDG"
+            continue
+        fi
+
+        bedGraphToBigWig "$TMP_BDG" "$CHROM_SIZES" "$BW" 2>&1
+        if [[ -f "$BW" ]]; then
+            echo "    Done: $(du -h "$BW" | cut -f1)"
+            CONVERTED=$((CONVERTED + 1))
+        else
+            echo "    ERROR: conversion failed"
+        fi
+
+        rm -f "$TMP_BDG"
+    done
+done
+
+echo ""
+echo "========================================="
+echo "Conversion complete"
+echo "Converted: ${CONVERTED}/${TOTAL} files"
+echo "mC BigWigs:  ${OUTDIR}/mc/"
+echo "hmC BigWigs: ${OUTDIR}/hmc/"
+echo "End time: $(date)"
+echo "========================================="
