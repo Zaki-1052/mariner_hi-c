@@ -270,6 +270,18 @@ fi
 # Create output directories
 mkdir -p "$OUTPUT_DIR/summary"
 
+# Ensure mm10.chrom.sizes is available for BigBed conversion
+if [[ ! -f "$CHROM_SIZES" ]]; then
+    # Copy from old processed output if available
+    OLD_CHROM="$BASE_DIR/old/DMR_processed/mm10.chrom.sizes"
+    if [[ -f "$OLD_CHROM" ]]; then
+        cp "$OLD_CHROM" "$CHROM_SIZES"
+        log_msg "Copied mm10.chrom.sizes from old processed output"
+    else
+        log_msg "WARNING: mm10.chrom.sizes not found — BigBed conversion will be skipped"
+    fi
+fi
+
 # Initialize summary file
 SUMMARY_FILE="$OUTPUT_DIR/summary/all_contexts_summary.tsv"
 echo -e "Context\tAnnotation\tModType\tTotal\tSignificant\tHyper\tHypo" > "$SUMMARY_FILE"
