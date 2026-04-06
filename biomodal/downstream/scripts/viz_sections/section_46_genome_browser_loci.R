@@ -1,7 +1,7 @@
 # biomodal/downstream/scripts/viz_sections/section_46_genome_browser_loci.R
 # Multi-omic genome browser views at key gene loci using Gviz
 # Renders stacked tracks: 5mC/5hmC (condition-averaged BigWigs), difference,
-# ChIP/epigenomic peak annotations, CpG density, Hi-C loop arcs
+# RNA-seq coverage, ChIP/epigenomic peak annotations, CpG density, Hi-C loop arcs
 # Run from downstream/ directory
 
 source("scripts/viz_sections/_shared_config.R")
@@ -16,6 +16,7 @@ suppressPackageStartupMessages({
   library(GenomicInteractions)
   library(AnnotationDbi)
   library(readxl)
+  library(grid)
 })
 
 # GenomicInteractions lacks a seqinfo method, which Gviz requires for
@@ -30,6 +31,9 @@ if (!hasMethod("seqinfo", "GenomicInteractions")) {
 
 SECTION_OUTPUT_DIR <- file.path(BASE_DIR, "plots/visualizations/46_genome_browser")
 dir.create(SECTION_OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
+
+CACHE_DIR <- file.path(SECTION_OUTPUT_DIR, ".cache")
+dir.create(CACHE_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # --- Methylation BigWig paths ------------------------------------------------
 MC_BW_DIR  <- "/Users/zakiralibhai/Documents/BIO_LAB/methylation-tracks/bigwigs/mc"
@@ -59,12 +63,9 @@ HMC_BW_MUT <- file.path(HMC_BW_DIR, c(
   "evoC-Bap1-mut-F-B2.genome.hmc_bedgraph.bw",
   "evoC-Bap1-mut-M-B2.genome.hmc_bedgraph.bw"))
 
-# --- RNA-seq BigWig paths (set paths when available) -------------------------
-# To enable RNA-seq coverage tracks, set these to character vectors of BigWig
-# file paths (one per sample). When NULL, a gene-level text annotation with
-# log2FC/padj from DESeq2 results is shown instead.
-RNASEQ_BW_CTRL <- NULL
-RNASEQ_BW_MUT  <- NULL
+# --- RNA-seq BigWig paths ----------------------------------------------------
+RNASEQ_BW_CTRL <- file.path(BASE_DIR, "peaks/RNActrl.bw")
+RNASEQ_BW_MUT  <- file.path(BASE_DIR, "peaks/RNAmut.bw")
 
 # --- View parameters ---------------------------------------------------------
 EXTEND_BP <- 50000   # 50kb flanking on each side
@@ -90,7 +91,8 @@ TRACK_COL <- list(
   cpg_shelf   = "#FDDBC7",
   hic_lost    = "#B2182B",
   hic_gained  = "#2166AC",
-  gene        = "#08306B"
+  gene        = "#08306B",
+  rnaseq      = "#984EA3"
 )
 
 # =============================================================================
@@ -122,29 +124,22 @@ get_gene_region <- function(gene_symbol, extend_bp = EXTEND_BP) {
 }
 
 
-#' Average BigWig signal across samples within a genomic region
-#' Returns a binned GRanges with mean score per bin
+#' Average methylation BigWig signal across samples within a genomic region.
+#' Uses viewSums(weighted)/viewSums(count) for mean-at-CpG-sites (NOT viewMeans).
 average_bigwigs_in_region <- function(bw_paths, region_gr, bin_size = NULL) {
   chr <- as.character(seqnames(region_gr)[1])
   region_start <- start(region_gr)
   region_end   <- end(region_gr)
   region_width <- width(region_gr)
 
-  # Auto-select bin size: ~1000 bins across the view
-
   if (is.null(bin_size)) {
     bin_size <- max(50, round(region_width / 1000))
   }
 
-  # Create bins across the region
   bin_starts <- seq(region_start, region_end - bin_size, by = bin_size)
   bins_gr <- GRanges(seqnames = chr,
                      ranges = IRanges(start = bin_starts, width = bin_size))
 
-  # Compute mean methylation per bin for each sample
-  # Key: BigWig entries are at individual CpG sites (1-2bp wide), so we must
-
-  # compute mean(scores at CpGs) NOT mean(signal over bin width)
   valid_paths <- bw_paths[file.exists(bw_paths)]
   if (length(valid_paths) == 0) {
     stop("No BigWig files found. Paths checked:\n",
@@ -155,7 +150,6 @@ average_bigwigs_in_region <- function(bw_paths, region_gr, bin_size = NULL) {
     bw <- rtracklayer::import.bw(path, which = region_gr)
     if (length(bw) == 0) return(rep(NA_real_, length(bins_gr)))
 
-    # Use weighted coverage / unweighted coverage = mean score at covered sites
     weighted_cov <- coverage(bw, weight = "score")
     count_cov    <- coverage(bw)
     if (!chr %in% names(weighted_cov)) return(rep(NA_real_, length(bins_gr)))
@@ -169,30 +163,59 @@ average_bigwigs_in_region <- function(bw_paths, region_gr, bin_size = NULL) {
     ifelse(num_cpgs > 0, sum_scores / num_cpgs, NA_real_)
   })
 
-  # Average across samples
   if (is.matrix(score_matrix)) {
     bins_gr$score <- rowMeans(score_matrix, na.rm = TRUE)
   } else {
     bins_gr$score <- score_matrix
   }
-  # Replace any remaining NAs with 0 for display
   bins_gr$score[is.na(bins_gr$score)] <- 0
   return(bins_gr)
 }
 
 
-#' Load a BED file as GRanges, adding chr prefix if needed
+#' Import a single RNA-seq BigWig and bin using viewMeans.
+#' Unlike methylation BigWigs (sparse CpG-site scores), RNA-seq BigWigs have
+#' continuous coverage — viewMeans (signal/bin_width) is the correct approach.
+import_rnaseq_bigwig <- function(bw_path, region_gr, bin_size = NULL) {
+  chr <- as.character(seqnames(region_gr)[1])
+  region_width <- width(region_gr)
+  if (is.null(bin_size)) bin_size <- max(50, round(region_width / 1000))
+
+  bin_starts <- seq(start(region_gr), end(region_gr) - bin_size, by = bin_size)
+  bins_gr <- GRanges(seqnames = chr,
+                     ranges = IRanges(start = bin_starts, width = bin_size))
+
+  bw <- rtracklayer::import.bw(bw_path, which = region_gr)
+  if (length(bw) == 0) { bins_gr$score <- 0; return(bins_gr) }
+
+  cov <- coverage(bw, weight = "score")
+  if (!chr %in% names(cov)) { bins_gr$score <- 0; return(bins_gr) }
+
+  bins_gr$score <- as.numeric(viewMeans(Views(cov[[chr]], ranges(bins_gr))))
+  bins_gr$score[is.na(bins_gr$score)] <- 0
+  return(bins_gr)
+}
+
+
+#' Load a BED file as GRanges, adding chr prefix if needed.
+#' Filters out non-numeric coordinate rows (header rows, NAs).
 load_peak_as_granges <- function(path, name = "peak") {
   if (!file.exists(path)) {
     warning("Peak file not found: ", path)
     return(GRanges())
   }
   df <- read.table(path, header = FALSE, sep = "\t",
-                   stringsAsFactors = FALSE, fill = TRUE)
+                   stringsAsFactors = FALSE, fill = TRUE, comment.char = "#")
+
+  # Filter non-numeric coordinate rows (header rows, NAs)
+  df$V2 <- suppressWarnings(as.numeric(df$V2))
+  df$V3 <- suppressWarnings(as.numeric(df$V3))
+  df <- df[!is.na(df$V1) & !is.na(df$V2) & !is.na(df$V3), ]
+  if (nrow(df) == 0) return(GRanges())
+
   gr <- GRanges(seqnames = df$V1,
                 ranges = IRanges(start = df$V2, end = df$V3))
 
-  # Ensure chr prefix
   if (length(gr) > 0 && !any(grepl("^chr", seqnames(gr)))) {
     seqlevels(gr) <- paste0("chr", seqlevels(gr))
   }
@@ -210,7 +233,6 @@ load_cpg_annotation <- function(path) {
     df <- read.table(path, header = TRUE, sep = "\t",
                      stringsAsFactors = FALSE)
   }
-  # Add chr prefix
   df$Chromosome <- paste0("chr", df$Chromosome)
   GRanges(seqnames = df$Chromosome,
           ranges = IRanges(start = df$Start, end = df$End),
@@ -224,7 +246,6 @@ build_hic_tracks <- function(loops_df, region_gr) {
   rstart <- start(region_gr)
   rend   <- end(region_gr)
 
-  # Filter: at least one anchor overlaps the view region
   in_region <- loops_df %>%
     dplyr::filter(
       (chr1 == chr & ((start1 >= rstart & start1 <= rend) |
@@ -237,7 +258,6 @@ build_hic_tracks <- function(loops_df, region_gr) {
 
   tracks <- list()
 
-  # Lost loops (down_in_mutant)
   lost <- in_region %>% dplyr::filter(direction == "down_in_mutant")
   if (nrow(lost) > 0) {
     a1 <- GRanges(lost$chr1, IRanges(lost$start1, lost$end1))
@@ -262,7 +282,6 @@ build_hic_tracks <- function(loops_df, region_gr) {
     )
   }
 
-  # Gained loops (up_in_mutant)
   gained <- in_region %>% dplyr::filter(direction == "up_in_mutant")
   if (nrow(gained) > 0) {
     a1 <- GRanges(gained$chr1, IRanges(gained$start1, gained$end1))
@@ -291,6 +310,94 @@ build_hic_tracks <- function(loops_df, region_gr) {
 }
 
 
+#' Create a bipolar DataTrack for difference data using groups for pos/neg colors.
+#' Assigns each bin to a "Hyper" or "Hypo" group so Gviz colors them differently.
+make_bipolar_track <- function(diff_gr, name, pos_color, neg_color, ylim,
+                               bg_title, cex_title = 0.7) {
+  diff_gr$group <- ifelse(diff_gr$score >= 0, "Hyper", "Hypo")
+
+  dt <- DataTrack(
+    range = diff_gr, genome = "mm10", type = "histogram",
+    name = name,
+    groups = diff_gr$group,
+    col = c(Hyper = pos_color, Hypo = neg_color),
+    ylim = ylim, baseline = 0, col.baseline = "black", lwd.baseline = 0.5,
+    legend = FALSE,
+    background.title = bg_title, col.title = "white", cex.title = cex_title
+  )
+  return(dt)
+}
+
+
+# =============================================================================
+# CACHING: Precompute and cache BigWig averages per gene
+# =============================================================================
+
+#' Compute all BigWig averages for a gene region (methylation + RNA-seq)
+precompute_bigwig_averages <- function(region_gr) {
+  mc_ctrl  <- average_bigwigs_in_region(MC_BW_CTRL, region_gr)
+  mc_mut   <- average_bigwigs_in_region(MC_BW_MUT, region_gr)
+  hmc_ctrl <- average_bigwigs_in_region(HMC_BW_CTRL, region_gr)
+  hmc_mut  <- average_bigwigs_in_region(HMC_BW_MUT, region_gr)
+
+  # Compute differences before scaling
+  mc_diff <- mc_ctrl
+  mc_diff$score <- mc_mut$score - mc_ctrl$score
+  hmc_diff <- hmc_ctrl
+  hmc_diff$score <- hmc_mut$score - hmc_ctrl$score
+
+  # Scale to percentage (BigWig values are 0-1 fractions)
+  mc_ctrl$score  <- mc_ctrl$score * 100
+  mc_mut$score   <- mc_mut$score * 100
+  mc_diff$score  <- mc_diff$score * 100
+  hmc_ctrl$score <- hmc_ctrl$score * 100
+  hmc_mut$score  <- hmc_mut$score * 100
+  hmc_diff$score <- hmc_diff$score * 100
+
+  result <- list(
+    mc_ctrl = mc_ctrl, mc_mut = mc_mut, mc_diff = mc_diff,
+    hmc_ctrl = hmc_ctrl, hmc_mut = hmc_mut, hmc_diff = hmc_diff
+  )
+
+  # RNA-seq BigWigs (single file per condition, different import method)
+  if (!is.null(RNASEQ_BW_CTRL) && file.exists(RNASEQ_BW_CTRL)) {
+    result$rnaseq_ctrl <- import_rnaseq_bigwig(RNASEQ_BW_CTRL, region_gr)
+    result$rnaseq_mut  <- import_rnaseq_bigwig(RNASEQ_BW_MUT, region_gr)
+  }
+
+  return(result)
+}
+
+#' Load cached BigWig averages or compute and cache them
+get_cached_bigwig_averages <- function(gene_symbol, region_gr) {
+  cache_file <- file.path(CACHE_DIR, sprintf("%s_bw_cache.rds", gene_symbol))
+
+  # Check if cache exists and is fresh (newer than all source BigWig files)
+  if (file.exists(cache_file)) {
+    cache_time <- file.mtime(cache_file)
+    all_bw_paths <- c(MC_BW_CTRL, MC_BW_MUT, HMC_BW_CTRL, HMC_BW_MUT)
+    if (!is.null(RNASEQ_BW_CTRL)) {
+      all_bw_paths <- c(all_bw_paths, RNASEQ_BW_CTRL, RNASEQ_BW_MUT)
+    }
+    existing_bw <- all_bw_paths[file.exists(all_bw_paths)]
+    newest_bw <- max(file.mtime(existing_bw))
+
+    if (cache_time > newest_bw) {
+      cat("    Loading cached BigWig averages...\n")
+      return(readRDS(cache_file))
+    }
+  }
+
+  # Compute fresh
+  cat("    Averaging 5mC BigWigs...\n")
+  cat("    Averaging 5hmC BigWigs...\n")
+  if (!is.null(RNASEQ_BW_CTRL)) cat("    Averaging RNA-seq BigWigs...\n")
+  result <- precompute_bigwig_averages(region_gr)
+  saveRDS(result, cache_file)
+  return(result)
+}
+
+
 # =============================================================================
 # MAIN PLOTTING FUNCTION
 # =============================================================================
@@ -304,22 +411,20 @@ build_hic_tracks <- function(loops_df, region_gr) {
 #' @param cpg_islands_gr CpG island GRanges
 #' @param cpg_shores_gr CpG shore GRanges
 #' @param cpg_shelves_gr CpG shelf GRanges
+#' @param peak_data Pre-loaded peak GRanges list
+#' @param precomputed_bw Pre-computed BigWig averages list
+#' @param return_tracks If TRUE, return track list instead of rendering
 plot_locus_browser <- function(gene_symbol, variant = "full",
                                loops_df, rnaseq_df,
                                cpg_islands_gr, cpg_shores_gr,
-                               cpg_shelves_gr) {
+                               cpg_shelves_gr,
+                               peak_data, precomputed_bw,
+                               return_tracks = FALSE) {
 
   cat(sprintf("  Generating %s browser view for %s...\n", variant, gene_symbol))
 
   # --- 1. Get gene region ---
-  region_gr <- tryCatch(
-    get_gene_region(gene_symbol, extend_bp = EXTEND_BP),
-    error = function(e) {
-      warning(sprintf("Could not find gene %s in TxDb: %s", gene_symbol, e$message))
-      return(NULL)
-    }
-  )
-  if (is.null(region_gr)) return(invisible(NULL))
+  region_gr <- get_gene_region(gene_symbol, extend_bp = EXTEND_BP)
 
   chr   <- as.character(seqnames(region_gr)[1])
   view_start <- start(region_gr)
@@ -344,31 +449,16 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     }
   }
 
-  # --- 3. Average methylation BigWigs ---
-  cat("    Averaging 5mC BigWigs...\n")
-  mc_ctrl_gr  <- average_bigwigs_in_region(MC_BW_CTRL, region_gr)
-  mc_mut_gr   <- average_bigwigs_in_region(MC_BW_MUT, region_gr)
-
-  cat("    Averaging 5hmC BigWigs...\n")
-  hmc_ctrl_gr <- average_bigwigs_in_region(HMC_BW_CTRL, region_gr)
-  hmc_mut_gr  <- average_bigwigs_in_region(HMC_BW_MUT, region_gr)
-
-  # Compute difference tracks (mutant - control)
-  mc_diff_gr <- mc_ctrl_gr
-  mc_diff_gr$score <- mc_mut_gr$score - mc_ctrl_gr$score
-
-  hmc_diff_gr <- hmc_ctrl_gr
-  hmc_diff_gr$score <- hmc_mut_gr$score - hmc_ctrl_gr$score
-
-  # Scale to percentage (BigWig values are 0-1 fractions)
-  mc_ctrl_gr$score  <- mc_ctrl_gr$score * 100
-  mc_mut_gr$score   <- mc_mut_gr$score * 100
-  mc_diff_gr$score  <- mc_diff_gr$score * 100
-  hmc_ctrl_gr$score <- hmc_ctrl_gr$score * 100
-  hmc_mut_gr$score  <- hmc_mut_gr$score * 100
-  hmc_diff_gr$score <- hmc_diff_gr$score * 100
+  # --- 3. Use precomputed BigWig averages ---
+  mc_ctrl_gr  <- precomputed_bw$mc_ctrl
+  mc_mut_gr   <- precomputed_bw$mc_mut
+  mc_diff_gr  <- precomputed_bw$mc_diff
+  hmc_ctrl_gr <- precomputed_bw$hmc_ctrl
+  hmc_mut_gr  <- precomputed_bw$hmc_mut
+  hmc_diff_gr <- precomputed_bw$hmc_diff
 
   # --- 4. Build Gviz tracks ---
+  cat("    [DEBUG] Starting track construction...\n")
   track_list <- list()
   sizes <- c()
 
@@ -376,12 +466,13 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
   track_list$axis <- GenomeAxisTrack(name = "Position")
   sizes <- c(sizes, 0.5)
 
-  # Track 1: Gene model
+  # Track 1: Gene model (collapsed meta-transcripts)
   txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
   track_list$gene <- GeneRegionTrack(
     txdb, genome = "mm10", chromosome = chr,
     name = paste0(gene_symbol, rnaseq_label),
     transcriptAnnotation = "symbol",
+    collapseTranscripts = "meta",
     stacking = "dense",
     col = TRACK_COL$gene,
     fill = TRACK_COL$gene,
@@ -422,16 +513,12 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
   )
   sizes <- c(sizes, 1.5)
 
-  # 5mC Difference
-  track_list$mc_diff <- DataTrack(
-    range = mc_diff_gr, genome = "mm10", type = "histogram",
-    name = "5mC%\nDifference",
-    fill.histogram = TRACK_COL$diff_hyper,
-    col.histogram = TRACK_COL$diff_hyper,
-    ylim = diff_ylim,
-    baseline = 0, col.baseline = "black", lwd.baseline = 0.5,
-    background.title = "#8C510A",
-    col.title = "white", cex.title = 0.7
+  cat("    [DEBUG] mc ctrl/mut tracks OK\n")
+  # 5mC Difference (bipolar: red = hyper, blue = hypo)
+  track_list$mc_diff <- make_bipolar_track(
+    mc_diff_gr, name = "5mC%\nDifference",
+    pos_color = TRACK_COL$diff_hyper, neg_color = TRACK_COL$diff_hypo,
+    ylim = diff_ylim, bg_title = "#8C510A"
   )
   sizes <- c(sizes, 1.5)
 
@@ -460,31 +547,29 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     )
     sizes <- c(sizes, 1.5)
 
-    # 5hmC Difference (full version only)
-    track_list$hmc_diff <- DataTrack(
-      range = hmc_diff_gr, genome = "mm10", type = "histogram",
-      name = "5hmC%\nDifference",
-      fill.histogram = TRACK_COL$diff_hypo,
-      col.histogram = TRACK_COL$diff_hypo,
-      ylim = diff_ylim,
-      baseline = 0, col.baseline = "black", lwd.baseline = 0.5,
-      background.title = "#01665E",
-      col.title = "white", cex.title = 0.7
+    # 5hmC Difference (bipolar: blue = gain, red = loss; reversed from 5mC)
+    track_list$hmc_diff <- make_bipolar_track(
+      hmc_diff_gr, name = "5hmC%\nDifference",
+      pos_color = TRACK_COL$diff_hypo, neg_color = TRACK_COL$diff_hyper,
+      ylim = diff_ylim, bg_title = "#01665E"
     )
     sizes <- c(sizes, 1.5)
   }
 
-  # --- RNA-seq BigWig tracks (modular: only if paths are set) ---
-  if (!is.null(RNASEQ_BW_CTRL)) {
-    cat("    Averaging RNA-seq BigWigs...\n")
-    rnaseq_ctrl_gr <- average_bigwigs_in_region(RNASEQ_BW_CTRL, region_gr)
-    rnaseq_mut_gr  <- average_bigwigs_in_region(RNASEQ_BW_MUT, region_gr)
+  cat("    [DEBUG] methylation tracks OK\n")
+  # --- RNA-seq BigWig tracks (both variants) ---
+  if (!is.null(RNASEQ_BW_CTRL) && !is.null(precomputed_bw$rnaseq_ctrl)) {
+    rnaseq_ctrl_gr <- precomputed_bw$rnaseq_ctrl
+    rnaseq_mut_gr  <- precomputed_bw$rnaseq_mut
+    rnaseq_ylim <- c(0, max(c(rnaseq_ctrl_gr$score, rnaseq_mut_gr$score), na.rm = TRUE) * 1.05)
+    if (rnaseq_ylim[2] == 0) rnaseq_ylim[2] <- 1
 
     track_list$rnaseq_ctrl <- DataTrack(
       range = rnaseq_ctrl_gr, genome = "mm10", type = "histogram",
       name = "RNA-seq\nControl",
-      fill.histogram = TRACK_COL$ctrl,
-      col.histogram = TRACK_COL$ctrl,
+      fill.histogram = TRACK_COL$rnaseq,
+      col.histogram = TRACK_COL$rnaseq,
+      ylim = rnaseq_ylim,
       background.title = TRACK_COL$ctrl,
       col.title = "white", cex.title = 0.7
     )
@@ -493,24 +578,24 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     track_list$rnaseq_mut <- DataTrack(
       range = rnaseq_mut_gr, genome = "mm10", type = "histogram",
       name = "RNA-seq\nMutant",
-      fill.histogram = TRACK_COL$mut,
-      col.histogram = TRACK_COL$mut,
+      fill.histogram = TRACK_COL$rnaseq,
+      col.histogram = TRACK_COL$rnaseq,
+      ylim = rnaseq_ylim,
       background.title = TRACK_COL$mut,
       col.title = "white", cex.title = 0.7
     )
     sizes <- c(sizes, 1.2)
   }
 
-  # --- Chromatin / epigenomic peak tracks ---
+  cat("    [DEBUG] RNA-seq tracks OK\n")
+  # --- Chromatin / epigenomic peak tracks (pre-loaded) ---
 
   # H2AK119ub (always shown -- central to BAP1 mechanism)
-  k119ub_ctrl_gr <- load_peak_as_granges(K119UB_FILES$ctrl, "K119ub_Ctrl")
-  k119ub_mut_gr  <- load_peak_as_granges(K119UB_FILES$mut, "K119ub_Mut")
-  k119_combined  <- c(k119ub_ctrl_gr, k119ub_mut_gr)
+  k119_combined <- c(peak_data$k119ub_ctrl, peak_data$k119ub_mut)
   if (length(k119_combined) > 0) {
     k119_combined$feature <- c(
-      rep("Control", length(k119ub_ctrl_gr)),
-      rep("Mutant", length(k119ub_mut_gr))
+      rep("Control", length(peak_data$k119ub_ctrl)),
+      rep("Mutant", length(peak_data$k119ub_mut))
     )
     track_list$k119ub <- AnnotationTrack(
       k119_combined, genome = "mm10", chromosome = chr,
@@ -527,10 +612,9 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
 
   if (variant == "full") {
     # H3K27me3 peaks
-    k27me3_gr <- load_peak_as_granges(CHIP_PEAK_FILES$h3k27me3, "H3K27me3")
-    if (length(k27me3_gr) > 0) {
+    if (length(peak_data$k27me3) > 0) {
       track_list$k27me3 <- AnnotationTrack(
-        k27me3_gr, genome = "mm10", chromosome = chr,
+        peak_data$k27me3, genome = "mm10", chromosome = chr,
         name = "H3K27me3",
         fill = TRACK_COL$k27me3, col = TRACK_COL$k27me3,
         stacking = "dense",
@@ -541,13 +625,11 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     }
 
     # H3K27ac condition-specific
-    k27ac_ctrl_gr <- load_peak_as_granges(H3K27AC_FILES$ctrl, "K27ac_Ctrl")
-    k27ac_mut_gr  <- load_peak_as_granges(H3K27AC_FILES$mut, "K27ac_Mut")
-    k27ac_combined <- c(k27ac_ctrl_gr, k27ac_mut_gr)
+    k27ac_combined <- c(peak_data$k27ac_ctrl, peak_data$k27ac_mut)
     if (length(k27ac_combined) > 0) {
       k27ac_combined$feature <- c(
-        rep("Control", length(k27ac_ctrl_gr)),
-        rep("Mutant", length(k27ac_mut_gr))
+        rep("Control", length(peak_data$k27ac_ctrl)),
+        rep("Mutant", length(peak_data$k27ac_mut))
       )
       track_list$k27ac <- AnnotationTrack(
         k27ac_combined, genome = "mm10", chromosome = chr,
@@ -563,13 +645,11 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     }
 
     # ATAC-seq differential
-    atac_up_gr   <- load_peak_as_granges(ATAC_FILES$up, "ATAC_Up")
-    atac_down_gr <- load_peak_as_granges(ATAC_FILES$down, "ATAC_Down")
-    atac_combined <- c(atac_up_gr, atac_down_gr)
+    atac_combined <- c(peak_data$atac_up, peak_data$atac_down)
     if (length(atac_combined) > 0) {
       atac_combined$feature <- c(
-        rep("Up", length(atac_up_gr)),
-        rep("Down", length(atac_down_gr))
+        rep("Up", length(peak_data$atac_up)),
+        rep("Down", length(peak_data$atac_down))
       )
       track_list$atac <- AnnotationTrack(
         atac_combined, genome = "mm10", chromosome = chr,
@@ -585,13 +665,11 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     }
 
     # MeCP2 differential
-    mecp2_up_gr   <- load_peak_as_granges(MECP2_FILES$up, "MeCP2_Up")
-    mecp2_down_gr <- load_peak_as_granges(MECP2_FILES$down, "MeCP2_Down")
-    mecp2_combined <- c(mecp2_up_gr, mecp2_down_gr)
+    mecp2_combined <- c(peak_data$mecp2_up, peak_data$mecp2_down)
     if (length(mecp2_combined) > 0) {
       mecp2_combined$feature <- c(
-        rep("Up", length(mecp2_up_gr)),
-        rep("Down", length(mecp2_down_gr))
+        rep("Up", length(peak_data$mecp2_up)),
+        rep("Down", length(peak_data$mecp2_down))
       )
       track_list$mecp2 <- AnnotationTrack(
         mecp2_combined, genome = "mm10", chromosome = chr,
@@ -607,11 +685,11 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     }
   }
 
+  cat("    [DEBUG] ChIP/epigenomic tracks OK\n")
   # CTCF peaks (both variants)
-  ctcf_gr <- load_peak_as_granges(CHIP_PEAK_FILES$ctcf, "CTCF")
-  if (length(ctcf_gr) > 0) {
+  if (length(peak_data$ctcf) > 0) {
     track_list$ctcf <- AnnotationTrack(
-      ctcf_gr, genome = "mm10", chromosome = chr,
+      peak_data$ctcf, genome = "mm10", chromosome = chr,
       name = "CTCF",
       fill = TRACK_COL$ctcf, col = TRACK_COL$ctcf,
       stacking = "dense",
@@ -621,8 +699,8 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     sizes <- c(sizes, 0.4)
   }
 
+  cat("    [DEBUG] CTCF track OK\n")
   # --- CpG annotation track ---
-  # Subset to view region for efficiency
   region_for_overlap <- GRanges(chr, IRanges(view_start, view_end))
   cpg_in_view <- subsetByOverlaps(cpg_islands_gr, region_for_overlap)
   shore_in_view <- subsetByOverlaps(cpg_shores_gr, region_for_overlap)
@@ -649,6 +727,7 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     sizes <- c(sizes, 0.4)
   }
 
+  cat("    [DEBUG] CpG annotation track OK\n")
   # --- Hi-C loop arcs ---
   hic_tracks <- build_hic_tracks(loops_df, region_gr)
   if (!is.null(hic_tracks)) {
@@ -662,6 +741,16 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     }
   }
 
+  cat("    [DEBUG] Hi-C tracks OK\n")
+  # --- Return tracks for composite figure assembly ---
+  if (return_tracks) {
+    return(list(
+      tracks = track_list, sizes = sizes,
+      chr = chr, from = view_start, to = view_end,
+      gene_symbol = gene_symbol, variant = variant
+    ))
+  }
+
   # --- 5. Render the plot ---
   suffix <- ifelse(variant == "compact", "_compact", "")
   out_name <- sprintf("%s_locus%s", gene_symbol, suffix)
@@ -669,10 +758,9 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   file_prefix <- file.path(out_dir, out_name)
 
-  fig_height <- sum(sizes) * 0.7 + 1  # scale factor + margins
+  fig_height <- sum(sizes) * 0.7 + 1
   fig_width  <- 14
 
-  # Closure captures all variables from this scope, avoiding eval() issues
   render_plot <- function() {
     plotTracks(
       track_list,
@@ -682,9 +770,9 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
       sizes = sizes,
       main = sprintf("%s Locus -- BAP1-KO Multi-Omic View (%s)", gene_symbol, variant),
       cex.main = 1.0,
-      title.width = 1.2,
+      title.width = 1.6,
       col.axis = "black",
-      fontsize = 10
+      fontsize = 12
     )
   }
 
@@ -743,6 +831,31 @@ if (!mc_bw_ok)  stop("Missing 5mC BigWig files. Check MC_BW_DIR path.")
 if (!hmc_bw_ok) stop("Missing 5hmC BigWig files. Check HMC_BW_DIR path.")
 cat("  All 16 methylation BigWig files verified\n")
 
+# Verify RNA-seq BigWig files
+if (!is.null(RNASEQ_BW_CTRL) && file.exists(RNASEQ_BW_CTRL) && file.exists(RNASEQ_BW_MUT)) {
+  cat("  RNA-seq BigWig files verified\n")
+} else {
+  warning("RNA-seq BigWig files not found, disabling RNA-seq tracks")
+  RNASEQ_BW_CTRL <- NULL
+  RNASEQ_BW_MUT  <- NULL
+}
+
+# Pre-load all peak files once (instead of per-gene)
+cat("Loading peak files...\n")
+peak_data <- list(
+  k119ub_ctrl = load_peak_as_granges(K119UB_FILES$ctrl, "K119ub_Ctrl"),
+  k119ub_mut  = load_peak_as_granges(K119UB_FILES$mut, "K119ub_Mut"),
+  k27me3      = load_peak_as_granges(CHIP_PEAK_FILES$h3k27me3, "H3K27me3"),
+  k27ac_ctrl  = load_peak_as_granges(H3K27AC_FILES$ctrl, "K27ac_Ctrl"),
+  k27ac_mut   = load_peak_as_granges(H3K27AC_FILES$mut, "K27ac_Mut"),
+  atac_up     = load_peak_as_granges(ATAC_FILES$up, "ATAC_Up"),
+  atac_down   = load_peak_as_granges(ATAC_FILES$down, "ATAC_Down"),
+  mecp2_up    = load_peak_as_granges(MECP2_FILES$up, "MeCP2_Up"),
+  mecp2_down  = load_peak_as_granges(MECP2_FILES$down, "MeCP2_Down"),
+  ctcf        = load_peak_as_granges(CHIP_PEAK_FILES$ctcf, "CTCF")
+)
+cat("  Peak files loaded\n")
+
 # =============================================================================
 # GENERATE BROWSER VIEWS
 # =============================================================================
@@ -752,32 +865,223 @@ cat("\n--- Generating genome browser views ---\n\n")
 for (gene in KEY_GENES) {
   cat(sprintf("Processing %s...\n", gene))
 
-  tryCatch({
-    # Full version
-    plot_locus_browser(
-      gene, variant = "full",
-      loops_df = loops_df, rnaseq_df = rnaseq_df,
-      cpg_islands_gr = cpg_islands_gr,
-      cpg_shores_gr = cpg_shores_gr,
-      cpg_shelves_gr = cpg_shelves_gr
-    )
+  # Get gene region and precompute BigWig averages ONCE per gene
+  region_gr <- get_gene_region(gene, extend_bp = EXTEND_BP)
+  precomputed <- get_cached_bigwig_averages(gene, region_gr)
 
-    # Compact version
-    plot_locus_browser(
-      gene, variant = "compact",
-      loops_df = loops_df, rnaseq_df = rnaseq_df,
-      cpg_islands_gr = cpg_islands_gr,
-      cpg_shores_gr = cpg_shores_gr,
-      cpg_shelves_gr = cpg_shelves_gr
-    )
-  }, error = function(e) {
-    cat(sprintf("  ERROR for %s: %s\n", gene, e$message))
-  })
+  # Full version
+  plot_locus_browser(
+    gene, variant = "full",
+    loops_df = loops_df, rnaseq_df = rnaseq_df,
+    cpg_islands_gr = cpg_islands_gr,
+    cpg_shores_gr = cpg_shores_gr,
+    cpg_shelves_gr = cpg_shelves_gr,
+    peak_data = peak_data,
+    precomputed_bw = precomputed
+  )
+
+  # Compact version (reuses same precomputed data)
+  plot_locus_browser(
+    gene, variant = "compact",
+    loops_df = loops_df, rnaseq_df = rnaseq_df,
+    cpg_islands_gr = cpg_islands_gr,
+    cpg_shores_gr = cpg_shores_gr,
+    cpg_shelves_gr = cpg_shelves_gr,
+    peak_data = peak_data,
+    precomputed_bw = precomputed
+  )
 
   cat("\n")
 }
 
-cat("================================================================================\n")
+# =============================================================================
+# COMPOSITE MULTI-PANEL FIGURE
+# =============================================================================
+
+cat("\n--- Generating composite figure ---\n\n")
+
+# ---- Panel A: Syt1 compact browser view as grob ----------------------------
+cat("  Building Panel A (Syt1 browser)...\n")
+syt1_region <- get_gene_region("Syt1", extend_bp = EXTEND_BP)
+syt1_bw <- get_cached_bigwig_averages("Syt1", syt1_region)
+
+track_info <- plot_locus_browser(
+  "Syt1", variant = "compact",
+  loops_df = loops_df, rnaseq_df = rnaseq_df,
+  cpg_islands_gr = cpg_islands_gr,
+  cpg_shores_gr = cpg_shores_gr,
+  cpg_shelves_gr = cpg_shelves_gr,
+  peak_data = peak_data,
+  precomputed_bw = syt1_bw,
+  return_tracks = TRUE
+)
+
+# Capture Gviz plotTracks output as a grid grob
+panel_a_grob <- NULL
+pdf(NULL)
+tryCatch({
+  grid.newpage()
+  plotTracks(
+    track_info$tracks,
+    chromosome = track_info$chr,
+    from = track_info$from,
+    to = track_info$to,
+    sizes = track_info$sizes,
+    main = "Syt1 Locus -- BAP1-KO Multi-Omic View",
+    cex.main = 1.0,
+    title.width = 1.6,
+    col.axis = "black",
+    fontsize = 12
+  )
+  panel_a_grob <- grid.grab()
+}, finally = dev.off())
+
+# ---- Panel B: Coordinated mC/hmC scatter -----------------------------------
+cat("  Building Panel B (coordinated scatter)...\n")
+coord_path <- file.path(TABLES_DIR, "coordinated_changes.tsv")
+stopifnot(file.exists(coord_path))
+coord_df <- read.table(coord_path, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+
+panel_b <- ggplot(coord_df, aes(x = mc_diff * 100, y = hmc_diff * 100)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_point(aes(color = as.character(coordinated_pattern)), alpha = 0.3, size = 1) +
+  scale_color_manual(values = c("TRUE" = "#D7191C", "FALSE" = "grey60"), guide = "none") +
+  geom_point(data = . %>% dplyr::filter(gene %in% KEY_GENES),
+             size = 2.5, shape = 21, fill = "gold", color = "black", stroke = 0.8) +
+  ggrepel::geom_text_repel(
+    data = . %>% dplyr::filter(gene %in% KEY_GENES),
+    aes(label = gene), fontface = "italic", size = 3,
+    max.overlaps = 20, seed = 42
+  ) +
+  labs(x = "5mC change (%)", y = "5hmC change (%)",
+       title = "Coordinated mC/hmC Changes") +
+  theme_biomodal()
+
+# ---- Panel C: Cross-gene summary heatmap -----------------------------------
+cat("  Building Panel C (cross-gene heatmap)...\n")
+
+# Merge multi-omic metrics for KEY_GENES
+summary_df <- data.frame(gene = KEY_GENES, stringsAsFactors = FALSE) %>%
+  dplyr::left_join(
+    mc_dmr %>%
+      dplyr::filter(gene %in% KEY_GENES) %>%
+      dplyr::group_by(gene) %>%
+      dplyr::slice_min(dmr_qvalue, n = 1, with_ties = FALSE) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(gene, mC_diff = mod_difference),
+    by = "gene"
+  ) %>%
+  dplyr::left_join(
+    hmc_dmr %>%
+      dplyr::filter(gene %in% KEY_GENES) %>%
+      dplyr::group_by(gene) %>%
+      dplyr::slice_min(dmr_qvalue, n = 1, with_ties = FALSE) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(gene, hmC_diff = mod_difference),
+    by = "gene"
+  )
+
+# Add RNA-seq log2FC
+if (!is.null(rnaseq_df)) {
+  summary_df <- summary_df %>%
+    dplyr::left_join(
+      rnaseq_df %>%
+        dplyr::select(gene = ensembl_gene_id, log2FC = log2FoldChange),
+      by = "gene"
+    )
+} else {
+  summary_df$log2FC <- NA_real_
+}
+
+# Add Hi-C loop counts per gene locus
+loop_counts <- sapply(KEY_GENES, function(g) {
+  rg <- get_gene_region(g, extend_bp = EXTEND_BP)
+  ch <- as.character(seqnames(rg)[1])
+  rs <- start(rg); re <- end(rg)
+  in_region <- loops_df %>%
+    dplyr::filter(
+      (chr1 == ch & start1 >= rs & end1 <= re) |
+      (chr2 == ch & start2 >= rs & end2 <= re)
+    )
+  lost <- sum(in_region$direction == "down_in_mutant")
+  gained <- sum(in_region$direction == "up_in_mutant")
+  c(lost = lost, gained = gained)
+})
+summary_df$loops_lost   <- loop_counts["lost", ]
+summary_df$loops_gained <- loop_counts["gained", ]
+
+# Scale numeric columns to z-scores for heatmap
+heat_cols <- c("mC_diff", "hmC_diff", "log2FC", "loops_lost", "loops_gained")
+heat_df <- summary_df %>%
+  dplyr::mutate(dplyr::across(
+    dplyr::all_of(heat_cols),
+    ~ as.numeric(scale(.x))
+  ))
+
+# Pivot to long format
+heat_long <- heat_df %>%
+  tidyr::pivot_longer(
+    cols = dplyr::all_of(heat_cols),
+    names_to = "metric",
+    values_to = "z_score"
+  ) %>%
+  dplyr::mutate(
+    metric = factor(metric,
+      levels = heat_cols,
+      labels = c("5mC", "5hmC", "RNA log2FC", "Loops Lost", "Loops Gained")
+    ),
+    gene = factor(gene, levels = rev(KEY_GENES))
+  )
+
+panel_c <- ggplot(heat_long, aes(x = metric, y = gene, fill = z_score)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  scale_fill_gradient2(low = "#2166AC", mid = "white", high = "#B2182B",
+                       midpoint = 0, na.value = "grey90",
+                       name = "Z-score") +
+  labs(x = NULL, y = NULL, title = "Multi-Omic Summary") +
+  theme_biomodal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 9),
+    axis.text.y = element_text(face = "italic", size = 10),
+    panel.grid = element_blank()
+  )
+
+# ---- Assembly --------------------------------------------------------------
+cat("  Assembling composite figure...\n")
+
+composite_assembled <- FALSE
+
+if (!is.null(panel_a_grob)) {
+  panel_a_wrapped <- patchwork::wrap_elements(panel_a_grob)
+  composite <- panel_a_wrapped / (panel_b | panel_c) +
+    patchwork::plot_layout(heights = c(2, 1)) +
+    patchwork::plot_annotation(tag_levels = "A")
+  save_multiformat_ggplot(
+    composite,
+    file.path(SECTION_OUTPUT_DIR, "composite_syt1_panel"),
+    width = 14, height = 16
+  )
+  composite_assembled <- TRUE
+  cat("  Saved: composite_syt1_panel/{pdf,svg,jpg}\n")
+}
+
+# Fallback: save panels separately for manual Illustrator assembly
+if (!composite_assembled) {
+  cat("  Saving panels separately for manual assembly...\n")
+  save_multiformat_ggplot(
+    panel_b, file.path(SECTION_OUTPUT_DIR, "composite_panel_b"),
+    width = 7, height = 6
+  )
+  save_multiformat_ggplot(
+    panel_c, file.path(SECTION_OUTPUT_DIR, "composite_panel_c"),
+    width = 7, height = 6
+  )
+  cat("  Saved: composite_panel_b/{pdf,svg,jpg}, composite_panel_c/{pdf,svg,jpg}\n")
+  cat("  Panel A (Syt1 browser): use Syt1_locus_compact/ output for assembly\n")
+}
+
+cat("\n================================================================================\n")
 cat("SECTION 46 COMPLETE\n")
 cat(sprintf("Output directory: %s\n", SECTION_OUTPUT_DIR))
 cat("================================================================================\n")
