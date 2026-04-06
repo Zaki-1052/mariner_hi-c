@@ -1,0 +1,67 @@
+#!/bin/bash
+#SBATCH --job-name=browser_%1
+#SBATCH --output=logs/browser_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+# Section 46: Genome Browser Locus View Renderer
+# Renders full + compact multi-omic browser figures for a single gene.
+#
+# Usage:
+#   sbatch scripts/viz_sections/run_browser.sb Syt1
+#   sbatch scripts/viz_sections/run_browser.sb Zbtb20
+#   bash scripts/viz_sections/run_all_browsers.sh   # submits all 10 genes
+#
+# Args:
+#   $1 = gene name (e.g., Syt1, Zbtb20, Trpm3, ...)
+#        If omitted, runs all KEY_GENES + composite figure.
+
+GENE=${1:-""}
+
+echo "========================================="
+echo "Section 46: Genome Browser Locus Views"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Gene: ${GENE:-ALL}"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment check:"
+which Rscript
+Rscript --version
+echo ""
+
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream
+echo "Working directory: $(pwd)"
+echo ""
+
+SCRIPT="scripts/viz_sections/section_46_genome_browser_loci.R"
+
+if [ ! -f "${SCRIPT}" ]; then
+  echo "ERROR: Script not found: ${SCRIPT}"
+  exit 1
+fi
+
+echo "Running: Rscript ${SCRIPT} ${GENE}"
+echo "--------------------------------------------------------------------------------"
+
+Rscript "${SCRIPT}" "${GENE}"
+EXIT_CODE=$?
+
+echo "--------------------------------------------------------------------------------"
+echo "Exit code: ${EXIT_CODE}"
+echo "End time: $(date)"
+echo "========================================="
+
+exit ${EXIT_CODE}
