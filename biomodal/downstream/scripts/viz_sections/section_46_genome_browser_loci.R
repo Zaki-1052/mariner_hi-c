@@ -67,16 +67,24 @@ HMC_BW_MUT <- file.path(HMC_BW_DIR, c(
 RNASEQ_BW_CTRL <- file.path(BASE_DIR, "peaks/RNActrl.bw")
 RNASEQ_BW_MUT  <- file.path(BASE_DIR, "peaks/RNAmut.bw")
 
-# --- ChIP/ATAC BigWig paths (set when available; NULL = use BED peaks only) ---
-# Each is a named list with ctrl/mut paths. When non-NULL, a continuous coverage
-# DataTrack replaces the BED AnnotationTrack for that mark.
-# From PI's IGV: H2AK119ub, H3K27me3, H3K4me3, H3K27ac, ATAC, H3K27me1
-H2AK119UB_BW <- NULL  # list(ctrl = "path/to/H2AK119ubCtrl.bw", mut = "path/to/H2AK119ubMut.bw")
-H3K27ME3_BW  <- NULL  # list(ctrl = "path/to/H3K27me3Ctrl.bw", mut = "path/to/H3K27me3Mut.bw")
-H3K4ME3_BW   <- NULL  # list(ctrl = "path/to/H3K4me3Ctrl.bw",  mut = "path/to/H3K4me3Mut.bw")
-H3K27AC_BW   <- NULL  # list(ctrl = "path/to/H3K27acCtrl.bw",  mut = "path/to/H3K27acMut.bw")
-ATAC_BW      <- NULL  # list(ctrl = "path/to/ATACctrl.bw",     mut = "path/to/ATACmut.bw")
-H3K27ME1_BW  <- NULL  # list(ctrl = "path/to/H3K27me1Ctrl.bw", mut = "path/to/H3K27me1Mut.bw")
+# --- ChIP/ATAC/MeCP2 BigWig paths ---------------------------------------------
+# Each is a named list with ctrl/mut paths. A continuous coverage DataTrack
+# replaces the BED AnnotationTrack for that mark.
+HISTONE_BW_DIR <- "/Users/zakiralibhai/Documents/BIO_LAB/methylation-tracks/histone_mods"
+H2AK119UB_BW <- list(ctrl = file.path(HISTONE_BW_DIR, "H2AK119ubCtrl.bw"),
+                      mut  = file.path(HISTONE_BW_DIR, "H2AK119ubMut.bw"))
+H3K27ME3_BW  <- list(ctrl = file.path(HISTONE_BW_DIR, "H3K27me3Ctrl.bw"),
+                      mut  = file.path(HISTONE_BW_DIR, "H3K27me3Mut.bw"))
+H3K4ME3_BW   <- list(ctrl = file.path(HISTONE_BW_DIR, "H3K4me3Ctrl.bw"),
+                      mut  = file.path(HISTONE_BW_DIR, "H3K4me3Mut.bw"))
+H3K27AC_BW   <- list(ctrl = file.path(HISTONE_BW_DIR, "H3K27acCtrl.bw"),
+                      mut  = file.path(HISTONE_BW_DIR, "H3K27acMut.bw"))
+ATAC_BW      <- list(ctrl = file.path(HISTONE_BW_DIR, "ATACctrl.bw"),
+                      mut  = file.path(HISTONE_BW_DIR, "ATACmut.bw"))
+H3K27ME1_BW  <- list(ctrl = file.path(HISTONE_BW_DIR, "H3K27me1Ctrl.bw"),
+                      mut  = file.path(HISTONE_BW_DIR, "H3K27me1Mut.bw"))
+MECP2_BW     <- list(ctrl = file.path(HISTONE_BW_DIR, "MeCP2Ctrl.bw"),
+                      mut  = file.path(HISTONE_BW_DIR, "MeCP2Mut.bw"))
 
 # --- View parameters ---------------------------------------------------------
 EXTEND_BP <- 50000   # 50kb flanking on each side
@@ -376,7 +384,8 @@ precompute_bigwig_averages <- function(region_gr) {
   chip_bw_configs <- list(
     h2ak119ub = H2AK119UB_BW, h3k27me3 = H3K27ME3_BW,
     h3k4me3 = H3K4ME3_BW, h3k27ac = H3K27AC_BW,
-    atac = ATAC_BW, h3k27me1 = H3K27ME1_BW
+    atac = ATAC_BW, h3k27me1 = H3K27ME1_BW,
+    mecp2 = MECP2_BW
   )
   for (mark_name in names(chip_bw_configs)) {
     bw_config <- chip_bw_configs[[mark_name]]
@@ -398,7 +407,7 @@ get_cached_bigwig_averages <- function(gene_symbol, region_gr) {
     cache_time <- file.mtime(cache_file)
     all_bw_paths <- c(MC_BW_CTRL, MC_BW_MUT, HMC_BW_CTRL, HMC_BW_MUT)
     if (!is.null(RNASEQ_BW_CTRL)) all_bw_paths <- c(all_bw_paths, RNASEQ_BW_CTRL, RNASEQ_BW_MUT)
-    for (bw_cfg in list(H2AK119UB_BW, H3K27ME3_BW, H3K4ME3_BW, H3K27AC_BW, ATAC_BW, H3K27ME1_BW)) {
+    for (bw_cfg in list(H2AK119UB_BW, H3K27ME3_BW, H3K4ME3_BW, H3K27AC_BW, ATAC_BW, H3K27ME1_BW, MECP2_BW)) {
       if (!is.null(bw_cfg)) all_bw_paths <- c(all_bw_paths, bw_cfg$ctrl, bw_cfg$mut)
     }
     existing_bw <- all_bw_paths[file.exists(all_bw_paths)]
@@ -734,24 +743,26 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     # H3K27me1
     add_chip_bw_tracks("H3K27me1", "h3k27me1", "#66A61E")
 
-    # MeCP2 differential (BED only, no BigWig expected)
-    mecp2_combined <- c(peak_data$mecp2_up, peak_data$mecp2_down)
-    if (length(mecp2_combined) > 0) {
-      mecp2_combined$feature <- c(
-        rep("Up", length(peak_data$mecp2_up)),
-        rep("Down", length(peak_data$mecp2_down))
-      )
-      track_list$mecp2 <- AnnotationTrack(
-        mecp2_combined, genome = "mm10", chromosome = chr,
-        name = "MeCP2",
-        feature = mecp2_combined$feature,
-        Up   = TRACK_COL$mecp2_up,
-        Down = TRACK_COL$mecp2_down,
-        stacking = "dense",
-        background.title = TRACK_COL$mecp2_up,
-        col.title = "white", cex.title = 0.7
-      )
-      sizes <- c(sizes, 0.5)
+    # MeCP2 (BigWig signal if available, otherwise BED differential peaks)
+    if (!add_chip_bw_tracks("MeCP2", "mecp2", TRACK_COL$mecp2_up)) {
+      mecp2_combined <- c(peak_data$mecp2_up, peak_data$mecp2_down)
+      if (length(mecp2_combined) > 0) {
+        mecp2_combined$feature <- c(
+          rep("Up", length(peak_data$mecp2_up)),
+          rep("Down", length(peak_data$mecp2_down))
+        )
+        track_list$mecp2 <- AnnotationTrack(
+          mecp2_combined, genome = "mm10", chromosome = chr,
+          name = "MeCP2",
+          feature = mecp2_combined$feature,
+          Up   = TRACK_COL$mecp2_up,
+          Down = TRACK_COL$mecp2_down,
+          stacking = "dense",
+          background.title = TRACK_COL$mecp2_up,
+          col.title = "white", cex.title = 0.7
+        )
+        sizes <- c(sizes, 0.5)
+      }
     }
   }
 
