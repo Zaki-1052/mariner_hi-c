@@ -310,22 +310,18 @@ build_hic_tracks <- function(loops_df, region_gr) {
 }
 
 
-#' Create a bipolar DataTrack for difference data using groups for pos/neg colors.
-#' Assigns each bin to a "Hyper" or "Hypo" group so Gviz colors them differently.
-make_bipolar_track <- function(diff_gr, name, pos_color, neg_color, ylim,
-                               bg_title, cex_title = 0.7) {
-  diff_gr$group <- ifelse(diff_gr$score >= 0, "Hyper", "Hypo")
-
-  dt <- DataTrack(
+#' Create a difference DataTrack with baseline at zero.
+#' NOTE: Gviz histogram DataTracks don't support per-bar coloring via groups
+#' (collapseTrack triggers seqnames NAs). Using single color with baseline.
+make_diff_track <- function(diff_gr, name, color, ylim,
+                            bg_title, cex_title = 0.7) {
+  DataTrack(
     range = diff_gr, genome = "mm10", type = "histogram",
     name = name,
-    groups = diff_gr$group,
-    col = c(Hyper = pos_color, Hypo = neg_color),
+    fill.histogram = color, col.histogram = color,
     ylim = ylim, baseline = 0, col.baseline = "black", lwd.baseline = 0.5,
-    legend = FALSE,
     background.title = bg_title, col.title = "white", cex.title = cex_title
   )
-  return(dt)
 }
 
 
@@ -472,7 +468,6 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     txdb, genome = "mm10", chromosome = chr,
     name = paste0(gene_symbol, rnaseq_label),
     transcriptAnnotation = "symbol",
-    collapseTranscripts = "meta",
     stacking = "dense",
     col = TRACK_COL$gene,
     fill = TRACK_COL$gene,
@@ -514,10 +509,10 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
   sizes <- c(sizes, 1.5)
 
   cat("    [DEBUG] mc ctrl/mut tracks OK\n")
-  # 5mC Difference (bipolar: red = hyper, blue = hypo)
-  track_list$mc_diff <- make_bipolar_track(
+  # 5mC Difference (Mut - Ctrl)
+  track_list$mc_diff <- make_diff_track(
     mc_diff_gr, name = "5mC%\nDifference",
-    pos_color = TRACK_COL$diff_hyper, neg_color = TRACK_COL$diff_hypo,
+    color = TRACK_COL$diff_hyper,
     ylim = diff_ylim, bg_title = "#8C510A"
   )
   sizes <- c(sizes, 1.5)
@@ -547,10 +542,10 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     )
     sizes <- c(sizes, 1.5)
 
-    # 5hmC Difference (bipolar: blue = gain, red = loss; reversed from 5mC)
-    track_list$hmc_diff <- make_bipolar_track(
+    # 5hmC Difference (Mut - Ctrl)
+    track_list$hmc_diff <- make_diff_track(
       hmc_diff_gr, name = "5hmC%\nDifference",
-      pos_color = TRACK_COL$diff_hypo, neg_color = TRACK_COL$diff_hyper,
+      color = TRACK_COL$diff_hypo,
       ylim = diff_ylim, bg_title = "#01665E"
     )
     sizes <- c(sizes, 1.5)
