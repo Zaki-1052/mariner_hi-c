@@ -67,6 +67,17 @@ HMC_BW_MUT <- file.path(HMC_BW_DIR, c(
 RNASEQ_BW_CTRL <- file.path(BASE_DIR, "peaks/RNActrl.bw")
 RNASEQ_BW_MUT  <- file.path(BASE_DIR, "peaks/RNAmut.bw")
 
+# --- ChIP/ATAC BigWig paths (set when available; NULL = use BED peaks only) ---
+# Each is a named list with ctrl/mut paths. When non-NULL, a continuous coverage
+# DataTrack replaces the BED AnnotationTrack for that mark.
+# From PI's IGV: H2AK119ub, H3K27me3, H3K4me3, H3K27ac, ATAC, H3K27me1
+H2AK119UB_BW <- NULL  # list(ctrl = "path/to/H2AK119ubCtrl.bw", mut = "path/to/H2AK119ubMut.bw")
+H3K27ME3_BW  <- NULL  # list(ctrl = "path/to/H3K27me3Ctrl.bw", mut = "path/to/H3K27me3Mut.bw")
+H3K4ME3_BW   <- NULL  # list(ctrl = "path/to/H3K4me3Ctrl.bw",  mut = "path/to/H3K4me3Mut.bw")
+H3K27AC_BW   <- NULL  # list(ctrl = "path/to/H3K27acCtrl.bw",  mut = "path/to/H3K27acMut.bw")
+ATAC_BW      <- NULL  # list(ctrl = "path/to/ATACctrl.bw",     mut = "path/to/ATACmut.bw")
+H3K27ME1_BW  <- NULL  # list(ctrl = "path/to/H3K27me1Ctrl.bw", mut = "path/to/H3K27me1Mut.bw")
+
 # --- View parameters ---------------------------------------------------------
 EXTEND_BP <- 50000   # 50kb flanking on each side
 
@@ -361,6 +372,20 @@ precompute_bigwig_averages <- function(region_gr) {
     result$rnaseq_mut  <- import_rnaseq_bigwig(RNASEQ_BW_MUT, region_gr)
   }
 
+  # ChIP/ATAC BigWigs (ctrl/mut pairs, same import method as RNA-seq)
+  chip_bw_configs <- list(
+    h2ak119ub = H2AK119UB_BW, h3k27me3 = H3K27ME3_BW,
+    h3k4me3 = H3K4ME3_BW, h3k27ac = H3K27AC_BW,
+    atac = ATAC_BW, h3k27me1 = H3K27ME1_BW
+  )
+  for (mark_name in names(chip_bw_configs)) {
+    bw_config <- chip_bw_configs[[mark_name]]
+    if (!is.null(bw_config) && file.exists(bw_config$ctrl) && file.exists(bw_config$mut)) {
+      result[[paste0(mark_name, "_ctrl")]] <- import_rnaseq_bigwig(bw_config$ctrl, region_gr)
+      result[[paste0(mark_name, "_mut")]]  <- import_rnaseq_bigwig(bw_config$mut, region_gr)
+    }
+  }
+
   return(result)
 }
 
@@ -372,8 +397,9 @@ get_cached_bigwig_averages <- function(gene_symbol, region_gr) {
   if (file.exists(cache_file)) {
     cache_time <- file.mtime(cache_file)
     all_bw_paths <- c(MC_BW_CTRL, MC_BW_MUT, HMC_BW_CTRL, HMC_BW_MUT)
-    if (!is.null(RNASEQ_BW_CTRL)) {
-      all_bw_paths <- c(all_bw_paths, RNASEQ_BW_CTRL, RNASEQ_BW_MUT)
+    if (!is.null(RNASEQ_BW_CTRL)) all_bw_paths <- c(all_bw_paths, RNASEQ_BW_CTRL, RNASEQ_BW_MUT)
+    for (bw_cfg in list(H2AK119UB_BW, H3K27ME3_BW, H3K4ME3_BW, H3K27AC_BW, ATAC_BW, H3K27ME1_BW)) {
+      if (!is.null(bw_cfg)) all_bw_paths <- c(all_bw_paths, bw_cfg$ctrl, bw_cfg$mut)
     }
     existing_bw <- all_bw_paths[file.exists(all_bw_paths)]
     newest_bw <- max(file.mtime(existing_bw))
@@ -583,83 +609,132 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
   }
 
   cat("    [DEBUG] RNA-seq tracks OK\n")
-  # --- Chromatin / epigenomic peak tracks (pre-loaded) ---
+  # --- Chromatin / epigenomic tracks ---
+  # For each mark: use BigWig DataTrack if available, otherwise BED AnnotationTrack.
+  # BigWig tracks show continuous coverage (like PI's IGV view); BED tracks show
+  # peak calls as colored bars.
 
-  # H2AK119ub (always shown -- central to BAP1 mechanism)
-  k119_combined <- c(peak_data$k119ub_ctrl, peak_data$k119ub_mut)
-  if (length(k119_combined) > 0) {
-    k119_combined$feature <- c(
-      rep("Control", length(peak_data$k119ub_ctrl)),
-      rep("Mutant", length(peak_data$k119ub_mut))
-    )
-    track_list$k119ub <- AnnotationTrack(
-      k119_combined, genome = "mm10", chromosome = chr,
-      name = "H2AK119ub",
-      feature = k119_combined$feature,
-      Control = TRACK_COL$k119ub_ctrl,
-      Mutant  = TRACK_COL$k119ub_mut,
-      stacking = "dense",
-      background.title = "#756BB1",
-      col.title = "white", cex.title = 0.7
-    )
-    sizes <- c(sizes, 0.6)
-  }
+  # Helper: add paired ctrl/mut BigWig DataTracks for a chromatin mark
+  add_chip_bw_tracks <- function(mark_name, mark_key, bg_color) {
+    ctrl_key <- paste0(mark_key, "_ctrl")
+    mut_key  <- paste0(mark_key, "_mut")
+    if (!is.null(precomputed_bw[[ctrl_key]])) {
+      ctrl_gr <- precomputed_bw[[ctrl_key]]
+      mut_gr  <- precomputed_bw[[mut_key]]
+      ylim <- c(0, max(c(ctrl_gr$score, mut_gr$score), na.rm = TRUE) * 1.05)
+      if (ylim[2] == 0) ylim[2] <- 1
 
-  if (variant == "full") {
-    # H3K27me3 peaks
-    if (length(peak_data$k27me3) > 0) {
-      track_list$k27me3 <- AnnotationTrack(
-        peak_data$k27me3, genome = "mm10", chromosome = chr,
-        name = "H3K27me3",
-        fill = TRACK_COL$k27me3, col = TRACK_COL$k27me3,
-        stacking = "dense",
-        background.title = TRACK_COL$k27me3,
+      track_list[[paste0(mark_key, "_ctrl")]] <<- DataTrack(
+        range = ctrl_gr, genome = "mm10", type = "histogram",
+        name = paste0(mark_name, "\nControl"),
+        fill.histogram = TRACK_COL$ctrl, col.histogram = TRACK_COL$ctrl,
+        ylim = ylim, background.title = bg_color,
         col.title = "white", cex.title = 0.7
       )
-      sizes <- c(sizes, 0.4)
-    }
+      sizes <<- c(sizes, 1.0)
 
-    # H3K27ac condition-specific
-    k27ac_combined <- c(peak_data$k27ac_ctrl, peak_data$k27ac_mut)
-    if (length(k27ac_combined) > 0) {
-      k27ac_combined$feature <- c(
-        rep("Control", length(peak_data$k27ac_ctrl)),
-        rep("Mutant", length(peak_data$k27ac_mut))
+      track_list[[paste0(mark_key, "_mut")]] <<- DataTrack(
+        range = mut_gr, genome = "mm10", type = "histogram",
+        name = paste0(mark_name, "\nMutant"),
+        fill.histogram = TRACK_COL$mut, col.histogram = TRACK_COL$mut,
+        ylim = ylim, background.title = bg_color,
+        col.title = "white", cex.title = 0.7
       )
-      track_list$k27ac <- AnnotationTrack(
-        k27ac_combined, genome = "mm10", chromosome = chr,
-        name = "H3K27ac",
-        feature = k27ac_combined$feature,
-        Control = TRACK_COL$k27ac_ctrl,
-        Mutant  = TRACK_COL$k27ac_mut,
+      sizes <<- c(sizes, 1.0)
+      return(TRUE)
+    }
+    return(FALSE)
+  }
+
+  # H2AK119ub (always shown -- central to BAP1 mechanism)
+  if (!add_chip_bw_tracks("H2AK119ub", "h2ak119ub", "#756BB1")) {
+    k119_combined <- c(peak_data$k119ub_ctrl, peak_data$k119ub_mut)
+    if (length(k119_combined) > 0) {
+      k119_combined$feature <- c(
+        rep("Control", length(peak_data$k119ub_ctrl)),
+        rep("Mutant", length(peak_data$k119ub_mut))
+      )
+      track_list$k119ub <- AnnotationTrack(
+        k119_combined, genome = "mm10", chromosome = chr,
+        name = "H2AK119ub",
+        feature = k119_combined$feature,
+        Control = TRACK_COL$k119ub_ctrl,
+        Mutant  = TRACK_COL$k119ub_mut,
         stacking = "dense",
-        background.title = "#FF7F00",
+        background.title = "#756BB1",
         col.title = "white", cex.title = 0.7
       )
       sizes <- c(sizes, 0.6)
     }
+  }
 
-    # ATAC-seq differential
-    atac_combined <- c(peak_data$atac_up, peak_data$atac_down)
-    if (length(atac_combined) > 0) {
-      atac_combined$feature <- c(
-        rep("Up", length(peak_data$atac_up)),
-        rep("Down", length(peak_data$atac_down))
-      )
-      track_list$atac <- AnnotationTrack(
-        atac_combined, genome = "mm10", chromosome = chr,
-        name = "ATAC-seq",
-        feature = atac_combined$feature,
-        Up   = TRACK_COL$atac_up,
-        Down = TRACK_COL$atac_down,
-        stacking = "dense",
-        background.title = TRACK_COL$atac_up,
-        col.title = "white", cex.title = 0.7
-      )
-      sizes <- c(sizes, 0.5)
+  if (variant == "full") {
+    # H3K27me3
+    if (!add_chip_bw_tracks("H3K27me3", "h3k27me3", TRACK_COL$k27me3)) {
+      if (length(peak_data$k27me3) > 0) {
+        track_list$k27me3 <- AnnotationTrack(
+          peak_data$k27me3, genome = "mm10", chromosome = chr,
+          name = "H3K27me3",
+          fill = TRACK_COL$k27me3, col = TRACK_COL$k27me3,
+          stacking = "dense",
+          background.title = TRACK_COL$k27me3,
+          col.title = "white", cex.title = 0.7
+        )
+        sizes <- c(sizes, 0.4)
+      }
     }
 
-    # MeCP2 differential
+    # H3K4me3
+    add_chip_bw_tracks("H3K4me3", "h3k4me3", "#E41A1C")
+
+    # H3K27ac
+    if (!add_chip_bw_tracks("H3K27ac", "h3k27ac", "#FF7F00")) {
+      k27ac_combined <- c(peak_data$k27ac_ctrl, peak_data$k27ac_mut)
+      if (length(k27ac_combined) > 0) {
+        k27ac_combined$feature <- c(
+          rep("Control", length(peak_data$k27ac_ctrl)),
+          rep("Mutant", length(peak_data$k27ac_mut))
+        )
+        track_list$k27ac <- AnnotationTrack(
+          k27ac_combined, genome = "mm10", chromosome = chr,
+          name = "H3K27ac",
+          feature = k27ac_combined$feature,
+          Control = TRACK_COL$k27ac_ctrl,
+          Mutant  = TRACK_COL$k27ac_mut,
+          stacking = "dense",
+          background.title = "#FF7F00",
+          col.title = "white", cex.title = 0.7
+        )
+        sizes <- c(sizes, 0.6)
+      }
+    }
+
+    # ATAC-seq
+    if (!add_chip_bw_tracks("ATAC-seq", "atac", TRACK_COL$atac_up)) {
+      atac_combined <- c(peak_data$atac_up, peak_data$atac_down)
+      if (length(atac_combined) > 0) {
+        atac_combined$feature <- c(
+          rep("Up", length(peak_data$atac_up)),
+          rep("Down", length(peak_data$atac_down))
+        )
+        track_list$atac <- AnnotationTrack(
+          atac_combined, genome = "mm10", chromosome = chr,
+          name = "ATAC-seq",
+          feature = atac_combined$feature,
+          Up   = TRACK_COL$atac_up,
+          Down = TRACK_COL$atac_down,
+          stacking = "dense",
+          background.title = TRACK_COL$atac_up,
+          col.title = "white", cex.title = 0.7
+        )
+        sizes <- c(sizes, 0.5)
+      }
+    }
+
+    # H3K27me1
+    add_chip_bw_tracks("H3K27me1", "h3k27me1", "#66A61E")
+
+    # MeCP2 differential (BED only, no BigWig expected)
     mecp2_combined <- c(peak_data$mecp2_up, peak_data$mecp2_down)
     if (length(mecp2_combined) > 0) {
       mecp2_combined$feature <- c(
@@ -771,19 +846,24 @@ plot_locus_browser <- function(gene_symbol, variant = "full",
     )
   }
 
-  # PDF
+  # Render once to off-screen device, capture grob for replay
+  pdf(NULL, width = fig_width, height = fig_height)
+  tryCatch({
+    render_plot()
+    plot_grob <- grid.grab()
+  }, finally = dev.off())
+
+  # Replay captured grob to each output device (fast — no re-rendering)
   pdf(paste0(file_prefix, ".pdf"), width = fig_width, height = fig_height)
-  tryCatch(render_plot(), finally = dev.off())
+  tryCatch({ grid.newpage(); grid.draw(plot_grob) }, finally = dev.off())
 
-  # SVG
   svglite::svglite(paste0(file_prefix, ".svg"), width = fig_width, height = fig_height)
-  tryCatch(render_plot(), finally = dev.off())
+  tryCatch({ grid.newpage(); grid.draw(plot_grob) }, finally = dev.off())
 
-  # JPEG
   jpeg(paste0(file_prefix, ".jpg"),
        width = fig_width * 300, height = fig_height * 300,
        res = 300, quality = 95)
-  tryCatch(render_plot(), finally = dev.off())
+  tryCatch({ grid.newpage(); grid.draw(plot_grob) }, finally = dev.off())
 
   cat(sprintf("    Saved: %s/{pdf,svg,jpg}\n", out_name))
   return(invisible(file_prefix))
@@ -855,9 +935,22 @@ cat("  Peak files loaded\n")
 # GENERATE BROWSER VIEWS
 # =============================================================================
 
+# CLI argument: optional gene name to render only that gene (for HPC parallelism)
+# Usage: Rscript section_46_genome_browser_loci.R [gene_name]
+# No argument = all KEY_GENES + composite figure
+args <- commandArgs(trailingOnly = TRUE)
+target_genes <- KEY_GENES
+run_composite <- TRUE
+if (length(args) >= 1 && nchar(args[1]) > 0) {
+  stopifnot(args[1] %in% KEY_GENES)
+  target_genes <- args[1]
+  run_composite <- FALSE
+  cat(sprintf("Single-gene mode: %s\n", args[1]))
+}
+
 cat("\n--- Generating genome browser views ---\n\n")
 
-for (gene in KEY_GENES) {
+for (gene in target_genes) {
   cat(sprintf("Processing %s...\n", gene))
 
   # Get gene region and precompute BigWig averages ONCE per gene
@@ -893,6 +986,7 @@ for (gene in KEY_GENES) {
 # COMPOSITE MULTI-PANEL FIGURE
 # =============================================================================
 
+if (run_composite) {
 cat("\n--- Generating composite figure ---\n\n")
 
 # ---- Panel A: Syt1 compact browser view as grob ----------------------------
@@ -1075,6 +1169,7 @@ if (!composite_assembled) {
   cat("  Saved: composite_panel_b/{pdf,svg,jpg}, composite_panel_c/{pdf,svg,jpg}\n")
   cat("  Panel A (Syt1 browser): use Syt1_locus_compact/ output for assembly\n")
 }
+} # end if (run_composite)
 
 cat("\n================================================================================\n")
 cat("SECTION 46 COMPLETE\n")
