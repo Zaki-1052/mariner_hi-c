@@ -20,7 +20,10 @@
 #   - Summary table TSV
 #
 # Usage:
-#   Rscript scripts/compartment_genome_percentage.R
+#   Rscript scripts/compartment_genome_percentage.R [BASE_DIR]
+#
+#   BASE_DIR    Path to compartment_volcano_plot.R output directory
+#               (default: tads/tad-pc-analysis/output/compartment_analysis)
 #
 # =============================================================================
 # CONFIGURATION
@@ -34,8 +37,10 @@ cat("================================================\n\n")
 # mm10 genome size (assembled autosomes + chrX)
 MM10_GENOME_SIZE <- 2730871774
 
-# Input files (from compartment_volcano_plot.R)
-BASE_DIR <- "tads/tad-pc-analysis/output/compartment_analysis"
+# Parse optional base directory from command line
+args <- commandArgs(trailingOnly = TRUE)
+BASE_DIR <- if (length(args) >= 1) args[1] else "tads/tad-pc-analysis/output/compartment_analysis"
+
 INPUT_FILES <- list(
   standard = file.path(BASE_DIR, "compartment_significant_standard.tsv"),
   relaxed  = file.path(BASE_DIR, "compartment_significant_relaxed.tsv"),
