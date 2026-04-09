@@ -1,325 +1,139 @@
-# BAP1 Hi-C Project: Personal Reference
+# BAP1 Hi-C: What's going on and why it matters
 
-## What BAP1 does and why we care about 3D chromatin
+## What BAP1 actually does and why we're looking at chromatin folding
 
-BAP1 is a deubiquitinase. It removes H2AK119ub -- the monoubiquitin mark that PRC1 deposits on histone H2A at lysine 119. In normal cells, PRC1 puts the mark on and BAP1 takes it off, creating a dynamic cycle. This cycling matters because it's not just about the steady-state level of the mark -- it's about the cell's ability to toggle regulatory elements between states. When BAP1 is gone (our CRISPR knockout in the cerebellum), H2AK119ub accumulates because PRC1 keeps depositing it and nothing removes it.
+So the starting point is that BAP1 is a deubiquitinase — it removes H2AK119ub, the ubiquitin mark that PRC1 puts on histone H2A. In a normal cell, PRC1 is constantly depositing this mark and BAP1 is constantly removing it. The important thing is that this isn't a static system where the mark is either "on" or "off" — it's a cycle. The mark is being written and erased continuously, and that dynamic turnover is itself functionally important. When you lose BAP1, PRC1 keeps writing but nothing erases, so H2AK119ub accumulates. But the problem isn't just "too much ubiquitin" — it's that the cycling stops.
 
-The lab generated BAP1-KO mice and observed neurodegeneration. The question is: what's actually going wrong at the level of chromatin organization? We have two timepoints -- P12 (early, before severe neurodegeneration) and P60/adult (late, after significant progression) -- with n=3 biological replicates per condition per timepoint. All Hi-C is from cerebellum, processed through both Juicer and Nextflow-HiC pipelines on SDSC Expanse.
+The reason this matters for chromatin folding specifically comes from a key finding in the Ferguson lab: H2AK119ub isn't just sitting at silenced Polycomb domains in the cerebellum. It's actually enriched at active enhancers too. That's not what you'd naively expect from a "repressive" mark. It means BAP1 is doing real work at active regulatory elements — constantly removing K119ub to keep those enhancers "clean" and functional. And it's also doing work at Polycomb domains, where the dynamic cycling of K119ub is part of how those long-range repressive contacts are organized and maintained.
 
-The reason to look at 3D chromatin specifically is that we already have CUT&RUN data for the major histone marks (H3K27ac, H3K27me3, H3K4me1, H3K4me3, H2AK119ub), ATAC-seq, RNA-seq, and Biomodal methylation data. The 1D epigenomic picture was partly established. The open question was whether these epigenetic changes actually restructure the 3D genome -- do loops, TADs, and compartments change? And if they do, does that matter for gene expression?
+So when BAP1 is gone, you'd expect problems at both types of sites, but for different reasons. At active enhancers, K119ub accumulates where it doesn't belong — it's a foreign mark that interferes with enhancer-promoter interactions. At Polycomb domains, the mark was already there but was being dynamically cycled; without cycling, the higher-order organization that depends on that dynamism breaks down. The question was whether this actually manifests as changes in 3D chromatin structure, and if so, whether those structural changes actually matter for gene expression.
 
----
+That's why we did Hi-C.
 
-## What we found at the loop level
+## What happens to loops
 
-The core pipeline uses mariner (Bioconductor) + edgeR to do replicate-aware differential loop analysis. We run it at three resolutions (5kb, 10kb, 25kb) and merge the results.
+The most immediate finding is that BAP1 loss causes widespread loop dysregulation in the adult cerebellum. Roughly one in five detected loops are significantly different between mutant and control. But it's not a uniform loss or gain — there's a very clear directional pattern that depends on distance.
 
-At the late timepoint (adult), the numbers are substantial. At 10kb resolution alone: 22,632 loops tested, 3,981 significant at FDR < 0.05. Of those, 2,240 are gained (up in mutant) and 1,741 are lost (down in mutant). After merging across all three resolutions and removing redundant calls, we get 2,910 non-redundant differential loops: 1,723 gained (59%) and 1,187 lost (41%).
+Long-range loops are preferentially lost. Loops spanning more than a megabase are heavily enriched for weakening in the mutant. Short-to-mid-range loops, on the other hand, are preferentially gained. The median distance of lost loops is about twice the median distance of gained loops. This is highly significant statistically and holds up across every test you throw at it.
 
-At the early timepoint (P12), it's a different story: only 87 significant loops at 10kb resolution (34 lost, 53 gained), and 165 total after merging. So there's roughly an 18-fold amplification from early to late.
+We call this "loop rewriting" because the genome isn't just losing contacts or gaining contacts — it's replacing one type with another. Long developmental contacts are being swapped out for shorter, more local ones. The loop distance shift is really the central structural observation of the whole project.
 
-### The distance shift
+### The shared anchor phenomenon
 
-This is the central structural finding. Lost loops and gained loops have very different distance distributions:
+The strongest evidence for this replacement pattern comes from shared anchors. At a couple hundred genomic loci, the exact same anchor site participates in both a lost loop and a gained loop. It loses a long-range partner and gains a shorter-range one. The directionality is very consistent — at the vast majority of these shared anchors, the lost contact is longer than the gained contact.
 
-- Loops >1 Mb: 413 lost vs 181 gained. That's a 3.3x enrichment for loss at long range.
-- Loops 100-500kb: 419 lost vs 1,012 gained. Short-to-mid range is where the gains pile up.
-- Lost loops have a median distance of 625 kb; gained loops have a median of 320 kb -- roughly a 2x difference.
+What's at these shared anchors? They're enriched for H3K27me3 (Polycomb) and depleted for H3K27ac (active marks). So the switching phenomenon is concentrated at Polycomb-regulated sites. This makes sense with the model: Polycomb hubs that were maintaining long-range contacts through dynamic K119ub cycling can no longer sustain those contacts when BAP1 is gone. The long-range partner is lost, and the interaction probability redistributes locally, creating shorter-range contacts that show up as "gained" loops.
 
-All the statistical tests confirm this isn't noise: KS test D=0.279 (p < 2.2e-16), Spearman correlation between distance and logFC is rho = -0.244 (p < 2.2e-16). Longer loops tend to get weaker in BAP1-KO.
+This is important because it means the gained loops at these sites are not new functional enhancer-promoter connections. They're the structural consequence of long-range contact collapse — the interaction "budget" getting redirected into the local neighborhood.
 
-We call this "loop rewriting" -- the genome is losing its long-range contacts and replacing them with shorter-range ones.
+## How K119ub drives the changes depending on context
 
-### Shared anchors
+This is where the biology gets interesting and where a lot of the analytical reasoning lives.
 
-At 212 genomic loci, we found anchors that participate in BOTH a lost loop and a gained loop. The same spot in the genome loses a long-range partner and gains a short-range one. This accounts for 604 of the 2,910 differential loops (about 21%).
+When you correlate K119ub change at loop anchors with loop strength change, you get different answers depending on what kind of chromatin you're looking at. At active enhancer anchors (H3K27ac-positive), more K119ub means weaker loops — negative correlation. At Polycomb/repressive anchors (H3K27me3-positive), more K119ub means stronger loops — positive correlation. At first glance that looks contradictory. It's not.
 
-The directionality is strong: 83% of shared anchors have the expected pattern (lost loop is longer than gained loop), with a paired Wilcoxon p = 1.17e-20. The median lost distance at these anchors is 1,150 kb and the median gained distance is 340 kb -- a 3.4x ratio.
+The key is that these are different populations of loops being measured, and K119ub is doing different things in different contexts.
 
-What's at these shared anchors? H3K27me3 is enriched (OR = 2.04, p = 1.75e-24) and H3K27ac is depleted (OR = 0.68, p = 3.9e-6). These are Polycomb-marked sites, not active regulatory elements. Bivalent promoters are also enriched (OR = 1.74, p = 0.013).
+At active enhancers, BAP1 was keeping K119ub away. These are sites where the mark is foreign — it doesn't belong there. When BAP1 is lost and K119ub accumulates at active enhancers, it directly interferes with the enhancer-promoter contacts those elements maintain. The correlation is negative at every distance. This is the simplest, most direct consequence of BAP1 loss: the substrate accumulates at sites where the enzyme was needed, and the functional output (E-P contact) degrades.
 
-So the switching phenomenon is concentrated at Polycomb-regulated loci. A Polycomb hub loses its long-range partner in another Polycomb domain and instead picks up a shorter-range contact in its local neighborhood.
+At Polycomb sites, the situation is more nuanced. K119ub was already present — it's a normal part of Polycomb chromatin. What matters here is the loss of dynamic cycling, not the accumulation per se. The positive correlation between K119ub and loop strength at Polycomb anchors is driven by short-range contacts. PRC1-mediated nucleosome compaction is a local phenomenon — K119ub promotes compaction within roughly a hundred kilobases. So at Polycomb sites that retain or gain K119ub, local short-range compaction persists or even increases. But the long-range Polycomb contacts — the ones that span megabases and depend on higher-order organization like Polycomb body formation — those collapse because they need dynamic turnover to be maintained.
 
----
+So the positive rho at Polycomb anchors doesn't mean K119ub is helping there. It means the surviving loops at those anchors are the short-range ones, and there are more of them after the long-range ones die. The shared anchor data confirms this directly: same anchor, lost partner at a megabase, gained partner at a few hundred kilobases.
 
-## The mechanism: K119ub in different chromatin contexts
-
-This is where the biology gets interesting and where a lot of the analytical work went.
-
-### The global picture
-
-We have DiffBind results for H2AK119ub: 41,392 peaks tested, with 6,164 significantly up in mutant (K119ub accumulation) and 1,250 down. The asymmetry makes sense -- BAP1 removes K119ub, so when it's gone, the mark accumulates.
-
-The logistic regression for predicting whether a loop is lost gives an OR of 10.70 for K119ub fold-change (p = 1.71e-91), and an OR of 5.36 for log(distance) (p = 1.67e-67). Both K119ub accumulation and distance independently predict loop loss, and the effects are multiplicative.
-
-### Context-dependent effects
-
-Here's where it gets non-obvious. When you split loops by anchor chromatin state and correlate K119ub change with loop strength change, you get different signs:
-
-- **Active anchors** (H3K27ac+): rho = -0.314, p = 7.46e-19 (n=764). More K119ub = weaker loop. This makes sense -- K119ub is a foreign mark at active sites. BAP1 was keeping these elements clean, and now the repressive mark is accumulating where it doesn't belong.
-
-- **Polycomb/Repressive anchors** (H3K27me3+): rho = +0.177, p = 2.82e-09 (n=1,118). More K119ub = *stronger* loop. This seems contradictory at first.
-
-- **Other anchors**: rho = -0.013, p = 0.676 (n=973). No relationship.
-
-### Reconciling the positive rho at Polycomb anchors
-
-The positive correlation at Polycomb sites doesn't mean K119ub is helping loops there. It means K119ub promotes *local* compaction at Polycomb sites (short-range nucleosome-nucleosome interactions) while the *long-range* Polycomb contacts that require higher-order organization are what collapse. The loops being measured at Polycomb anchors with positive rho are the short-range ones that persist or get stronger. The long-range ones are the ones that disappear.
-
-This is a distance-dependent dual effect: K119ub without turnover supports local compaction but disrupts long-range connectivity. The shared anchor data backs this up -- the same Polycomb anchor gains a short contact while losing a long one.
-
-### The enrichment data tells the same story from a different angle
-
-From the differential ChIP enrichment analysis:
-
-- K119ub_up peaks are enriched at long-range lost loops vs short-range gained: OR = 4.87, FDR = 1.86e-90
-- K27me3_down peaks are enriched at short-range gained loops vs unchanged: OR = 8.78, FDR = 6.86e-102
-- K27me3_up peaks are enriched at long-range lost loops vs unchanged: OR = 3.18, FDR = 3.58e-28
-
-Translation: where K119ub goes up and K27me3 goes up, long-range loops are lost. Where K27me3 goes *down*, short-range loops are gained. The Polycomb landscape is being redistributed, and the loop architecture follows.
-
-### Chromatin state enrichment at loop anchors
-
-The enrichment-by-chromatin-state analysis (14 tests) shows the specificity:
-
-- Active_Enhancer anchors with K119ub_up: OR = 4.72, FDR = 1.81e-09. These are overwhelmingly lost loops -- 73.6% of lost active enhancer anchors overlap K119ub_up peaks vs 37.1% of gained.
-- Polycomb anchors with K119ub_down: OR = 2.92, FDR = 2.25e-04. Polycomb sites losing K119ub are associated with lost loops too, but through a different mechanism (loss of PRC1 occupancy).
-- Poised_Enhancer anchors with K119ub_up: OR = 2.05, FDR = 2.16e-06.
-
-The unifying principle: BAP1 loss eliminates K119ub turnover. At active sites where BAP1 was keeping things clean, K119ub accumulates and directly weakens enhancer-promoter contacts. At Polycomb domains where K119ub was being dynamically cycled as part of Polycomb body organization, the loss of cycling disrupts the higher-order structure that maintained long-range contacts.
-
----
+The logistic regression ties it together globally: K119ub fold-change at an anchor is by far the strongest predictor of whether a loop is lost, with an odds ratio over ten. Distance is the second strongest predictor. Both effects are independent and multiplicative. A loop at a K119ub-accumulating anchor that also happens to be long-range is extremely likely to be lost.
 
 ## The temporal story
 
-### Early (P12)
+The early timepoint (P13) and the late timepoint (adult) tell very different parts of the same story.
 
-Only 165 differential loops. The anchor type distribution is dominated by Repressed_Promoter (~36% of anchors vs ~9-10% at late), with CTCF_Site second (~28%). Active marks are nearly absent (Active_Promoter is 1.8% of Anchor1 at early vs 8.7% at late). The early disruption is concentrated at Polycomb-repressed sites. There are only 3 Active_Promoter anchors at P12 vs 253 at adult.
+At P13, there's barely any signal — the number of differential loops is tiny compared to adult. But the composition of those early changes is informative. The anchor types are dominated by Repressed_Promoter, which accounts for over a third of anchors at P13 versus under ten percent at adult. Active marks are almost absent. The early disruption is concentrated at Polycomb-repressed sites — which makes sense, because those are the sites where K119ub cycling is most critical for maintaining chromatin organization, and they'd be the first to feel the loss of BAP1.
 
-The direction at P12 is 57% down (lost) -- the dominant early signal is loops weakening. This makes sense as the initial effect of BAP1 loss: existing developmental contacts begin to fail before the secondary reorganization kicks in.
+The direction is also different. At P13, the majority of differential loops are weakened (lost). At adult, it reverses — the majority are gained. This reversal doesn't mean things are getting better. The late-stage gains represent the downstream structural consequences of the early losses: redistribution of contacts into shorter range, boundary failure creating ectopic interactions, compensatory contacts, and Polycomb domain compaction filling the void left by collapsed long-range loops. The gained loops have weaker individual effect sizes than the lost ones — many small gains versus fewer strong losses.
 
-### Late (P60/adult)
+There's also a progression in which types of chromatin are affected. Early: mostly Polycomb/repressive. Late: everything — active enhancers, poised enhancers, Polycomb, CTCF sites, all involved. The disease starts as a targeted disruption at Polycomb-regulated loci and expands into a system-wide architectural breakdown.
 
-2,910 differential loops. The anchor distribution is much more diverse: Poised_Enhancer (~20%), Polycomb (~16%), Active_Enhancer (~11%), CTCF (~27%), Repressed_Promoter (~10%), Active_Promoter (~9%). The disease has spread beyond Polycomb-specific sites to affect the broader regulatory landscape.
+The mechanistic interpretation — which is speculative but consistent with the data — is that there are two phases. First, BAP1 loss directly disrupts Polycomb-dependent long-range contacts because those contacts depend on dynamic K119ub cycling. Second, the Polycomb landscape globally reorganizes in response, redistributing marks and association preferences across the genome, which then indirectly affects non-Polycomb structures. By adulthood, the cascade has propagated to the point where the chromatin architecture is fundamentally remodeled.
 
-The direction reverses: 59% up (gained). This doesn't mean the genome is getting healthier. The gained loops include ectopic contacts, compensatory interactions, and the structural consequence of Polycomb domain reorganization (short-range contacts filling the void left by long-range losses). The 2,240 gained loops at 10kb resolution have weaker individual effect sizes than the 1,741 lost ones -- many small gains vs fewer strong losses.
+The abstract frames this as: as increasing ubiquitinated histone collapses developmental loops and replaces them with more proximal contacts, the result is dysregulation of synaptic and developmental genes.
 
-### The boundary data across timepoints
-
-From the timepoint comparison file: early has 4,349 differential boundaries (18.8%) and late has 4,144 (19.0%). The percentages are remarkably similar -- boundary dynamics don't change much between timepoints even as loop changes amplify 18-fold. But the composition shifts: late has more Strength Change boundaries (1,250 vs 975) and fewer Splits (593 vs 808). The boundaries are responding to the changing loop architecture -- more strengthening as gained loops densify local TADs.
-
----
-
-## Other structural scales
-
-### TADs
-
-TAD boundaries are moderately affected: about 16-20% are differential at either timepoint. This is notably less dramatic than what happens at the loop or compartment level.
-
-But the TAD boundary changes aren't random with respect to loop changes. Lost loops sit closer to differential boundaries than gained loops (median 45kb vs 75kb, OR = 1.46, p = 4.8e-6). The boundary-loop directional concordance is 69.6% at the late timepoint (chi-squared p = 0.0005) -- when a loop is lost near a boundary, that boundary tends to be control-enriched (stronger in WT), and when a loop is gained, nearby boundaries tend to be mutant-enriched.
-
-The boundary type breakdown is mechanistically informative:
-
-- **Merge** boundaries are 3x enriched near lost loops (OR = 0.32). When a long-range loop collapses, the TAD boundary it spanned becomes unnecessary, and two TADs fuse.
-- **Strength Change** boundaries are 2x enriched near gained loops (OR = 2.11). The new shorter-range contacts densify local structure.
-- **Split** boundaries are 1.5x enriched near gained loops (OR = 1.48). Some TADs subdivide as new contacts create internal structure.
-
-This is the intermediate-scale link: loop collapse causes TAD merging; loop gain causes TAD strengthening and splitting.
+## What happens at other structural scales
 
 ### Compartments
 
-Compartments show dramatic changes at both timepoints. The analysis uses HOMER's `getDiffExpression.pl` on PC1 eigenvectors at 25kb resolution.
+Compartments are the most dramatically affected scale. About seven to eight percent of the genome shows significant compartment shifts at standard thresholds at both timepoints, with roughly twice as many regions shifting toward the A compartment (active) as toward B (inactive). This net B-to-A shift is consistent with loss of Polycomb repression — without proper Polycomb-mediated silencing, formerly repressed regions shift toward a more active identity.
 
-**Early (P13):** 101,684 regions analyzed. At standard thresholds (FDR < 0.05, |Diff| > 0.30): 8,154 significant regions covering 203.8 Mb (7.46% of the genome). B->A: 5,282 regions (132.1 Mb); A->B: 2,872 regions (71.8 Mb). At relaxed thresholds: 26,733 regions, 668.3 Mb (24.5% of genome).
+An interesting detail is that compartment changes are already at full magnitude at P13, even though loop changes are minimal at that age. This seems counterintuitive until you remember that compartments are defined by the aggregate behavior of many loci. They're the coarsest scale of chromatin organization — the sum of many small association-preference changes across millions of base pairs. Even modest per-locus changes in Polycomb mark distribution can sum to detectable compartment shifts. Loops, by contrast, are individual contacts that each need to cross a statistical threshold to be called differential. So compartments can change subtly but measurably while individual loops haven't yet reached significance.
 
-**Late (adult):** 104,071 regions analyzed. At standard thresholds: 8,189 significant regions covering 204.7 Mb (7.50% of genome). B->A: 5,485 regions (137.1 Mb); A->B: 2,704 regions (67.6 Mb). At relaxed thresholds: 24,189 regions, 604.7 Mb (22.1% of genome).
+The composition of compartment changes does shift between timepoints though. Early has more complete A-to-B and B-to-A flips (sign changes in PC1), while late has more strengthening and weakening of existing compartment identity. This suggests the compartment landscape is actively flipping at P13 and then settling into a remodeled but more stable state by adulthood.
 
-The early and late numbers are remarkably similar in total magnitude (~8,150 regions at standard, ~7.5% of genome) but the composition shifts. Early has proportionally more A->B shifts (2,872 vs 2,704) and fewer B->A shifts (5,282 vs 5,485) compared to late. The early 7-category breakdown shows more flipping (A->B flips: 1,694 regions at 42.4 Mb early vs 656 at 16.4 Mb late; B->A flips: 2,426 at 60.6 Mb early vs 1,517 at 37.9 Mb late) and less strengthening. By late, the flipping decreases and strengthening/weakening increases -- the compartment landscape is settling into a remodeled but stable state rather than actively flipping.
+### TADs
 
-The direction is asymmetric at both timepoints: B-to-A shifts outnumber A-to-B roughly 2:1. This makes sense as a consequence of loss of Polycomb repression -- without proper Polycomb-mediated silencing, formerly repressed regions shift toward active.
+TAD boundaries are moderately affected — about a fifth are differential at either timepoint. This is notably less dramatic than compartments, and the percentages barely change between early and late even as loops amplify eighteen-fold. TAD boundaries are primarily maintained by CTCF and cohesin, structural proteins whose binding is not directly regulated by H2AK119ub. So you'd expect them to be relatively resilient to BAP1 loss, and they are.
 
-The 7-category breakdown at standard thresholds (late):
-- Flipped B->A: 37.9 Mb (1.39% of genome)
-- Strengthened A: 53.8 Mb (1.97%)
-- Weakened B: 45.4 Mb (1.66%)
-- Flipped A->B: 16.4 Mb (0.60%)
-- Strengthened B: 27.3 Mb (1.00%)
-- Weakened A: 23.9 Mb (0.87%)
+But they're not just passive bystanders either. The TAD boundary changes that do occur are spatially and directionally coordinated with loop changes. Lost loops tend to sit closer to differential boundaries than gained loops. There's about seventy percent directional concordance — when a loop is lost near a boundary, that boundary tends to be control-enriched, and when a loop is gained, nearby boundaries tend to be mutant-enriched.
 
-Compartments are defined by the aggregate behavior of many loci, so even modest per-locus changes sum to large compartment shifts. This is why compartments are the most affected scale -- they're sensitive to the widespread Polycomb redistribution that BAP1 loss causes.
+The specific types of boundary changes are mechanistically informative. Merge boundaries (two TADs fusing) are heavily enriched near lost loops — when a long-range loop collapses, the TAD boundary it spanned becomes unnecessary, and the two domains merge. Strength-change boundaries are enriched near gained loops — the new shorter-range contacts densify local structure. Split boundaries are also enriched near gained loops. So the TAD-level story is: loops collapse, TADs merge where the loops were; loops gain locally, TADs densify or subdivide.
+
+This provides the intermediate-scale link between loop rewriting and compartment shifts. The loops change, the TADs respond by reorganizing their domain structure, and the aggregate effect of all of this shows up as compartment shifts.
 
 ### Stripes
 
-Stripes are essentially unaffected. Out of ~200-286 stripes detected, zero reach FDR < 0.05 and only one reaches FDR < 0.10 (stripe_0014 at the Apaf1 locus on chr10, logFC = 0.34, FDR = 0.075). The BCV for stripes is remarkably low (~6-7%), meaning we had good power to detect changes -- there just aren't any.
+Stripes are essentially unaffected. No significant changes at either timepoint. This is actually informative because stripes reflect cohesin-mediated loop extrusion — a mechanical process that doesn't depend on Polycomb or H2AK119ub. The fact that stripes are preserved confirms that BAP1's effects are channeled through the Polycomb axis specifically, not through some general disruption of chromatin compaction or extrusion machinery.
 
-This is actually informative. Stripes reflect cohesin-mediated loop extrusion, which is mechanistically independent of Polycomb/H2AK119ub. The fact that stripes are preserved confirms that BAP1's effects are channeled through the Polycomb axis, not through the cohesin/extrusion machinery.
+### The hierarchy
 
-### The hierarchy of sensitivity
+So you get a hierarchy of sensitivity: compartments (most affected) > loops > TAD boundaries (moderate) > stripes (unaffected). This maps cleanly onto the expected biology: compartments and Polycomb loops depend on PRC1/PRC2 activity; CTCF boundaries and cohesin stripes don't. A Polycomb regulator should primarily affect Polycomb-dependent structures, and it does, at every scale.
 
-Putting it together:
-1. **Compartments** -- most affected (~7.5% at standard, ~22-24% at relaxed, both timepoints)
-2. **Loops** -- primary functional unit (2,910 differential at late, 165 at early)
-3. **TAD boundaries** -- moderately stable (16-20% differential), responsive to loop changes
-4. **Stripes** -- preserved (0 significant)
+## When do contact changes actually matter for genes?
 
-This hierarchy makes biological sense for a Polycomb regulator: compartments and Polycomb loops depend on PRC1/PRC2 activity, while CTCF boundaries and cohesin stripes don't.
+This is where the ABC (Activity-By-Contact) model comes in. The core question is: of all these loop changes, which ones actually translate into gene expression changes?
 
----
+The answer turns out to depend on what else is happening at the enhancer besides the contact change.
 
-## The enhancer/ABC integration
+The analysis classifies enhancers into groups based on what changes in the mutant. The critical comparison is between two groups: enhancers where K119ub accumulates AND the active mark H3K27ac is lost ("Activity_Lost"), versus enhancers where K119ub accumulates BUT active marks remain unchanged ("K119ub_Only").
 
-The Activity-By-Contact model connects enhancers to genes: ABC = (Activity x Contact) / normalization. We computed this for both WT and KO using an identical consensus enhancer universe (75,371 ATAC peaks) to ensure we're measuring real changes in linkage, not artifacts of different enhancer definitions.
+Both groups show real loop weakening. K119ub accumulation at an enhancer weakens its contacts whether or not the enhancer loses its active marks. But the functional consequence is different. Activity_Lost enhancers show clear concordance between contact loss and gene downregulation — the loop weakens, the enhancer-gene connection degrades, and the target gene actually goes down. K119ub_Only enhancers show loop weakening that is statistically real but doesn't translate into detectable gene expression changes. The concordance between contact change and gene expression at these sites is at chance level.
 
-### The key finding: unnormalized Delta(AxC) works better
+This establishes something like a threshold model. K119ub accumulation is mechanistically upstream of contact disruption — it weakens loops. But the contact change alone doesn't cross a functional threshold. The enhancer needs to also lose its activity (H3K27ac) before the downstream gene is affected. In the steady-state adult cerebellum, K119ub alone is necessary but not sufficient for transcriptional consequence.
 
-The strongest correlation between enhancer-gene linkage changes and RNA-seq is with the unnormalized sum of Delta(AxC) across all enhancers for each gene: Spearman rho = 0.582, which is very strong for this kind of analysis. The normalized version (standard ABC) gives much weaker correlation because per-gene normalization compresses real activity changes when there's widespread remodeling.
+This has implications for understanding the progressive nature of the disease. Early on, K119ub accumulates and starts weakening contacts, but many enhancers can tolerate this because their active marks are still intact. Over time, as the Polycomb landscape continues to remodel and active marks are secondarily affected, more enhancers cross the threshold into functional disruption. The initial epigenetic perturbation is tolerable; the cascade isn't.
 
-### Enhancer classes tell a mechanistic story
+When you do enforce a geometric constraint — requiring the enhancer to sit at one loop anchor and the gene's TSS at the other — the concordance between loop changes, ABC score changes, and RNA-seq changes jumps dramatically. This tells you that the structural contact and the regulatory connection are mechanistically linked, not just coincidentally overlapping. The loops aren't epiphenomenal; they're carrying the regulatory signal.
 
-The enhancer subset analysis splits ~55,000 enhancers into four classes based on what changes:
+## How to think about the paradoxes and connections
 
-**Activity_Lost** (7,503 enhancers): H3K27ac goes down. These show median loop logFC of -0.088 (loops weakening) and 61.9% RNA-seq concordance. When an enhancer loses its active mark AND its contacts weaken, the target gene is likely to be downregulated. This is the most functionally consequential class.
+### Why gained loops aren't good news
 
-**Activity_Gain** (2,851 enhancers): H3K27ac goes up. Median loop logFC of +0.066 and 67.2% RNA-seq concordance. Mirror image of Activity_Lost.
+At the late timepoint, there are more gained loops than lost. This seems counterintuitive if BAP1 loss is supposed to be disruptive. But the gains aren't functional recovery. There are several things contributing to the gain signal, and none of them represent healthy chromatin organization.
 
-**K119ub_Only** (2,479 enhancers): K119ub goes up but active marks don't change. Median loop logFC of -0.054 (loops weakening, but less than Activity_Lost) and 48.7% RNA-seq concordance -- indistinguishable from chance. This is important: K119ub accumulation alone produces a real but sub-functional contact weakening (3.7% reduction, statistically significant) that does NOT translate to detectable gene expression changes. The contact perturbation doesn't cross a functional threshold.
+When a long-range loop collapses, the interaction probability doesn't vanish — it redistributes locally. The shared anchor data shows this literally: the same anchor loses a megabase-scale partner and gains a few-hundred-kilobase partner. The "gained" loop is just where the lost interaction's budget went.
 
-**Stable** (42,864 enhancers): No significant changes. 48.4% concordance (chance level).
+TAD merging creates ectopic contacts — regions that were previously insulated by a boundary can now interact. Those show up as gains. The cell may also attempt to compensate by forming alternative enhancer-promoter contacts. And at Polycomb domains, K119ub accumulation promotes local nucleosome compaction even as long-range contacts fail, creating many weak short-range gains.
 
-### The threshold model
+The key tell is that gained loops have weaker individual effect sizes than lost loops. They're not robust new functional contacts — they're noise and redistribution.
 
-K119ub_Only vs Activity_Lost is the crux. Both involve K119ub accumulation at enhancers. But Activity_Lost also loses H3K27ac, while K119ub_Only keeps its active marks. The contact weakening at K119ub_Only sites (median logFC = -0.054) is real but about 40% weaker than at Activity_Lost sites (median logFC = -0.088). More importantly, the K119ub_Only contact change doesn't produce gene expression effects.
+### Why compartments change before loops
 
-This establishes something like a threshold: K119ub accumulation is upstream of contact disruption, but the contact change must either be large enough or be accompanied by loss of activating marks before the downstream gene is affected. In the adult cerebellum, K119ub alone isn't sufficient.
+This seems backward — shouldn't the individual contacts (loops) change before the aggregate measure (compartments)? But compartments are defined by the average behavior of chromatin across very large regions. Even small, individually sub-significant changes in association preferences at many loci can sum to a significant compartment shift. Each individual locus might not have a significant loop change yet, but the collective tendency of Polycomb-marked regions to associate differently is already detectable. Loops need to cross a per-loop statistical threshold; compartments measure the mean of the entire distribution.
 
-### Geometric constraint and paired anchors
+### The positive rho at Polycomb anchors
 
-When you just look at whether loops and ABC connections overlap in the genome, concordance is about 51% -- chance. But when you require the enhancer to be at one loop anchor and the gene's TSS at the other anchor (geometric constraint), concordance jumps to 89.7% (p = 1.67e-48). And three-way concordance (loop + ABC + RNA-seq all agree) is 88.2% (p = 1.69e-45).
-
-At paired enhancers specifically, K119ub correlates with loop loss at rho = -0.401 (p = 5.48e-13) -- 4.5x stronger than the genome-wide K119ub-loop correlation. So the K119ub -> contact disruption -> gene expression chain is strong when you look at geometrically constrained enhancer-gene pairs.
-
-### GO enrichment splits by loop type
-
-The GO terms for genes at long-range lost loops vs short-range gained loops are different:
-
-Long-range lost loops: locomotory behavior, eye development, embryonic organ morphogenesis, sex differentiation, gonad development. These are developmental regulatory programs maintained by long-range contacts.
-
-Short-range gained loops: pattern specification, regionalization, dorsal/ventral patterning, cell fate commitment, kidney development. These are developmental programs associated with shorter-range regulatory architecture.
-
-The functional interpretation: the genome is losing its long-range developmental regulatory connections (which may have been set up during earlier development and maintained by Polycomb) and gaining shorter-range contacts near developmental transcription factor loci.
-
----
-
-## Reasoning through the tricky parts
-
-### Why the positive rho at Polycomb anchors isn't contradictory
-
-When you first see that K119ub accumulation correlates with loop STRENGTHENING at Polycomb sites (rho = +0.177) and loop WEAKENING at active sites (rho = -0.314), it seems like K119ub is doing opposite things. But the resolution is that these are different populations of loops.
-
-At Polycomb anchors, the loops that survive (or get stronger) are the short-range ones. K119ub promotes local compaction -- nucleosome-nucleosome interactions within ~100kb are strengthened by PRC1-mediated compaction. The long-range Polycomb contacts (>1 Mb) that require higher-order organization (Polycomb bodies, possibly phase separation) are what collapse. But the correlation analysis includes all loops at Polycomb anchors, and the short-range ones that persist or strengthen dominate the positive rho because there are simply more of them after the long-range ones are lost.
-
-The distance shift data at shared Polycomb anchors confirms this: the same anchor has a lost partner at median 1,150 kb and a gained partner at median 340 kb.
-
-At active anchors, the story is simpler: K119ub is a foreign repressive mark. It doesn't belong there. As it accumulates, enhancer-promoter contacts weaken at all distances. The correlation is negative across the board.
-
-### Why compartments change more than TADs
-
-TAD boundaries are primarily maintained by CTCF and cohesin -- structural proteins whose binding isn't directly regulated by H2AK119ub. CTCF binds DNA motifs (we used 114,081 genome-wide CTCF motifs for annotation); cohesin extrudes loops until blocked by CTCF. Neither process depends on Polycomb.
-
-Compartments, by contrast, are defined by the aggregate association preferences of chromatin -- active regions cluster with active regions (A compartment), repressed with repressed (B compartment). Polycomb is a major organizer of the B compartment. When BAP1 loss disrupts Polycomb organization, the association preferences shift. Many formerly B-compartment regions lose their repressive identity and shift toward A. This is why B->A shifts outnumber A->B shifts 2:1.
-
-TADs sit in between: their boundaries are CTCF-dependent (stable), but their internal structure is influenced by the loops within them. When loops collapse and reform at shorter range, TADs merge (lost-loop sites) or densify (gained-loop sites) -- but the boundaries themselves mostly persist because CTCF is still there.
-
-### Why we see more gained than lost loops at the late timepoint
-
-At early (P12), the majority of differential loops are lost (57% down). At late (adult), it reverses: 59% are gained. This reversal isn't because the genome is recovering. There are several things contributing to the gain signal:
-
-1. **Redistribution of contact probability.** When a long-range loop collapses, the interaction "budget" doesn't disappear -- it redistributes locally. The shared anchor data shows this directly: lost contacts at 1,150 kb become gained contacts at 340 kb.
-
-2. **Boundary failure creates ectopic contacts.** As TADs merge, regions that were previously insulated can now interact. These show up as gained loops.
-
-3. **Compensatory interactions.** Some gained loops may represent the cell attempting to maintain gene expression through alternative enhancer-promoter contacts.
-
-4. **Polycomb domain compaction.** At Polycomb sites, K119ub accumulation promotes local compaction even as long-range contacts fail. This creates many short-range gains.
-
-The key insight is that the gained loops at late timepoint are not "healthy" -- they're the structural consequence of architectural collapse. The gained loops have weaker individual effect sizes than the lost ones, are shorter range, and many sit at Polycomb hubs that have lost their long-range partners.
-
-### Why K119ub_Only enhancers don't affect gene expression
-
-This one has real implications for the disease model. K119ub_Only enhancers (2,479 of them) accumulate K119ub but keep their H3K27ac. The contact weakening is real (median logFC = -0.054, p < 2.2e-16) but the RNA-seq concordance is 48.7% -- chance.
-
-Several possible explanations:
-
-1. **Threshold effect.** The 3.7% contact reduction simply isn't enough to change transcription. The enhancer-gene linkage has built-in robustness -- you need to weaken it substantially before the gene notices.
-
-2. **Redundancy.** Each gene has multiple enhancers. If one weakens slightly due to K119ub, others compensate. From the class-level summary: K119ub_Only enhancers have a median of 1 loop and a mean of 2.17, while Activity_Lost has mean 1.79. With multiple enhancers per gene, a slight weakening of one isn't enough.
-
-3. **Active marks still work.** H3K27ac is still there, ATAC accessibility is still there. The enhancer is still "on" -- it's just slightly less connected. The transcriptional machinery can still find and use it.
-
-4. **Developmental context matters.** In steady-state adult tissue, these K119ub_Only perturbations might be tolerable. During developmental transitions (like P12 to adult), where enhancers need to switch states, the inability to remove K119ub could be catastrophic. This would explain the temporal amplification.
+Already discussed above, but worth repeating because it comes up: the positive correlation between K119ub and loop strength at Polycomb sites is about which loops survive, not about K119ub helping. K119ub promotes local compaction (short-range, positive), but the long-range contacts that depend on higher-order Polycomb organization collapse (negative). Since the correlation includes all loops at Polycomb anchors and the short-range survivors outnumber the long-range losses in the remaining data, the aggregate rho is positive. It's a composition effect, not a mechanistic reversal.
 
 ### Why stripes don't change but loops do
 
-Stripes and loops both involve chromatin contacts, but they're generated by different mechanisms. Stripes arise from cohesin-mediated loop extrusion -- cohesin loads onto chromatin and extrudes loops until it hits CTCF barriers. This process is mechanical and doesn't depend on histone modifications. Loops, especially enhancer-promoter loops and Polycomb loops, depend on specific protein-protein interactions mediated by chromatin state.
+Both involve physical contacts, but they're generated by fundamentally different mechanisms. Stripes arise from cohesin extruding chromatin until it hits a CTCF barrier — a mechanical, motor-driven process that doesn't care about histone modifications. Loops that depend on specific protein-protein interactions mediated by chromatin state (enhancer-promoter loops, Polycomb loops) are sensitive to changes in those marks. BAP1 loss changes chromatin state; it doesn't change the extrusion machinery. The stripes being unaffected is a nice internal control — it confirms the loop changes are specifically about chromatin state perturbation, not some artifact of library quality or general compaction changes.
 
-BAP1 loss perturbs chromatin state (H2AK119ub accumulation -> downstream changes in H3K27me3, H3K27ac). This directly affects loops that depend on those marks but doesn't affect the extrusion machinery. The BCV for stripes was ~6-7% with zero significant calls -- we had good power and there was genuinely nothing to find.
+### The K119ub_Only threshold
 
-This is actually a nice internal control: it tells us the Hi-C data quality is good (stripes are reproducible) and that the loop changes we observe are specifically due to chromatin state perturbation, not some global artifact of BAP1 loss on chromatin compaction or Hi-C library quality.
+This is probably the most interesting biological finding from the ABC analysis for thinking about disease mechanism. The fact that K119ub accumulation alone produces real but sub-functional contact weakening means there's a buffer. Enhancers can tolerate some amount of K119ub accumulation without their target genes being affected, as long as the active marks stay. This predicts that the disease should be progressive — early perturbations are tolerated, and the phenotype only manifests when enough enhancers cross the threshold through secondary loss of active marks. That's consistent with the temporal progression from subtle early changes to massive late-stage dysregulation.
 
-### The HOMER motif enrichment pattern
+It also explains why the early timepoint is dominated by Polycomb-repressed sites rather than active enhancers. The active enhancers have this buffer; the Polycomb sites, which depend on K119ub cycling for their structural organization, don't. The buffered sites fail later.
 
-The motif analysis at enhancer subsets is informative:
+### Connecting it all
 
-- Activity_Lost enhancers: 369 of 450 motifs enriched (top = Olig2 at p = 1e-120). Massive motif enrichment suggests these enhancers have very specific regulatory grammar.
-- K119ub_Only enhancers: 357 of 450 motifs enriched (top = Atoh1 at p = 1e-41). Also highly enriched but less extreme than Activity_Lost.
-- Activity_Gain enhancers: only 30 of 450 motifs enriched (top = TCF4 at p = 1e-9). These are less motif-specific.
-- K119ub tertile comparison (high vs low): 0 significant motifs. K119ub dose doesn't select for specific TF binding sites.
+The chain, from cause to consequence, goes roughly like this: BAP1 is lost, so K119ub cycling stops. At active enhancers, K119ub accumulates and weakens E-P contacts; where the weakening is severe enough and active marks are secondarily lost, target genes go down. At Polycomb domains, loss of cycling destabilizes long-range contacts; the interaction budget redistributes locally, creating short-range gains. The net effect is loop rewriting. The loop changes propagate to TAD boundaries (merges and strengthening) and sum to compartment shifts. Stripes, which depend on a different structural mechanism entirely, are preserved.
 
-The Olig2 enrichment at Activity_Lost enhancers is interesting for a cerebellar context -- Olig2 is involved in glial and neuronal development. Atoh1 at K119ub_Only sites is a cerebellar granule cell specification factor. These are tissue-relevant TF binding sites being affected.
+The temporal dimension adds that this starts small and focused (P13: few loops, Polycomb-specific) and amplifies into a system-wide remodeling by adulthood (thousands of loops, all chromatin types, massive compartment shifts), consistent with a progressive regulatory cascade rather than an acute structural collapse.
 
-### How the different data types connect
-
-The chain runs like this:
-
-1. BAP1 is gone -> K119ub accumulates (DiffBind: 6,164 K119ub_up peaks)
-2. K119ub accumulation at active enhancers weakens E-P contacts (rho = -0.314 at active anchors; OR = 10.70 in logistic regression)
-3. K119ub accumulation at Polycomb domains disrupts long-range contacts while promoting local compaction (shared anchors: 83% directionality, Polycomb-enriched)
-4. Contact changes propagate to TAD boundaries (69.6% concordance, merges at lost sites, strengthening at gained sites)
-5. Aggregate effects shift compartments (7.5-22% of genome, net B->A)
-6. Where contact weakening is strong enough AND active marks are lost (Activity_Lost class), gene expression changes follow (61.9% concordance)
-7. Where contact weakening is weak and active marks persist (K119ub_Only class), gene expression is unaffected (48.7%, chance)
-8. Three-way concordance at geometrically constrained enhancer-gene pairs: 88.2%
-
-The temporal dimension adds that this cascade starts small (165 differential loops at P12, concentrated at Repressed_Promoter sites) and amplifies massively by adulthood (2,910 loops, broad chromatin type involvement, 44% compartment shifts), consistent with a progressive regulatory breakdown rather than an acute event.
-
----
-
-## Key loci
-
-- **Syt1/Nav3** (chr10): The most impacted region in the data. Essentially collapsed by P60.
-- **Apaf1** (chr10): The only significant stripe change -- an apoptosis regulator gaining a stripe in mutant. Interesting given the neurodegeneration phenotype.
-- **Zbtb20**: Lost loop at Active_Promoter-Active_Enhancer (logFC = -0.389, FDR < 1e-24 for RNA), one of the stronger DEG-loop associations.
-- **Nfib**: Second-highest combined structural score, lost loops, -0.57 log2FC RNA.
-- **Tgfbr1**: Gained loops + boundary change + ABC change -- a 3-layer hit.
-- **Col15a1**: Strongest ABC effect (delta unnorm = 3.86), multi-layer disruption.
-
----
-
-## Numbers to have in your head
-
-- 2,910 differential loops at adult (1,723 gained, 1,187 lost)
-- 165 at P12 (18x amplification)
-- Lost median 625kb, gained median 320kb (1.95x ratio)
-- >1 Mb loops: 3.3x enriched for loss
-- K119ub OR for predicting loop loss: 10.70
-- Active anchor K119ub-loop correlation: rho = -0.314
-- Polycomb anchor K119ub-loop correlation: rho = +0.177
-- 212 shared anchor hubs, 83% directionality
-- TAD boundaries: 16-20% differential, 69.6% directional concordance with loops
-- Compartments: ~7.5% (standard) to ~22-24% (relaxed) of genome shifted at both timepoints
-- Stripes: 0 significant
-- ABC 3-way concordance: 88.2% with geometric constraint
-- Activity_Lost concordance: 61.9%; K119ub_Only: 48.7% (chance)
-- Unnormalized DABC-RNA rho: 0.582
-- 457 DEGs at loop anchors
-- K119ub at paired enhancers: rho = -0.401
+The abstract puts it well: BAP1 loss collapses long-range developmental loops and replaces them with more proximal contacts, resulting in dysregulation of synaptic and developmental genes. That's the one-sentence version.
