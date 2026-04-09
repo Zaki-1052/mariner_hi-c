@@ -16,7 +16,7 @@ The most immediate finding is that BAP1 loss causes widespread loop dysregulatio
 
 Long-range loops are preferentially lost. Loops spanning more than a megabase are heavily enriched for weakening in the mutant. Short-to-mid-range loops, on the other hand, are preferentially gained. The median distance of lost loops is about twice the median distance of gained loops. This is highly significant statistically and holds up across every test you throw at it.
 
-We call this "loop rewriting" because the genome isn't just losing contacts or gaining contacts — it's replacing one type with another. Long developmental contacts are being swapped out for shorter, more local ones. The loop distance shift is really the central structural observation of the whole project.
+The genome isn't just losing contacts or gaining contacts — it's replacing one type with another. Long developmental contacts are being swapped out for shorter, more local ones. The loop distance shift is really the central structural observation of the whole project.
 
 ### The shared anchor phenomenon
 
@@ -74,7 +74,7 @@ But they're not just passive bystanders either. The TAD boundary changes that do
 
 The specific types of boundary changes are mechanistically informative. Merge boundaries (two TADs fusing) are heavily enriched near lost loops — when a long-range loop collapses, the TAD boundary it spanned becomes unnecessary, and the two domains merge. Strength-change boundaries are enriched near gained loops — the new shorter-range contacts densify local structure. Split boundaries are also enriched near gained loops. So the TAD-level story is: loops collapse, TADs merge where the loops were; loops gain locally, TADs densify or subdivide.
 
-This provides the intermediate-scale link between loop rewriting and compartment shifts. The loops change, the TADs respond by reorganizing their domain structure, and the aggregate effect of all of this shows up as compartment shifts.
+This provides the intermediate-scale link between the loop-level distance shift and compartment shifts. The loops change, the TADs respond by reorganizing their domain structure, and the aggregate effect of all of this shows up as compartment shifts.
 
 ### Stripes
 
@@ -132,7 +132,7 @@ It also explains why the early timepoint is dominated by Polycomb-repressed site
 
 ### Connecting it all
 
-The chain, from cause to consequence, goes roughly like this: BAP1 is lost, so K119ub cycling stops. At active enhancers, K119ub accumulates and weakens E-P contacts; where the weakening is severe enough and active marks are secondarily lost, target genes go down. At Polycomb domains, loss of cycling destabilizes long-range contacts; the interaction budget redistributes locally, creating short-range gains. The net effect is loop rewriting. The loop changes propagate to TAD boundaries (merges and strengthening) and sum to compartment shifts. Stripes, which depend on a different structural mechanism entirely, are preserved.
+The chain, from cause to consequence, goes roughly like this: BAP1 is lost, so K119ub cycling stops. At active enhancers, K119ub accumulates and weakens E-P contacts; where the weakening is severe enough and active marks are secondarily lost, target genes go down. At Polycomb domains, loss of cycling destabilizes long-range contacts; the interaction budget redistributes locally, creating short-range gains. The net effect is long-range contacts collapsing and being replaced by shorter-range ones. The loop changes propagate to TAD boundaries (merges and strengthening) and sum to compartment shifts. Stripes, which depend on a different structural mechanism entirely, are preserved.
 
 The temporal dimension adds that this starts small and focused (P13: few loops, Polycomb-specific) and amplifies into a system-wide remodeling by adulthood (thousands of loops, all chromatin types, massive compartment shifts), consistent with a progressive regulatory cascade rather than an acute structural collapse.
 

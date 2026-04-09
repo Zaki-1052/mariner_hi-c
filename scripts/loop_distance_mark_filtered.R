@@ -7,7 +7,7 @@
 #   - One-anchor: at least one anchor overlaps the mark
 #   - Both-anchors: both anchors overlap the mark (e.g., super-enhancer for H3K27ac)
 #
-# Supported marks: H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent, CTCF
+# Supported marks: H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent, CTCF, K119Ub
 #
 # Usage:
 #   Rscript scripts/loop_distance_mark_filtered.R                          # All marks, late
@@ -34,6 +34,7 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(ggplot2)
   library(scales)
+  library(GenomicRanges)
 })
 
 source("scripts/utils/multi_format_output.R")
@@ -86,6 +87,15 @@ MARK_CONFIG <- list(
     display_name = "CTCF",
     biological_role = "CTCF/Cohesin Anchor (Loop Extrusion)",
     dir_name = "ctcf"
+  ),
+  K119Ub = list(
+    col1 = "anchor1_K119Ub_overlap",
+    col2 = "anchor2_K119Ub_overlap",
+    display_name = "H2AK119Ub",
+    biological_role = "PRC1 Ubiquitination (Polycomb Repression)",
+    dir_name = "k119ub",
+    peak_file = "peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt",
+    compute_on_fly = TRUE
   )
 )
 
@@ -137,7 +147,7 @@ parse_arguments <- function() {
       cat("Options:\n")
       cat("  --timepoint TP   Timepoint: 'early', 'late', or 'both' (default: late)\n")
       cat("  --marks MARKS    Marks to analyze: 'all' or comma-separated list\n")
-      cat("                   Available: H3K27ac,H3K27me3,H3K4me1,H3K4me3,Bivalent,CTCF\n")
+      cat("                   Available: H3K27ac,H3K27me3,H3K4me1,H3K4me3,Bivalent,CTCF,K119Ub\n")
       cat("                   (default: all)\n")
       cat("  --help, -h       Show this help message\n\n")
       cat("Output:\n")
@@ -189,6 +199,51 @@ if (args_parsed$marks == "all") {
 
 cat("Timepoint(s) to process:", paste(TIMEPOINTS_TO_RUN, collapse = ", "), "\n")
 cat("Mark(s) to analyze:", paste(MARKS_TO_RUN, collapse = ", "), "\n\n")
+
+# ==============================================================================
+# SECTION 3b: ON-THE-FLY OVERLAP COMPUTATION
+# ==============================================================================
+
+#' Compute anchor overlap columns from a peak file (DiffBind format)
+#' Used for marks not pre-computed in extended_characterized_loops.tsv
+#'
+#' @param loops_df Data frame with chr1, start1, end1, chr2, start2, end2 columns
+#' @param peak_file Path to DiffBind results file (with Peak_Chr, Peak_Start, Peak_End)
+#' @param col1_name Name for anchor1 overlap column
+#' @param col2_name Name for anchor2 overlap column
+#' @return loops_df with two new logical overlap columns added
+compute_overlap_from_peaks <- function(loops_df, peak_file, col1_name, col2_name) {
+  cat(sprintf("  Computing %s overlaps from: %s\n", col1_name, peak_file))
+
+  # Read DiffBind peak coordinates
+  peaks_raw <- read.delim(peak_file, stringsAsFactors = FALSE)
+  peaks_gr <- GRanges(
+    seqnames = peaks_raw$Peak_Chr,
+    ranges = IRanges(start = peaks_raw$Peak_Start, end = peaks_raw$Peak_End)
+  )
+  cat(sprintf("  Loaded %d peaks for overlap computation\n", length(peaks_gr)))
+
+  # Build GRanges for each anchor
+  anchor1_gr <- GRanges(
+    seqnames = loops_df$chr1,
+    ranges = IRanges(start = loops_df$start1, end = loops_df$end1)
+  )
+  anchor2_gr <- GRanges(
+    seqnames = loops_df$chr2,
+    ranges = IRanges(start = loops_df$start2, end = loops_df$end2)
+  )
+
+  # Compute overlaps
+  loops_df[[col1_name]] <- countOverlaps(anchor1_gr, peaks_gr) > 0
+  loops_df[[col2_name]] <- countOverlaps(anchor2_gr, peaks_gr) > 0
+
+  n1 <- sum(loops_df[[col1_name]])
+  n2 <- sum(loops_df[[col2_name]])
+  cat(sprintf("  Anchor1 overlaps: %d (%.1f%%), Anchor2 overlaps: %d (%.1f%%)\n",
+              n1, 100 * n1 / nrow(loops_df), n2, 100 * n2 / nrow(loops_df)))
+
+  loops_df
+}
 
 # ==============================================================================
 # SECTION 4: HELPER FUNCTIONS
@@ -503,6 +558,7 @@ run_mark_analysis <- function(timepoint, mark_name, mark_config, loops_direction
                          "H3K4me3" = "Promoter-Promoter",
                          "Bivalent" = "Bivalent-Bivalent",
                          "CTCF" = "CTCF-CTCF",
+                         "K119Ub" = "PRC1-PRC1",
                          "Both Anchors")
 
     subset_name_both <- sprintf("%s Loops (Both Anchors = %s)",
@@ -584,6 +640,26 @@ run_timepoint_analysis <- function(timepoint) {
   cat("Directional loops:", nrow(loops_directional), "\n")
   cat("  - Lost (down_in_mutant):", sum(loops_directional$direction == "down_in_mutant"), "\n")
   cat("  - Gained (up_in_mutant):", sum(loops_directional$direction == "up_in_mutant"), "\n\n")
+
+  # ==========================================================================
+  # Step 1b: Compute on-the-fly overlaps for marks without pre-computed columns
+  # ==========================================================================
+
+  for (mark_name in MARKS_TO_RUN) {
+    mc <- MARK_CONFIG[[mark_name]]
+    if (isTRUE(mc$compute_on_fly) &&
+        (!mc$col1 %in% names(loops_directional) || !mc$col2 %in% names(loops_directional))) {
+      cat(sprintf("Computing on-the-fly overlaps for %s...\n", mc$display_name))
+      if (!file.exists(mc$peak_file)) {
+        cat(sprintf("  WARNING: Peak file not found: %s. Skipping %s.\n", mc$peak_file, mark_name))
+        next
+      }
+      loops_directional <- compute_overlap_from_peaks(
+        loops_directional, mc$peak_file, mc$col1, mc$col2
+      )
+      cat("\n")
+    }
+  }
 
   # ==========================================================================
   # Step 2: Run analysis for each mark

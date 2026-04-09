@@ -153,7 +153,7 @@ Priority-based classification using 5 histone marks + CTCF DNA motifs (114,081 g
 
 ---
 
-## 5. Loop Distance Shift ("Loop Rewriting")
+## 5. Loop Distance Shift
 
 BAP1-KO preferentially loses long-range loops and gains shorter-range loops.
 
@@ -543,7 +543,7 @@ The following numbers are from abc/docs/ analysis documentation generated during
 | **Differential Loops (Early)** | Non-redundant | 165 | " |
 | | Up | 73 (44.2%) | " |
 | | Down | 92 (55.8%) | " |
-| **Loop Rewriting** | Median distance lost/gained | 625 kb / 320 kb (1.95x) | distance_shift_statistics.txt |
+| **Loop Distance Shift** | Median distance lost/gained | 625 kb / 320 kb (1.95x) | distance_shift_statistics.txt |
 | | >1Mb lost enrichment | 3.31x | 2B_late_distance_shift_summary.tsv |
 | **Shared Anchors** | Hub regions | 212 | shared_anchors.tsv |
 | | Direction support | 83.0% | shared_anchor_paired_distance.tsv |
