@@ -1,0 +1,276 @@
+ ▐▛███▜▌   Claude Code v2.1.98
+▝▜█████▛▘  Opus 4.6 (1M context) · Claude Max
+  ▘▘ ▝▝    ~/Documents/GitHub/mariner_hi-c
+
+❯ anything relevant in this paper to our work? @nihpp-2025.03.23.644697v1.pdf   
+  might be stuff in @biomodal/                                                  
+  ⎿  Referenced PDF nihpp-2025.03.23.644697v1.pdf (102 pages)
+  ⎿  Listed directory biomodal/
+
+⏺ Let me read the paper and explore the biomodal directory in parallel.
+
+  Read 2 files, listed 1 directory (ctrl+o to expand)
+
+⏺ This is a big paper from the Ecker/Dixon labs. Let me read more to find the
+  sections most relevant to your BAP1/methylation/Hi-C work.
+
+  Read 2 files, listed 2 directories (ctrl+o to expand)
+
+⏺ Now let me check the biomodal concordance analysis and non-CG work to map
+  specific connections.
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ OK, I've read the core of the paper (Zhou, Wu, Liu et al. 2025 - "Human Body
+  Single-Cell Atlas of 3D Genome Organization and DNA Methylation") and
+  cross-referenced it with your biomodal and Hi-C work. Here's what's relevant:
+
+  ---
+  High relevance
+
+  1. Methylation and 3D genome are partially independent (Fig 5I, Fig 6)
+
+  This is probably the most important finding for your project. The paper shows
+  that DNA methylation and chromatin looping don't always co-vary across cell 
+  types -- in some lineages (especially those with PMDs), there's weak
+  correlation between DMRs and differential loops (Fig 5I). They go further in
+  Fig 6 to show that mCG-based clustering and chromatin contact-based clustering
+   can assign cells to different subtypes (skeletal muscle, placenta examples).
+
+  Why this matters for you: Your key-takeaways.md question #5 asks "How does the
+   methylation story connect to the loop story?" This paper provides a
+  framework: they may be parallel consequences of the same upstream perturbation
+   (H2AK119ub accumulation) rather than one causing the other. Your discordant
+  gene analysis already showed that loop-anchored genes behave differently (3x
+  enrichment at loops, opposite K119ub direction). The paper's finding that
+  methylation may reflect maturation history while 3D genome reflects current 
+  cell state is an interesting lens for your BAP1-KO model.
+
+  2. Non-CG methylation is pervasive, not neuron-specific (Fig 3)
+
+  Major finding: mCH exists at low levels across nearly all cell types, not just
+   neurons. They show:
+  - Enrichment in specific trinucleotide contexts (CAC, CTC most prominent in
+  non-neuronal cells)
+  - mCH patterns are non-random and cell-type-specific -- can distinguish cell
+  types even in non-neuronal tissues
+  - mCH is depleted at cCREs across all lineages, suggesting functional
+  relevance
+
+  Why this matters for biomodal/non_cg_analysis/: Your non-CG analysis comparing
+   EM-seq vs evoC in cerebellum is well-placed. The paper validates that your
+  CHG/CHH signals aren't just noise. But it also suggests you should look at
+  trinucleotide context specificity -- your non_cg_methylation.py treats CHG and
+   CHH as aggregate categories, but the paper shows that within those, specific
+  trinucleotides (especially CA-containing) carry the most signal. Your
+  ca_filter.py seems to already be going in this direction.
+
+  3. DMRs enriched at loop anchors + motif analysis (Fig 5H)
+
+  They explicitly tested motif enrichment at loop-associated DMRs versus
+  non-loop DMRs and found lineage-specific TFs. CTCF was enriched at loop
+  anchors in all major types. They also found IRF2 and ISRE in immune lineages
+  and GATA factors in trophoblasts.
+
+  Why this matters: You could directly replicate this analysis -- overlay your
+  biomodal DMRs onto your mariner differential loop anchors. Your concordance
+  analysis already found that discordant genes (mC down/hmC up) are 3x enriched
+  at loops. The paper's approach of k-means clustering loop-DMR pairs (Fig 5H)
+  and then running motif enrichment per cluster could reveal which TFs are
+  driving the differential behavior at loop-anchored vs non-loop loci in your
+  BAP1-KO.
+
+  4. Methylation compartments are finer-grained than Hi-C compartments (Fig 
+  5C-E)
+
+  They define "DNA methylation compartments" from 10kb-resolution mCG data that
+  map to, but subdivide, the traditional A/B compartments from Hi-C (100kb). The
+   partially methylated compartment consistently maps to B compartment, but
+  provides more granularity.
+
+  Why this matters: Your compartment/TAD analysis (tad_analysis/) uses HOMER's
+  PC1 at relatively coarse resolution. The paper argues that methylation-based
+  compartmentalization is higher resolution and can reveal fine-grained
+  compartment transitions that Hi-C misses. Your biomodal DUET data, with its
+  6bp resolution methylation, could in principle provide this kind of
+  fine-grained compartment annotation -- a complementary view to your Hi-C
+  compartment analysis.
+
+  ---
+  Moderate relevance
+
+  5. 283,606 differential chromatin loops identified (Fig 4E)
+
+  They found differential loops are shared among related cell types in clusters
+  (fibroblasts, epithelial, neurons, hematopoietic). Loops in A-compartment
+  regions are more lineage-specific. They used ANOVA-based F-statistics with
+  FDR<0.05 for differential loop calling -- different from your edgeR
+  quasi-likelihood GLM but conceptually similar.
+
+  Useful as: A reference for loop variability baseline. If any of the 35 cell
+  types they profiled are relevant to cerebellum (neurons especially), you could
+   compare your BAP1-KO differential loops against their normal neuronal loop
+  catalog.
+
+  6. Compartment-dominant vs domain-dominant phenotypes (Fig 4A-C)
+
+  Neurons are the most domain-dominant (stronger short-range interactions,
+  weaker compartmentalization). Hematopoietic lineages are most
+  compartment-dominant. This is consistent with your observation of Polycomb
+  loop collapse in BAP1-KO -- if BAP1 loss disrupts long-range Polycomb loops,
+  it could shift cells from domain-dominant toward a more mixed phenotype.
+
+  7. mCH at gene bodies anticorrelated with expression in neurons (Fig 3H)
+
+  In neurons specifically, mCH in gene bodies is negatively correlated with
+  expression, and this relationship varies by lineage. In endocrine pancreas,
+  the relationship is different (anticorrelated downstream of TSS but positively
+   correlated upstream).
+
+  Relevant because: Your biomodal data is from cerebellum (high 5hmC, high mCH).
+   The paper's nuanced treatment of how mCH-expression relationships vary by
+  tissue context is important for interpreting your non-CG findings. The paper
+  also notes that MeCP2 binding is influenced by mCH levels -- and your
+  concordance analysis already tracks MeCP2.
+
+  ---
+  Lower relevance but worth noting
+
+  - PMDs on a continuum (Fig 2C-E): PMDs aren't binary but vary in degree across
+   cell types. The "partially methylated compartment" concept could help
+  interpret your biomodal global methylation patterns.
+  - APA methodology (Methods, Fig S20D): They do APA on single-cell differential
+   loops at 10kb resolution with +/-100kb flanking -- validates your
+  apa_analysis.R approach.
+  - Human, not mouse: The paper is all human (hg38). Your data is mouse (mm10).
+  Direct comparisons of specific loci won't work, but the conceptual framework
+  and methodological approaches transfer.
+
+  ---
+  Bottom line
+
+  The paper's central insight -- that methylation and 3D genome organization can
+   diverge and may reflect different timescales of cellular identity -- is
+  directly relevant to your core question of how BAP1 loss affects both
+  modalities simultaneously. It gives you a framework to argue that your
+  coordinated mC/hmC changes and your differential loop changes may stem from
+  the same upstream cause (H2AK119ub accumulation, chromatin compaction) while
+  operating through partially independent downstream mechanisms.
+
+  The non-CG findings also validate your non_cg_analysis/ work and suggest
+  looking at trinucleotide-level context specificity rather than just aggregate
+  CHG/CHH.
+
+  Worth citing in your eventual writeup, especially Fig 5I (loop-DMR correlation
+   variability), Fig 6 (methylation vs 3D genome discrepancies), and the non-CG
+  discussion.
+
+✻ Sautéed for 3m 4s
+
+❯ anything about (granule or just general) neurons?                             
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Let me search the remaining supplementary pages for neuron-specific data.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Here's what the paper has on neurons specifically:
+
+  No cerebellum, no granule neurons. The only brain tissue is primary motor 
+  cortex (2 donors, from the BRAIN Initiative Cell Census Network). The neuronal
+   subtypes are all cortical:
+  - Neu Exc: IT L2/3 (5 subtypes), IT L4, IT L5, IT L6, CT L6, ET L5/6, NP
+  - Neu Inh: PVALB (2 subtypes), SST (3 subtypes), VIP (2 subtypes), LAMP5
+
+  So no granule neurons, no Purkinje neurons, no cerebellum at all. That said,
+  there are several neuron-specific findings worth knowing:
+
+  3D genome: Neurons are uniquely domain-dominant
+
+  - Neurons have the strongest short-range interactions and weakest 
+  compartmentalization of any cell type (Fig 4A-C, Fig S19). They're at one
+  extreme of a "compartment-dominant ↔ domain-dominant" spectrum.
+  - They have the most and longest chromatin loops (Fig 4D, Fig S20A).
+  - The paper speculates this could relate to cohesin-mediated loop extrusion --
+   neurons may have more active loop extrusion and weaker heterochromatin,
+  reducing compartment segregation.
+
+  Relevance to your Hi-C: If BAP1 loss causes chromatin compaction and H2AK119ub
+   spreading, it could shift neurons away from this domain-dominant phenotype
+  toward something more compartment-dominant (stronger A/B segregation, weaker
+  loops). That would be consistent with your observation of Polycomb loop
+  collapse -- losing long-range loops while strengthening local compartment
+  interactions.
+
+  mCH: Neurons are the outlier in every analysis
+
+  - Neurons have 10-50x more mCH than any other cell type (Fig 3A). The paper
+  confirms this is real (not bisulfite artifact) via lambda phage spike-in
+  controls (Fig S14A).
+  - CAA and CTC are the dominant contexts in neurons (Fig S14B), but
+  non-neuronal cells also show low-level mCH enriched in these same contexts.
+  - mCH distinguishes neuronal subtypes cleanly -- IT L2/3, SST, PVALB, LAMP5
+  all separate by mCH alone (Fig S17).
+  - mCH in gene bodies is negatively correlated with expression in neurons (Fig
+  3H, Fig S18B), consistent with the MeCP2-mediated repression model. But the
+  paper notes this relationship varies across subtypes even within excitatory
+  neurons.
+
+  Relevance to biomodal: Your cerebellum data should show even higher mCH than
+  these cortical neurons (Purkinje neurons have the highest documented mCH in
+  any mammalian cell type). The paper's finding that mCH-expression
+  relationships vary by neuronal subtype is important -- you can't assume
+  cortical patterns extrapolate to cerebellar granule neurons.
+
+  The critical neuron exception: Methylation ≠ compartments
+
+  This is the most important neuron finding for your project:
+
+  - In most cell types, mCG positively correlates with compartment score (high
+  mCG = A compartment = active). In neurons, the correlation is negative (Fig
+  S21A-B): Neu Inh r = -0.286, Neu Exc r = -0.249.
+  - Similarly, mCH negatively correlates with compartment score only in neurons
+  (Fig 5B) -- neurons have enriched mCH in B-compartment regions.
+  - The paper explicitly states that neurons and glia are excluded from the
+  compartment score vs PMD density comparison (Fig 5E) because the relationship
+  breaks down.
+
+  Why this matters: In your BAP1-KO cerebellum, you're trying to connect
+  methylation changes to 3D genome changes. This paper is saying that in neurons
+   specifically, the normal rules about methylation tracking with compartments
+  don't apply. The methylation-3D genome relationship in neurons operates
+  differently from every other cell type. This makes it even harder to predict
+  how BAP1-mediated chromatin compaction would affect methylation in your system
+   -- and potentially even more interesting that you see coordinated changes at
+  all.
+
+  DMRs at loops: Neurons are split
+
+  From Fig S22:
+  - Neu Inh shows moderate-strong enrichment of DMRs at differential loop
+  anchors
+  - Neu Exc shows lower enrichment
+  - In the loop-DMR correlation analysis (Fig S23), Neu Inh shows one of the
+  strongest negative correlations -- loop gains correspond to methylation loss
+  at those loci
+
+  This is consistent with your finding that discordant genes (mC down) are 3x
+  enriched at loop anchors. In neurons, the loop-methylation relationship
+  appears to be: more looping = less methylation at those sites.
+
+  Bottom line
+
+  The paper has rich cortical neuron data but nothing on cerebellum. The most
+  citable finding for your work is that neurons are exceptional -- they break
+  the methylation-compartment relationship seen in every other cell type,
+  they're the most domain-dominant lineage, and they show the strongest
+  anticorrelation between loops and DMRs. This reinforces that your BAP1-KO
+  cerebellum system, where both modalities change coordinately, is operating in
+  a unique biological context where the normal rules may not apply.
+
+✻ Brewed for 1m 38s
+
+❯ /copy                                                                         
+  ⎿  Copied to clipboard (4835 characters, 47 lines)
+     Also written to /tmp/claude/response.md
