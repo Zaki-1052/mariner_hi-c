@@ -1,0 +1,92 @@
+CpG ISLAND / GC CONTENT ANALYSIS AT CTCF-ANCHORED LOOP ANCHORS
+================================================================
+Date: 2026-04-12 22:33:52.513763
+
+MOTIVATION:
+-----------
+  Jesse Dixon (04/10/26) connected lost CTCF-CTCF loop length asymmetry
+  to Brad Bernstein's IDH mutant glioma work (repressive chromatin disrupts
+  CTCF binding at CpG-rich regions). This analysis tests whether CpG islands
+  and GC content differ at CTCF anchors of lost vs gained loops.
+
+INPUT DATA:
+-----------
+  Loops: peaks/loop_annotation_extended/late/extended_characterized_loops.tsv (2910 loops)
+  CpG islands: biomodal/downstream/modality/mm10/gencode.vM25.mouse.cpg_islands.annotation.bed (15997 islands on standard chroms)
+  CTCF peaks: peaks/CTCF.bed (32474 peaks)
+
+LOOP SUBSETS:
+-------------
+  CTCF-CTCF (both anchors ChIP+): 443 lost, 1024 gained
+  Any-CTCF (>=1 anchor ChIP+):    890 lost, 1568 gained
+  Unique anchors (ChIP):          1085 lost, 2192 gained
+
+CpG ISLAND OVERLAP RATES:
+-------------------------
+  CTCF-CTCF lost:   34.3% (152/443)
+  CTCF-CTCF gained: 31.2% (319/1024)
+  Any-CTCF lost:    39.0% (347/890)
+  Any-CTCF gained:  33.5% (526/1568)
+
+FISHER'S EXACT TESTS (CpG island enrichment, lost vs gained):
+--------------------------------------------------------------
+  CTCF-CTCF_lost vs CTCF-CTCF_gained [ChIP-seq]: OR=1.15 [0.90-1.47], p=2.47e-01, FDR=2.47e-01 (ns)
+  Any-CTCF_lost vs Any-CTCF_gained [ChIP-seq]: OR=1.27 [1.06-1.51], p=7.46e-03, FDR=1.12e-02 ** enriched **
+  CTCF_anchor_lost vs CTCF_anchor_gained [ChIP-seq]: OR=1.53 [1.28-1.84], p=2.90e-06, FDR=8.69e-06 ** enriched **
+  Motif-CTCF_lost vs Motif-CTCF_gained [motif]: OR=1.32 [1.05-1.65], p=1.34e-02, FDR=1.61e-02 ** enriched **
+  Any-motif_lost vs Any-motif_gained [motif]: OR=1.35 [1.14-1.60], p=5.08e-04, FDR=1.02e-03 ** enriched **
+  Motif_anchor_lost vs Motif_anchor_gained [motif]: OR=1.68 [1.41-2.00], p=4.14e-09, FDR=2.49e-08 ** enriched **
+
+DISTANCE-STRATIFIED FISHER'S TESTS (CTCF-CTCF loops):
+------------------------------------------------------
+  <200kb: OR=1.51, p=1.65e-01, FDR=3.30e-01, lost 37.3% vs gained 28.2%
+  200-500kb: OR=1.01, p=1.00e+00, FDR=1.00e+00, lost 33.7% vs gained 33.5%
+  500kb-1Mb: OR=0.78, p=4.31e-01, FDR=5.75e-01, lost 27.2% vs gained 32.4%
+  >1Mb: OR=1.45, p=1.62e-01, FDR=3.30e-01, lost 37.6% vs gained 29.2%
+
+GC CONTENT AT CTCF ANCHORS:
+---------------------------
+  Lost CTCF anchors:   median=0.429 [IQR 0.402-0.459] (n=1085)
+  Gained CTCF anchors: median=0.451 [IQR 0.423-0.483] (n=2192)
+  All CTCF peaks:      median=0.506 [IQR 0.459-0.554] (n=32474, baseline)
+
+WILCOXON RANK-SUM TEST (GC content, lost vs gained):
+----------------------------------------------------
+  Overall: W=842946, p=5.05e-42, effect size r=0.237
+
+  Distance-stratified:
+    <200kb: lost 0.442 vs gained 0.473, p=1.48e-15, FDR=5.91e-15
+    200-500kb: lost 0.435 vs gained 0.448, p=4.78e-06, FDR=9.55e-06
+    500kb-1Mb: lost 0.425 vs gained 0.435, p=5.70e-03, FDR=7.60e-03
+    >1Mb: lost 0.421 vs gained 0.430, p=3.72e-02, FDR=3.72e-02
+
+INTERPRETATION:
+---------------
+  - OR > 1 means CpG islands are more common at LOST loop anchors
+  - OR < 1 means CpG islands are more common at GAINED loop anchors
+  - If distance-stratified tests lose significance, the CpG/GC effect
+    is confounded with loop distance (lost loops are ~2.5x longer)
+  - If significant within distance bins, the effect is independent of length
+  - Bernstein IDH prediction: lost anchors enriched for CpG islands (OR > 1)
+
+CAVEATS:
+--------
+  - CTCF ChIP-seq peaks are from reference (not differential binding)
+  - CpG islands defined by UCSC/GENCODE annotation (not methylation state)
+  - Anchor width is 5-25kb depending on resolution; CpG islands are ~1kb
+  - ChIP-seq based CTCF definition used (not motifs); 81% of motifs are unbound
+
+OUTPUT FILES:
+-------------
+  tables/cpg_overlap_summary.tsv
+  tables/fisher_test_results.tsv
+  tables/fisher_test_distance_stratified.tsv
+  tables/gc_content_summary.tsv
+  tables/wilcoxon_test_results.tsv
+  tables/ctcf_anchors_annotated.tsv
+  plots/01_cpg_overlap_barplot/{pdf,svg,jpg}
+  plots/02_cpg_enrichment_forest/{pdf,svg,jpg}
+  plots/03_gc_content_boxplot/{pdf,svg,jpg}
+  plots/04_gc_content_density/{pdf,svg,jpg}
+  plots/05_cpg_by_distance/{pdf,svg,jpg}
+  plots/06_gc_vs_distance_scatter/{pdf,svg,jpg}
