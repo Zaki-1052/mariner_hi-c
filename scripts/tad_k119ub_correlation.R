@@ -8,7 +8,7 @@
 #   - data/upstream/diffbind/K119ub_diffbind_results_summit_appended_ap.txt
 #
 # Output:
-#   - outputs/tad_k119ub_analysis/ (plots + annotated TSV + statistics)
+#   - output/tad_k119ub_analysis/ (plots + annotated TSV + statistics)
 #
 # Usage:
 #   Rscript scripts/tad_k119ub_correlation.R
@@ -35,7 +35,7 @@ source("scripts/utils/multi_format_output.R")
 TAD_FILE <- "data/tsvs/figure_1_tads_boundaries_compartments/1B_late_tad_all_annotated.tsv"
 UB_FILE  <- "data/upstream/diffbind/K119ub_diffbind_results_summit_appended_ap.txt"
 
-OUTPUT_DIR <- "outputs/tad_k119ub_analysis"
+OUTPUT_DIR <- "output/tad_k119ub_analysis"
 dir.create(OUTPUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # Significance thresholds
@@ -316,7 +316,7 @@ if (nrow(sig_inc) >= 5 && nrow(sig_dec) >= 5) {
              yend = max(sig_tads$peak_density) * 0.88,
              color = "black", linewidth = 0.5) +
     labs(
-      title = "K119ub Peak Density — Significant TADs",
+      title = "K119ub Peak Density - Significant TADs",
       subtitle = sprintf("FDR < %.2f (n = %d increased, %d decreased)",
                          TAD_FDR_THRESHOLD, nrow(sig_inc), nrow(sig_dec)),
       x = "TAD Interaction Density",
@@ -347,7 +347,7 @@ if (nrow(sig_inc) >= 5 && nrow(sig_dec) >= 5) {
                yend = max(sig_fold_data$mean_ub_fold) * 0.88,
                color = "black", linewidth = 0.5) +
       labs(
-        title = "Mean K119ub Fold Change — Significant TADs",
+        title = "Mean K119ub Fold Change - Significant TADs",
         subtitle = sprintf("FDR < %.2f (n = %d increased, %d decreased)",
                            TAD_FDR_THRESHOLD, nrow(sig_inc_fold), nrow(sig_dec_fold)),
         x = "TAD Interaction Density",

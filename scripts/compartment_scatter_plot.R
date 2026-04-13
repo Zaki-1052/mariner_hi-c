@@ -11,7 +11,7 @@
 # Usage:
 #   Rscript scripts/compartment_scatter_plot.R
 #   Rscript scripts/compartment_scatter_plot.R path/to/compartment_annotated.tsv
-#   Rscript scripts/compartment_scatter_plot.R --output outputs/custom_dir/
+#   Rscript scripts/compartment_scatter_plot.R --output output/custom_dir/
 #   Rscript scripts/compartment_scatter_plot.R --n-labels 20
 
 # =============================================================================
