@@ -647,12 +647,13 @@ create_distance_violin_plot <- function(shared_result) {
   p <- ggplot(plot_data, aes(x = direction_label, y = loop_distance / 1e6, fill = direction_label)) +
     geom_violin(alpha = 0.7, trim = FALSE, color = "black", linewidth = 0.5) +
     geom_boxplot(width = 0.15, fill = "white", outlier.shape = NA, color = "black", linewidth = 0.5) +
+    scale_y_log10(labels = scales::label_number(suffix = "")) +
     scale_fill_manual(values = c("Lost" = "#4575b4", "Gained" = "#d73027")) +
     labs(
       title = "Loop Distance at Shared Anchors",
       subtitle = sprintf("Mann-Whitney p = %.2e (lost > gained)", test_result$p.value),
       x = NULL,
-      y = "Loop Distance (Mb)"
+      y = "Loop Distance (Mb, log scale)"
     ) +
     theme_classic(base_size = 12) +
     theme(
