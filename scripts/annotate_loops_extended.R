@@ -580,8 +580,9 @@ annotate_loops_extended <- function(
   # 10a. Side-by-side pie charts
   create_loop_type_piechart_comparison(loops_df, output_dir)
 
-  # 10b. Anchor type bar chart
+  # 10b. Anchor type bar chart (per-anchor + combined-anchor variants)
   create_anchor_type_barplot(loops_df, output_dir)
+  create_anchor_type_barplot_combined(loops_df, output_dir)
 
   # 10c. Loop type by direction bar chart
   create_loop_type_direction_barplot(loops_df, output_dir)
