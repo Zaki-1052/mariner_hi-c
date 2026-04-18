@@ -621,7 +621,7 @@ create_paired_scatter_plot <- function(distance_result) {
 #' Create distance violin plot for shared anchors
 #' @param shared_result Result from identify_shared_anchors
 #' @return ggplot object
-create_distance_violin_plot <- function(shared_result) {
+create_distance_violin_plot <- function(shared_result, lost_color = "#d73027", gained_color = "#4575b4") {
   # Combine lost and gained at shared anchors
   lost_data <- shared_result$lost_at_shared %>%
     dplyr::select(loop_id, loop_distance, direction) %>%
@@ -659,9 +659,8 @@ create_distance_violin_plot <- function(shared_result) {
   # Annotate max y for n label placement on log scale
   y_top <- max(plot_data$loop_distance, na.rm = TRUE) / 1e6
 
-  # Swap colors: Lost=red, Gained=blue (better visual mapping)
   fill_vals <- setNames(
-    c("#d73027", "#4575b4"),
+    c(lost_color, gained_color),
     c(sprintf("Lost\n(n = %d)", n_lost),
       sprintf("Gained\n(n = %d)", n_gained))
   )
@@ -1091,6 +1090,18 @@ process_timepoint <- function(timepoint, tolerance = 10000) {
   if (!is.null(violin_plot)) {
     save_multiformat_ggplot(violin_plot, file.path(plots_dir, "distance_violin_shared"),
                             width = 5, height = 6)
+  }
+
+  # Talk-slide companion: swapped colors for consistency across decks
+  violin_plot_swapped <- create_distance_violin_plot(
+    shared_result, lost_color = "#4575b4", gained_color = "#d73027"
+  )
+  if (!is.null(violin_plot_swapped)) {
+    save_multiformat_ggplot(
+      violin_plot_swapped,
+      file.path(plots_dir, "distance_violin_shared_swapped"),
+      width = 5, height = 6
+    )
   }
 
   # Task 1d: APA subsets
