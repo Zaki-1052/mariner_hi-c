@@ -951,7 +951,7 @@ create_anchor_type_barplot_combined <- function(loops_df, output_dir) {
     scale_y_continuous(expand = expansion(mult = c(0, 0.02))) +
     labs(
       title = "Chromatin State Composition of Differential Loops",
-      subtitle = "Strengthened vs. Weakened loops cluster in different compartments",
+      subtitle = "Strengthened vs. Weakened loops cluster in distinct chromatin states",
       x = NULL,
       y = "Percentage of loops (%)"
     ) +
