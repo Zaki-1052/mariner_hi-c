@@ -946,14 +946,14 @@ create_anchor_type_barplot_combined <- function(loops_df, output_dir) {
   p <- ggplot(anchor_summary, aes(x = direction, y = percentage, fill = anchor_type)) +
     geom_bar(stat = "identity", position = "stack", color = "white",
              linewidth = 0.3, width = 0.6) +
-    scale_fill_manual(values = ANCHOR_COLORS, name = "Anchor Type",
+    scale_fill_manual(values = ANCHOR_COLORS, name = "Loop Type",
                       drop = FALSE) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.02))) +
     labs(
       title = "Chromatin State Composition of Differential Loops",
       subtitle = "Strengthened vs. Weakened loops cluster in different compartments",
       x = NULL,
-      y = "Percentage of anchors (%)"
+      y = "Percentage of loops (%)"
     ) +
     theme_minimal() +
     theme(
