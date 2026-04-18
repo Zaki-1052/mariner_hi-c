@@ -868,8 +868,8 @@ run_analysis <- function() {
                                     y = mean_anchor_k119ub_fc, fill = direction)) +
         geom_boxplot(alpha = 0.7, outlier.size = 0.8) +
         geom_hline(yintercept = 0, linetype = "dashed") +
-        scale_fill_manual(values = c("down_in_mutant" = COLORS$lost,
-                                      "up_in_mutant" = COLORS$gained)) +
+        scale_fill_manual(values = c("down_in_mutant" = COLORS$gained,
+                                      "up_in_mutant" = COLORS$lost)) +
         stat_summary(fun = median, geom = "text",
                      aes(label = sprintf("%.3f", after_stat(y))),
                      vjust = -0.5, size = 3.5) +
