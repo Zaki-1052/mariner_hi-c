@@ -37,8 +37,8 @@ source("scripts/utils/multi_format_output.R")
 
 # Input files by timepoint
 INPUT_FILES <- list(
-  late = "25042-late_outputs/merged_loops/characterized_loops.tsv",
-  early = "250831-early_outputs/merged_loops/characterized_loops.tsv"
+  late = "outputs/250402-late_outputs/merged_loops/characterized_loops.tsv",
+  early = "outputs/250831-early_outputs/merged_loops/characterized_loops.tsv"
 )
 
 # Output directories by timepoint (standalone, not via symlink)
@@ -326,6 +326,7 @@ p3_density <- ggplot(loops_directional, aes(x = loop_distance_kb, fill = directi
     values = c("Lost in BAP1-KO" = COLORS$down, "Gained in BAP1-KO" = COLORS$up),
     name = ""
   ) +
+  guides(fill = guide_legend(reverse = TRUE)) +
   scale_x_log10(
     labels = comma,
     breaks = c(10, 100, 1000, 10000),
