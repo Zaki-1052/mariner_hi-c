@@ -648,14 +648,37 @@ create_distance_violin_plot <- function(shared_result) {
     alternative = "greater"
   )
 
+  # Per-group n for x-axis labels; shared-anchor n for subtitle headline
+  n_lost <- nrow(lost_data)
+  n_gained <- nrow(gained_data)
+  n_shared <- shared_result$stats$n_shared
+  plot_data <- plot_data %>%
+    mutate(direction_label = factor(
+      direction_label,
+      levels = c("Lost", "Gained"),
+      labels = c(sprintf("Lost\n(n = %d)", n_lost),
+                 sprintf("Gained\n(n = %d)", n_gained))
+    ))
+
+  # Swap colors: Lost=red, Gained=blue (better visual mapping)
+  fill_vals <- setNames(
+    c("#d73027", "#4575b4"),
+    c(sprintf("Lost\n(n = %d)", n_lost),
+      sprintf("Gained\n(n = %d)", n_gained))
+  )
+
   p <- ggplot(plot_data, aes(x = direction_label, y = loop_distance / 1e6, fill = direction_label)) +
     geom_violin(alpha = 0.7, trim = FALSE, color = "black", linewidth = 0.5) +
     geom_boxplot(width = 0.15, fill = "white", outlier.shape = NA, color = "black", linewidth = 0.5) +
-    scale_y_log10(labels = scales::label_number(suffix = "")) +
-    scale_fill_manual(values = c("Lost" = "#4575b4", "Gained" = "#d73027")) +
+    scale_y_log10(
+      breaks = c(0.01, 0.1, 1, 10, 100),
+      labels = c("0.01", "0.1", "1", "10", "100")
+    ) +
+    scale_fill_manual(values = fill_vals) +
     labs(
       title = "Loop Distance at Shared Anchors",
-      subtitle = sprintf("Mann-Whitney p = %.2e (lost > gained)", test_result$p.value),
+      subtitle = sprintf("Mann-Whitney p = %.2e (lost > gained)\n%d shared anchor regions",
+                         test_result$p.value, n_shared),
       x = NULL,
       y = "Loop Distance (Mb, log scale)"
     ) +
