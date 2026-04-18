@@ -33,6 +33,7 @@ cat("========================================\n\n")
 args <- commandArgs(trailingOnly = TRUE)
 volcano_resolution <- 5000
 skip_apa <- FALSE
+timepoint <- "late"
 
 if (length(args) > 0) {
   for (i in seq_along(args)) {
@@ -40,11 +41,21 @@ if (length(args) > 0) {
       volcano_resolution <- as.numeric(args[i + 1])
     } else if (args[i] == "--skip-apa") {
       skip_apa <- TRUE
+    } else if (args[i] == "--timepoint" && i < length(args)) {
+      timepoint <- args[i + 1]
     }
   }
 }
 
+if (!timepoint %in% c("late", "early")) {
+  stop(sprintf("Invalid --timepoint '%s' (expected 'late' or 'early')", timepoint))
+}
+tp_root <- switch(timepoint,
+                  late  = "outputs/250402-late_outputs",
+                  early = "outputs/250831-early_outputs")
+
 cat(sprintf("Configuration:\n"))
+cat(sprintf("  Timepoint: %s (%s)\n", timepoint, tp_root))
 cat(sprintf("  Volcano plot resolution: %d kb\n", volcano_resolution/1000))
 cat(sprintf("  Skip APA: %s\n\n", ifelse(skip_apa, "Yes", "No")))
 
@@ -120,7 +131,7 @@ cat("Loading Input Data\n")
 cat("\n========================================\n")
 
 # Load characterized loops from downstream analysis
-characterized_file <- "outputs/250402-late_outputs/merged_loops/characterized_loops.tsv"  # Note: repo-relative path, not bundled in data/
+characterized_file <- file.path(tp_root, "merged_loops/characterized_loops.tsv")  # Timepoint-scoped; not bundled in data/
 if (!file.exists(characterized_file)) {
   stop("ERROR: characterized_loops.tsv not found. Run downstream_analysis.R first.")
 }
@@ -131,7 +142,7 @@ cat(sprintf("  Up-regulated: %d\n", sum(loops_df$logFC > 0)))
 cat(sprintf("  Down-regulated: %d\n\n", sum(loops_df$logFC < 0)))
 
 # Load GInteractions object
-gi_file <- "outputs/250402-late_outputs/merged_loops/non_redundant_loops.rds"  # Note: repo-relative path, not bundled in data/
+gi_file <- file.path(tp_root, "merged_loops/non_redundant_loops.rds")  # Timepoint-scoped; not bundled in data/
 if (file.exists(gi_file)) {
   loops_gi <- readRDS(gi_file)
   cat(sprintf("✓ Loaded GInteractions object: %d interactions\n\n", length(loops_gi)))
@@ -162,23 +173,57 @@ create_publication_volcano <- function(results_file, output_path, title_suffix =
   df <- read.table(results_file, sep = "\t", header = TRUE, stringsAsFactors = FALSE)
   cat(sprintf("  Loaded %d loops\n", nrow(df)))
 
-  # Calculate counts for annotations
-  # Significant = FDR < 0.05 AND |logFC| > 0.3 (matches plot_color "red"/"blue")
+  # The upstream `significant` column is FDR<0.05 only and must not be used here;
+  # counts must reflect the joint cutoff drawn on the plot (pCutoff & FCcutoff).
   n_total <- nrow(df)
-  n_up <- sum(df$significant & df$logFC > 0, na.rm = TRUE)
-  n_down <- sum(df$significant & df$logFC < 0, na.rm = TRUE)
+  n_up    <- sum(df$FDR < 0.05 & df$logFC >  0.3, na.rm = TRUE)
+  n_down  <- sum(df$FDR < 0.05 & df$logFC < -0.3, na.rm = TRUE)
 
-  cat(sprintf("  Significant: %d up, %d down\n", n_up, n_down))
+  cat(sprintf("  Significant (FDR<0.05 & |logFC|>0.3): %s gained + %s lost = %s total\n",
+    format(n_up, big.mark = ","), format(n_down, big.mark = ","),
+    format(n_up + n_down, big.mark = ",")))
 
   # Get data ranges for annotation positioning
   logfc_range <- range(df$logFC, na.rm = TRUE)
   fdr_range <- range(df$FDR[df$FDR > 0], na.rm = TRUE)
   neg_log10_fdr_max <- -log10(min(fdr_range))
 
-  # Create EnhancedVolcano with publication settings
+  # Symmetric x-limits clip stray outliers that otherwise stretch one side of
+  # the axis and squash the main distribution. Use the smaller half-range + a
+  # margin so the FCcutoff lines stay well inside and both annotations mirror.
+  x_half   <- min(abs(logfc_range[1]), logfc_range[2])
+  x_lim    <- max(x_half + 0.2, 1.0)
+  xlim_vec <- c(-x_lim, x_lim)
+  n_clipped <- sum(df$logFC < xlim_vec[1] | df$logFC > xlim_vec[2], na.rm = TRUE)
+  if (n_clipped > 0) {
+    cat(sprintf("  Clipping %d display outlier(s) beyond +/-%.2f logFC\n",
+                n_clipped, x_lim))
+  }
+  anno_x   <- x_lim - 0.1
+
+  # Tight y-limit: cap at the data max + small margin instead of letting
+  # EnhancedVolcano round up to 12.
+  ylim_vec <- c(0, ceiling(neg_log10_fdr_max) + 0.5)
+
+  # Direction-split 5-category palette via EnhancedVolcano's colCustom (named color vector)
+  cat_vec <- rep("NS", nrow(df))
+  cat_vec[abs(df$logFC) > 0.3]                 <- "|log2FC| > 0.3 only"
+  cat_vec[df$FDR < 0.05]                       <- "FDR < 0.05 only"
+  cat_vec[df$FDR < 0.05 & df$logFC < -0.3]     <- "Lost"
+  cat_vec[df$FDR < 0.05 & df$logFC >  0.3]     <- "Gained"
+  color_map <- c(
+    "NS"                   = "grey80",
+    "|log2FC| > 0.3 only"  = "grey55",
+    "FDR < 0.05 only"      = "#F4A582",
+    "Lost"                 = "#2166AC",
+    "Gained"               = "#B2182B"
+  )
+  point_colors <- color_map[cat_vec]
+  names(point_colors) <- cat_vec
+
   p <- EnhancedVolcano(
     df,
-    lab = NA,  # Hide individual labels for cleaner look
+    lab = NA,
     x = 'logFC',
     y = 'FDR',
     title = paste0('WT vs KO ', title_suffix, ' Differential Loops'),
@@ -186,58 +231,59 @@ create_publication_volcano <- function(results_file, output_path, title_suffix =
     pCutoff = 0.05,
     FCcutoff = 0.3,
     pointSize = 2.5,
-    labSize = 0,  # No point labels
-    col = c('black', 'grey', 'red', 'darkred'),  # NS, FC-only, p-only, both
+    labSize = 0,
+    colCustom = point_colors,
     colAlpha = 0.6,
     legendPosition = 'top',
     legendLabSize = 11,
     legendIconSize = 4.0,
-    legendLabels = c('NS', bquote(Log[2]~FC), 'p-value', bquote(p-value~and~log[2]~FC)),
-    drawConnectors = FALSE,  # Cleaner look
+    drawConnectors = FALSE,
     gridlines.major = TRUE,
     gridlines.minor = FALSE,
     border = 'full',
     borderWidth = 0.8,
     borderColour = 'black',
-    xlab = 'LogFC Pixel Enrichment',
-    ylab = 'FDR',
-    xlim = c(logfc_range[1] - 0.2, logfc_range[2] + 0.2),
-    caption = NULL  # Remove default caption
+    xlab = expression("log"[2] * " Fold Change  (KO / WT)"),
+    ylab = expression("-log"[10] * "(FDR)"),
+    xlim = xlim_vec,
+    ylim = ylim_vec,
+    caption = NULL
   )
 
-  # Add custom text annotations
+  # Direction-correct count annotations mirrored at +/- anno_x
   p <- p +
-    # Up-regulated count (top left, blue)
     annotate(
       "text",
-      x = logfc_range[1] + 0.3,
-      y = neg_log10_fdr_max * 0.98,
-      label = as.character(n_up),
-      color = "#3366CC",
+      x = anno_x,
+      y = ylim_vec[2] * 0.95,
+      label = sprintf("%s gained", format(n_up, big.mark = ",")),
+      color = "#B2182B",
+      size = 6,
+      fontface = "bold",
+      hjust = 1
+    ) +
+    annotate(
+      "text",
+      x = -anno_x,
+      y = neg_log10_fdr_max * 0.95,
+      label = sprintf("%s lost", format(n_down, big.mark = ",")),
+      color = "#2166AC",
       size = 6,
       fontface = "bold",
       hjust = 0
     ) +
-    # Down-regulated count (top right, blue)
     annotate(
       "text",
-      x = logfc_range[2] - 0.3,
-      y = neg_log10_fdr_max * 0.98,
-      label = as.character(n_down),
-      color = "#3366CC",
-      size = 6,
-      fontface = "bold",
-      hjust = 1
-    ) +
-    # Total variables (bottom right, black)
-    annotate(
-      "text",
-      x = logfc_range[2] - 0.1,
-      y = 0.15,
-      label = sprintf("total = %d variables", n_total),
-      color = "black",
+      x = -x_lim,
+      y = 0.5,
+      vjust = 0,
+      lineheight = 0.95,
+      label = sprintf("n = %s tested  |  %s significant\n(FDR < 0.05 AND |log2FC| > 0.3)",
+        format(n_total, big.mark = ","),
+        format(n_up + n_down, big.mark = ",")),
+      color = "grey25",
       size = 3.5,
-      hjust = 1
+      hjust = 0
     ) +
     # Enhanced theme
     theme(
@@ -284,7 +330,7 @@ for (res_kb in c(5, 10, 25)) {
 cat("Creating merged multi-resolution volcano plot...\n")
 
 # Check if merged_all_results exists (created by downstream_analysis.R)
-merged_all_results_file <- "outputs/250402-late_outputs/merged_loops/merged_all_results.tsv"  # Note: repo-relative path, not bundled in data/
+merged_all_results_file <- file.path(tp_root, "merged_loops/merged_all_results.tsv")  # Timepoint-scoped; not bundled in data/
 if (file.exists(merged_all_results_file)) {
   # Use the properly merged non-redundant dataset
   output_file <- file.path(volcano_output_dir, "2A_volcano_merged_multiresolution.pdf")  # Original: file.path(output_dir, "volcano", "volcano_merged_multiresolution.pdf")
@@ -324,7 +370,7 @@ if (file.exists(merged_all_results_file)) {
 # Create volcano plot for merged non-redundant loops
 cat("Creating volcano plot for merged non-redundant loops...\n")
 
-characterized_file <- "outputs/250402-late_outputs/merged_loops/characterized_loops.tsv"  # Note: repo-relative path, not bundled in data/ (already declared above)
+characterized_file <- file.path(tp_root, "merged_loops/characterized_loops.tsv")  # Timepoint-scoped; already declared above
 if (file.exists(characterized_file)) {
   output_file <- file.path(volcano_output_dir, "2A_volcano_nonredundant.pdf")  # Original: file.path(output_dir, "volcano", "volcano_nonredundant.pdf")
   create_publication_volcano(characterized_file, output_file, "Non-Redundant")
