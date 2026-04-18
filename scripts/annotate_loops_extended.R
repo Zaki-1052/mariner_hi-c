@@ -11,14 +11,16 @@
 #   Categories are biologically defined based on histone modifications and
 #   TSS proximity.
 #
-# Anchor Categories (7 types, priority order):
+# Anchor Categories (8 types, priority order):
 #   1. Active_Promoter:    H3K4me3+ AND NOT H3K27me3 AND <=2kb from TSS
 #   2. Repressed_Promoter: H3K27me3+ AND NOT H3K27ac AND <=2kb from TSS
 #   3. Bivalent_Promoter:  K4me3+K27me3 overlap (pre-computed intersection)
 #   4. Polycomb:           H3K27me3+ AND >2kb from TSS (distal repressive)
 #   5. Active_Enhancer:    H3K27ac+ AND >2kb from TSS
 #   6. Poised_Enhancer:    H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
-#   7. Other:              No ChIP-seq marks / structural elements
+#   7. CTCF_Site:          CTCF DNA motif+ AND not classified above
+#                          (DNA motifs used for all timepoints - genome-wide)
+#   8. Other:              No ChIP-seq marks / no CTCF motif
 #
 # Peak Files (peaks/beds/):
 #   - H3K27ac:  Early/Late cerebellum
@@ -33,8 +35,8 @@
 #   Rscript scripts/annotate_loops_extended.R --timepoint late    # Late only
 #
 # Output:
-#   outputs/loop_annotation_extended/early/  (Early timepoint)
-#   outputs/loop_annotation_extended/late/   (Late timepoint)
+#   output/loop_annotation_extended/early/  (Early timepoint)
+#   output/loop_annotation_extended/late/   (Late timepoint)
 
 # =============================================================================
 # LIBRARY LOADING
@@ -61,60 +63,70 @@ source("scripts/utils/multi_format_output.R")
 # Peak file paths organized by timepoint
 # All files from standardized peaks/beds/ directory
 # Bivalent files generated with: bash scripts/generate_bivalent_peaks.sb
+# CTCF: ChIP-seq peaks (Bing Ren lab, adult mouse cerebellum) + DNA motifs (mm10)
 PEAK_FILES <- list(
   early = list(
-    h3k27ac  = "peaks/beds/H3K27acCerebellumEarly2.bed",
-    h3k27me3 = "peaks/beds/H3K27me3CerebellumEarly1.bed",
-    h3k4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",
-    h3k4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",
-    bivalent = "peaks/beds/Bivalent_Cerebellum_Early.bed"
+    h3k27ac    = "peaks/beds/H3K27acCerebellumEarly2.bed",
+    h3k27me3   = "peaks/beds/H3K27me3CerebellumEarly1.bed",
+    h3k4me1    = "peaks/beds/H3K4me1CerebellumEarly1.bed",
+    h3k4me3    = "peaks/beds/H3K4me3CerebellumEarly2.bed",
+    bivalent   = "peaks/beds/Bivalent_Cerebellum_Early.bed",
+    ctcf       = "peaks/CTCF.bed",
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
   ),
   late = list(
-    h3k27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",
-    h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",
-    h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",
-    h3k4me3  = "peaks/beds/H3K4me3CerebellumLate2.bed",
-    bivalent = "peaks/beds/Bivalent_Cerebellum_Late.bed"
+    h3k27ac    = "peaks/beds/H3K27acCerebellumLate2.bed",
+    h3k27me3   = "peaks/beds/H3K27me3CerebellumLate1.bed",
+    h3k4me1    = "peaks/beds/H3K4me1CerebellumLate1.bed",
+    h3k4me3    = "peaks/beds/H3K4me3CerebellumLate2.bed",
+    bivalent   = "peaks/beds/Bivalent_Cerebellum_Late.bed",
+    ctcf       = "peaks/CTCF.bed",
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
   ),
   # Consensus-based for comparison (uses 4-replicate H3K4me3 for both bivalent AND Active_Promoter)
   late_consensus = list(
-    h3k27ac  = "peaks/beds/H3K27acCerebellumLate2.bed",
-    h3k27me3 = "peaks/beds/H3K27me3CerebellumLate1.bed",
-    h3k4me1  = "peaks/beds/H3K4me1CerebellumLate1.bed",
-    h3k4me3  = "peaks/peaks-v1/consensus_H3K4me3_late_peaks.bed",  # 9,651 peaks (4-replicate consensus)
-    bivalent = "peaks/beds/Bivalent_Consensus_Late.bed"            # 688 peaks (from consensus H3K4me3)
+    h3k27ac    = "peaks/beds/H3K27acCerebellumLate2.bed",
+    h3k27me3   = "peaks/beds/H3K27me3CerebellumLate1.bed",
+    h3k4me1    = "peaks/beds/H3K4me1CerebellumLate1.bed",
+    h3k4me3    = "peaks/peaks-v1/consensus_H3K4me3_late_peaks.bed",  # 9,651 peaks (4-replicate consensus)
+    bivalent   = "peaks/beds/Bivalent_Consensus_Late.bed",           # 688 peaks (from consensus H3K4me3)
+    ctcf       = "peaks/CTCF.bed",
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
   ),
   # P12_ctrl peaks for early comparison (more lenient peak calling than Cerebellum)
   # Demonstrates lack of single source of truth for ChIP-seq annotations
   early_p12ctrl = list(
-    h3k27ac  = "peaks/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # 28,042 peaks (vs 18,178 Cerebellum)
-    h3k27me3 = "peaks/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # 23,491 peaks (vs 12,473 Cerebellum)
-    h3k4me1  = "peaks/beds/H3K4me1CerebellumEarly1.bed",               # same (no P12_ctrl version)
-    h3k4me3  = "peaks/beds/H3K4me3CerebellumEarly2.bed",               # same (no P12_ctrl version)
-    bivalent = "peaks/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed"  # 933 peaks (Addison)
+    h3k27ac    = "peaks/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # 28,042 peaks (vs 18,178 Cerebellum)
+    h3k27me3   = "peaks/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # 23,491 peaks (vs 12,473 Cerebellum)
+    h3k4me1    = "peaks/beds/H3K4me1CerebellumEarly1.bed",               # same (no P12_ctrl version)
+    h3k4me3    = "peaks/beds/H3K4me3CerebellumEarly2.bed",               # same (no P12_ctrl version)
+    bivalent   = "peaks/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed", # 933 peaks (Addison)
+    ctcf       = "peaks/CTCF.bed",
+    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
   )
 )
 
-# Default input files by timepoint
+# Default input files by timepoint (relative to repo root)
 DEFAULT_INPUT_FILES <- list(
-  early = "250831-early_outputs/merged_loops/non_redundant_loops.tsv",
-  late  = "25042-late_outputs/merged_loops/non_redundant_loops.tsv",
-  late_consensus = "25042-late_outputs/merged_loops/non_redundant_loops.tsv",
-  early_p12ctrl = "250831-early_outputs/merged_loops/non_redundant_loops.tsv"
+  early          = "outputs/250831-early_outputs/merged_loops/non_redundant_loops.tsv",
+  late           = "outputs/250402-late_outputs/merged_loops/non_redundant_loops.tsv",
+  late_consensus = "outputs/250402-late_outputs/merged_loops/non_redundant_loops.tsv",
+  early_p12ctrl  = "outputs/250831-early_outputs/merged_loops/non_redundant_loops.tsv"
 )
 
-# Default output directories by timepoint
+# Default output directories by timepoint (relative to repo root)
 DEFAULT_OUTPUT_DIRS <- list(
-  early = "outputs/loop_annotation_extended/early",
-  late  = "outputs/loop_annotation_extended/late",
-  late_consensus = "outputs/loop_annotation_extended/late_consensus",
-  early_p12ctrl = "outputs/loop_annotation_extended/early_p12ctrl"
+  early          = "output/loop_annotation_extended/early",
+  late           = "output/loop_annotation_extended/late",
+  late_consensus = "output/loop_annotation_extended/late_consensus",
+  early_p12ctrl  = "output/loop_annotation_extended/early_p12ctrl"
 )
 
 # Anchor type hierarchy (for consistent loop type ordering)
-# 7 categories reflecting chromatin states
+# 8 categories reflecting chromatin states (added CTCF_Site for structural loops)
 ANCHOR_TYPE_ORDER <- c("Active_Promoter", "Repressed_Promoter", "Bivalent_Promoter",
-                       "Polycomb", "Active_Enhancer", "Poised_Enhancer", "Other")
+                       "Polycomb", "Active_Enhancer", "Poised_Enhancer",
+                       "CTCF_Site", "Other")
 
 # Color scheme for visualizations
 ANCHOR_COLORS <- c(
@@ -124,7 +136,8 @@ ANCHOR_COLORS <- c(
   "Polycomb" = "#4daf4a",            # Green - distal repressive
   "Active_Enhancer" = "#377eb8",     # Blue - active enhancer
   "Poised_Enhancer" = "#ff7f00",     # Orange - primed enhancer
-  "Other" = "#999999"                # Gray - structural/unmarked
+  "CTCF_Site" = "#a65628",           # Brown - structural/insulator
+  "Other" = "#999999"                # Gray - unmarked
 )
 
 # =============================================================================
@@ -168,23 +181,34 @@ load_chip_peaks <- function(bed_path, mark_name = "ChIP") {
 #' @param k4me1_gr H3K4me1 peaks
 #' @param k4me3_gr H3K4me3 peaks (active promoter mark)
 #' @param bivalent_gr Bivalent_Promoter regions (K4me3+K27me3 overlap)
+#' @param ctcf_gr CTCF ChIP-seq peaks (structural/insulator sites)
+#' @param ctcf_motif_gr CTCF DNA motifs (used for CTCF_Site classification)
 #' @return data.frame with overlap columns
 annotate_chip_overlaps_extended <- function(anchor_gr, k27ac_gr, k27me3_gr,
-                                            k4me1_gr, k4me3_gr, bivalent_gr) {
-  data.frame(
+                                            k4me1_gr, k4me3_gr, bivalent_gr,
+                                            ctcf_gr, ctcf_motif_gr = NULL) {
+  result <- data.frame(
     H3K27ac_overlap = countOverlaps(anchor_gr, k27ac_gr) > 0,
     H3K27me3_overlap = countOverlaps(anchor_gr, k27me3_gr) > 0,
     H3K4me1_overlap = countOverlaps(anchor_gr, k4me1_gr) > 0,
     H3K4me3_overlap = countOverlaps(anchor_gr, k4me3_gr) > 0,
-    Bivalent_Promoter_overlap = countOverlaps(anchor_gr, bivalent_gr) > 0
+    Bivalent_Promoter_overlap = countOverlaps(anchor_gr, bivalent_gr) > 0,
+    CTCF_overlap = countOverlaps(anchor_gr, ctcf_gr) > 0
   )
+  # Add CTCF motif overlap if motif data is provided
+  if (!is.null(ctcf_motif_gr)) {
+    result$CTCF_motif_overlap <- countOverlaps(anchor_gr, ctcf_motif_gr) > 0
+  } else {
+    result$CTCF_motif_overlap <- FALSE
+  }
+  result
 }
 
-#' Classify anchor type with chromatin state categories (7 types)
+#' Classify anchor type with chromatin state categories (8 types)
 #'
 #' Priority order:
 #'   Active_Promoter > Repressed_Promoter > Bivalent_Promoter > Polycomb >
-#'   Active_Enhancer > Poised_Enhancer > Other
+#'   Active_Enhancer > Poised_Enhancer > CTCF_Site > Other
 #'
 #' Biological rationale:
 #'   - Active promoters: H3K4me3 is the canonical active promoter mark
@@ -193,19 +217,26 @@ annotate_chip_overlaps_extended <- function(anchor_gr, k27ac_gr, k27me3_gr,
 #'   - Bivalent_Promoter: K4me3+K27me3 overlap marks developmental poised domains
 #'   - Polycomb: Distal H3K27me3 regions (long-range repressive loops)
 #'   - Poised enhancers: H3K4me1 without repressive or active marks
+#'   - CTCF sites: Structural/insulator elements (DNA motif for all timepoints)
 #'
 #' @param h3k27ac_overlap Logical - overlaps H3K27ac peak
 #' @param h3k27me3_overlap Logical - overlaps H3K27me3 peak
 #' @param h3k4me1_overlap Logical - overlaps H3K4me1 peak
 #' @param h3k4me3_overlap Logical - overlaps H3K4me3 peak (active promoter)
 #' @param bivalent_overlap Logical - overlaps K4me3+K27me3 region (Addison file)
+#' @param ctcf_overlap Logical - overlaps CTCF ChIP-seq peak
+#' @param ctcf_motif_overlap Logical - overlaps CTCF DNA motif
 #' @param distance_to_tss Numeric - distance to nearest TSS
 #' @param tss_threshold Numeric - promoter distance threshold (default 2000bp)
+#' @param use_motif_for_ctcf Logical - if TRUE use motif for CTCF, else use ChIP
 #' @return Character vector with anchor types
 classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
                                           h3k4me1_overlap, h3k4me3_overlap,
-                                          bivalent_overlap, distance_to_tss,
-                                          tss_threshold = 2000) {
+                                          bivalent_overlap,
+                                          ctcf_overlap, ctcf_motif_overlap,
+                                          distance_to_tss,
+                                          tss_threshold = 2000,
+                                          use_motif_for_ctcf = TRUE) {
   n <- length(h3k27ac_overlap)
   anchor_type <- rep("Other", n)
 
@@ -254,7 +285,22 @@ classify_anchor_type_extended <- function(h3k27ac_overlap, h3k27me3_overlap,
                         (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   anchor_type[is_poised_enhancer] <- "Poised_Enhancer"
 
-  # 7. Other: default (no ChIP-seq marks - structural elements, CTCF sites, etc.)
+  # 7. CTCF_Site: Structural/insulator elements
+  # Default uses DNA motifs for ALL timepoints (genome-wide sequence features,
+  # not tissue/stage-specific) so CTCF_Site is comparable across early vs late.
+  # ChIP overlap is preserved as a column for reference/validation.
+  if (use_motif_for_ctcf) {
+    is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
+                    !is_bivalent & !is_polycomb & !is_active_enhancer &
+                    !is_poised_enhancer & ctcf_motif_overlap
+  } else {
+    is_ctcf_site <- !is_active_promoter & !is_repressed_promoter &
+                    !is_bivalent & !is_polycomb & !is_active_enhancer &
+                    !is_poised_enhancer & ctcf_overlap
+  }
+  anchor_type[is_ctcf_site] <- "CTCF_Site"
+
+  # 8. Other: default (no ChIP-seq marks - truly unmarked regions)
   return(anchor_type)
 }
 
@@ -365,6 +411,13 @@ annotate_loops_extended <- function(
   k4me1_gr <- load_chip_peaks(peak_files$h3k4me1, "H3K4me1")
   k4me3_gr <- load_chip_peaks(peak_files$h3k4me3, "H3K4me3")
   bivalent_gr <- load_chip_peaks(peak_files$bivalent, "Bivalent (K4me3+K27me3)")
+  ctcf_gr <- load_chip_peaks(peak_files$ctcf, "CTCF")
+
+  # CTCF DNA motifs drive CTCF_Site classification (genome-wide, not stage-specific)
+  ctcf_motif_gr <- NULL
+  if (!is.null(peak_files$ctcf_motif) && file.exists(peak_files$ctcf_motif)) {
+    ctcf_motif_gr <- load_chip_peaks(peak_files$ctcf_motif, "CTCF_motif")
+  }
   cat("\n")
 
   # --- Step 3: Create anchor GRanges ---
@@ -411,9 +464,11 @@ annotate_loops_extended <- function(
   cat("Step 5: Annotating ChIP-seq overlaps...\n")
 
   anchor1_chip <- annotate_chip_overlaps_extended(anchor1_gr, k27ac_gr, k27me3_gr,
-                                                  k4me1_gr, k4me3_gr, bivalent_gr)
+                                                  k4me1_gr, k4me3_gr, bivalent_gr,
+                                                  ctcf_gr, ctcf_motif_gr)
   anchor2_chip <- annotate_chip_overlaps_extended(anchor2_gr, k27ac_gr, k27me3_gr,
-                                                  k4me1_gr, k4me3_gr, bivalent_gr)
+                                                  k4me1_gr, k4me3_gr, bivalent_gr,
+                                                  ctcf_gr, ctcf_motif_gr)
 
   cat("  Anchor1 overlaps:\n")
   cat(sprintf("    H3K27ac+:  %d (%.1f%%)\n",
@@ -431,6 +486,12 @@ annotate_loops_extended <- function(
   cat(sprintf("    Bivalent_Promoter:  %d (%.1f%%)\n",
               sum(anchor1_chip$Bivalent_Promoter_overlap),
               100 * mean(anchor1_chip$Bivalent_Promoter_overlap)))
+  cat(sprintf("    CTCF+:     %d (%.1f%%)\n",
+              sum(anchor1_chip$CTCF_overlap),
+              100 * mean(anchor1_chip$CTCF_overlap)))
+  cat(sprintf("    CTCF_motif+: %d (%.1f%%)\n",
+              sum(anchor1_chip$CTCF_motif_overlap),
+              100 * mean(anchor1_chip$CTCF_motif_overlap)))
 
   cat("  Anchor2 overlaps:\n")
   cat(sprintf("    H3K27ac+:  %d (%.1f%%)\n",
@@ -445,12 +506,20 @@ annotate_loops_extended <- function(
   cat(sprintf("    H3K4me3+:  %d (%.1f%%)\n",
               sum(anchor2_chip$H3K4me3_overlap),
               100 * mean(anchor2_chip$H3K4me3_overlap)))
-  cat(sprintf("    Bivalent_Promoter:  %d (%.1f%%)\n\n",
+  cat(sprintf("    Bivalent_Promoter:  %d (%.1f%%)\n",
               sum(anchor2_chip$Bivalent_Promoter_overlap),
               100 * mean(anchor2_chip$Bivalent_Promoter_overlap)))
+  cat(sprintf("    CTCF+:     %d (%.1f%%)\n",
+              sum(anchor2_chip$CTCF_overlap),
+              100 * mean(anchor2_chip$CTCF_overlap)))
+  cat(sprintf("    CTCF_motif+: %d (%.1f%%)\n\n",
+              sum(anchor2_chip$CTCF_motif_overlap),
+              100 * mean(anchor2_chip$CTCF_motif_overlap)))
 
   # --- Step 6: Classify anchor types ---
-  cat("Step 6: Classifying anchor types (7 categories)...\n")
+  cat("Step 6: Classifying anchor types (8 categories)...\n")
+  cat("  CTCF classification: Using DNA motifs (consistent across timepoints)\n")
+  use_motif_for_ctcf <- TRUE
 
   anchor1_type <- classify_anchor_type_extended(
     anchor1_chip$H3K27ac_overlap,
@@ -458,8 +527,11 @@ annotate_loops_extended <- function(
     anchor1_chip$H3K4me1_overlap,
     anchor1_chip$H3K4me3_overlap,
     anchor1_chip$Bivalent_Promoter_overlap,
+    anchor1_chip$CTCF_overlap,
+    anchor1_chip$CTCF_motif_overlap,
     anchor1_distance_to_tss,
-    tss_threshold
+    tss_threshold,
+    use_motif_for_ctcf
   )
 
   anchor2_type <- classify_anchor_type_extended(
@@ -468,8 +540,11 @@ annotate_loops_extended <- function(
     anchor2_chip$H3K4me1_overlap,
     anchor2_chip$H3K4me3_overlap,
     anchor2_chip$Bivalent_Promoter_overlap,
+    anchor2_chip$CTCF_overlap,
+    anchor2_chip$CTCF_motif_overlap,
     anchor2_distance_to_tss,
-    tss_threshold
+    tss_threshold,
+    use_motif_for_ctcf
   )
 
   cat("\n  Anchor1 type distribution:\n")
@@ -488,7 +563,7 @@ annotate_loops_extended <- function(
   cat("\n")
 
   # --- Step 7: Classify loop types ---
-  cat("Step 7: Classifying loop types (28 combinations)...\n")
+  cat("Step 7: Classifying loop types (36 combinations)...\n")
 
   loop_type <- classify_loop_type_extended(anchor1_type, anchor2_type)
 
@@ -513,12 +588,16 @@ annotate_loops_extended <- function(
   loops_df$anchor1_H3K4me1_overlap <- anchor1_chip$H3K4me1_overlap
   loops_df$anchor1_H3K4me3_overlap <- anchor1_chip$H3K4me3_overlap
   loops_df$anchor1_Bivalent_Promoter_overlap <- anchor1_chip$Bivalent_Promoter_overlap
+  loops_df$anchor1_CTCF_overlap <- anchor1_chip$CTCF_overlap
+  loops_df$anchor1_CTCF_motif_overlap <- anchor1_chip$CTCF_motif_overlap
 
   loops_df$anchor2_H3K27ac_overlap <- anchor2_chip$H3K27ac_overlap
   loops_df$anchor2_H3K27me3_overlap <- anchor2_chip$H3K27me3_overlap
   loops_df$anchor2_H3K4me1_overlap <- anchor2_chip$H3K4me1_overlap
   loops_df$anchor2_H3K4me3_overlap <- anchor2_chip$H3K4me3_overlap
   loops_df$anchor2_Bivalent_Promoter_overlap <- anchor2_chip$Bivalent_Promoter_overlap
+  loops_df$anchor2_CTCF_overlap <- anchor2_chip$CTCF_overlap
+  loops_df$anchor2_CTCF_motif_overlap <- anchor2_chip$CTCF_motif_overlap
 
   # TSS distances
   loops_df$anchor1_distance_to_tss_ext <- anchor1_distance_to_tss
@@ -537,6 +616,8 @@ annotate_loops_extended <- function(
   cat("    - anchor1/2_H3K4me1_overlap\n")
   cat("    - anchor1/2_H3K4me3_overlap\n")
   cat("    - anchor1/2_Bivalent_Promoter_overlap\n")
+  cat("    - anchor1/2_CTCF_overlap\n")
+  cat("    - anchor1/2_CTCF_motif_overlap\n")
   cat("    - anchor1/2_distance_to_tss_ext\n")
   cat("    - anchor1/2_type_extended\n")
   cat("    - loop_type_extended\n\n")
@@ -829,6 +910,64 @@ create_anchor_type_barplot <- function(loops_df, output_dir) {
   save_multiformat_ggplot(p, output_base, width = 10, height = 6)
 }
 
+#' Create combined-anchor type distribution bar chart
+#'
+#' Pools anchor1 + anchor2 within each direction so each direction is shown as
+#' a single stacked bar, making the strengthened-vs-weakened compartment
+#' contrast easier to read. Reuses the same classification fields, palette and
+#' factor order as `create_anchor_type_barplot()`.
+#'
+#' @param loops_df Annotated loops data.frame
+#' @param output_dir Output directory
+create_anchor_type_barplot_combined <- function(loops_df, output_dir) {
+  cat("  Creating combined-anchor type bar chart...\n")
+
+  anchor_data <- bind_rows(
+    loops_df %>% dplyr::select(direction, anchor_type = anchor1_type_extended),
+    loops_df %>% dplyr::select(direction, anchor_type = anchor2_type_extended)
+  )
+
+  anchor_summary <- anchor_data %>%
+    group_by(direction, anchor_type) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    group_by(direction) %>%
+    mutate(percentage = 100 * count / sum(count)) %>%
+    ungroup()
+
+  anchor_summary$anchor_type <- factor(anchor_summary$anchor_type,
+                                       levels = ANCHOR_TYPE_ORDER)
+  anchor_summary$direction <- factor(
+    anchor_summary$direction,
+    levels = c("up_in_mutant", "down_in_mutant"),
+    labels = c("Strengthened\n(Up in Mutant)",
+               "Weakened\n(Down in Mutant)")
+  )
+
+  p <- ggplot(anchor_summary, aes(x = direction, y = percentage, fill = anchor_type)) +
+    geom_bar(stat = "identity", position = "stack", color = "white",
+             linewidth = 0.3, width = 0.6) +
+    scale_fill_manual(values = ANCHOR_COLORS, name = "Anchor Type",
+                      drop = FALSE) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.02))) +
+    labs(
+      title = "Chromatin State Composition of Differential Loops",
+      subtitle = "Strengthened vs. Weakened loops cluster in different compartments",
+      x = NULL,
+      y = "Percentage of anchors (%)"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title    = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 11, face = "italic"),
+      axis.text.x   = element_text(size = 11),
+      legend.position = "right",
+      panel.grid.major.x = element_blank()
+    )
+
+  output_base <- file.path(output_dir, "plots", "anchor_type_distribution_combined")
+  save_multiformat_ggplot(p, output_base, width = 8, height = 6)
+}
+
 #' Create loop type by direction bar chart
 #'
 #' @param loops_df Annotated loops data.frame
@@ -931,9 +1070,9 @@ parse_arguments <- function() {
       cat("Description:\n")
       cat("  Annotates differential loops with chromatin state categories:\n")
       cat("    - Active_Promoter, Repressed_Promoter, Bivalent_Promoter, Polycomb,\n")
-      cat("      Active_Enhancer, Poised_Enhancer, Other\n\n")
+      cat("      Active_Enhancer, Poised_Enhancer, CTCF_Site, Other\n\n")
       cat("Output structure:\n")
-      cat("  outputs/loop_annotation_extended/\n")
+      cat("  output/loop_annotation_extended/\n")
       cat("  ├── early/           (Early, Cerebellum peaks)\n")
       cat("  ├── late/            (Late, Cerebellum peaks)\n")
       cat("  ├── late_consensus/  (Late, Consensus H3K4me3)\n")
