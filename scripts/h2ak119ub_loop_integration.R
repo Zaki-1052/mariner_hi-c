@@ -56,8 +56,8 @@ cat("Date:", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "\n\n")
 OUTPUT_DIR <- "output/h2ak119ub_loop_integration/late"
 
 INPUT_FILES <- list(
-  all_loops        = "25042-late_outputs/merged_loops/merged_all_results.tsv",
-  diff_loops       = "25042-late_outputs/merged_loops/characterized_loops.tsv",
+  all_loops        = "outputs/250402-late_outputs/merged_loops/merged_all_results.tsv",
+  diff_loops       = "outputs/250402-late_outputs/merged_loops/characterized_loops.tsv",
   shared_anchors   = "output/shared_anchor_analysis/late/tables/shared_anchors.tsv",
   shared_loops     = "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv",
   polycomb_shared  = "output/shared_anchor_analysis/late/polycomb_specific/tables/polycomb_shared_loops.tsv",
@@ -854,8 +854,17 @@ run_analysis <- function() {
         }
       }
 
-      # Plot 14: Boxplot of K119ub signal by loop direction
-      p14 <- ggplot(sig_loops, aes(x = factor(direction, labels = c("Lost", "Gained")),
+      # Plot 14: Boxplot of H2AK119ub signal by loop direction
+      n_lost   <- sum(sig_loops$direction == "down_in_mutant")
+      n_gained <- sum(sig_loops$direction == "up_in_mutant")
+      direction_labels <- c(
+        "down_in_mutant" = sprintf("Lost\n(n = %s)",   format(n_lost,   big.mark = ",")),
+        "up_in_mutant"   = sprintf("Gained\n(n = %s)", format(n_gained, big.mark = ","))
+      )
+
+      p14 <- ggplot(sig_loops, aes(x = factor(direction,
+                                               levels = c("down_in_mutant", "up_in_mutant"),
+                                               labels = direction_labels),
                                     y = mean_anchor_k119ub_fc, fill = direction)) +
         geom_boxplot(alpha = 0.7, outlier.size = 0.8) +
         geom_hline(yintercept = 0, linetype = "dashed") +
@@ -864,12 +873,13 @@ run_analysis <- function() {
         stat_summary(fun = median, geom = "text",
                      aes(label = sprintf("%.3f", after_stat(y))),
                      vjust = -0.5, size = 3.5) +
-        labs(title = "K119ub Signal Change by Loop Direction",
-             subtitle = sprintf("Wilcoxon p = %.2e",
+        labs(title = "H2AK119ub Signal Change by Loop Direction",
+             subtitle = sprintf("Wilcoxon p = %.2e   |   total n = %s loops",
                                 tryCatch(wilcox.test(mean_anchor_k119ub_fc ~ direction,
                                                       data = sig_loops)$p.value,
-                                         error = function(e) NA)),
-             x = "Loop Direction", y = "Mean Anchor K119ub log2FC") +
+                                         error = function(e) NA),
+                                format(n_lost + n_gained, big.mark = ",")),
+             x = "Loop Direction", y = "Mean Anchor H2AK119ub log2FC") +
         theme_bw(base_size = 12) +
         theme(plot.title = element_text(face = "bold", size = 14),
               legend.position = "none")
