@@ -1,0 +1,120 @@
+# stripes/stripenn/config/stripenn_config.yaml
+# Stripenn Differential Architectural Stripe Analysis — paths & parameters.
+# BAP1-KO vs Wildtype, mouse cerebellum (mm10), SDSC Expanse HPC.
+
+# ==============================================================================
+# Path roots
+# ==============================================================================
+paths:
+  # Synced to GitHub — scripts, config, small summary TSVs only.
+  code_root: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+
+  # NOT synced — heavy .mcool / intermediate outputs / logs live here.
+  data_root: "/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+
+  # Source .hic files (already on HPC).
+  hic_root: "/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+
+# ==============================================================================
+# Timepoints
+# ==============================================================================
+timepoints:
+  early: "250831"   # P12 developmental stage
+  late:  "250402"
+
+# ==============================================================================
+# Samples (per timepoint)
+# ==============================================================================
+samples:
+  replicates:
+    - "ctrl_M1"
+    - "ctrl_M2"
+    - "ctrl_M3"
+    - "mut_M1"
+    - "mut_M2"
+    - "mut_M3"
+  merged:
+    - "ctrl_merged"
+    - "mut_merged"
+  # Full set used for .hic -> .mcool conversion (Stage 0).
+  all:
+    - "ctrl_M1"
+    - "ctrl_M2"
+    - "ctrl_M3"
+    - "ctrl_merged"
+    - "mut_M1"
+    - "mut_M2"
+    - "mut_M3"
+    - "mut_merged"
+  groups: ["ctrl", "ctrl", "ctrl", "mut", "mut", "mut"]
+
+# ==============================================================================
+# Stripenn resolutions (bp). Both used for cross-resolution comparison.
+# ==============================================================================
+resolutions: [5000, 10000]
+
+# ==============================================================================
+# Stripenn compute parameters (Stage 1)
+# ==============================================================================
+stripenn_compute:
+  norm: "KR"
+  chroms: "all"                          # filter sex/mito post-hoc in R
+  canny: 2.0
+  min_length_bins: 10
+  max_width_bins: 8
+  maxpixel: "0.95,0.96,0.97,0.98,0.99"
+  pvalue: 0.1
+  bfilter: 3
+  seed: 42
+
+# ==============================================================================
+# Detection / union (Stage 2) — mirrors existing Quagga pipeline
+# ==============================================================================
+detection:
+  anchor_tolerance_bp: 50000   # 50kb match window
+
+# ==============================================================================
+# edgeR (Stage 4)
+# ==============================================================================
+edger:
+  skip_filtering: true
+  normalization_method: "TMM"
+  robust_dispersion: true
+  fdr_primary: 0.05
+  fdr_exploratory: 0.10
+
+# ==============================================================================
+# Integration / classification (Stage 5)
+# ==============================================================================
+classification:
+  logFC_threshold: 0.3
+  fdr_threshold: 0.05
+  tiered:
+    high_fdr: 0.10
+    medium_logfc: 0.2
+
+# ==============================================================================
+# Chromosome filter (applied post-stripenn)
+# ==============================================================================
+filtering:
+  exclude_chromosomes: ["chrX", "chrY", "chrM"]
+
+# ==============================================================================
+# SLURM defaults
+# ==============================================================================
+slurm:
+  account: "csd940"
+  partition: "shared"
+  # Stage-specific resource hints (wrapper scripts may override).
+  stage_00_convert:
+    cpus: 8
+    mem: "64G"
+    time: "04:00:00"
+  stage_01_call:
+    cpus: 16
+    mem: "96G"
+    time: "08:00:00"
+  stage_03_score:
+    cpus: 12
+    mem: "64G"
+    time: "04:00:00"
