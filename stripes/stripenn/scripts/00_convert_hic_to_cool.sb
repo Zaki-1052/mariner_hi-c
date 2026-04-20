@@ -55,8 +55,8 @@ fi
 # Skip if output already exists and is non-empty (idempotent re-run).
 if [ -s "${MCOOL}" ]; then
   echo "NOTE: ${MCOOL} already exists and is non-empty; skipping conversion."
-  echo "Existing resolutions:"
-  hictk ls "${MCOOL}" || true
+  echo "Existing file metadata:"
+  hictk metadata "${MCOOL}" || true
   echo "To force re-run, delete the file and resubmit."
   echo "End: $(date)"
   exit 0
@@ -88,8 +88,8 @@ if [ ${STATUS} -ne 0 ] || [ ! -s "${MCOOL}" ]; then
 fi
 
 echo ""
-echo "Conversion complete. Resolutions available:"
-hictk ls "${MCOOL}"
+echo "Conversion complete. Root-level metadata:"
+hictk metadata "${MCOOL}"
 
 echo ""
 echo "5kb/10kb spot check:"
