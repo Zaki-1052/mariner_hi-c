@@ -65,6 +65,8 @@ echo "Expected stripes (from union): ${EXPECTED_ROWS}"
 source ~/.bashrc
 conda activate mariner_env
 
+export PYTHONWARNINGS="ignore::FutureWarning"
+
 # stripenn score auto-detects headers (no -h flag exists in CLI).
 # --seed 42 overrides default (123456789) per config.
 stripenn score \
