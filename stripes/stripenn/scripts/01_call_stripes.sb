@@ -57,6 +57,8 @@ which stripenn
 stripenn --help >/dev/null 2>&1
 echo "stripenn available: OK"
 
+export PYTHONWARNINGS="ignore::FutureWarning"
+
 # `yes Y` handles stripenn's interactive overwrite prompt when rerunning.
 # --seed 42 overrides stripenn default (123456789) per config.
 yes Y | stripenn compute \
