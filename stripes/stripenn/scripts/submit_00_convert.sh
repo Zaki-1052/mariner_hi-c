@@ -6,7 +6,7 @@
 # Optional trailing arg "--dependency=afterok:<jid[:<jid>...]>" is spliced
 # into every sbatch call, for chaining into a prior stage.
 
-set -e
+#set -e
 
 CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
 DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"

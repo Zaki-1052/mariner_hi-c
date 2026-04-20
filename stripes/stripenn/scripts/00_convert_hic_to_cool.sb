@@ -6,6 +6,7 @@
 #   <sample>    : ctrl_M1 | ctrl_M2 | ctrl_M3 | ctrl_merged
 #                 mut_M1  | mut_M2  | mut_M3  | mut_merged
 #SBATCH --job-name=hic2cool
+#SBATCH --output=stage0.out
 #SBATCH --partition=shared
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -14,7 +15,7 @@
 #SBATCH --time=04:00:00
 #SBATCH --account=csd940
 
-set -e
+#set -e
 
 TIMEPOINT="${1:?usage: sbatch 00_convert_hic_to_cool.sb <timepoint> <sample>}"
 SAMPLE="${2:?usage: sbatch 00_convert_hic_to_cool.sb <timepoint> <sample>}"
