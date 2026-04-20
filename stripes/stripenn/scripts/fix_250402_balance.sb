@@ -1,0 +1,58 @@
+#!/bin/bash
+# stripes/stripenn/scripts/fix_250402_balance.sb
+# One-off: compute ICE balancing weights (named "KR") for the 250402 merged
+# mcool files that lack KR normalization from the source .hic.
+# Delete this script after use.
+#SBATCH --job-name=balance_250402
+#SBATCH --output=/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/logs/balance_250402_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "==========================================="
+echo "Fix: cooler balance for 250402 merged files"
+echo "Start: $(date)"
+echo "==========================================="
+
+for SAMPLE in ctrl_merged mut_merged; do
+  MCOOL="${DATA_DIR}/data/cool/250402/${SAMPLE}.mcool"
+
+  if [ ! -s "${MCOOL}" ]; then
+    echo "ERROR: ${MCOOL} not found or empty" >&2
+    exit 1
+  fi
+
+  for RES in 5000 10000; do
+    COOL_URI="${MCOOL}::/resolutions/${RES}"
+    echo ""
+    echo "--- ${SAMPLE} @ ${RES}bp ---"
+
+    cooler balance "${COOL_URI}" \
+      --name KR \
+      --nproc ${SLURM_CPUS_PER_TASK} \
+      --force
+    STATUS=$?
+
+    if [ ${STATUS} -ne 0 ]; then
+      echo "ERROR: cooler balance failed for ${COOL_URI} (exit=${STATUS})" >&2
+      exit 1
+    fi
+
+    echo "Verifying KR column exists:"
+    cooler dump -t bins "${COOL_URI}" | head -1
+  done
+done
+
+echo ""
+echo "All 4 balancing runs complete."
+echo "End: $(date)"
+echo "==========================================="
