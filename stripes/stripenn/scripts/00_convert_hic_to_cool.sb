@@ -1,0 +1,97 @@
+#!/bin/bash
+# stripes/stripenn/scripts/00_convert_hic_to_cool.sb
+# Stage 0: Convert a single .hic file to a multi-resolution .mcool via hic2cool.
+# Usage: sbatch 00_convert_hic_to_cool.sb <timepoint> <sample>
+#   <timepoint> : 250831 | 250402
+#   <sample>    : ctrl_M1 | ctrl_M2 | ctrl_M3 | ctrl_merged
+#                 mut_M1  | mut_M2  | mut_M3  | mut_merged
+#SBATCH --job-name=hic2cool
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+set -e
+
+TIMEPOINT="${1:?usage: sbatch 00_convert_hic_to_cool.sb <timepoint> <sample>}"
+SAMPLE="${2:?usage: sbatch 00_convert_hic_to_cool.sb <timepoint> <sample>}"
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+
+HIC="${HIC_ROOT}/${TIMEPOINT}/${SAMPLE}.hic"
+MCOOL_DIR="${DATA_DIR}/data/cool/${TIMEPOINT}"
+MCOOL="${MCOOL_DIR}/${SAMPLE}.mcool"
+LOG_DIR="${DATA_DIR}/logs"
+
+mkdir -p "${MCOOL_DIR}" "${LOG_DIR}"
+
+echo "==========================================="
+echo "Stage 0: hic2cool convert"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Memory:     ${SLURM_MEM_PER_NODE} MB"
+echo "Timepoint:  ${TIMEPOINT}"
+echo "Sample:     ${SAMPLE}"
+echo "Input:      ${HIC}"
+echo "Output:     ${MCOOL}"
+echo "Start:      $(date)"
+echo "==========================================="
+
+# Fail fast if input missing.
+if [ ! -s "${HIC}" ]; then
+  echo "ERROR: missing or empty .hic: ${HIC}" >&2
+  exit 2
+fi
+
+# Skip if output already exists and is non-empty (idempotent re-run).
+if [ -s "${MCOOL}" ]; then
+  echo "NOTE: ${MCOOL} already exists and is non-empty; skipping conversion."
+  echo "Existing resolutions:"
+  cooler ls "${MCOOL}" || true
+  echo "To force re-run, delete the file and resubmit."
+  echo "End: $(date)"
+  exit 0
+fi
+
+# Activate the shared mariner_env which now contains hic2cool + cooler.
+source ~/.bashrc
+conda activate mariner_env
+
+# Verify tools available.
+which hic2cool
+which cooler
+hic2cool --version || true
+
+# Run conversion (multi-resolution mcool; preserves KR weights).
+hic2cool convert "${HIC}" "${MCOOL}" -p "${SLURM_CPUS_PER_TASK}"
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ] || [ ! -s "${MCOOL}" ]; then
+  echo "ERROR: hic2cool convert failed (exit=${STATUS}) or produced empty output." >&2
+  exit 1
+fi
+
+echo ""
+echo "Conversion complete. Resolutions available:"
+cooler ls "${MCOOL}"
+
+echo ""
+echo "5kb/10kb spot check:"
+for R in 5000 10000; do
+  if cooler info "${MCOOL}::/resolutions/${R}" >/dev/null 2>&1; then
+    cooler info "${MCOOL}::/resolutions/${R}" | grep -E "nbins|nnz|bin-size"
+  else
+    echo "WARNING: resolution ${R} not present in ${MCOOL}"
+  fi
+done
+
+echo ""
+echo "End: $(date)"
+echo "==========================================="
