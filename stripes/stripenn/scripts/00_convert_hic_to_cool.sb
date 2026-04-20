@@ -72,9 +72,14 @@ conda activate hictk
 which hictk
 hictk --version
 
-# Run conversion: .hic -> .mcool (all native resolutions, normalization
-# weights preserved). --threads parallelizes per-resolution writes.
-hictk convert "${HIC}" "${MCOOL}" --threads "${SLURM_CPUS_PER_TASK}"
+# Run conversion: .hic -> .mcool, restricted to the two resolutions stripenn
+# will actually use (5kb, 10kb). Without --resolutions, hictk writes every
+# native resolution from the .hic (1kb through 2.5Mb) -- 3-4x longer wall
+# time and several GB of wasted disk per mcool. Normalization weights
+# (KR) are preserved. --threads parallelizes per-resolution writes.
+hictk convert "${HIC}" "${MCOOL}" \
+  --resolutions 5000 10000 \
+  --threads "${SLURM_CPUS_PER_TASK}"
 STATUS=$?
 
 if [ ${STATUS} -ne 0 ] || [ ! -s "${MCOOL}" ]; then
