@@ -1,0 +1,64 @@
+#!/bin/bash
+# stripes/stripenn/scripts/05_integration.sb
+# Stage 5: Merge annotations with edgeR stats, classify direction.
+# Usage: sbatch 05_integration.sb <timepoint> <resolution_bp>
+#   <timepoint>     : 250831 | 250402
+#   <resolution_bp> : 5000 | 10000
+#SBATCH --job-name=integrate_stripes
+#SBATCH --output=stage5.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+TIMEPOINT="${1:?usage: sbatch 05_integration.sb <timepoint> <resolution_bp>}"
+RES="${2:?usage: sbatch 05_integration.sb <timepoint> <resolution_bp>}"
+
+RES_KB=$((RES / 1000))
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+LOG_DIR="${DATA_DIR}/logs"
+
+mkdir -p "${LOG_DIR}"
+
+echo "==========================================="
+echo "Stage 5: Integration & Classification"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "Timepoint:  ${TIMEPOINT}"
+echo "Resolution: ${RES} bp (${RES_KB} kb)"
+echo "Start:      $(date)"
+echo "==========================================="
+
+EDGER_RESULTS="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/04_edgeR/all_results.tsv"
+if [ ! -s "${EDGER_RESULTS}" ]; then
+  echo "ERROR: Stage 4 edgeR results missing: ${EDGER_RESULTS}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+conda activate mariner_env
+
+Rscript "${CODE_DIR}/scripts/05_integration.R" "${TIMEPOINT}" "${RES}"
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: 05_integration.R failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+FINAL="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/05_final_differential.tsv"
+if [ ! -s "${FINAL}" ]; then
+  echo "ERROR: 05_final_differential.tsv not created or empty." >&2
+  exit 1
+fi
+
+echo ""
+echo "Integration complete. Output: ${FINAL}"
+echo "End: $(date)"
+echo "==========================================="

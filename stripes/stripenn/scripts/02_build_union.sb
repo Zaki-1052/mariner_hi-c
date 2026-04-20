@@ -1,0 +1,71 @@
+#!/bin/bash
+# stripes/stripenn/scripts/02_build_union.sb
+# Stage 2: Build union stripe set from ctrl/mut merged stripenn calls.
+# Usage: sbatch 02_build_union.sb <timepoint> <resolution_bp>
+#   <timepoint>     : 250831 | 250402
+#   <resolution_bp> : 5000 | 10000
+#SBATCH --job-name=union_stripes
+#SBATCH --output=stage2.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+TIMEPOINT="${1:?usage: sbatch 02_build_union.sb <timepoint> <resolution_bp>}"
+RES="${2:?usage: sbatch 02_build_union.sb <timepoint> <resolution_bp>}"
+
+RES_KB=$((RES / 1000))
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+LOG_DIR="${DATA_DIR}/logs"
+
+mkdir -p "${LOG_DIR}"
+
+echo "==========================================="
+echo "Stage 2: Build Union Stripe Set"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "Timepoint:  ${TIMEPOINT}"
+echo "Resolution: ${RES} bp (${RES_KB} kb)"
+echo "Start:      $(date)"
+echo "==========================================="
+
+CTRL_RESULT="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/calls/ctrl_merged/result_filtered.tsv"
+MUT_RESULT="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/calls/mut_merged/result_filtered.tsv"
+
+if [ ! -s "${CTRL_RESULT}" ]; then
+  echo "ERROR: Stage 1 ctrl output missing: ${CTRL_RESULT}" >&2
+  exit 2
+fi
+if [ ! -s "${MUT_RESULT}" ]; then
+  echo "ERROR: Stage 1 mut output missing: ${MUT_RESULT}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+conda activate mariner_env
+
+Rscript "${CODE_DIR}/scripts/02_build_union.R" "${TIMEPOINT}" "${RES}"
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: 02_build_union.R failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+BEDPE="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/union_stripes.bedpe"
+if [ ! -s "${BEDPE}" ]; then
+  echo "ERROR: union_stripes.bedpe not created or empty." >&2
+  exit 1
+fi
+
+NSTRIPES=$(tail -n +2 "${BEDPE}" | wc -l)
+echo ""
+echo "Union BEDPE created: ${NSTRIPES} stripes"
+echo "End: $(date)"
+echo "==========================================="

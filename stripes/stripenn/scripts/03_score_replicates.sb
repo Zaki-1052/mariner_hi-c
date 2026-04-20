@@ -1,0 +1,103 @@
+#!/bin/bash
+# stripes/stripenn/scripts/03_score_replicates.sb
+# Stage 3: Score one replicate sample against the union stripe set.
+# Uses stripenn score to quantify O_Sum_added (edgeR count input).
+# Usage: sbatch 03_score_replicates.sb <timepoint> <resolution_bp> <sample>
+#   <timepoint>     : 250831 | 250402
+#   <resolution_bp> : 5000 | 10000
+#   <sample>        : ctrl_M1 | ctrl_M2 | ctrl_M3 | mut_M1 | mut_M2 | mut_M3
+#SBATCH --job-name=stripenn_score
+#SBATCH --output=stage3.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+TIMEPOINT="${1:?usage: sbatch 03_score_replicates.sb <timepoint> <resolution_bp> <sample>}"
+RES="${2:?usage: sbatch 03_score_replicates.sb <timepoint> <resolution_bp> <sample>}"
+SAMPLE="${3:?usage: sbatch 03_score_replicates.sb <timepoint> <resolution_bp> <sample>}"
+
+RES_KB=$((RES / 1000))
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+
+MCOOL="${DATA_DIR}/data/cool/${TIMEPOINT}/${SAMPLE}.mcool"
+UNION_BEDPE="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/union_stripes.bedpe"
+SCORES_DIR="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/scores"
+OUT="${SCORES_DIR}/${SAMPLE}.scores.tsv"
+LOG_DIR="${DATA_DIR}/logs"
+
+mkdir -p "${SCORES_DIR}" "${LOG_DIR}"
+
+echo "==========================================="
+echo "Stage 3: stripenn score"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Memory:     ${SLURM_MEM_PER_NODE} MB"
+echo "Timepoint:  ${TIMEPOINT}"
+echo "Resolution: ${RES} bp (${RES_KB} kb)"
+echo "Sample:     ${SAMPLE}"
+echo "Input cool: ${MCOOL}"
+echo "Union BEDPE:${UNION_BEDPE}"
+echo "Output:     ${OUT}"
+echo "Start:      $(date)"
+echo "==========================================="
+
+if [ ! -s "${MCOOL}" ]; then
+  echo "ERROR: missing or empty .mcool: ${MCOOL}" >&2
+  exit 2
+fi
+
+if [ ! -s "${UNION_BEDPE}" ]; then
+  echo "ERROR: union_stripes.bedpe missing: ${UNION_BEDPE}" >&2
+  exit 2
+fi
+
+EXPECTED_ROWS=$(tail -n +2 "${UNION_BEDPE}" | wc -l)
+echo "Expected stripes (from union): ${EXPECTED_ROWS}"
+
+source ~/.bashrc
+conda activate mariner_env
+
+# stripenn score auto-detects headers (no -h flag exists in CLI).
+# --seed 42 overrides default (123456789) per config.
+stripenn score \
+  --cool "${MCOOL}::/resolutions/${RES}" \
+  -c "${UNION_BEDPE}" \
+  --norm KR \
+  -n ${SLURM_CPUS_PER_TASK} \
+  --seed 42 \
+  -o "${OUT}"
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: stripenn score failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+if [ ! -s "${OUT}" ]; then
+  echo "ERROR: score output is missing or empty." >&2
+  exit 1
+fi
+
+ACTUAL_ROWS=$(tail -n +2 "${OUT}" | wc -l)
+echo ""
+echo "Scoring complete."
+echo "Output rows: ${ACTUAL_ROWS} (expected: ${EXPECTED_ROWS})"
+
+if [ "${ACTUAL_ROWS}" -ne "${EXPECTED_ROWS}" ]; then
+  echo "WARNING: row count mismatch — expected ${EXPECTED_ROWS}, got ${ACTUAL_ROWS}" >&2
+fi
+
+echo "Output columns:"
+head -1 "${OUT}" | tr '\t' '\n' | cat -n
+
+echo ""
+echo "End: $(date)"
+echo "==========================================="
