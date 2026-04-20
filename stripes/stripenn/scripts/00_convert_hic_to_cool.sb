@@ -1,6 +1,7 @@
 #!/bin/bash
 # stripes/stripenn/scripts/00_convert_hic_to_cool.sb
-# Stage 0: Convert a single .hic file to a multi-resolution .mcool via hic2cool.
+# Stage 0: Convert a single .hic file to a multi-resolution .mcool via hictk.
+# Uses the `hictk` conda env (hic2cool in mariner_env cannot read .hic v9).
 # Usage: sbatch 00_convert_hic_to_cool.sb <timepoint> <sample>
 #   <timepoint> : 250831 | 250402
 #   <sample>    : ctrl_M1 | ctrl_M2 | ctrl_M3 | ctrl_merged
@@ -55,39 +56,41 @@ fi
 if [ -s "${MCOOL}" ]; then
   echo "NOTE: ${MCOOL} already exists and is non-empty; skipping conversion."
   echo "Existing resolutions:"
-  cooler ls "${MCOOL}" || true
+  hictk ls "${MCOOL}" || true
   echo "To force re-run, delete the file and resubmit."
   echo "End: $(date)"
   exit 0
 fi
 
-# Activate the shared mariner_env which now contains hic2cool + cooler.
+# Activate the dedicated hictk env. hic2cool (in mariner_env) cannot read
+# Juicer .hic format v9, so hictk is used for the conversion step only.
+# R / stripenn stages elsewhere in the pipeline continue to use mariner_env.
 source ~/.bashrc
-conda activate mariner_env
+conda activate hictk
 
 # Verify tools available.
-which hic2cool
-which cooler
-hic2cool --version || true
+which hictk
+hictk --version
 
-# Run conversion (multi-resolution mcool; preserves KR weights).
-hic2cool convert "${HIC}" "${MCOOL}" -p "${SLURM_CPUS_PER_TASK}"
+# Run conversion: .hic -> .mcool (all native resolutions, normalization
+# weights preserved). --threads parallelizes per-resolution writes.
+hictk convert "${HIC}" "${MCOOL}" --threads "${SLURM_CPUS_PER_TASK}"
 STATUS=$?
 
 if [ ${STATUS} -ne 0 ] || [ ! -s "${MCOOL}" ]; then
-  echo "ERROR: hic2cool convert failed (exit=${STATUS}) or produced empty output." >&2
+  echo "ERROR: hictk convert failed (exit=${STATUS}) or produced empty output." >&2
   exit 1
 fi
 
 echo ""
 echo "Conversion complete. Resolutions available:"
-cooler ls "${MCOOL}"
+hictk ls "${MCOOL}"
 
 echo ""
 echo "5kb/10kb spot check:"
 for R in 5000 10000; do
-  if cooler info "${MCOOL}::/resolutions/${R}" >/dev/null 2>&1; then
-    cooler info "${MCOOL}::/resolutions/${R}" | grep -E "nbins|nnz|bin-size"
+  if hictk metadata "${MCOOL}::/resolutions/${R}" >/dev/null 2>&1; then
+    hictk metadata "${MCOOL}::/resolutions/${R}"
   else
     echo "WARNING: resolution ${R} not present in ${MCOOL}"
   fi
