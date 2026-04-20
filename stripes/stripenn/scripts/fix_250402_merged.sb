@@ -1,0 +1,57 @@
+#!/bin/bash
+# stripes/stripenn/scripts/fix_250402_merged.sb
+# One-off: reconvert the two 250402 merged .hic files that failed due to
+# unreadable GW_SCALE normalization. Uses --normalization-methods KR to
+# skip the problematic vector. Delete this script after use.
+#SBATCH --job-name=fix_250402
+#SBATCH --output=/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/logs/fix_250402_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+
+source ~/.bashrc
+conda activate hictk
+
+echo "==========================================="
+echo "Fix: reconvert 250402 merged files (KR only)"
+echo "Start: $(date)"
+echo "==========================================="
+
+for SAMPLE in ctrl_merged mut_merged; do
+  HIC="${HIC_ROOT}/250402/${SAMPLE}.hic"
+  MCOOL="${DATA_DIR}/data/cool/250402/${SAMPLE}.mcool"
+
+  echo ""
+  echo "--- ${SAMPLE} ---"
+
+  if [ -f "${MCOOL}" ]; then
+    echo "Removing incomplete mcool: ${MCOOL}"
+    rm "${MCOOL}"
+  fi
+
+  hictk convert "${HIC}" "${MCOOL}" \
+    --resolutions 5000 10000 \
+    --normalization-methods KR \
+    --threads ${SLURM_CPUS_PER_TASK}
+  STATUS=$?
+
+  if [ ${STATUS} -ne 0 ] || [ ! -s "${MCOOL}" ]; then
+    echo "ERROR: conversion failed for ${SAMPLE} (exit=${STATUS})" >&2
+    exit 1
+  fi
+
+  echo "Verifying:"
+  hictk metadata "${MCOOL}"
+done
+
+echo ""
+echo "Both files reconverted successfully."
+echo "End: $(date)"
+echo "==========================================="
