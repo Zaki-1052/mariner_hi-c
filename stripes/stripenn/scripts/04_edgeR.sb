@@ -1,0 +1,75 @@
+#!/bin/bash
+# stripes/stripenn/scripts/04_edgeR.sb
+# Stage 4: edgeR differential analysis on stripenn score counts.
+# Usage: sbatch 04_edgeR.sb <timepoint> <resolution_bp>
+#   <timepoint>     : 250831 | 250402
+#   <resolution_bp> : 5000 | 10000
+#SBATCH --job-name=edgeR_stripes
+#SBATCH --output=stage4.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+TIMEPOINT="${1:?usage: sbatch 04_edgeR.sb <timepoint> <resolution_bp>}"
+RES="${2:?usage: sbatch 04_edgeR.sb <timepoint> <resolution_bp>}"
+
+RES_KB=$((RES / 1000))
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+LOG_DIR="${DATA_DIR}/logs"
+SCORES_DIR="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/scores"
+
+mkdir -p "${LOG_DIR}"
+
+echo "==========================================="
+echo "Stage 4: edgeR Differential Analysis"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "Timepoint:  ${TIMEPOINT}"
+echo "Resolution: ${RES} bp (${RES_KB} kb)"
+echo "Start:      $(date)"
+echo "==========================================="
+
+REPLICATES=("ctrl_M1" "ctrl_M2" "ctrl_M3" "mut_M1" "mut_M2" "mut_M3")
+MISSING=0
+for S in "${REPLICATES[@]}"; do
+  SCORE_FILE="${SCORES_DIR}/${S}.scores.tsv"
+  if [ ! -s "${SCORE_FILE}" ]; then
+    echo "ERROR: Score file missing: ${SCORE_FILE}" >&2
+    MISSING=1
+  fi
+done
+if [ ${MISSING} -eq 1 ]; then
+  echo "ERROR: One or more Stage 3 score files missing." >&2
+  exit 2
+fi
+
+source ~/.bashrc
+conda activate mariner_env
+
+R --slave -e "library(edgeR); library(yaml); library(ggplot2); library(svglite); cat('R packages OK\n')"
+
+Rscript "${CODE_DIR}/scripts/04_edgeR.R" "${TIMEPOINT}" "${RES}"
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: 04_edgeR.R failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+RESULTS="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/04_edgeR/all_results.tsv"
+if [ ! -s "${RESULTS}" ]; then
+  echo "ERROR: all_results.tsv not created or empty." >&2
+  exit 1
+fi
+
+echo ""
+echo "edgeR complete. Results: ${RESULTS}"
+echo "End: $(date)"
+echo "==========================================="

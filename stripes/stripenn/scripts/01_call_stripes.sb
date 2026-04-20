@@ -1,0 +1,97 @@
+#!/bin/bash
+# stripes/stripenn/scripts/01_call_stripes.sb
+# Stage 1: Run stripenn compute on a single merged sample at one resolution.
+# Usage: sbatch 01_call_stripes.sb <timepoint> <resolution_bp> <sample>
+#   <timepoint>     : 250831 | 250402
+#   <resolution_bp> : 5000 | 10000
+#   <sample>        : ctrl_merged | mut_merged
+#SBATCH --job-name=stripenn_call
+#SBATCH --output=stage1.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=96G
+#SBATCH --time=08:00:00
+#SBATCH --account=csd940
+
+TIMEPOINT="${1:?usage: sbatch 01_call_stripes.sb <timepoint> <resolution_bp> <sample>}"
+RES="${2:?usage: sbatch 01_call_stripes.sb <timepoint> <resolution_bp> <sample>}"
+SAMPLE="${3:?usage: sbatch 01_call_stripes.sb <timepoint> <resolution_bp> <sample>}"
+
+RES_KB=$((RES / 1000))
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+
+MCOOL="${DATA_DIR}/data/cool/${TIMEPOINT}/${SAMPLE}.mcool"
+OUT_DIR="${DATA_DIR}/outputs/${TIMEPOINT}/res_${RES_KB}kb/calls/${SAMPLE}/"
+LOG_DIR="${DATA_DIR}/logs"
+
+mkdir -p "${OUT_DIR}" "${LOG_DIR}"
+
+echo "==========================================="
+echo "Stage 1: stripenn compute"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Memory:     ${SLURM_MEM_PER_NODE} MB"
+echo "Timepoint:  ${TIMEPOINT}"
+echo "Resolution: ${RES} bp (${RES_KB} kb)"
+echo "Sample:     ${SAMPLE}"
+echo "Input:      ${MCOOL}"
+echo "Output dir: ${OUT_DIR}"
+echo "Start:      $(date)"
+echo "==========================================="
+
+if [ ! -s "${MCOOL}" ]; then
+  echo "ERROR: missing or empty .mcool: ${MCOOL}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+conda activate mariner_env
+
+which stripenn
+stripenn --help >/dev/null 2>&1
+echo "stripenn available: OK"
+
+# `yes Y` handles stripenn's interactive overwrite prompt when rerunning.
+# --seed 42 overrides stripenn default (123456789) per config.
+yes Y | stripenn compute \
+  --cool "${MCOOL}::/resolutions/${RES}" \
+  --out "${OUT_DIR}" \
+  --norm KR \
+  -k all \
+  -m 0.95,0.96,0.97,0.98,0.99 \
+  -p 0.1 \
+  -n ${SLURM_CPUS_PER_TASK} \
+  --seed 42 \
+  -l 10 \
+  -w 8 \
+  -b 3
+STATUS=$?
+
+RESULT="${OUT_DIR}/result_filtered.tsv"
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: stripenn compute failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+if [ ! -s "${RESULT}" ]; then
+  echo "ERROR: result_filtered.tsv is missing or empty after compute." >&2
+  exit 1
+fi
+
+NSTRIPES=$(tail -n +2 "${RESULT}" | wc -l)
+echo ""
+echo "Stripe detection complete."
+echo "Stripes found: ${NSTRIPES}"
+echo "Output: ${RESULT}"
+head -2 "${RESULT}"
+
+echo ""
+echo "End: $(date)"
+echo "==========================================="

@@ -1,0 +1,66 @@
+#!/bin/bash
+# stripes/stripenn/scripts/06_compare_resolutions.sb
+# Stage 6: Cross-resolution comparison (5kb vs 10kb).
+# Usage: sbatch 06_compare_resolutions.sb <timepoint>
+#   <timepoint> : 250831 | 250402
+#SBATCH --job-name=crossres_stripes
+#SBATCH --output=stage6.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+TIMEPOINT="${1:?usage: sbatch 06_compare_resolutions.sb <timepoint>}"
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+LOG_DIR="${DATA_DIR}/logs"
+
+mkdir -p "${LOG_DIR}"
+
+echo "==========================================="
+echo "Stage 6: Cross-Resolution Comparison"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "Timepoint:  ${TIMEPOINT}"
+echo "Start:      $(date)"
+echo "==========================================="
+
+RES5="${DATA_DIR}/outputs/${TIMEPOINT}/res_5kb/05_final_differential.tsv"
+RES10="${DATA_DIR}/outputs/${TIMEPOINT}/res_10kb/05_final_differential.tsv"
+
+if [ ! -s "${RES5}" ]; then
+  echo "ERROR: 5kb results missing: ${RES5}" >&2
+  exit 2
+fi
+if [ ! -s "${RES10}" ]; then
+  echo "ERROR: 10kb results missing: ${RES10}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+conda activate mariner_env
+
+Rscript "${CODE_DIR}/scripts/06_compare_resolutions.R" "${TIMEPOINT}"
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: 06_compare_resolutions.R failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+OUTPUT="${DATA_DIR}/outputs/${TIMEPOINT}/cross_res_merged.tsv"
+if [ ! -s "${OUTPUT}" ]; then
+  echo "ERROR: cross_res_merged.tsv not created or empty." >&2
+  exit 1
+fi
+
+echo ""
+echo "Cross-resolution comparison complete."
+echo "Output: ${OUTPUT}"
+echo "End: $(date)"
+echo "==========================================="
