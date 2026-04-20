@@ -24,7 +24,12 @@ Stripenn only accepts `.cool`/`.mcool`, so an upstream conversion step is requir
   - **DATA root** (not synced, >100 MB): `/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/` — `data/cool/` mcools, `outputs/` raw stripenn compute/score results, intermediate RDS, plots.
   - Every path in every script is absolute; no relative paths. Final small TSVs / final volcano PDFs can be manually rsynced to the repo later.
 
-Total workload: 2 tp × 2 res × (2 merged calls + 6 replicate scores) = **8 `stripenn compute` jobs + 24 `stripenn score` jobs** on top of 16 `hic2cool` jobs. With SLURM concurrency each job is its own submission and runs in parallel on its own node/partition slot.
+Total workload: 2 tp × 2 res × (2 merged calls + 6 replicate scores) = **8 `stripenn compute` jobs + 24 `stripenn score` jobs** on top of 16 `hictk convert` jobs. With SLURM concurrency each job is its own submission and runs in parallel on its own node/partition slot.
+
+### Env split (resolved during Stage 0 setup)
+
+- **`hictk` conda env** — used by Stage 0 only (`.hic` → `.mcool` conversion). Required because the source `.hic` files are Juicer format **v9**, which `hic2cool 0.8.3` cannot parse (fails with `UnicodeDecodeError` at `read_footer`). `hictk` is the modern C++ successor and handles both v8 and v9. The env already existed at `/home/zalibhai/miniforge3/envs/hictk`.
+- **`mariner_env` conda env** — used by every other stage (stripenn compute/score, all R scripts for union building, edgeR, integration, cross-res). `stripenn` was installed into `mariner_env` with `pip install --no-deps stripenn` (then opencv-python, scikit-image, typer, joblib, tqdm, matplotlib) because `mariner_env` runs Python 3.13, and stripenn's `pandas<2.0.0,>=1.5.0` pin cannot be satisfied on 3.13 (no cp313 wheels for pandas 1.5.x). Pandas 2.x works in practice for stripenn's usage (`read_csv`, `.iloc`, `.columns`).
 
 ## Architecture
 
@@ -83,57 +88,82 @@ DATA_DIR=/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn
 
 ## Step 1 — Environment & Installation
 
-**Recommended:** install into `mariner_env` (already has R/edgeR for downstream; just needs Python deps).
+Two envs are involved (see "Env split" above for rationale):
+
+### `hictk` env (for Stage 0 only)
+
+Already present on HPC at `/home/zalibhai/miniforge3/envs/hictk`. No additional install needed. Verify:
+
+```bash
+conda activate hictk
+hictk --version
+hictk convert --help | head
+conda deactivate
+```
+
+### `mariner_env` (for every other stage)
+
+Install stripenn with `--no-deps` to bypass the `pandas<2.0` pin (incompatible with mariner_env's Python 3.13), then install the real runtime deps:
 
 ```bash
 conda activate mariner_env
-# Stripenn + deps (README explicitly says install via PyPI, NOT git clone)
-pip install stripenn hic2cool
-# hic2cool pulls cooler, h5py — stripenn pulls opencv-python, scikit-image, scipy
+pip install --no-deps stripenn
+pip install opencv-python scikit-image typer joblib tqdm matplotlib
+# cooler, h5py, numpy, scipy, pandas are already present in mariner_env.
 ```
+
+**Note:** `hic2cool` was attempted first but fails on these `.hic` files (format v9). Do not use it — `hictk` replaces it. If `hic2cool` is already installed in `mariner_env` from earlier attempts, leave it; it's not called by any pipeline script.
 
 Verify:
 ```bash
 stripenn --help
-hic2cool --help
-python -c "import cooler, cv2, skimage; print('ok')"
+python -c "import cooler, cv2, skimage, pandas, numpy; \
+           print('pandas', pandas.__version__, 'numpy', numpy.__version__)"
 ```
 
-The cloned `stripes/stripenn/` source is kept only as reference — **do not** `pip install -e ./stripes/stripenn/` per the README warning.
+The cloned `stripes/stripenn/` source is kept only as reference — **do not** `pip install -e ./stripes/stripenn/` per the upstream README warning.
+
+**Known non-fatal warning:** `pip` will report a conflict (`stripenn requires pandas<2.0.0 but you have 2.x`) and three conflicts from the older `quagga` package. Both are accepted — quagga has its own dedicated `quagga_env`, and stripenn's pandas pin is overly conservative for the operations it actually uses.
 
 ---
 
 ## Step 2 — `.hic` → `.mcool` Conversion
 
-Uses `hic2cool convert` to produce multi-resolution `.mcool` preserving KR weights from the original `.hic`.
+Uses **`hictk convert`** (not `hic2cool` — see Env split). Produces a multi-resolution `.mcool` with all native resolutions from the source `.hic` and preserves normalization weights (including KR).
 
-`00_convert_hic_to_cool.sb` accepts two positional args — timepoint and sample:
+`00_convert_hic_to_cool.sb` accepts two positional args — timepoint and sample — and activates the `hictk` env:
+
 ```bash
-# inside the .sb
+# inside the .sb (abbreviated)
 TIMEPOINT=$1         # 250831 | 250402
 SAMPLE=$2            # ctrl_M1 | ... | mut_merged
-HIC=/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/${TIMEPOINT}/${SAMPLE}.hic
+HIC=${HIC_ROOT}/${TIMEPOINT}/${SAMPLE}.hic
 MCOOL=${DATA_DIR}/data/cool/${TIMEPOINT}/${SAMPLE}.mcool
-mkdir -p "$(dirname ${MCOOL})"
-hic2cool convert "${HIC}" "${MCOOL}" -p ${SLURM_CPUS_PER_TASK}
-```
 
-Wrapper `submit_00_convert.sh` (in `scripts/`):
-```bash
-#!/bin/bash
-CODE_DIR=/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn
-for TP in 250831 250402; do
-  for SAMPLE in ctrl_M1 ctrl_M2 ctrl_M3 ctrl_merged mut_M1 mut_M2 mut_M3 mut_merged; do
-    sbatch --job-name=hic2cool_${TP}_${SAMPLE} \
-           --output=${CODE_DIR}/../../../stripes/stripenn/logs/hic2cool_${TP}_${SAMPLE}_%j.out \
-           ${CODE_DIR}/scripts/00_convert_hic_to_cool.sb ${TP} ${SAMPLE}
-  done
+conda activate hictk
+# --resolutions restricts to only the resolutions stripenn will use.
+# Without it, hictk writes ALL native resolutions from the .hic (1kb through 2.5Mb)
+# — ~3-4x longer wall time and several GB of wasted disk per mcool.
+hictk convert "${HIC}" "${MCOOL}" \
+  --resolutions 5000 10000 \
+  --threads ${SLURM_CPUS_PER_TASK}
+
+# Post-conversion verification uses hictk's native introspection:
+hictk ls "${MCOOL}"
+for R in 5000 10000; do
+  hictk metadata "${MCOOL}::/resolutions/${R}"
 done
 ```
 
-Submits 16 concurrent jobs (SLURM schedules as nodes free). Expected wall time per job: ~10–30 min. Output: `.mcool` with all native resolutions + KR weights.
+The script is idempotent (skips if `${MCOOL}` already exists non-empty) and fails fast on missing input.
+
+Wrapper `submit_00_convert.sh` submits **16 concurrent jobs** (2 timepoints × 8 samples), uses `sbatch --parsable` so it prints one JobID per line (feeds cleanly into `--dependency=afterok:...` for downstream stages), and accepts an optional leading `--dependency=...` arg for chaining.
+
+Expected wall time per job: ~10–30 min. Output: `.mcool` with all native resolutions + normalization weights.
 
 Target resolutions for stripenn: **5 kb and 10 kb** (both embedded in the mcool; stripenn selects via `::/resolutions/{res}`).
+
+**Historical note:** `hic2cool 0.8.3` was attempted first and failed with `UnicodeDecodeError: byte 0x92 ... invalid start byte` at `read_footer`. Root cause: the source `.hic` files are Juicer format v9, which hic2cool 0.8.3 (v8-only) cannot parse. `hictk` replaced it cleanly with a one-line script edit.
 
 ---
 
@@ -285,8 +315,8 @@ Output: `outputs/{tp}/cross_res_merged.tsv` + overlap plots.
 
 ## Verification Plan
 
-1. **After install**: `stripenn compute --help` and `hic2cool --help` both print usage.
-2. **After conversion** (Step 2): `cooler ls data/cool/250831/ctrl_merged.mcool` shows expected resolutions; `cooler info ::/resolutions/10000` shows nnz > 0 and KR weight column present.
+1. **After install**: `stripenn --help` (in mariner_env) and `hictk --version` (in hictk env) both succeed.
+2. **After conversion** (Step 2): `hictk ls data/cool/250831/ctrl_merged.mcool` shows expected resolutions; `hictk metadata ::/resolutions/10000` shows nnz > 0 and a balancing weight dataset present.
 3. **Smoke test** (Step 3): run `stripenn compute` on a single chromosome (`-k chr19`) on `ctrl_merged` 250831 — expect completion in <15 min and a populated `result_filtered.txt`.
 4. **After Step 3 full run**: both merged calls produce 100–500 stripes each (Stripenn is more permissive than Quagga; count may be higher).
 5. **After Step 5**: every replicate score file has the same number of rows as union stripes; `O_Sum_added` > 0 for the vast majority.
@@ -311,7 +341,7 @@ No single monolithic `.sb`. Instead, each stage's wrapper `.sh` submits its jobs
 CODE_DIR=/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn
 cd ${CODE_DIR}/scripts
 
-# Stage 0: hic2cool × 16
+# Stage 0: hictk convert × 16
 JIDS_00=$(bash submit_00_convert.sh | awk '{print $NF}' | paste -sd:)
 
 # Stage 1: stripenn compute × 8 (depends on all stage 0 jobs)
@@ -335,4 +365,4 @@ bash submit_06_compare.sh --dependency=afterok:${JIDS_05}
 
 Each `submit_*.sh` accepts an optional trailing `--dependency=…` arg that it splices into its `sbatch` calls. Within a stage, all jobs run in parallel; across stages, SLURM enforces ordering. Expected wall time: **8–16 h** (vs ~30 h if fully serial) — stage 0 is the longest bottleneck (~30 min/file × 16 files on queue).
 
-Each stage's `.sb` uses the existing repo conventions: absolute paths, `source ~/.bashrc; conda activate mariner_env`, `logs/` under `${DATA_DIR}/logs/`, exit-code validation (matching `phase1_detection.sb:40-67`).
+Each stage's `.sb` uses the existing repo conventions: absolute paths, `source ~/.bashrc` + `conda activate <env>` (`hictk` for Stage 0, `mariner_env` for everything else), `logs/` under `${DATA_DIR}/logs/`, exit-code validation (matching `phase1_detection.sb:40-67`).
