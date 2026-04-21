@@ -232,7 +232,7 @@ for (tp_name in names(TIMEPOINTS)) {
     p <- create_volcano(df, sprintf("%s %s", tp_label, res_label))
     if (!is.null(p)) {
       save_multiformat_ggplot(p, file.path(viz_dir, sprintf("volcano_%s_%s", tp_id, res_label)),
-                              width = 10, height = 8, use_subfolders = FALSE)
+                              width = 10, height = 8, use_subfolders = TRUE)
       volcano_plots[[tag]] <- p
     }
   }
@@ -244,7 +244,7 @@ if (length(volcano_plots) == 4) {
     plot_annotation(title = "Differential Stripes: Stripenn Pipeline",
                     subtitle = "BAP1-KO vs Wildtype, Mouse Cerebellum (mm10)")
   save_multiformat_ggplot(combined_v, file.path(combined_dir, "volcano_combined"),
-                          width = 20, height = 16, use_subfolders = FALSE)
+                          width = 20, height = 16, use_subfolders = TRUE)
 }
 
 cat("Section 2 complete\n")
@@ -294,7 +294,7 @@ for (tp_name in names(TIMEPOINTS)) {
 
     combined_s <- p_scatter + p_box + plot_layout(widths = c(2, 1))
     save_multiformat_ggplot(combined_s, file.path(viz_dir, sprintf("stripiness_%s", tp_id)),
-                            width = 15, height = 7, use_subfolders = FALSE)
+                            width = 15, height = 7, use_subfolders = TRUE)
   }
 }
 
@@ -359,7 +359,7 @@ for (tp_name in names(TIMEPOINTS)) {
 
     combined_l <- (p_violin | p_hist) / p_width + plot_layout(heights = c(2, 1))
     save_multiformat_ggplot(combined_l, file.path(viz_dir, sprintf("length_distribution_%s", tp_id)),
-                            width = 14, height = 12, use_subfolders = FALSE)
+                            width = 14, height = 12, use_subfolders = TRUE)
 
     stats_df <- diff_only %>%
       group_by(direction) %>%
@@ -392,7 +392,7 @@ if (!is.null(early_df) && !is.null(late_df)) {
       theme_stripe() + theme(legend.position = "none",
                              strip.text = element_text(size = 12, face = "bold"))
     save_multiformat_ggplot(p_comp, file.path(combined_dir, "length_comparison"),
-                            width = 12, height = 6, use_subfolders = FALSE)
+                            width = 12, height = 6, use_subfolders = TRUE)
   }
 }
 
@@ -467,7 +467,7 @@ if (length(summary_rows) > 0) {
   combined_sd <- (p_src | p_dir) / (p_conf | p_dtype) +
     plot_annotation(title = "Stripenn: Source & Direction Summary")
   save_multiformat_ggplot(combined_sd, file.path(combined_dir, "source_direction_summary"),
-                          width = 18, height = 14, use_subfolders = FALSE)
+                          width = 18, height = 14, use_subfolders = TRUE)
 
   for (tp_name in names(TIMEPOINTS)) {
     tp_id <- TIMEPOINTS[[tp_name]]$tp
@@ -483,7 +483,7 @@ if (length(summary_rows) > 0) {
            x = "Resolution", y = "Count") +
       theme_stripe()
     save_multiformat_ggplot(p_d, file.path(viz_dir, sprintf("direction_breakdown_%s", tp_id)),
-                            width = 8, height = 6, use_subfolders = FALSE)
+                            width = 8, height = 6, use_subfolders = TRUE)
   }
 }
 
@@ -538,7 +538,7 @@ for (tp_name in names(TIMEPOINTS)) {
 
     combined_cr <- p_corr + p_sup + plot_layout(widths = c(2, 1))
     save_multiformat_ggplot(combined_cr, file.path(viz_dir, sprintf("cross_res_%s", tp_id)),
-                            width = 15, height = 7, use_subfolders = FALSE)
+                            width = 15, height = 7, use_subfolders = TRUE)
   }
 }
 
@@ -560,7 +560,7 @@ if (!is.null(early_cr) && !is.null(late_cr)) {
                            axis.text.x = element_text(angle = 30, hjust = 1),
                            strip.text = element_text(face = "bold"))
   save_multiformat_ggplot(p_crc, file.path(combined_dir, "cross_res_comparison"),
-                          width = 12, height = 6, use_subfolders = FALSE)
+                          width = 12, height = 6, use_subfolders = TRUE)
 }
 
 cat("Section 6 complete\n")
@@ -599,7 +599,7 @@ for (tp_name in names(TIMEPOINTS)) {
                      annotation_col = ann_col, annotation_colors = ann_colors,
                      main = sprintf("Replicate Correlation: %s %s", tp_label, res_label))),
       file.path(viz_dir, sprintf("replicate_correlation_%s_%s", tp_id, res_label)),
-      width = 8, height = 7, use_subfolders = FALSE
+      width = 8, height = 7, use_subfolders = TRUE
     )
   }
 }
@@ -753,7 +753,7 @@ for (tp_name in names(TIMEPOINTS)) {
     plot_annotation(title = sprintf("Anchor Annotation: %s", TIMEPOINTS[[tp_name]]$label))
   save_multiformat_ggplot(combined_ann,
                           file.path(viz_dir, sprintf("anchor_annotation_%s", tp_id)),
-                          width = 14, height = 12, use_subfolders = FALSE)
+                          width = 14, height = 12, use_subfolders = TRUE)
 }
 
 cat("Section 8 complete\n")
@@ -974,7 +974,7 @@ if (enrichment_ok) {
           theme(plot.title = element_text(hjust = 0.5, face = "bold"))
         save_multiformat_ggplot(p_go,
                                 file.path(enrich_dir, sprintf("go_%s_dotplot_%s", tolower(ont), tp_name)),
-                                width = cfg$w, height = cfg$h, use_subfolders = FALSE)
+                                width = cfg$w, height = cfg$h, use_subfolders = TRUE)
         cat(sprintf("    %d significant terms\n", nrow(go_res@compareClusterResult)))
       } else {
         cat(sprintf("    No significant GO %s terms\n", ont))
@@ -998,7 +998,7 @@ if (enrichment_ok) {
         theme(plot.title = element_text(hjust = 0.5, face = "bold"))
       save_multiformat_ggplot(p_kegg,
                               file.path(enrich_dir, sprintf("kegg_dotplot_%s", tp_name)),
-                              width = 12, height = 10, use_subfolders = FALSE)
+                              width = 12, height = 10, use_subfolders = TRUE)
       cat(sprintf("    %d significant pathways\n", nrow(kegg_res@compareClusterResult)))
     } else {
       cat("    No significant KEGG pathways\n")
@@ -1060,7 +1060,7 @@ if (length(count_rows) > 0) {
     plot_annotation(title = "Stripenn Differential Stripe Summary")
   save_multiformat_ggplot(combined_comp,
                           file.path(combined_dir, "comparison_summary"),
-                          width = 14, height = 6, use_subfolders = FALSE)
+                          width = 14, height = 6, use_subfolders = TRUE)
 }
 
 sink_file <- file.path(combined_dir, "combined_summary.txt")
