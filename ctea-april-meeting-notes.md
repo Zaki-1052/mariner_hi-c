@@ -1,0 +1,50 @@
+- Look at superenhancers within 2MB window of DEGs
+	- How frequently does this gene contact SE or just enhancers (APA)
+	- Can you sub-classify contact frequency by K27ac change
+- Center on Rad21/CTCF peak/motif within differential anchor
+	- Are changes happening at the actual motif?
+- Luthi et al, nat comms 2025
+- Stripe-calling - classify genes within superenhancer hubs
+- loop anchor classification plot:
+- output/loop_annotation_extended/late/plots/anchor_type_distribution_combined/
+	- 10kb regions within loop:
+		- ctcf/rad21 motif
+			- where the loop is engaging
+	- each 10kb anchor should have ctcf **motif**
+		- most will, if: center the annotation around the ctcf region
+			- bc 10kb is big
+		- at other end (some anchors), if enhancer or promoter etc
+		- to have ctcf, only need 1 anchor
+		- still be a loop, not as stable
+		- how you get a stripe
+	- try this again and see if we get the same result
+	- set a filter - at least one anchor has to have a ctcf motif
+		- has or is paired with
+	- jesse: might have a cre
+- DEG centric analysis
+	- pull degs and invariants as a comparison
+	- contact strength between just those genes and enhancers
+	- focus on differentially expressed genes
+	- maybe will clear up abc plot
+- stripes can be super-enhancer hubs
+	- (enhancers modifying multiple promoters?)
+- different genes proximal to enhancer
+- super enhancer - are differential stripes overlapping
+- encode version, and bing ren - been using p60 bed file
+	- overlap them
+	- strengthened or weakening
+	- losing superenhancer - stripe weakening
+	- losing k27ac
+	- show relationship 
+- cmpts weakening is all we can say
+- diff peak changes happening in A cmpt
+- shorter ctcf loops:
+- why loops vs stripes
+- w/t rad21
+- cohesin trying to extrude or grow longer
+- more polycomb regions blocking it
+- polycomb regions flanking anchor sites?
+- span distance has no polycomb?
+- extending along euchromatin stretch / span
+- but then hits polycomb k27me3 and stops
+- 
