@@ -1,0 +1,70 @@
+===========================================
+Stage 1: stripenn compute
+===========================================
+Job ID:     48239373
+Node:       exp-2-30
+CPUs:       16
+Memory:     98304 MB
+Timepoint:  250402
+Resolution: 10000 bp (10 kb)
+Sample:     mut_merged
+Input:      /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_merged.mcool
+Output dir: /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/res_10kb/calls/mut_merged/
+Start:      Mon Apr 20 04:23:05 PDT 2026
+===========================================
+/home/zalibhai/.conda/envs/mariner_env/bin/stripenn
+stripenn available: OK
+
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/res_10kb/calls/mut_merged/ exists. Do you want to remove all files and save new results in this folder? [Y/n]
+All directories and files in /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/res_10kb/calls/mut_merged/ will be deleted.
+Result will be stored in /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/res_10kb/calls/mut_merged/
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /home/zalibhai/.conda/envs/mariner_env/lib/python3.13/site-packages/stripenn │
+│ /cli.py:27 in execute                                                        │
+│                                                                              │
+│   24 ):                                                                      │
+│   25 │   """Finds stripe coordinates from 3D genomic data                    │
+│   26 │   """                                                                 │
+│ ❱ 27 │   stripenn.compute(cool, out, norm, chrom, canny, minL, maxW, maxpixe │
+│   28                                                                         │
+│   29 @app.command('seeimage')                                                │
+│   30 def seeimag(                                                            │
+│                                                                              │
+│ /home/zalibhai/.conda/envs/mariner_env/lib/python3.13/site-packages/stripenn │
+│ /stripenn.py:80 in compute                                                   │
+│                                                                              │
+│    77 │   #cool, out, norm, chroms, canny, minH, maxW, maxpixel, core, pcut  │
+│    78 │   print('Result will be stored in %s' % (out))                       │
+│    79 │                                                                      │
+│ ❱  80 │   Lib = cooler.Cooler(cool)                                          │
+│    81 │   PossibleNorm = Lib.bins().columns                                  │
+│    82 │   if norm == 'None':                                                 │
+│    83 │   │   norm = False                                                   │
+│                                                                              │
+│ /home/zalibhai/.conda/envs/mariner_env/lib/python3.13/site-packages/cooler/a │
+│ pi.py:88 in __init__                                                         │
+│                                                                              │
+│    85 │   │   │   self.uri = self.filename + "::" + self.root                │
+│    86 │   │   │   self.store = store.file                                    │
+│    87 │   │   │   self.open_kws = {}                                         │
+│ ❱  88 │   │   self._refresh()                                                │
+│    89 │                                                                      │
+│    90 │   def _refresh(self) -> None:                                        │
+│    91 │   │   try:                                                           │
+│                                                                              │
+│ /home/zalibhai/.conda/envs/mariner_env/lib/python3.13/site-packages/cooler/a │
+│ pi.py:109 in _refresh                                                        │
+│                                                                              │
+│   106 │   │   │   │   │   f" Coolers found in {listing}. "                   │
+│   107 │   │   │   │   │   + "Use '::' to specify a group path"               │
+│   108 │   │   │   │   )                                                      │
+│ ❱ 109 │   │   │   raise KeyError(err_msg) from None                          │
+│   110 │                                                                      │
+│   111 │   def _load_dset(self, path: str) -> np.ndarray:                     │
+│   112 │   │   with open_hdf5(self.store, **self.open_kws) as h5:             │
+╰──────────────────────────────────────────────────────────────────────────────╯
+KeyError: "No cooler found at: 
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_m
+erged.mcool. Coolers found in ['/resolutions/5000']. Use '::' to specify a group
+path"
+ERROR: stripenn compute failed (exit=1).
