@@ -494,6 +494,8 @@ The Quagga pipeline found very few significant differential calls (FDR<0.05: ~0-
 
 **Zero stripes found:** Check that the mcool has data at the requested resolution: `cooler dump -r chr1:0-1000000 <uri> | wc -l`. If zero, the conversion failed silently.
 
+**Appears stuck after chromosome progress bars (NOT a bug):** After the last chromosome's progress bar completes (e.g., "Chromosome: chr19 / Maximum pixel: 95.0%"), the process enters `pvalue()` (`getStripe.py:536`) — a **serial loop with no progress output** that computes empirical p-values for every candidate stripe. Each candidate requires a `cooler.fetch()` + comparison against background distributions. With thousands of candidates at 5kb resolution, this takes 1-3+ hours **per maxpixel percentile**, and there are 5 percentiles (0.95-0.99). The process is working, just silently. Output files (`result_filtered.tsv`) are only written after ALL percentiles complete. Total runtime for Stage 1 can be 8-20+ hours at 5kb depending on the dataset. A tqdm patch for `pvalue()` exists in `repo/stripenn/getStripe.py` (line 543-545) if visibility is needed.
+
 ### Stage 3: stripenn score fails with "KR not found"
 
 The mcool doesn't have KR normalization weights. Check:

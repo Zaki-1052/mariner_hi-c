@@ -540,8 +540,9 @@ class getStripe:
         np.seterr(divide='ignore', invalid='ignore')
         PVAL = []
         dfsize = len(df)
+        print(f"  Computing p-values for {dfsize} candidate stripes ...")
         with np.errstate(divide='ignore',invalid='ignore'):
-            for i in range(dfsize):
+            for i in tqdm(range(dfsize), desc="  P-values"):
                 chr = df['chr'].iloc[i]
                 chr = str(chr)
                 chrLen = self.chromnames2sizes[chr]
