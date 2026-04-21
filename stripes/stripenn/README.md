@@ -104,7 +104,7 @@ Stage 6: 06_compare_res.R  (5kb vs 10kb comparison)    2 jobs  [COMPLETE]
 Stage 7: stripenn_visualizations.R (viz + annotation)   1 job   [PENDING HPC RUN]
 ```
 
-**Master orchestration:** `run_full_stripenn.sh [--skip-stage0]` chains Stages 0-6 via SLURM dependencies. Stage 7 is run separately after all stages complete: `sbatch scripts/stripenn_visualizations.sb`.
+**Master orchestration:** `run_full_stripenn.sh [--skip-stage0]` chains Stages 0-7 via SLURM dependencies.
 
 ### 4.2 Stage Details
 
@@ -371,7 +371,7 @@ stripenn/
     ├── stripenn_visualizations.R      # Stage 7: visualization + annotation (1,114 lines)
     ├── stripenn_visualizations.sb     # Stage 7: SLURM wrapper
     ├── generate_bedpe.py              # Simple BEDPE generator (local, no HPC needed)
-    ├── run_full_stripenn.sh           # Master orchestration driver (Stages 0-6)
+    ├── run_full_stripenn.sh           # Master orchestration driver (Stages 0-7)
     ├── fix_250402_merged.sb           # One-off fix (delete after use)
     └── fix_250402_balance.sb          # One-off fix (delete after use)
 ```
@@ -481,7 +481,7 @@ stripenn/
 | `stripenn_visualizations.R` | 7 | R | 1 |
 | `stripenn_visualizations.sb` | 7 | SLURM | 1 |
 | `generate_bedpe.py` | 7 | Python | local |
-| `run_full_stripenn.sh` | 0-6 | Driver | |
+| `run_full_stripenn.sh` | 0-7 | Driver | |
 | `fix_250402_merged.sb` | fix | One-off | DELETE after use |
 | `fix_250402_balance.sb` | fix | One-off | DELETE after use |
 

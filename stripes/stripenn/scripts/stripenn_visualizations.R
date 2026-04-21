@@ -768,7 +768,9 @@ cat("========================================\n\n")
 
 make_bedpe <- function(df, cr_df = NULL) {
   if (!is.null(cr_df)) {
-    cr_cols <- cr_df %>% select(stripe_id, in_10kb, resolution_support)
+    cr_cols <- cr_df %>%
+      select(stripe_id, in_10kb, resolution_support) %>%
+      distinct(stripe_id, .keep_all = TRUE)
     df <- df %>% left_join(cr_cols, by = "stripe_id")
   }
   if (!"in_10kb" %in% names(df)) df$in_10kb <- NA
@@ -831,8 +833,8 @@ for (tp_name in names(TIMEPOINTS)) {
                 sep = "\t", quote = FALSE, row.names = FALSE)
     cat(sprintf("  highconf: %d stripes\n", nrow(bp)))
 
-    full_start <- pmin(highconf$pos1, highconf$pos3)
-    full_end   <- pmax(highconf$pos2, highconf$pos4)
+    full_start <- pmin(bp$x1, bp$y1)
+    full_end   <- pmax(bp$x2, bp$y2)
     diag_bp <- bp
     diag_bp$x1 <- full_start; diag_bp$x2 <- full_end
     diag_bp$y1 <- full_start; diag_bp$y2 <- full_end
@@ -860,7 +862,8 @@ for (tp_name in names(TIMEPOINTS)) {
       if (!is.null(cr_ann)) {
         ann_cols <- cr_ann %>%
           select(stripe_id, any_of(c("nearest_gene", "distance_to_tss", "anchor_type",
-                                     "h3k27ac", "h3k27me3", "h3k4me1")))
+                                     "h3k27ac", "h3k27me3", "h3k4me1"))) %>%
+          distinct(stripe_id, .keep_all = TRUE)
         concordant <- concordant %>% left_join(ann_cols, by = "stripe_id")
       }
       bp <- make_bedpe(concordant)
