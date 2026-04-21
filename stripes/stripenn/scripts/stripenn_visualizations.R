@@ -622,8 +622,22 @@ cat("SECTION 8: ChIP-seq Anchor Annotation\n")
 cat("========================================\n\n")
 
 txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
-tss <- resize(genes(txdb), width = 1, fix = "start")
+all_genes <- genes(txdb)
+tss <- resize(all_genes, width = 1, fix = "start")
 cat(sprintf("Loaded %d TSS positions from mm10\n", length(tss)))
+
+pc_map <- tryCatch(
+  AnnotationDbi::select(org.Mm.eg.db, keys = names(tss),
+                        columns = "GENETYPE", keytype = "ENTREZID"),
+  error = function(e) NULL)
+if (!is.null(pc_map)) {
+  coding_ids <- pc_map$ENTREZID[!is.na(pc_map$GENETYPE) & pc_map$GENETYPE == "protein-coding"]
+  tss_coding <- tss[names(tss) %in% coding_ids]
+  cat(sprintf("Protein-coding TSS subset: %d genes\n", length(tss_coding)))
+} else {
+  tss_coding <- tss
+  cat("WARNING: Could not filter protein-coding genes, using all\n")
+}
 
 load_peaks <- function(peak_file) {
   if (is.null(peak_file) || !file.exists(peak_file)) return(NULL)
@@ -669,6 +683,50 @@ annotate_stripes <- function(df, tp_name) {
   } else {
     df$nearest_gene <- NA_character_
   }
+
+  nearest_coding <- distanceToNearest(anchor_gr, tss_coding)
+  df$nearest_coding_dist <- NA_real_
+  df$nearest_coding_id <- NA_character_
+  if (length(nearest_coding) > 0) {
+    df$nearest_coding_dist[queryHits(nearest_coding)] <- mcols(nearest_coding)$distance
+    df$nearest_coding_id[queryHits(nearest_coding)] <- names(tss_coding)[subjectHits(nearest_coding)]
+  }
+  if (any(!is.na(df$nearest_coding_id))) {
+    gm_c <- tryCatch(
+      AnnotationDbi::select(org.Mm.eg.db,
+                            keys = unique(na.omit(df$nearest_coding_id)),
+                            columns = "SYMBOL", keytype = "ENTREZID"),
+      error = function(e) data.frame(ENTREZID = character(), SYMBOL = character()))
+    df$nearest_coding_gene <- gm_c$SYMBOL[match(df$nearest_coding_id, gm_c$ENTREZID)]
+  } else {
+    df$nearest_coding_gene <- NA_character_
+  }
+
+  body_gr <- GRanges(seqnames = df$chr,
+                     ranges = IRanges(start = pmin(df$pos1, df$pos3),
+                                      end = pmax(df$pos2, df$pos4)))
+  body_hits <- findOverlaps(body_gr, tss_coding)
+  all_body_ids <- unique(names(tss_coding)[subjectHits(body_hits)])
+  if (length(all_body_ids) > 0) {
+    gm_body <- tryCatch(
+      AnnotationDbi::select(org.Mm.eg.db, keys = all_body_ids,
+                            columns = "SYMBOL", keytype = "ENTREZID"),
+      error = function(e) data.frame(ENTREZID = character(), SYMBOL = character()))
+    id_to_sym <- setNames(gm_body$SYMBOL, gm_body$ENTREZID)
+  } else {
+    id_to_sym <- character(0)
+  }
+  hit_by_stripe <- split(names(tss_coding)[subjectHits(body_hits)], queryHits(body_hits))
+  df$body_genes <- NA_character_
+  df$body_gene_count <- 0L
+  for (idx in names(hit_by_stripe)) {
+    i <- as.integer(idx)
+    syms <- sort(unique(na.omit(id_to_sym[unique(hit_by_stripe[[idx]])])))
+    df$body_genes[i] <- paste(syms, collapse = ",")
+    df$body_gene_count[i] <- length(syms)
+  }
+  cat(sprintf("  Body genes: median %d, max %d per stripe\n",
+              median(df$body_gene_count), max(df$body_gene_count)))
 
   df$h3k27ac  <- if (!is.null(h3k27ac))  countOverlaps(anchor_gr, h3k27ac)  > 0 else FALSE
   df$h3k27me3 <- if (!is.null(h3k27me3)) countOverlaps(anchor_gr, h3k27me3) > 0 else FALSE
@@ -780,13 +838,12 @@ make_bedpe <- function(df, cr_df = NULL) {
       distinct(stripe_id, .keep_all = TRUE)
     df <- df %>% left_join(cr_cols, by = "stripe_id")
   }
-  if (!"in_10kb" %in% names(df)) df$in_10kb <- NA
-  if (!"nearest_gene" %in% names(df)) df$nearest_gene <- NA
-  if (!"distance_to_tss" %in% names(df)) df$distance_to_tss <- NA
-  if (!"anchor_type" %in% names(df)) df$anchor_type <- NA
-  if (!"h3k27ac" %in% names(df))  df$h3k27ac <- NA
-  if (!"h3k27me3" %in% names(df)) df$h3k27me3 <- NA
-  if (!"h3k4me1" %in% names(df))  df$h3k4me1 <- NA
+  for (col in c("in_10kb", "nearest_gene", "distance_to_tss", "anchor_type",
+                 "h3k27ac", "h3k27me3", "h3k4me1",
+                 "nearest_coding_gene", "nearest_coding_dist",
+                 "body_genes", "body_gene_count")) {
+    if (!col %in% names(df)) df[[col]] <- NA
+  }
 
   rgb_col <- RGB_MAP[assign_plot_category(df$direction, df$direction_confidence)]
   rgb_col[is.na(rgb_col)] <- "128,128,128"
@@ -809,6 +866,10 @@ make_bedpe <- function(df, cr_df = NULL) {
     in_10kb = df$in_10kb,
     nearest_gene = df$nearest_gene,
     distance_to_tss = df$distance_to_tss,
+    nearest_coding_gene = df$nearest_coding_gene,
+    nearest_coding_dist = df$nearest_coding_dist,
+    body_genes = df$body_genes,
+    body_gene_count = df$body_gene_count,
     anchor_type = df$anchor_type,
     h3k27ac = df$h3k27ac,
     h3k27me3 = df$h3k27me3,
@@ -837,7 +898,9 @@ for (tp_name in names(TIMEPOINTS)) {
   if (!is.null(ann_df)) {
     ann_cols <- ann_df %>%
       select(stripe_id, any_of(c("nearest_gene", "distance_to_tss", "anchor_type",
-                                 "h3k27ac", "h3k27me3", "h3k4me1"))) %>%
+                                 "h3k27ac", "h3k27me3", "h3k4me1",
+                                 "nearest_coding_gene", "nearest_coding_dist",
+                                 "body_genes", "body_gene_count"))) %>%
       distinct(stripe_id, .keep_all = TRUE)
     bedpe_src <- bedpe_src %>% left_join(ann_cols, by = "stripe_id")
   }
