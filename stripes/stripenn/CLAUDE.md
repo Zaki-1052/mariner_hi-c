@@ -4,7 +4,7 @@
 
 This document captures all implementation progress, bugs encountered, fixes applied, and remaining work for the Stripenn-based differential chromatin stripe analysis pipeline. It is a companion to the Quagga pipeline (`stripes/quagga/CLAUDE.md`) and serves as context for continuing development across AI sessions.
 
-**Last updated:** 2026-04-20 (initial session)
+**Last updated:** 2026-04-21 (Stage 7 visualization session)
 
 ---
 
@@ -91,19 +91,20 @@ Source .hic files: `/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCalle
 
 ### 4.1 Overview
 
-7 stages, 19 scripts total. Each stage has a SLURM `.sb` script (accepts CLI args), an optional R script, and a `submit_*.sh` wrapper that iterates over the parameter space and supports `--dependency=afterok:...` chaining.
+8 stages, 22 scripts total. Each stage has a SLURM `.sb` script (accepts CLI args), an optional R script, and a `submit_*.sh` wrapper that iterates over the parameter space and supports `--dependency=afterok:...` chaining.
 
 ```
 Stage 0: hictk convert     (.hic -> .mcool)           16 jobs  [COMPLETE]
-Stage 1: stripenn compute   (call stripes on merged)    8 jobs
-Stage 2: 02_build_union.R  (merge ctrl/mut calls)      4 jobs
-Stage 3: stripenn score     (score 6 replicates)       24 jobs
-Stage 4: 04_edgeR.R        (differential analysis)     4 jobs
-Stage 5: 05_integration.R  (classify direction)        4 jobs
-Stage 6: 06_compare_res.R  (5kb vs 10kb comparison)    2 jobs
+Stage 1: stripenn compute   (call stripes on merged)    8 jobs  [COMPLETE]
+Stage 2: 02_build_union.R  (merge ctrl/mut calls)      4 jobs  [COMPLETE]
+Stage 3: stripenn score     (score 6 replicates)       24 jobs  [COMPLETE]
+Stage 4: 04_edgeR.R        (differential analysis)     4 jobs  [COMPLETE]
+Stage 5: 05_integration.R  (classify direction)        4 jobs  [COMPLETE]
+Stage 6: 06_compare_res.R  (5kb vs 10kb comparison)    2 jobs  [COMPLETE]
+Stage 7: stripenn_visualizations.R (viz + annotation)   1 job   [PENDING HPC RUN]
 ```
 
-**Master orchestration:** `run_full_stripenn.sh [--skip-stage0]` chains all stages via SLURM dependencies.
+**Master orchestration:** `run_full_stripenn.sh [--skip-stage0]` chains Stages 0-6 via SLURM dependencies. Stage 7 is run separately after all stages complete: `sbatch scripts/stripenn_visualizations.sb`.
 
 ### 4.2 Stage Details
 
@@ -143,7 +144,7 @@ Stage 6: 06_compare_res.R  (5kb vs 10kb comparison)    2 jobs
 **Stage 4 — edgeR differential analysis**
 - Scripts: `04_edgeR.R` + `04_edgeR.sb` + `submit_04_edgeR.sh`
 - Builds count matrix from `O_Sum_added` (rounded to integer) across 6 replicates
-- Skips `filterByExpr()` (small feature set ~150-300 stripes)
+- Skips `filterByExpr()` (feature set ~1,800-7,400 stripes)
 - TMM normalization, robust QL-GLM (`estimateDisp` + `glmQLFit` + `glmQLFTest`)
 - Diagnostic plots: MDS, BCV, QL dispersion, volcano, MA
 - Output: `${DATA_DIR}/outputs/{tp}/res_{kb}kb/04_edgeR/`
@@ -162,6 +163,16 @@ Stage 6: 06_compare_res.R  (5kb vs 10kb comparison)    2 jobs
 - High-confidence: significant at both resolutions with concordant direction
 - Output: `cross_res_merged.tsv`, logFC correlation plot, direction bar chart
 
+**Stage 7 — Visualization & annotation** (PENDING HPC RUN)
+- Scripts: `stripenn_visualizations.R` + `stripenn_visualizations.sb`
+- Processes both timepoints (250831, 250402) and both resolutions in a single run
+- 11 sections: volcano plots, stripiness analysis, length distributions, source/direction bars, cross-res concordance, replicate heatmaps, ChIP-seq anchor annotation (7 categories using 5 marks), annotated BEDPE export (3 tiers), GO/KEGG enrichment, combined comparison, summary stats
+- ChIP-seq annotation uses all 5 marks (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent) for both timepoints
+- BEDPE export: 3 tiers per timepoint (highconf, allsig, concordant) + JuiceBox diagonal/rectangle formats, 28-column format matching Quagga BEDPE schema
+- SLURM: 8 cpus, 64G, 4h
+- Output: `${DATA_DIR}/outputs/{tp}/visualizations/`, `${DATA_DIR}/outputs/combined/`
+- **Prerequisite BEDPEs already generated locally** via `generate_bedpe.py` (simple 15-column format for immediate JuiceBox use)
+
 ### 4.3 Configuration
 
 All parameters in `config/stripenn_config.yaml`:
@@ -170,6 +181,7 @@ All parameters in `config/stripenn_config.yaml`:
 - edgeR: skip filtering, TMM, robust, FDR primary=0.05, exploratory=0.10
 - Classification: logFC threshold=0.3, tiered confidence
 - Filtering: exclude chrX, chrY, chrM
+- ChIP-seq peaks: 5 marks x 2 timepoints from `peaks/beds/`
 - SLURM resource hints per stage
 
 ---
@@ -216,7 +228,7 @@ All other 14 mcool files have native KR from the source .hic files.
 
 ---
 
-## 6. Current State (as of 2026-04-20)
+## 6. Current State (as of 2026-04-21)
 
 ### 6.1 Data files
 
@@ -232,56 +244,71 @@ All other 14 mcool files have native KR from the source .hic files.
 | Stage | Status | Notes |
 |-------|--------|-------|
 | 0 (hictk convert) | COMPLETE | All 16 mcool files verified |
-| 1 (stripenn compute) | PARTIAL | 250831 5kb runs completed successfully after numpy fix. Other jobs need (re)run |
-| 2 (build union) | NOT RUN | |
-| 3 (score replicates) | NOT RUN | |
-| 4 (edgeR) | NOT RUN | |
-| 5 (integration) | NOT RUN | |
-| 6 (cross-resolution) | NOT RUN | |
+| 1 (stripenn compute) | COMPLETE | All 8 jobs (2 tp x 2 res x 2 conditions). 250402 5kb: 5,327/5,850 stripes; 250831 5kb: 3,237/3,068 stripes |
+| 2 (build union) | COMPLETE | Union sets: 250402 5kb=7,371; 250831 5kb=4,008 |
+| 3 (score replicates) | COMPLETE | All 24 jobs. Row counts match union sets exactly |
+| 4 (edgeR) | COMPLETE | 250402: 31.5% sig (5kb), BCV=0.012. 250831: 2.4% sig (5kb), BCV=0.020 |
+| 5 (integration) | COMPLETE | 250402: 1,528 lost, 2,052 gained, 3 str, 4 wk. 250831: 949 lost, 776 gained |
+| 6 (cross-resolution) | COMPLETE | 250402: r=0.850, 1,273 concordant. 250831: r=0.808, 759 concordant |
+| 7 (visualization) | PENDING HPC RUN | Script written, simple BEDPEs generated locally |
 
-### 6.3 To resume
+### 6.3 Key results
+
+**250402 (late/adult) — strong differential signal:**
+- 7,371 union stripes at 5kb, 2,320 significant (31.5% FDR<0.05)
+- More gained than lost (2,052 vs 1,528)
+- High-confidence: 367 lost + 638 gained = 1,005 stripes
+- All effect sizes minimal (max |logFC| = 0.389)
+- Cross-res logFC correlation: r=0.850
+
+**250831 (early/P12) — weak differential signal:**
+- 4,008 union stripes at 5kb, 96 significant (2.4% FDR<0.05)
+- More lost than gained (949 vs 776)
+- High-confidence: 12 lost + 10 gained = 22 stripes
+- All effect sizes minimal (max |logFC| = 0.321)
+- Cross-res logFC correlation: r=0.808
+
+### 6.4 Simple BEDPEs (already generated locally)
+
+Generated via `scripts/generate_bedpe.py` from `cross_res_merged.tsv` for immediate JuiceBox use:
+
+| File | 250402 | 250831 |
+|------|--------|--------|
+| `{tp}_stripes_highconf.bedpe` | 1,015 stripes | 10 stripes |
+| `{tp}_stripes_allsig.bedpe` | 1,404 stripes | 61 stripes |
+| `{tp}_stripes_concordant.bedpe` | 315 stripes | 134 stripes |
+| `{tp}_stripes_diagonal.bedpe` | 1,015 stripes | 10 stripes |
+| `{tp}_stripes_rectangle.bedpe` | 1,015 stripes | 10 stripes |
+
+Location: `outputs/{tp}/{tp}_stripes_*.bedpe` (GitHub-synced, 15-column format)
+
+### 6.5 To run Stage 7 on HPC
 
 ```bash
-# Cancel any stale jobs from broken dependency chains
-scancel -u $USER --state=PENDING
-
-# Re-run the full pipeline from Stage 1
-cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn/scripts
-bash run_full_stripenn.sh --skip-stage0
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn
+sbatch scripts/stripenn_visualizations.sb
 ```
 
-If the dependency chain breaks (e.g., one job fails), you can resubmit stages manually:
-```bash
-cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn/scripts
-
-# Check which stages completed
-ls ${DATA_DIR}/outputs/250831/res_5kb/
-
-# Resubmit from the failed stage onward (no deps = run immediately)
-bash submit_02_union.sh
-# Then chain the rest:
-JIDS=$(bash submit_02_union.sh | paste -sd:)
-JIDS=$(bash submit_03_score.sh --dependency=afterok:${JIDS} | paste -sd:)
-# ... etc
-```
+This produces annotated 28-column BEDPEs (with ChIP-seq, gene annotation), volcano plots, stripiness analysis, length distributions, replicate heatmaps, GO/KEGG enrichment, and combined summary.
 
 ---
 
 ## 7. Verification Checklist
 
-| Stage | Check | Expected |
-|-------|-------|----------|
-| 0 | `hictk metadata *.mcool` | All 16 files show resolutions [5000, 10000] |
-| 0 | KR present | `cooler dump -t bins -H -c chrom,start,end,KR <uri> \| awk '$4!=""' \| head` shows numeric values |
-| 1 | `wc -l result_filtered.tsv` | 100-500 stripes per merged sample |
-| 2 | `wc -l union_stripes.bedpe` | >= max(ctrl, mut) count |
-| 2 | source distribution | shared + control_only + mutant_only = total |
-| 3 | score row count | matches union BEDPE minus header |
-| 3 | `O_Sum_added` values | non-negative, mostly > 0 |
-| 4 | MDS plot | ctrl/mut cluster separation |
-| 4 | BCV | 0.2-0.5 range |
-| 5 | source x direction | control_only all "lost", mutant_only all "gained" |
-| 6 | high-confidence set | proper subset of all significant |
+| Stage | Check | Expected | Actual |
+|-------|-------|----------|--------|
+| 0 | `hictk metadata *.mcool` | All 16 files show resolutions [5000, 10000] | PASS |
+| 0 | KR present | numeric KR values in bins table | PASS |
+| 1 | `wc -l result_filtered.tsv` | 1,000-6,000 stripes per merged sample | PASS: 1,398-5,850 |
+| 2 | `wc -l union_stripes.bedpe` | >= max(ctrl, mut) count | PASS: 1,879-7,371 |
+| 2 | source distribution | shared + control_only + mutant_only = total | PASS |
+| 3 | score row count | matches union BEDPE minus header | PASS: exact match |
+| 3 | `O_Sum_added` values | non-negative, mostly > 0 | PASS |
+| 4 | MDS plot | ctrl/mut cluster separation | PASS |
+| 4 | BCV | reasonable range | PASS: 0.011-0.021 (very low) |
+| 5 | source x direction | control_only all "lost", mutant_only all "gained" | PASS |
+| 6 | high-confidence set | proper subset of all significant | PASS |
+| 7 | BEDPE column count | 15 (simple) or 28 (annotated) | PASS: 15 (simple generated) |
 
 ---
 
@@ -305,7 +332,16 @@ stripenn/
 ├── CLAUDE.md                          # This document
 ├── PLAN.md                            # Original architectural plan
 ├── config/
-│   └── stripenn_config.yaml           # All paths, params, thresholds
+│   └── stripenn_config.yaml           # All paths, params, thresholds, ChIP peaks
+├── docs/
+│   └── stripenn-analysis-prompt.md    # Analysis prompt template for BEDPE files
+├── outputs/
+│   ├── 250402/
+│   │   ├── 250402_results.md          # Results document (late/adult)
+│   │   └── 250402_stripes_*.bedpe     # Simple BEDPEs for JuiceBox (5 files)
+│   └── 250831/
+│       ├── 250831_results.md          # Results document (early/P12)
+│       └── 250831_stripes_*.bedpe     # Simple BEDPEs for JuiceBox (5 files)
 ├── repo/                              # Upstream stripenn source (reference only)
 │   ├── stripenn/
 │   │   ├── cli.py                     # CLI entry point (compute, score, seeimage)
@@ -332,7 +368,10 @@ stripenn/
     ├── 06_compare_resolutions.R       # Stage 6: 5kb vs 10kb
     ├── 06_compare_resolutions.sb
     ├── submit_06_compare.sh
-    ├── run_full_stripenn.sh           # Master orchestration driver
+    ├── stripenn_visualizations.R      # Stage 7: visualization + annotation (1,114 lines)
+    ├── stripenn_visualizations.sb     # Stage 7: SLURM wrapper
+    ├── generate_bedpe.py              # Simple BEDPE generator (local, no HPC needed)
+    ├── run_full_stripenn.sh           # Master orchestration driver (Stages 0-6)
     ├── fix_250402_merged.sb           # One-off fix (delete after use)
     └── fix_250402_balance.sb          # One-off fix (delete after use)
 ```
@@ -439,18 +478,27 @@ stripenn/
 | `06_compare_resolutions.R` | 6 | R | |
 | `06_compare_resolutions.sb` | 6 | SLURM | 2 |
 | `submit_06_compare.sh` | 6 | Wrapper | |
-| `run_full_stripenn.sh` | all | Driver | |
+| `stripenn_visualizations.R` | 7 | R | 1 |
+| `stripenn_visualizations.sb` | 7 | SLURM | 1 |
+| `generate_bedpe.py` | 7 | Python | local |
+| `run_full_stripenn.sh` | 0-6 | Driver | |
 | `fix_250402_merged.sb` | fix | One-off | DELETE after use |
 | `fix_250402_balance.sb` | fix | One-off | DELETE after use |
 
 ### Config
 
-- `config/stripenn_config.yaml` — All paths, parameters, thresholds, SLURM resources
+- `config/stripenn_config.yaml` — All paths, parameters, thresholds, ChIP-seq peaks, SLURM resources
 
 ### Architecture docs
 
 - `PLAN.md` — Original architectural plan (has some inaccuracies; see Section 8)
 - `CLAUDE.md` — This document (current state and context)
+- `docs/stripenn-analysis-prompt.md` — Template for analyzing BEDPE files
+
+### Results documents (GitHub-synced outputs/)
+
+- `outputs/250402/250402_results.md` — Late timepoint results with summary stats, top stripes, JuiceBox coordinates
+- `outputs/250831/250831_results.md` — Early timepoint results
 
 ### Ported logic from Quagga pipeline
 
@@ -460,6 +508,7 @@ stripenn/
 | `04_edgeR.R` | `stripes/quagga/scripts/phase3_edgeR.R` | `save_multiformat()`, full edgeR QL-GLM workflow, diagnostic plots |
 | `05_integration.R` | `stripes/quagga/scripts/phase4_integration.R` | Tiered direction classification, confidence scoring, BEDPE output |
 | `06_compare_resolutions.R` | `scripts/compare_resolutions.R` | Anchor matching across resolutions, concordance analysis |
+| `stripenn_visualizations.R` | `stripes/quagga/scripts/stripe_visualizations.R` | Volcano plots, length distributions, ChIP-seq annotation, BEDPE construction, GO/KEGG enrichment, color scheme, `save_multiformat_ggplot()` utility |
 
 ---
 
@@ -551,10 +600,13 @@ cat ${DATA_DIR}/logs/01_call_*_5kb_*.out  # Stage 1 logs
 ### R (in mariner_env)
 
 - `edgeR` (differential analysis — Stage 4)
-- `GenomicRanges`, `IRanges` (anchor matching — Stage 2)
+- `GenomicRanges`, `IRanges` (anchor matching — Stages 2, 7)
 - `yaml` (config loading)
-- `dplyr` (data manipulation)
-- `ggplot2`, `svglite` (diagnostic plots)
+- `dplyr`, `tidyr` (data manipulation)
+- `ggplot2`, `patchwork`, `svglite`, `RColorBrewer` (visualization — Stage 7)
+- `pheatmap` (replicate correlation heatmaps — Stage 7)
+- `TxDb.Mmusculus.UCSC.mm10.knownGene`, `org.Mm.eg.db` (gene annotation — Stage 7)
+- `clusterProfiler`, `enrichplot` (GO/KEGG enrichment — Stage 7)
 - `VennDiagram` (cross-resolution comparison — Stage 6)
 
 ### System (HPC)
@@ -565,23 +617,35 @@ cat ${DATA_DIR}/logs/01_call_*_5kb_*.out  # Stage 1 logs
 
 ---
 
-## 13. Downstream (after pipeline completes)
+## 13. Downstream (after Stage 7 visualization completes)
 
-The existing `stripes/quagga/scripts/stripe_visualizations.R` can be pointed at `05_final_differential.tsv` (same schema) for volcano plots, length distributions, ChIP-seq anchor annotation, and GO/KEGG enrichment — no rewrite needed.
+Stage 7 (`stripenn_visualizations.R`) handles most downstream analyses that were previously done by the Quagga `stripe_visualizations.R`:
+- Volcano plots, length distributions, stripiness analysis
+- ChIP-seq anchor annotation (all 5 marks, 7-category classification)
+- GO/KEGG enrichment (clusterProfiler with stripe-specific background)
+- Annotated 28-column BEDPEs for JuiceBox (3 tiers per timepoint)
+- Combined early vs late comparison panels
 
-The `cross_res_merged.tsv` from Stage 6 provides high-confidence stripe calls for publication-ready analyses.
+Simple 15-column BEDPEs are already generated locally (via `generate_bedpe.py`) and available for immediate JuiceBox validation. Results documents with top stripes and JuiceBox coordinates are at `outputs/{tp}/{tp}_results.md`.
 
-### Planned downstream analyses
+### Remaining downstream analyses
 
 - Comparison with Quagga pipeline results (stripes called by both methods = highest confidence)
-- ChIP-seq anchor annotation (H3K27ac, H3K27me3, H3K4me1 — timepoint-specific)
-- GO/KEGG functional enrichment of genes near differential stripe anchors
-- JuiceBox visualization using `.bedpe` files (color-coded by direction and confidence)
 - Integration with loop differential results from the main mariner pipeline
+- Tessa Popay-style anchor/body ChIP-seq metagene analysis (per Dixon meeting suggestion)
+
+### Column mapping reference (Stripenn → Quagga BEDPE)
+
+| Stripenn col | Quagga BEDPE col | Notes |
+|---|---|---|
+| `pos1/pos2` | `x1/x2` (anchor) | Narrow anchor region |
+| `pos3/pos4` | `y1/y2` (span) | Extended stripe body |
+| `stripe_width` | `anchor_width` | In bp; BEDPE has `_kb` suffix |
+| `direction_confidence` | `detection_confidence` | Stripenn has no separate detection confidence |
 
 ---
 
-**Last Updated:** 2026-04-20
+**Last Updated:** 2026-04-21
 **Project:** BAP1-KO Differential Chromatin Stripe Analysis (Stripenn track)
 **Organism:** Mouse (mm10)
 **HPC:** SDSC Expanse
