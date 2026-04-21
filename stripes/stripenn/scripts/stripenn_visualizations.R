@@ -948,41 +948,58 @@ if (enrichment_ok) {
                 file.path(enrich_dir, sprintf("stripe_anchor_genes_%s.tsv", tp_name)),
                 sep = "\t", quote = FALSE, row.names = FALSE)
 
-    for (ont in c("BP", "CC", "MF")) {
-      cat(sprintf("  GO %s...\n", ont))
+    go_config <- list(
+      BP = list(label = "Biological Process", show = 20, w = 12, h = 10),
+      CC = list(label = "Cellular Component", show = 15, w = 10, h = 8),
+      MF = list(label = "Molecular Function", show = 15, w = 10, h = 8)
+    )
+
+    for (ont in names(go_config)) {
+      cfg <- go_config[[ont]]
+      cat(sprintf("  GO %s (%s)...\n", ont, cfg$label))
       go_res <- tryCatch(
         compareCluster(geneCluster = gene_list, fun = "enrichGO",
                        OrgDb = org.Mm.eg.db, ont = ont,
                        universe = bg_genes,
-                       pAdjustMethod = "BH", pvalueCutoff = 0.05),
+                       pAdjustMethod = "BH", pvalueCutoff = 0.05,
+                       qvalueCutoff = 0.05),
         error = function(e) { cat(sprintf("    Error: %s\n", e$message)); NULL })
 
       if (!is.null(go_res) && nrow(go_res@compareClusterResult) > 0) {
-        p_go <- dotplot(go_res, showCategory = 15) +
-          labs(title = sprintf("GO %s: %s Stripes", ont, tp_label)) +
+        write.table(go_res@compareClusterResult,
+                    file.path(enrich_dir, sprintf("go_%s_%s.tsv", tolower(ont), tp_name)),
+                    sep = "\t", quote = FALSE, row.names = FALSE)
+        p_go <- dotplot(go_res, showCategory = cfg$show) +
+          labs(title = sprintf("GO %s: %s Stripes", cfg$label, tp_label)) +
           theme(plot.title = element_text(hjust = 0.5, face = "bold"))
         save_multiformat_ggplot(p_go,
-                                file.path(enrich_dir, sprintf("go_%s_%s", tolower(ont), tp_name)),
-                                width = 10, height = 8, use_subfolders = FALSE)
+                                file.path(enrich_dir, sprintf("go_%s_dotplot_%s", tolower(ont), tp_name)),
+                                width = cfg$w, height = cfg$h, use_subfolders = FALSE)
+        cat(sprintf("    %d significant terms\n", nrow(go_res@compareClusterResult)))
       } else {
         cat(sprintf("    No significant GO %s terms\n", ont))
       }
     }
 
-    cat("  KEGG...\n")
+    cat("  KEGG pathways...\n")
     kegg_res <- tryCatch(
       compareCluster(geneCluster = gene_list, fun = "enrichKEGG",
                      organism = "mmu", universe = bg_genes,
-                     pAdjustMethod = "BH", pvalueCutoff = 0.05),
+                     pAdjustMethod = "BH", pvalueCutoff = 0.05,
+                     qvalueCutoff = 0.05),
       error = function(e) { cat(sprintf("    Error: %s\n", e$message)); NULL })
 
     if (!is.null(kegg_res) && nrow(kegg_res@compareClusterResult) > 0) {
-      p_kegg <- dotplot(kegg_res, showCategory = 15) +
-        labs(title = sprintf("KEGG: %s Stripes", tp_label)) +
+      write.table(kegg_res@compareClusterResult,
+                  file.path(enrich_dir, sprintf("kegg_%s.tsv", tp_name)),
+                  sep = "\t", quote = FALSE, row.names = FALSE)
+      p_kegg <- dotplot(kegg_res, showCategory = 20) +
+        labs(title = sprintf("KEGG Pathways: %s Stripes", tp_label)) +
         theme(plot.title = element_text(hjust = 0.5, face = "bold"))
       save_multiformat_ggplot(p_kegg,
-                              file.path(enrich_dir, sprintf("kegg_%s", tp_name)),
-                              width = 10, height = 8, use_subfolders = FALSE)
+                              file.path(enrich_dir, sprintf("kegg_dotplot_%s", tp_name)),
+                              width = 12, height = 10, use_subfolders = FALSE)
+      cat(sprintf("    %d significant pathways\n", nrow(kegg_res@compareClusterResult)))
     } else {
       cat("    No significant KEGG pathways\n")
     }
@@ -1107,7 +1124,9 @@ cat("  Per timepoint: visualizations/{tp}_stripes_{highconf,allsig,concordant}.b
 cat("  Per timepoint: visualizations/{tp}_stripes_{diagonal,rectangle}.bedpe\n")
 cat("  Per timepoint: visualizations/{tp}_annotated_stripes.tsv\n")
 cat("  Combined: combined/{volcano,length,source_direction,cross_res,comparison}_*\n")
-cat("  Enrichment: combined/enrichment/go_{bp,cc,mf}_{tp}.* kegg_{tp}.*\n")
+cat("  Enrichment: combined/enrichment/go_{bp,cc,mf}_dotplot_{tp}.* kegg_dotplot_{tp}.*\n")
+cat("  Enrichment TSVs: combined/enrichment/go_{bp,cc,mf}_{tp}.tsv kegg_{tp}.tsv\n")
+cat("  Enrichment genes: combined/enrichment/stripe_anchor_genes_{tp}.tsv\n")
 cat("=========================================\n")
 sink()
 cat(sprintf("Summary written: %s\n", sink_file))

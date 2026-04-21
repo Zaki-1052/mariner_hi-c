@@ -29,9 +29,18 @@ You are analyzing differential chromatin stripe results from a BAP1-KO vs wildty
 | nearest_gene | Closest gene to anchor |
 | distance_to_tss | Distance to TSS in bp (0 = overlaps promoter) |
 | anchor_type | `Active_Promoter`, `Repressed_Promoter`, `Bivalent_Promoter`, `Active_Enhancer`, `Poised_Enhancer`, `Polycomb`, or `Other` |
-| h3k27ac, h3k27me3, h3k4me1 | ChIP-seq peak overlap at anchor (TRUE/FALSE) |
+| h3k27ac, h3k27me3, h3k4me1, h3k4me3 | ChIP-seq peak overlap at anchor (TRUE/FALSE) |
 | stripe_length_kb | Span length in kb |
 | anchor_width_kb | Anchor width in kb |
+
+**Additional columns in annotated TSV** (not in simple BEDPE, available in `{tp}_annotated_stripes.tsv`):
+
+| Column | Description |
+|--------|-------------|
+| stripiness_ctrl | Stripiness score in control (higher = stronger stripe signal) |
+| stripiness_mut | Stripiness score in mutant |
+| bivalent | Overlap with pre-computed H3K4me3+H3K27me3 intersection peaks (TRUE/FALSE) |
+| nearest_gene_id | Entrez gene ID for nearest gene |
 
 ## Stripenn-Specific Notes
 
@@ -46,7 +55,7 @@ You are analyzing differential chromatin stripe results from a BAP1-KO vs wildty
 - Total stripes by direction (lost vs gained)
 - Distribution by confidence tier
 - Distribution by anchor_type
-- ChIP-seq annotation breakdown (H3K27ac, H3K27me3, H3K4me1 overlap rates by direction)
+- ChIP-seq annotation breakdown (H3K27ac, H3K27me3, H3K4me1, H3K4me3 overlap rates by direction)
 
 ### 2. High-Priority Stripes for Validation
 
@@ -87,13 +96,63 @@ Keep speculation minimal. Report what the data shows:
 - ChIP mark overlap patterns
 - Any notable gene associations
 
-### 5. Caveats and Confidence Assessment
+### 5. Anchor Annotation Analysis
+
+Using the annotated TSV (`{tp}_annotated_stripes.tsv`) or the annotated BEDPEs:
+
+**Anchor type enrichment:**
+- Compare anchor_type distribution in lost stripes vs gained stripes vs all stripes (background)
+- Flag any anchor types significantly over- or under-represented in a direction (Fisher's exact or chi-squared)
+- Specifically assess: are Polycomb/Bivalent_Promoter anchors preferentially lost? Are Active_Enhancer anchors preferentially gained?
+
+**ChIP-seq mark analysis:**
+- Report H3K27me3, H3K27ac, H3K4me1, H3K4me3 overlap rates per direction as a table
+- Compare lost vs gained overlap rates — which marks show the largest differential?
+- Note any stripes with bivalent marks (H3K4me3 + H3K27me3) — these are key BAP1/Polycomb targets
+
+**Stripiness score comparison** (if annotated TSV provided):
+- For shared stripes: is stripiness_ctrl vs stripiness_mut correlated? Do differential stripes show genuinely different stripiness, or are effect sizes driven by count differences at similar stripe morphology?
+
+### 6. Pathway Enrichment Summary
+
+If GO/KEGG enrichment results are available (from `combined/enrichment/`):
+
+**GO Biological Process** (`go_bp_{tp}.tsv` / `go_bp_dotplot_{tp}.*`):
+- Report top 5 terms per direction (lost vs gained), with gene counts and adjusted p-values
+- Flag any Polycomb-related, developmental, or chromatin-remodeling terms
+
+**GO Cellular Component** (`go_cc_{tp}.tsv` / `go_cc_dotplot_{tp}.*`):
+- Report top 3 terms per direction — are differential stripes enriched at specific subcellular structures (nuclear envelope, heterochromatin, etc.)?
+
+**GO Molecular Function** (`go_mf_{tp}.tsv` / `go_mf_dotplot_{tp}.*`):
+- Report top 3 terms per direction — any enrichment for transcription factor binding, chromatin binding, or deubiquitinase targets?
+
+**KEGG Pathways** (`kegg_{tp}.tsv` / `kegg_dotplot_{tp}.*`):
+- Report top 3 pathways per direction if significant
+
+**General:**
+- Note if enrichment was underpowered (too few genes) for either direction or timepoint
+- Compare enrichment results across timepoints if both are available
+
+### 7. Cross-Timepoint Comparison
+
+When analyzing both early (250831/P12) and late (250402/adult) timepoints:
+
+- Is the directional bias consistent? (Both show more lost? More gained? Or opposite?)
+- Are anchor type enrichments consistent between timepoints?
+- Do the same pathways appear in both timepoints' enrichment results?
+- Identify any stripes at the same locus that are differential in both timepoints (convergent evidence)
+- Note the large difference in significance rates (early ~2.4% vs late ~31.5%) and what this implies for developmental timing of BAP1's effect
+
+### 8. Caveats and Confidence Assessment
 
 Note any concerns about:
-- Small effect sizes (all |logFC| < 0.4)
+- Small effect sizes (all |logFC| < 0.4) — the differential signal is frequency-driven, not magnitude-driven
 - Directional consistency rate
-- Stripes with conflicting signals
+- Stripes with conflicting signals (e.g., both_discordant in cross-resolution)
 - Low-confidence calls that appear biologically interesting
+- Whether anchor type enrichments survive multiple testing correction
+- Replicate correlation structure (tight within-group → trustworthy; inflated → cautious interpretation)
 
 ## Output Format
 
