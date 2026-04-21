@@ -30,9 +30,20 @@ echo "==========================================="
 echo ""
 
 source ~/.bashrc
-conda activate mariner_env
+
+# Auto-detect HPC vs local
+if [ -d "/expanse/lustre/projects/csd940/zalibhai" ]; then
+    conda activate mariner_env
+    CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+    DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+else
+    CODE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+    DATA_DIR="${CODE_DIR}"
+fi
 
 echo "Environment:"
+echo "  CODE_DIR: ${CODE_DIR}"
+echo "  DATA_DIR: ${DATA_DIR}"
 which R
 R --version | head -n 1
 echo ""
@@ -45,9 +56,6 @@ if [ $? -ne 0 ]; then
 fi
 echo "All required packages available"
 echo ""
-
-CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
-DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
 
 echo "Checking Stage 6 outputs..."
 for TP in 250831 250402; do
@@ -88,16 +96,18 @@ echo ""
 
 for TP in 250831 250402; do
     echo "${TP} visualizations:"
-    ls "${DATA_DIR}/outputs/${TP}/visualizations/"*.{pdf,tsv,bedpe} 2>/dev/null | head -20
+    find "${DATA_DIR}/outputs/${TP}/visualizations" -name "*.pdf" -o -name "*.tsv" 2>/dev/null | head -20
+    echo "  BEDPEs:"
+    ls "${DATA_DIR}/outputs/${TP}/"*.bedpe 2>/dev/null
     echo ""
 done
 
 echo "Combined:"
-ls "${DATA_DIR}/outputs/combined/"*.{pdf,txt} 2>/dev/null | head -10
+find "${DATA_DIR}/outputs/combined" -maxdepth 2 -name "*.pdf" -o -name "*.txt" 2>/dev/null | head -10
 echo ""
 
 echo "Enrichment:"
-ls "${DATA_DIR}/outputs/combined/enrichment/"* 2>/dev/null | head -10
+find "${DATA_DIR}/outputs/combined/enrichment" -maxdepth 2 -type f 2>/dev/null | head -10
 echo ""
 
 echo "==========================================="
