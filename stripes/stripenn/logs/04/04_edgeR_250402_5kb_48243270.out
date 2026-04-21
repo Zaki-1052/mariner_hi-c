@@ -1,0 +1,105 @@
+===========================================
+Stage 4: edgeR Differential Analysis
+===========================================
+Job ID:     48243270
+Node:       exp-3-40
+Timepoint:  250402
+Resolution: 5000 bp (5 kb)
+Start:      Mon Apr 20 16:41:51 PDT 2026
+===========================================
+Loading required package: limma
+Warning message:
+package ‘yaml’ was built under R version 4.4.3 
+R packages OK
+Warning messages:
+1: package ‘yaml’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+
+========================================
+Stage 4: edgeR Differential Analysis
+Timepoint:  250402
+Resolution: 5000 bp (5 kb)
+========================================
+
+Config loaded: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn/config/stripenn_config.yaml
+
+=== Loading Score Data ===
+  Union stripes: 7371
+  ctrl_M1: loaded (median O_Sum=2364)
+  ctrl_M2: loaded (median O_Sum=3116)
+  ctrl_M3: loaded (median O_Sum=3141)
+  mut_M1: loaded (median O_Sum=2795)
+  mut_M2: loaded (median O_Sum=2822)
+  mut_M3: loaded (median O_Sum=2526)
+
+  Count matrix: 7371 stripes x 6 samples
+  After filtering: 7371 stripes
+
+=== Creating DGEList ===
+  DGEList: 7371 stripes x 6 samples
+  Groups: ctrl, mut
+
+  Library sizes:
+    ctrl_M1 (ctrl): 18480546
+    ctrl_M2 (ctrl): 24318499
+    ctrl_M3 (ctrl): 24557943
+    mut_M1 (mut): 21829802
+    mut_M2 (mut): 22080131
+    mut_M3 (mut): 19751036
+
+=== Filtering ===
+  SKIPPING low-count filtering (per design decision)
+  Retaining ALL 7371 stripes for analysis
+
+=== Normalization ===
+  Method: TMM
+  Normalization factors:
+    ctrl_M1: 1.0010
+    ctrl_M2: 1.0005
+    ctrl_M3: 1.0005
+    mut_M1: 1.0013
+    mut_M2: 0.9989
+    mut_M3: 0.9978
+
+=== Generating MDS Plot ===
+  Saved: mds_plot.{pdf,svg,jpg}
+
+=== Dispersion Estimation ===
+  Common dispersion: 0.0001
+  Common BCV: 0.012
+  Tagwise BCV range: 0.010 - 0.083
+  Median tagwise BCV: 0.011
+  Saved: bcv_plot.{pdf,svg,jpg}
+
+=== Quasi-Likelihood GLM ===
+  Saved: ql_dispersion_plot.{pdf,svg,jpg}
+
+=== Differential Testing ===
+
+  Results (FDR < 0.05):
+    Significant: 2320 / 7371 (31.5%)
+    Up in mutant: 1288
+    Down in mutant: 1032
+
+  Exploratory (FDR < 0.10): 2919
+
+=== Generating Volcano Plot ===
+  Saved: volcano_plot.{pdf,svg,jpg}
+  Saved: ma_plot.{pdf,svg,jpg}
+
+=== Saving Outputs ===
+  Saved: dge_object.rds
+  Saved: fit_object.rds
+  Saved: all_results.tsv/rds
+  Saved: significant_FDR05.tsv (2320 stripes)
+  Saved: count_matrix.tsv
+  Saved: summary.txt
+
+========================================
+Stage 4 complete.
+End: 2026-04-20 16:42:07.056193
+========================================
+
+edgeR complete. Results: /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/res_5kb/04_edgeR/all_results.tsv
+End: Mon Apr 20 16:42:07 PDT 2026
+===========================================
