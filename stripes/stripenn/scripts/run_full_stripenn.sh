@@ -102,11 +102,22 @@ if [ -z "${JIDS_06}" ]; then
 fi
 echo "  Job IDs: ${JIDS_06}"
 
+# Stage 7: visualization (1 job)
+echo ""
+echo "=== Stage 7: visualization (1 job) ==="
+JID_07=$(sbatch --parsable --dependency=afterok:${JIDS_06} \
+  "${CODE_DIR}/scripts/stripenn_visualizations.sb" 2>/dev/null)
+if [ -z "${JID_07}" ]; then
+  echo "ERROR: Stage 7 submission failed." >&2
+  exit 1
+fi
+echo "  Job ID: ${JID_07}"
+
 echo ""
 echo "==========================================="
 echo "All stages submitted."
-echo "Total jobs: 0+8+4+24+4+4+2 = 46 (excluding Stage 0)"
-echo "Final stage job IDs: ${JIDS_06}"
+echo "Total jobs: 0+8+4+24+4+4+2+1 = 47 (excluding Stage 0)"
+echo "Final stage job ID: ${JID_07}"
 echo ""
 echo "Monitor: squeue -u $USER"
 echo "Logs:    /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/logs/"
