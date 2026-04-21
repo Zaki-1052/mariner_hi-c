@@ -34,9 +34,16 @@ suppressPackageStartupMessages({
 })
 cat("Packages loaded\n\n")
 
-CODE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
-DATA_DIR <- "/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
-REPO_ROOT <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+if (dir.exists("/expanse/lustre/projects/csd940/zalibhai")) {
+  CODE_DIR  <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
+  DATA_DIR  <- "/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+  REPO_ROOT <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+} else {
+  CODE_DIR  <- normalizePath(file.path(getwd()))
+  DATA_DIR  <- CODE_DIR
+  REPO_ROOT <- normalizePath(file.path(CODE_DIR, "..", ".."))
+}
+cat(sprintf("CODE_DIR:  %s\nDATA_DIR:  %s\nREPO_ROOT: %s\n\n", CODE_DIR, DATA_DIR, REPO_ROOT))
 
 source(file.path(REPO_ROOT, "scripts/utils/multi_format_output.R"))
 
@@ -815,21 +822,35 @@ make_bedpe <- function(df, cr_df = NULL) {
 for (tp_name in names(TIMEPOINTS)) {
   tp_id <- TIMEPOINTS[[tp_name]]$tp
   viz_dir <- file.path(DATA_DIR, "outputs", tp_id, "visualizations")
+  bedpe_dir <- file.path(DATA_DIR, "outputs", tp_id)
   ann_df <- annotated[[tp_name]]
   cr_df  <- data_all[[tp_name]][["cross_res"]]
-  if (is.null(ann_df)) next
+  if (is.null(cr_df) && is.null(ann_df)) next
 
   cat(sprintf("BEDPE export: %s\n", TIMEPOINTS[[tp_name]]$label))
 
-  highconf <- ann_df %>%
+  # Use cross_res_merged as the source (includes both 5kb and 10kb-only stripes)
+  # Fall back to 5kb annotated if cross_res not available
+  bedpe_src <- if (!is.null(cr_df)) cr_df else ann_df
+
+  # Left-join annotation columns from 5kb annotated stripes
+  if (!is.null(ann_df)) {
+    ann_cols <- ann_df %>%
+      select(stripe_id, any_of(c("nearest_gene", "distance_to_tss", "anchor_type",
+                                 "h3k27ac", "h3k27me3", "h3k4me1"))) %>%
+      distinct(stripe_id, .keep_all = TRUE)
+    bedpe_src <- bedpe_src %>% left_join(ann_cols, by = "stripe_id")
+  }
+
+  highconf <- bedpe_src %>%
     filter(direction %in% c("lost", "gained") &
              significant_FDR05 == TRUE & direction_confidence == "high")
-  allsig <- ann_df %>%
+  allsig <- bedpe_src %>%
     filter(direction %in% c("lost", "gained") & significant_FDR05 == TRUE)
 
   if (nrow(highconf) > 0) {
     bp <- make_bedpe(highconf, cr_df)
-    write.table(bp, file.path(viz_dir, sprintf("%s_stripes_highconf.bedpe", tp_id)),
+    write.table(bp, file.path(bedpe_dir, sprintf("%s_stripes_highconf.bedpe", tp_id)),
                 sep = "\t", quote = FALSE, row.names = FALSE)
     cat(sprintf("  highconf: %d stripes\n", nrow(bp)))
 
@@ -838,36 +859,28 @@ for (tp_name in names(TIMEPOINTS)) {
     diag_bp <- bp
     diag_bp$x1 <- full_start; diag_bp$x2 <- full_end
     diag_bp$y1 <- full_start; diag_bp$y2 <- full_end
-    write.table(diag_bp, file.path(viz_dir, sprintf("%s_stripes_diagonal.bedpe", tp_id)),
+    write.table(diag_bp, file.path(bedpe_dir, sprintf("%s_stripes_diagonal.bedpe", tp_id)),
                 sep = "\t", quote = FALSE, row.names = FALSE)
 
     rect_bp <- bp
     rect_bp$y1 <- full_start; rect_bp$y2 <- full_end
-    write.table(rect_bp, file.path(viz_dir, sprintf("%s_stripes_rectangle.bedpe", tp_id)),
+    write.table(rect_bp, file.path(bedpe_dir, sprintf("%s_stripes_rectangle.bedpe", tp_id)),
                 sep = "\t", quote = FALSE, row.names = FALSE)
   }
 
   if (nrow(allsig) > 0) {
     bp <- make_bedpe(allsig, cr_df)
-    write.table(bp, file.path(viz_dir, sprintf("%s_stripes_allsig.bedpe", tp_id)),
+    write.table(bp, file.path(bedpe_dir, sprintf("%s_stripes_allsig.bedpe", tp_id)),
                 sep = "\t", quote = FALSE, row.names = FALSE)
     cat(sprintf("  allsig: %d stripes\n", nrow(bp)))
   }
 
   if (!is.null(cr_df)) {
-    concordant <- cr_df %>%
+    concordant <- bedpe_src %>%
       filter(direction %in% c("lost", "gained") & resolution_support == "both_concordant")
     if (nrow(concordant) > 0) {
-      cr_ann <- annotated[[tp_name]]
-      if (!is.null(cr_ann)) {
-        ann_cols <- cr_ann %>%
-          select(stripe_id, any_of(c("nearest_gene", "distance_to_tss", "anchor_type",
-                                     "h3k27ac", "h3k27me3", "h3k4me1"))) %>%
-          distinct(stripe_id, .keep_all = TRUE)
-        concordant <- concordant %>% left_join(ann_cols, by = "stripe_id")
-      }
       bp <- make_bedpe(concordant)
-      write.table(bp, file.path(viz_dir, sprintf("%s_stripes_concordant.bedpe", tp_id)),
+      write.table(bp, file.path(bedpe_dir, sprintf("%s_stripes_concordant.bedpe", tp_id)),
                   sep = "\t", quote = FALSE, row.names = FALSE)
       cat(sprintf("  concordant: %d stripes\n", nrow(bp)))
     }
@@ -1120,8 +1133,8 @@ for (tp_name in names(TIMEPOINTS)) {
 cat("=========================================\n")
 cat("OUTPUT FILES:\n")
 cat("  Per timepoint: visualizations/{volcano,stripiness,length,direction,cross_res,replicate,anchor}.*\n")
-cat("  Per timepoint: visualizations/{tp}_stripes_{highconf,allsig,concordant}.bedpe\n")
-cat("  Per timepoint: visualizations/{tp}_stripes_{diagonal,rectangle}.bedpe\n")
+cat("  Per timepoint: {tp}/{tp}_stripes_{highconf,allsig,concordant}.bedpe\n")
+cat("  Per timepoint: {tp}/{tp}_stripes_{diagonal,rectangle}.bedpe\n")
 cat("  Per timepoint: visualizations/{tp}_annotated_stripes.tsv\n")
 cat("  Combined: combined/{volcano,length,source_direction,cross_res,comparison}_*\n")
 cat("  Enrichment: combined/enrichment/go_{bp,cc,mf}_dotplot_{tp}.* kegg_dotplot_{tp}.*\n")

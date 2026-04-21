@@ -1,0 +1,357 @@
+===========================================
+STRIPENN VISUALIZATION ANALYSIS
+===========================================
+Job ID: 48294248
+Node: exp-2-28
+CPUs: 8
+Start time: Tue Apr 21 10:39:13 PDT 2026
+===========================================
+
+Environment:
+/home/zalibhai/.conda/envs/mariner_env/bin/R
+R version 4.4.2 (2024-10-31) -- "Pile of Leaves"
+
+Checking R packages...
+Loading required package: stats4
+Loading required package: BiocGenerics
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, intersect, is.unsorted, lapply, Map, mapply,
+    match, mget, order, paste, pmax, pmax.int, pmin, pmin.int,
+    Position, rank, rbind, Reduce, rownames, sapply, saveRDS, setdiff,
+    table, tapply, union, unique, unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: GenomeInfoDb
+Loading required package: GenomicFeatures
+Loading required package: AnnotationDbi
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+All required packages available
+
+Checking Stage 6 outputs...
+  250831: 4483 stripes
+  250402: 8415 stripes
+
+===========================================
+Running stripenn_visualizations.R
+Start: Tue Apr 21 10:39:31 PDT 2026
+===========================================
+
+
+========================================
+Stripenn Visualization Analysis
+========================================
+
+Loading required packages...
+Warning messages:
+1: package ‘dplyr’ was built under R version 4.4.3
+2: package ‘yaml’ was built under R version 4.4.3
+Packages loaded
+
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+
+========================================
+SECTION 1: Loading Data
+========================================
+
+  Loaded 250831/5kb: 4008 stripes
+  Loaded 250831/10kb: 1879 stripes
+  Loaded 250831 cross-res: 4483 stripes
+  Loaded 250402/5kb: 7371 stripes
+  Loaded 250402/10kb: 3566 stripes
+  Loaded 250402 cross-res: 8415 stripes
+
+Section 1 complete
+
+========================================
+SECTION 2: Volcano Plots
+========================================
+
+  Saved: volcano_250831_5kb.{pdf,svg,jpg}
+  Saved: volcano_250831_10kb.{pdf,svg,jpg}
+  Saved: volcano_250402_5kb.{pdf,svg,jpg}
+  Saved: volcano_250402_10kb.{pdf,svg,jpg}
+  Saved: volcano_combined.{pdf,svg,jpg}
+Section 2 complete
+
+========================================
+SECTION 3: Stripiness Score Analysis
+========================================
+
+Stripiness analysis: Early (P12)
+  Shared stripes with both scores: 2280
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: stripiness_250831.{pdf,svg,jpg}
+Stripiness analysis: Late (Adult)
+  Shared stripes with both scores: 3789
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: stripiness_250402.{pdf,svg,jpg}
+Warning messages:
+1: Removed 4 rows containing non-finite outside the scale range
+(`stat_boxplot()`).
+2: Removed 4 rows containing non-finite outside the scale range
+(`stat_boxplot()`).
+3: Removed 4 rows containing non-finite outside the scale range
+(`stat_boxplot()`).
+4: Removed 3 rows containing non-finite outside the scale range
+(`stat_boxplot()`).
+5: Removed 3 rows containing non-finite outside the scale range
+(`stat_boxplot()`).
+6: Removed 3 rows containing non-finite outside the scale range
+(`stat_boxplot()`).
+Section 3 complete
+
+========================================
+SECTION 4: Length & Width Distributions
+========================================
+
+Length analysis: Early (P12)
+  Saved: length_distribution_250831.{pdf,svg,jpg}
+Length analysis: Late (Adult)
+  Saved: length_distribution_250402.{pdf,svg,jpg}
+  Saved: length_comparison.{pdf,svg,jpg}
+Section 4 complete
+
+========================================
+SECTION 5: Source & Direction Distributions
+========================================
+
+  Saved: source_direction_summary.{pdf,svg,jpg}
+  Saved: direction_breakdown_250831.{pdf,svg,jpg}
+  Saved: direction_breakdown_250402.{pdf,svg,jpg}
+Section 5 complete
+
+========================================
+SECTION 6: Cross-Resolution Concordance
+========================================
+
+Cross-res analysis: Early (P12)
+  Saved: cross_res_250831.{pdf,svg,jpg}
+Cross-res analysis: Late (Adult)
+  Saved: cross_res_250402.{pdf,svg,jpg}
+  Saved: cross_res_comparison.{pdf,svg,jpg}
+Section 6 complete
+
+========================================
+SECTION 7: Replicate Correlation
+========================================
+
+  Replicate heatmap: Early (P12) 5kb (4008 stripes)
+  Saved: replicate_correlation_250831_5kb.{pdf,svg,jpg}
+  Replicate heatmap: Early (P12) 10kb (1879 stripes)
+  Saved: replicate_correlation_250831_10kb.{pdf,svg,jpg}
+  Replicate heatmap: Late (Adult) 5kb (7371 stripes)
+  Saved: replicate_correlation_250402_5kb.{pdf,svg,jpg}
+  Replicate heatmap: Late (Adult) 10kb (3566 stripes)
+  Saved: replicate_correlation_250402_10kb.{pdf,svg,jpg}
+Section 7 complete
+
+========================================
+SECTION 8: ChIP-seq Anchor Annotation
+========================================
+
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+Loaded 24528 TSS positions from mm10
+  Annotating anchors: early (4008 stripes)
+'select()' returned 1:1 mapping between keys and columns
+  Anchor types:
+    Active_Enhancer: 479 (12.0%)
+    Active_Promoter: 507 (12.6%)
+    Bivalent_Promoter: 144 (3.6%)
+    Other: 1218 (30.4%)
+    Poised_Enhancer: 1412 (35.2%)
+    Polycomb: 35 (0.9%)
+    Repressed_Promoter: 213 (5.3%)
+  Saved: 250831_annotated_stripes.tsv
+  Saved: anchor_annotation_250831.{pdf,svg,jpg}
+  Annotating anchors: late (7371 stripes)
+'select()' returned 1:1 mapping between keys and columns
+  Anchor types:
+    Active_Enhancer: 1224 (16.6%)
+    Active_Promoter: 1280 (17.4%)
+    Bivalent_Promoter: 85 (1.2%)
+    Other: 1925 (26.1%)
+    Poised_Enhancer: 2381 (32.3%)
+    Polycomb: 109 (1.5%)
+    Repressed_Promoter: 367 (5.0%)
+  Saved: 250402_annotated_stripes.tsv
+  Saved: anchor_annotation_250402.{pdf,svg,jpg}
+There were 24 warnings (use warnings() to see them)
+Section 8 complete
+
+========================================
+SECTION 9: Annotated BEDPE Export
+========================================
+
+BEDPE export: Early (P12)
+  highconf: 8 stripes
+  allsig: 48 stripes
+  concordant: 134 stripes
+BEDPE export: Late (Adult)
+  highconf: 832 stripes
+  allsig: 1158 stripes
+  concordant: 315 stripes
+Section 9 complete
+
+========================================
+SECTION 10: GO/KEGG Enrichment
+========================================
+
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Early (P12): lost=26 genes, gained=19 genes, background=4344
+'select()' returned 1:1 mapping between keys and columns
+  GO BP (Biological Process)...
+  Saved: go_bp_dotplot_early.{pdf,svg,jpg}
+    49 significant terms
+  GO CC (Cellular Component)...
+    No significant GO CC terms
+  GO MF (Molecular Function)...
+  Saved: go_mf_dotplot_early.{pdf,svg,jpg}
+    2 significant terms
+  KEGG pathways...
+  Saved: kegg_dotplot_early.{pdf,svg,jpg}
+    2 significant pathways
+  Late (Adult): lost=444 genes, gained=639 genes, background=6687
+'select()' returned 1:1 mapping between keys and columns
+  GO BP (Biological Process)...
+  Saved: go_bp_dotplot_late.{pdf,svg,jpg}
+    8 significant terms
+  GO CC (Cellular Component)...
+  Saved: go_cc_dotplot_late.{pdf,svg,jpg}
+    18 significant terms
+  GO MF (Molecular Function)...
+  Saved: go_mf_dotplot_late.{pdf,svg,jpg}
+    1 significant terms
+  KEGG pathways...
+    No significant KEGG pathways
+Warning messages:
+1: `aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>.
+2: In compareCluster(geneCluster = gene_list, fun = "enrichGO", OrgDb = org.Mm.eg.db,  :
+  No enrichment found in any of gene cluster, please check your input...
+3: In compareCluster(geneCluster = gene_list, fun = "enrichKEGG", organism = "mmu",  :
+  No enrichment found in any of gene cluster, please check your input...
+Section 10 complete
+
+========================================
+SECTION 11: Summary & Comparison
+========================================
+
+  Saved: comparison_summary.{pdf,svg,jpg}
+Summary written: /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/combined_summary.txt
+
+========================================
+STRIPENN VISUALIZATION COMPLETE
+========================================
+
+
+===========================================
+VISUALIZATION COMPLETE
+===========================================
+End time: Tue Apr 21 10:42:49 PDT 2026
+
+250831 visualizations:
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/250831_stripes_allsig.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/250831_stripes_concordant.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/250831_stripes_diagonal.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/250831_stripes_highconf.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/250831_stripes_rectangle.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/anchor_annotation_250831.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/cross_res_250831.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/direction_breakdown_250831.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/length_distribution_250831.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/length_statistics_250831.tsv
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/replicate_correlation_250831_10kb.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/replicate_correlation_250831_5kb.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/stripiness_250831.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/volcano_250831_10kb.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250831/visualizations/volcano_250831_5kb.pdf
+
+250402 visualizations:
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/250402_stripes_allsig.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/250402_stripes_concordant.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/250402_stripes_diagonal.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/250402_stripes_highconf.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/250402_stripes_rectangle.bedpe
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/anchor_annotation_250402.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/cross_res_250402.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/direction_breakdown_250402.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/length_distribution_250402.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/length_statistics_250402.tsv
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/replicate_correlation_250402_10kb.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/replicate_correlation_250402_5kb.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/stripiness_250402.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/volcano_250402_10kb.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/250402/visualizations/volcano_250402_5kb.pdf
+
+Combined:
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/combined_summary.txt
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/comparison_summary.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/cross_res_comparison.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/length_comparison.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/source_direction_summary.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/volcano_combined.pdf
+
+Enrichment:
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_early.jpg
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_early.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_early.svg
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_late.jpg
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_late.pdf
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_late.svg
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_bp_early.tsv
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_bp_late.tsv
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_cc_dotplot_late.jpg
+/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/outputs/combined/enrichment/go_cc_dotplot_late.pdf
+
+===========================================
+SUCCESS
+===========================================

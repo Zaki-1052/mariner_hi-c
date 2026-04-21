@@ -1,0 +1,326 @@
+===========================================
+STRIPENN VISUALIZATION ANALYSIS
+===========================================
+Job ID: 
+Node: Zakirs-MacBook-Air.local
+CPUs: 
+Start time: Tue Apr 21 12:14:33 PDT 2026
+===========================================
+
+Environment:
+  CODE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn
+  DATA_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn
+/usr/local/bin/R
+R version 4.5.2 (2025-10-31) -- "[Not] Part in a Rumble"
+
+Checking R packages...
+Loading required package: stats4
+Loading required package: BiocGenerics
+Loading required package: generics
+
+Attaching package: ‘generics’
+
+The following objects are masked from ‘package:base’:
+
+    as.difftime, as.factor, as.ordered, intersect, is.element, setdiff,
+    setequal, union
+
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, aperm, append, as.data.frame, basename, cbind,
+    colnames, dirname, do.call, duplicated, eval, evalq, Filter, Find,
+    get, grep, grepl, is.unsorted, lapply, Map, mapply, match, mget,
+    order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+    rbind, Reduce, rownames, sapply, saveRDS, table, tapply, unique,
+    unsplit, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:utils’:
+
+    findMatches
+
+The following objects are masked from ‘package:base’:
+
+    expand.grid, I, unname
+
+Loading required package: IRanges
+Loading required package: Seqinfo
+Loading required package: GenomicFeatures
+Loading required package: AnnotationDbi
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+All required packages available
+
+Checking Stage 6 outputs...
+  250831: 4483 stripes
+  250402: 8415 stripes
+
+===========================================
+Running stripenn_visualizations.R
+Start: Tue Apr 21 12:14:37 PDT 2026
+===========================================
+
+
+========================================
+Stripenn Visualization Analysis
+========================================
+
+Loading required packages...
+Packages loaded
+
+CODE_DIR:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn
+DATA_DIR:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn
+REPO_ROOT: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c
+
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+
+========================================
+SECTION 1: Loading Data
+========================================
+
+  Loaded 250831/5kb: 4008 stripes
+  Loaded 250831/10kb: 1879 stripes
+  Loaded 250831 cross-res: 4483 stripes
+  Loaded 250402/5kb: 7371 stripes
+  Loaded 250402/10kb: 3566 stripes
+  Loaded 250402 cross-res: 8415 stripes
+
+Section 1 complete
+
+========================================
+SECTION 2: Volcano Plots
+========================================
+
+  Saved: volcano_250831_5kb/{pdf,svg,jpg}
+  Saved: volcano_250831_10kb/{pdf,svg,jpg}
+  Saved: volcano_250402_5kb/{pdf,svg,jpg}
+  Saved: volcano_250402_10kb/{pdf,svg,jpg}
+  Saved: volcano_combined/{pdf,svg,jpg}
+Section 2 complete
+
+========================================
+SECTION 3: Stripiness Score Analysis
+========================================
+
+Stripiness analysis: Early (P12)
+  Shared stripes with both scores: 2280
+  Saved: stripiness_250831/{pdf,svg,jpg}
+Stripiness analysis: Late (Adult)
+  Shared stripes with both scores: 3789
+  Saved: stripiness_250402/{pdf,svg,jpg}
+Section 3 complete
+
+========================================
+SECTION 4: Length & Width Distributions
+========================================
+
+Length analysis: Early (P12)
+  Saved: length_distribution_250831/{pdf,svg,jpg}
+Length analysis: Late (Adult)
+  Saved: length_distribution_250402/{pdf,svg,jpg}
+  Saved: length_comparison/{pdf,svg,jpg}
+Section 4 complete
+
+========================================
+SECTION 5: Source & Direction Distributions
+========================================
+
+  Saved: source_direction_summary/{pdf,svg,jpg}
+  Saved: direction_breakdown_250831/{pdf,svg,jpg}
+  Saved: direction_breakdown_250402/{pdf,svg,jpg}
+Section 5 complete
+
+========================================
+SECTION 6: Cross-Resolution Concordance
+========================================
+
+Cross-res analysis: Early (P12)
+  Saved: cross_res_250831/{pdf,svg,jpg}
+Cross-res analysis: Late (Adult)
+  Saved: cross_res_250402/{pdf,svg,jpg}
+  Saved: cross_res_comparison/{pdf,svg,jpg}
+Section 6 complete
+
+========================================
+SECTION 7: Replicate Correlation
+========================================
+
+  Replicate heatmap: Early (P12) 5kb (4008 stripes)
+  Saved: replicate_correlation_250831_5kb/{pdf,svg,jpg}
+  Replicate heatmap: Early (P12) 10kb (1879 stripes)
+  Saved: replicate_correlation_250831_10kb/{pdf,svg,jpg}
+  Replicate heatmap: Late (Adult) 5kb (7371 stripes)
+  Saved: replicate_correlation_250402_5kb/{pdf,svg,jpg}
+  Replicate heatmap: Late (Adult) 10kb (3566 stripes)
+  Saved: replicate_correlation_250402_10kb/{pdf,svg,jpg}
+Section 7 complete
+
+========================================
+SECTION 8: ChIP-seq Anchor Annotation
+========================================
+
+Loaded 24528 TSS positions from mm10
+  Annotating anchors: early (4008 stripes)
+  Anchor types:
+    Active_Enhancer: 479 (12.0%)
+    Active_Promoter: 507 (12.6%)
+    Bivalent_Promoter: 144 (3.6%)
+    Other: 1218 (30.4%)
+    Poised_Enhancer: 1412 (35.2%)
+    Polycomb: 35 (0.9%)
+    Repressed_Promoter: 213 (5.3%)
+  Saved: 250831_annotated_stripes.tsv
+  Saved: anchor_annotation_250831/{pdf,svg,jpg}
+  Annotating anchors: late (7371 stripes)
+  Anchor types:
+    Active_Enhancer: 1224 (16.6%)
+    Active_Promoter: 1280 (17.4%)
+    Bivalent_Promoter: 85 (1.2%)
+    Other: 1925 (26.1%)
+    Poised_Enhancer: 2381 (32.3%)
+    Polycomb: 109 (1.5%)
+    Repressed_Promoter: 367 (5.0%)
+  Saved: 250402_annotated_stripes.tsv
+  Saved: anchor_annotation_250402/{pdf,svg,jpg}
+Section 8 complete
+
+========================================
+SECTION 9: Annotated BEDPE Export
+========================================
+
+BEDPE export: Early (P12)
+  highconf: 10 stripes
+  allsig: 61 stripes
+  concordant: 134 stripes
+BEDPE export: Late (Adult)
+  highconf: 1015 stripes
+  allsig: 1404 stripes
+  concordant: 315 stripes
+Section 9 complete
+
+========================================
+SECTION 10: GO/KEGG Enrichment
+========================================
+
+  Early (P12): lost=26 genes, gained=19 genes, background=4344
+  GO BP (Biological Process)...
+  Saved: go_bp_dotplot_early/{pdf,svg,jpg}
+    49 significant terms
+  GO CC (Cellular Component)...
+    No significant GO CC terms
+  GO MF (Molecular Function)...
+  Saved: go_mf_dotplot_early/{pdf,svg,jpg}
+    1 significant terms
+  KEGG pathways...
+  Saved: kegg_dotplot_early/{pdf,svg,jpg}
+    2 significant pathways
+  Late (Adult): lost=444 genes, gained=639 genes, background=6687
+  GO BP (Biological Process)...
+  Saved: go_bp_dotplot_late/{pdf,svg,jpg}
+    6 significant terms
+  GO CC (Cellular Component)...
+  Saved: go_cc_dotplot_late/{pdf,svg,jpg}
+    19 significant terms
+  GO MF (Molecular Function)...
+  Saved: go_mf_dotplot_late/{pdf,svg,jpg}
+    1 significant terms
+  KEGG pathways...
+    No significant KEGG pathways
+Section 10 complete
+
+========================================
+SECTION 11: Summary & Comparison
+========================================
+
+  Saved: comparison_summary/{pdf,svg,jpg}
+Summary written: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/combined_summary.txt
+
+========================================
+STRIPENN VISUALIZATION COMPLETE
+========================================
+
+
+===========================================
+VISUALIZATION COMPLETE
+===========================================
+End time: Tue Apr 21 12:16:01 PDT 2026
+
+250831 visualizations:
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/direction_breakdown_250831/direction_breakdown_250831.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/volcano_250831_10kb/volcano_250831_10kb.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/length_distribution_250831/length_distribution_250831.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/length_statistics_250831.tsv
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/stripiness_250831/stripiness_250831.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/replicate_correlation_250831_5kb/replicate_correlation_250831_5kb.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/cross_res_250831/cross_res_250831.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/volcano_250831_5kb/volcano_250831_5kb.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/replicate_correlation_250831_10kb/replicate_correlation_250831_10kb.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/anchor_annotation_250831/anchor_annotation_250831.pdf
+  BEDPEs:
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/250831_stripes_allsig.bedpe
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/250831_stripes_concordant.bedpe
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/250831_stripes_diagonal.bedpe
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/250831_stripes_highconf.bedpe
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/250831_stripes_rectangle.bedpe
+
+250402 visualizations:
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/direction_breakdown_250402/direction_breakdown_250402.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/length_distribution_250402/length_distribution_250402.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/length_statistics_250402.tsv
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/replicate_correlation_250402_10kb/replicate_correlation_250402_10kb.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/stripiness_250402/stripiness_250402.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/replicate_correlation_250402_5kb/replicate_correlation_250402_5kb.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/cross_res_250402/cross_res_250402.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/volcano_250402_10kb/volcano_250402_10kb.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/anchor_annotation_250402/anchor_annotation_250402.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/volcano_250402_5kb/volcano_250402_5kb.pdf
+  BEDPEs:
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/250402_stripes_allsig.bedpe
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/250402_stripes_concordant.bedpe
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/250402_stripes_diagonal.bedpe
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/250402_stripes_highconf.bedpe
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/250402_stripes_rectangle.bedpe
+
+Combined:
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/source_direction_summary/source_direction_summary.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/volcano_combined/volcano_combined.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/comparison_summary/comparison_summary.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/combined_summary.txt
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/cross_res_comparison/cross_res_comparison.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/length_comparison/length_comparison.pdf
+
+Enrichment:
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_mf_dotplot_early/go_mf_dotplot_early.svg
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_mf_dotplot_early/go_mf_dotplot_early.jpg
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_mf_dotplot_early/go_mf_dotplot_early.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_early/go_bp_dotplot_early.svg
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_early/go_bp_dotplot_early.jpg
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_early/go_bp_dotplot_early.pdf
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_mf_early.tsv
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_late/go_bp_dotplot_late.svg
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_late/go_bp_dotplot_late.jpg
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/combined/enrichment/go_bp_dotplot_late/go_bp_dotplot_late.pdf
+
+===========================================
+SUCCESS
+===========================================
