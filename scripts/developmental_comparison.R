@@ -389,23 +389,49 @@ cat(sprintf("  Late gained: %.1f%% (%d / %d)\n",
 cat(sprintf("  Late lost:   %.1f%% (%d / %d)\n\n",
             frac_lost * 100, round(frac_lost * nrow(late_lost)), nrow(late_lost)))
 
-cat(sprintf("Running permutation test (%d iterations)...\n", N_PERM))
-set.seed(SEED)
-null_fracs <- numeric(N_PERM)
-for (i in seq_len(N_PERM)) {
-  if (i %% 100 == 0) cat(sprintf("  Iteration %d / %d\n", i, N_PERM))
-  sampled_idx <- sample(nrow(late_bg), nrow(late_gained), replace = FALSE)
-  sampled_loops <- late_bg[sampled_idx, ]
-  null_fracs[i] <- overlap_fraction(sampled_loops, early_wt, ANCHOR_TOLERANCE)
+perm_cache <- file.path(OUTPUT_DIR,
+                        "03_loop_overlap_gained/permutation_stats.tsv")
+
+if (file.exists(perm_cache)) {
+  cat("Loading cached permutation results...\n")
+  cached <- read.delim(perm_cache, stringsAsFactors = FALSE)
+  null_mean <- as.numeric(cached$value[cached$metric == "null_mean"])
+  null_sd   <- as.numeric(cached$value[cached$metric == "null_sd"])
+  z_score   <- (frac_gained - null_mean) / null_sd
+  emp_p     <- as.numeric(cached$value[cached$metric == "empirical_p"])
+  null_fracs <- rnorm(N_PERM, mean = null_mean, sd = null_sd)
+  N_PERM_ACTUAL <- as.numeric(
+    cached$value[cached$metric == "n_perm"]
+  )
+} else {
+  cat(sprintf("Running permutation test (%d iterations)...\n",
+              N_PERM))
+  set.seed(SEED)
+  null_fracs <- numeric(N_PERM)
+  for (i in seq_len(N_PERM)) {
+    if (i %% 100 == 0)
+      cat(sprintf("  Iteration %d / %d\n", i, N_PERM))
+    sampled_idx <- sample(nrow(late_bg),
+                          nrow(late_gained),
+                          replace = FALSE)
+    sampled_loops <- late_bg[sampled_idx, ]
+    null_fracs[i] <- overlap_fraction(sampled_loops,
+                                      early_wt,
+                                      ANCHOR_TOLERANCE)
+  }
+  null_mean <- mean(null_fracs)
+  null_sd   <- sd(null_fracs)
+  N_PERM_ACTUAL <- N_PERM
 }
 
-z_score <- (frac_gained - mean(null_fracs)) / sd(null_fracs)
-emp_p   <- (sum(null_fracs >= frac_gained) + 1) / (N_PERM + 1)
+z_score <- (frac_gained - null_mean) / null_sd
+emp_p   <- (sum(null_fracs >= frac_gained) + 1) /
+           (N_PERM_ACTUAL + 1)
 
 cat(sprintf("\nPermutation results:\n"))
 cat(sprintf("  Observed overlap (gained): %.4f\n", frac_gained))
-cat(sprintf("  Null mean:   %.4f\n", mean(null_fracs)))
-cat(sprintf("  Null SD:     %.4f\n", sd(null_fracs)))
+cat(sprintf("  Null mean:   %.4f\n", null_mean))
+cat(sprintf("  Null SD:     %.4f\n", null_sd))
 cat(sprintf("  Z-score:     %.3f\n", z_score))
 cat(sprintf("  Empirical p: %.4f\n\n", emp_p))
 
@@ -774,6 +800,235 @@ if (!is.null(early_stripes) && !is.null(late_stripes)) {
 }
 
 cat("\nModule 6 complete.\n\n")
+
+
+# =============================================================================
+# MODULE 7: INTUITIVE SUMMARY VISUALIZATIONS
+# =============================================================================
+
+cat("=== Module 7: Intuitive Summary Visualizations ===\n\n")
+
+dir.create(file.path(OUTPUT_DIR, "07_summary_panels"), recursive = TRUE, showWarnings = FALSE)
+
+# ---------------------------------------------------------------------------
+# 7A: PCA of 12 replicates — the "MDS-style" plot PIs recognize from RNA-seq
+# ---------------------------------------------------------------------------
+
+cat("7A: PCA of 12 replicates...\n")
+
+pc1_complete <- pc1_joined[, -1]
+pc1_complete <- pc1_complete[complete.cases(pc1_complete), ]
+
+pca_res <- prcomp(t(as.matrix(pc1_complete)), center = TRUE, scale. = FALSE)
+
+pca_plot_df <- data.frame(
+  sample = rownames(pca_res$x),
+  PCA1 = pca_res$x[, 1],
+  PCA2 = pca_res$x[, 2],
+  stringsAsFactors = FALSE
+)
+pca_plot_df$timepoint <- ifelse(grepl("^early", pca_plot_df$sample), "P13", "Adult")
+pca_plot_df$condition <- ifelse(grepl("_ctrl_", pca_plot_df$sample), "WT", "KO")
+pca_plot_df$group <- factor(paste(pca_plot_df$timepoint, pca_plot_df$condition),
+                            levels = c("P13 WT", "P13 KO", "Adult WT", "Adult KO"))
+
+var_pct <- round(summary(pca_res)$importance[2, 1:2] * 100, 1)
+
+centroids_pca <- pca_plot_df %>%
+  group_by(group) %>%
+  summarise(PCA1 = mean(PCA1), PCA2 = mean(PCA2), .groups = "drop")
+
+c_ew <- centroids_pca[centroids_pca$group == "P13 WT", ]
+c_lw <- centroids_pca[centroids_pca$group == "Adult WT", ]
+c_lk <- centroids_pca[centroids_pca$group == "Adult KO", ]
+
+dev_vec <- c(c_lw$PCA1 - c_ew$PCA1, c_lw$PCA2 - c_ew$PCA2)
+ko_vec  <- c(c_lk$PCA1 - c_ew$PCA1, c_lk$PCA2 - c_ew$PCA2)
+dev_frac <- sum(ko_vec * dev_vec) / sum(dev_vec^2) * 100
+
+cat(sprintf("  KO completed %.1f%% of WT developmental trajectory in PCA space\n", dev_frac))
+
+pca_colors <- c("P13 WT" = "#7570b3", "P13 KO" = "#b3b0d8",
+                "Adult WT" = "#1b9e77", "Adult KO" = "#66c2a5")
+pca_shapes <- c("P13 WT" = 16, "P13 KO" = 17,
+                "Adult WT" = 16, "Adult KO" = 17)
+
+p_pca <- ggplot(pca_plot_df, aes(x = PCA1, y = PCA2, color = group, shape = group)) +
+  annotate("segment", x = c_ew$PCA1, y = c_ew$PCA2,
+           xend = c_lw$PCA1, yend = c_lw$PCA2,
+           arrow = arrow(length = unit(0.3, "cm"), type = "closed"),
+           color = "grey50", linewidth = 1) +
+  annotate("text",
+           x = (c_ew$PCA1 + c_lw$PCA1) / 2,
+           y = (c_ew$PCA2 + c_lw$PCA2) / 2,
+           label = "WT developmental trajectory",
+           color = "grey40", size = 3.5, vjust = 2, fontface = "italic") +
+  geom_point(size = 5) +
+  scale_color_manual(values = pca_colors) +
+  scale_shape_manual(values = pca_shapes) +
+  labs(x = sprintf("PC1 (%.1f%% variance)", var_pct[1]),
+       y = sprintf("PC2 (%.1f%% variance)", var_pct[2]),
+       title = "Compartment Landscape: 12-Replicate PCA",
+       subtitle = sprintf("Adult KO completes %.0f%% of WT developmental trajectory", dev_frac),
+       color = NULL, shape = NULL) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "right",
+        legend.text = element_text(size = 12))
+
+save_multiformat_ggplot(p_pca,
+                        file.path(OUTPUT_DIR, "07_summary_panels/pca_12_replicates"),
+                        width = 9, height = 7)
+
+
+# ---------------------------------------------------------------------------
+# 7B: PC1 scatter — side-by-side: how much did each condition move from P13?
+# ---------------------------------------------------------------------------
+
+cat("7B: PC1 density scatter...\n")
+
+scatter_df <- data.frame(
+  early_WT = group_avgs$early_WT,
+  late_WT  = group_avgs$late_WT,
+  late_KO  = group_avgs$late_KO
+)
+scatter_df <- scatter_df[complete.cases(scatter_df), ]
+
+r2_wt <- cor(scatter_df$early_WT, scatter_df$late_WT)^2
+r2_ko <- cor(scatter_df$early_WT, scatter_df$late_KO)^2
+rmsd_wt <- sqrt(mean((scatter_df$late_WT - scatter_df$early_WT)^2))
+rmsd_ko <- sqrt(mean((scatter_df$late_KO - scatter_df$early_WT)^2))
+
+cat(sprintf("  Adult WT vs P13 WT: R²=%.4f, RMSD=%.4f\n", r2_wt, rmsd_wt))
+cat(sprintf("  Adult KO vs P13 WT: R²=%.4f, RMSD=%.4f\n", r2_ko, rmsd_ko))
+
+scatter_long <- rbind(
+  data.frame(x = scatter_df$early_WT, y = scatter_df$late_WT,
+             panel = sprintf("Adult WT vs P13 WT  (R²=%.3f, RMSD=%.3f)", r2_wt, rmsd_wt)),
+  data.frame(x = scatter_df$early_WT, y = scatter_df$late_KO,
+             panel = sprintf("Adult KO vs P13 WT  (R²=%.3f, RMSD=%.3f)", r2_ko, rmsd_ko))
+)
+
+pc1_lim <- range(c(scatter_df$early_WT, scatter_df$late_WT, scatter_df$late_KO), na.rm = TRUE)
+pc1_lim <- pc1_lim + c(-0.05, 0.05) * diff(pc1_lim)
+
+p_scatter <- ggplot(scatter_long, aes(x = x, y = y)) +
+  geom_bin2d(bins = 120) +
+  scale_fill_viridis_c(option = "inferno", trans = "log10", name = "Bins") +
+  geom_abline(slope = 1, intercept = 0, color = "white", linewidth = 0.5, linetype = "dashed") +
+  facet_wrap(~panel) +
+  coord_fixed(xlim = pc1_lim, ylim = pc1_lim) +
+  labs(x = "P13 Wildtype PC1", y = "Adult PC1",
+       title = "Compartment Remodeling from P13 Baseline",
+       subtitle = "Closer to diagonal = less change from immature state") +
+  theme_minimal(base_size = 13) +
+  theme(strip.text = element_text(size = 11, face = "bold"))
+
+save_multiformat_ggplot(p_scatter,
+                        file.path(OUTPUT_DIR, "07_summary_panels/pc1_scatter_vs_p13"),
+                        width = 13, height = 6)
+
+
+# ---------------------------------------------------------------------------
+# 7C: Gained loop overlap — clean single-message bar
+# ---------------------------------------------------------------------------
+
+cat("7C: Gained loop overlap bar...\n")
+
+n_overlap_gained <- round(frac_gained * nrow(late_gained))
+n_novel <- nrow(late_gained) - n_overlap_gained
+
+seg_df <- data.frame(
+  segment = factor(c("Present at P13", "Novel"),
+                   levels = c("Novel", "Present at P13")),
+  count = c(n_overlap_gained, n_novel),
+  frac = c(frac_gained, 1 - frac_gained)
+)
+
+p_bar_simple <- ggplot(seg_df, aes(x = "Loops gained\nin adult KO", y = frac, fill = segment)) +
+  geom_col(width = 0.5, color = "white", linewidth = 0.3) +
+  geom_text(aes(label = sprintf("%s\n%d loops (%.0f%%)",
+                                segment, count, frac * 100)),
+            position = position_stack(vjust = 0.5),
+            size = 4.5, fontface = "bold", color = "white") +
+  geom_hline(yintercept = mean(null_fracs), linetype = "dashed",
+             color = "grey20", linewidth = 0.7) +
+  annotate("text", x = 0.6, y = mean(null_fracs),
+           label = sprintf("Chance expectation: %.0f%%", mean(null_fracs) * 100),
+           size = 4, hjust = 1, vjust = -0.8, color = "grey20") +
+  scale_fill_manual(values = c("Present at P13" = "#2b8c6e",
+                                "Novel" = "#e07b4b")) +
+  scale_y_continuous(labels = percent_format(), expand = expansion(mult = c(0, 0.02))) +
+  coord_flip() +
+  labs(title = sprintf("84%% of loops gained in adult BAP1-KO already existed at P13"),
+       subtitle = sprintf("n=%s gained loops | Permutation z=%.1f, p<%.0e",
+                          format(nrow(late_gained), big.mark = ","), z_score,
+                          1 / (N_PERM + 1)),
+       x = NULL, y = NULL) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid.major.y = element_blank())
+
+save_multiformat_ggplot(p_bar_simple,
+                        file.path(OUTPUT_DIR, "07_summary_panels/gained_loop_origin"),
+                        width = 10, height = 4)
+
+
+# ---------------------------------------------------------------------------
+# 7D: Developmental maturation index — single-number-per-layer summary
+# ---------------------------------------------------------------------------
+
+cat("7D: Maturation index...\n")
+
+med_ew <- medians$median_dist[medians$group == "early_WT"]
+med_lw <- medians$median_dist[medians$group == "late_WT"]
+med_lk <- medians$median_dist[medians$group == "late_KO"]
+
+mat_compartment <- (1 - r_lateKO_earlyWT) / (1 - r_lateWT_earlyWT) * 100
+mat_loop_pos    <- (1 - jaccard_mat["late_KO", "early_WT"]) /
+                   (1 - jaccard_mat["late_WT", "early_WT"]) * 100
+mat_loop_dist   <- (med_ew - med_lk) / (med_ew - med_lw) * 100
+
+cat(sprintf("  Compartment maturation:   %.1f%%\n", mat_compartment))
+cat(sprintf("  Loop position maturation: %.1f%%\n", mat_loop_pos))
+cat(sprintf("  Loop distance maturation: %.1f%%\n", mat_loop_dist))
+
+summary_stats$maturation_compartment <- mat_compartment
+summary_stats$maturation_loop_pos    <- mat_loop_pos
+summary_stats$maturation_loop_dist   <- mat_loop_dist
+
+mat_df <- data.frame(
+  layer = factor(c("Compartments\n(PC1 correlation)",
+                   "Loop positions\n(Jaccard similarity)",
+                   "Loop distance\n(median shift)"),
+                 levels = c("Compartments\n(PC1 correlation)",
+                            "Loop positions\n(Jaccard similarity)",
+                            "Loop distance\n(median shift)")),
+  pct = c(mat_compartment, mat_loop_pos, mat_loop_dist)
+)
+mat_df$status <- ifelse(mat_df$pct <= 100, "Blocked", "Overshot")
+
+p_mat <- ggplot(mat_df, aes(x = layer, y = pct, fill = status)) +
+  geom_col(width = 0.6) +
+  geom_hline(yintercept = 100, linetype = "dashed", color = "grey30", linewidth = 0.8) +
+  annotate("text", x = 3.4, y = 100, label = "WT maturation (100%)",
+           hjust = 0, vjust = -0.5, size = 3.5, color = "grey30") +
+  geom_text(aes(label = sprintf("%.0f%%", pct)), vjust = -0.5, size = 5, fontface = "bold") +
+  scale_fill_manual(values = c("Blocked" = "#66c2a5", "Overshot" = "#fc8d62")) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(title = "Developmental Maturation Index: BAP1-KO vs Wildtype",
+       subtitle = "How much of the P13→Adult remodeling did BAP1-KO complete?",
+       x = NULL, y = "% of WT developmental change") +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none",
+        panel.grid.major.x = element_blank())
+
+save_multiformat_ggplot(p_mat,
+                        file.path(OUTPUT_DIR, "07_summary_panels/maturation_index"),
+                        width = 9, height = 6)
+
+cat("\nModule 7 complete.\n\n")
 
 
 # =============================================================================

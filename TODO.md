@@ -164,11 +164,9 @@ Post-April 2026 CTEA meeting planning document. Derived from `ctea-april-meeting
 
 **Source:** CTEA meeting notes, Dixon meeting
 
-### 5a. Stripenn Stage 7 Visualization (run on HPC)
+### 5a. Stripenn Stage 7 Visualization ~~(run on HPC)~~ DONE
 
-- Script written, pending execution
-- `cd /expanse/.../stripes/stripenn && sbatch scripts/stripenn_visualizations.sb`
-- Produces annotated 28-col BEDPEs, volcano plots, ChIP-seq annotation, GO/KEGG enrichment
+**Completed 2026-04-21 (ran locally).** Produced annotated 28-col BEDPEs, volcano plots, ChIP-seq annotation, GO/KEGG enrichment for both timepoints. Results documents updated at `stripes/stripenn/outputs/{tp}/{tp}_results.md`. Key: 250402 (late) 2,320 significant stripes (31.5%), 250831 (early) 96 significant (2.4%), more gained than lost at late timepoint, directional reversal between timepoints.
 
 ### 5b. Stripes as Boundary Explanation
 
@@ -182,12 +180,9 @@ Post-April 2026 CTEA meeting planning document. Derived from `ctea-april-meeting
 - Test: at differential stripe anchors, is K27me3 enriched at the termini (blocking extrusion)?
 - This connects to the anchor-vs-span analysis (Section 4)
 
-### 5d. Compare Stripenn vs. Quagga Results
+### ~~5d. Compare Stripenn vs. Quagga Results~~ REMOVED
 
-- Stripes called by both methods = highest confidence set
-- Both pipelines complete for 250402 and 250831
-- Quagga: `stripes/quagga/`, Stripenn: `stripes/stripenn/`
-- Cross-reference by anchor overlap with tolerance
+Not pursuing — Stripenn supersedes Quagga with substantially more calls and better sensitivity. The CTCF-stripe crossref early analysis used Quagga calls and would need re-running against Stripenn outputs if needed.
 
 ---
 
@@ -195,12 +190,9 @@ Post-April 2026 CTEA meeting planning document. Derived from `ctea-april-meeting
 
 **Source:** Dixon meeting (medium priority)
 
-### 6a. PC1 Scatter Plot (not Volcano)
+### 6a. PC1 Scatter Plot (not Volcano) — DONE
 
-- Jesse: plot PC1_mutant vs. PC1_WT as a scatter, not a volcano
-- A change of +/-1 in PC1 doesn't necessarily mean a flip
-- Partial work exists: `output/compartment_analysis/compartment_pc1_scatter/`
-- Verify this is what Dixon described; may need refinement
+**Completed.** Output at `output/compartment_analysis/compartment_pc1_scatter/`. Confirms Jesse's observation: changes are mostly quantitative weakening along the diagonal (Pearson r=0.985 between ctrl and mut PC1), not full A/B switches. Only 4.1% of bins actually cross zero (1,838 A->B + 2,425 B->A out of 104K bins). The scatter shows the data as Jesse requested — partial shifts, not flips.
 
 ### 6b. SNIPER Subcompartment Calling
 
@@ -212,13 +204,9 @@ Post-April 2026 CTEA meeting planning document. Derived from `ctea-april-meeting
 
 **Status:** Not started. No SNIPER files in repo.
 
-### 6c. Correlate Differential TADs with K119ub
+### 6c. Correlate Differential TADs with K119ub — DONE
 
-- Jesse's direct suggestion: which TADs gaining interaction density are at K119ub-enriched regions?
-- Increased TAD ID in B compartment (heterochromatin gaining density)
-- Decreased TAD ID in A compartment (euchromatin losing density)
-- Check with K119ub status to test model
-- `output/tad_k119ub_analysis` exists
+**Completed.** Output at `output/tad_k119ub_analysis/`. 82.8% of TADs overlap at least one K119ub peak. Key finding: TADs with *decreased* interaction density have significantly higher mean K119ub fold change than those with increased density (median 0.256 vs 0.129, Wilcoxon p=1e-17). Spearman rho(difference vs K119ub fold) = -0.154 (p=1.6e-20). K119ub-enriched regions show weakening TAD structure, consistent with Polycomb spreading disrupting domain organization.
 
 ---
 
@@ -241,25 +229,17 @@ Post-April 2026 CTEA meeting planning document. Derived from `ctea-april-meeting
 
 ---
 
-## 8. ABC Analysis Cleanup
+## 8. ABC Analysis Cleanup — DONE
 
 **Source:** Dixon meeting
 
-### 8a. Filter Per-Enhancer Plot
+### 8a. Filter Per-Enhancer Plot — DONE
 
-- Current per-enhancer scatter has 90% of data as a blob near zero
-- Filter to only sites with significantly differential K119ub
-- Use `peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt` for filtering
+**Completed.** Output at `abc/results/figures/k119ub_filtered_scatter/`. Filtered to enhancers with significantly differential K119ub (FDR<0.05), producing cleaner before/after scatter plots and direction-specific panels. Summary at `k119ub_filter_summary.tsv`.
 
-### 8b. Separate Activity vs. Contact
+### 8b. Separate Activity vs. Contact — DONE
 
-- Plot activity changes and contact changes separately (not multiplied as ABC score)
-- Determine if the effect is mostly activity-driven (as suggested by current data)
-- Relates to slide 32 discussion: contact changes are minimal, activity changes are clear
-
-**Existing files:**
-- `abc/results/delta_abc_all_pairs.tsv` (180K E-G pairs with activity + contact columns)
-- `abc/results/k119ub_enhancer_signal.tsv` (K119ub at enhancers)
+**Completed.** Output at `abc/results/figures/activity_contact_scatter/`. Decomposed delta-ABC into raw delta activity vs raw delta contact components, with classified scatters, promoter-distal separation, and marginal densities (10 plot sets). Confirms the effect is largely activity-driven: activity changes are clear while contact changes are minimal, consistent with the slide 32 discussion. Summary statistics at `activity_contact_summary.tsv`.
 
 ---
 
@@ -298,14 +278,19 @@ Yu et al. (Commun Biol 2026) findings:
 
 ---
 
-## 10. Developmental Comparison
+## 10. Developmental Comparison — DONE
 
 **Source:** Dixon meeting (medium priority)
 
-- Compare adult mutant Hi-C to P12 wild-type Hi-C
-- Does the mutant adult look more like immature neurons?
-- Could support a "blocked developmental remodeling" narrative
-- Jesse's remaining puzzle: BAP1 is more expressed early but phenotype is stronger late
+**Completed 2026-04-21.** Script at `scripts/developmental_comparison.R`, output at `output/developmental_comparison/`. Six quantitative modules + four intuitive summary panels testing whether adult BAP1-KO resembles P13 wildtype (blocked developmental remodeling).
+
+**Key findings — layer-specific support for blocking:**
+- **Compartments (PC1): SUPPORTS.** r(late_KO, early_WT) = 0.899 vs r(late_WT, early_WT) = 0.882 (Fisher Z=17.3, p=1.7e-67). Adult KO retains more immature compartment signature. KO completed 86% of WT developmental maturation.
+- **Loop positions (gained): SUPPORTS.** 84% of adult-KO gained loops already existed at P13-WT (vs 65% chance, permutation z=27.7, p<1e-4). Gained loops are overwhelmingly retained immature contacts.
+- **Loop distance: DOES NOT SUPPORT.** KO median 225kb vs WT 240kb vs P13 300kb. KO overshoots the developmental shortening trend (125% maturation), likely from Polycomb-driven short-range contact gains.
+- **TAD boundaries: MIXED.** Fisher OR=1.68, p=5.7e-7 but only 45% concordance (below 50% blocking prediction).
+
+**Interpretation:** BAP1-KO partially blocks developmental compartment remodeling while simultaneously driving Polycomb-mediated loop shortening beyond normal development. Not simply "frozen at P13" — a hybrid state. See `output/developmental_comparison/analysis.md` for full reference.
 
 ---
 
@@ -325,14 +310,14 @@ Yu et al. (Commun Biol 2026) findings:
 ### Immediate (for paper)
 
 1. **Popay anchor-vs-span analysis** (Section 4) -- Tessa just shared code today; highest scientific value for distinguishing extrusion impediment vs. sensitivity model
-2. **Stripenn Stage 7** (Section 5a) -- just needs `sbatch`, script is written (already run)
+2. ~~**Stripenn Stage 7** (Section 5a)~~ -- DONE
 3. **CTCF motif re-centering** (Section 2) -- refines existing annotation, meeting consensus
 4. **SE-DEG proximity** (Section 1a) -- direct meeting request, straightforward analysis
 5. **DEG-centric enhancer contacts** (Section 3) -- fills gap in current ABC analysis
 
 ### Soon (strengthens story)
 
-6. **ABC cleanup** (Section 8) -- quick filter + replot
+6. ~~**ABC cleanup** (Section 8)~~ -- DONE (activity-driven, not contact-driven)
 7. **Loop body Polycomb analysis** (Section 9a) -- mechanistic insight
 8. **Stripe-boundary connection** (Section 5b) -- interpretive
 9. **Insulation score with cooltools** (Section 7) -- validates/corrects TADcompare results
@@ -340,9 +325,17 @@ Yu et al. (Commun Biol 2026) findings:
 ### Medium-term
 
 10. **SNIPER subcompartments** (Section 6b) -- HPC computation needed
-11. **Developmental comparison** (Section 10) -- interpretive framing
+11. ~~**Developmental comparison** (Section 10)~~ -- DONE (partial blocking at compartment level)
 12. **CpG/GC content at CTCF anchors** (Section 9b) -- mechanistic detail
-13. **Stripenn vs. Quagga comparison** (Section 5d) -- confidence set
+13. ~~**Stripenn vs. Quagga comparison** (Section 5d)~~ -- REMOVED
+
+### Already completed
+
+- **PC1 scatter plot** (Section 6a) -- confirms quantitative weakening, not A/B switches
+- **TAD-K119ub correlation** (Section 6c) -- K119ub enrichment correlates with TAD weakening
+- **ABC cleanup** (Section 8a, 8b) -- activity-driven effects confirmed
+- **Stripenn Stage 7** (Section 5a) -- full visualization for both timepoints
+- **Developmental comparison** (Section 10) -- layer-specific blocking model
 
 ---
 
