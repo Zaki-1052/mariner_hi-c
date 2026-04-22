@@ -140,7 +140,7 @@ R scripts in Stages 2/4/5/6/7 were ported from Quagga equivalents (see README.md
 
 ## Current State
 
-All Stages 0-6 complete. Stage 7 script written, pending HPC run. Simple BEDPEs generated locally at `outputs/{tp}/{tp}_stripes_*.bedpe`.
+All Stages 0-7 complete. Stage 7 ran locally 2026-04-21 producing all visualization, annotation, and enrichment outputs. Results documents fully updated at `outputs/{tp}/{tp}_results.md`.
 
 Key results:
 - 250402 (late): 7,371 union stripes at 5kb, 2,320 significant (31.5%), more gained than lost

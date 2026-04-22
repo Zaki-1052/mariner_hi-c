@@ -1,0 +1,233 @@
+
+================================================
+Developmental Comparison: Adult-KO vs P13-WT
+================================================
+
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Checking input files...
+All 8 input files verified.
+
+=== Module 1: PC1 Correlation Matrix ===
+
+Loading PC1 values...
+  Early: 95424 autosomal bins
+  Late:  95460 autosomal bins
+  Joined: 95394 shared bins
+
+PC1 Correlation Summary (group averages):
+  r(late_KO, early_WT) = 0.8986
+  r(late_WT, early_WT) = 0.8822
+  r(late_KO, late_WT)  = 0.9853
+  Fisher Z-test (late_KO-earlyWT vs late_WT-earlyWT): z=17.318, p=1.73e-67
+
+  Saved: pc1_correlation_replicate/{pdf,svg,jpg}
+  Saved: pc1_correlation_summary/{pdf,svg,jpg}
+Module 1 complete.
+
+=== Module 2: Loop Jaccard Overlap Matrix ===
+
+Loading loop sets...
+  early_WT: 38929 loops
+  early_KO: 38958 loops
+  late_WT: 35091 loops
+  late_KO: 35616 loops
+
+Computing pairwise Jaccard (10kb tolerance)...
+  early_WT vs early_KO... J = 0.9925
+  early_WT vs late_WT... J = 0.4561
+  early_WT vs late_KO... J = 0.4790
+  early_KO vs late_WT... J = 0.4561
+  early_KO vs late_KO... J = 0.4808
+  late_WT vs late_KO... J = 0.8263
+
+Key comparisons:
+  J(late_KO, early_WT) = 0.4790
+  J(late_WT, early_WT) = 0.4561
+  J(late_KO, late_WT)  = 0.8263
+  Saved: loop_jaccard_matrix/{pdf,svg,jpg}
+
+Module 2 complete.
+
+=== Module 3: Gained Loop Overlap with P13-WT ===
+
+  Late gained (up_in_mutant):   4253 loops
+  Late lost (down_in_mutant):   3728 loops
+  Late unchanged (background):  31363 loops
+  Early WT (reference):         38929 loops
+
+Overlap with P13-WT:
+  Late gained: 83.9% (3570 / 4253)
+  Late lost:   72.5% (2702 / 3728)
+
+Running permutation test (10000 iterations)...
+  Iteration 100 / 10000
+  Iteration 200 / 10000
+  Iteration 300 / 10000
+  Iteration 400 / 10000
+  Iteration 500 / 10000
+  Iteration 600 / 10000
+  Iteration 700 / 10000
+  Iteration 800 / 10000
+  Iteration 900 / 10000
+  Iteration 1000 / 10000
+  Iteration 1100 / 10000
+  Iteration 1200 / 10000
+  Iteration 1300 / 10000
+  Iteration 1400 / 10000
+  Iteration 1500 / 10000
+  Iteration 1600 / 10000
+  Iteration 1700 / 10000
+  Iteration 1800 / 10000
+  Iteration 1900 / 10000
+  Iteration 2000 / 10000
+  Iteration 2100 / 10000
+  Iteration 2200 / 10000
+  Iteration 2300 / 10000
+  Iteration 2400 / 10000
+  Iteration 2500 / 10000
+  Iteration 2600 / 10000
+  Iteration 2700 / 10000
+  Iteration 2800 / 10000
+  Iteration 2900 / 10000
+  Iteration 3000 / 10000
+  Iteration 3100 / 10000
+  Iteration 3200 / 10000
+  Iteration 3300 / 10000
+  Iteration 3400 / 10000
+  Iteration 3500 / 10000
+  Iteration 3600 / 10000
+  Iteration 3700 / 10000
+  Iteration 3800 / 10000
+  Iteration 3900 / 10000
+  Iteration 4000 / 10000
+  Iteration 4100 / 10000
+  Iteration 4200 / 10000
+  Iteration 4300 / 10000
+  Iteration 4400 / 10000
+  Iteration 4500 / 10000
+  Iteration 4600 / 10000
+  Iteration 4700 / 10000
+  Iteration 4800 / 10000
+  Iteration 4900 / 10000
+  Iteration 5000 / 10000
+  Iteration 5100 / 10000
+  Iteration 5200 / 10000
+  Iteration 5300 / 10000
+  Iteration 5400 / 10000
+  Iteration 5500 / 10000
+  Iteration 5600 / 10000
+  Iteration 5700 / 10000
+  Iteration 5800 / 10000
+  Iteration 5900 / 10000
+  Iteration 6000 / 10000
+  Iteration 6100 / 10000
+  Iteration 6200 / 10000
+  Iteration 6300 / 10000
+  Iteration 6400 / 10000
+  Iteration 6500 / 10000
+  Iteration 6600 / 10000
+  Iteration 6700 / 10000
+  Iteration 6800 / 10000
+  Iteration 6900 / 10000
+  Iteration 7000 / 10000
+  Iteration 7100 / 10000
+  Iteration 7200 / 10000
+  Iteration 7300 / 10000
+  Iteration 7400 / 10000
+  Iteration 7500 / 10000
+  Iteration 7600 / 10000
+  Iteration 7700 / 10000
+  Iteration 7800 / 10000
+  Iteration 7900 / 10000
+  Iteration 8000 / 10000
+  Iteration 8100 / 10000
+  Iteration 8200 / 10000
+  Iteration 8300 / 10000
+  Iteration 8400 / 10000
+  Iteration 8500 / 10000
+  Iteration 8600 / 10000
+  Iteration 8700 / 10000
+  Iteration 8800 / 10000
+  Iteration 8900 / 10000
+  Iteration 9000 / 10000
+  Iteration 9100 / 10000
+  Iteration 9200 / 10000
+  Iteration 9300 / 10000
+  Iteration 9400 / 10000
+  Iteration 9500 / 10000
+  Iteration 9600 / 10000
+  Iteration 9700 / 10000
+  Iteration 9800 / 10000
+  Iteration 9900 / 10000
+  Iteration 10000 / 10000
+
+Permutation results:
+  Observed overlap (gained): 0.8394
+  Null mean:   0.6546
+  Null SD:     0.0067
+  Z-score:     27.681
+  Empirical p: 0.0001
+
+  Saved: gained_vs_early_wt_overlap/{pdf,svg,jpg}
+  Saved: permutation_null_distribution/{pdf,svg,jpg}
+Module 3 complete.
+
+=== Module 4: Loop Distance eCDF Overlay ===
+
+Median loop distances:
+  early_WT: 300 kb
+  early_KO: 300 kb
+  late_WT: 240 kb
+  late_KO: 225 kb
+
+KS tests:
+  lateKO_vs_earlyWT: D=0.0811, p=1.01e-106
+  lateKO_vs_lateWT: D=0.0177, p=3.13e-05
+  lateWT_vs_earlyWT: D=0.0719, p=3.44e-83
+  Saved: distance_ecdf_4groups/{pdf,svg,jpg}
+
+Module 4 complete.
+
+=== Module 5: TAD Boundary Direction Concordance ===
+
+  Early differential boundaries: 4349
+  Late differential boundaries:  4144
+  Shared differential boundaries (within 20kb): 1520
+
+Contingency table (Early direction x Late direction):
+               Late
+Early           Ctrl-enriched Mut-enriched
+  Ctrl-enriched           397          375
+  Mut-enriched            289          459
+
+Fisher's exact test: OR=1.681, p=5.6509e-07
+
+Of 834 late-KO-enriched shared boundaries, 375 (45.0%) were early-ctrl-enriched
+  (If blocking: expect >50%% — boundaries strong in WT at P13 become
+   KO-enriched in adult, meaning KO retained the immature state)
+  Saved: boundary_direction_heatmap/{pdf,svg,jpg}
+  Saved: boundary_concordance_bar/{pdf,svg,jpg}
+
+Module 5 complete.
+
+=== Module 6: Stripe Footprint Comparison ===
+
+  Late-gained stripes: 3032
+  Early-WT stripes (ctrl p<0.1): 3596
+
+  Late-gained stripes overlapping early-WT anchor: 1078 / 3032 (35.6%)
+  Saved: stripe_anchor_overlap/{pdf,svg,jpg}
+
+Module 6 complete.
+
+=== Writing master summary ===
+
+Report written to:  output/developmental_comparison/developmental_comparison_report.txt 
+
+================================================
+Developmental Comparison Analysis Complete
+================================================
+
