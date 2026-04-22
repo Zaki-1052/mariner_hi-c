@@ -4,7 +4,7 @@
 
 This document captures all implementation progress, bugs encountered, fixes applied, and remaining work for the Stripenn-based differential chromatin stripe analysis pipeline. It is a companion to the Quagga pipeline (`stripes/quagga/CLAUDE.md`) and serves as context for continuing development across AI sessions.
 
-**Last updated:** 2026-04-21 (Stage 7 visualization session)
+**Last updated:** 2026-04-21 (Stage 7 visualization complete, results documents updated)
 
 ---
 
@@ -101,7 +101,7 @@ Stage 3: stripenn score     (score 6 replicates)       24 jobs  [COMPLETE]
 Stage 4: 04_edgeR.R        (differential analysis)     4 jobs  [COMPLETE]
 Stage 5: 05_integration.R  (classify direction)        4 jobs  [COMPLETE]
 Stage 6: 06_compare_res.R  (5kb vs 10kb comparison)    2 jobs  [COMPLETE]
-Stage 7: stripenn_visualizations.R (viz + annotation)   1 job   [PENDING HPC RUN]
+Stage 7: stripenn_visualizations.R (viz + annotation)   1 job   [COMPLETE]
 ```
 
 **Master orchestration:** `run_full_stripenn.sh [--skip-stage0]` chains Stages 0-7 via SLURM dependencies.
@@ -163,15 +163,14 @@ Stage 7: stripenn_visualizations.R (viz + annotation)   1 job   [PENDING HPC RUN
 - High-confidence: significant at both resolutions with concordant direction
 - Output: `cross_res_merged.tsv`, logFC correlation plot, direction bar chart
 
-**Stage 7 — Visualization & annotation** (PENDING HPC RUN)
+**Stage 7 — Visualization & annotation** (COMPLETE)
 - Scripts: `stripenn_visualizations.R` + `stripenn_visualizations.sb`
-- Processes both timepoints (250831, 250402) and both resolutions in a single run
+- Ran locally (2026-04-21) processing both timepoints (250831, 250402) and both resolutions
 - 11 sections: volcano plots, stripiness analysis, length distributions, source/direction bars, cross-res concordance, replicate heatmaps, ChIP-seq anchor annotation (7 categories using 5 marks), annotated BEDPE export (3 tiers), GO/KEGG enrichment, combined comparison, summary stats
 - ChIP-seq annotation uses all 5 marks (H3K27ac, H3K27me3, H3K4me1, H3K4me3, Bivalent) for both timepoints
-- BEDPE export: 3 tiers per timepoint (highconf, allsig, concordant) + JuiceBox diagonal/rectangle formats, 28-column format matching Quagga BEDPE schema
-- SLURM: 8 cpus, 64G, 4h
-- Output: `${DATA_DIR}/outputs/{tp}/visualizations/`, `${DATA_DIR}/outputs/combined/`
-- **Prerequisite BEDPEs already generated locally** via `generate_bedpe.py` (simple 15-column format for immediate JuiceBox use)
+- BEDPE export: 3 tiers per timepoint (highconf, allsig, concordant) + JuiceBox diagonal/rectangle formats
+- Output: `outputs/{tp}/visualizations/`, `outputs/combined/`
+- Simple 15-column BEDPEs also generated locally via `generate_bedpe.py`
 
 ### 4.3 Configuration
 
@@ -250,7 +249,7 @@ All other 14 mcool files have native KR from the source .hic files.
 | 4 (edgeR) | COMPLETE | 250402: 31.5% sig (5kb), BCV=0.012. 250831: 2.4% sig (5kb), BCV=0.020 |
 | 5 (integration) | COMPLETE | 250402: 1,528 lost, 2,052 gained, 3 str, 4 wk. 250831: 949 lost, 776 gained |
 | 6 (cross-resolution) | COMPLETE | 250402: r=0.850, 1,273 concordant. 250831: r=0.808, 759 concordant |
-| 7 (visualization) | PENDING HPC RUN | Script written, simple BEDPEs generated locally |
+| 7 (visualization) | COMPLETE | Ran locally 2026-04-21. All plots, annotation, enrichment, BEDPEs generated |
 
 ### 6.3 Key results
 
@@ -260,6 +259,8 @@ All other 14 mcool files have native KR from the source .hic files.
 - High-confidence: 367 lost + 638 gained = 1,005 stripes
 - All effect sizes minimal (max |logFC| = 0.389)
 - Cross-res logFC correlation: r=0.850
+- Anchor annotation: H3K27me3+ anchors 1.75x enriched in gained vs lost (9.1% vs 5.2%); Active_Enhancer enriched in lost (19.5% vs 14.0%)
+- GO enrichment: gained stripes only — developmental TFs (Hox, Shh, Sox11, Dlx5/6), synaptic genes (46 at postsynaptic specialization), ion channels. No enrichment for lost stripes.
 
 **250831 (early/P12) — weak differential signal:**
 - 4,008 union stripes at 5kb, 96 significant (2.4% FDR<0.05)
@@ -267,6 +268,8 @@ All other 14 mcool files have native KR from the source .hic files.
 - High-confidence: 12 lost + 10 gained = 22 stripes
 - All effect sizes minimal (max |logFC| = 0.321)
 - Cross-res logFC correlation: r=0.808
+- Anchor annotation: no strong directional enrichment of any anchor type; Bivalent_Promoter 3x more prevalent than late (3.6% vs 1.2%)
+- GO enrichment: lost stripes only — stem cell pluripotency (Wnt5a, Fgfr2, Klf4; KEGG p.adj=0.009). Gained: no enrichment (19 genes, underpowered).
 
 ### 6.4 Simple BEDPEs (already generated locally)
 
@@ -282,14 +285,25 @@ Generated via `scripts/generate_bedpe.py` from `cross_res_merged.tsv` for immedi
 
 Location: `outputs/{tp}/{tp}_stripes_*.bedpe` (GitHub-synced, 15-column format)
 
-### 6.5 To run Stage 7 on HPC
+### 6.5 Stage 7 Output Summary
 
-```bash
-cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn
-sbatch scripts/stripenn_visualizations.sb
-```
+Stage 7 ran locally on 2026-04-21 and produced:
 
-This produces annotated 28-column BEDPEs (with ChIP-seq, gene annotation), volcano plots, stripiness analysis, length distributions, replicate heatmaps, GO/KEGG enrichment, and combined summary.
+**Per-timepoint** (`outputs/{tp}/visualizations/`):
+- Volcano plots (5kb, 10kb), stripiness scatter, length distributions, direction breakdown, cross-res concordance, replicate correlation heatmaps (5kb, 10kb), anchor annotation bar charts
+- `{tp}_annotated_stripes.tsv` — all stripes with ChIP-seq marks, anchor_type, nearest_gene, body_genes
+- `length_statistics_{tp}.tsv`
+
+**Combined** (`outputs/combined/`):
+- Combined volcano, length comparison, source/direction summary, cross-res comparison, comparison summary panel
+- `combined_summary.txt` — full numeric summary
+
+**Enrichment** (`outputs/combined/enrichment/`):
+- GO BP/CC/MF dotplots and TSVs per timepoint; KEGG for early only
+- `stripe_anchor_genes_{tp}.tsv` — gene lists used for enrichment
+
+**BEDPEs** (`outputs/{tp}/`):
+- 5 files per timepoint: highconf, allsig, concordant, diagonal, rectangle (15-column simple format)
 
 ---
 
@@ -309,6 +323,9 @@ This produces annotated 28-column BEDPEs (with ChIP-seq, gene annotation), volca
 | 5 | source x direction | control_only all "lost", mutant_only all "gained" | PASS |
 | 6 | high-confidence set | proper subset of all significant | PASS |
 | 7 | BEDPE column count | 15 (simple) or 28 (annotated) | PASS: 15 (simple generated) |
+| 7 | Annotated TSV | All stripes with anchor_type, ChIP marks, genes | PASS: 7,371 (late), 4,008 (early) |
+| 7 | GO enrichment | Significant terms produced | PASS: 6 GO BP late-gained, 49 GO BP early-lost |
+| 7 | Visualization plots | PDF/SVG/JPG per section | PASS: all 10 sections produced |
 
 ---
 
@@ -337,11 +354,39 @@ stripenn/
 │   └── stripenn-analysis-prompt.md    # Analysis prompt template for BEDPE files
 ├── outputs/
 │   ├── 250402/
-│   │   ├── 250402_results.md          # Results document (late/adult)
-│   │   └── 250402_stripes_*.bedpe     # Simple BEDPEs for JuiceBox (5 files)
-│   └── 250831/
-│       ├── 250831_results.md          # Results document (early/P12)
-│       └── 250831_stripes_*.bedpe     # Simple BEDPEs for JuiceBox (5 files)
+│   │   ├── 250402_results.md          # Results document (late/adult) — full analysis
+│   │   ├── 250402_stripes_*.bedpe     # Simple BEDPEs for JuiceBox (5 files)
+│   │   ├── cross_res_merged.tsv       # Stage 6 cross-resolution data
+│   │   └── visualizations/            # Stage 7 outputs
+│   │       ├── 250402_annotated_stripes.tsv  # All stripes + ChIP + genes
+│   │       ├── length_statistics_250402.tsv
+│   │       ├── volcano_250402_{5kb,10kb}/    # {pdf,svg,jpg}
+│   │       ├── stripiness_250402/
+│   │       ├── length_distribution_250402/
+│   │       ├── direction_breakdown_250402/
+│   │       ├── cross_res_250402/
+│   │       ├── replicate_correlation_250402_{5kb,10kb}/
+│   │       └── anchor_annotation_250402/
+│   ├── 250831/
+│   │   ├── 250831_results.md          # Results document (early/P12) — full analysis
+│   │   ├── 250831_stripes_*.bedpe     # Simple BEDPEs for JuiceBox (5 files)
+│   │   ├── cross_res_merged.tsv
+│   │   └── visualizations/            # Same structure as 250402
+│   └── combined/
+│       ├── combined_summary.txt       # Full numeric summary both timepoints
+│       ├── volcano_combined/
+│       ├── length_comparison/
+│       ├── source_direction_summary/
+│       ├── cross_res_comparison/
+│       ├── comparison_summary/
+│       └── enrichment/
+│           ├── go_bp_dotplot_{early,late}/
+│           ├── go_cc_dotplot_late/
+│           ├── go_mf_dotplot_{early,late}/
+│           ├── kegg_dotplot_early/
+│           ├── go_{bp,cc,mf}_{early,late}.tsv
+│           ├── kegg_early.tsv
+│           └── stripe_anchor_genes_{early,late}.tsv
 ├── repo/                              # Upstream stripenn source (reference only)
 │   ├── stripenn/
 │   │   ├── cli.py                     # CLI entry point (compute, score, seeimage)
@@ -617,19 +662,28 @@ cat ${DATA_DIR}/logs/01_call_*_5kb_*.out  # Stage 1 logs
 
 ---
 
-## 13. Downstream (after Stage 7 visualization completes)
+## 13. Downstream
 
-Stage 7 (`stripenn_visualizations.R`) handles most downstream analyses that were previously done by the Quagga `stripe_visualizations.R`:
+### Completed (Stage 7)
+
+Stage 7 (`stripenn_visualizations.R`) ran locally 2026-04-21, producing all downstream analyses previously done by Quagga's `stripe_visualizations.R`:
 - Volcano plots, length distributions, stripiness analysis
 - ChIP-seq anchor annotation (all 5 marks, 7-category classification)
 - GO/KEGG enrichment (clusterProfiler with stripe-specific background)
-- Annotated 28-column BEDPEs for JuiceBox (3 tiers per timepoint)
+- Annotated BEDPEs for JuiceBox (3 tiers per timepoint)
 - Combined early vs late comparison panels
 
-Simple 15-column BEDPEs are already generated locally (via `generate_bedpe.py`) and available for immediate JuiceBox validation. Results documents with top stripes and JuiceBox coordinates are at `outputs/{tp}/{tp}_results.md`.
+Results documents with full analysis (summary stats, ChIP-seq annotation, GO/KEGG enrichment, cross-timepoint comparison, top stripes, JuiceBox coordinates) are at `outputs/{tp}/{tp}_results.md`.
+
+### Key biological findings
+
+- **Late (adult):** Net gain of stripes in BAP1-KO. H3K27me3+ anchors 1.75x enriched in gained vs lost. GO enrichment exclusively in gained stripes: developmental TFs (Hox, Shh, Dlx5/6), synaptic genes, ion channels. No enrichment for lost stripes.
+- **Early (P12):** Weak signal (2.4% significant). Net loss of stripes (opposite of late). GO/KEGG enrichment in lost stripes only: stem cell pluripotency signaling (Wnt5a, Fgfr2, Klf4). Bivalent_Promoter anchors 3x more prevalent than adult.
+- **Cross-timepoint:** Directional bias reverses (more lost at P12, more gained in adult). Effect sizes uniformly small at both timepoints (max |logFC| < 0.4).
 
 ### Remaining downstream analyses
 
+- JuiceBox visual validation of top-ranked stripes (coordinates in results docs)
 - Comparison with Quagga pipeline results (stripes called by both methods = highest confidence)
 - Integration with loop differential results from the main mariner pipeline
 - Tessa Popay-style anchor/body ChIP-seq metagene analysis (per Dixon meeting suggestion)
