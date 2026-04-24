@@ -1,0 +1,632 @@
+Stripe Integration Pipeline
+Permutations: 10000
+Timepoints:   late early
+Resolutions:  5000 10000
+Started:      Thu Apr 23 14:53:06 PDT 2026
+
+================================================================
+  T1.1 Body-Gene Enrichment (late res=5000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.1 - Stripe Body-Gene GO/KEGG Enrichment
+==============================================================
+Timepoint : late (250402)
+Resolution: 5000 bp
+Input     : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/late/body_gene_enrichment
+
+Loaded 7371 stripes with 48 columns
+Exploded to 51752 (stripe, body-gene) pairs (14836 unique symbols)
+'select()' returned 1:1 mapping between keys and columns
+Mapped 14836/14836 symbols to Entrez IDs
+
+Gene clusters (Entrez counts):
+  Gained_high     1502
+  Lost_high       1551
+  UNIVERSE       14836
+
+GO BP (Biological Process)...
+  Saved: go_bp_dotplot/{pdf,svg,jpg}
+   GO BP: 91 significant terms 
+
+GO CC (Cellular Component)...
+  Saved: go_cc_dotplot/{pdf,svg,jpg}
+   GO CC: 17 significant terms 
+
+GO MF (Molecular Function)...
+  Saved: go_mf_dotplot/{pdf,svg,jpg}
+   GO MF: 4 significant terms 
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+
+KEGG pathways...
+  Saved: kegg_dotplot/{pdf,svg,jpg}
+   KEGG: 5 significant pathways 
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.2 Compartment Cross-Ref (late res=5000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.2 - Stripe x Compartment Cross-Reference
+==============================================================
+Timepoint : late (250402)
+Resolution: 5000 bp
+Stripes   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+PC all    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis/compartment_all_annotated.tsv
+PC sig    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis/compartment_significant_standard.tsv
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/late/compartment_crossref
+
+Stripes: 7371 rows
+PC bins: 104071 rows
+PC bins with signal: 104071
+
+Aggregating PC1 over anchors...
+Aggregating PC1 over stripe bodies...
+Significant-PC1 bins: 8189; anchors on switched bins: 734
+  Saved: anchor_compartment_by_direction/{pdf,svg,jpg}
+  Saved: pc1_by_direction/{pdf,svg,jpg}
+  Saved: switched_bin_overlap/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.3 DEG Stripe Violin (late res=5000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.3 - RNA-seq x Stripe Direction Violin Analysis
+==============================================================
+Timepoint : late (250402)
+Stripes   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+RNA-seq   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/data/upstream/rna_seq/adult_rnaseq_results.xlsx
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/late/rna_integration
+
+RNA-seq: 16572 genes loaded
+Stripes: 7371 loaded
+Gene-stripe pairs: 2981 anchor-proximal, 51752 body-resident
+After RNA-seq join: 43873 pairs with expression data
+  Saved: deg_stripe_violin/{pdf,svg,jpg}
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: stripe_rna_concordance/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.4 Loop x Stripe Cross-Ref (late res=5000, n_perm=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.4 - Stripe x Loop Cross-Reference (all 7 anchor types)
+==============================================================
+Timepoint    : late (250402)
+Tolerance    : 50000 bp
+Permutations : 10000
+Stripes      : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+Loops        : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/250402-late_outputs/merged_loops/characterized_loops.tsv
+Output       : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/late/loop_crossref
+
+Stripes: 7371; Loops: 2910
+Loop anchors: 5820 (a1=2910 + a2=2910)
+Loop anchor types present:
+  Active_Enhancer           663
+  Active_Promoter           510
+  Bivalent_Promoter          49
+  Other                    1938
+  Poised_Enhancer          1172
+  Polycomb                  928
+  Repressed_Promoter        560
+Stripes used (direction in {gained,lost,unchanged}): 7364
+
+Running 10000 circular-shuffle permutations...
+  permutation 1000 / 10000
+  permutation 2000 / 10000
+  permutation 3000 / 10000
+  permutation 4000 / 10000
+  permutation 5000 / 10000
+  permutation 6000 / 10000
+  permutation 7000 / 10000
+  permutation 8000 / 10000
+  permutation 9000 / 10000
+  permutation 10000 / 10000
+  Saved: enrichment_heatmap/{pdf,svg,jpg}
+  Saved: loop_type_by_stripe_direction_bar/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.1 Body-Gene Enrichment (late res=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.1 - Stripe Body-Gene GO/KEGG Enrichment
+==============================================================
+Timepoint : late (250402)
+Resolution: 10000 bp
+Input     : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/late/body_gene_enrichment
+
+Loaded 7371 stripes with 48 columns
+Exploded to 51752 (stripe, body-gene) pairs (14836 unique symbols)
+'select()' returned 1:1 mapping between keys and columns
+Mapped 14836/14836 symbols to Entrez IDs
+
+Gene clusters (Entrez counts):
+  Gained_high     1502
+  Lost_high       1551
+  UNIVERSE       14836
+
+GO BP (Biological Process)...
+  Saved: go_bp_dotplot/{pdf,svg,jpg}
+   GO BP: 91 significant terms 
+
+GO CC (Cellular Component)...
+  Saved: go_cc_dotplot/{pdf,svg,jpg}
+   GO CC: 17 significant terms 
+
+GO MF (Molecular Function)...
+  Saved: go_mf_dotplot/{pdf,svg,jpg}
+   GO MF: 4 significant terms 
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+
+KEGG pathways...
+  Saved: kegg_dotplot/{pdf,svg,jpg}
+   KEGG: 5 significant pathways 
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.2 Compartment Cross-Ref (late res=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.2 - Stripe x Compartment Cross-Reference
+==============================================================
+Timepoint : late (250402)
+Resolution: 10000 bp
+Stripes   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+PC all    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis/compartment_all_annotated.tsv
+PC sig    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis/compartment_significant_standard.tsv
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/late/compartment_crossref
+
+Stripes: 7371 rows
+PC bins: 104071 rows
+PC bins with signal: 104071
+
+Aggregating PC1 over anchors...
+Aggregating PC1 over stripe bodies...
+Significant-PC1 bins: 8189; anchors on switched bins: 734
+  Saved: anchor_compartment_by_direction/{pdf,svg,jpg}
+  Saved: pc1_by_direction/{pdf,svg,jpg}
+  Saved: switched_bin_overlap/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.3 DEG Stripe Violin (late res=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.3 - RNA-seq x Stripe Direction Violin Analysis
+==============================================================
+Timepoint : late (250402)
+Stripes   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+RNA-seq   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/data/upstream/rna_seq/adult_rnaseq_results.xlsx
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/late/rna_integration
+
+RNA-seq: 16572 genes loaded
+Stripes: 7371 loaded
+Gene-stripe pairs: 2981 anchor-proximal, 51752 body-resident
+After RNA-seq join: 43873 pairs with expression data
+  Saved: deg_stripe_violin/{pdf,svg,jpg}
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: stripe_rna_concordance/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.4 Loop x Stripe Cross-Ref (late res=10000, n_perm=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.4 - Stripe x Loop Cross-Reference (all 7 anchor types)
+==============================================================
+Timepoint    : late (250402)
+Tolerance    : 50000 bp
+Permutations : 10000
+Stripes      : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250402/visualizations/250402_annotated_stripes.tsv
+Loops        : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/250402-late_outputs/merged_loops/characterized_loops.tsv
+Output       : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/late/loop_crossref
+
+Stripes: 7371; Loops: 2910
+Loop anchors: 5820 (a1=2910 + a2=2910)
+Loop anchor types present:
+  Active_Enhancer           663
+  Active_Promoter           510
+  Bivalent_Promoter          49
+  Other                    1938
+  Poised_Enhancer          1172
+  Polycomb                  928
+  Repressed_Promoter        560
+Stripes used (direction in {gained,lost,unchanged}): 7364
+
+Running 10000 circular-shuffle permutations...
+  permutation 1000 / 10000
+  permutation 2000 / 10000
+  permutation 3000 / 10000
+  permutation 4000 / 10000
+  permutation 5000 / 10000
+  permutation 6000 / 10000
+  permutation 7000 / 10000
+  permutation 8000 / 10000
+  permutation 9000 / 10000
+  permutation 10000 / 10000
+  Saved: enrichment_heatmap/{pdf,svg,jpg}
+  Saved: loop_type_by_stripe_direction_bar/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.1 Body-Gene Enrichment (early res=5000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.1 - Stripe Body-Gene GO/KEGG Enrichment
+==============================================================
+Timepoint : early (250831)
+Resolution: 5000 bp
+Input     : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/early/body_gene_enrichment
+
+Loaded 4008 stripes with 48 columns
+Exploded to 15660 (stripe, body-gene) pairs (10362 unique symbols)
+'select()' returned 1:1 mapping between keys and columns
+Mapped 10362/10362 symbols to Entrez IDs
+
+Gene clusters (Entrez counts):
+  Lost_high         10
+  UNIVERSE       10362
+
+GO BP (Biological Process)...
+   GO BP: no significant terms 
+
+GO CC (Cellular Component)...
+  Saved: go_cc_dotplot/{pdf,svg,jpg}
+   GO CC: 1 significant terms 
+
+GO MF (Molecular Function)...
+   GO MF: no significant terms 
+Warning messages:
+1: In compareCluster(geneCluster = gene_clusters, fun = "enrichGO",  :
+  No enrichment found in any of gene cluster, please check your input...
+2: `aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+3: In compareCluster(geneCluster = gene_clusters, fun = "enrichGO",  :
+  No enrichment found in any of gene cluster, please check your input...
+
+KEGG pathways...
+Warning message:
+In compareCluster(geneCluster = gene_clusters, fun = "enrichKEGG",  :
+  No enrichment found in any of gene cluster, please check your input...
+   KEGG: no significant pathways 
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.2 Compartment Cross-Ref (early res=5000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.2 - Stripe x Compartment Cross-Reference
+==============================================================
+Timepoint : early (250831)
+Resolution: 5000 bp
+Stripes   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+PC all    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis_early/compartment_all_annotated.tsv
+PC sig    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis_early/compartment_significant_standard.tsv
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/early/compartment_crossref
+
+Stripes: 4008 rows
+PC bins: 101684 rows
+PC bins with signal: 101684
+
+Aggregating PC1 over anchors...
+Aggregating PC1 over stripe bodies...
+Significant-PC1 bins: 8154; anchors on switched bins: 146
+  Saved: anchor_compartment_by_direction/{pdf,svg,jpg}
+  Saved: pc1_by_direction/{pdf,svg,jpg}
+  Saved: switched_bin_overlap/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.3 DEG Stripe Violin (early res=5000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.3 - RNA-seq x Stripe Direction Violin Analysis
+==============================================================
+Timepoint : early (250831)
+Stripes   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+RNA-seq   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/data/upstream/rna_seq/young_rnaseq_results.xlsx
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/early/rna_integration
+
+RNA-seq: 15220 genes loaded
+Stripes: 4008 loaded
+Gene-stripe pairs: 1413 anchor-proximal, 15660 body-resident
+After RNA-seq join: 12460 pairs with expression data
+  Saved: deg_stripe_violin/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.4 Loop x Stripe Cross-Ref (early res=5000, n_perm=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.4 - Stripe x Loop Cross-Reference (all 7 anchor types)
+==============================================================
+Timepoint    : early (250831)
+Tolerance    : 50000 bp
+Permutations : 10000
+Stripes      : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+Loops        : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/250831-early_outputs/merged_loops/characterized_loops.tsv
+Output       : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/early/loop_crossref
+
+Stripes: 4008; Loops: 165
+Loop anchors: 330 (a1=165 + a2=165)
+Loop anchor types present:
+  Active_Enhancer            12
+  Active_Promoter            14
+  Bivalent_Promoter           3
+  Other                     120
+  Poised_Enhancer            24
+  Polycomb                   39
+  Repressed_Promoter        118
+Stripes used (direction in {gained,lost,unchanged}): 4008
+
+Running 10000 circular-shuffle permutations...
+  permutation 1000 / 10000
+  permutation 2000 / 10000
+  permutation 3000 / 10000
+  permutation 4000 / 10000
+  permutation 5000 / 10000
+  permutation 6000 / 10000
+  permutation 7000 / 10000
+  permutation 8000 / 10000
+  permutation 9000 / 10000
+  permutation 10000 / 10000
+  Saved: enrichment_heatmap/{pdf,svg,jpg}
+  Saved: loop_type_by_stripe_direction_bar/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.1 Body-Gene Enrichment (early res=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.1 - Stripe Body-Gene GO/KEGG Enrichment
+==============================================================
+Timepoint : early (250831)
+Resolution: 10000 bp
+Input     : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/early/body_gene_enrichment
+
+Loaded 4008 stripes with 48 columns
+Exploded to 15660 (stripe, body-gene) pairs (10362 unique symbols)
+'select()' returned 1:1 mapping between keys and columns
+Mapped 10362/10362 symbols to Entrez IDs
+
+Gene clusters (Entrez counts):
+  Lost_high         10
+  UNIVERSE       10362
+
+GO BP (Biological Process)...
+   GO BP: no significant terms 
+
+GO CC (Cellular Component)...
+  Saved: go_cc_dotplot/{pdf,svg,jpg}
+   GO CC: 1 significant terms 
+
+GO MF (Molecular Function)...
+   GO MF: no significant terms 
+Warning messages:
+1: In compareCluster(geneCluster = gene_clusters, fun = "enrichGO",  :
+  No enrichment found in any of gene cluster, please check your input...
+2: `aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+3: In compareCluster(geneCluster = gene_clusters, fun = "enrichGO",  :
+  No enrichment found in any of gene cluster, please check your input...
+
+KEGG pathways...
+Warning message:
+In compareCluster(geneCluster = gene_clusters, fun = "enrichKEGG",  :
+  No enrichment found in any of gene cluster, please check your input...
+   KEGG: no significant pathways 
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.2 Compartment Cross-Ref (early res=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.2 - Stripe x Compartment Cross-Reference
+==============================================================
+Timepoint : early (250831)
+Resolution: 10000 bp
+Stripes   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+PC all    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis_early/compartment_all_annotated.tsv
+PC sig    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis_early/compartment_significant_standard.tsv
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/early/compartment_crossref
+
+Stripes: 4008 rows
+PC bins: 101684 rows
+PC bins with signal: 101684
+
+Aggregating PC1 over anchors...
+Aggregating PC1 over stripe bodies...
+Significant-PC1 bins: 8154; anchors on switched bins: 146
+  Saved: anchor_compartment_by_direction/{pdf,svg,jpg}
+  Saved: pc1_by_direction/{pdf,svg,jpg}
+  Saved: switched_bin_overlap/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.3 DEG Stripe Violin (early res=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.3 - RNA-seq x Stripe Direction Violin Analysis
+==============================================================
+Timepoint : early (250831)
+Stripes   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+RNA-seq   : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/data/upstream/rna_seq/young_rnaseq_results.xlsx
+Output    : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/early/rna_integration
+
+RNA-seq: 15220 genes loaded
+Stripes: 4008 loaded
+Gene-stripe pairs: 1413 anchor-proximal, 15660 body-resident
+After RNA-seq join: 12460 pairs with expression data
+  Saved: deg_stripe_violin/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  T1.4 Loop x Stripe Cross-Ref (early res=10000, n_perm=10000)
+================================================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+==============================================================
+T1.4 - Stripe x Loop Cross-Reference (all 7 anchor types)
+==============================================================
+Timepoint    : early (250831)
+Tolerance    : 50000 bp
+Permutations : 10000
+Stripes      : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/stripes/stripenn/outputs/250831/visualizations/250831_annotated_stripes.tsv
+Loops        : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/250831-early_outputs/merged_loops/characterized_loops.tsv
+Output       : /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/stripe_integration/early/loop_crossref
+
+Stripes: 4008; Loops: 165
+Loop anchors: 330 (a1=165 + a2=165)
+Loop anchor types present:
+  Active_Enhancer            12
+  Active_Promoter            14
+  Bivalent_Promoter           3
+  Other                     120
+  Poised_Enhancer            24
+  Polycomb                   39
+  Repressed_Promoter        118
+Stripes used (direction in {gained,lost,unchanged}): 4008
+
+Running 10000 circular-shuffle permutations...
+  permutation 1000 / 10000
+  permutation 2000 / 10000
+  permutation 3000 / 10000
+  permutation 4000 / 10000
+  permutation 5000 / 10000
+  permutation 6000 / 10000
+  permutation 7000 / 10000
+  permutation 8000 / 10000
+  permutation 9000 / 10000
+  permutation 10000 / 10000
+  Saved: enrichment_heatmap/{pdf,svg,jpg}
+  Saved: loop_type_by_stripe_direction_bar/{pdf,svg,jpg}
+
+Done.
+  -> SUCCESS
+
+================================================================
+  COMPLETE: 16 tasks, 0 failed
+  Finished: Thu Apr 23 15:52:04 PDT 2026
+================================================================
