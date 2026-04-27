@@ -229,35 +229,178 @@ LOG=cluster/phase4_chip.txt      bash cluster/scripts/run_phase4.sh 4.3,4.7   # 
 
 ---
 
-## Phase 5: deepTools Metagene Analysis
+## Phase 5: deepTools Metagene Analysis — DONE (2026-04-27)
 
-H3K27me3/H3K27ac/H2AK119ub signal across loop anchors +/-5kb per cluster.
+**Status:** Per-cluster anchor metagene at ±5kb produced for 4 marks × ctrl/mut = 8 BigWigs across 6 clusters. Single combined heatmap at `cluster/bap1_late/figures/deeptools/histone_anchors/` with biologically coherent signal. Total runtime: 1h36min (significantly longer than the plan's 5–15min estimate; see corrections). Results visually confirm Phase 4.4 KEY conclusion: clust5 (gain) and clust4 (moderate gain) anchors show high K27me3 + K119ub + K27me1 with low K27ac — Polycomb-rich; clust1–3 (unchanged/loss bulk) show K27ac dominance with lower repressive marks; clust6 (loss) intermediate. ctrl-vs-mut paired vmax confirms mark-level differences are biological signal, not colormap artifacts.
 
-### 5.1 — Prepare per-cluster anchor BED files
+**Corrections applied during execution (Phase 6+ must follow these, not the original plan):**
 
-For each cluster, extract both anchors (deduplicated) into 3-column BED:
-`cluster/bap1_late/figures/deeptools_input/{clust1..clustN}_anchors.bed`
+- **Runtime: ~96 min, not 5–15 min.** computeMatrix at default `--binSize 10` over a ±5kb window = 1,000 bins per BigWig × 8 BigWigs × 62k unique anchors → 1.6GB text-matrix output, dominated by pyBigWig random access on 8 BigWigs in serial. Future deeptools runs at this scale should budget 90–120 minutes. To speed up, override with `--binSize 50` or `100` (acceptable for ±5kb visualization; would shrink the matrix 5–10×).
 
-### 5.2 — Run deepTools bed_pileup
+- **Python stdout block-buffering hides progress for the entire computeMatrix runtime.** Without `python3 -u` or `PYTHONUNBUFFERED=1`, the log appears to "hang" between `[2/2] Running deepTools bed_pileup...` and the next Python print for the full ~90 min while computeMatrix runs as a subprocess. Fix baked into `run_phase5.sh:29` (`export PYTHONUNBUFFERED=1`) and `run_phase5.sh:46` (`"$PYTHON" -u "$SCRIPT"`). Phase 6 sbatch script also benefits — though SLURM logs flush more aggressively than terminal stdout, so `PYTHONUNBUFFERED` is sufficient there without `-u`.
 
-Uses `deepTools_pipeline.bed_pileup()` which shells out to `computeMatrix reference-point` + `deeptools_plotting.heatmap_plot()`.
+- **Cluster env's `bin/` MUST be on PATH for the `computeMatrix` subprocess.** `bed_pileup` shells out via `subprocess.run('computeMatrix ...', shell=True)`, inheriting the parent shell's PATH. Pointing PYTHON at the cluster env's python3 alone is NOT enough — computeMatrix is in the env's bin/ dir, not on the default PATH. `run_phase5.sh:24-25` prepends `/opt/homebrew/anaconda3/envs/cluster/bin` explicitly. Pre-run check: `which computeMatrix` returns valid path before invoking the script.
 
-**BigWig dict — need user to confirm/sync these files:**
-- H3K27me3: ctrl + mut (from `peaks/bigwigs/macs2.narrow.aug18.dedup/`)
-- H3K27ac: ctrl + mut (same directory)
-- H2AK119ub: ctrl + mut (user has at `/Users/zakiralibhai/sdsc/bigwigs/H2AK119ub{Ctrl,Mut}.bw` — available locally)
+- **Per-cluster unique anchor counts (post-dedup):**
 
-**Blacklist:** `tads/mm10-blacklist.v2.bed` (verified on disk)
+  | Cluster | Loops | Raw anchors (×2) | Unique BED rows | % unique |
+  |---------|------:|-----------------:|----------------:|---------:|
+  | clust1  | 12,298 | 24,596 | 19,809 | 80.5% |
+  | clust2  | 10,970 | 21,940 | 18,163 | 82.8% |
+  | clust3  |  8,738 | 17,476 | 13,759 | 78.7% |
+  | clust4  |  3,916 |  7,832 |  6,783 | 86.6% |
+  | clust5  |    667 |  1,334 |  1,187 | 89.0% |
+  | clust6  |  2,359 |  4,718 |  3,817 | 80.9% |
+  | **Total** | **38,948** | **77,896** | **63,518** | **81.5%** |
 
-**Output:** `cluster/bap1_late/figures/deeptools/histone_anchors.{png,pdf}`
+  Plan estimated 88–92% unique; actual 78–89%. Hub anchors more common than expected (especially clust3 with the most loops and most hub-shared anchors).
+
+- **computeMatrix dropped 1,211 of 63,518 (1.9%) regions** as "absent in computeMatrix output" — these fall in blacklisted regions or have BigWig signal gaps on at least one of the 8 marks. Per-cluster post-computeMatrix counts: clust1=19,459 / clust2=17,842 / clust3=13,481 / clust4=6,648 / clust5=1,160 / clust6=3,717. 98.1% retention is acceptable.
+
+- **Output sizes larger than plan estimate.** PNG was estimated 100–500KB; actual **2.2MB**. Larger because 6 clusters × ~10k rows = 60k+ heatmap rows × 8 BigWig columns rendered as raster at 300dpi. SVG=650KB, PDF=1.1MB, JPG=377KB.
+
+- **Intermediate files are LARGE and should NOT be committed.** `histone_anchors_values` (1.6GB tab-text matrix) and `histone_anchors` (96MB gzipped binary matrix) are intermediate computeMatrix outputs needed only by `heatmap_plot`. Only the rendered heatmap files (.png/.pdf/.svg/.jpg) are figures. **TODO: add to `.gitignore`:**
+  ```
+  cluster/bap1_late/figures/deeptools/histone_anchors/histone_anchors
+  cluster/bap1_late/figures/deeptools/histone_anchors/histone_anchors_values
+  ```
+  They can be regenerated by re-running the script. Or delete them after Phase 5 completes to recover ~1.7GB.
+
+### 5.1 — Per-cluster anchor BED preparation
+
+`build_anchor_beds()` in `cluster/scripts/06_deeptools_metagene.py:75` reads `combined-clusters.txt`, concatenates both anchor halves per cluster, dedups on `(chrom, start, end)`, sorts, and writes 3-col BEDs to `cluster/bap1_late/figures/deeptools_input/{clust1..clust6}_anchors.bed`. See above table for actual counts.
+
+### 5.2 — deepTools bed_pileup invocation
+
+Single call to `bed_pileup()` (deepTools_pipeline.py:25) with:
+- `up_down=5000` — ±5kb window, computeMatrix default `--binSize 10` produces 1,000 bins per BigWig
+- 8 BigWigs (4 marks × ctrl/mut, BAP1-relevant: K27ac/K27me3/K119ub/K27me1)
+- `vmax_groups`: paired ctrl/mut per mark — fair visual ctrl vs mut comparison
+- `color_dict`: Blues (K27ac, active) / Reds (K27me3, repressive) / Greens (K119ub, PR-DUB substrate) / Purples (K27me1, PRC2 intermediate)
+- `blacklisted_regions`: `tads/mm10-blacklist.v2.bed`
+- `pileup_type='referencePoint'` (computeMatrix `--referencePoint center`)
+
+Wrapped in `multi_format_savefig()` so heatmap_plot's two `fig.savefig` calls (deeptools_plotting.py:146-147) emit `.png` + `.pdf` + `.svg` + `.jpg`.
+
+### Phase 5 Verification
+
+**Verified 2026-04-27 (10:39 PDT, after 96-min run):**
+
+- `cluster/bap1_late/figures/deeptools_input/clust{1..6}_anchors.bed`: 6 files, sizes 28KB–462KB, line counts proportional to cluster sizes (1,187–19,809 rows). All deduplicated, all sorted by chrom/start/end.
+- `cluster/bap1_late/figures/deeptools/histone_anchors/`: contains `histone_anchors` (96MB gz matrix), `histone_anchors_values` (1.6GB tab-text matrix), and 4-format heatmap files: PNG=2.2MB, PDF=1.1MB, SVG=650KB, JPG=377KB. All non-empty.
+- **Visual sanity (heatmap):** Top-row mean profile lines per BigWig clearly separate clusters; clust5 line elevated for K27me3/K119ub/K27me1 (purple/brown lines), clust1 elevated for K27ac. Heatmap rows: clust1 (top, biggest, K27ac-dominant) → clust5 (small, K27me3+K119ub+K27me1-dominant). ctrl/mut paired panels show subtle but visible mut increases in K27me3/K119ub at clust4–5 anchors, mechanistically consistent with BAP1 KO failing to remove K119ub.
+- Profile lines confirm cluster-level mark separations match Phase 4.5 ChromHMM proportion conclusions (clust5 = 87% Polycomb, clust1–3 mostly Active_Promoter+Active_Enhancer).
+- Skipped 1,211 regions across all 8 BigWigs (1.9% of input). Acceptable.
+- 4-format multi_format_savefig wrapper fired correctly: PDF and PNG via heatmap_plot's two explicit `fig.savefig` calls; SVG and JPG emitted as siblings on the .png write via the patch.
+
+**Files created in Phase 5:**
+
+| File | Purpose |
+|------|---------|
+| `cluster/scripts/06_deeptools_metagene.py` | Phase 5 orchestrator: build per-cluster anchor BEDs + run bed_pileup |
+| `cluster/scripts/run_phase5.sh` | Local driver: prepend cluster env bin to PATH, set PYTHONUNBUFFERED=1, invoke `python3 -u`, tee log to cluster/phase5.txt |
+| `cluster/phase5.txt` | Full Phase 5 run log (1,261 lines, includes 1,211 "Skipping" lines) |
+
+**Outputs created in Phase 5 (under `cluster/bap1_late/`):**
+
+| Path | What |
+|------|------|
+| `figures/deeptools_input/clust{1..6}_anchors.bed` | 6 deduplicated 3-col anchor BEDs (1,187–19,809 rows each) |
+| `figures/deeptools/histone_anchors/histone_anchors` | computeMatrix gz binary matrix (96MB; intermediate, gitignore) |
+| `figures/deeptools/histone_anchors/histone_anchors_values` | computeMatrix tab-text matrix for heatmap_plot (1.6GB; intermediate, gitignore) |
+| `figures/deeptools/histone_anchors/histone_anchors_values.{png,pdf,svg,jpg}` | Combined heatmap (2.2MB / 1.1MB / 650KB / 377KB) |
+
+**Re-running:**
+```bash
+LOG=cluster/phase5.txt bash cluster/scripts/run_phase5.sh
+# 1.5-2 hours runtime; large intermediates (1.6GB values text) overwritten in place.
+```
 
 ---
 
-## Phase 6: Cooltools Pileup (DEFERRED — needs mcool sync)
+## Phase 6: Cooltools Pileup — READY FOR HPC SUBMISSION (planned 2026-04-27)
 
-mcool files are on HPC at `/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/`. Samples: ctrl_merged.mcool, mut_merged.mcool (plus 6 individual replicates).
+**Status:** Scripts (`07_cooltools_pileup.py`, `07_cooltools_pileup.sb`) are written, syntax-checked, and ready to submit on SDSC Expanse. **Execution requires user action:** (a) one-time conda env creation on Expanse from `cluster/environment_linux.yml`, then (b) `sbatch cluster/scripts/07_cooltools_pileup.sb` from the login node. mcool inputs already on Expanse at `/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/{ctrl,mut}_merged.mcool` (KR-balanced via cooler balance per stripenn 5.2 history).
 
-User can sync the merged mcools (~2-5GB each) to Mac for local cooltools pileup. Write stub script `cluster/scripts/06_cooltools_pileup.py` with the correct `cooltools_called.mcool_pileup()` call using `genome='mm10'` and the cluster BEDPE dict, with a configurable `mcool_dict` pointing to local paths.
+**Design decisions (from PLAN approval, AskUserQuestion 2026-04-27):**
+
+- **HPC env strategy:** create dedicated `cluster` env on Expanse from `environment_linux.yml` (mirrors local Mac, isolates cooltools from stripenn's `mariner_env`). User chose this over the alternative of pip-installing cooltools+bioframe+pybbi into mariner_env, citing local-Mac parity.
+- **mcools:** merged only (`ctrl_merged.mcool`, `mut_merged.mcool`); skip per-replicate (variance work not the goal here).
+- **Pileup parameters:** 10kb resolution, ±500kb flank, log2(obs/exp) over `expected_cis`, `v_range=[-1, 2]` — all match Popay grouped_loops_figures.ipynb cell-9 verbatim.
+- **Cluster ordering:** clust1..clust6 from Phase 3 v2 (38,948 loops, all 6 clusters non-degenerate).
+- **Numbering:** Phase 6 uses script number 07 (Phase 5 took 06_deeptools_metagene.py); plan-p2 originally reserved 06_ for cooltools but renumbered for monotonic phase-script alignment.
+
+### 6.1 — One-time HPC env setup (USER ACTION REQUIRED before first submission)
+
+```bash
+# On Expanse login node (one-time, ~3-5 min)
+ssh <expanse-alias>
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+git pull   # pull the Phase 5+6 scripts
+conda env create -f cluster/environment_linux.yml -n cluster
+conda activate cluster
+python -c "import cooltools, bioframe, cooler; print('cooltools', cooltools.__version__)"
+# If any of the 3 imports fail (rare — environment_linux.yml SHOULD include them):
+#   pip install cooltools bioframe pybbi
+```
+
+### 6.2 — Submission
+
+```bash
+cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+sbatch cluster/scripts/07_cooltools_pileup.sb
+squeue -u $USER
+# When complete, sync outputs back to Mac:
+#   git pull   (if outputs committed on HPC), OR
+#   rsync -avP <expanse>:.../cluster/bap1_late/cooltools/ cluster/bap1_late/cooltools/
+```
+
+SLURM resource request (per stripenn `01_call_stripes.sb` gold standard):
+- `--account=csd940 --partition=shared`
+- 16 CPUs, 64G memory, 4-hour time limit
+- Output log: `cluster/logs/phase6_pileup_<jobid>.out`
+- Manual exit-code check: `STATUS=$?` after `python ... 07_cooltools_pileup.py`; checks output PNG existence before declaring success.
+
+### 6.3 — bioframe centromere fetch failure + applied fix (2026-04-27)
+
+**First HPC submission (jobid pending) failed** with:
+```
+ValueError: No source for centromere data found from provider 'local'.
+```
+
+**Root cause:** bioframe ≥0.5 deprecated UCSC online fetch and ships a `provider='local'` default that requires bundled centromere data. mm10 centromere data is not in bioframe 0.6.1's bundled package (verified locally on Mac too — same bioframe version, same error). `bioframe.fetch_chromsizes('mm10')` works (chrom sizes ARE bundled), but `bioframe.fetch_centromeres('mm10')` raises ValueError unconditionally.
+
+**Fix applied in `cluster/scripts/07_cooltools_pileup.py:30-58`:** added `make_arms_robust()` that tries the original `fetch_centromeres + make_chromarms` and falls back to whole-chromosome "arms" (one row per chrom, start=0, end=chromsize) if it raises. Monkey-patches `cooltools_called.make_arms` at module import time so `mcool_pileup`'s internal `make_arms` call uses the robust version. Popay's `cooltools_called.py` is NOT edited.
+
+**Biological impact of fallback:** None for our use case. `cooltools.expected_cis(view_df=arms)` computes expected contact frequency per "arm" — whole-chromosome arms means whole-chromosome expected. Centromere-aware splits matter only for cis contacts that span a centromere; mouse centromeres are acrocentric (at chrom start) and our pileup window is ±500kb (median loop ~250kb), so centromere-spanning is rare. Whole-chromosome expected is a valid simplification.
+
+**Verified locally:** `make_arms_robust('mm10')` returns 22 rows (chr1-19, chrX, chrY) with correct columns (`chrom`, `start`, `end`, `name`). Monkey-patch confirmed: `cooltools_called.make_arms is make_arms_robust` after import.
+
+**Internet on Expanse (still relevant):** the only remaining UCSC HTTPS call is `bioframe.fetch_chromsizes('mm10')` at line 188 (now line 47 inside our robust wrapper). Compute nodes typically allow outbound HTTPS to UCSC. If THIS also fails, hard-code chromsizes from a TSV — but it's worked everywhere I've tested.
+
+### 6.4 — Expected outputs
+
+| Path | What |
+|------|------|
+| `cluster/bap1_late/cooltools/obs_exp_contacts/obs_exp_contacts_ctrl.{png,pdf,svg,jpg}` | log2(obs/exp) pileup per cluster, ctrl mcool |
+| `cluster/bap1_late/cooltools/obs_exp_contacts/obs_exp_contacts_mut.{png,pdf,svg,jpg}` | log2(obs/exp) pileup per cluster, mut mcool |
+| `cluster/logs/phase6_pileup_<jobid>.out` | SLURM stdout (also captures Python stdout) |
+
+### 6.5 — Visual sanity expectations (post-submission)
+
+- **clust5 (gain, 97% up_in_mutant):** mut central pixel STRONGER (more red) than ctrl — loop strengthening at aggregate level.
+- **clust6 (loss, 78% down_in_mutant):** mut central pixel WEAKER than ctrl — loop weakening visible.
+- **clust1 (100% unchanged):** ctrl and mut nearly identical — bulk baseline.
+- **clust4 (70% up):** moderate strengthening in mut.
+- **clust3 (21% down):** moderate weakening in mut.
+- Background quadrants outside center: random log2(obs/exp) ≈ 0 in both conditions (uniform pale color).
+
+### Files created in Phase 6 (pre-execution):
+
+| File | Purpose |
+|------|---------|
+| `cluster/scripts/07_cooltools_pileup.py` | Loads combined-clusters.txt → cooler-convention bedpe_dict; calls `mcool_pileup` with 10kb / ±500kb / `over_expected=True`; multi_format_savefig wrapped |
+| `cluster/scripts/07_cooltools_pileup.sb` | SLURM wrapper: csd940 / shared / 16 CPUs / 64G / 4h, two-root paths, manual exit checks. Activates `cluster` conda env via `source ~/.bashrc; conda activate cluster`. |
 
 ---
 
@@ -270,29 +413,29 @@ cluster/
 ├── custom_params.json                 # Existing — matplotlib style params
 ├── *.py                               # Existing — Popay modules (modified in Phase 0)
 │
-├── scripts/                           # NEW — all runnable scripts
-│   ├── 00_fix_popay_modules.sh        #   Phase 0: apply bug fixes
+├── scripts/                           # all runnable scripts
 │   ├── 01_build_loop_count_file.py    #   Phase 1: merged loops → Popay format
 │   ├── 02_build_mm10_gene_annotation.R#   Phase 1: mm10 gene BED
 │   ├── 03_chromhmm_segmentation.sh    #   Phase 2: BinarizeBed + LearnModel
 │   ├── 04_clustering.py               #   Phase 3: elbow + Cluster 3.0 + viz
-│   ├── 05_grouped_analyses.py         #   Phase 4-5: all downstream analyses
-│   ├── 06_cooltools_pileup.py         #   Phase 6: cooltools pileup (stub)
-│   ├── run_phase0.sh                  #   Runner: apply fixes + verify imports
+│   ├── 05_grouped_analyses.py         #   Phase 4: 8 downstream sub-analyses
+│   ├── 06_deeptools_metagene.py       #   Phase 5: anchor metagene (DONE)
+│   ├── 07_cooltools_pileup.py         #   Phase 6: cooltools pileup orchestrator
+│   ├── 07_cooltools_pileup.sb         #   Phase 6: SLURM wrapper for Expanse
 │   ├── run_phase1.sh                  #   Runner: data prep
 │   ├── run_phase2.sh                  #   Runner: ChromHMM segmentation
 │   ├── run_phase3.sh                  #   Runner: clustering
 │   ├── run_phase4.sh                  #   Runner: downstream analyses
 │   ├── run_phase5.sh                  #   Runner: deepTools metagene
-│   └── sync_from_hpc.sh              #   rsync helper for HPC data
+│   └── utils/
+│       └── multi_format_output.py     #   Figure.savefig patch for 4-format output
 │
-├── data/                              # NEW — input data files
+├── data/                              # input data files
 │   ├── late_merged_loop_counts.txt    #   Phase 1 output (Popay format)
 │   ├── late_merged_loop_metadata.tsv  #   Phase 1 output (edgeR stats sidecar)
-│   ├── mm10_knownGene_pp.bed          #   Phase 1 output (gene annotation)
-│   └── bigwigs/                       #   Synced BigWigs for deepTools
-│       ├── H2AK119ubCtrl.bw           #   (synced from HPC via sync_from_hpc.sh)
-│       └── H2AK119ubMut.bw
+│   └── mm10_knownGene_pp.bed          #   Phase 1 output (gene annotation)
+│   # Phase 5 BigWigs source: /Users/zakiralibhai/sdsc/bigwigs/ (not in repo)
+│   # Phase 6 mcools source:  /expanse/.../stripes/stripenn/data/cool/250402/ (HPC)
 │
 └── bap1_late/                         # NEW — all analysis outputs
     ├── cluster3/
@@ -307,14 +450,16 @@ cluster/
     │           ├── boxplot.{png,pdf}
     │           └── stripplot.{png,pdf}
     ├── figures/
-    │   ├── annotation/                # Gene lists per cluster
-    │   ├── ChIP_intersect/            # DiffBind + ChIP signal plots
-    │   ├── deeptools/                 # Metagene heatmaps
-    │   ├── deeptools_input/           # Per-cluster anchor BEDs
-    │   ├── loop_size.{png,pdf}
-    │   ├── loop_classification.{png,pdf}
-    │   ├── chromHMM_anchor.{png,pdf}
-    │   └── cluster_differential_status.{png,pdf}
+    │   ├── annotation/                # Phase 4.6: per-cluster gene lists
+    │   ├── ChIP_intersect/            # Phase 4.3, 4.7: DiffBind + ChIP signal
+    │   ├── loop_size/                 # Phase 4.1: per-cluster loop-size dist.
+    │   ├── loop_classification/       # Phase 4.2: structural/CRE/mixed/uncl.
+    │   ├── chromHMM_anchor/           # Phase 4.5: ChromHMM proportions
+    │   ├── cluster_differential_status/  # Phase 4.8: cluster x edgeR direction
+    │   ├── deeptools_input/           # Phase 5: per-cluster anchor BEDs (6 files)
+    │   └── deeptools/
+    │       └── histone_anchors/       # Phase 5: combined heatmap (DONE)
+    │           ├── histone_anchors_values.{png,pdf,svg,jpg}  # 8 BigWigs x 6 clusters
     ├── chromHMM/
     │   ├── peak_beds/                 # 3-col BEDs staged for BinarizeBed
     │   ├── cellmarkfiletable.txt
@@ -327,7 +472,9 @@ cluster/
     │   ├── span_input/                # Per-cluster span BEDs for OverlapEnrichment
     │   ├── {anchor,span}.txt          # Fold enrichment tables
     │   └── {anchor,span}.{png,pdf}    # Heatmaps (Fig 2f equivalent)
-    └── cooltools/                     # Phase 6 outputs (after mcool sync)
+    ├── cooltools/                     # Phase 6 outputs (HPC submission pending)
+    │   └── obs_exp_contacts/          #   obs_exp_contacts_{ctrl,mut}.{png,pdf,svg,jpg}
+    └── logs/                          # Phase 6 SLURM stdout (created on HPC)
 ```
 
 ---
@@ -452,14 +599,15 @@ ls -lh "$LOCAL_MCOOL"/ 2>/dev/null || echo "  (no mcools yet)"
 | `cluster/scripts/utils/multi_format_output.py` | 3+ | Context-manager savefig wrapper + figure_subfolder helper (PNG + PDF + SVG + JPG, subfolder per figure); shared by Phase 4-5 |
 | `cluster/scripts/05_grouped_analyses.py` | 4-5 | All downstream analyses (ChromHMM, ChIP, DiffBind, deepTools) |
 | `cluster/scripts/06_cooltools_pileup.py` | 6 | Cooltools pileup stub (after mcool sync) |
+| `cluster/scripts/06_deeptools_metagene.py` | 5 | Per-cluster anchor BED prep + bed_pileup (8 BigWigs x 6 clusters, single combined heatmap) |
+| `cluster/scripts/07_cooltools_pileup.py` | 6 | Loads combined-clusters.txt → cooler-convention bedpe_dict; calls mcool_pileup |
+| `cluster/scripts/07_cooltools_pileup.sb` | 6 | SLURM wrapper for Expanse: csd940 / shared / 16 cpus / 64G / 4h, two-root paths |
 | **Runner scripts** | | |
-| `cluster/scripts/run_phase0.sh` | 0 | Verify bug fixes |
 | `cluster/scripts/run_phase1.sh` | 1 | Data prep + directory setup |
 | `cluster/scripts/run_phase2.sh` | 2 | ChromHMM segmentation |
 | `cluster/scripts/run_phase3.sh` | 3 | Clustering — accepts `K FILTER_PCT MIN_RATIO MAX_RATIO` positional + `LOG` env var |
 | `cluster/scripts/run_phase4.sh` | 4 | Downstream analyses |
-| `cluster/scripts/run_phase5.sh` | 5 | deepTools metagene |
-| `cluster/scripts/sync_from_hpc.sh` | — | rsync BigWigs + mcools from Expanse |
+| `cluster/scripts/run_phase5.sh` | 5 | deepTools metagene — prepends cluster env bin to PATH, sets PYTHONUNBUFFERED=1, invokes `python3 -u` |
 
 ## Files to Modify
 
@@ -475,10 +623,11 @@ ls -lh "$LOCAL_MCOOL"/ 2>/dev/null || echo "  (no mcools yet)"
 
 ## Verification Plan
 
-1. **Phase 0:** ✅ `run_phase0.sh` — all module imports succeed without error
+1. **Phase 0:** ✅ All Popay modules import without error (`plotting`, `cluster_tools`, `chromHMM_heatmap`, `deeptools_plotting`, `bedpe_analysis`, `cooltools_called`, `deepTools_pipeline`)
 2. **Phase 1:** ✅ `late_merged_loop_counts.txt` has 39,344 rows, 8 columns; `mm10_knownGene_pp.bed` has 24,515 entries
 3. **Phase 2:** ✅ Segmentation BED covers all 21 standard chroms (chr1-19 + chrX + chrY), 335,569 segments; 12-state emissions matrix biologically interpretable (Active_Promoter through Quiescent)
 4. **Phase 3:** ✅ Elbow plot shows bend at k=4-5; v2 combined-clusters.txt has 38,948 rows, all 6 clusters > 600 loops, captures 99%+ of edgeR differential calls; multi-format outputs (PNG + PDF + SVG + JPG) per figure subfolder
-5. **Phase 4.4 (key result):** ChromHMM anchor vs span heatmaps show differential Polycomb enrichment across clusters
-6. **Phase 4.8:** Chi-squared p < 0.05 for cluster x differential status
-7. **Phase 5:** deepTools heatmaps show H3K27me3/H3K27ac differences across clusters at anchors
+5. **Phase 4.4 (KEY result):** ✅ ChromHMM anchor vs span heatmaps show differential Polycomb enrichment across clusters — clust5 anchor 6.59x + span 3.03x (extrusion impediment); clust6 anchor 2.09x + span 0.94x (sensitivity model)
+6. **Phase 4.8:** ✅ Chi-squared p ≈ 0 for cluster x differential status (clust5=97% up, clust6=78% down, clust1=100% unchanged)
+7. **Phase 5:** ✅ deepTools metagene shows clust5 anchors enriched for H3K27me3 + H2AK119ub + H3K27me1 with low H3K27ac (Polycomb signature); clust1-3 K27ac-dominant; clust4-5 paired vmax shows visible mut increases in repressive marks. Heatmap PDF/PNG/SVG/JPG all present at `cluster/bap1_late/figures/deeptools/histone_anchors/`
+8. **Phase 6:** ⏳ READY FOR HPC SUBMISSION — scripts written and syntax-checked; awaiting user `sbatch` submission on Expanse. Visual expectation: clust5 mut > clust5 ctrl central pixel (gain), clust6 mut < clust6 ctrl (loss), clust1 ctrl ≈ mut (unchanged).
