@@ -7,15 +7,16 @@ import cooler
 import cooltools
 import cooltools.lib.plotting
 import json
+import os
 from mpl_toolkits.axes_grid1 import Divider, Size
 
 from plotting import factor_int,ax_selection,box
 from statistics_functions import kruskal_wilcoxon
 
 
-plt.style.use('seaborn-poster')
+plt.style.use('seaborn-v0_8-poster')
 
-with open('/Users/tessapopay/example_data/custom_params.json') as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'custom_params.json')) as f:
     custom_params = json.loads(f.read())
 
 font_dict = {'big_title':10,'title':8,'labels':6,'axlab':7,'plt-text':5,'legend':6,'fonttype':'arial'}
@@ -24,7 +25,7 @@ font_dict = {'big_title':10,'title':8,'labels':6,'axlab':7,'plt-text':5,'legend'
 # bed dataframes need to have the columns 'chrom','start','end' and if they have strand, it needs to be 'strand' not 'Strand'
 # use smaller flank for bedpe than bed
 # split_diagonal can only be used with a bed_dict
-def mcool_pileup(mcool_dict,out_dir,out_name,flank=500000,bed_dict=None,bedpe_dict=None,over_expected=True,resolution=10000,split_diagonal=False,palette=None,v_range=None,genome='hg38'):
+def mcool_pileup(mcool_dict,out_dir,out_name,flank=500000,bed_dict=None,bedpe_dict=None,over_expected=True,resolution=10000,split_diagonal=False,palette=None,v_range=None,genome='mm10'):
     arms = make_arms(genome=genome)
 
     if v_range is None: v_range = [-1,1]

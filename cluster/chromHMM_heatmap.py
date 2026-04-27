@@ -6,7 +6,7 @@ from mpl_toolkits.axes_grid1 import Divider, Size
 import os
 from pathlib import Path
 
-with open('/Users/tessapopay/example_data/custom_params.json') as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'custom_params.json')) as f:
     custom_params = json.loads(f.read())
 
 sns.set_theme(font='arial',style='ticks',rc=custom_params)

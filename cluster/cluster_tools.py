@@ -15,8 +15,9 @@ def elbow(out_dir,count_matrix,data_cols):
     plt.plot(range(1, 15), sse, '-o', c = 'maroon')
     plt.xlabel('Count of Clusters')
     plt.ylabel('SSE')
-    plt.show()
     plt.savefig(out_dir + '/elbow_plot.png',dpi=300)
+    plt.show()
+    plt.close()
 
 def sort_clusters(cluster_sort_df,data_cols):
     clusters = pd.DataFrame()

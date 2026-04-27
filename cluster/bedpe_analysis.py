@@ -64,7 +64,7 @@ def bedtools_annotation(out_dir=None,type='anchor_intersect',bedpe_dict=None,FPK
     os.makedirs(temp_dir,exist_ok=True)
 
     default_bed_name = 'gene promoters'
-    default_gene_path = '~/example_data/gencode.v25.annotation_pp.bed'
+    default_gene_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'mm10_knownGene_pp.bed')
 
     gene_file_path = default_gene_path
     B_bed_cols = ['chr','start','end','gene_id','idk','strand','gene_name']
@@ -139,23 +139,24 @@ def bedtools_annotation(out_dir=None,type='anchor_intersect',bedpe_dict=None,FPK
                                     sort_col='sample'
                                     )
 
-    bedpe_figures_grouped = bedpe_figures_df[['chr1','x1','x2','chr2','y1','y2','sample','FPKM']].groupby(by=['chr1','x1','x2','chr2','y1','y2','sample'],as_index=False,sort=False).mean()
-    bedpe_figures_df[['chr1','x1','x2','chr2','y1','y2','sample','FPKM','gene_name','gene_id']].to_csv(out_dir + '/loop_FPKM_ungrouped.txt',sep='\t',header=True,index=False)
-    bedpe_figures_grouped.to_csv(out_dir + '/loop_FPKM.txt',sep='\t',header=True,index=False)
+    if FPKM_df is not None:
+        bedpe_figures_grouped = bedpe_figures_df[['chr1','x1','x2','chr2','y1','y2','sample','FPKM']].groupby(by=['chr1','x1','x2','chr2','y1','y2','sample'],as_index=False,sort=False).mean()
+        bedpe_figures_df[['chr1','x1','x2','chr2','y1','y2','sample','FPKM','gene_name','gene_id']].to_csv(out_dir + '/loop_FPKM_ungrouped.txt',sep='\t',header=True,index=False)
+        bedpe_figures_grouped.to_csv(out_dir + '/loop_FPKM.txt',sep='\t',header=True,index=False)
 
-    data_names,data_list = [],[]
-    for sample in bedpe_figures_grouped['sample'].unique():
-        data_names.append(sample)
-        data_list.append(bedpe_figures_grouped.loc[bedpe_figures_grouped['sample'] == sample,'FPKM'].tolist())
-    stats_df = kruskal_wilcoxon(data_names=data_names,data_list=data_list)
-    stats_df.to_csv(out_dir + '/loop_FPKM.stats.txt',sep='\t',header=True,index=False)
+        data_names,data_list = [],[]
+        for sample in bedpe_figures_grouped['sample'].unique():
+            data_names.append(sample)
+            data_list.append(bedpe_figures_grouped.loc[bedpe_figures_grouped['sample'] == sample,'FPKM'].tolist())
+        stats_df = kruskal_wilcoxon(data_names=data_names,data_list=data_list)
+        stats_df.to_csv(out_dir + '/loop_FPKM.stats.txt',sep='\t',header=True,index=False)
 
-    plotting.box(melted_df=bedpe_figures_grouped,
-        xcol='sample',
-        ycol='FPKM',
-        out_dir=out_dir,
-        measure='chromatin loop mean FPKM',
-        title='',
-        out_name='FPKM_' + type)
+        plotting.box(melted_df=bedpe_figures_grouped,
+            xcol='sample',
+            ycol='FPKM',
+            out_dir=out_dir,
+            measure='chromatin loop mean FPKM',
+            title='',
+            out_name='FPKM_' + type)
 
     if analysis_type == 'dict': return annotated_bedpe_dict

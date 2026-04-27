@@ -1,11 +1,12 @@
 
+import os
 import pandas as pd
 import seaborn as sns
 import json
 import numpy as np
 from plotting import ax_selection,randomize_hex
 
-with open('/Users/tessapopay/example_data/custom_params.json') as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'custom_params.json')) as f:
     custom_params = json.loads(f.read())
 
 sns.set_theme(font='arial',style='ticks',rc=custom_params)
@@ -105,7 +106,6 @@ def heatmap_plot(values_path,use_height,pileup_type,color_dict=None,vmax_groups=
 
         line.set_title(bam)
         line.set_ylim([0,line_max_dict[bam]])
-        if bam == 'HA-NIPBL': line.set_ylim([0,2])
 
         if (col_rep == len(list(set(data_cols))) - 1) and (len(datasets) != 1):
             ax.legend(title=None,loc='center left', bbox_to_anchor=(1, 0.5),labelspacing=0.2,fontsize=5)

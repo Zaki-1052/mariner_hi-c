@@ -5,14 +5,17 @@ from pathlib import Path
 from deeptools_plotting import heatmap_plot
 
 
-def bam_coverage(bam_file,out_file,blacklisted_regions):
+GENOME_SIZES = {'mm10': 2494787188, 'hg38': 2913022398}
+
+def bam_coverage(bam_file,out_file,blacklisted_regions,genome='mm10'):
     # test if the data is PE
     samtools_func = 'samtools view -c -f 1 ' + bam_file
     out = subprocess.check_output(samtools_func,shell=True)
     out = int(out.decode('utf-8').split('\n')[0])
     if out == 0: extend_append = ' -e 100'
     else: extend_append = ' -e'
-    func = 'bamCoverage --bam ' + bam_file + ' -o ' + out_file  + ' -bl ' + blacklisted_regions + ' -p 4 --normalizeUsing RPKM --effectiveGenomeSize 2913022398' + extend_append
+    genome_size = GENOME_SIZES[genome]
+    func = 'bamCoverage --bam ' + bam_file + ' -o ' + out_file  + ' -bl ' + blacklisted_regions + ' -p 4 --normalizeUsing RPKM --effectiveGenomeSize ' + str(genome_size) + extend_append
     subprocess.run(func, shell=True)
 
 

@@ -17,11 +17,12 @@ import random
 from mpl_toolkits.axes_grid1 import Divider, Size
 from PIL import ImageFont, ImageDraw, Image
 from matplotlib import font_manager
+import os
 
 colors = sns.color_palette()
 font_dict = {'big_title':10,'title':8,'labels':6,'axlab':7,'plt-text':5,'legend':6,'fonttype':'arial'}
 
-with open('/Users/tessapopay/example_data/custom_params.json') as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'custom_params.json')) as f:
     custom_params = json.loads(f.read())
 
 sns.set_theme(font='arial',style='ticks',rc=custom_params)
@@ -129,16 +130,8 @@ def line(melted_df,xcol,ycol,xcol_measure,ycol_measure,out_dir,out_name,title=''
                 #fig_ax.set_xticks(axis_ticks)
                 fig_ax.set_yticks(axis_ticks)
 
-            if dataset == 'TFAP2A': fig_ax.set_ylim([0,5])
-            if dataset == 'MYC': fig_ax.set_ylim([0,25])
-            if dataset == 'BDNF': fig_ax.set_ylim([0,3])
-            if dataset == 'SNAI2': fig_ax.set_ylim([0,14])
-            if dataset == 'KCTD16': fig_ax.set_ylim([0,0.7])
-            if dataset == 'SOX9': fig_ax.set_ylim([0,50])
-            if dataset == 'VEGFA': fig_ax.set_ylim([0,35])
-            if dataset == 'ASNS (non-sig.)': fig_ax.set_ylim([0,12])
 
-    
+
     sns.despine()
     #plt.tight_layout()
     plt.savefig(out_dir + '/' + out_name + '.png',dpi=300)
@@ -499,7 +492,7 @@ def joint(melted_df,ycol,xcol,ycol_measure,xcol_measure,out_dir,out_name,title,h
 
 
     if logX:
-        if data[data[ycol] == 0].shape[0] > 0:
+        if data[data[xcol] == 0].shape[0] > 0:
             print('data contains zero values in ' + xcol + ' that cannot be converted to log scale')
             print('please adjust input data before continuing')
             return
