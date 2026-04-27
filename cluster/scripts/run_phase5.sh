@@ -22,6 +22,11 @@ cd "$(dirname "$0")/../.."   # repo root
 # but is not the default-active env. PYTHON points to the same env explicitly.
 CLUSTER_ENV_BIN=/opt/homebrew/anaconda3/envs/cluster/bin
 export PATH="${CLUSTER_ENV_BIN}:${PATH}"
+# Force unbuffered Python so prints stream live through `tee` instead of
+# block-buffering during the long subprocess.run('computeMatrix ...') call.
+# Without this, the log appears to "hang" between the banner and the next
+# Python print for 5-15 minutes while computeMatrix is genuinely running.
+export PYTHONUNBUFFERED=1
 PYTHON="${CLUSTER_ENV_BIN}/python3"
 SCRIPT=cluster/scripts/06_deeptools_metagene.py
 LOG=${LOG:-cluster/phase5.txt}
@@ -38,7 +43,7 @@ LOG=${LOG:-cluster/phase5.txt}
   echo "============================================================"
   echo
   echo "[1/1] Running 06_deeptools_metagene.py..."
-  "$PYTHON" "$SCRIPT"
+  "$PYTHON" -u "$SCRIPT"
   echo
   echo "============================================================"
   echo "Phase 5 outputs"

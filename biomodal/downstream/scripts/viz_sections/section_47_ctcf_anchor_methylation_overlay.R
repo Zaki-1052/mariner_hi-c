@@ -365,19 +365,25 @@ cat(sprintf("    hmC: %s (lost median=%.4f, gained median=%.4f)\n",
             fmt_p(wt_hmc$p.value),
             median(lost_dyn_hmc$mod_difference), median(gained_dyn_hmc$mod_difference)))
 
-# --- Per-region overlay table ---
-overlay_47a <- dynamic_mc %>%
-  dplyr::select(chr, start, end, mod_difference, dmr_qvalue, significant,
-                direction, anchor_group, region_type) %>%
-  dplyr::rename(mc_mod_difference = mod_difference, mc_qvalue = dmr_qvalue,
-                mc_significant = significant, mc_direction = direction) %>%
+# --- Per-region overlay table (join within region type to avoid many-to-many) ---
+join_mc_hmc_overlay <- function(mc_df, hmc_df) {
   left_join(
-    dynamic_hmc %>%
+    mc_df %>%
+      dplyr::select(chr, start, end, mod_difference, dmr_qvalue, significant,
+                    direction, anchor_group) %>%
+      dplyr::rename(mc_mod_difference = mod_difference, mc_qvalue = dmr_qvalue,
+                    mc_significant = significant, mc_direction = direction),
+    hmc_df %>%
       dplyr::select(chr, start, end, mod_difference, dmr_qvalue, significant, direction) %>%
       dplyr::rename(hmc_mod_difference = mod_difference, hmc_qvalue = dmr_qvalue,
                     hmc_significant = significant, hmc_direction = direction),
     by = c("chr", "start", "end")
   )
+}
+overlay_47a <- bind_rows(
+  join_mc_hmc_overlay(shores_mc, shores_hmc) %>% mutate(region_type = "Shore"),
+  join_mc_hmc_overlay(shelves_mc, shelves_hmc) %>% mutate(region_type = "Shelf")
+)
 
 write.table(overlay_47a, file.path(TABLES_DIR, "47a_dynamic_ctcf_anchor_methylation.tsv"),
             sep = "\t", quote = FALSE, row.names = FALSE)
@@ -624,17 +630,23 @@ cat("===========================================================================
 cat("47c: COORDINATED mC-UP / hmC-DOWN AT DYNAMIC CpG REGIONS\n")
 cat("================================================================================\n\n")
 
-dyn_coord <- inner_join(
-  dynamic_mc %>%
-    dplyr::select(chr, start, end, mod_difference, dmr_qvalue, significant,
-                  direction, anchor_group, region_type) %>%
-    dplyr::rename(mc_diff = mod_difference, mc_q = dmr_qvalue,
-                  mc_sig = significant, mc_dir = direction),
-  dynamic_hmc %>%
-    dplyr::select(chr, start, end, mod_difference, dmr_qvalue, significant, direction) %>%
-    dplyr::rename(hmc_diff = mod_difference, hmc_q = dmr_qvalue,
-                  hmc_sig = significant, hmc_dir = direction),
-  by = c("chr", "start", "end")
+join_mc_hmc_coord <- function(mc_df, hmc_df) {
+  inner_join(
+    mc_df %>%
+      dplyr::select(chr, start, end, mod_difference, dmr_qvalue, significant,
+                    direction, anchor_group) %>%
+      dplyr::rename(mc_diff = mod_difference, mc_q = dmr_qvalue,
+                    mc_sig = significant, mc_dir = direction),
+    hmc_df %>%
+      dplyr::select(chr, start, end, mod_difference, dmr_qvalue, significant, direction) %>%
+      dplyr::rename(hmc_diff = mod_difference, hmc_q = dmr_qvalue,
+                    hmc_sig = significant, hmc_dir = direction),
+    by = c("chr", "start", "end")
+  )
+}
+dyn_coord <- bind_rows(
+  join_mc_hmc_coord(shores_mc, shores_hmc) %>% mutate(region_type = "Shore"),
+  join_mc_hmc_coord(shelves_mc, shelves_hmc) %>% mutate(region_type = "Shelf")
 )
 
 dyn_coord <- dyn_coord %>%
