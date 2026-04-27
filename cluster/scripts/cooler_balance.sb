@@ -1,0 +1,114 @@
+#!/bin/bash
+# cluster/scripts/cooler_balance.sb
+# ICE-balance mcool files at a given resolution.
+# Runs ctrl and mut concurrently (2 nproc each, 4 CPUs total).
+#
+# Usage (from repo root on Expanse login node):
+#   sbatch cluster/scripts/cooler_balance.sb <ctrl.mcool> <mut.mcool> [resolution]
+#
+# Default resolution is 10000 (10kb) to match Phase 6 pileup.
+#
+# Example:
+#   sbatch cluster/scripts/cooler_balance.sb \
+#     /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/ctrl_merged.mcool \
+#     /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_merged.mcool
+#
+#SBATCH --job-name=cooler_balance
+#SBATCH --output=cluster/logs/cooler_balance_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=64G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+MCOOL_CTRL="$1"
+MCOOL_MUT="$2"
+RES="${3:-10000}"
+
+if [ -z "${MCOOL_CTRL}" ] || [ -z "${MCOOL_MUT}" ]; then
+  echo "Usage: sbatch cooler_balance.sb <ctrl.mcool> <mut.mcool> [resolution]" >&2
+  exit 2
+fi
+
+mkdir -p cluster/logs
+
+echo "==========================================="
+echo "cooler balance (ICE normalization)"
+echo "==========================================="
+echo "Job ID:      ${SLURM_JOB_ID}"
+echo "Node:        ${HOSTNAME}"
+echo "Resolution:  ${RES}"
+echo "MCOOL_CTRL:  ${MCOOL_CTRL}"
+echo "MCOOL_MUT:   ${MCOOL_MUT}"
+echo "Start:       $(date)"
+echo "==========================================="
+
+if [ ! -s "${MCOOL_CTRL}" ]; then
+  echo "ERROR: missing or empty ctrl mcool: ${MCOOL_CTRL}" >&2
+  exit 2
+fi
+if [ ! -s "${MCOOL_MUT}" ]; then
+  echo "ERROR: missing or empty mut mcool: ${MCOOL_MUT}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+conda activate cluster
+
+echo "cooler $(python -c 'import cooler; print(cooler.__version__)')"
+
+echo ""
+echo "Balancing ctrl: ${MCOOL_CTRL}::/resolutions/${RES}"
+cooler balance --nproc 2 "${MCOOL_CTRL}::/resolutions/${RES}" 2>&1 &
+PID_CTRL=$!
+
+echo "Balancing mut:  ${MCOOL_MUT}::/resolutions/${RES}"
+cooler balance --nproc 2 "${MCOOL_MUT}::/resolutions/${RES}" 2>&1 &
+PID_MUT=$!
+
+echo "  ctrl PID=${PID_CTRL}  mut PID=${PID_MUT}"
+echo "  Waiting..."
+
+wait ${PID_CTRL}
+RC_CTRL=$?
+
+wait ${PID_MUT}
+RC_MUT=$?
+
+echo ""
+echo "==========================================="
+if [ ${RC_CTRL} -eq 0 ]; then
+  echo "  ctrl: balanced OK"
+else
+  echo "  ERROR: ctrl balance failed (exit=${RC_CTRL})" >&2
+fi
+
+if [ ${RC_MUT} -eq 0 ]; then
+  echo "  mut:  balanced OK"
+else
+  echo "  ERROR: mut balance failed (exit=${RC_MUT})" >&2
+fi
+
+if [ ${RC_CTRL} -ne 0 ] || [ ${RC_MUT} -ne 0 ]; then
+  exit 1
+fi
+
+echo ""
+echo "Verify weight column:"
+python -c "
+import cooler
+for label, path in [('ctrl', '${MCOOL_CTRL}'), ('mut', '${MCOOL_MUT}')]:
+    clr = cooler.Cooler(path + '::/resolutions/${RES}')
+    cols = list(clr.bins().columns)
+    has_weight = 'weight' in cols
+    print(f'  {label}: columns={cols}  weight={has_weight}')
+"
+
+echo ""
+echo "Done. Now run Phase 6:"
+echo "  sbatch cluster/scripts/07_cooltools_pileup.sb"
+echo ""
+echo "End: $(date)"
+echo "==========================================="

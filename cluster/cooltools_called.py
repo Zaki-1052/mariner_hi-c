@@ -36,7 +36,7 @@ def _viewframe_from_cooler(clr):
 # bed dataframes need to have the columns 'chrom','start','end' and if they have strand, it needs to be 'strand' not 'Strand'
 # use smaller flank for bedpe than bed
 # split_diagonal can only be used with a bed_dict
-def mcool_pileup(mcool_dict,out_dir,out_name,flank=500000,bed_dict=None,bedpe_dict=None,over_expected=True,resolution=10000,split_diagonal=False,palette=None,v_range=None,genome='mm10'):
+def mcool_pileup(mcool_dict,out_dir,out_name,flank=500000,bed_dict=None,bedpe_dict=None,over_expected=True,resolution=10000,split_diagonal=False,palette=None,v_range=None,genome='mm10',clr_weight_name='weight'):
     if v_range is None: v_range = [-1,1]
 
     if bed_dict is not None:
@@ -52,8 +52,8 @@ def mcool_pileup(mcool_dict,out_dir,out_name,flank=500000,bed_dict=None,bedpe_di
             first = list(mcool_dict.keys())[pair]
             second = list(mcool_dict.keys())[pair + 1]
 
-            bed_mtx_dict1,_ = mcool_get_matrix(mcool_file=mcool_dict[first],resolution=resolution,type='bed',flank=flank,bed_dict=use_dict,over_expected=over_expected)
-            bed_mtx_dict2,_ = mcool_get_matrix(mcool_file=mcool_dict[second],resolution=resolution,type='bed',flank=flank,bed_dict=use_dict,over_expected=over_expected)
+            bed_mtx_dict1,_ = mcool_get_matrix(mcool_file=mcool_dict[first],resolution=resolution,type='bed',flank=flank,bed_dict=use_dict,over_expected=over_expected,clr_weight_name=clr_weight_name)
+            bed_mtx_dict2,_ = mcool_get_matrix(mcool_file=mcool_dict[second],resolution=resolution,type='bed',flank=flank,bed_dict=use_dict,over_expected=over_expected,clr_weight_name=clr_weight_name)
             
             new_mtx_dict = {}
             for bed_name in bed_mtx_dict1:
@@ -70,20 +70,20 @@ def mcool_pileup(mcool_dict,out_dir,out_name,flank=500000,bed_dict=None,bedpe_di
             pileup_plotting(bed_mtx_dict=new_mtx_dict,resolution=resolution,flank=flank,out_dir=out_dir,out_name=out_name + '_' + first + '_vs_' + second)
     else:
         for mcool_name,mcool_file in mcool_dict.items():
-            if type == 'bed': bed_mtx_dict = mcool_get_matrix(mcool_file=mcool_file,resolution=resolution,type=type,flank=flank,bed_dict=use_dict,over_expected=over_expected)
-            if type == 'bedpe': bed_mtx_dict = mcool_get_matrix(mcool_file=mcool_file,resolution=resolution,type=type,flank=flank,bed_dict=use_dict,over_expected=over_expected)
+            if type == 'bed': bed_mtx_dict = mcool_get_matrix(mcool_file=mcool_file,resolution=resolution,type=type,flank=flank,bed_dict=use_dict,over_expected=over_expected,clr_weight_name=clr_weight_name)
+            if type == 'bedpe': bed_mtx_dict = mcool_get_matrix(mcool_file=mcool_file,resolution=resolution,type=type,flank=flank,bed_dict=use_dict,over_expected=over_expected,clr_weight_name=clr_weight_name)
             pileup_plotting(bed_mtx_dict=bed_mtx_dict,flank=flank,resolution=resolution,out_dir=out_dir,out_name=out_name + '_' + mcool_name,over_expected=over_expected,v_range=v_range)
 
 
-def mcool_get_matrix(mcool_file,resolution,flank,bed_dict,type,over_expected,arms=None,mean_array=True):
+def mcool_get_matrix(mcool_file,resolution,flank,bed_dict,type,over_expected,arms=None,mean_array=True,clr_weight_name='weight'):
     clr = cooler.Cooler(mcool_file + '::/resolutions/' + str(resolution))
     view_df = _viewframe_from_cooler(clr)
-    if over_expected: expected = cooltools.expected_cis(clr, view_df=view_df, nproc=2, chunksize=1_000_000)
+    if over_expected: expected = cooltools.expected_cis(clr, view_df=view_df, clr_weight_name=clr_weight_name, nproc=2, chunksize=1_000_000)
     else: expected = None
 
     bed_mtx_dict = {}
     for name,sites in bed_dict.items():
-        stack = cooltools.pileup(clr, sites, view_df=view_df, expected_df=expected, flank=flank)
+        stack = cooltools.pileup(clr, sites, view_df=view_df, expected_df=expected, flank=flank, clr_weight_name=clr_weight_name)
         if 'strand' in sites.columns:
             mask = np.array(sites.strand == '-', dtype=bool)
             # the order of the stack being returned from pileup seems to be different than expected, so I have adjusted the code to account for this
