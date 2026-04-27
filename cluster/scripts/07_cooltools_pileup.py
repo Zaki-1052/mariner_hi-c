@@ -13,9 +13,8 @@ Reads:
 Writes:
   cluster/bap1_late/cooltools/obs_exp_contacts/obs_exp_contacts_{ctrl,mut}.{png,pdf,svg,jpg}
 
-NOTE: cooltools_called.make_arms() requires outbound HTTPS to UCSC (bioframe
-fetches mm10 chromsizes + centromeres). If the compute node has no network
-access, pre-fetch on a login node and patch make_arms to load from cache.
+NOTE: cooltools_called builds the viewframe from the cooler's own chromsizes,
+so no outbound HTTPS to UCSC is needed on compute nodes.
 """
 import argparse
 import sys
@@ -24,7 +23,6 @@ from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')           # disable GUI; headless on HPC compute nodes
 
-import bioframe
 import pandas as pd
 
 SCRIPT_DIR  = Path(__file__).resolve().parent
@@ -33,46 +31,8 @@ REPO_ROOT   = CLUSTER_DIR.parent
 sys.path.insert(0, str(CLUSTER_DIR))            # cooltools_called
 sys.path.insert(0, str(SCRIPT_DIR / 'utils'))   # multi_format_output
 
-import cooltools_called                         # noqa: E402
 from cooltools_called import mcool_pileup        # noqa: E402
 from multi_format_output import multi_format_savefig, figure_subfolder  # noqa: E402
-
-
-def make_arms_robust(genome: str = 'mm10') -> pd.DataFrame:
-    """Robust replacement for cooltools_called.make_arms.
-
-    bioframe>=0.5 deprecated UCSC online fetch and ships a 'local' provider
-    that needs bundled centromere data. mm10 centromere data is not bundled
-    in some installations -> fetch_centromeres raises ValueError.
-
-    Fallback: whole-chromosome arms (one "arm" per chromosome from 0 to
-    chromsize). cooltools.expected_cis with single-arm-per-chrom view_df
-    computes whole-chromosome expected, which is fine for our +/-500kb
-    pileup use case (centromere-aware splits matter only for trans or
-    centromere-spanning cis contacts).
-    """
-    chromsizes = bioframe.fetch_chromsizes(genome)
-    try:
-        cens = bioframe.fetch_centromeres(genome)
-        arms = bioframe.make_chromarms(chromsizes, cens)
-    except (ValueError, KeyError, FileNotFoundError) as exc:
-        print(f'  make_arms: fetch_centromeres failed '
-              f'({type(exc).__name__}: {exc}); '
-              f'falling back to whole-chromosome arms.', flush=True)
-        arms = pd.DataFrame({
-            'chrom': list(chromsizes.index),
-            'start': 0,
-            'end':   [int(v) for v in chromsizes.values],
-            'name':  list(chromsizes.index),
-        })
-    return arms
-
-
-# Monkey-patch cooltools_called.make_arms BEFORE mcool_pileup is invoked so that
-# the call inside mcool_pileup uses the robust version. Module-level function
-# lookup in Python is dynamic, so replacing the attribute in the module dict
-# redirects subsequent calls.
-cooltools_called.make_arms = make_arms_robust
 
 CLUSTER_FILE  = CLUSTER_DIR / 'bap1_late/cluster3/k-6/data/combined-clusters.txt'
 OUT_BASE      = CLUSTER_DIR / 'bap1_late/cooltools'
@@ -131,9 +91,8 @@ def main() -> None:
     print(f'  out_dir:    {sub}')
     print(f'  mcool_ctrl: {args.mcool_ctrl}')
     print(f'  mcool_mut:  {args.mcool_mut}')
-    print('  NOTE: bioframe.fetch_chromsizes("mm10") + fetch_centromeres requires '
-          'outbound HTTPS to UCSC. If this fails on a compute node, pre-fetch '
-          'arms on the login node and patch make_arms to load from cache.', flush=True)
+    print('  NOTE: viewframe built from cooler chromsizes (no UCSC fetch needed).',
+          flush=True)
 
     with multi_format_savefig():
         mcool_pileup(
