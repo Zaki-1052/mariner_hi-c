@@ -1,0 +1,86 @@
+============================================================
+Phase 4: Grouped downstream analyses
+Repo root: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c
+Started:   Mon Apr 27 07:11:12 PDT 2026
+analyses:  4.4
+log_path:  cluster/phase4_test_4.4.txt
+python:    /opt/homebrew/anaconda3/envs/cluster/bin/python3
+chromhmm:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/ChromHMM/chromhmm
+bedtools:  /opt/homebrew/bin/bedtools
+============================================================
+
+[1/1] Running 05_grouped_analyses.py...
+Selected analyses: 4.4
+Loaded 38948 loops in 6 clusters: clust1=12298, clust2=10970, clust3=8738, clust4=3916, clust5=667, clust6=2359
+
+=== [4.4] ChromHMM anchor vs span enrichment (KEY) ===
+  Running: chromhmm OverlapEnrichment -noimage -uniformscale -m /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt -f /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/coordlistfile_anchor.txt -colfields 0,1,2 /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/anchor_input/ /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/anchor
+  Running: chromhmm OverlapEnrichment -noimage -uniformscale -m /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt -f /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/coordlistfile_span.txt -colfields 0,1,2 /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/span_input/ /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/span
+                         clust1.bed  clust2.bed  ...  clust5.bed  clust6.bed
+State (Emission order)                           ...                        
+1_Quiescent                0.867930    0.868910  ...    0.856910    0.847220
+2_CTCF_Boundary            4.868140    5.141990  ...    2.823300    4.054500
+3_Poised_Enhancer          2.224970    1.999340  ...    0.799550    1.751580
+4_Active_Enhancer          3.815420    3.126850  ...    0.544290    4.421610
+5_Active_Promoter_Flank    5.343340    4.581970  ...    1.865890    6.853620
+6_Poised_Promoter          4.466320    4.209540  ...    2.524330    4.322390
+7_Weak_Promoter            4.706650    4.478500  ...    2.138820    4.204290
+8_Active_Promoter          5.863640    5.050200  ...    1.843870    7.216810
+9_Strong_Enhancer          4.100730    3.368270  ...    0.547590    4.605540
+10_Insulator               3.496380    4.105730  ...    5.308480    3.460100
+11_Polycomb                0.964260    1.798180  ...    6.589950    2.092290
+12_Bivalent_Enhancer       1.404810    2.351620  ...    7.907690    2.477740
+Base                       9.680357    8.437474  ...    0.508343    1.842768
+
+[13 rows x 6 columns]
+                         clust1.bed  clust2.bed  ...  clust5.bed  clust6.bed
+State (Emission order)                           ...                        
+1_Quiescent                0.982070    0.980390  ...    0.986860    0.996470
+2_CTCF_Boundary            1.286800    1.229980  ...    0.433030    0.977600
+3_Poised_Enhancer          1.260410    1.218440  ...    0.578700    1.071490
+4_Active_Enhancer          1.343380    1.274660  ...    0.339070    1.121000
+5_Active_Promoter_Flank    1.277460    1.207630  ...    0.505710    1.111660
+6_Poised_Promoter          1.213090    1.130570  ...    0.400120    1.006370
+7_Weak_Promoter            1.225750    1.148740  ...    0.382250    0.950440
+8_Active_Promoter          1.303360    1.213560  ...    0.403860    1.111500
+9_Strong_Enhancer          1.337500    1.261380  ...    0.356790    1.124500
+10_Insulator               1.176610    1.165970  ...    0.731050    0.954080
+11_Polycomb                1.005050    1.229140  ...    3.028690    0.944590
+12_Bivalent_Enhancer       1.065140    1.230190  ...    2.207610    0.950190
+Base                      68.500888   64.842503  ...    8.246868   48.153574
+
+[13 rows x 6 columns]
+  Enrichment tables: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/anchor.txt, /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/span.txt
+  Heatmaps: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/{anchor,span}.{png,pdf,svg,jpg}
+
+=== All requested Phase 4 analyses complete ===
+
+============================================================
+Phase 4 outputs
+============================================================
+--- 4.4 ChromHMM anchor vs span (KEY) ---
+-rw-r--r--@ 1 zakiralibhai  staff   952B Apr 27 07:11 cluster/bap1_late/chromHMM/anchor.txt
+-rw-r--r--@ 1 zakiralibhai  staff   957B Apr 27 07:11 cluster/bap1_late/chromHMM/span.txt
+-rw-r--r--@ 1 zakiralibhai  staff    59K Apr 27 07:11 cluster/bap1_late/chromHMM/anchor.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    28K Apr 27 07:11 cluster/bap1_late/chromHMM/anchor.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    74K Apr 27 07:11 cluster/bap1_late/chromHMM/anchor.png
+-rw-r--r--@ 1 zakiralibhai  staff    54K Apr 27 07:11 cluster/bap1_late/chromHMM/anchor.svg
+-rw-r--r--@ 1 zakiralibhai  staff    58K Apr 27 07:11 cluster/bap1_late/chromHMM/span.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    28K Apr 27 07:11 cluster/bap1_late/chromHMM/span.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    78K Apr 27 07:11 cluster/bap1_late/chromHMM/span.png
+-rw-r--r--@ 1 zakiralibhai  staff    55K Apr 27 07:11 cluster/bap1_late/chromHMM/span.svg
+--- 4.1 loop size ---
+  (not run)
+--- 4.8 cluster x differential ---
+  (not run)
+--- 4.5 ChromHMM proportions ---
+  (not run)
+--- 4.6 gene annotation ---
+--- 4.2 loop classification ---
+  (not run)
+--- 4.7 DiffBind ---
+  (not run)
+--- 4.3 anchor ChIP ---
+  (not run)
+
+Phase 4 finished: Mon Apr 27 07:11:17 PDT 2026

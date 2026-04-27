@@ -1,0 +1,239 @@
+============================================================
+Phase 4: Grouped downstream analyses
+Repo root: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c
+Started:   Mon Apr 27 07:12:37 PDT 2026
+analyses:  all
+log_path:  cluster/phase4.txt
+python:    /opt/homebrew/anaconda3/envs/cluster/bin/python3
+chromhmm:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/ChromHMM/chromhmm
+bedtools:  /opt/homebrew/bin/bedtools
+============================================================
+
+[1/1] Running 05_grouped_analyses.py...
+/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/plotting.py:775: RuntimeWarning: More than 20 figures have been opened. Figures created through the pyplot interface (`matplotlib.pyplot.figure`) are retained until explicitly closed and may consume too much memory. (To control this warning, see the rcParam `figure.max_open_warning`). Consider using `matplotlib.pyplot.close()`.
+  fig, axs = plt.subplots(nrows=nrows, ncols=ncols,figsize=(fig_width,fig_height),sharex=sharex,sharey=sharey)
+Selected analyses: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8
+Loaded 38948 loops in 6 clusters: clust1=12298, clust2=10970, clust3=8738, clust4=3916, clust5=667, clust6=2359
+
+=== [4.4] ChromHMM anchor vs span enrichment (KEY) ===
+  Running: chromhmm OverlapEnrichment -noimage -uniformscale -m /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt -f /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/coordlistfile_anchor.txt -colfields 0,1,2 /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/anchor_input/ /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/anchor
+  Running: chromhmm OverlapEnrichment -noimage -uniformscale -m /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt -f /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/coordlistfile_span.txt -colfields 0,1,2 /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/span_input/ /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/span
+                         clust1.bed  clust2.bed  ...  clust5.bed  clust6.bed
+State (Emission order)                           ...                        
+1_Quiescent                0.867930    0.868910  ...    0.856910    0.847220
+2_CTCF_Boundary            4.868140    5.141990  ...    2.823300    4.054500
+3_Poised_Enhancer          2.224970    1.999340  ...    0.799550    1.751580
+4_Active_Enhancer          3.815420    3.126850  ...    0.544290    4.421610
+5_Active_Promoter_Flank    5.343340    4.581970  ...    1.865890    6.853620
+6_Poised_Promoter          4.466320    4.209540  ...    2.524330    4.322390
+7_Weak_Promoter            4.706650    4.478500  ...    2.138820    4.204290
+8_Active_Promoter          5.863640    5.050200  ...    1.843870    7.216810
+9_Strong_Enhancer          4.100730    3.368270  ...    0.547590    4.605540
+10_Insulator               3.496380    4.105730  ...    5.308480    3.460100
+11_Polycomb                0.964260    1.798180  ...    6.589950    2.092290
+12_Bivalent_Enhancer       1.404810    2.351620  ...    7.907690    2.477740
+Base                       9.680357    8.437474  ...    0.508343    1.842768
+
+[13 rows x 6 columns]
+                         clust1.bed  clust2.bed  ...  clust5.bed  clust6.bed
+State (Emission order)                           ...                        
+1_Quiescent                0.982070    0.980390  ...    0.986860    0.996470
+2_CTCF_Boundary            1.286800    1.229980  ...    0.433030    0.977600
+3_Poised_Enhancer          1.260410    1.218440  ...    0.578700    1.071490
+4_Active_Enhancer          1.343380    1.274660  ...    0.339070    1.121000
+5_Active_Promoter_Flank    1.277460    1.207630  ...    0.505710    1.111660
+6_Poised_Promoter          1.213090    1.130570  ...    0.400120    1.006370
+7_Weak_Promoter            1.225750    1.148740  ...    0.382250    0.950440
+8_Active_Promoter          1.303360    1.213560  ...    0.403860    1.111500
+9_Strong_Enhancer          1.337500    1.261380  ...    0.356790    1.124500
+10_Insulator               1.176610    1.165970  ...    0.731050    0.954080
+11_Polycomb                1.005050    1.229140  ...    3.028690    0.944590
+12_Bivalent_Enhancer       1.065140    1.230190  ...    2.207610    0.950190
+Base                      68.500888   64.842503  ...    8.246868   48.153574
+
+[13 rows x 6 columns]
+  Enrichment tables: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/anchor.txt, /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/span.txt
+  Heatmaps: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/chromHMM/{anchor,span}.{png,pdf,svg,jpg}
+
+=== [4.1] Loop size per cluster ===
+  Outputs: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/figures/loop_size/loop_size{,_strip}.{png,pdf,svg,jpg} + loop_size.stats.txt
+
+=== [4.8] Cluster x edgeR direction crosstab (NEW) ===
+
+Counts:
+direction  down_in_mutant  unchanged  up_in_mutant
+GROUP                                             
+clust1                  0      12298             0
+clust2                  0      10119           851
+clust3               1852       6886             0
+clust4                  0       1184          2732
+clust5                  0         18           649
+clust6               1851        508             0
+
+Row %:
+direction  down_in_mutant  unchanged  up_in_mutant
+GROUP                                             
+clust1                0.0      100.0           0.0
+clust2                0.0       92.2           7.8
+clust3               21.2       78.8           0.0
+clust4                0.0       30.2          69.8
+clust5                0.0        2.7          97.3
+clust6               78.5       21.5           0.0
+
+chi2 = 38986.57  p = 0.000e+00  dof = 10
+  Outputs: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/figures/cluster_differential_status/cluster_differential_status.{png,pdf,svg,jpg} + cluster_differential_status.stats.txt
+
+=== [4.5] ChromHMM proportions per cluster ===
+
+Percent state per cluster (Quiescent excluded):
+                       clust1  clust2  clust3  clust4  clust5  clust6
+CTCF_Boundary            0.00    0.00    0.00    0.00    0.00    0.00
+Poised_Enhancer         15.37   12.45   11.87    6.77    2.90    7.27
+Active_Enhancer         29.79   27.68   29.43    5.58    0.00   25.45
+Active_Promoter_Flank    1.65    3.18    1.34    0.40    1.45    1.82
+Poised_Promoter          0.35    0.00    0.00    0.00    0.00    0.00
+Weak_Promoter            1.65    2.38    1.84    1.59    0.00    1.82
+Active_Promoter         37.35   33.38   43.14   17.93    1.45   35.45
+Strong_Enhancer          4.49    2.38    4.68    1.59    0.00    1.82
+Insulator                0.00    0.00    0.00    0.00    0.00    0.00
+Polycomb                 8.75   17.48    6.69   60.56   86.96   25.45
+Bivalent_Enhancer        0.59    1.06    1.00    5.58    7.25    0.91
+  Outputs: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/figures/chromHMM_anchor/chromHMM_anchor.{png,pdf,svg,jpg} + chromHMM_anchor.proportions.tsv
+
+=== [4.6] Gene annotation per cluster ===
+  clust1: 16217 loops, 7298 unique genes
+  clust2: 13460 loops, 5949 unique genes
+  clust3: 11328 loops, 4939 unique genes
+  clust4: 4408 loops, 1759 unique genes
+  clust5: 725 loops, 237 unique genes
+  clust6: 2963 loops, 1241 unique genes
+  Outputs: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/figures/annotation/{clust1..clust6}_annotation.txt
+
+=== [4.2] Loop classification (CTCF-only) ===
+
+Raw counts:
+              clust1  clust2  clust3  clust4  clust5  clust6
+structural      3960    4431    2787    2047     365     692
+CRE             3042    1823    2470     283      19     728
+mixed           1497    1204     930     168      14     172
+unclassified    3799    3512    2551    1418     269     767
+
+chi2 = 1772.76  p = 0.000e+00  dof = 15
+
+Percent stacked:
+              clust1  clust2  clust3  clust4  clust5  clust6
+structural      32.2    40.4    31.9    52.3    54.7    29.3
+CRE             24.7    16.6    28.3     7.2     2.8    30.9
+mixed           12.2    11.0    10.6     4.3     2.1     7.3
+unclassified    30.9    32.0    29.2    36.2    40.3    32.5
+  Outputs: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/figures/loop_classification/loop_classification.{png,pdf,svg,jpg} + loop_classification.stats.txt
+
+=== [4.7] DiffBind relationship (3 marks x 2 thresholds) ===
+  Mark=K27ac  FDR<0.05  |Fold|>0.3: 11647 sig peaks of 25669
+    K27ac fc>0.3: chi2=3487.78, p=0.00e+00; fc-data n=23371 loops
+  Mark=K27ac  FDR<0.05  |Fold|>0.0: 11783 sig peaks of 25669
+    K27ac fc>0.0: chi2=3490.67, p=0.00e+00; fc-data n=23371 loops
+  Mark=K27me3  FDR<0.05  |Fold|>0.3: 7103 sig peaks of 18324
+    K27me3 fc>0.3: chi2=3009.32, p=0.00e+00; fc-data n=8159 loops
+  Mark=K27me3  FDR<0.05  |Fold|>0.0: 7104 sig peaks of 18324
+    K27me3 fc>0.0: chi2=3009.32, p=0.00e+00; fc-data n=8159 loops
+  Mark=K119ub  FDR<0.05  |Fold|>0.3: 20512 sig peaks of 41392
+    K119ub fc>0.3: chi2=1693.04, p=0.00e+00; fc-data n=26680 loops
+  Mark=K119ub  FDR<0.05  |Fold|>0.0: 21812 sig peaks of 41392
+    K119ub fc>0.0: chi2=1641.84, p=0.00e+00; fc-data n=26680 loops
+
+=== [4.3] ChIP signal at anchors (raw RPKM) ===
+  Querying 38948 loops x 8 BigWigs
+    H3K27ac_ctrl: H3K27acCtrl.bw
+    H3K27ac_mut: H3K27acMut.bw
+    H3K27me3_ctrl: H3K27me3Ctrl.bw
+    H3K27me3_mut: H3K27me3Mut.bw
+    H2AK119ub_ctrl: H2AK119ubCtrl.bw
+    H2AK119ub_mut: H2AK119ubMut.bw
+    H3K27me1_ctrl: H3K27me1Ctrl.bw
+    H3K27me1_mut: H3K27me1Mut.bw
+  Outputs: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/figures/ChIP_intersect/anchor_ChIP_box/anchor_ChIP_box.{png,pdf,svg,jpg} + anchor_ChIP.stats.txt
+
+=== All requested Phase 4 analyses complete ===
+
+============================================================
+Phase 4 outputs
+============================================================
+--- 4.4 ChromHMM anchor vs span (KEY) ---
+-rw-r--r--@ 1 zakiralibhai  staff   952B Apr 27 07:12 cluster/bap1_late/chromHMM/anchor.txt
+-rw-r--r--@ 1 zakiralibhai  staff   957B Apr 27 07:12 cluster/bap1_late/chromHMM/span.txt
+-rw-r--r--@ 1 zakiralibhai  staff    59K Apr 27 07:12 cluster/bap1_late/chromHMM/anchor.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    28K Apr 27 07:12 cluster/bap1_late/chromHMM/anchor.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    74K Apr 27 07:12 cluster/bap1_late/chromHMM/anchor.png
+-rw-r--r--@ 1 zakiralibhai  staff    54K Apr 27 07:12 cluster/bap1_late/chromHMM/anchor.svg
+-rw-r--r--@ 1 zakiralibhai  staff    58K Apr 27 07:12 cluster/bap1_late/chromHMM/span.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    28K Apr 27 07:12 cluster/bap1_late/chromHMM/span.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    78K Apr 27 07:12 cluster/bap1_late/chromHMM/span.png
+-rw-r--r--@ 1 zakiralibhai  staff    55K Apr 27 07:12 cluster/bap1_late/chromHMM/span.svg
+--- 4.1 loop size ---
+total 9448
+-rw-r--r--@ 1 zakiralibhai  staff    36K Apr 27 07:12 loop_size.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    16K Apr 27 07:12 loop_size.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    32K Apr 27 07:12 loop_size.png
+-rw-r--r--@ 1 zakiralibhai  staff   1.7K Apr 27 07:12 loop_size.stats.txt
+-rw-r--r--@ 1 zakiralibhai  staff    26K Apr 27 07:12 loop_size.svg
+-rw-r--r--@ 1 zakiralibhai  staff    38K Apr 27 07:12 loop_size_strip.jpg
+-rw-r--r--@ 1 zakiralibhai  staff   359K Apr 27 07:12 loop_size_strip.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    44K Apr 27 07:12 loop_size_strip.png
+-rw-r--r--@ 1 zakiralibhai  staff   3.2M Apr 27 07:12 loop_size_strip.svg
+--- 4.8 cluster x differential ---
+total 264
+-rw-r--r--@ 1 zakiralibhai  staff    41K Apr 27 07:12 cluster_differential_status.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    19K Apr 27 07:12 cluster_differential_status.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    35K Apr 27 07:12 cluster_differential_status.png
+-rw-r--r--@ 1 zakiralibhai  staff    30K Apr 27 07:12 cluster_differential_status.svg
+-rw-r--r--@ 1 zakiralibhai  staff   877B Apr 27 07:12 cluster/bap1_late/figures/cluster_differential_status.stats.txt
+--- 4.5 ChromHMM proportions ---
+total 840
+-rw-r--r--@ 1 zakiralibhai  staff   201K Apr 27 07:12 chromHMM_anchor.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    25K Apr 27 07:12 chromHMM_anchor.pdf
+-rw-r--r--@ 1 zakiralibhai  staff   115K Apr 27 07:12 chromHMM_anchor.png
+-rw-r--r--@ 1 zakiralibhai  staff   1.1K Apr 27 07:12 chromHMM_anchor.proportions.tsv
+-rw-r--r--@ 1 zakiralibhai  staff    68K Apr 27 07:12 chromHMM_anchor.svg
+--- 4.6 gene annotation ---
+-rw-r--r--@ 1 zakiralibhai  staff   1.5M Apr 27 07:12 cluster/bap1_late/figures/annotation/clust1_annotation.txt
+-rw-r--r--@ 1 zakiralibhai  staff   1.2M Apr 27 07:12 cluster/bap1_late/figures/annotation/clust2_annotation.txt
+-rw-r--r--@ 1 zakiralibhai  staff   1.0M Apr 27 07:12 cluster/bap1_late/figures/annotation/clust3_annotation.txt
+-rw-r--r--@ 1 zakiralibhai  staff   354K Apr 27 07:12 cluster/bap1_late/figures/annotation/clust4_annotation.txt
+-rw-r--r--@ 1 zakiralibhai  staff    55K Apr 27 07:12 cluster/bap1_late/figures/annotation/clust5_annotation.txt
+-rw-r--r--@ 1 zakiralibhai  staff   260K Apr 27 07:12 cluster/bap1_late/figures/annotation/clust6_annotation.txt
+--- 4.2 loop classification ---
+total 264
+-rw-r--r--@ 1 zakiralibhai  staff    38K Apr 27 07:12 loop_classification.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    19K Apr 27 07:12 loop_classification.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    34K Apr 27 07:12 loop_classification.png
+-rw-r--r--@ 1 zakiralibhai  staff   684B Apr 27 07:12 loop_classification.stats.txt
+-rw-r--r--@ 1 zakiralibhai  staff    31K Apr 27 07:12 loop_classification.svg
+--- 4.7 DiffBind ---
+cluster/bap1_late/figures/ChIP_intersect/differential_binding_K119ub_fc0p0
+cluster/bap1_late/figures/ChIP_intersect/differential_binding_K119ub_fc0p3
+cluster/bap1_late/figures/ChIP_intersect/differential_binding_K27ac_fc0p0
+cluster/bap1_late/figures/ChIP_intersect/differential_binding_K27ac_fc0p3
+cluster/bap1_late/figures/ChIP_intersect/differential_binding_K27me3_fc0p0
+cluster/bap1_late/figures/ChIP_intersect/differential_binding_K27me3_fc0p3
+cluster/bap1_late/figures/ChIP_intersect/ChIP_FC_K119ub_fc0p0
+cluster/bap1_late/figures/ChIP_intersect/ChIP_FC_K119ub_fc0p3
+cluster/bap1_late/figures/ChIP_intersect/ChIP_FC_K27ac_fc0p0
+cluster/bap1_late/figures/ChIP_intersect/ChIP_FC_K27ac_fc0p3
+cluster/bap1_late/figures/ChIP_intersect/ChIP_FC_K27me3_fc0p0
+cluster/bap1_late/figures/ChIP_intersect/ChIP_FC_K27me3_fc0p3
+-rw-r--r--@ 1 zakiralibhai  staff   2.8K Apr 27 07:12 cluster/bap1_late/figures/ChIP_intersect/diffbind_stats_K119ub_fc0p0.txt
+-rw-r--r--@ 1 zakiralibhai  staff   2.8K Apr 27 07:12 cluster/bap1_late/figures/ChIP_intersect/diffbind_stats_K119ub_fc0p3.txt
+-rw-r--r--@ 1 zakiralibhai  staff   2.8K Apr 27 07:12 cluster/bap1_late/figures/ChIP_intersect/diffbind_stats_K27ac_fc0p0.txt
+-rw-r--r--@ 1 zakiralibhai  staff   2.8K Apr 27 07:12 cluster/bap1_late/figures/ChIP_intersect/diffbind_stats_K27ac_fc0p3.txt
+-rw-r--r--@ 1 zakiralibhai  staff   2.8K Apr 27 07:12 cluster/bap1_late/figures/ChIP_intersect/diffbind_stats_K27me3_fc0p0.txt
+-rw-r--r--@ 1 zakiralibhai  staff   2.8K Apr 27 07:12 cluster/bap1_late/figures/ChIP_intersect/diffbind_stats_K27me3_fc0p3.txt
+--- 4.3 anchor ChIP ---
+total 1296
+-rw-r--r--@ 1 zakiralibhai  staff   281K Apr 27 07:17 anchor_ChIP_box.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    27K Apr 27 07:17 anchor_ChIP_box.pdf
+-rw-r--r--@ 1 zakiralibhai  staff   181K Apr 27 07:17 anchor_ChIP_box.png
+-rw-r--r--@ 1 zakiralibhai  staff   149K Apr 27 07:17 anchor_ChIP_box.svg
+-rw-r--r--@ 1 zakiralibhai  staff    17K Apr 27 07:17 cluster/bap1_late/figures/ChIP_intersect/anchor_ChIP.stats.txt
+
+Phase 4 finished: Mon Apr 27 07:17:38 PDT 2026

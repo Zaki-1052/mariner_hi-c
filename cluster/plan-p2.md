@@ -1,0 +1,484 @@
+
+## Phase 4: Downstream Analyses — DONE (2026-04-27)
+
+**Status:** All 8 sub-analyses (4.1–4.8) executed end-to-end via `LOG=cluster/phase4.txt bash cluster/scripts/run_phase4.sh all`. Single Python orchestrator at `cluster/scripts/05_grouped_analyses.py` with `--analyses` CLI flag for selective re-runs (e.g. `bash run_phase4.sh 4.4` for KEY-only). KEY result (4.4) shows **clean differential ChromHMM enrichment distinguishing two mechanisms in the same paper**: gained loops (clust5) have Polycomb at BOTH anchor (6.59×) AND span (3.03×) — Polycomb-Polycomb domain expansion / extrusion impediment; lost loops (clust6) have Polycomb at anchor (2.09×) but NOT span (0.94×) — anchor-disruption / sensitivity model. This is a stronger result than Popay's mixed-dependency cluster which only showed span enrichment. Total runtime ~6 minutes on Mac (07:11–07:17 PDT). All 8 sub-analyses produced multi-format outputs (PNG + PDF + SVG + JPG) per figure subfolder.
+
+**Corrections applied during execution (Phase 5+ must follow these, not the original plan):**
+
+- **`multi_format_savefig` must patch `Figure.savefig`, not `plt.savefig`.** Original Phase 3 utility patched only `plt.savefig`, leaving `plotting.stacked()` (which uses `fig.savefig` directly at `cluster/plotting.py:630-631`) bypassed — outputs would have only emitted PNG+PDF, no SVG/JPG. Patched class-level `matplotlib.figure.Figure.savefig` instead — covers BOTH calling patterns since `pyplot.savefig` internally calls `fig.savefig`. Phase 3 outputs unaffected (re-running 04_clustering.py with the new wrapper goes through the same code path with identical 4-format output). Smoke-tested with `plt.savefig('foo.png')` AND `fig.savefig('foo.png')` — both emit 4 sibling files; `Figure.savefig` is restored on context exit.
+- **`pd.crosstab` produces a named index that breaks `plotting.stacked`.** The function does `count_table.reset_index(drop=False).rename(columns={'index':'xcol'})` which only works when `index.name is None`. `pd.crosstab(joined['GROUP'], joined['direction'])` sets `index.name='GROUP'` → `KeyError('xcol')` in the upstream melt. **Fix in 4.8:** clear `pct.index.name = None` and `pct.columns.name = None` before passing to `plotting.stacked`. Same defensive pattern needed for any future caller using `pd.crosstab` → `plotting.stacked`. Manually-built DataFrames (via `.loc[]` like 4.2 / 4.7) are unaffected since their index defaults to unnamed.
+- **chromhmm wrapper on PATH works as-is.** OverlapEnrichment subprocess call succeeded on first run; no fallback to direct `java -jar` invocation needed. The wrapper at `cluster/ChromHMM/chromhmm` is on PATH via `~/.zshrc`. Driver verifies via `which chromhmm` in its banner.
+- **`bedtools` is system-wide on macOS.** `/opt/homebrew/bin/bedtools` (v2.31.1) used by `bedpe_analysis.bedtools_annotation()` for 4.6 — no need to install in the cluster conda env. Check `shutil.which('bedtools')` at the start of `run_gene_annotation()` for clear error if missing.
+- **Phase 4.5 'U' → 'E' regex fix.** Popay cell-25's `rename_df['sort_col'].str.replace('U','').astype(int)` would crash on our E-prefixed states (`E1`–`E12`). Replaced with `str.replace(r'^[A-Z]', '', regex=True)` for symbol-agnostic prefix stripping — works whether ChromHMM ever changes the state-id prefix.
+- **Phase 4.7 anchor2 typo fix.** Popay cell-17's `value_vars=['sig_chr1','sig_chr1']` (both chr1; anchor2 silently ignored). Fixed to `['sig_chr1','sig_chr2']`. Material correction — DiffBind proportions stats now reflect both anchors. Plus extended the Popay 3-stack `(non-sig, sig, no peak)` to 4-stack `(no peak, non-sig., decreased, increased)` for direction visibility.
+- **DiffBind column rename at load time.** Renamed our `Peak_Chr/Peak_Start/Peak_End` → `Chr/Start/End` once when loading each diffbind file, so the rest of Popay's cell-17/19 logic (`bf.overlap(..., cols2=['Chr','Start','End'])`, `drop(columns=['Chr_chr1', ...])`) works unchanged. Avoids 8-10 scattered `cols2=...` and `drop(columns=...)` updates the Plan-agent flagged.
+- **All BigWigs sourced from `/Users/zakiralibhai/sdsc/bigwigs/`.** Plan §4.3 originally referenced `peaks/bigwigs/macs2.narrow.aug18.dedup/` — but two mutant files there are 0-byte (`index_19_mut_1_H3K27ac` and `index_23_mut_1_H3K27me3`). sdsc has all 16 marks at full coverage (ATAC, DNAmethylation, H3K27ac/me1/me3, H2AK119ub, H3K4me3, RNA — all paired ctrl+mut). **Phase 5 should also use sdsc as the canonical BigWig source.**
+- **Anchor-side dedup before pyBigWig query in 4.3.** Within each anchor side (chr1 or chr2 columns), `.drop_duplicates(subset=anchor_cols)` before iterating `pyBigWig.values()`. Hub anchors participate in many loops; without dedup they get over-weighted in per-cluster means. ~38k loops → ~30k unique anchor1 + ~30k unique anchor2 queries × 8 BigWigs in ~5 minutes total.
+- **Defensive try/except + `np.nanmean` around `pyBigWig.values()`.** Anchor regions on chrM or in blacklist may not be in the BigWig — `.values()` raises `RuntimeError`. Wrap in `try/except (RuntimeError, ValueError)` and return `np.nan`; downstream `dropna(subset=['signal'])` filters them out. NaN-only regions handled via `np.nanmean(arr)` (returns NaN if all-NaN, no warning).
+- **`bedpe_analysis.bedtools_annotation` requires non-None `temp_dir`.** Despite Phase 0 fix for `FPKM_df=None`, the `os.makedirs(temp_dir, exist_ok=True)` at line 64 still crashes if `temp_dir=None` (TypeError). Pass an explicit `cluster/bap1_late/figures/annotation/_temp/` path. Temp dir kept on disk for debug; safe to clean later.
+- **Python 3.8 in cluster env requires `Tuple[...]`/`Dict[...]`/`List[...]` from `typing`.** PEP 585 generic syntax (`tuple[X]`, `dict[X, Y]`, `list[X]`) requires Python 3.10+. Plan-p1.md called this out for Phase 3; same applies here.
+- **Cis-only assertion guards span BED in 4.4.** `df[['chr1','x1','y2']]` is biologically meaningless for trans loops (chr1 ≠ chr2). Verified 0 trans loops in our 38,948 cluster set, but the assertion stays as a defensive check for future runs / new timepoints.
+- **`chromHMM_heatmap.heatmap_plot()` writes to dir-of-input-path with no `out_dir` argument.** Auto-derives output filename from the input `.txt` stem (`os.path.dirname(path) + '/' + Path(path).stem`). So heatmaps land at `cluster/bap1_late/chromHMM/{anchor,span}.{png,pdf}` — adjacent to the .txt enrichment tables. Our patch adds .svg + .jpg via the .png save (the .pdf save passes through cleanly with non-PNG extension). No file-relocation needed.
+
+**Script:** `cluster/scripts/05_grouped_analyses.py` (adapted from grouped_loops_figures.ipynb)
+
+All analyses use `group_dict` built from `combined-clusters.txt` split by GROUP column.
+
+### 4.1 — Loop size
+
+**Reuse:** `bedpe_analysis.loop_size(out_dir, bedpe_dict=group_dict)` — no changes needed.
+**Output:** `cluster/bap1_late/figures/loop_size.{stats.txt,png,pdf}`
+
+### 4.2 — Loop classification (CTCF-only, no RAD21)
+
+Popay's classification requires CTCF+RAD21 at both anchors for "structural". We have no RAD21 data, so use CTCF alone as the structural marker.
+
+Modify the classifier_dict to omit RAD21 and adjust the classification rules:
+- **structural:** CTCF at both anchors, no enhancer/promoter at either (`CTCF==2 & EorP<2`)
+- **CRE:** enhancer or promoter at both anchors, no structural marker (`CTCF<2 & EorP==2`)
+- **mixed:** one anchor CTCF, other anchor CRE (reflected by remaining combinations)
+- **unclassified:** everything else
+
+The bioframe overlap logic stays identical — just remove RAD21 from `classifier_dict` and replace `(loop_df['CTCF'] == 2) & (loop_df['RAD21'] == 2)` with `(loop_df['CTCF'] == 2)`.
+
+**Input files:**
+- CTCF: `peaks/CTCF.bed` (32,487 peaks)
+- Enhancer: `peaks/beds/H3K27acCerebellumLate2.bed` (15,105 peaks)
+- Promoter: `cluster/data/mm10_knownGene_pp.bed` (Phase 1 output)
+
+**Output:** `cluster/bap1_late/figures/loop_classification.{png,pdf}`
+
+### 4.3 — ChIP signal in anchors (raw RPKM, no RAD21 normalization)
+
+Popay normalizes all ChIP RPKM to RAD21 signal at RAD21 peaks overlapping the anchors. Since we lack RAD21:
+
+**Approach:** Extract raw RPKM signal directly at loop anchors using pyBigWig (mean signal per anchor, then mean of both anchors per loop). Skip the bed_intersect filtering step entirely — compute signal at ALL anchor regions, not just those overlapping a reference peak. This is biologically valid: we're asking "what is the histone mark level at loop anchors per cluster?" rather than "what is the mark level at cohesin-bound loop anchors?". The structural information is already captured by the CTCF-based classification in 4.2.
+
+Per-mark boxplots across clusters (Kruskal-Wallis + pairwise Wilcoxon), same statistical framework as Popay.
+
+**Input BigWigs (verified on disk at `peaks/bigwigs/macs2.narrow.aug18.dedup/`):**
+- ctrl H3K27ac: `index_13_ctrl_1_H3K27ac_S25_L001_aligned_reads.sorted.bw`
+- ctrl H3K27me3: `index_25_ctrl_1_H3K27me3_S37_L001_aligned_reads.sorted.bw`
+- mut H3K27ac: `index_19_mut_1_H3K27ac_S46_L002_R2_001.fastq.gz_aligned_reads.sorted.bw`
+- mut H3K27me3: `index_23_mut_1_H3K27me3_S50_L002_R1_001_aligned_reads.sorted.bw`
+
+**Additional BigWigs (user has these locally at `/Users/zakiralibhai/sdsc/bigwigs/`, no need to sync):**
+- H2AK119ubCtrl.bw, H2AK119ubMut.bw — enables K119ub anchor signal per cluster
+- H3K27me1Ctrl.bw, H3K27me1Mut.bw — H3K27me1 (not in macs2 bigwigs)
+
+**Output:** `cluster/bap1_late/figures/ChIP_intersect/anchor_ChIP_box.{png,pdf}`, `anchor_ChIP.stats.txt`
+
+### 4.4 — ChromHMM anchor vs span enrichment (KEY — Fig 2f)
+
+**Inputs:**
+- Segmentation: `cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed` (Phase 2)
+- Rename: `cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt` (Phase 2)
+- Loop clusters: `combined-clusters.txt` (Phase 3)
+
+**Logic (from notebook cell-23):**
+
+1. For each cluster, write two BED files:
+   - **Anchor BED:** Both anchors concatenated — `[chr1,x1,x2]` + `[chr2,y1,y2]` renamed to 3-col
+   - **Span BED:** Full loop extent — `[chr1, x1, y2]` (matching notebook cell-23: `df[['chr1','x1','y2']]`)
+
+2. Write `coordlistfile.txt` listing BED filenames
+
+3. Run ChromHMM OverlapEnrichment for anchors and spans:
+```bash
+java -mx4G -jar cluster/ChromHMM/ChromHMM.jar OverlapEnrichment \
+    -noimage -uniformscale \
+    -m cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt \
+    -f cluster/bap1_late/chromHMM/coordlistfile.txt \
+    -colfields 0,1,2 \
+    cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed \
+    cluster/bap1_late/chromHMM/anchor_input/ \
+    cluster/bap1_late/chromHMM/anchor
+```
+   (Repeat with `span_input/` and `span`)
+
+4. Generate heatmaps via `chromHMM_heatmap.heatmap_plot(path=..., normalize=False)`
+
+**Outputs:**
+- `cluster/bap1_late/chromHMM/{anchor,span}.txt` — fold enrichment tables
+- `cluster/bap1_late/chromHMM/{anchor,span}.{png,pdf}` — heatmaps
+
+### 4.5 — ChromHMM proportions stacked bar
+
+Logic (from notebook cell-25): bioframe overlap of each loop anchor with segmentation, find most prominent state per anchor by overlap length, plot proportions per cluster.
+
+**Adaptations:**
+- Update `palette` dict from Popay's 12-state names to our cerebellum names (from rename file)
+- Dynamically read cluster list from `group_dict.keys()` (not hardcoded `clust1-6`)
+- Map state exclusions (Popay excludes `U12`/`U9`) using our rename file
+
+**Output:** `cluster/bap1_late/figures/chromHMM_anchor.{png,pdf}`
+
+### 4.6 — Gene annotation
+
+**Reuse:** `bedpe_analysis.bedtools_annotation()` with `cluster/data/mm10_knownGene_pp.bed`.
+
+Set `FPKM=None` — Popay's pipeline optionally takes an RNA-seq FPKM DataFrame to rank/filter annotated genes by expression. We don't have RNA-seq FPKM data in the format her code expects. With `FPKM=None`, the function still produces per-cluster gene lists (via bedtools closest on the gene annotation BED) — it just skips the FPKM-based expression boxplots and the `.to_csv()` call that writes expression-ranked gene tables. The Phase 0 fix (0.8) adds a `if FPKM_df is not None:` guard around those downstream calls so the function doesn't crash when FPKM is absent.
+
+**Output:** `cluster/bap1_late/figures/annotation/{clust1..clustN}_annotation.txt`
+
+### 4.7 — DiffBind relationship
+
+Logic (from notebook cells 17-19): overlaps differential ChIP peaks with loop anchors per cluster.
+
+**Input files (verified on disk):**
+- `peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt`
+- `peaks/diffbind/K27me3_diffbind_results_summit_appended_ap.txt`
+- `peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt`
+
+**Column mapping (our files vs Popay's):**
+- Popay: `diffbind[['Chr','Start','End','Fold','sig']]`
+- Ours: `diffbind[['Peak_Chr','Peak_Start','Peak_End','Fold','sig']]` (columns 4-6 for coordinates, col 12 for Fold, col 14 for FDR)
+- Update bioframe overlap `cols2` references and drop-column names accordingly
+
+**Outputs:**
+- `cluster/bap1_late/figures/ChIP_intersect/differential_binding.{png,pdf}` (proportions per mark)
+- `cluster/bap1_late/figures/ChIP_intersect/ChIP_FC_*.{png,pdf}` (fold-change boxplots)
+
+### 4.8 — Cluster x differential status crosstab (NEW)
+
+Not in Popay's pipeline. Uses metadata sidecar from Phase 1.
+
+**Logic:**
+1. Join `combined-clusters.txt` with `late_merged_loop_metadata.tsv` on coordinates
+2. Contingency table: cluster x direction (up_in_mutant / down_in_mutant / not_significant)
+3. Chi-squared test
+4. Stacked bar chart via `plotting.stacked()`
+
+**Output:** `cluster/bap1_late/figures/cluster_differential_status.{png,pdf,stats.txt}`
+
+---
+
+### Phase 4 Verification
+
+**Verified 2026-04-27:**
+
+- **Phase 4.4 KEY result.** Both `cluster/bap1_late/chromHMM/{anchor,span}.txt` produced (12 states × 6 clusters). Heatmaps render correctly in 4 formats (74-78KB PNGs). **Polycomb fold-enrichment per cluster:**
+
+  | Cluster | Anchor | Span | Anchor/Span | edgeR direction (4.8) |
+  |---------|-------:|-----:|------------:|----------------------:|
+  | clust1  | 0.96   | 1.00 | 0.96        | 100% unchanged        |
+  | clust2  | 1.80   | 1.23 | 1.46        | 92% unchanged         |
+  | clust3  | 0.84   | 0.89 | 0.94        | 79% unchanged         |
+  | clust4  | 3.91   | 1.69 | 2.31        | 70% up                |
+  | **clust5**  | **6.59** | **3.03** | **2.18** | **97% up**         |
+  | **clust6**  | **2.09** | **0.94** | **2.22** | **78% down**       |
+
+  Both gain (clust5) and loss (clust6) clusters show anchor-Polycomb enrichment, but only **gain** has elevated **span**. Mechanistically: gained loops sit in expanding Polycomb domains (extrusion impediment + Polycomb-Polycomb loop type), while lost loops have anchor-specific Polycomb gain (sensitivity model). Bivalent_Enhancer follows the same pattern (anchor 7.91× / span 2.21× in clust5).
+
+- **Phase 4.1 loop size.** Median sizes per cluster (kb): clust1=200, clust2=190, clust3=300, clust4=290, clust5=350, **clust6=575**. Clust6 (78.5% down_in_mutant) has the longest median, matching CONTEXT-CLUSTER §11's "lost loops median 625 kb." Kruskal-Wallis p ≈ 0; all 15 pairwise Wilcoxon comparisons significant after Bonferroni.
+
+- **Phase 4.8 cluster × differential.** chi2 = 38,986; p ≈ 0; dof = 10. Stacked bar shows clust5 dominantly up_in_mutant (97.3%), clust6 dominantly down_in_mutant (78.5%), clust1 entirely unchanged (100%). Confirms Phase 3 v2 clustering captures edgeR's independent differential calls cleanly.
+
+- **Phase 4.5 ChromHMM proportions.** Most-prominent state per anchor (Quiescent excluded): **clust5 = 87% Polycomb, 7% Bivalent_Enhancer** (overwhelmingly repressive). clust1-3: 30-43% Active_Promoter, 12-30% Active_Enhancer, 6-17% Polycomb. clust6: 35% Active_Promoter, 25% Active_Enhancer, 25% Polycomb (heterogeneous loss).
+
+- **Phase 4.6 gene annotation.** 6 per-cluster TSVs: clust1=1.5MB (12,298 loops), clust2=1.2MB, clust3=1.0MB, clust4=354KB, clust5=55KB (667 loops), clust6=260KB. File sizes scale with loop count × promoter overlap rate. clust5 small file is consistent with its 87%-Polycomb anchor signature — most clust5 anchors do NOT overlap promoters.
+
+- **Phase 4.2 loop classification.** chi2 = 1773; p ≈ 0; dof = 15. Percent stacked confirms abstract: **clust5 = 55% structural / 3% CRE (gained = CTCF-CTCF biased), clust6 = 29% structural / 31% CRE (lost = CRE-biased).**
+
+- **Phase 4.7 DiffBind.** 12 figure subfolders (3 marks × 2 cutoffs × 2 plot types) + 6 stats files written. K27ac proportions chi2 = 3488 (fc>0.3); K27me3 = 3009; K119ub = 1693. All p ≈ 0. **Threshold 0.3 vs 0.0 produced very similar plots** (peak counts differ by ≤7%: K27ac 11647 vs 11783; K27me3 7103 vs 7104; K119ub 20512 vs 21812). Project-standard threshold (0.3) is sufficient — Popay-default (0.0) just adds marginal-effect peaks without changing structure.
+
+- **Phase 4.3 anchor ChIP signal.** ~38,948 loops × 8 BigWigs queried via dedupe + pyBigWig in ~5 minutes. All 8 mark×condition Kruskal-Wallis p ≪ 0.001 (most p ≈ 0). H2AK119ub_mut omnibus statistic (926) > H2AK119ub_ctrl (361) — cluster-level K119ub variance INCREASES in mutant, mechanistically consistent with BAP1 KO failing to remove K119ub at differentially-rewired anchors.
+
+- **Multi-format outputs.** All 8 sub-analyses emit `.{png,pdf,svg,jpg}` per figure (per Figure.savefig patch). PNG sizes 30-180KB (proper plots, not blank). SVG up to 3.2MB for stripplots (vector points × 38k data points).
+
+- **`Figure.savefig` patch correctness.** Smoke-tested separately: 4 formats emitted for both `plt.savefig('foo.png')` and `fig.savefig('foo.png')`. Method restored on context exit (`matplotlib.figure.Figure.savefig is _original`). Patch fires on `.png` extension only — `.pdf` calls (which `plotting.stacked` does immediately after `.png`) pass through cleanly without double-emission.
+
+**Files created in Phase 4:**
+
+| File | Purpose |
+|------|---------|
+| `cluster/scripts/05_grouped_analyses.py` | Phase 4 orchestrator — 8 sub-analysis functions + argparse + shared loaders |
+| `cluster/scripts/run_phase4.sh` | Driver: positional `ANALYSES` arg, env var `LOG`, mirrors run_phase3.sh |
+| `cluster/phase4.txt` | Full Phase 4 run log (tee'd from driver) |
+| `cluster/phase4_test_4.4.txt` | KEY-result smoke-test log (4.4 only, run before full pipeline) |
+
+**Files modified in Phase 4:**
+
+| File | Change |
+|------|--------|
+| `cluster/scripts/utils/multi_format_output.py` | Patches `matplotlib.figure.Figure.savefig` instead of `plt.savefig`. Covers both calling patterns (since `plt.savefig` internally calls `Figure.savefig`); now handles `plotting.stacked`'s direct `fig.savefig` calls. |
+
+**Outputs created in Phase 4 (under `cluster/bap1_late/`):**
+
+| Path | What |
+|------|------|
+| `chromHMM/{anchor,span}.txt` | OverlapEnrichment fold-enrichment matrices (12 states × 6 clusters) |
+| `chromHMM/{anchor,span}.{png,pdf,svg,jpg}` | **KEY result heatmaps (Fig 2f equivalent)** |
+| `chromHMM/{anchor,span}_input/clust*.bed` | Per-cluster BEDs fed to OverlapEnrichment |
+| `chromHMM/coordlistfile_{anchor,span}.txt` | OverlapEnrichment column-order control |
+| `figures/loop_size/loop_size{,_strip}.{4 formats}` + `.stats.txt` | 4.1 |
+| `figures/cluster_differential_status/cluster_differential_status.{4 formats}` + `.stats.txt` | 4.8 |
+| `figures/chromHMM_anchor/chromHMM_anchor.{4 formats}` + `.proportions.tsv` | 4.5 |
+| `figures/annotation/clust{1..6}_annotation.txt` + `_temp/` | 4.6 |
+| `figures/loop_classification/loop_classification.{4 formats}` + `.stats.txt` | 4.2 |
+| `figures/ChIP_intersect/{differential_binding,ChIP_FC}_{K27ac,K27me3,K119ub}_fc{0p3,0p0}/...{4 formats}` | 4.7 (12 fig subfolders) |
+| `figures/ChIP_intersect/diffbind_stats_*.txt` | 4.7 (6 stats files) |
+| `figures/ChIP_intersect/anchor_ChIP_box/anchor_ChIP_box.{4 formats}` + `anchor_ChIP.stats.txt` | 4.3 |
+
+**Re-running selectively:**
+```bash
+LOG=cluster/phase4.txt           bash cluster/scripts/run_phase4.sh           # all 8
+LOG=cluster/phase4_4.4.txt       bash cluster/scripts/run_phase4.sh 4.4       # KEY only
+LOG=cluster/phase4_chip.txt      bash cluster/scripts/run_phase4.sh 4.3,4.7   # subset
+```
+
+---
+
+## Phase 5: deepTools Metagene Analysis
+
+H3K27me3/H3K27ac/H2AK119ub signal across loop anchors +/-5kb per cluster.
+
+### 5.1 — Prepare per-cluster anchor BED files
+
+For each cluster, extract both anchors (deduplicated) into 3-column BED:
+`cluster/bap1_late/figures/deeptools_input/{clust1..clustN}_anchors.bed`
+
+### 5.2 — Run deepTools bed_pileup
+
+Uses `deepTools_pipeline.bed_pileup()` which shells out to `computeMatrix reference-point` + `deeptools_plotting.heatmap_plot()`.
+
+**BigWig dict — need user to confirm/sync these files:**
+- H3K27me3: ctrl + mut (from `peaks/bigwigs/macs2.narrow.aug18.dedup/`)
+- H3K27ac: ctrl + mut (same directory)
+- H2AK119ub: ctrl + mut (user has at `/Users/zakiralibhai/sdsc/bigwigs/H2AK119ub{Ctrl,Mut}.bw` — needs sync to `cluster/data/bigwigs/` or similar)
+
+**Blacklist:** `tads/mm10-blacklist.v2.bed` (verified on disk)
+
+**Output:** `cluster/bap1_late/figures/deeptools/histone_anchors.{png,pdf}`
+
+---
+
+## Phase 6: Cooltools Pileup (DEFERRED — needs mcool sync)
+
+mcool files are on HPC at `/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/`. Samples: ctrl_merged.mcool, mut_merged.mcool (plus 6 individual replicates).
+
+User can sync the merged mcools (~2-5GB each) to Mac for local cooltools pileup. Write stub script `cluster/scripts/06_cooltools_pileup.py` with the correct `cooltools_called.mcool_pileup()` call using `genome='mm10'` and the cluster BEDPE dict, with a configurable `mcool_dict` pointing to local paths.
+
+---
+
+## Directory Structure
+
+```
+cluster/
+├── ChromHMM/                          # Existing — ChromHMM.jar + CHROMSIZES/
+├── clustering_example_data/           # Existing — Popay example files
+├── custom_params.json                 # Existing — matplotlib style params
+├── *.py                               # Existing — Popay modules (modified in Phase 0)
+│
+├── scripts/                           # NEW — all runnable scripts
+│   ├── 00_fix_popay_modules.sh        #   Phase 0: apply bug fixes
+│   ├── 01_build_loop_count_file.py    #   Phase 1: merged loops → Popay format
+│   ├── 02_build_mm10_gene_annotation.R#   Phase 1: mm10 gene BED
+│   ├── 03_chromhmm_segmentation.sh    #   Phase 2: BinarizeBed + LearnModel
+│   ├── 04_clustering.py               #   Phase 3: elbow + Cluster 3.0 + viz
+│   ├── 05_grouped_analyses.py         #   Phase 4-5: all downstream analyses
+│   ├── 06_cooltools_pileup.py         #   Phase 6: cooltools pileup (stub)
+│   ├── run_phase0.sh                  #   Runner: apply fixes + verify imports
+│   ├── run_phase1.sh                  #   Runner: data prep
+│   ├── run_phase2.sh                  #   Runner: ChromHMM segmentation
+│   ├── run_phase3.sh                  #   Runner: clustering
+│   ├── run_phase4.sh                  #   Runner: downstream analyses
+│   ├── run_phase5.sh                  #   Runner: deepTools metagene
+│   └── sync_from_hpc.sh              #   rsync helper for HPC data
+│
+├── data/                              # NEW — input data files
+│   ├── late_merged_loop_counts.txt    #   Phase 1 output (Popay format)
+│   ├── late_merged_loop_metadata.tsv  #   Phase 1 output (edgeR stats sidecar)
+│   ├── mm10_knownGene_pp.bed          #   Phase 1 output (gene annotation)
+│   └── bigwigs/                       #   Synced BigWigs for deepTools
+│       ├── H2AK119ubCtrl.bw           #   (synced from HPC via sync_from_hpc.sh)
+│       └── H2AK119ubMut.bw
+│
+└── bap1_late/                         # NEW — all analysis outputs
+    ├── cluster3/
+    │   ├── elbow_plot.png
+    │   └── k-{k}/
+    │       ├── data/
+    │       │   ├── input_matrix.txt
+    │       │   └── combined-clusters.txt
+    │       └── figures/
+    │           ├── heatmap.{png,pdf}
+    │           ├── lineplot.{png,pdf}
+    │           ├── boxplot.{png,pdf}
+    │           └── stripplot.{png,pdf}
+    ├── figures/
+    │   ├── annotation/                # Gene lists per cluster
+    │   ├── ChIP_intersect/            # DiffBind + ChIP signal plots
+    │   ├── deeptools/                 # Metagene heatmaps
+    │   ├── deeptools_input/           # Per-cluster anchor BEDs
+    │   ├── loop_size.{png,pdf}
+    │   ├── loop_classification.{png,pdf}
+    │   ├── chromHMM_anchor.{png,pdf}
+    │   └── cluster_differential_status.{png,pdf}
+    ├── chromHMM/
+    │   ├── peak_beds/                 # 3-col BEDs staged for BinarizeBed
+    │   ├── cellmarkfiletable.txt
+    │   ├── binarized/                 # BinarizeBed output
+    │   ├── learned_model/             # LearnModel output
+    │   │   ├── cerebellum_late_12_segments.bed
+    │   │   └── emissions_12.txt
+    │   ├── 12state_rename_cerebellum.txt  # Manual state naming
+    │   ├── anchor_input/              # Per-cluster anchor BEDs for OverlapEnrichment
+    │   ├── span_input/                # Per-cluster span BEDs for OverlapEnrichment
+    │   ├── {anchor,span}.txt          # Fold enrichment tables
+    │   └── {anchor,span}.{png,pdf}    # Heatmaps (Fig 2f equivalent)
+    └── cooltools/                     # Phase 6 outputs (after mcool sync)
+```
+
+---
+
+## Runner Scripts
+
+Each phase gets a `run_phase{N}.sh` bash script in `cluster/scripts/` that runs the steps for that phase sequentially with error checking. These are meant to be run manually one phase at a time (not chained).
+
+### `run_phase0.sh` — Apply bug fixes + verify
+
+```bash
+#!/bin/bash
+cd "$(dirname "$0")/.."
+# Bug fixes are applied via edits (not a script), but this verifies they work:
+python3 -c "
+import plotting
+import cluster_tools
+import chromHMM_heatmap
+import deeptools_plotting
+import bedpe_analysis
+print('All imports OK')
+"
+```
+
+### `run_phase1.sh` — Data preparation
+
+```bash
+#!/bin/bash
+cd "$(dirname "$0")/.."
+mkdir -p data bap1_late/{cluster3,figures/{annotation,ChIP_intersect,deeptools,deeptools_input},chromHMM/{binarized,learned_model,anchor_input,span_input,peak_beds},cooltools}
+python3 scripts/01_build_loop_count_file.py
+Rscript scripts/02_build_mm10_gene_annotation.R
+echo "Phase 1 complete. Verify:"
+wc -l data/late_merged_loop_counts.txt data/mm10_knownGene_pp.bed
+```
+
+### `run_phase2.sh` — ChromHMM segmentation
+
+```bash
+#!/bin/bash
+cd "$(dirname "$0")/.."
+bash scripts/03_chromhmm_segmentation.sh
+echo "Phase 2 complete. Verify:"
+wc -l bap1_late/chromHMM/learned_model/*_12_segments.bed
+echo "Now inspect emissions_12.txt and create 12state_rename_cerebellum.txt"
+```
+
+### `run_phase3.sh` — Clustering
+
+```bash
+#!/bin/bash
+cd "$(dirname "$0")/.."
+python3 scripts/04_clustering.py
+echo "Phase 3 complete. Verify:"
+wc -l bap1_late/cluster3/k-*/data/combined-clusters.txt
+```
+
+### `run_phase4.sh` — Downstream analyses
+
+```bash
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+python3 scripts/05_grouped_analyses.py
+echo "Phase 4 complete. Check bap1_late/figures/ and bap1_late/chromHMM/"
+```
+
+### `run_phase5.sh` — deepTools metagene
+
+```bash
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+# Requires BigWigs in data/bigwigs/ — run sync_from_hpc.sh first if needed
+python3 scripts/05_grouped_analyses.py --deeptools-only
+echo "Phase 5 complete. Check bap1_late/figures/deeptools/"
+```
+
+### `sync_from_hpc.sh` — rsync HPC data
+
+```bash
+#!/bin/bash
+# Sync BigWigs and mcools from SDSC Expanse (ssh alias: expanse)
+# Run from repo root: bash cluster/scripts/sync_from_hpc.sh
+
+REMOTE="expanse"
+LOCAL_BW="cluster/data/bigwigs"
+LOCAL_MCOOL="cluster/data/mcools"
+mkdir -p "$LOCAL_BW" "$LOCAL_MCOOL"
+
+echo "=== Syncing BigWigs ==="
+# H2AK119ub (not in peaks/bigwigs/)
+rsync -avP "${REMOTE}:/expanse/lustre/projects/csd940/zalibhai/bigwigs/H2AK119ubCtrl.bw" "$LOCAL_BW/"
+rsync -avP "${REMOTE}:/expanse/lustre/projects/csd940/zalibhai/bigwigs/H2AK119ubMut.bw" "$LOCAL_BW/"
+# H3K27me1
+rsync -avP "${REMOTE}:/expanse/lustre/projects/csd940/zalibhai/bigwigs/H3K27me1Ctrl.bw" "$LOCAL_BW/"
+rsync -avP "${REMOTE}:/expanse/lustre/projects/csd940/zalibhai/bigwigs/H3K27me1Mut.bw" "$LOCAL_BW/"
+
+echo "=== Syncing mcools (Phase 6 only — large files, ~2-5GB each) ==="
+echo "Uncomment below when ready for cooltools pileup:"
+# rsync -avP "${REMOTE}:/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/ctrl_merged.mcool" "$LOCAL_MCOOL/"
+# rsync -avP "${REMOTE}:/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_merged.mcool" "$LOCAL_MCOOL/"
+
+echo "Done. Files synced to:"
+ls -lh "$LOCAL_BW"/ 2>/dev/null || echo "  (no bigwigs yet)"
+ls -lh "$LOCAL_MCOOL"/ 2>/dev/null || echo "  (no mcools yet)"
+```
+
+**Note on BigWig paths in `sync_from_hpc.sh`:** The remote paths above assume `/expanse/lustre/projects/csd940/zalibhai/bigwigs/` matches what's on the user's Mac at `/Users/zakiralibhai/sdsc/bigwigs/`. If the HPC paths differ, update the script before running. The H3K27ac/H3K27me3 BigWigs are already on disk at `peaks/bigwigs/macs2.narrow.aug18.dedup/` and don't need syncing.
+
+---
+
+## Files to Create
+
+| File | Phase | Description |
+|------|-------|-------------|
+| **Analysis scripts** | | |
+| `cluster/scripts/01_build_loop_count_file.py` | 1.1 | Merged loops → Popay format count file |
+| `cluster/scripts/02_build_mm10_gene_annotation.R` | 1.2 | mm10 promoter BED from TxDb |
+| `cluster/scripts/03_chromhmm_segmentation.sh` | 2 | BinarizeBed + LearnModel pipeline |
+| `cluster/scripts/04_clustering.py` | 3 | Elbow plot + Cluster 3.0 k-means + visualization (incl. `--min-ratio` / `--max-ratio` for outlier removal) |
+| `cluster/scripts/utils/multi_format_output.py` | 3+ | Context-manager savefig wrapper + figure_subfolder helper (PNG + PDF + SVG + JPG, subfolder per figure); shared by Phase 4-5 |
+| `cluster/scripts/05_grouped_analyses.py` | 4-5 | All downstream analyses (ChromHMM, ChIP, DiffBind, deepTools) |
+| `cluster/scripts/06_cooltools_pileup.py` | 6 | Cooltools pileup stub (after mcool sync) |
+| **Runner scripts** | | |
+| `cluster/scripts/run_phase0.sh` | 0 | Verify bug fixes |
+| `cluster/scripts/run_phase1.sh` | 1 | Data prep + directory setup |
+| `cluster/scripts/run_phase2.sh` | 2 | ChromHMM segmentation |
+| `cluster/scripts/run_phase3.sh` | 3 | Clustering — accepts `K FILTER_PCT MIN_RATIO MAX_RATIO` positional + `LOG` env var |
+| `cluster/scripts/run_phase4.sh` | 4 | Downstream analyses |
+| `cluster/scripts/run_phase5.sh` | 5 | deepTools metagene |
+| `cluster/scripts/sync_from_hpc.sh` | — | rsync BigWigs + mcools from Expanse |
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `cluster/plotting.py` | Add `import os`; fix custom_params path (L24-25); remove gene ylim overrides (L132-139); fix joint() logX bug (L502: `ycol`→`xcol`) |
+| `cluster/cooltools_called.py` | Add `import os`; replace `plt.style.use('seaborn-poster')` with `'seaborn-v0_8-poster'` (L16); fix custom_params path (L18-19); change default genome to mm10 (L27) |
+| `cluster/chromHMM_heatmap.py` | Fix custom_params path (L9-10) |
+| `cluster/deeptools_plotting.py` | Add `import os`; fix custom_params path (L8-9); remove HA-NIPBL ylim override (L108) |
+| `cluster/cluster_tools.py` | Fix elbow() savefig/show order (L18-19) |
+| `cluster/deepTools_pipeline.py` | Add genome param to bam_coverage() with mm10 size (L15) |
+| `cluster/bedpe_analysis.py` | Fix default gene path (L67); add FPKM_df None guard (L142-159) |
+
+## Verification Plan
+
+1. **Phase 0:** ✅ `run_phase0.sh` — all module imports succeed without error
+2. **Phase 1:** ✅ `late_merged_loop_counts.txt` has 39,344 rows, 8 columns; `mm10_knownGene_pp.bed` has 24,515 entries
+3. **Phase 2:** ✅ Segmentation BED covers all 21 standard chroms (chr1-19 + chrX + chrY), 335,569 segments; 12-state emissions matrix biologically interpretable (Active_Promoter through Quiescent)
+4. **Phase 3:** ✅ Elbow plot shows bend at k=4-5; v2 combined-clusters.txt has 38,948 rows, all 6 clusters > 600 loops, captures 99%+ of edgeR differential calls; multi-format outputs (PNG + PDF + SVG + JPG) per figure subfolder
+5. **Phase 4.4 (key result):** ChromHMM anchor vs span heatmaps show differential Polycomb enrichment across clusters
+6. **Phase 4.8:** Chi-squared p < 0.05 for cluster x differential status
+7. **Phase 5:** deepTools heatmaps show H3K27me3/H3K27ac differences across clusters at anchors
