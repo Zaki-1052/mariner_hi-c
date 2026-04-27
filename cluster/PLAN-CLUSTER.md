@@ -204,7 +204,20 @@ bash cluster/scripts/run_phase1.sh
 
 ---
 
-## Phase 2: ChromHMM Segmentation
+## Phase 2: ChromHMM Segmentation — DONE (2026-04-27)
+
+**Status:** 12-state model learned from 5 ChIP-seq peak BEDs on 21 standard chromosomes. Segmentation (`cerebellum_late_12_segments.bed`, 335,569 segments), emission matrix (`emissions_12.txt`, 12 × 5), and rename file (`12state_rename_cerebellum.txt`, 12 biological names) all produced and verified. Smoke-tested rename file via OverlapEnrichment on all 39,344 loop anchors — biologically coherent enrichments (Active_Promoter 5.31×, Quiescent 0.87×). Model shows no degeneracy: all 12 states have unique emission profiles (every pair differs by ≥1 fully-on vs fully-off mark), clean convergence in 32 iterations, no state >50% of segments.
+
+**Corrections applied during execution (Phase 4+ must follow these, not the original plan):**
+
+- **Filtered chromsizes.** Used `cluster/bap1_late/chromHMM/mm10_standard.txt` (21 chroms: chr1-19 + chrX + chrY) instead of the full `cluster/ChromHMM/CHROMSIZES/mm10.txt` (which includes chrM, chr*_random, chrUn_* contigs). Peak BEDs were also filtered to these 21 chroms. This avoids segmenting ~45 contigs that no loops or genes ever touch.
+- **Peak BED chromosome contamination.** 4 of 5 source BED files (all except H3K4me3) contained peaks on `chr*_random`, `chrUn_*`, or `chrM`. Filtered during staging: H3K27ac 15,105→15,100; H3K27me3 15,809→15,801; H3K4me1 113,781→113,722; CTCF 32,487→32,474; H3K4me3 unchanged at 6,581.
+- **State ID prefix is `E`, not `U`.** ChromHMM v1.27 emits state IDs as `E1`–`E12` in segments.bed and emissions_12.txt. Popay's example uses `U1`–`U12` (from an older version or relabeling). The rename file uses `E` prefix verbatim.
+- **Runtime: 93 seconds, not 30-90 min.** LearnModel converged in 32 iterations (total 71 sec) with 4 threads. The mm10 genome with 5 binary marks produces a small enough state space that convergence is fast.
+- **Segments.bed has 335,569 lines, not ~14M.** The original plan estimate (~14M = genome/200bp) was the per-bin count; the segments BED merges adjacent bins of the same state into contiguous regions.
+- **No blacklist pre-filter applied.** ChromHMM treats blacklist regions correctly as no-signal bins. Blacklist filtering deferred to Phase 5 (deepTools `--blackListFileName`).
+- **Rename file uses underscored names** (e.g. `Active_Promoter`, not `Active promoter`) for cross-script string-matching with the project's existing 7-category annotation taxonomy and Phase 4 palette dicts.
+- **ChromHMM wrapper `-mx` deprecation warning.** Java 25 emits a benign warning about the deprecated `-mx8G` flag in `cluster/ChromHMM/chromhmm`. Functionally harmless; could update to `-Xmx8G` but not in scope.
 
 ### 2.1 — Prepare peak BEDs for BinarizeBed
 
@@ -257,8 +270,48 @@ Runtime: ~30-90 min. Key outputs: `cerebellum_late_12_segments.bed`, `emissions_
 ### Phase 2 Verification
 ```bash
 wc -l cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed
-# Expect ~14M lines (mm10 / 200bp)
+# Expect ~335K lines (region-merged segments, not per-bin)
 ```
+
+**Verified 2026-04-27:**
+
+- `cluster/bap1_late/chromHMM/peak_beds/{H3K27ac,H3K27me3,H3K4me1,H3K4me3,CTCF}.bed`: 5 staged 3-col BEDs, standard chroms only. Total 183,678 peaks.
+- `cluster/bap1_late/chromHMM/mm10_standard.txt`: 21 chroms, sum 2,725,519,400 bp.
+- `cluster/bap1_late/chromHMM/cellmarkfiletable.txt`: 5 rows, cell = `cerebellum_late`.
+- `cluster/bap1_late/chromHMM/binarized/`: 21 binary files (`cerebellum_late_chr{1..19,X,Y}_binary.txt`).
+- `cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed`: 335,569 segments across all 21 chroms. 13,627,597 total 200bp bins covered.
+- `cluster/bap1_late/chromHMM/learned_model/emissions_12.txt`: 12 states × 5 marks. All emission probabilities are cleanly "digital" (near 0 or 1), no blurred intermediate states. Convergence: 32 iterations, log-likelihood -1,617,268.978.
+- State distribution (segment counts): E1=136,333 / E3=96,673 / E10=21,252 / E11=20,365 / E9=16,476 / E4=12,851 / E2=6,896 / E12=6,763 / E8=6,214 / E5=5,511 / E7=3,383 / E6=2,852. All 12 states meaningfully populated. E1 Quiescent = 40.6% of segments / 92.0% of genome (expected for 5-mark model).
+- `cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt`: 12 lines, tab-separated, state_id `E{N}` → underscored biological name. Ordered thematically (active → repressive → structural → quiescent):
+
+| State | Genome % | Marks (≥0.95 prob) | Name | TSS ×fold | CpG ×fold |
+|-------|----------|--------------------|------|-----------|-----------|
+| E8 | 0.35% | K27ac + K4me3 | Active_Promoter | 45.07 | 83.76 |
+| E5 | 0.20% | K27ac + K4me3 + K4me1 | Active_Promoter_Flank | 19.28 | 21.15 |
+| E6 | 0.08% | K4me3 + K4me1 | Poised_Promoter | 19.47 | 20.66 |
+| E7 | 0.11% | K4me3 (+ slight K27me3) | Weak_Promoter | 51.97 | 88.89 |
+| E9 | 0.36% | K27ac alone | Strong_Enhancer | 7.18 | 12.70 |
+| E4 | 0.77% | K27ac + K4me1 | Active_Enhancer | 3.00 | 2.33 |
+| E3 | 3.67% | K4me1 alone | Poised_Enhancer | 2.32 | 1.60 |
+| E12 | 0.31% | K4me1 + K27me3 | Bivalent_Enhancer | 23.33 | 49.75 |
+| E11 | 1.81% | K27me3 alone | Polycomb | 2.93 | 3.79 |
+| E2 | 0.09% | K4me1 + CTCF | CTCF_Boundary | 9.44 | 8.98 |
+| E10 | 0.30% | CTCF alone | Insulator | 4.66 | 3.94 |
+| E1 | 91.97% | none | Quiescent | 0.49 | 0.21 |
+
+- Smoke-test OverlapEnrichment (all 39,344 anchor1 regions): Active_Promoter 5.31×, Active_Promoter_Flank 4.90×, Poised_Promoter 4.28×, Weak_Promoter 4.32×, Strong_Enhancer 3.67×, Active_Enhancer 3.45×, Poised_Enhancer 2.06×, Bivalent_Enhancer 2.02×, Polycomb 1.56×, CTCF_Boundary 4.11×, Insulator 3.41×, Quiescent 0.87× (depleted). Biologically coherent — active/structural states enriched at loop anchors, quiescent depleted.
+- **Model degeneracy assessment: k=12 is well-justified.** Every pair of states differs by ≥1 mark being fully on vs fully off (no near-duplicate emissions). No state >50% of segments. Small genome-% states (E2 0.09%, E6 0.08%, E7 0.11%) have very high TSS/CpG enrichments (up to 89×), proving they mark real genomic features, not noise. A k=10 model would merge E5↔E8 (losing TSS-flank vs core distinction) and E6↔E7 (losing K4me1-flanked vs isolated promoter distinction) — both biologically meaningful.
+
+**Files created in Phase 2:**
+
+| File | Purpose |
+|------|---------|
+| `cluster/scripts/03_chromhmm_segmentation.sh` | Worker: stage BEDs, filter chromsizes, BinarizeBed + LearnModel(k=12) |
+| `cluster/scripts/run_phase2.sh` | Driver: call worker with status check, summary |
+| `cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt` | State ID → biological name mapping (12 lines) |
+| `cluster/bap1_late/chromHMM/mm10_standard.txt` | 21-row filtered chromsizes |
+| `cluster/bap1_late/chromHMM/cellmarkfiletable.txt` | 5-row mark → BED table |
+| `cluster/phase2.txt` | Full run log |
 
 ---
 
