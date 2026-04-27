@@ -1,0 +1,91 @@
+============================================================
+Phase 1: Data preparation
+Repo root: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c
+Started:   Sun Apr 26 23:42:44 PDT 2026
+============================================================
+
+[a] Ensuring output directory tree...
+
+[b] Step 1.1 — Building loop count file...
+cluster/scripts/01_build_loop_count_file.py:76: DtypeWarning: Columns (23,25,26,28) have mixed types. Specify dtype option on import or set low_memory=False.
+  merged = pd.read_csv(MERGED_BEDPE, sep='\t', header=0)
+[1/5] Loading merged BEDPE: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/outputs/250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe
+      rows: 39344
+      kept_from_resolution counts: {25: 16890, 10: 14553, 5: 7901}
+[2/5] Loading per-resolution counts (5/10/25 kb)...
+      res 5kb: 17982 loops with merged-replicate counts
+      res 10kb: 22632 loops with merged-replicate counts
+      res 25kb: 20398 loops with merged-replicate counts
+[3/5] Per-resolution coordinate join...
+[4/5] Writing count file: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/data/late_merged_loop_counts.txt
+      wrote 39344 rows × 8 cols
+[5/5] Writing metadata sidecar: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/data/late_merged_loop_metadata.tsv
+      wrote 39344 rows × 16 cols
+
+=== Summary ===
+Count file: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/data/late_merged_loop_counts.txt
+  shape: (39344, 8)
+  ctrl_merge distribution:
+count    39344.000000
+mean       755.080409
+std        885.269094
+min          5.497996
+1%          48.997856
+5%          91.258189
+50%        450.535783
+95%       2577.812980
+99%       4527.423532
+max      10421.883808
+  mut_merge distribution:
+count    39344.000000
+mean       720.241960
+std        871.845697
+min          6.824153
+1%          44.092952
+5%          84.661879
+50%        426.867285
+95%       2469.314557
+99%       4355.156572
+max      38762.652761
+
+Metadata sidecar: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/data/late_merged_loop_metadata.tsv
+  shape: (39344, 16)
+  direction counts: {'unchanged': 31363, 'up_in_mutant': 4253, 'down_in_mutant': 3728}
+  significant counts: {False: 31363, True: 7981}
+
+Phase 1.1 complete.
+
+[c] Step 1.2 — Building mm10 promoter BED...
+[1/5] Loading TxDb and pulling gene bodies...
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+      genes: 24528 
+[2/5] Building promoters (TSS +/- 750bp, strand-aware)...
+      promoters: 24528 (dropped 0 for falling outside chromosome bounds)
+[3/5] Filtering to standard chromosomes (chr1..19, chrX, chrY, chrM)...
+      retained: 24515 
+[4/5] Mapping Entrez IDs to gene symbols (org.Mm.eg.db)...
+      genes without symbol mapping (gene_name left blank): 19 of 24515 
+[5/5] Writing 7-col BED: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/data/mm10_knownGene_pp.bed 
+
+=== Summary ===
+Output: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/data/mm10_knownGene_pp.bed 
+Rows: 24515 
+Unique chromosomes: chr1, chr10, chr11, chr12, chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chrX, chrY 
+Strand counts: -=12197, +=12318 
+Width invariant (end - start == 1500): TRUE 
+Rows with empty gene_name: 19 (expected: matches mapping-failure count above)
+
+Phase 1.2 complete.
+
+============================================================
+Phase 1 outputs
+============================================================
+  cluster/data/late_merged_loop_counts.txt               39345 rows    8 cols
+  cluster/data/late_merged_loop_metadata.tsv             39345 rows   16 cols
+  cluster/data/mm10_knownGene_pp.bed                     24515 rows    7 cols
+
+Phase 1 finished: Sun Apr 26 23:42:51 PDT 2026
