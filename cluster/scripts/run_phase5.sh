@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# cluster/scripts/run_phase5.sh
+# Driver: Phase 5 -- deepTools metagene at loop anchors for BAP1-KO Hi-C clusters.
+#
+# Builds per-cluster anchor BEDs and runs deepTools bed_pileup with 8 BigWigs
+# (4 marks x ctrl/mut). Single combined heatmap at cluster/bap1_late/figures/
+# deeptools/histone_anchors/.
+#
+# Env vars:
+#   LOG  (default cluster/phase5.txt)  -- full output log path
+#
+# Usage:
+#   bash cluster/scripts/run_phase5.sh
+#   LOG=cluster/phase5_test.txt bash cluster/scripts/run_phase5.sh
+
+set -e
+
+cd "$(dirname "$0")/../.."   # repo root
+
+# Cluster env's bin must be on PATH so the `computeMatrix` subprocess called
+# by bed_pileup resolves. The cluster env has deepTools 3.5.5 installed,
+# but is not the default-active env. PYTHON points to the same env explicitly.
+CLUSTER_ENV_BIN=/opt/homebrew/anaconda3/envs/cluster/bin
+export PATH="${CLUSTER_ENV_BIN}:${PATH}"
+PYTHON="${CLUSTER_ENV_BIN}/python3"
+SCRIPT=cluster/scripts/06_deeptools_metagene.py
+LOG=${LOG:-cluster/phase5.txt}
+
+{
+  echo "============================================================"
+  echo "Phase 5: deepTools metagene at loop anchors"
+  echo "Repo root: $(pwd)"
+  echo "Started:   $(date)"
+  echo "log_path:  ${LOG}"
+  echo "python:    ${PYTHON}"
+  echo "computeMatrix: $(which computeMatrix 2>/dev/null || echo NOT_ON_PATH)"
+  echo "plotHeatmap:   $(which plotHeatmap   2>/dev/null || echo NOT_ON_PATH)"
+  echo "============================================================"
+  echo
+  echo "[1/1] Running 06_deeptools_metagene.py..."
+  "$PYTHON" "$SCRIPT"
+  echo
+  echo "============================================================"
+  echo "Phase 5 outputs"
+  echo "============================================================"
+  echo "--- per-cluster anchor BEDs ---"
+  ls -lh cluster/bap1_late/figures/deeptools_input/clust*_anchors.bed 2>/dev/null
+  echo
+  echo "--- metagene heatmap ---"
+  ls -lh cluster/bap1_late/figures/deeptools/histone_anchors/ 2>/dev/null
+  echo
+  echo "Phase 5 finished: $(date)"
+} 2>&1 | tee "$LOG"

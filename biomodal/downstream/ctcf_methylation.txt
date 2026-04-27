@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-04-27 08:24:04 
+Date: 2026-04-27 08:42:32 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -55,44 +55,55 @@ SECTION 47: CTCF ANCHOR METHYLATION OVERLAY
   Unique CTCF anchors (ChIP): 1085 lost, 2192 gained
   Unique CTCF anchors (motif): 1198 lost, 2335 gained
 
+--- Assigning anchor groups ---
+  Dynamic CpG regions (shores+shelves): 61675 mC, 61675 hmC
+    At lost anchors:  1084 mC, 1084 hmC
+    At gained anchors: 1427 mC, 1427 hmC
+
 ================================================================================
-47a: CpG ISLAND METHYLATION AT CTCF LOOP ANCHORS
+47a: METHYLATION AT CTCF LOOP ANCHORS
 ================================================================================
 
-  CpG islands at lost CTCF anchors:   230
-  CpG islands at gained CTCF anchors: 253
-  CpG islands at both:                43
-  CpG islands at neither (background): 8470
+  CpG Islands (expected null -- constitutively unmethylated):
+    n=187 lost, n=210 gained; mC hyper OR=0.84, p = 1.00
 
-  Fisher's exact tests (mC hypermethylation):
-    Lost vs Gained (mC hyper): OR=0.84 [0.12-5.04], p = 1.00
-    Lost vs Background (mC hyper): OR=1.18 [0.24-3.60], p = 0.74
-    Lost vs Gained (hmC hypo): OR=Inf [0.21-Inf], p = 0.22
-    Motif sensitivity (mC hyper): OR=0.88 [0.17-4.13], p = 1.00
+  Dynamic CpG Regions (shores + shelves -- primary analysis):
+    Regions at lost anchors: 1084
+    Regions at gained anchors: 1427
+    Background: 58928
+    mC hyper (lost vs gained): OR=3.28 [2.57-4.20], p < 2.2e-16
+    mC hyper (lost vs BG): OR=1.12 [0.97-1.30], p = 0.12
+    hmC hypo (lost vs gained): OR=2.08 [1.50-2.89], p = 3.86e-06
+    Motif sensitivity (mC hyper): OR=2.52 [2.03-3.14], p < 2.2e-16
 
-  Wilcoxon rank-sum tests (mod_difference):
-    mC mod_diff lost vs gained: p = 0.91
-      Lost median: 0.0000, Gained median: 0.0000
-    hmC mod_diff lost vs gained: p = 0.88
-      Lost median: 0.0000, Gained median: 0.0000
+  Wilcoxon rank-sum tests (mod_difference, dynamic CpG regions):
+    mC: p < 2.2e-16 (lost median=0.0055, gained median=-0.0068)
+    hmC: p < 2.2e-16 (lost median=-0.0017, gained median=0.0030)
+Warning message:
+In left_join(., dynamic_hmc %>% dplyr::select(chr, start, end, mod_difference,  :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 56 of `x` matches multiple rows in `y`.
+ℹ Row 56 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship =
+  "many-to-many"` to silence this warning.
 
   Generating plots...
-  Saved: 47a_cpgi_mc_direction_barchart/{pdf,svg,jpg}
-  Saved: 47a_cpgi_mc_violin/{pdf,svg,jpg}
-  Saved: 47a_cpgi_hmc_violin/{pdf,svg,jpg}
+  Saved: 47a_dynamic_mc_direction_barchart/{pdf,svg,jpg}
+  Saved: 47a_dynamic_mc_violin/{pdf,svg,jpg}
+  Saved: 47a_dynamic_hmc_violin/{pdf,svg,jpg}
 
 ================================================================================
 47b: MULTI-REGION COMPARISON
 ================================================================================
 
-  CpG islands mc: lost 3/230 (1.3%) vs gained 4/253 (1.6%), OR=0.82, p = 1.00
-  CpG islands hmc: lost 2/230 (0.9%) vs gained 0/253 (0.0%), OR=Inf, p = 0.23
-  CpG shores mc: lost 156/794 (19.6%) vs gained 84/947 (8.9%), OR=2.51, p = 9.01e-11
-  CpG shores hmc: lost 57/794 (7.2%) vs gained 52/947 (5.5%), OR=1.33, p = 0.16
-  CpG shelves mc: lost 118/526 (22.4%) vs gained 63/716 (8.8%), OR=3.00, p = 2.40e-11
-  CpG shelves hmc: lost 67/526 (12.7%) vs gained 37/716 (5.2%), OR=2.68, p = 2.43e-06
-  Promoters mc: lost 24/286 (8.4%) vs gained 9/326 (2.8%), OR=3.22, p = 0.002
-  Promoters hmc: lost 4/286 (1.4%) vs gained 4/326 (1.2%), OR=1.14, p = 1.00
+  CpG islands mc: lost 3/187 (1.6%) vs gained 4/210 (1.9%), OR=0.84, p = 1.00
+  CpG islands hmc: lost 2/187 (1.1%) vs gained 0/210 (0.0%), OR=Inf, p = 0.22
+  CpG shores mc: lost 138/647 (21.3%) vs gained 66/800 (8.2%), OR=3.01, p = 1.34e-12
+  CpG shores hmc: lost 45/647 (7.0%) vs gained 40/800 (5.0%), OR=1.42, p = 0.12
+  CpG shelves mc: lost 104/437 (23.8%) vs gained 49/627 (7.8%), OR=3.68, p = 4.34e-13
+  CpG shelves hmc: lost 60/437 (13.7%) vs gained 30/627 (4.8%), OR=3.16, p = 4.92e-07
+  Promoters mc: lost 24/247 (9.7%) vs gained 9/287 (3.1%), OR=3.32, p = 0.002
+  Promoters hmc: lost 3/247 (1.2%) vs gained 3/287 (1.0%), OR=1.16, p = 1.00
 
   Generating plots...
 Warning message:
@@ -102,77 +113,53 @@ Warning message:
 `height` was translated to `width`.
 `height` was translated to `width`.
   Saved: 47b_multiregion_OR_forest/{pdf,svg,jpg}
-Warning messages:
-1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'Promoters — 5hmC (hypo)' in 'mbcsToSbcs': - substituted for — (U+2014)
-2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'Promoters — 5mC (hyper)' in 'mbcsToSbcs': - substituted for — (U+2014)
-3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'CpG shelves — 5hmC (hypo)' in 'mbcsToSbcs': - substituted for — (U+2014)
-4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'CpG shelves — 5mC (hyper)' in 'mbcsToSbcs': - substituted for — (U+2014)
-5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'CpG shores — 5hmC (hypo)' in 'mbcsToSbcs': - substituted for — (U+2014)
-6: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'CpG shores — 5mC (hyper)' in 'mbcsToSbcs': - substituted for — (U+2014)
-7: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'CpG islands — 5hmC (hypo)' in 'mbcsToSbcs': - substituted for — (U+2014)
-8: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'CpG islands — 5mC (hyper)' in 'mbcsToSbcs': - substituted for — (U+2014)
-9: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'log2(Odds Ratio) — Lost vs Gained CTCF Anchors' in 'mbcsToSbcs': - substituted for — (U+2014)
   Saved: 47b_multiregion_pct_heatmap/{pdf,svg,jpg}
 
 ================================================================================
-47c: COORDINATED mC-UP / hmC-DOWN AT CTCF ANCHOR CpG ISLANDS
+47c: COORDINATED mC-UP / hmC-DOWN AT DYNAMIC CpG REGIONS
 ================================================================================
 
-  Joined CpG islands: 8910
-  Coordinated (mC up + hmC down): 1025 (11.5%)
+Warning message:
+In inner_join(dynamic_mc %>% dplyr::select(chr, start, end, mod_difference,  :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 56 of `x` matches multiple rows in `y`.
+ℹ Row 56 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship =
+  "many-to-many"` to silence this warning.
+  Joined dynamic CpG regions: 64843
+  Coordinated (mC up + hmC down): 27501 (42.4%)
 
   Coordinated rates by anchor group:
-    Background: 982/8470 (11.6%) coordinated, 87 sig-coordinated
-    Gained CTCF anchor: 22/210 (10.5%) coordinated, 1 sig-coordinated
-    Lost CTCF anchor: 16/187 (8.6%) coordinated, 2 sig-coordinated
+    Background: 26760/61782 (43.3%) coordinated, 9202 sig-coordinated
+    Gained CTCF anchor: 291/1577 (18.5%) coordinated, 74 sig-coordinated
+    Lost CTCF anchor: 400/1210 (33.1%) coordinated, 164 sig-coordinated
 
-  Fisher's (coordinated, lost vs gained): OR=0.80, p = 0.61
-  Fisher's (coordinated, lost vs BG): OR=0.71, p = 0.25
+  Fisher's (coordinated, lost vs gained): OR=2.18, p < 2.2e-16
+  Fisher's (coordinated, lost vs BG): OR=0.65, p = 5.82e-13
+  Fisher's (sig-coordinated, lost vs gained): OR=3.18, p < 2.2e-16
 
   Generating plots...
   Saved: 47c_coordinated_barchart/{pdf,svg,jpg}
-Warning messages:
-1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on '% CpG Islands with Coordinated mC↑ / hmC↓' in 'mbcsToSbcs': for ↑ (U+2191)
-2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on '% CpG Islands with Coordinated mC↑ / hmC↓' in 'mbcsToSbcs': for ↓ (U+2193)
   Saved: 47c_scatter_mc_vs_hmc/{pdf,svg,jpg}
-Warning messages:
-1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'Upper-left quadrant = coordinated mC↑ / hmC↓ (TET blockade)' in 'mbcsToSbcs': for ↑ (U+2191)
-2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'Upper-left quadrant = coordinated mC↑ / hmC↓ (TET blockade)' in 'mbcsToSbcs': for ↓ (U+2193)
   Saved: 47c_combined_effect_violin/{pdf,svg,jpg}
 
 ================================================================================
-47d: DISTANCE-STRATIFIED ANALYSIS
+47d: DISTANCE-STRATIFIED ANALYSIS (DYNAMIC CpG REGIONS)
 ================================================================================
 
   Per-distance-bin Fisher's tests:
-    <200kb: lost 0/27 (0.0%) vs gained 0/75 (0.0%), OR=0.00, p = 1.00
-    200-500kb: lost 0/38 (0.0%) vs gained 2/92 (2.2%), OR=0.00, p = 1.00
-    500kb-1Mb: lost 2/30 (6.7%) vs gained 2/59 (3.4%), OR=2.02, p = 0.60
-    >1Mb: lost 1/135 (0.7%) vs gained 0/27 (0.0%), OR=Inf, p = 1.00
+    <200kb: lost 62/169 (36.7%) vs gained 25/511 (4.9%), OR=11.21, p < 2.2e-16
+    200-500kb: lost 54/241 (22.4%) vs gained 61/621 (9.8%), OR=2.65, p = 3.40e-06
+    500kb-1Mb: lost 55/195 (28.2%) vs gained 33/358 (9.2%), OR=3.86, p = 1.96e-08
+    >1Mb: lost 103/715 (14.4%) vs gained 28/173 (16.2%), OR=0.87, p = 0.55
 
-  CMH test (all strata): common OR=1.19 [0.22-6.43], p = 0.84
+  CMH test (all strata): common OR=2.87 [2.28-3.60], p < 2.2e-16
 
   Generating plots...
 `height` was translated to `width`.
 `height` was translated to `width`.
 `height` was translated to `width`.
   Saved: 47d_distance_stratified_OR/{pdf,svg,jpg}
-Warning message:
-In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  for 'log2(Odds Ratio) — mC Hyper at Lost vs Gained CTCF Anchors' in 'mbcsToSbcs': - substituted for — (U+2014)
   Saved: 47d_mc_violin_by_distance/{pdf,svg,jpg}
 
 ================================================================================
@@ -180,11 +167,11 @@ In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
 ================================================================================
 
   CTCF-CTCF loops: 1467 (443 lost, 1024 gained)
-  Loops with CpG islands at anchors: 321 / 1467 (21.9%)
-  Spearman (mC diff vs logFC, all): rho=0.032, p = 0.57, n=321
-  Spearman (mC diff vs logFC, lost only): rho=0.135, p = 0.16, n=108
-  Spearman (hmC diff vs logFC, all): rho=0.060, p = 0.28, n=321
-  Partial (mC diff | distance): beta=0.649, p = 0.47
+  Loops with dynamic CpG regions at anchors: 565 / 1467 (38.5%)
+  Spearman (mC diff vs logFC, all): rho=-0.244, p = 4.25e-09, n=565
+  Spearman (mC diff vs logFC, lost only): rho=0.124, p = 0.11, n=169
+  Spearman (hmC diff vs logFC, all): rho=0.216, p = 2.03e-07, n=565
+  Partial (mC diff | distance): beta=-2.239, p = 7.37e-10
 
   Generating plots...
 `geom_smooth()` using formula = 'y ~ x'
@@ -204,40 +191,42 @@ In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
 SECTION 47 SUMMARY
 ================================================================================
 
-47a — CpG Island Methylation at CTCF Anchors (Core Test):
-  CpG islands at lost CTCF anchors: 230
-  CpG islands at gained CTCF anchors: 253
-  mC hyper Fisher's (lost vs gained): OR=0.84, p = 1.00
-  hmC hypo Fisher's (lost vs gained): OR=Inf, p = 0.22
-  mC Wilcoxon: p = 0.91 (lost median=0.0000, gained median=0.0000)
+47a -- Methylation at CTCF Anchors:
+  CpG islands (null): OR=0.84, p = 1.00 (constitutively unmethylated)
+  Dynamic CpG regions at lost anchors: 1084, gained: 1427
+  mC hyper Fisher's (lost vs gained): OR=3.28, p < 2.2e-16
+  hmC hypo Fisher's (lost vs gained): OR=2.08, p = 3.86e-06
+  mC Wilcoxon: p < 2.2e-16 (lost median=0.0055, gained median=-0.0068)
 
-47b — Multi-Region Comparison:
-  CpG islands mc: OR=0.82, FDR=1.00e+00
-  CpG islands hmc: OR=Inf, FDR=3.02e-01
-  CpG shores mc: OR=2.51, FDR=3.61e-10
-  CpG shores hmc: OR=1.33, FDR=2.63e-01
-  CpG shelves mc: OR=3.00, FDR=1.92e-10
-  CpG shelves hmc: OR=2.68, FDR=6.48e-06
-  Promoters mc: OR=3.22, FDR=4.39e-03
-  Promoters hmc: OR=1.14, FDR=1.00e+00
+47b -- Multi-Region Comparison:
+  CpG islands mc: OR=0.84, FDR=1.00e+00
+  CpG islands hmc: OR=Inf, FDR=2.95e-01
+  CpG shores mc: OR=3.01, FDR=5.35e-12
+  CpG shores hmc: OR=1.42, FDR=1.88e-01
+  CpG shelves mc: OR=3.68, FDR=3.47e-12
+  CpG shelves hmc: OR=3.16, FDR=1.31e-06
+  Promoters mc: OR=3.32, FDR=3.84e-03
+  Promoters hmc: OR=1.16, FDR=1.00e+00
 
-47c — Coordinated Pattern:
-  Fisher's (coordinated, lost vs gained): OR=0.80, p = 0.61
+47c -- Coordinated Pattern (dynamic CpG regions):
+  Fisher's (coordinated, lost vs gained): OR=2.18, p < 2.2e-16
+  Fisher's (coordinated, lost vs BG): OR=0.65, p = 5.82e-13
+  Combined effect Wilcoxon: p = 0.20
 
-47d — Distance-Stratified:
-  CMH common OR=1.19 [0.22-6.43], p = 0.84
+47d -- Distance-Stratified (dynamic CpG regions):
+  CMH common OR=2.87 [2.28-3.60], p < 2.2e-16
 
-47e — logFC vs Methylation Correlation:
-  mC_vs_logFC_all: rho/beta=0.032, p = 0.57 (n=321)
-  mC_vs_logFC_lost: rho/beta=0.135, p = 0.16 (n=108)
-  hmC_vs_logFC_all: rho/beta=0.060, p = 0.28 (n=321)
-  partial_mC_vs_logFC_adj_distance: rho/beta=0.649, p = 0.47 (n=321)
+47e -- logFC vs Methylation Correlation (dynamic CpG regions):
+  mC_vs_logFC_all: rho/beta=-0.244, p = 4.25e-09 (n=565)
+  mC_vs_logFC_lost: rho/beta=0.124, p = 0.11 (n=169)
+  hmC_vs_logFC_all: rho/beta=0.216, p = 2.03e-07 (n=565)
+  partial_mC_vs_logFC_adj_distance: rho/beta=-2.239, p = 7.37e-10 (n=565)
 
 --- Output files ---
 Figures (13 panels in /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/47_ctcf_anchor_methylation_overlay):
-  47a_cpgi_mc_direction_barchart/
-  47a_cpgi_mc_violin/
-  47a_cpgi_hmc_violin/
+  47a_dynamic_mc_direction_barchart/
+  47a_dynamic_mc_violin/
+  47a_dynamic_hmc_violin/
   47b_multiregion_OR_forest/
   47b_multiregion_pct_heatmap/
   47c_coordinated_barchart/
@@ -250,11 +239,11 @@ Figures (13 panels in /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal
   47e_residual_partial_correlation/
 
 Tables (in /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables):
-  47a_cpgi_ctcf_anchor_methylation.tsv
   47a_fisher_results.tsv
+  47a_dynamic_ctcf_anchor_methylation.tsv
   47b_multiregion_fisher.tsv
   47b_multiregion_wilcoxon.tsv
-  47c_cpgi_coordinated_pattern.tsv
+  47c_dynamic_coordinated_pattern.tsv
   47c_coordinated_enrichment.tsv
   47d_distance_stratified_results.tsv
   47e_loop_methylation_correlation.tsv
