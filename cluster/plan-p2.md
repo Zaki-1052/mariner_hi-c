@@ -245,7 +245,7 @@ Uses `deepTools_pipeline.bed_pileup()` which shells out to `computeMatrix refere
 **BigWig dict — need user to confirm/sync these files:**
 - H3K27me3: ctrl + mut (from `peaks/bigwigs/macs2.narrow.aug18.dedup/`)
 - H3K27ac: ctrl + mut (same directory)
-- H2AK119ub: ctrl + mut (user has at `/Users/zakiralibhai/sdsc/bigwigs/H2AK119ub{Ctrl,Mut}.bw` — needs sync to `cluster/data/bigwigs/` or similar)
+- H2AK119ub: ctrl + mut (user has at `/Users/zakiralibhai/sdsc/bigwigs/H2AK119ub{Ctrl,Mut}.bw` — available locally)
 
 **Blacklist:** `tads/mm10-blacklist.v2.bed` (verified on disk)
 
