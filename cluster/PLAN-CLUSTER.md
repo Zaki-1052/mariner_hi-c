@@ -315,58 +315,126 @@ wc -l cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed
 
 ---
 
-## Phase 3: K-means Clustering
+## Phase 3: K-means Clustering — DONE (2026-04-27)
 
-**Script:** `cluster/scripts/04_clustering.py` (adapted from HiC_cluster3.ipynb)
+**Status:** Two runs preserved on disk for full reproducibility.
+- **v1** (no ratio bounds, k=6) — diagnostic; produced a degenerate 2-loop cluster driven by 2 statistical outliers. Outputs at `cluster/bap1_late/cluster3/{elbow_plot,k-6}_v1_no-ratio-bound/`. Log: `cluster/phase3.txt`.
+- **v2** (with symmetric ratio bounds `0.333 ≤ mut/ctrl ≤ 3.0`, k=6) — **canonical result**, used by Phase 4+. Outputs at `cluster/bap1_late/cluster3/{elbow_plot,k-6}/`. Log: `cluster/phase3_v2.txt`.
 
-Cluster 3.0 is installed on the user's Mac and available on PATH as `cluster`. Use it faithfully as Popay does — subprocess call with `-r 100 -g 7 -k {k}`.
+Six well-populated clusters in v2 (12,298 / 10,970 / 8,738 / 3,916 / 667 / 2,359), no degeneracy, biologically clean — captures 99.3% of edgeR's down_in_mutant calls and 99.5% of up_in_mutant. clust5 = strong gain (97% up_in_mutant), clust6 = strong loss (78% down_in_mutant), clust3/4 = moderate loss/gain, clust1/2 = unchanged bulk.
+
+**Corrections applied during execution (Phase 4+ must follow these, not the original plan):**
+
+- **Filter percentile, not Popay's `0.008` absolute.** The parent plan's `filter_threshold = 0.008` was calibrated for Popay's KR-balanced contact frequencies (~0.05 scale). Our mariner-aggregated counts are ~5,000× larger and per-resolution medians differ ~6× (5kb=171, 10kb=403, 25kb=984). Use **per-resolution 1%-tile** threshold computed empirically. Empirical thresholds: 5kb=38.0, 10kb=61.5, 25kb=56.5. Drops 394 loops (1%), keeps 38,950.
+- **Cluster 3.0 binary lives at `/usr/local/bin/cluster`**, NOT `~/apps/cluster-1.59/src/cluster` as the parent plan §3 / §15 claimed. Verified via `which cluster`. PATH conflict-free with the conda env named `cluster` (envs don't add a binary by that name).
+- **Symmetric mut/ctrl ratio bound is necessary** to prevent k-means degeneracy. v1 (no bounds) put one centroid at ratio≈7.3 to capture 2 extreme outlier loops (`chr8:69440000` at ratio=4.6, `chr7:104225000` at ratio=10.08), wasting one slot on 2 loops while leaving the loss side under-resolved. Both outliers are flagged `unchanged` by edgeR (FDR>0.25) — replicate-noise driven, not real biology. Adding `--max-ratio 3.0 --min-ratio 0.333` drops these 2 loops and lets k-means produce a balanced 6-cluster solution.
+- **`sort_clusters` orders by raw signal mean, NOT mut/ctrl ratio.** It calls `clusters_df[data_cols].to_numpy().mean()` on the un-normalized values. So `clust1` has the highest mean ctrl_merge+mut_merge across loops (median ctrl=555 in v2), not the highest mut/ctrl ratio. The directional information lives in the `direction` column of the metadata sidecar, not in the cluster index.
+- **Multi-format figure output.** Mirroring `scripts/utils/multi_format_output.R` (Illustrator + slides + publication workflow), each figure is saved in its own subfolder as `{name}.{png,pdf,svg,jpg}`. Implemented as a Python context-manager `multi_format_savefig()` that monkey-patches `plt.savefig` so Popay's plotting modules emit all four formats with no edits to her code. Utility lives at `cluster/scripts/utils/multi_format_output.py`.
+- **`Y_range=None` (auto-fit) for line/strip/box, not Popay's hardcoded `[0,1]` / `[0,0.4]`.** Her ranges were tuned for NIPBL depletion (loop-loss-only); our BAP1-KO data spans 0.39–2.31 (post-bound) with both gains and losses, so hardcoded ranges would clip the gain side.
+- **Python 3.8 in the conda env requires `Optional[float]` instead of `float | None`** (PEP 604 syntax requires 3.10+). Use `from typing import Optional`.
+- **Cluster 3.0 default jobname behavior.** With `-f input_matrix.txt`, output `.kgg` lands at `<input_dir>/input_matrix_K_G{k}.kgg` (same dir as input). The script reads it from there.
 
 ### 3.1 — Elbow plot
 
 ```python
 loop_count_file = 'cluster/data/late_merged_loop_counts.txt'
-normalize_col = 'ctrl_merged'
-filter_threshold = 0.008
+normalize_col = 'ctrl_merge'             # NOT 'ctrl_merged' — see Phase 1 corrections
+filter_pct    = 0.01                      # per-resolution percentile, NOT absolute 0.008
+min_ratio     = 0.333                     # drop mut/ctrl < 0.333 (symmetric)
+max_ratio     = 3.0                       # drop mut/ctrl > 3.0 (removes 2 outliers)
 ```
 
-Load TSV -> filter rows where ctrl_merged > threshold -> normalize all data columns by ctrl_merged -> `cluster_tools.elbow()` for k=1-14.
+Load TSV → join metadata (for `resolution_kb`) → filter per-resolution percentile → apply ratio bounds → normalize all data columns by `ctrl_merge` → `cluster_tools.elbow()` for k=1..14.
 
-**Output:** `cluster/bap1_late/cluster3/elbow_plot.png`
+**Output:** `cluster/bap1_late/cluster3/elbow_plot/elbow_plot.{png,pdf,svg,jpg}` (subfolder due to multi-format).
 
-**Decision point:** Inspect elbow to choose k. Start with k=6 (matching Popay).
+**v2 elbow shape:** k=1 SSE=550, k=4 SSE≈100, k=6 SSE≈50, k=8 SSE≈30, asymptote ≈ 10. Bend visible around k=4-5; k=6 sits at inflection point and matches Popay precedent. Defensible.
 
 ### 3.2 — Run Cluster 3.0 k-means
 
 Logic (from HiC_cluster3 cell-5):
-1. Normalize to ctrl_merged, filter as above
-2. Create `id` column: `chr1-x1-x2-chr2-y1-y2`
+1. Load + filter + normalize (as above)
+2. Build `id = chr1-x1-x2-chr2-y1-y2`
 3. Save normalized matrix to `input_matrix.txt`
-4. Shell out to Cluster 3.0: `cluster -f input_matrix.txt -r 100 -g 7 -k {k}`
-5. Read `.kgg` output, merge with original coordinates
-6. Sort clusters by descending mean signal via `cluster_tools.sort_clusters()`
+4. Shell out: `/usr/local/bin/cluster -f input_matrix.txt -r 100 -g 7 -k {k}`
+5. Read `input_matrix_K_G{k}.kgg`, merge with raw-counts df on `id`
+6. `cluster_tools.sort_clusters()` → assigns `clust1..clustK` ordered by descending raw signal mean (NOT ratio — see corrections)
 7. Save to `combined-clusters.txt`
 
 **Output:** `cluster/bap1_late/cluster3/k-{k}/data/combined-clusters.txt`
-Format: `GROUP  chr1  x1  x2  chr2  y1  y2  ctrl_merged  mut_merged`
+Format: `GROUP  chr1  x1  x2  chr2  y1  y2  ctrl_merge  mut_merge` (9 cols, header row, ~38,948 rows in v2)
 
 ### 3.3 — Cluster visualization
 
-Logic (from HiC_cluster3 cell-9): max-normalize per row, melt to long format, generate heatmap/lineplot/boxplot/stripplot.
+Logic (from HiC_cluster3 cell-9): max-normalize per row, melt to long format, generate heatmap/lineplot/boxplot/stripplot. Our data is 2 conditions, so `comparison_type(['ctrl_merge','mut_merge']) → ('multiple', ['ctrl','mut'])`.
 
-Our data has 2 conditions (not 3 like Popay's DMSO/4hr/24hr). `comparison_type()` returns `'multiple'` since column names have no `_` separator creating pairwise structure. Palette:
+Palette covers both pre- and post-`_merge`-strip keys:
 ```python
-palette = {'ctrl_merged': 'darkgrey', 'mut_merged': 'forestgreen'}
+palette = {
+    'ctrl_merge': 'darkgrey', 'mut_merge': 'forestgreen',  # for heat() — uses raw data_cols
+    'ctrl':       'darkgrey', 'mut':       'forestgreen',  # for box/strip — _merge stripped
+}
 ```
 
-**Outputs:** `cluster/bap1_late/cluster3/k-{k}/figures/{heatmap,lineplot,boxplot,stripplot}.{png,pdf}`
+Each plot wrapped in `multi_format_savefig()` and `figure_subfolder()` so output lands as:
+- `cluster/bap1_late/cluster3/k-{k}/figures/heatmap/heatmap.{png,pdf,svg,jpg}`
+- `cluster/bap1_late/cluster3/k-{k}/figures/lineplot/lineplot.{png,pdf,svg,jpg}`
+- `cluster/bap1_late/cluster3/k-{k}/figures/stripplot/stripplot.{png,pdf,svg,jpg}`
+- `cluster/bap1_late/cluster3/k-{k}/figures/boxplot/boxplot.{png,pdf,svg,jpg}`
 
 ### Phase 3 Verification
+
 ```bash
-wc -l cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt
-# Expect ~39,344 + 1 header
-cut -f1 cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt | sort | uniq -c
-# Check 6 clusters with reasonable distribution (no cluster < 1%)
+LOG=cluster/phase3_v2.txt bash cluster/scripts/run_phase3.sh 6 0.01 0.333 3.0
 ```
+
+**Verified 2026-04-27 (v2 — canonical):**
+
+- `cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt`: 38,949 lines (38,948 rows + header). All 9 expected columns. Coordinates inner-join cleanly to Phase 1 metadata sidecar.
+- **Cluster sizes (no degenerate cluster):** clust1=12,298 (31.6%) / clust2=10,970 (28.2%) / clust3=8,738 (22.4%) / clust4=3,916 (10.1%) / clust5=667 (1.7%) / clust6=2,359 (6.1%). Smallest cluster (clust5) has 667 loops — sufficient for stable ChromHMM enrichment in Phase 4.4.
+- **Per-cluster mut/ctrl ratio (median):** clust1=0.93 / clust2=1.01 / clust3=0.86 / clust4=1.12 / clust5=1.34 / clust6=0.76. Range bounded by `[0.333, 3.0]` filter — max observed 2.31 in clust5.
+- **Per-cluster median logFC (edgeR):** clust1=-0.03 / clust2=+0.09 / clust3=-0.14 / clust4=+0.25 / clust5=+0.50 / clust6=-0.31.
+- **cluster × direction crosstab (row %):**
+  | cluster | down_in_mutant | unchanged | up_in_mutant |
+  |---------|---------------|-----------|--------------|
+  | clust1  | 0.0           | **100.0** | 0.0          |
+  | clust2  | 0.0           | 92.2      | 7.8          |
+  | clust3  | **21.2**      | 78.8      | 0.0          |
+  | clust4  | 0.0           | 30.2      | **69.8**     |
+  | clust5  | 0.0           | 2.7       | **97.3**     |
+  | clust6  | **78.5**      | 21.5      | 0.0          |
+- **Differential capture:** 3,703 of 3,728 down_in_mutant loops (99.3%) and 4,232 of 4,253 up_in_mutant (99.5%) are present in v2 (the 2 outliers and the 1%-tile-filter drops account for the rest).
+- **Resolution distribution per cluster:** all 6 clusters draw from all 3 resolutions in roughly proportional ratios (no cluster monopolizes one resolution). E.g., clust5: 5kb=112 / 10kb=379 / 25kb=176; clust1: 5kb=2,274 / 10kb=4,258 / 25kb=5,766.
+- **Multi-format outputs:** all 4 figure types × 4 formats present in their respective subfolders. Heatmap.svg ≈ 12 MB, stripplot.svg ≈ 10 MB (one vector element per data point × 38k loops). PDF/PNG/JPG sizes 60–110 KB.
+- **Elbow plot v2:** SSE drops from 550 (k=1) to 100 (k=4) to 50 (k=6) to 30 (k=8); inflection at k=4-5 with continued gradual improvement. k=6 defensible.
+- **Multi-format wrapper smoke test:** `multi_format_savefig()` correctly emits 4 sibling files per figure, restores `plt.savefig` on context exit. Verified before integrating.
+
+**v1 vs v2 comparison (preserved on disk):**
+
+| Metric                  | v1 (no bounds)              | v2 (bounds applied)              |
+|-------------------------|-----------------------------|-----------------------------------|
+| Loops clustered         | 38,950                      | 38,948 (−2 outliers)              |
+| clust1 size             | **2** (degenerate)          | 12,298 (well-populated)           |
+| All 6 clusters > 100    | No (clust1 = 2)             | Yes (smallest = 667)              |
+| Smallest cluster        | 2                           | 667                               |
+| Median ratio range      | 0.80–7.34                   | 0.76–1.34                         |
+| Differential capture    | 99.3% / 99.5%               | 99.3% / 99.5%                     |
+| Output dir              | `*_v1_no-ratio-bound/`      | `elbow_plot/`, `k-6/` (canonical) |
+| Log file                | `cluster/phase3.txt`        | `cluster/phase3_v2.txt`           |
+
+**Files created in Phase 3:**
+
+| File | Purpose |
+|------|---------|
+| `cluster/scripts/utils/multi_format_output.py` | Context-manager savefig wrapper + figure_subfolder helper (Python equivalent of `scripts/utils/multi_format_output.R`); reused by Phase 4-5 |
+| `cluster/scripts/04_clustering.py` | Elbow + Cluster 3.0 k-means + sort + 4 visualizations; CLI flags `--elbow-only --k --filter-pct --min-ratio --max-ratio` |
+| `cluster/scripts/run_phase3.sh` | Driver: positional args `K FILTER_PCT MIN_RATIO MAX_RATIO`, env var `LOG` for log path, `tee` to `$LOG` |
+| `cluster/phase3.txt` | v1 run log (no ratio bounds — diagnostic) |
+| `cluster/phase3_v2.txt` | v2 run log (with bounds — canonical) |
+| `cluster/bap1_late/cluster3/elbow_plot_v1_no-ratio-bound/` | v1 elbow plot (preserved) |
+| `cluster/bap1_late/cluster3/elbow_plot/` | v2 elbow plot (canonical) |
+| `cluster/bap1_late/cluster3/k-6_v1_no-ratio-bound/` | v1 cluster outputs (preserved) |
+| `cluster/bap1_late/cluster3/k-6/` | v2 cluster outputs (canonical, used by Phase 4+) |
 
 ---
 
@@ -729,14 +797,15 @@ ls -lh "$LOCAL_MCOOL"/ 2>/dev/null || echo "  (no mcools yet)"
 | `cluster/scripts/01_build_loop_count_file.py` | 1.1 | Merged loops → Popay format count file |
 | `cluster/scripts/02_build_mm10_gene_annotation.R` | 1.2 | mm10 promoter BED from TxDb |
 | `cluster/scripts/03_chromhmm_segmentation.sh` | 2 | BinarizeBed + LearnModel pipeline |
-| `cluster/scripts/04_clustering.py` | 3 | Elbow plot + Cluster 3.0 k-means + visualization |
+| `cluster/scripts/04_clustering.py` | 3 | Elbow plot + Cluster 3.0 k-means + visualization (incl. `--min-ratio` / `--max-ratio` for outlier removal) |
+| `cluster/scripts/utils/multi_format_output.py` | 3+ | Context-manager savefig wrapper + figure_subfolder helper (PNG + PDF + SVG + JPG, subfolder per figure); shared by Phase 4-5 |
 | `cluster/scripts/05_grouped_analyses.py` | 4-5 | All downstream analyses (ChromHMM, ChIP, DiffBind, deepTools) |
 | `cluster/scripts/06_cooltools_pileup.py` | 6 | Cooltools pileup stub (after mcool sync) |
 | **Runner scripts** | | |
 | `cluster/scripts/run_phase0.sh` | 0 | Verify bug fixes |
 | `cluster/scripts/run_phase1.sh` | 1 | Data prep + directory setup |
 | `cluster/scripts/run_phase2.sh` | 2 | ChromHMM segmentation |
-| `cluster/scripts/run_phase3.sh` | 3 | Clustering |
+| `cluster/scripts/run_phase3.sh` | 3 | Clustering — accepts `K FILTER_PCT MIN_RATIO MAX_RATIO` positional + `LOG` env var |
 | `cluster/scripts/run_phase4.sh` | 4 | Downstream analyses |
 | `cluster/scripts/run_phase5.sh` | 5 | deepTools metagene |
 | `cluster/scripts/sync_from_hpc.sh` | — | rsync BigWigs + mcools from Expanse |
@@ -755,10 +824,10 @@ ls -lh "$LOCAL_MCOOL"/ 2>/dev/null || echo "  (no mcools yet)"
 
 ## Verification Plan
 
-1. **Phase 0:** `run_phase0.sh` — all module imports succeed without error
-2. **Phase 1:** `late_merged_loop_counts.txt` has ~39,344 rows, 8 columns; `mm10_knownGene_pp.bed` has ~24K entries
-3. **Phase 2:** Segmentation BED covers all autosomes + chrX; emissions matrix shows interpretable mark combinations
-4. **Phase 3:** Elbow plot shows clear bend; combined-clusters.txt has ~39K rows, no cluster < 1%
+1. **Phase 0:** ✅ `run_phase0.sh` — all module imports succeed without error
+2. **Phase 1:** ✅ `late_merged_loop_counts.txt` has 39,344 rows, 8 columns; `mm10_knownGene_pp.bed` has 24,515 entries
+3. **Phase 2:** ✅ Segmentation BED covers all 21 standard chroms (chr1-19 + chrX + chrY), 335,569 segments; 12-state emissions matrix biologically interpretable (Active_Promoter through Quiescent)
+4. **Phase 3:** ✅ Elbow plot shows bend at k=4-5; v2 combined-clusters.txt has 38,948 rows, all 6 clusters > 600 loops, captures 99%+ of edgeR differential calls; multi-format outputs (PNG + PDF + SVG + JPG) per figure subfolder
 5. **Phase 4.4 (key result):** ChromHMM anchor vs span heatmaps show differential Polycomb enrichment across clusters
 6. **Phase 4.8:** Chi-squared p < 0.05 for cluster x differential status
 7. **Phase 5:** deepTools heatmaps show H3K27me3/H3K27ac differences across clusters at anchors

@@ -12,6 +12,7 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
@@ -40,7 +41,9 @@ PALETTE = {
 }
 
 
-def load_and_filter(filter_pct: float) -> pd.DataFrame:
+def load_and_filter(filter_pct: float,
+                    min_ratio: Optional[float] = None,
+                    max_ratio: Optional[float] = None) -> pd.DataFrame:
     # Per-resolution percentile filter on ctrl_merge — addresses the ~6x scale
     # difference between 5/10/25 kb count distributions.
     df   = pd.read_csv(LOOP_COUNT_FILE, sep='\t')
@@ -61,7 +64,28 @@ def load_and_filter(filter_pct: float) -> pd.DataFrame:
     print(f'  TOTAL  keep {keep.sum()} of {len(df)} '
           f'({keep.sum() / len(df) * 100:.1f}%)\n')
 
-    return df[keep].drop(columns=['resolution_kb']).reset_index(drop=True)
+    df = df[keep].drop(columns=['resolution_kb']).reset_index(drop=True)
+
+    # Optional symmetric mut/ctrl ratio bound — removes statistical outliers that
+    # k-means would otherwise hand a centroid (degenerate clusters with n<10).
+    # Outliers are typically loops where merged averages mask high replicate
+    # variance; edgeR flags them as 'unchanged' (high BCV) so dropping them is
+    # consistent with the differential-analysis pipeline.
+    if min_ratio is not None or max_ratio is not None:
+        ratio = df['mut_merge'] / df['ctrl_merge']
+        ratio_keep = pd.Series(True, index=df.index)
+        if min_ratio is not None:
+            ratio_keep &= (ratio >= min_ratio)
+        if max_ratio is not None:
+            ratio_keep &= (ratio <= max_ratio)
+        n_drop = int((~ratio_keep).sum())
+        bounds = f'{min_ratio if min_ratio is not None else "-inf"} <= mut/ctrl <= {max_ratio if max_ratio is not None else "+inf"}'
+        print(f'Ratio bounds filter: keep {bounds}')
+        print(f'  drop {n_drop}, keep {int(ratio_keep.sum())} of {len(df)} '
+              f'({ratio_keep.sum() / len(df) * 100:.2f}%)\n')
+        df = df[ratio_keep].reset_index(drop=True)
+
+    return df
 
 
 def normalize(df: pd.DataFrame) -> pd.DataFrame:
@@ -77,17 +101,21 @@ def make_id(df: pd.DataFrame) -> pd.Series:
             + '-' + df['chr2'] + '-' + df['y1'].astype(str) + '-' + df['y2'].astype(str))
 
 
-def run_elbow(filter_pct: float) -> None:
+def run_elbow(filter_pct: float,
+              min_ratio: Optional[float] = None,
+              max_ratio: Optional[float] = None) -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    df_norm = normalize(load_and_filter(filter_pct))
+    df_norm = normalize(load_and_filter(filter_pct, min_ratio, max_ratio))
     elbow_dir = figure_subfolder(OUT_DIR, 'elbow_plot')
     with multi_format_savefig():
         elbow(out_dir=str(elbow_dir), count_matrix=df_norm, data_cols=DATA_COLS)
     print(f'Elbow plot: {elbow_dir}/elbow_plot.{{png,pdf,svg,jpg}}')
 
 
-def run_clustering(k: int, filter_pct: float) -> None:
-    df       = load_and_filter(filter_pct)
+def run_clustering(k: int, filter_pct: float,
+                   min_ratio: Optional[float] = None,
+                   max_ratio: Optional[float] = None) -> None:
+    df       = load_and_filter(filter_pct, min_ratio, max_ratio)
     df_norm  = normalize(df)
     df_norm['id'] = make_id(df_norm)
 
@@ -190,13 +218,21 @@ def main():
                    help='k for k-means clustering (default 6)')
     p.add_argument('--filter-pct', type=float, default=0.01,
                    help='Per-resolution percentile floor for ctrl_merge (default 0.01)')
+    p.add_argument('--min-ratio', type=float, default=None,
+                   help='Drop loops with mut_merge/ctrl_merge below this. '
+                        'Symmetric pair with --max-ratio (e.g. 0.333 + 3.0). '
+                        'Default: no lower bound.')
+    p.add_argument('--max-ratio', type=float, default=None,
+                   help='Drop loops with mut_merge/ctrl_merge above this. '
+                        'Used to remove statistical outliers that produce '
+                        'degenerate k-means clusters. Default: no upper bound.')
     args = p.parse_args()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     if args.elbow_only:
-        run_elbow(args.filter_pct)
+        run_elbow(args.filter_pct, args.min_ratio, args.max_ratio)
     else:
-        run_clustering(args.k, args.filter_pct)
+        run_clustering(args.k, args.filter_pct, args.min_ratio, args.max_ratio)
 
 
 if __name__ == '__main__':

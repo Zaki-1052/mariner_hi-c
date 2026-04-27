@@ -1,0 +1,77 @@
+============================================================
+Phase 3: K-means clustering
+Repo root: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c
+Started:   Mon Apr 27 05:55:57 PDT 2026
+k=6  filter_pct=0.01  min_ratio=0.333  max_ratio=3.0
+log_path:  cluster/phase3_v2.txt
+============================================================
+
+[1/2] Generating elbow plot (k=1..14)...
+
+Per-resolution filter: keep ctrl_merge >= 1.0%-tile
+  res= 5kb  thr=   38.01  drop=  79  keep= 7822 (99.0%)
+  res=10kb  thr=   61.47  drop= 146  keep=14407 (99.0%)
+  res=25kb  thr=   56.47  drop= 169  keep=16721 (99.0%)
+  TOTAL  keep 38950 of 39344 (99.0%)
+
+Ratio bounds filter: keep 0.333 <= mut/ctrl <= 3.0
+  drop 2, keep 38948 of 38950 (99.99%)
+
+Elbow plot: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/cluster3/elbow_plot/elbow_plot.{png,pdf,svg,jpg}
+
+[2/2] Running clustering with k=6...
+
+Per-resolution filter: keep ctrl_merge >= 1.0%-tile
+  res= 5kb  thr=   38.01  drop=  79  keep= 7822 (99.0%)
+  res=10kb  thr=   61.47  drop= 146  keep=14407 (99.0%)
+  res=25kb  thr=   56.47  drop= 169  keep=16721 (99.0%)
+  TOTAL  keep 38950 of 39344 (99.0%)
+
+Ratio bounds filter: keep 0.333 <= mut/ctrl <= 3.0
+  drop 2, keep 38948 of 38950 (99.99%)
+
+Running: /usr/local/bin/cluster -f /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/cluster3/k-6/data/input_matrix.txt -r 100 -g 7 -k 6
+Wrote /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt
+
+Cluster sizes (descending mean signal — clust1=highest mut/ctrl):
+    clust1: 12298 (31.6%)
+    clust2: 10970 (28.2%)
+    clust3:  8738 (22.4%)
+    clust4:  3916 (10.1%)
+    clust5:   667 (1.7%)
+    clust6:  2359 (6.1%)
+
+============================================================
+Phase 3 outputs
+============================================================
+total 384
+-rw-r--r--@ 1 zakiralibhai  staff    83K Apr 27 05:56 elbow_plot.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    16K Apr 27 05:56 elbow_plot.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    63K Apr 27 05:56 elbow_plot.png
+-rw-r--r--@ 1 zakiralibhai  staff    21K Apr 27 05:56 elbow_plot.svg
+-rw-r--r--@ 1 zakiralibhai  staff   3.4M Apr 27 05:56 cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt
+--- heatmap/ ---
+total 29128
+-rw-r--r--@ 1 zakiralibhai  staff    62K Apr 27 05:56 heatmap.jpg
+-rw-r--r--@ 1 zakiralibhai  staff   1.6M Apr 27 05:56 heatmap.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    60K Apr 27 05:56 heatmap.png
+-rw-r--r--@ 1 zakiralibhai  staff    12M Apr 27 05:56 heatmap.svg
+--- lineplot/ ---
+total 328
+-rw-r--r--@ 1 zakiralibhai  staff    39K Apr 27 05:56 lineplot.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    19K Apr 27 05:56 lineplot.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    64K Apr 27 05:56 lineplot.png
+-rw-r--r--@ 1 zakiralibhai  staff    33K Apr 27 05:56 lineplot.svg
+--- stripplot/ ---
+total 27856
+-rw-r--r--@ 1 zakiralibhai  staff    71K Apr 27 05:56 stripplot.jpg
+-rw-r--r--@ 1 zakiralibhai  staff   1.0M Apr 27 05:56 stripplot.pdf
+-rw-r--r--@ 1 zakiralibhai  staff   108K Apr 27 05:56 stripplot.png
+-rw-r--r--@ 1 zakiralibhai  staff    10M Apr 27 05:56 stripplot.svg
+--- boxplot/ ---
+total 376
+-rw-r--r--@ 1 zakiralibhai  staff    65K Apr 27 05:56 boxplot.jpg
+-rw-r--r--@ 1 zakiralibhai  staff    19K Apr 27 05:56 boxplot.pdf
+-rw-r--r--@ 1 zakiralibhai  staff    54K Apr 27 05:56 boxplot.png
+-rw-r--r--@ 1 zakiralibhai  staff    41K Apr 27 05:56 boxplot.svg
+Phase 3 finished: Mon Apr 27 05:56:30 PDT 2026
