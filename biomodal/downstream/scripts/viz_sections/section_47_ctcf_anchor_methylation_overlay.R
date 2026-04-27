@@ -428,20 +428,30 @@ violin_mc_data <- dynamic_mc %>%
   mutate(anchor_group = factor(anchor_group,
                                levels = c("Lost CTCF anchor", "Gained CTCF anchor", "Background")))
 
+mc_medians <- violin_mc_data %>%
+  group_by(anchor_group) %>%
+  summarise(med = median(mod_difference), n = n(), .groups = "drop") %>%
+  mutate(label = sprintf("n=%s\nmed=%.4f", format(n, big.mark = ","), med))
+
+mc_ylim <- quantile(violin_mc_data$mod_difference, c(0.005, 0.995))
+
 p47a_mc <- ggplot(violin_mc_data, aes(x = anchor_group, y = mod_difference, fill = anchor_group)) +
   geom_violin(alpha = 0.3, color = NA) +
-  geom_boxplot(width = 0.15, outlier.size = 0.5, alpha = 0.8) +
+  geom_boxplot(width = 0.15, outlier.shape = NA, alpha = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_text(data = mc_medians, aes(x = anchor_group, y = mc_ylim[1] * 0.85, label = label),
+            inherit.aes = FALSE, size = 3.2, lineheight = 0.9) +
   scale_fill_manual(values = ANCHOR_COLORS, guide = "none") +
   labs(x = NULL,
        y = "mC Modification Difference (mutant - control)",
        title = "5mC at Dynamic CpG Regions (Shores+Shelves)",
        subtitle = sprintf("Wilcoxon lost vs gained: %s", fmt_p(wt_mc$p.value))) +
-  theme_biomodal()
+  theme_biomodal() +
+  coord_cartesian(ylim = mc_ylim)
 
 save_multiformat_ggplot(p47a_mc,
                         file.path(SECTION_DIR, "47a_dynamic_mc_violin"),
-                        width = 7, height = 6)
+                        width = 8, height = 6)
 
 # Plot 47a.3: hmC mod_difference violin (dynamic regions)
 violin_hmc_data <- dynamic_hmc %>%
@@ -449,20 +459,30 @@ violin_hmc_data <- dynamic_hmc %>%
   mutate(anchor_group = factor(anchor_group,
                                levels = c("Lost CTCF anchor", "Gained CTCF anchor", "Background")))
 
+hmc_medians <- violin_hmc_data %>%
+  group_by(anchor_group) %>%
+  summarise(med = median(mod_difference), n = n(), .groups = "drop") %>%
+  mutate(label = sprintf("n=%s\nmed=%.4f", format(n, big.mark = ","), med))
+
+hmc_ylim <- quantile(violin_hmc_data$mod_difference, c(0.005, 0.995))
+
 p47a_hmc <- ggplot(violin_hmc_data, aes(x = anchor_group, y = mod_difference, fill = anchor_group)) +
   geom_violin(alpha = 0.3, color = NA) +
-  geom_boxplot(width = 0.15, outlier.size = 0.5, alpha = 0.8) +
+  geom_boxplot(width = 0.15, outlier.shape = NA, alpha = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_text(data = hmc_medians, aes(x = anchor_group, y = hmc_ylim[1] * 0.85, label = label),
+            inherit.aes = FALSE, size = 3.2, lineheight = 0.9) +
   scale_fill_manual(values = ANCHOR_COLORS, guide = "none") +
   labs(x = NULL,
        y = "hmC Modification Difference (mutant - control)",
        title = "5hmC at Dynamic CpG Regions (Shores+Shelves)",
        subtitle = sprintf("Wilcoxon lost vs gained: %s", fmt_p(wt_hmc$p.value))) +
-  theme_biomodal()
+  theme_biomodal() +
+  coord_cartesian(ylim = hmc_ylim)
 
 save_multiformat_ggplot(p47a_hmc,
                         file.path(SECTION_DIR, "47a_dynamic_hmc_violin"),
-                        width = 7, height = 6)
+                        width = 8, height = 6)
 
 
 # =============================================================================
