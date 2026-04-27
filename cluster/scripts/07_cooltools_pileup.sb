@@ -1,0 +1,98 @@
+#!/bin/bash
+# cluster/scripts/07_cooltools_pileup.sb
+# Phase 6: cooltools off-diagonal pileup over loop-cluster BEDPEs (ctrl + mut, late tp).
+#
+# One-time setup on Expanse login node before first submission:
+#   cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+#   conda env create -f cluster/environment_linux.yml -n cluster
+#   conda activate cluster
+#   python -c "import cooltools, bioframe, cooler; print(cooltools.__version__)"
+#
+# Usage (from CODE_DIR on Expanse login node):
+#   sbatch cluster/scripts/07_cooltools_pileup.sb
+#
+# Optional override (default uses 250402 merged mcools):
+#   sbatch cluster/scripts/07_cooltools_pileup.sb <ctrl_mcool> <mut_mcool>
+#
+#SBATCH --job-name=cooltools_pileup
+#SBATCH --output=cluster/logs/phase6_pileup_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
+
+MCOOL_CTRL="${1:-${DATA_DIR}/data/cool/250402/ctrl_merged.mcool}"
+MCOOL_MUT="${2:-${DATA_DIR}/data/cool/250402/mut_merged.mcool}"
+
+mkdir -p "${CODE_DIR}/cluster/logs"
+mkdir -p "${CODE_DIR}/cluster/bap1_late/cooltools"
+
+echo "==========================================="
+echo "Phase 6: cooltools off-diagonal pileup"
+echo "==========================================="
+echo "Job ID:      ${SLURM_JOB_ID}"
+echo "Node:        ${HOSTNAME}"
+echo "CPUs:        ${SLURM_CPUS_PER_TASK}"
+echo "Memory:      ${SLURM_MEM_PER_NODE} MB"
+echo "CODE_DIR:    ${CODE_DIR}"
+echo "MCOOL_CTRL:  ${MCOOL_CTRL}"
+echo "MCOOL_MUT:   ${MCOOL_MUT}"
+echo "Start:       $(date)"
+echo "==========================================="
+
+if [ ! -s "${MCOOL_CTRL}" ]; then
+  echo "ERROR: missing or empty ctrl mcool: ${MCOOL_CTRL}" >&2
+  exit 2
+fi
+if [ ! -s "${MCOOL_MUT}" ]; then
+  echo "ERROR: missing or empty mut mcool: ${MCOOL_MUT}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+conda activate cluster
+
+which python
+python -c "import cooltools, bioframe, cooler; print('cooltools', cooltools.__version__, 'bioframe', bioframe.__version__, 'cooler', cooler.__version__)"
+echo "env OK"
+
+export PYTHONWARNINGS="ignore::FutureWarning"
+
+cd "${CODE_DIR}"
+
+python cluster/scripts/07_cooltools_pileup.py \
+  --mcool-ctrl "${MCOOL_CTRL}" \
+  --mcool-mut  "${MCOOL_MUT}" \
+  --resolution 10000 \
+  --flank      500000
+STATUS=$?
+
+OUT_DIR="${CODE_DIR}/cluster/bap1_late/cooltools/obs_exp_contacts"
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: cooltools_pileup failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+if [ ! -s "${OUT_DIR}/obs_exp_contacts_ctrl.png" ]; then
+  echo "ERROR: ctrl heatmap missing or empty after run." >&2
+  exit 1
+fi
+if [ ! -s "${OUT_DIR}/obs_exp_contacts_mut.png" ]; then
+  echo "ERROR: mut heatmap missing or empty after run." >&2
+  exit 1
+fi
+
+echo ""
+echo "Output files:"
+ls -lh "${OUT_DIR}/" 2>/dev/null
+
+echo ""
+echo "End: $(date)"
+echo "==========================================="
