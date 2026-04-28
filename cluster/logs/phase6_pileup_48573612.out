@@ -1,0 +1,58 @@
+===========================================
+Phase 6: cooltools off-diagonal pileup
+===========================================
+Job ID:      48573612
+Node:        exp-16-56
+CPUs:        16
+Memory:      65536 MB
+CODE_DIR:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+MCOOL_CTRL:  /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/ctrl_merged.mcool
+MCOOL_MUT:   /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_merged.mcool
+Start:       Mon Apr 27 14:13:25 PDT 2026
+===========================================
+/home/zalibhai/miniforge3/envs/cluster/bin/python
+cooltools 0.6.1 bioframe 0.6.1 cooler 0.9.3
+env OK
+[1/2] Loading clusters from /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt...
+  clust1: 12298 loops
+  clust2: 10970 loops
+  clust3: 8738 loops
+  clust4: 3916 loops
+  clust5: 667 loops
+  clust6: 2359 loops
+
+[2/2] cooltools pileup at 10000bp / flank +/-500000bp
+  out_dir:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/bap1_late/cooltools/obs_exp_contacts
+  mcool_ctrl: /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/ctrl_merged.mcool
+  mcool_mut:  /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_merged.mcool
+  NOTE: bioframe.fetch_chromsizes("mm10") + fetch_centromeres requires outbound HTTPS to UCSC. If this fails on a compute node, pre-fetch arms on the login node and patch make_arms to load from cache.
+  make_arms: fetch_centromeres failed (ValueError: No source for centromere data found from provider 'local'.); falling back to whole-chromosome arms.
+Traceback (most recent call last):
+  File "/home/zalibhai/miniforge3/envs/cluster/lib/python3.8/site-packages/cooltools/lib/checks.py", line 446, in is_compatible_viewframe
+    raise ValueError(
+ValueError: View table is out of the bounds of chromosomes in cooler.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/zalibhai/miniforge3/envs/cluster/lib/python3.8/site-packages/cooltools/api/expected.py", line 956, in expected_cis
+    _ = is_compatible_viewframe(
+  File "/home/zalibhai/miniforge3/envs/cluster/lib/python3.8/site-packages/cooltools/lib/checks.py", line 460, in is_compatible_viewframe
+    raise ValueError("view_df is not compatible, or not a viewframe") from e
+ValueError: view_df is not compatible, or not a viewframe
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "cluster/scripts/07_cooltools_pileup.py", line 158, in <module>
+    main()
+  File "cluster/scripts/07_cooltools_pileup.py", line 139, in main
+    mcool_pileup(
+  File "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/cooltools_called.py", line 65, in mcool_pileup
+    if type == 'bedpe': bed_mtx_dict = mcool_get_matrix(mcool_file=mcool_file,resolution=resolution,type=type,flank=flank,bed_dict=use_dict,over_expected=over_expected,arms=arms)
+  File "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/cooltools_called.py", line 71, in mcool_get_matrix
+    if over_expected: expected = cooltools.expected_cis(clr, view_df=arms, nproc=2, chunksize=1_000_000)
+  File "/home/zalibhai/miniforge3/envs/cluster/lib/python3.8/site-packages/cooltools/api/expected.py", line 964, in expected_cis
+    raise ValueError("view_df is not a valid viewframe or incompatible") from e
+ValueError: view_df is not a valid viewframe or incompatible
+ERROR: cooltools_pileup failed (exit=1).

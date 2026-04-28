@@ -1,0 +1,41 @@
+===========================================
+Phase 6: cooltools off-diagonal pileup
+===========================================
+Job ID:      48572100
+Node:        exp-1-11
+CPUs:        16
+Memory:      65536 MB
+CODE_DIR:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+MCOOL_CTRL:  /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/ctrl_merged.mcool
+MCOOL_MUT:   /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_merged.mcool
+Start:       Mon Apr 27 12:34:04 PDT 2026
+===========================================
+/home/zalibhai/miniforge3/envs/cluster/bin/python
+cooltools 0.6.1 bioframe 0.6.1 cooler 0.9.3
+env OK
+[1/2] Loading clusters from /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt...
+  clust1: 12298 loops
+  clust2: 10970 loops
+  clust3: 8738 loops
+  clust4: 3916 loops
+  clust5: 667 loops
+  clust6: 2359 loops
+
+[2/2] cooltools pileup at 10000bp / flank +/-500000bp
+  out_dir:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/bap1_late/cooltools/obs_exp_contacts
+  mcool_ctrl: /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/ctrl_merged.mcool
+  mcool_mut:  /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_merged.mcool
+  NOTE: bioframe.fetch_chromsizes("mm10") + fetch_centromeres requires outbound HTTPS to UCSC. If this fails on a compute node, pre-fetch arms on the login node and patch make_arms to load from cache.
+Traceback (most recent call last):
+  File "cluster/scripts/07_cooltools_pileup.py", line 119, in <module>
+    main()
+  File "cluster/scripts/07_cooltools_pileup.py", line 100, in main
+    mcool_pileup(
+  File "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/cooltools_called.py", line 29, in mcool_pileup
+    arms = make_arms(genome=genome)
+  File "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/cooltools_called.py", line 188, in make_arms
+    cens = bioframe.fetch_centromeres(genome)
+  File "/home/zalibhai/miniforge3/envs/cluster/lib/python3.8/site-packages/bioframe/io/resources.py", line 215, in fetch_centromeres
+    raise ValueError(
+ValueError: No source for centromere data found from provider 'local'.
+ERROR: cooltools_pileup failed (exit=1).
