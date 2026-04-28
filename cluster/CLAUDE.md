@@ -2,10 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-@docs/CONTEXT-CLUSTER.md
-@docs/plan-p1.md
-@docs/plan-p2.md
-
+@docs/CONTEXT-cluster.md
+@docs/PLAN-p1.md
+@docs/PLAN-p2.md
+@docs/PLAN-p3.md
+@docs/RESULTS-cluster.md
 
 ## What This Is
 
