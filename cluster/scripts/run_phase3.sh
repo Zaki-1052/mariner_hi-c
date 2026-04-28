@@ -8,22 +8,26 @@
 #   $3  MIN_RATIO    (default unset)    — drop loops with mut/ctrl below this
 #   $4  MAX_RATIO    (default unset)    — drop loops with mut/ctrl above this
 #
+# Run from cluster/ (cd is automatic via $0).
+#
 # Env vars:
-#   LOG  (default cluster/phase3.txt)   — full output log path
+#   LOG  (default docs/phase3.txt, relative to cluster/)
 #
 # Usage:
 #   bash cluster/scripts/run_phase3.sh                                # k=6, 1%-tile filter, no ratio bounds
 #   bash cluster/scripts/run_phase3.sh 6 0.01                          # explicit k+filter, no bounds
 #   bash cluster/scripts/run_phase3.sh 6 0.01 0.333 3.0                 # add symmetric ratio bounds
-#   LOG=cluster/phase3_v2.txt bash cluster/scripts/run_phase3.sh 6 0.01 0.333 3.0   # custom log path
+#   LOG=docs/phase3_v2.txt bash cluster/scripts/run_phase3.sh 6 0.01 0.333 3.0   # custom log path
 
 set -e
 
-cd "$(dirname "$0")/../.."   # repo root
+cd "$(dirname "$0")/.."   # cluster/
 
 PYTHON=/opt/homebrew/anaconda3/envs/cluster/bin/python3
-SCRIPT=cluster/scripts/04_clustering.py
-LOG=${LOG:-cluster/phase3.txt}
+SCRIPT=scripts/04_clustering.py
+LOG=${LOG:-docs/phase3.txt}
+
+mkdir -p "$(dirname "$LOG")"
 
 K=${1:-6}
 FILTER_PCT=${2:-0.01}
@@ -38,10 +42,10 @@ RATIO_ARGS=""
 {
   echo "============================================================"
   echo "Phase 3: K-means clustering"
-  echo "Repo root: $(pwd)"
-  echo "Started:   $(date)"
+  echo "Cluster dir: $(pwd)"
+  echo "Started:     $(date)"
   echo "k=${K}  filter_pct=${FILTER_PCT}  min_ratio=${MIN_RATIO:-none}  max_ratio=${MAX_RATIO:-none}"
-  echo "log_path:  ${LOG}"
+  echo "log_path:    ${LOG}"
   echo "============================================================"
 
   echo
@@ -56,11 +60,11 @@ RATIO_ARGS=""
   echo "============================================================"
   echo "Phase 3 outputs"
   echo "============================================================"
-  ls -lh cluster/bap1_late/cluster3/elbow_plot/ 2>/dev/null || true
-  ls -lh "cluster/bap1_late/cluster3/k-${K}/data/combined-clusters.txt" 2>/dev/null || true
+  ls -lh bap1_late/cluster3/elbow_plot/ 2>/dev/null || true
+  ls -lh "bap1_late/cluster3/k-${K}/data/combined-clusters.txt" 2>/dev/null || true
   for sub in heatmap lineplot stripplot boxplot; do
     echo "--- ${sub}/ ---"
-    ls -lh "cluster/bap1_late/cluster3/k-${K}/figures/${sub}/" 2>/dev/null || true
+    ls -lh "bap1_late/cluster3/k-${K}/figures/${sub}/" 2>/dev/null || true
   done
 
   echo "Phase 3 finished: $(date)"

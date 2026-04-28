@@ -5,15 +5,15 @@
 # Per project convention we do NOT use `set -euo pipefail` (would abort on
 # benign Java/awk warnings); the worker checks $? after each long step.
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-WORKER="${REPO_ROOT}/cluster/scripts/03_chromhmm_segmentation.sh"
+CLUSTER_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WORKER="${CLUSTER_ROOT}/scripts/03_chromhmm_segmentation.sh"
 
-cd "${REPO_ROOT}"
+cd "${CLUSTER_ROOT}"
 
 echo "============================================================"
 echo "Phase 2 driver"
-echo "Repo root: ${REPO_ROOT}"
-echo "Started:   $(date)"
+echo "Cluster dir: ${CLUSTER_ROOT}"
+echo "Started:     $(date)"
 echo "============================================================"
 
 bash "${WORKER}"
@@ -27,10 +27,10 @@ echo ""
 echo "============================================================"
 echo "Phase 2 outputs"
 echo "============================================================"
-for f in cluster/bap1_late/chromHMM/mm10_standard.txt \
-         cluster/bap1_late/chromHMM/cellmarkfiletable.txt \
-         cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed \
-         cluster/bap1_late/chromHMM/learned_model/emissions_12.txt; do
+for f in bap1_late/chromHMM/mm10_standard.txt \
+         bap1_late/chromHMM/cellmarkfiletable.txt \
+         bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed \
+         bap1_late/chromHMM/learned_model/emissions_12.txt; do
   if [ -s "${f}" ]; then
     rows=$(wc -l < "${f}")
     printf "  %-70s  %8d rows\n" "${f}" "${rows}"

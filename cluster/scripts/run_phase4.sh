@@ -5,34 +5,38 @@
 # Positional args (all optional):
 #   $1  ANALYSES  (default 'all')  — comma-separated subset of {4.1..4.8}, or 'all'
 #
+# Run from cluster/ (cd is automatic via $0).
+#
 # Env vars:
-#   LOG  (default cluster/phase4.txt)  — full output log path
+#   LOG  (default docs/phase4.txt, relative to cluster/)
 #
 # Usage:
-#   bash cluster/scripts/run_phase4.sh                                       # all 8 sub-analyses
-#   bash cluster/scripts/run_phase4.sh 4.4                                   # KEY result only
-#   LOG=cluster/phase4_chip.txt bash cluster/scripts/run_phase4.sh 4.3,4.7   # subset + custom log
+#   bash cluster/scripts/run_phase4.sh                                   # all 8 sub-analyses
+#   bash cluster/scripts/run_phase4.sh 4.4                               # KEY result only
+#   LOG=docs/phase4_chip.txt bash cluster/scripts/run_phase4.sh 4.3,4.7   # subset + custom log
 
 set -e
 
-cd "$(dirname "$0")/../.."   # repo root
+cd "$(dirname "$0")/.."   # cluster/
 
 PYTHON=/opt/homebrew/anaconda3/envs/cluster/bin/python3
-SCRIPT=cluster/scripts/05_grouped_analyses.py
-LOG=${LOG:-cluster/phase4.txt}
+SCRIPT=scripts/05_grouped_analyses.py
+LOG=${LOG:-docs/phase4.txt}
+
+mkdir -p "$(dirname "$LOG")"
 
 ANALYSES=${1:-all}
 
 {
   echo "============================================================"
   echo "Phase 4: Grouped downstream analyses"
-  echo "Repo root: $(pwd)"
-  echo "Started:   $(date)"
-  echo "analyses:  ${ANALYSES}"
-  echo "log_path:  ${LOG}"
-  echo "python:    ${PYTHON}"
-  echo "chromhmm:  $(which chromhmm 2>/dev/null || echo NOT_ON_PATH)"
-  echo "bedtools:  $(which bedtools 2>/dev/null || echo NOT_ON_PATH)"
+  echo "Cluster dir: $(pwd)"
+  echo "Started:     $(date)"
+  echo "analyses:    ${ANALYSES}"
+  echo "log_path:    ${LOG}"
+  echo "python:      ${PYTHON}"
+  echo "chromhmm:    $(which chromhmm 2>/dev/null || echo NOT_ON_PATH)"
+  echo "bedtools:    $(which bedtools 2>/dev/null || echo NOT_ON_PATH)"
   echo "============================================================"
 
   echo
@@ -45,34 +49,34 @@ ANALYSES=${1:-all}
   echo "============================================================"
 
   echo "--- 4.4 ChromHMM anchor vs span (KEY) ---"
-  ls -lh cluster/bap1_late/chromHMM/anchor.txt cluster/bap1_late/chromHMM/span.txt 2>/dev/null || echo "  (not run)"
-  ls -lh cluster/bap1_late/chromHMM/anchor.{png,pdf,svg,jpg} 2>/dev/null || true
-  ls -lh cluster/bap1_late/chromHMM/span.{png,pdf,svg,jpg}   2>/dev/null || true
+  ls -lh bap1_late/chromHMM/anchor.txt bap1_late/chromHMM/span.txt 2>/dev/null || echo "  (not run)"
+  ls -lh bap1_late/chromHMM/anchor.{png,pdf,svg,jpg} 2>/dev/null || true
+  ls -lh bap1_late/chromHMM/span.{png,pdf,svg,jpg}   2>/dev/null || true
 
   echo "--- 4.1 loop size ---"
-  ls -lh cluster/bap1_late/figures/loop_size/ 2>/dev/null || echo "  (not run)"
+  ls -lh bap1_late/figures/loop_size/ 2>/dev/null || echo "  (not run)"
 
   echo "--- 4.8 cluster x differential ---"
-  ls -lh cluster/bap1_late/figures/cluster_differential_status/ 2>/dev/null || echo "  (not run)"
-  ls -lh cluster/bap1_late/figures/cluster_differential_status.stats.txt 2>/dev/null || true
+  ls -lh bap1_late/figures/cluster_differential_status/ 2>/dev/null || echo "  (not run)"
+  ls -lh bap1_late/figures/cluster_differential_status.stats.txt 2>/dev/null || true
 
   echo "--- 4.5 ChromHMM proportions ---"
-  ls -lh cluster/bap1_late/figures/chromHMM_anchor/ 2>/dev/null || echo "  (not run)"
+  ls -lh bap1_late/figures/chromHMM_anchor/ 2>/dev/null || echo "  (not run)"
 
   echo "--- 4.6 gene annotation ---"
-  ls -lh cluster/bap1_late/figures/annotation/clust*_annotation.txt 2>/dev/null | head -10 || echo "  (not run)"
+  ls -lh bap1_late/figures/annotation/clust*_annotation.txt 2>/dev/null | head -10 || echo "  (not run)"
 
   echo "--- 4.2 loop classification ---"
-  ls -lh cluster/bap1_late/figures/loop_classification/ 2>/dev/null || echo "  (not run)"
+  ls -lh bap1_late/figures/loop_classification/ 2>/dev/null || echo "  (not run)"
 
   echo "--- 4.7 DiffBind ---"
-  ls -d cluster/bap1_late/figures/ChIP_intersect/differential_binding_*  2>/dev/null || echo "  (not run)"
-  ls -d cluster/bap1_late/figures/ChIP_intersect/ChIP_FC_*               2>/dev/null || true
-  ls -lh cluster/bap1_late/figures/ChIP_intersect/diffbind_stats_*.txt    2>/dev/null || true
+  ls -d bap1_late/figures/ChIP_intersect/differential_binding_*  2>/dev/null || echo "  (not run)"
+  ls -d bap1_late/figures/ChIP_intersect/ChIP_FC_*               2>/dev/null || true
+  ls -lh bap1_late/figures/ChIP_intersect/diffbind_stats_*.txt    2>/dev/null || true
 
   echo "--- 4.3 anchor ChIP ---"
-  ls -lh cluster/bap1_late/figures/ChIP_intersect/anchor_ChIP_box/ 2>/dev/null || echo "  (not run)"
-  ls -lh cluster/bap1_late/figures/ChIP_intersect/anchor_ChIP.stats.txt 2>/dev/null || true
+  ls -lh bap1_late/figures/ChIP_intersect/anchor_ChIP_box/ 2>/dev/null || echo "  (not run)"
+  ls -lh bap1_late/figures/ChIP_intersect/anchor_ChIP.stats.txt 2>/dev/null || true
 
   echo
   echo "Phase 4 finished: $(date)"

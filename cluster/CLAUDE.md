@@ -33,32 +33,39 @@ Key Python packages: matplotlib 3.7.5, seaborn 0.13.2, scikit-learn 1.3.2, scipy
 
 ## Running the Pipeline
 
-All commands run from the **repo root** (`mariner_hi-c/`), not from `cluster/`. Phase drivers do NOT use `set -euo pipefail` (benign Java/awk warnings would abort); they use explicit `$?` checks. Logs go to `cluster/phaseN.txt`.
+All commands run from `cluster/` (the working directory the runners cd to via `$(dirname "$0")/..`). Invoking via `bash cluster/scripts/run_phaseN.sh` from the repo root works too — runners always end up cwd'd to `cluster/` regardless. Phase drivers do NOT use `set -euo pipefail` (benign Java/awk warnings would abort); they use explicit `$?` checks. Logs default to `docs/phaseN.txt` (relative to `cluster/`, i.e. `cluster/docs/phaseN.txt`).
 
 ```bash
+cd cluster   # (optional — runners cd themselves)
+
 # Phase 1: Data prep (~1 min)
-bash cluster/scripts/run_phase1.sh
+bash scripts/run_phase1.sh
 
 # Phase 2: ChromHMM segmentation (30–90 min for LearnModel)
-bash cluster/scripts/run_phase2.sh
-# MANUAL STEP: edit cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt after
+bash scripts/run_phase2.sh
+# MANUAL STEP: edit bap1_late/chromHMM/12state_rename_cerebellum.txt after
 
 # Phase 3: K-means clustering (~2 min)
-bash cluster/scripts/run_phase3.sh [K] [FILTER_PCT] [MIN_RATIO] [MAX_RATIO]
-# Canonical: bash cluster/scripts/run_phase3.sh 6 0.01 0.333 3.0
+bash scripts/run_phase3.sh [K] [FILTER_PCT] [MIN_RATIO] [MAX_RATIO]
+# Canonical: bash scripts/run_phase3.sh 6 0.01 0.333 3.0
 
 # Phase 4: Downstream analyses (~6 min)
-bash cluster/scripts/run_phase4.sh [all|4.1,4.4,...]
-# Run only the key result: bash cluster/scripts/run_phase4.sh 4.4
+bash scripts/run_phase4.sh [all|4.1,4.4,...]
+# Run only the key result: bash scripts/run_phase4.sh 4.4
 
 # Phase 5: deepTools metagene (90–120 min)
-bash cluster/scripts/run_phase5.sh
+bash scripts/run_phase5.sh
 
 # Phase 6: Cooltools pileup (HPC only — needs mcool files on Expanse)
-sbatch cluster/scripts/07_cooltools_pileup.sb
+sbatch scripts/07_cooltools_pileup.sb        # MUST run cooler_balance.sb first if mcool only has KR
 
-# Summary figures for lab meeting (~1 min)
-bash cluster/scripts/run_summary.sh
+# Phase 7: Lab-meeting summary figures (~1 min)
+bash scripts/run_summary.sh
+
+# Phase 8: Oriented anchor metagene + asymmetry (~1.7 h for step 1)
+bash scripts/run_oriented_metagene.sh
+/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/quantify_orientation_asymmetry.py
+/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/visualize_orientation_asymmetry.py
 ```
 
 ## Pipeline Architecture
@@ -77,15 +84,20 @@ Phase 4: 05_grouped_analyses.py (8 sub-analyses)
   4.4 ChromHMM anchor vs span (KEY RESULT)   │  4.5 ChromHMM proportions
   4.6 gene annotation  │  4.7 DiffBind       │  4.8 cluster × differential
 Phase 5: 06_deeptools_metagene.py (anchor ±5kb per cluster × 8 BigWigs)
-Phase 6: 07_cooltools_pileup.py (off-diagonal Hi-C pileup — HPC only)
-Phase 8: 08_summary_figures.py (3 composite lab-meeting figures)
+Phase 6: 07_cooltools_pileup.py (off-diagonal Hi-C pileup — HPC only;
+         requires cooler_balance.sb prereq if mcool lacks `weight` column)
+Phase 7: 08_summary_figures.py (3 composite lab-meeting figures —
+         dashboard / mechanism / heatmap)
+Phase 8: 09_oriented_anchor_metagene.py (strand-aware anchor metagene)
+       + quantify_orientation_asymmetry.py  (Wilcoxon ext/int → TSV)
+       + visualize_orientation_asymmetry.py (K27me3 dual-panel figure)
 ```
 
-Phases 2 and 3 are independent of each other (both depend on Phase 1). Phase 4 requires both 2 and 3.
+Phases 2 and 3 are independent of each other (both depend on Phase 1). Phase 4 requires both 2 and 3. Phases 5–8 all depend on Phase 3's clustering output.
 
 ## Module Architecture
 
-Seven top-level `.py` files are the inherited Popay library (modified in Phase 0). Scripts in `scripts/` call into them:
+Seven `.py` files in `modules/` are the inherited Popay library (modified in Phase 0). Scripts in `scripts/` add `cluster/modules/` to `sys.path` and call into them:
 
 | Module | Purpose | Key functions |
 |--------|---------|---------------|
@@ -98,7 +110,7 @@ Seven top-level `.py` files are the inherited Popay library (modified in Phase 0
 | `bedpe_analysis.py` | BEDPE-level analyses | `loop_size()`, `bedtools_annotation()` |
 | `cooltools_called.py` | Cooltools pileup wrapper | `mcool_pileup()` |
 
-All modules load `custom_params.json` at import time (matplotlib rcParams for publication figures: Arial, small labels, TrueType embedding). `plotting.py` uses `mpl_toolkits.axes_grid1.Divider` for fixed-pixel axis sizing with dimensions computed from label text width via PIL `ImageFont.textbbox`.
+All modules load `modules/custom_params.json` at import time (matplotlib rcParams for publication figures: Arial, small labels, TrueType embedding). `plotting.py` uses `mpl_toolkits.axes_grid1.Divider` for fixed-pixel axis sizing with dimensions computed from label text width via PIL `ImageFont.textbbox`. Scripts that need `custom_params.json` directly (e.g. `08_summary_figures.py`, `visualize_orientation_asymmetry.py`) reference `CLUSTER_DIR / 'modules' / 'custom_params.json'`.
 
 `scripts/utils/multi_format_output.py` provides a `multi_format_savefig()` context manager that monkey-patches `Figure.savefig` to auto-emit `.svg`, `.pdf`, `.jpg` alongside any `.png` save.
 
@@ -126,7 +138,10 @@ The loop count file uses `ctrl_merge` / `mut_merge` (NOT `_merged`). Downstream 
 - `chromHMM/learned_model/cerebellum_late_12_segments.bed` — 12-state segmentation
 - `chromHMM/12state_rename_cerebellum.txt` — manual E1–E12 → biological name mapping
 - `chromHMM/{anchor,span}.txt` — OverlapEnrichment fold-enrichment tables
-- `figures/` — all Phase 4/5/8 figure outputs organized by analysis type
+- `figures/` — all Phase 4/5/7/8 figure outputs organized by analysis type
+- `cooltools/obs_exp_contacts/obs_exp_contacts_{ctrl,mut}.{png,pdf,svg,jpg}` — Phase 6 pileup outputs
+
+**Logs (`cluster/docs/`):** captured stdout/stderr from each phase driver; the canonical log directory after the 2026-04-27 reorg. SLURM logs from HPC are in `cluster/logs/`.
 
 ## Canonical Clustering (k=6)
 
@@ -170,7 +185,8 @@ Clusters sorted by descending mean mut/ctrl signal. Biological ordering for summ
 - `plotting.stacked()` requires `df.index.name = None` — `pd.crosstab` sets a named index that breaks the internal `reset_index().rename({'index': 'xcol'})`.
 - `bedpe_analysis.bedtools_annotation()` requires non-None `temp_dir` even when `FPKM_df=None`.
 - `cooltools_called.mcool_pileup()` expects BEDPE DataFrames with columns `chrom1/start1/end1/chrom2/start2/end2` (not the project's `chr1/x1/x2`).
-- `bioframe.fetch_centromeres('mm10')` fails on bioframe 0.6.1. `07_cooltools_pileup.py` monkey-patches `make_arms` with a whole-chromosome fallback.
+- `bioframe.fetch_centromeres('mm10')` fails on bioframe 0.6.1. `cooltools_called.mcool_pileup` builds the viewframe inline from `cooler.Cooler(mcool).chromsizes` (avoids the bioframe call entirely). The earlier `make_arms_robust` monkey-patch in `07_cooltools_pileup.py` was superseded — the script no longer monkey-patches anything.
+- `cooltools.expected_cis` requires the cooler `weight` column from `cooler balance`. Source mcools with only `KR` weights from juicer-pre will fail with `cooler is not balanced`. Run `cluster/scripts/cooler_balance.sb` first.
 
 **Data integrity:**
 - All 38,948 retained loops are cis (`chr1 == chr2`). Span BED construction (`df[['chr1', 'x1', 'y2']]`) is only valid for cis loops — an assertion guards this.
@@ -179,8 +195,10 @@ Clusters sorted by descending mean mut/ctrl signal. Biological ordering for summ
 
 ## Reference Documents
 
-- `PLAN-CLUSTER.md` — complete phase-by-phase implementation plan with corrections log
-- `CONTEXT-CLUSTER.md` — biological context, meeting notes, Popay paper summary, data inventory
-- `plan-p1.md` / `plan-p2.md` — session-level plans for Phases 1–5 and 5–8
-- `phaseN.txt` — captured stdout/stderr from each phase driver execution
+All planning and log files live under `cluster/docs/` (post-2026-04-27 reorg):
+
+- `docs/PLAN-CLUSTER.md` — complete phase-by-phase implementation plan with corrections log
+- `docs/CONTEXT-CLUSTER.md` — biological context, meeting notes, Popay paper summary, data inventory
+- `docs/plan-p1.md` / `docs/plan-p2.md` — session-level plans (plan-p1: Phases 0–3; plan-p2: Phases 4–8)
+- `docs/phaseN.txt` — captured stdout/stderr from each phase driver execution
 - `clustering_example_data/` — Popay's original hg38 example files (reference schemas)

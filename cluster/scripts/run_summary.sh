@@ -1,10 +1,15 @@
 #!/bin/bash
+# cluster/scripts/run_summary.sh
+# Driver: Phase 7 (Phase 8 in CLAUDE.md) -- lab-meeting summary figures.
+# Run from cluster/ (cd is automatic via $0).
 set -e
-cd "$(dirname "$0")/../.."
+cd "$(dirname "$0")/.."   # cluster/
 
 PYTHON=/opt/homebrew/anaconda3/envs/cluster/bin/python3
-SCRIPT=cluster/scripts/08_summary_figures.py
-LOG=${LOG:-cluster/phase8_summary.txt}
+SCRIPT=scripts/08_summary_figures.py
+LOG=${LOG:-docs/phase8_summary.txt}
+
+mkdir -p "$(dirname "$LOG")"
 
 {
   echo "Summary Figures: $(date)"
@@ -18,7 +23,7 @@ LOG=${LOG:-cluster/phase8_summary.txt}
   echo "--- Output inventory ---"
   for dir in dashboard mechanism heatmap; do
     echo "  ${dir}:"
-    ls -lh "cluster/bap1_late/figures/summary_figures/${dir}/" 2>/dev/null || echo "    (missing)"
+    ls -lh "bap1_late/figures/summary_figures/${dir}/" 2>/dev/null || echo "    (missing)"
   done
 
   echo ""

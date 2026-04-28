@@ -218,6 +218,7 @@ bash cluster/scripts/run_phase1.sh
 - **No blacklist pre-filter applied.** ChromHMM treats blacklist regions correctly as no-signal bins. Blacklist filtering deferred to Phase 5 (deepTools `--blackListFileName`).
 - **Rename file uses underscored names** (e.g. `Active_Promoter`, not `Active promoter`) for cross-script string-matching with the project's existing 7-category annotation taxonomy and Phase 4 palette dicts.
 - **ChromHMM wrapper `-mx` deprecation warning.** Java 25 emits a benign warning about the deprecated `-mx8G` flag in `cluster/ChromHMM/chromhmm`. Functionally harmless; could update to `-Xmx8G` but not in scope.
+- **Peak BEDs are control-condition data.** The 5 ChIP-seq peak files fed into ChromHMM are from wildtype/control samples, published in the PLOS Genetics paper. The model therefore represents the **control chromatin landscape**, not a condition-agnostic or pooled reference. Downstream enrichment (Phase 4.4) asks "what control-condition chromatin states do the differential loop anchors/spans sit in?"
 
 ### 2.1 — Prepare peak BEDs for BinarizeBed
 
