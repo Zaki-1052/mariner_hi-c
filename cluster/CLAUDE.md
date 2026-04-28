@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+@docs/CONTEXT-CLUSTER.md
+@docs/plan-p1.md
+@docs/plan-p2.md
+
+
 ## What This Is
 
 Adaptation of the Popay et al. (Nat Genet 2026) Hi-C loop clustering pipeline for BAP1-KO mouse cerebellum (mm10, late/adult timepoint 250402). Answers whether Polycomb enrichment at differential loop anchors vs. loop spans supports an anchor-disruption or extrusion-impediment model. The key result is ChromHMM state enrichment heatmaps (anchor vs. span) across k-means clusters — the BAP1-KO equivalent of Popay Figure 2f.
