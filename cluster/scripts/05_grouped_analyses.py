@@ -38,7 +38,7 @@ from scipy.stats import chi2_contingency
 SCRIPT_DIR  = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
 REPO_ROOT   = CLUSTER_DIR.parent
-sys.path.insert(0, str(CLUSTER_DIR))           # bedpe_analysis, plotting, etc.
+sys.path.insert(0, str(CLUSTER_DIR / 'modules'))  # bedpe_analysis, plotting, etc.
 sys.path.insert(0, str(SCRIPT_DIR / 'utils'))  # multi_format_output
 
 import bedpe_analysis        # noqa: E402

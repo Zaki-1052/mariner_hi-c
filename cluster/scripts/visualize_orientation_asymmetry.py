@@ -22,7 +22,7 @@ CLUSTER_DIR = SCRIPT_DIR.parent
 sys.path.insert(0, str(SCRIPT_DIR / 'utils'))
 from multi_format_output import multi_format_savefig  # noqa: E402
 
-with open(CLUSTER_DIR / 'custom_params.json') as f:
+with open(CLUSTER_DIR / 'modules' / 'custom_params.json') as f:
     plt.rcParams.update(json.load(f))
 
 VALUES_FILE = CLUSTER_DIR / 'bap1_late/figures/deeptools/oriented_anchors/oriented_anchors_values'

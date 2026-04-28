@@ -34,7 +34,7 @@ import pandas as pd
 SCRIPT_DIR  = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
 REPO_ROOT   = CLUSTER_DIR.parent
-sys.path.insert(0, str(CLUSTER_DIR))
+sys.path.insert(0, str(CLUSTER_DIR / 'modules'))  # deepTools_pipeline, deeptools_plotting
 sys.path.insert(0, str(SCRIPT_DIR / 'utils'))
 
 from deepTools_pipeline import bed_pileup        # noqa: E402

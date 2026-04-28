@@ -101,7 +101,7 @@ STATE_COLORS = {
     'Quiescent':             '#e0e0e0',
 }
 
-with open(CLUSTER_DIR / 'custom_params.json') as f:
+with open(CLUSTER_DIR / 'modules' / 'custom_params.json') as f:
     _custom = json.load(f)
 plt.rcParams.update(_custom)
 sns.set_theme(style='ticks', rc=_custom)

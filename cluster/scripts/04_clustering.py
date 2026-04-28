@@ -19,7 +19,7 @@ import pandas as pd
 SCRIPT_DIR  = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
 REPO_ROOT   = CLUSTER_DIR.parent
-sys.path.insert(0, str(CLUSTER_DIR))           # cluster_tools, plotting
+sys.path.insert(0, str(CLUSTER_DIR / 'modules'))  # cluster_tools, plotting
 sys.path.insert(0, str(SCRIPT_DIR / 'utils'))  # multi_format_output
 
 from cluster_tools import elbow, sort_clusters

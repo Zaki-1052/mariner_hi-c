@@ -28,7 +28,7 @@ import pandas as pd
 SCRIPT_DIR  = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
 REPO_ROOT   = CLUSTER_DIR.parent
-sys.path.insert(0, str(CLUSTER_DIR))            # cooltools_called
+sys.path.insert(0, str(CLUSTER_DIR / 'modules'))  # cooltools_called
 sys.path.insert(0, str(SCRIPT_DIR / 'utils'))   # multi_format_output
 
 from cooltools_called import mcool_pileup        # noqa: E402
