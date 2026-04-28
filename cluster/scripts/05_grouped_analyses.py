@@ -48,15 +48,23 @@ from cluster_tools import sort_by_strings  # noqa: E402
 from chromHMM_heatmap import heatmap_plot  # noqa: E402
 from multi_format_output import multi_format_savefig, figure_subfolder  # noqa: E402
 
-# -------- inputs --------
-CLUSTER_FILE  = REPO_ROOT / 'cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt'
-METADATA_FILE = REPO_ROOT / 'cluster/data/late_merged_loop_metadata.tsv'
-PROMOTER_BED  = REPO_ROOT / 'cluster/data/mm10_knownGene_pp.bed'
-SEGMENT_BED   = REPO_ROOT / 'cluster/bap1_late/chromHMM/learned_model/cerebellum_late_12_segments.bed'
-RENAME_FILE   = REPO_ROOT / 'cluster/bap1_late/chromHMM/12state_rename_cerebellum.txt'
+# -------- inputs (env-var overridable) --------
+import os as _os
+_tp = _os.environ.get('CLUSTER_TIMEPOINT_LABEL', 'late')
+_out = _os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
+_cell = _os.environ.get('CLUSTER_CELL_NAME', 'cerebellum_late')
+_k = _os.environ.get('CLUSTER_K', '6')
 
-CTCF_BED      = REPO_ROOT / 'peaks/CTCF.bed'
-ENHANCER_BED  = REPO_ROOT / 'peaks/beds/H3K27acCerebellumLate2.bed'
+CLUSTER_FILE  = Path(_os.environ.get('CLUSTER_COMBINED',
+    str(REPO_ROOT / 'cluster/{}/cluster3/k-{}/data/combined-clusters.txt'.format(_out, _k))))
+METADATA_FILE = Path(_os.environ.get('CLUSTER_METADATA_FILE',
+    str(REPO_ROOT / 'cluster/data/{}_merged_loop_metadata.tsv'.format(_tp))))
+PROMOTER_BED  = REPO_ROOT / 'cluster/data/mm10_knownGene_pp.bed'
+SEGMENT_BED   = REPO_ROOT / 'cluster/{}/chromHMM/learned_model/{}_12_segments.bed'.format(_out, _cell)
+RENAME_FILE   = REPO_ROOT / 'cluster/{}/chromHMM/12state_rename_{}.txt'.format(_out, _cell)
+
+CTCF_BED      = REPO_ROOT / _os.environ.get('CLUSTER_PEAK_CTCF', 'peaks/CTCF.bed')
+ENHANCER_BED  = REPO_ROOT / _os.environ.get('CLUSTER_ENHANCER_BED', 'peaks/beds/H3K27acCerebellumLate2.bed')
 
 DIFFBIND_FILES = {
     'K27ac':  REPO_ROOT / 'peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt',
@@ -64,9 +72,7 @@ DIFFBIND_FILES = {
     'K119ub': REPO_ROOT / 'peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt',
 }
 
-# All BigWigs sourced from sdsc — peaks/bigwigs/macs2.narrow.aug18.dedup mut files
-# are partially 0-byte (corrupted), per data-format audit. sdsc has all 16 marks.
-BIGWIG_BASE = Path('/Users/zakiralibhai/sdsc/bigwigs')
+BIGWIG_BASE = Path(_os.environ.get('CLUSTER_BIGWIG_DIR', '/Users/zakiralibhai/sdsc/bigwigs'))
 BIGWIG_DICT = {
     'H3K27ac_ctrl':   BIGWIG_BASE / 'H3K27acCtrl.bw',
     'H3K27ac_mut':    BIGWIG_BASE / 'H3K27acMut.bw',
@@ -79,7 +85,7 @@ BIGWIG_DICT = {
 }
 
 # -------- outputs --------
-OUT_BASE     = REPO_ROOT / 'cluster/bap1_late'
+OUT_BASE     = REPO_ROOT / 'cluster' / _out
 FIG_BASE     = OUT_BASE / 'figures'
 CHROMHMM_DIR = OUT_BASE / 'chromHMM'
 

@@ -6,6 +6,7 @@ Top: per-cluster K27me3 metagene profiles (1x6 grid, biological order).
 Bottom: Ext/Int ratio bar chart with significance.
 """
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Tuple
@@ -25,9 +26,10 @@ from multi_format_output import multi_format_savefig  # noqa: E402
 with open(CLUSTER_DIR / 'modules' / 'custom_params.json') as f:
     plt.rcParams.update(json.load(f))
 
-VALUES_FILE = CLUSTER_DIR / 'bap1_late/figures/deeptools/oriented_anchors/oriented_anchors_values'
-ASYM_TSV    = CLUSTER_DIR / 'bap1_late/figures/deeptools/oriented_anchors/asymmetry_quantification.tsv'
-OUT_DIR     = CLUSTER_DIR / 'bap1_late/figures/deeptools/oriented_anchors'
+_out = os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
+VALUES_FILE = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors/oriented_anchors_values'
+ASYM_TSV    = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors/asymmetry_quantification.tsv'
+OUT_DIR     = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors'
 
 BIO_ORDER  = ['clust6', 'clust3', 'clust1', 'clust2', 'clust4', 'clust5']
 BIO_LABELS = {

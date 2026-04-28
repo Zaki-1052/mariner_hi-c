@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Adaptation of the Popay et al. (Nat Genet 2026) Hi-C loop clustering pipeline for BAP1-KO mouse cerebellum (mm10, late/adult timepoint 250402). Answers whether Polycomb enrichment at differential loop anchors vs. loop spans supports an anchor-disruption or extrusion-impediment model. The key result is ChromHMM state enrichment heatmaps (anchor vs. span) across k-means clusters — the BAP1-KO equivalent of Popay Figure 2f.
 
-The original Popay code (hg38/hTERT-RPE1/NIPBL depletion) was cloned from `github.com/tpopay/HiC-clustering` and adapted in Phase 0. Seven Python modules at the top level are the modified Popay library; numbered scripts in `scripts/` are the BAP1-KO pipeline.
+The original Popay code (hg38/hTERT-RPE1/NIPBL depletion) was cloned from `github.com/tpopay/HiC-clustering` and adapted in Phase 0. Eight Python modules in `modules/` are the modified Popay library; numbered scripts in `scripts/` are the BAP1-KO pipeline.
 
 ## Environment
 
@@ -44,7 +44,7 @@ bash scripts/run_phase1.sh
 
 # Phase 2: ChromHMM segmentation (30–90 min for LearnModel)
 bash scripts/run_phase2.sh
-# MANUAL STEP: edit bap1_late/chromHMM/12state_rename_cerebellum.txt after
+# MANUAL STEP: edit outputs/bap1_late/chromHMM/12state_rename_cerebellum.txt after
 
 # Phase 3: K-means clustering (~2 min)
 bash scripts/run_phase3.sh [K] [FILTER_PCT] [MIN_RATIO] [MAX_RATIO]
@@ -98,7 +98,7 @@ Phases 2 and 3 are independent of each other (both depend on Phase 1). Phase 4 r
 
 ## Module Architecture
 
-Seven `.py` files in `modules/` are the inherited Popay library (modified in Phase 0). Scripts in `scripts/` add `cluster/modules/` to `sys.path` and call into them:
+Eight `.py` files in `modules/` are the inherited Popay library (modified in Phase 0). Scripts in `scripts/` add `cluster/modules/` to `sys.path` and call into them:
 
 | Module | Purpose | Key functions |
 |--------|---------|---------------|
@@ -134,7 +134,7 @@ The loop count file uses `ctrl_merge` / `mut_merge` (NOT `_merged`). Downstream 
 - Blacklist: `tads/mm10-blacklist.v2.bed`
 - mcools (HPC only): `/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/{ctrl,mut}_merged.mcool`
 
-**Outputs (`cluster/bap1_late/`):**
+**Outputs (`cluster/outputs/bap1_late/`):**
 - `cluster3/k-6/data/combined-clusters.txt` — canonical clustering (38,948 loops × 6 clusters)
 - `chromHMM/learned_model/cerebellum_late_12_segments.bed` — 12-state segmentation
 - `chromHMM/12state_rename_cerebellum.txt` — manual E1–E12 → biological name mapping
@@ -196,10 +196,15 @@ Clusters sorted by descending mean mut/ctrl signal. Biological ordering for summ
 
 ## Reference Documents
 
-All planning and log files live under `cluster/docs/` (post-2026-04-27 reorg):
+- `README.md` — project overview, quick start, key result, output structure
+- `CLAUDE.md` — this file (AI assistant context, environment, gotchas, module API)
 
-- `docs/PLAN-CLUSTER.md` — complete phase-by-phase implementation plan with corrections log
+All planning, results, and log files live under `cluster/docs/` (post-2026-04-27 reorg):
+
 - `docs/CONTEXT-CLUSTER.md` — biological context, meeting notes, Popay paper summary, data inventory
-- `docs/plan-p1.md` / `docs/plan-p2.md` — session-level plans (plan-p1: Phases 0–3; plan-p2: Phases 4–8)
+- `docs/RESULTS-cluster.md` — statistical outputs by phase, biological interpretation, open questions
+- `docs/plan-p1.md` — session-level plan for Phases 0–3 with corrections and verification
+- `docs/plan-p2.md` — session-level plan for Phases 4–6 with corrections and verification
+- `docs/plan-p3.md` — session-level plan for Phases 7–8 with corrections and verification
 - `docs/phaseN.txt` — captured stdout/stderr from each phase driver execution
-- `clustering_example_data/` — Popay's original hg38 example files (reference schemas)
+- `example/` — Popay's original hg38 example files (reference schemas)

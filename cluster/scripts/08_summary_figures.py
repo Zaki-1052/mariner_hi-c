@@ -38,18 +38,27 @@ sys.path.insert(0, str(SCRIPT_DIR / 'utils'))
 from multi_format_output import multi_format_savefig, figure_subfolder
 
 # ---------------------------------------------------------------------------
-# Path constants
+# Path constants (env-var overridable for multi-timepoint / HPC use)
 # ---------------------------------------------------------------------------
-CLUSTER_FILE = REPO_ROOT / 'cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt'
-METADATA_FILE = REPO_ROOT / 'cluster/data/late_merged_loop_metadata.tsv'
-ANCHOR_ENRICH = REPO_ROOT / 'cluster/bap1_late/chromHMM/anchor.txt'
-SPAN_ENRICH = REPO_ROOT / 'cluster/bap1_late/chromHMM/span.txt'
-PROPORTIONS_FILE = REPO_ROOT / 'cluster/bap1_late/figures/chromHMM_anchor/chromHMM_anchor.proportions.tsv'
-DIFF_STATS_FILE = REPO_ROOT / 'cluster/bap1_late/figures/cluster_differential_status.stats.txt'
-CLASS_STATS_FILE = REPO_ROOT / 'cluster/bap1_late/figures/loop_classification/loop_classification.stats.txt'
-ANNOT_DIR = REPO_ROOT / 'cluster/bap1_late/figures/annotation'
-BIGWIG_DIR = Path('/Users/zakiralibhai/sdsc/bigwigs')
-OUT_DIR = REPO_ROOT / 'cluster/bap1_late/figures/summary_figures'
+import os as _os
+_out = _os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
+_tp = _os.environ.get('CLUSTER_TIMEPOINT_LABEL', 'late')
+_k = _os.environ.get('CLUSTER_K', '6')
+_cell = _os.environ.get('CLUSTER_CELL_NAME', 'cerebellum_late')
+_base = REPO_ROOT / 'cluster' / _out
+
+CLUSTER_FILE = Path(_os.environ.get('CLUSTER_COMBINED',
+    str(_base / 'cluster3/k-{}/data/combined-clusters.txt'.format(_k))))
+METADATA_FILE = Path(_os.environ.get('CLUSTER_METADATA_FILE',
+    str(REPO_ROOT / 'cluster/data/{}_merged_loop_metadata.tsv'.format(_tp))))
+ANCHOR_ENRICH = _base / 'chromHMM/anchor.txt'
+SPAN_ENRICH = _base / 'chromHMM/span.txt'
+PROPORTIONS_FILE = _base / 'figures/chromHMM_anchor/chromHMM_anchor.proportions.tsv'
+DIFF_STATS_FILE = _base / 'figures/cluster_differential_status.stats.txt'
+CLASS_STATS_FILE = _base / 'figures/loop_classification/loop_classification.stats.txt'
+ANNOT_DIR = _base / 'figures/annotation'
+BIGWIG_DIR = Path(_os.environ.get('CLUSTER_BIGWIG_DIR', '/Users/zakiralibhai/sdsc/bigwigs'))
+OUT_DIR = _base / 'figures/summary_figures'
 COORD_COLS = ['chr1', 'x1', 'x2', 'chr2', 'y1', 'y2']
 
 # ---------------------------------------------------------------------------

@@ -11,26 +11,25 @@ import sys
 import pandas as pd
 
 
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+REPO_ROOT = os.environ.get('REPO_ROOT',
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+_TP_LABEL = os.environ.get('CLUSTER_TIMEPOINT_LABEL', 'late')
+_TP_ID = os.environ.get('CLUSTER_TIMEPOINT_ID', '250402')
 
-MERGED_BEDPE = os.path.join(
-    REPO_ROOT,
-    'outputs/250402-late_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe',
-)
-COUNTS_TEMPLATE = os.path.join(
-    REPO_ROOT,
-    'outputs/250402-late_outputs/res_{kb}kb/06_counts_matrix.tsv',
-)
-EDGER_TEMPLATE = os.path.join(
-    REPO_ROOT,
-    'outputs/250402-late_outputs/edgeR_results_res_{kb}kb/primary_analysis/all_results_primary.tsv',
-)
+MERGED_BEDPE = os.path.join(REPO_ROOT, os.environ.get('CLUSTER_MERGED_BEDPE',
+    'outputs/{}-{}_outputs/bedpe_final/merged_all_loops_nonredundant.bedpe'.format(_TP_ID, _TP_LABEL)))
+COUNTS_TEMPLATE = os.path.join(REPO_ROOT, os.environ.get('CLUSTER_COUNTS_TEMPLATE',
+    'outputs/{}-{}_outputs/res_{{kb}}kb/06_counts_matrix.tsv'.format(_TP_ID, _TP_LABEL)))
+EDGER_TEMPLATE = os.path.join(REPO_ROOT, os.environ.get('CLUSTER_EDGER_TEMPLATE',
+    'outputs/{}-{}_outputs/edgeR_results_res_{{kb}}kb/primary_analysis/all_results_primary.tsv'.format(_TP_ID, _TP_LABEL)))
 
-OUT_COUNTS = os.path.join(REPO_ROOT, 'cluster/data/late_merged_loop_counts.txt')
-OUT_META = os.path.join(REPO_ROOT, 'cluster/data/late_merged_loop_metadata.tsv')
+OUT_COUNTS = os.environ.get('CLUSTER_COUNT_FILE',
+    os.path.join(REPO_ROOT, 'cluster/data/{}_merged_loop_counts.txt'.format(_TP_LABEL)))
+OUT_META = os.environ.get('CLUSTER_METADATA_FILE',
+    os.path.join(REPO_ROOT, 'cluster/data/{}_merged_loop_metadata.tsv'.format(_TP_LABEL)))
 
-EXPECTED_TOTAL = 39344
-EXPECTED_PER_RES = {5: 7901, 10: 14553, 25: 16890}
+EXPECTED_TOTAL = 39344 if _TP_LABEL == 'late' else None
+EXPECTED_PER_RES = {5: 7901, 10: 14553, 25: 16890} if _TP_LABEL == 'late' else None
 
 CTRL_REPS = ['ctrl_M1', 'ctrl_M2', 'ctrl_M3']
 MUT_REPS = ['mut_M1', 'mut_M2', 'mut_M3']

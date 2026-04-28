@@ -26,11 +26,17 @@ from cluster_tools import elbow, sort_clusters
 from plotting import heat, line, box, strip, randomize_hex
 from multi_format_output import multi_format_savefig, figure_subfolder
 
-# -------- config --------
-LOOP_COUNT_FILE = REPO_ROOT / 'cluster/data/late_merged_loop_counts.txt'
-METADATA_FILE   = REPO_ROOT / 'cluster/data/late_merged_loop_metadata.tsv'
-OUT_DIR         = REPO_ROOT / 'cluster/bap1_late/cluster3'
-CLUSTER_BIN     = '/usr/local/bin/cluster'
+# -------- config (env-var overridable) --------
+import os as _os
+_tp = _os.environ.get('CLUSTER_TIMEPOINT_LABEL', 'late')
+_out = _os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
+LOOP_COUNT_FILE = Path(_os.environ.get('CLUSTER_COUNT_FILE',
+    str(REPO_ROOT / 'cluster/data/{}_merged_loop_counts.txt'.format(_tp))))
+METADATA_FILE   = Path(_os.environ.get('CLUSTER_METADATA_FILE',
+    str(REPO_ROOT / 'cluster/data/{}_merged_loop_metadata.tsv'.format(_tp))))
+OUT_DIR         = Path(_os.environ.get('CLUSTER_OUT_DIR_PATH',
+    str(REPO_ROOT / 'cluster/{}/cluster3'.format(_out))))
+CLUSTER_BIN     = _os.environ.get('CLUSTER_BIN', '/usr/local/bin/cluster')
 NORMALIZE_COL   = 'ctrl_merge'
 DATA_COLS       = ['ctrl_merge', 'mut_merge']
 COORD_COLS      = ['chr1', 'x1', 'x2', 'chr2', 'y1', 'y2']

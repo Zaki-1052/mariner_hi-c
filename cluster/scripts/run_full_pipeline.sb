@@ -1,0 +1,340 @@
+#!/bin/bash
+#SBATCH --job-name=cluster_pipeline
+#SBATCH --account=csd940
+#SBATCH --partition=shared
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=08:00:00
+#SBATCH --output=cluster/logs/pipeline_%j.out
+
+# cluster/scripts/run_full_pipeline.sb
+# Full Popay-style clustering pipeline — configurable for any timepoint.
+#
+# Usage (HPC):
+#   sbatch cluster/scripts/run_full_pipeline.sb cluster/scripts/config/late.conf
+#   sbatch cluster/scripts/run_full_pipeline.sb cluster/scripts/config/early.conf
+#
+# Usage (local Mac — runs as plain bash):
+#   bash cluster/scripts/run_full_pipeline.sb cluster/scripts/config/late.conf
+#
+# The config file defines all timepoint-specific paths, clustering parameters,
+# and machine-specific BigWig/mcool locations. See config/late.conf for the
+# annotated template.
+
+set -e
+
+# ============================================================================
+# 0. RESOLVE PATHS + LOAD CONFIG
+# ============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLUSTER_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${CLUSTER_DIR}/.." && pwd)"
+
+CONF="${1:-${SCRIPT_DIR}/config/late.conf}"
+if [[ ! -f "$CONF" ]]; then
+    echo "ERROR: config file not found: $CONF"
+    echo "Usage: $0 <config.conf>"
+    exit 1
+fi
+
+# shellcheck source=/dev/null
+source "$CONF"
+
+# Export all CLUSTER_* vars so Python/R scripts can read them via os.environ
+export CLUSTER_TIMEPOINT_LABEL CLUSTER_TIMEPOINT_ID CLUSTER_OUT_DIR CLUSTER_CELL_NAME
+export CLUSTER_K CLUSTER_FILTER_PCT CLUSTER_MIN_RATIO CLUSTER_MAX_RATIO
+export CLUSTER_MERGED_BEDPE CLUSTER_COUNTS_TEMPLATE CLUSTER_EDGER_TEMPLATE
+export CLUSTER_PEAK_K27AC CLUSTER_PEAK_K27ME3 CLUSTER_PEAK_K4ME1 CLUSTER_PEAK_K4ME3 CLUSTER_PEAK_CTCF
+export CLUSTER_ENHANCER_BED
+export CLUSTER_BIGWIG_DIR
+export CLUSTER_MCOOL_CTRL CLUSTER_MCOOL_MUT
+export CLUSTER_BIN
+export CLUSTER_SKIP_PHASES
+export REPO_ROOT CLUSTER_DIR
+
+# Derived paths (exported for scripts)
+CLUSTER_COUNT_FILE="${CLUSTER_DIR}/data/${CLUSTER_TIMEPOINT_LABEL}_merged_loop_counts.txt"
+CLUSTER_METADATA_FILE="${CLUSTER_DIR}/data/${CLUSTER_TIMEPOINT_LABEL}_merged_loop_metadata.tsv"
+CLUSTER_COMBINED="${CLUSTER_DIR}/${CLUSTER_OUT_DIR}/cluster3/k-${CLUSTER_K}/data/combined-clusters.txt"
+export CLUSTER_COUNT_FILE CLUSTER_METADATA_FILE CLUSTER_COMBINED
+
+# ============================================================================
+# 1. DETECT ENVIRONMENT (HPC vs Mac)
+# ============================================================================
+
+if command -v conda &>/dev/null; then
+    # Try to activate the cluster conda env
+    if [[ -n "$SLURM_JOB_ID" ]]; then
+        source ~/.bashrc
+    fi
+    conda activate cluster 2>/dev/null || true
+fi
+
+# Prefer conda env python, fall back to absolute Mac path, fall back to PATH
+if command -v python3 &>/dev/null && python3 -c "import pandas" 2>/dev/null; then
+    PYTHON="$(command -v python3)"
+elif [[ -x /opt/homebrew/anaconda3/envs/cluster/bin/python3 ]]; then
+    PYTHON="/opt/homebrew/anaconda3/envs/cluster/bin/python3"
+else
+    echo "ERROR: cannot find a python3 with pandas. Activate the cluster conda env."
+    exit 1
+fi
+
+# Prepend cluster env bin to PATH for computeMatrix/deeptools subprocess calls
+CLUSTER_ENV_BIN="$(dirname "$PYTHON")"
+export PATH="${CLUSTER_ENV_BIN}:${PATH}"
+export PYTHONUNBUFFERED=1
+
+# R interpreter
+if command -v Rscript &>/dev/null; then
+    RSCRIPT="$(command -v Rscript)"
+elif [[ -x /usr/local/bin/Rscript ]]; then
+    RSCRIPT="/usr/local/bin/Rscript"
+else
+    RSCRIPT=""
+fi
+
+# Log file
+LOG_DIR="${CLUSTER_DIR}/docs"
+mkdir -p "$LOG_DIR"
+LOG="${LOG_DIR}/pipeline_${CLUSTER_TIMEPOINT_LABEL}.txt"
+
+# ============================================================================
+# 2. HELPER FUNCTIONS
+# ============================================================================
+
+phase_skipped() {
+    local phase="$1"
+    for skip in $CLUSTER_SKIP_PHASES; do
+        [[ "$skip" == "$phase" ]] && return 0
+    done
+    return 1
+}
+
+banner() {
+    echo ""
+    echo "============================================================"
+    echo "  $1"
+    echo "  $(date)"
+    echo "============================================================"
+}
+
+check_status() {
+    local status=$1 phase_name="$2"
+    if [[ $status -ne 0 ]]; then
+        echo "FAILED: ${phase_name} (exit code ${status})"
+        exit $status
+    fi
+    echo "OK: ${phase_name}"
+}
+
+# ============================================================================
+# 3. BANNER
+# ============================================================================
+
+{
+
+banner "Cluster Pipeline: ${CLUSTER_TIMEPOINT_LABEL} (${CLUSTER_TIMEPOINT_ID})"
+echo "  Config:     $CONF"
+echo "  Repo root:  $REPO_ROOT"
+echo "  Cluster dir: $CLUSTER_DIR"
+echo "  Output dir: ${CLUSTER_DIR}/${CLUSTER_OUT_DIR}"
+echo "  Python:     $PYTHON"
+echo "  R:          ${RSCRIPT:-NOT FOUND}"
+echo "  BigWig dir: $CLUSTER_BIGWIG_DIR"
+echo "  Skip:       ${CLUSTER_SKIP_PHASES:-none}"
+
+# ============================================================================
+# PHASE 1: Data preparation
+# ============================================================================
+
+if ! phase_skipped 1; then
+    banner "Phase 1: Data Preparation"
+
+    # Create output directory tree
+    mkdir -p "${CLUSTER_DIR}/data"
+    mkdir -p "${CLUSTER_DIR}/${CLUSTER_OUT_DIR}"/{cluster3,cooltools}
+    mkdir -p "${CLUSTER_DIR}/${CLUSTER_OUT_DIR}/figures"/{annotation,ChIP_intersect,deeptools,deeptools_input,loop_size,loop_classification,chromHMM_anchor,cluster_differential_status,summary_figures}
+    mkdir -p "${CLUSTER_DIR}/${CLUSTER_OUT_DIR}/chromHMM"/{binarized,learned_model,anchor_input,span_input,peak_beds}
+
+    # 1.1: Build loop count file
+    "$PYTHON" -u "${SCRIPT_DIR}/01_build_loop_count_file.py"
+    check_status $? "Phase 1.1 — loop count file"
+
+    # Verify output
+    if [[ ! -s "$CLUSTER_COUNT_FILE" ]]; then
+        echo "FAILED: count file not produced at $CLUSTER_COUNT_FILE"
+        exit 1
+    fi
+    echo "  Count file: $(wc -l < "$CLUSTER_COUNT_FILE") rows"
+
+    # 1.2: Gene annotation BED (genome-specific, not timepoint-specific)
+    GENE_BED="${CLUSTER_DIR}/data/mm10_knownGene_pp.bed"
+    if [[ -s "$GENE_BED" ]]; then
+        echo "  Gene BED already exists ($(wc -l < "$GENE_BED") rows), skipping regeneration"
+    elif [[ -n "$RSCRIPT" ]]; then
+        "$RSCRIPT" "${SCRIPT_DIR}/02_build_mm10_gene_annotation.R"
+        check_status $? "Phase 1.2 — gene annotation BED"
+        echo "  Gene BED: $(wc -l < "$GENE_BED") rows"
+    else
+        echo "  WARNING: Rscript not available, skipping gene annotation BED"
+        echo "  (gene annotation in Phase 4.6 will fail without it)"
+    fi
+else
+    echo "Phase 1: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 2: ChromHMM segmentation
+# ============================================================================
+
+if ! phase_skipped 2; then
+    banner "Phase 2: ChromHMM Segmentation"
+
+    SEGMENTS_BED="${CLUSTER_DIR}/${CLUSTER_OUT_DIR}/chromHMM/learned_model/${CLUSTER_CELL_NAME}_12_segments.bed"
+    RENAME_FILE="${CLUSTER_DIR}/${CLUSTER_OUT_DIR}/chromHMM/12state_rename_${CLUSTER_CELL_NAME}.txt"
+
+    if [[ -s "$SEGMENTS_BED" ]] && [[ -s "$RENAME_FILE" ]]; then
+        echo "  Segmentation + rename file already exist, skipping"
+        echo "  Segments: $(wc -l < "$SEGMENTS_BED") rows"
+    else
+        bash "${SCRIPT_DIR}/03_chromhmm_segmentation.sh"
+        check_status $? "Phase 2 — ChromHMM"
+
+        if [[ ! -s "$RENAME_FILE" ]]; then
+            echo ""
+            echo "  *** MANUAL STEP REQUIRED ***"
+            echo "  Inspect: ${CLUSTER_DIR}/${CLUSTER_OUT_DIR}/chromHMM/learned_model/emissions_12.txt"
+            echo "  Create:  $RENAME_FILE"
+            echo "  Format:  E{N}<TAB>Biological_Name  (12 lines)"
+            echo ""
+            echo "  For the late timepoint, copy from bap1_late/chromHMM/12state_rename_cerebellum.txt"
+            echo "  For a new timepoint, inspect the emission matrix and assign names."
+            echo ""
+            echo "  Re-run this pipeline after creating the rename file."
+            exit 0
+        fi
+    fi
+else
+    echo "Phase 2: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 3: K-means clustering
+# ============================================================================
+
+if ! phase_skipped 3; then
+    banner "Phase 3: K-means Clustering (k=${CLUSTER_K})"
+
+    "$PYTHON" -u "${SCRIPT_DIR}/04_clustering.py" \
+        --k "$CLUSTER_K" \
+        --filter-pct "$CLUSTER_FILTER_PCT" \
+        --min-ratio "$CLUSTER_MIN_RATIO" \
+        --max-ratio "$CLUSTER_MAX_RATIO"
+    check_status $? "Phase 3 — clustering"
+
+    if [[ -s "$CLUSTER_COMBINED" ]]; then
+        echo "  Combined clusters: $(wc -l < "$CLUSTER_COMBINED") rows"
+    else
+        echo "FAILED: combined-clusters.txt not produced"
+        exit 1
+    fi
+else
+    echo "Phase 3: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 4: Downstream analyses
+# ============================================================================
+
+if ! phase_skipped 4; then
+    banner "Phase 4: Downstream Analyses (8 sub-analyses)"
+
+    "$PYTHON" -u "${SCRIPT_DIR}/05_grouped_analyses.py" --analyses all
+    check_status $? "Phase 4 — downstream"
+else
+    echo "Phase 4: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 5: deepTools metagene
+# ============================================================================
+
+if ! phase_skipped 5; then
+    banner "Phase 5: deepTools Anchor Metagene (~90 min)"
+
+    if [[ ! -d "$CLUSTER_BIGWIG_DIR" ]]; then
+        echo "  WARNING: BigWig dir not found: $CLUSTER_BIGWIG_DIR"
+        echo "  Skipping Phase 5 (set CLUSTER_BIGWIG_DIR in config)"
+    else
+        "$PYTHON" -u "${SCRIPT_DIR}/06_deeptools_metagene.py"
+        check_status $? "Phase 5 — deepTools metagene"
+    fi
+else
+    echo "Phase 5: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 6: Cooltools pileup (HPC only)
+# ============================================================================
+
+if ! phase_skipped 6; then
+    banner "Phase 6: Cooltools Pileup"
+
+    if [[ -z "$CLUSTER_MCOOL_CTRL" ]] || [[ ! -f "$CLUSTER_MCOOL_CTRL" ]]; then
+        echo "  WARNING: mcool files not found. Skipping Phase 6."
+        echo "  Set CLUSTER_MCOOL_CTRL and CLUSTER_MCOOL_MUT in config."
+    else
+        "$PYTHON" -u "${SCRIPT_DIR}/07_cooltools_pileup.py"
+        check_status $? "Phase 6 — cooltools pileup"
+    fi
+else
+    echo "Phase 6: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 7: Summary figures
+# ============================================================================
+
+if ! phase_skipped 7; then
+    banner "Phase 7: Summary Figures"
+
+    "$PYTHON" -u "${SCRIPT_DIR}/08_summary_figures.py"
+    check_status $? "Phase 7 — summary figures"
+else
+    echo "Phase 7: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 8: Oriented anchor metagene + asymmetry
+# ============================================================================
+
+if ! phase_skipped 8; then
+    banner "Phase 8: Oriented Anchor Metagene + Asymmetry (~1.7 h)"
+
+    if [[ ! -d "$CLUSTER_BIGWIG_DIR" ]]; then
+        echo "  WARNING: BigWig dir not found. Skipping Phase 8."
+    else
+        "$PYTHON" -u "${SCRIPT_DIR}/09_oriented_anchor_metagene.py"
+        check_status $? "Phase 8.1 — oriented metagene"
+
+        "$PYTHON" -u "${SCRIPT_DIR}/quantify_orientation_asymmetry.py"
+        check_status $? "Phase 8.2 — quantify asymmetry"
+
+        "$PYTHON" -u "${SCRIPT_DIR}/visualize_orientation_asymmetry.py"
+        check_status $? "Phase 8.3 — visualize asymmetry"
+    fi
+else
+    echo "Phase 8: SKIPPED"
+fi
+
+# ============================================================================
+# DONE
+# ============================================================================
+
+banner "Pipeline Complete: ${CLUSTER_TIMEPOINT_LABEL} (${CLUSTER_TIMEPOINT_ID})"
+echo "  Outputs: ${CLUSTER_DIR}/${CLUSTER_OUT_DIR}/"
+echo "  Log:     $LOG"
+
+} 2>&1 | tee "$LOG"

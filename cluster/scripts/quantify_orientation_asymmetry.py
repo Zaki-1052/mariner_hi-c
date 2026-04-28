@@ -14,10 +14,12 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+import os as _os
 SCRIPT_DIR  = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
-VALUES_FILE = CLUSTER_DIR / 'bap1_late/figures/deeptools/oriented_anchors/oriented_anchors_values'
-OUT_DIR     = CLUSTER_DIR / 'bap1_late/figures/deeptools/oriented_anchors'
+_out = _os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
+VALUES_FILE = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors/oriented_anchors_values'
+OUT_DIR     = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors'
 
 CLUSTER_DIRECTION = {
     'clust1': 'unchanged',

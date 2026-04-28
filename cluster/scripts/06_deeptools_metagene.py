@@ -36,14 +36,18 @@ sys.path.insert(0, str(SCRIPT_DIR / 'utils'))   # multi_format_output
 from deepTools_pipeline import bed_pileup        # noqa: E402
 from multi_format_output import multi_format_savefig, figure_subfolder  # noqa: E402
 
-# -------- inputs --------
-CLUSTER_FILE = CLUSTER_DIR / 'bap1_late/cluster3/k-6/data/combined-clusters.txt'
-BIGWIG_BASE  = Path('/Users/zakiralibhai/sdsc/bigwigs')
+# -------- inputs (env-var overridable) --------
+import os as _os
+_out = _os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
+_k = _os.environ.get('CLUSTER_K', '6')
+CLUSTER_FILE = Path(_os.environ.get('CLUSTER_COMBINED',
+    str(CLUSTER_DIR / '{}/cluster3/k-{}/data/combined-clusters.txt'.format(_out, _k))))
+BIGWIG_BASE  = Path(_os.environ.get('CLUSTER_BIGWIG_DIR', '/Users/zakiralibhai/sdsc/bigwigs'))
 BLACKLIST    = REPO_ROOT / 'tads/mm10-blacklist.v2.bed'
 
 # -------- outputs --------
-ANCHOR_BED_DIR = CLUSTER_DIR / 'bap1_late/figures/deeptools_input'
-DEEPTOOLS_DIR  = CLUSTER_DIR / 'bap1_late/figures/deeptools'
+ANCHOR_BED_DIR = CLUSTER_DIR / _out / 'figures/deeptools_input'
+DEEPTOOLS_DIR  = CLUSTER_DIR / _out / 'figures/deeptools'
 
 # -------- constants --------
 CLUSTER_ORDER = ['clust1', 'clust2', 'clust3', 'clust4', 'clust5', 'clust6']

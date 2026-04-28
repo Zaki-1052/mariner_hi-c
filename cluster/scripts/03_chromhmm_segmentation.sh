@@ -23,16 +23,18 @@
 #
 # Runtime: ~1-2 min for stages 1-4, ~30-90 min for LearnModel.
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+CLUSTER_OUT_DIR="${CLUSTER_OUT_DIR:-outputs/bap1_late}"
+CLUSTER_CELL_NAME="${CLUSTER_CELL_NAME:-cerebellum_late}"
 CHROMHMM="${REPO_ROOT}/cluster/ChromHMM/chromhmm"
-CHM_DIR="${REPO_ROOT}/cluster/bap1_late/chromHMM"
+CHM_DIR="${REPO_ROOT}/cluster/${CLUSTER_OUT_DIR}/chromHMM"
 PEAK_DIR="${CHM_DIR}/peak_beds"
 BIN_DIR="${CHM_DIR}/binarized"
 MODEL_DIR="${CHM_DIR}/learned_model"
 CMT="${CHM_DIR}/cellmarkfiletable.txt"
 CHROMSIZES_SRC="${REPO_ROOT}/cluster/ChromHMM/CHROMSIZES/mm10.txt"
 CHROMSIZES_DST="${CHM_DIR}/mm10_standard.txt"
-CELL="cerebellum_late"
+CELL="${CLUSTER_CELL_NAME}"
 NSTATES=12
 ASSEMBLY="mm10"
 
@@ -55,11 +57,11 @@ rm -f "${PEAK_DIR}"/*.bed
 
 MARKS=(H3K27ac H3K27me3 H3K4me1 H3K4me3 CTCF)
 SOURCES=(
-  "peaks/beds/H3K27acCerebellumLate2.bed"
-  "peaks/beds/H3K27me3CerebellumLate1.bed"
-  "peaks/beds/H3K4me1CerebellumLate1.bed"
-  "peaks/beds/H3K4me3CerebellumLate2.bed"
-  "peaks/CTCF.bed"
+  "${CLUSTER_PEAK_K27AC:-peaks/beds/H3K27acCerebellumLate2.bed}"
+  "${CLUSTER_PEAK_K27ME3:-peaks/beds/H3K27me3CerebellumLate1.bed}"
+  "${CLUSTER_PEAK_K4ME1:-peaks/beds/H3K4me1CerebellumLate1.bed}"
+  "${CLUSTER_PEAK_K4ME3:-peaks/beds/H3K4me3CerebellumLate2.bed}"
+  "${CLUSTER_PEAK_CTCF:-peaks/CTCF.bed}"
 )
 for i in "${!MARKS[@]}"; do
   MARK="${MARKS[$i]}"

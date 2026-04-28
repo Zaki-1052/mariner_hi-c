@@ -1,4 +1,6 @@
-# HiC-clustering
+# HiC-clustering (Original Popay README)
+
+> **Note:** This is the original README from the [Popay et al. HiC-clustering repo](https://github.com/tpopay/HiC-clustering). For the BAP1-KO cerebellum adaptation, see [`cluster/README.md`](../README.md).
 
 Code used to cluster the Hi-C data and subsequent downstream analyses from Popay et al (https://www.nature.com/articles/s41588-026-02516-y)
 
