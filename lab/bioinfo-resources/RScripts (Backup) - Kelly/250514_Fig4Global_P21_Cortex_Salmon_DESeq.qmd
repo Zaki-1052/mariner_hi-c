@@ -1,0 +1,932 @@
+---
+title: "PseudoCounts_DEG_Prep"
+format: pdf
+---
+#Prepping Salmon Pseudo-count data for DESeq2
+
+Use tximport to import and combine the quant.sh files created for each sample
+
+```{r}
+library("tximport")
+library("txdbmaker")
+library("GenomicFeatures")
+library("rtracklayer")
+library("AnnotationDbi")
+library("biomaRt")
+library("pathview")
+library("gage")
+library("gageData")
+library('clusterProfiler')
+library('enrichplot')
+library('dplyr')
+
+```
+
+```{r}
+#To use DESeq2 we need to first have a sample table that tells DESeq2 what samples we are interested in and an covariates we want to add to the GLM.
+#First read in the sample table
+# Load necessary libraries
+library(knitr)
+
+# Set the working directory
+knitr::opts_knit$set(root.dir = "/Users/bridgetwong/RNAseq/")  # Change this path as needed
+
+# Optional: Set other options
+#options(stringsAsFactors = FALSE)
+
+directory <- "/Users/bridgetwong/RNAseq/250514_FIg4Global_P21_Cortex_Counts/"
+samples <- data.frame(
+  samples = c("ctrl1", "mut1", "ctrl2", "mut2", "ctrl3", "mut3", "ctrl4", "mut4", "ctrl5", "mut5"),
+  Condition = c("ctrl", "mut","ctrl", "mut","ctrl", "mut","ctrl", "mut", "ctrl", "mut"),
+
+  stringsAsFactors = FALSE  # Prevent factors, if you prefer character vectors
+)
+
+# Write the data frame to a CSV file
+write.csv(samples, "design_012424_4samples.csv", row.names = FALSE)
+
+# Confirm creation
+print("design_012424_4samples.csv has been created.")
+samples <- read.table("design_012424_4samples.csv", sep=',', header=TRUE)
+```
+
+```{r}
+#Take a look at the samples table
+samples
+```
+
+Check to make sure everything is there...
+
+```{r}
+# Base directory where the quant.sf files are located
+base_dir <- "/Users/bridgetwong/RNAseq/250514_FIg4Global_P21_Cortex_Counts"
+
+# Constructing file paths for quant.sf files
+files <- file.path(base_dir, samples$sample, "quant.sf")
+
+# Print the constructed file paths to check
+print(files)
+#files <- file.path("/Users/bridgetwong/RNAseq/Salmon_Quants/", samples$sample, "quant.sf")
+all(file.exists(files))
+```
+
+Now we need to make the tx2gene file so that the transcripts can be associated with gene IDs for gene-level summarization. For this, we need to create a transcript to gene file that associates each transcript with its gene
+
+```{r}
+library(GenomicFeatures)
+library(AnnotationDbi)
+library(biomaRt)
+library(writexl)
+
+# Set the GTF path
+gtfPath <- file.path("/Users/bridgetwong/RNAseq", "gencode.vM10.annotation.gtf")
+
+# Create TxDb from GTF
+txdb <- makeTxDbFromGFF(file = gtfPath)
+
+# Retrieve transcript names
+k <- keys(txdb, keytype = "TXNAME")
+
+# Map transcripts to gene IDs
+tx2gene <- AnnotationDbi::select(txdb, keys = k, columns = "GENEID", keytype = "TXNAME")
+head(tx2gene)
+
+# Load biomaRt
+library(biomaRt)
+
+# Initialize BioMart for the mouse dataset (change to hsapiens_gene_ensembl for human data)
+ensembl <- useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+
+# Connect to Ensembl, using a mirror site if Ensembl is down
+#ensembl<- useEnsembl(biomart = "genes", dataset = "mmusculus_gene_ensembl", mirror = "useast") # Or use 'useast'/'asia'
+
+# Strip version numbers from Ensembl IDs in tx2gene if necessary
+tx2gene$GENEID <- sub("\\..*", "", tx2gene$GENEID)
+
+# Run BioMart query again
+gene_symbols <- getBM(attributes = c("ensembl_gene_id", "external_gene_name"),
+                      filters = "ensembl_gene_id",
+                      values = unique(tx2gene$GENEID),
+                      mart = ensembl)
+
+
+# Merge Gene Symbols with tx2gene and handle missing values
+tx2gene <- merge(tx2gene, gene_symbols, by.x = "GENEID", by.y = "ensembl_gene_id", all.x = TRUE)
+tx2gene <- tx2gene %>% 
+  rename(GeneSymbol = external_gene_name, Transcript = TXNAME) %>%
+  mutate(GeneSymbol = ifelse(is.na(GeneSymbol), GENEID, GeneSymbol))
+
+
+```
+
+
+```{r}
+# Step 3: Import with tximport to include Counts, Abundance, and Length
+names(files) <- paste0(samples$sample)
+txi.salmon <- tximport(files, type = "salmon", tx2gene = tx2gene[, c("Transcript", "GENEID")])
+
+# Step 4: Convert matrices to data frames and add Gene IDs, Gene Symbols, and Transcripts as columns
+counts_df <- as.data.frame(txi.salmon$counts)
+abundance_df <- as.data.frame(txi.salmon$abundance)
+length_df <- as.data.frame(txi.salmon$length)
+
+# Merge to add GENEID, GeneSymbol, and Transcript columns to each matrix
+counts_df <- tibble::rownames_to_column(counts_df, var = "GENEID")
+abundance_df <- tibble::rownames_to_column(abundance_df, var = "GENEID")
+length_df <- tibble::rownames_to_column(length_df, var = "GENEID")
+
+# Join with tx2gene to include GeneSymbol and Transcript columns
+counts_df <- merge(counts_df, tx2gene, by = "GENEID", all.x = TRUE)
+abundance_df <- merge(abundance_df, tx2gene, by = "GENEID", all.x = TRUE)
+length_df <- merge(length_df, tx2gene, by = "GENEID", all.x = TRUE)
+
+# Step 5: Remove duplicate gene names (keep first occurrence)
+counts_df <- counts_df %>% distinct(GeneSymbol, .keep_all = TRUE)
+abundance_df <- abundance_df %>% distinct(GeneSymbol, .keep_all = TRUE)
+length_df <- length_df %>% distinct(GeneSymbol, .keep_all = TRUE)
+
+
+# Step 6: Export to Excel with each matrix as a separate sheet
+txi_data <- list(
+  Counts = counts_df,
+  Abundance = abundance_df,
+  Length = length_df
+)
+
+```
+```{r}
+#Check that genes are annotated
+print(dim(txi.salmon$counts))
+
+```
+
+```{r}
+
+# Step 1: Define refined patterns for unwanted genes
+genes_to_remove <- c("^mt", "^Rpl", "^Rps", "^GM", "^Gm", "Rik$")
+
+# Step 2: Trim whitespace from GeneSymbol column
+counts_df$GeneSymbol <- trimws(counts_df$GeneSymbol)
+abundance_df$GeneSymbol <- trimws(abundance_df$GeneSymbol)
+length_df$GeneSymbol <- trimws(length_df$GeneSymbol)
+
+# Step 3: Filter out unwanted genes with case-insensitivity
+counts_df <- counts_df[!grepl(paste(genes_to_remove, collapse = "|"), counts_df$GeneSymbol, ignore.case = TRUE), ]
+abundance_df <- abundance_df[!grepl(paste(genes_to_remove, collapse = "|"), abundance_df$GeneSymbol, ignore.case = TRUE), ]
+length_df <- length_df[!grepl(paste(genes_to_remove, collapse = "|"), length_df$GeneSymbol, ignore.case = TRUE), ]
+
+# Step 4: Verify that unwanted genes are removed
+sum(grepl("^Gm", counts_df$GeneSymbol, ignore.case = TRUE))  # Should be 0
+sum(grepl("Rik$", counts_df$GeneSymbol, ignore.case = TRUE))  # Should be 0
+
+# Step 5: Export to Excel
+txi_data_filtered <- list(
+  Counts = counts_df,
+  Abundance = abundance_df,
+  Length = length_df
+)
+
+
+# Check the first few rows of the filtered data to ensure the unwanted genes are removed
+head(counts_df)
+head(abundance_df)
+head(length_df)
+
+
+# Step 1: Reorder the columns to move GeneID to the last column
+counts_df <- counts_df[, c(setdiff(names(counts_df), "GENEID"), "GENEID")]
+abundance_df <- abundance_df[, c(setdiff(names(abundance_df), "GENEID"), "GENEID")]
+length_df <- length_df[, c(setdiff(names(length_df), "GENEID"), "GENEID")]
+
+# Step 2: Check if GeneID is moved to the last column
+head(counts_df)
+head(abundance_df)
+head(length_df)
+
+# Step 3: Export the updated data to Excel
+txi_data_reordered <- list(
+  Counts = counts_df,
+  Abundance = abundance_df,
+  Length = length_df
+)
+
+
+```
+
+
+
+```{r}
+# Check the first few row names and summary of counts
+head(rownames(txi.salmon$counts))  # Ensure these are gene symbols
+summary(txi.salmon$counts)        # Ensure there are non-zero counts
+
+```
+```{r}
+# Ensure tx2gene has unique mappings between Ensembl IDs and Gene Symbols
+rownames_mapping <- tx2gene$GeneSymbol
+names(rownames_mapping) <- tx2gene$GENEID
+
+```
+
+```{r}
+# Set row names to gene symbols for each matrix in txi.salmon
+rownames(txi.salmon$counts) <- rownames_mapping[rownames(txi.salmon$counts)]
+rownames(txi.salmon$abundance) <- rownames_mapping[rownames(txi.salmon$abundance)]
+rownames(txi.salmon$length) <- rownames_mapping[rownames(txi.salmon$length)]
+
+```
+
+```{r}
+# Print first few rows to confirm
+head(rownames(txi.salmon$counts))
+head(rownames(txi.salmon$abundance))
+head(rownames(txi.salmon$length))
+
+# Step 1: Define unwanted gene patterns
+genes_to_remove <- c("^mt", "^Rpl", "^Rps", "^GM", "^Gm", "Rik$")
+
+# Step 2: Filter counts, abundance, and length in txi.salmon
+filtered_counts <- txi.salmon$counts[!grepl(paste(genes_to_remove, collapse = "|"), rownames(txi.salmon$counts), ignore.case = TRUE), ]
+filtered_abundance <- txi.salmon$abundance[!grepl(paste(genes_to_remove, collapse = "|"), rownames(txi.salmon$abundance), ignore.case = TRUE), ]
+filtered_length <- txi.salmon$length[!grepl(paste(genes_to_remove, collapse = "|"), rownames(txi.salmon$length), ignore.case = TRUE), ]
+
+# Step 3: Update txi.salmon with filtered data
+txi.salmon$counts <- filtered_counts
+txi.salmon$abundance <- filtered_abundance
+txi.salmon$length <- filtered_length
+
+# Verify filtering
+print(dim(txi.salmon$counts))  # Check the dimensions after filtering
+
+```
+
+##DESEQ2
+
+```{r}
+library("DESeq2")
+library("ggplot2")
+library("pheatmap")
+library("RColorBrewer")
+library("PoiClaClu")
+library("genefilter")
+library("EnhancedVolcano")
+library("openxlsx")
+library("ggrepel")
+```
+
+```{r}
+# samples <- read.table("design_012424_4samples.csv", sep=',', header=TRUE)
+# print(head(samples))  # Display the first few rows
+```
+
+```{r}
+samples$Condition <- factor(samples$Condition)
+# Check if sample identifiers match
+setdiff(rownames(samples), colnames(txi.salmon$counts))  # Should return an empty vector
+setdiff(colnames(txi.salmon$counts), rownames(samples))  # Should return an empty vector
+
+```
+
+```{r}
+# Set row names of samples to match the column names of txi.salmon$counts
+rownames(samples) <- colnames(txi.salmon$counts)
+
+# Now check if the row names of samples and column names of counts match
+setdiff(rownames(samples), colnames(txi.salmon$counts))  # Should return an empty vector
+setdiff(colnames(txi.salmon$counts), rownames(samples))  # Should return an empty vector
+
+any(is.na(rownames(samples)))  # Should return FALSE if there are no missing row names
+# Check that the conditions in 'samples' match the column names in 'txi.salmon$counts'
+all(rownames(samples) == colnames(txi.salmon$counts))  # Should return TRUE
+
+# Make sure that the row names of 'samples' match column names of 'txi.salmon$counts'
+identical(rownames(samples), colnames(txi.salmon$counts))  # Should return TRUE
+# Check for the Condition column
+head(samples$Condition)
+
+# Make sure 'Condition' is a factor
+samples$Condition <- factor(samples$Condition)
+
+# Check for any NA values in rownames of the counts data
+any(is.na(rownames(txi.salmon$counts)))  # Should return FALSE
+
+# Check for any NA values in rownames of the samples metadata
+any(is.na(rownames(samples)))  # Should return FALSE
+
+na_rows <- which(is.na(rownames(txi.salmon$counts)))
+na_rows
+
+print(dim(txi.salmon$counts))
+
+```
+
+
+```{r}
+
+# Check that the design formula is correct
+DESeq2CDS <- DESeqDataSetFromTximport(
+  txi = txi.salmon,  # txi.salmon contains the count data
+  colData = samples,  # sample metadata
+  design = ~ Condition  # design formula to specify the condition variable
+)
+dds <- DESeq(DESeq2CDS)
+
+
+#dds <- DESeqDataSetFromMatrix(countData = countData, colData = samples, design = ~ Condition)
+
+```
+
+```{r}
+#PCA Plots
+vsd <- vst(dds, blind=FALSE)
+pcaData <- plotPCA(vsd, intgroup = c("Condition"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, color=Condition)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed()
+```
+
+```{r}
+##Some QC comparisons of our data, all plots should be in a  similar positive linear direction. 
+par( mfrow = c( 1, 1 ) )
+dds <- estimateSizeFactors(dds)
+plot(log2(counts(dds, normalized=TRUE)[,1:2] + 1), pch=16, cex=0.3)
+plot(log2(counts(dds, normalized=TRUE)[,3:4] + 1), pch=16, cex=0.3)
+
+vst <- vst(dds, blind=FALSE)
+plot(assay(vst)[,1:2], pch=16, cex=0.3)
+sampleDists <- dist( t( assay(vst) ) )
+sampleDists
+```
+
+```{r}
+##Heatmap visualization
+sampleDistMatrix <- as.matrix( sampleDists )
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors)
+```
+
+```{r}
+sampleNames =c( 'ctrl1',  'ctrl2',  "ctrl3",  "ctrl4",  "ctrl5",'mut1','mut2',"mut3","mut4", "mut5")
+```
+
+```{r}
+## PoiClaClu
+poisd <- PoissonDistance(t(counts(dds)))
+samplePoisDistMatrix <- as.matrix( poisd$dd )
+rownames(samplePoisDistMatrix) <- paste( vst$dex, vst$cell, sep="-" )
+colnames(samplePoisDistMatrix) <- sampleNames
+pheatmap(samplePoisDistMatrix,
+         clustering_distance_rows=poisd$dd,
+         clustering_distance_cols=poisd$dd,
+         col=colors)
+```
+```{r}
+plotPCA(vst,  intgroup = c("Condition"))
+(data <- plotPCA(vst, intgroup = c( "Condition"), returnData=TRUE))
+percentVar <- round(100 * attr(data, "percentVar"))
+mdsPoisData <- data.frame(cmdscale(samplePoisDistMatrix))
+mdsPois <- cbind(mdsPoisData, as.data.frame(colData(dds)))
+ggplot(mdsPois, aes(X1,X2,shape=Condition)) + geom_point(size=3)
+```
+
+```{r}
+## Further Visualizations
+(res <- results(dds))
+mcols(res, use.names=TRUE)
+summary(res)
+res.05 <- results(dds, alpha=.05)
+table(res.05$padj < .05)
+resLFC1 <- results(dds, lfcThreshold=1)
+topGene <- rownames(res)[which.min(res$padj)]
+print(topGene)
+plotCounts(dds, gene=topGene, intgroup=c("Condition"))
+
+data <- plotCounts(dds, gene=topGene, intgroup=c("Condition"), returnData=TRUE)
+ggplot(data, aes(x=Condition, y=count)) +
+  scale_y_log10() +
+  geom_point(position=position_jitter(width=.1,height=0), size=3)
+
+ggplot(data, aes(x=Condition, y=count, fill=Condition)) +
+  scale_y_log10() +
+  geom_dotplot(binaxis="y", stackdir="center", binwidth = 1/30)
+
+ggplot(data, aes(x=Condition, y=count, color=Condition, group=Condition)) +
+  scale_y_log10() + geom_point(size=3) + geom_line()
+```
+
+```{r}
+#Mean-average plot, genes with low read counts show higher variability than highly expressed genes, resulting in a strong log2FC even though are likely not really differentially expressed
+
+plotMA(res, ylim=c(-5,5))
+
+topGene <- rownames(resLFC1)[which.min(resLFC1$padj)]
+with(resLFC1[topGene, ], {
+  points(baseMean, log2FoldChange, col="dodgerblue", cex=2, lwd=2)
+  text(baseMean, log2FoldChange, topGene, pos=2, col="dodgerblue")
+})
+
+#Rough idea of proportion of genes that are differentially expressed
+hist(res$pvalue[res$baseMean > 1], breaks=0:20/20, col="grey50", border="white")
+```
+
+```{r}
+topVarGenes <- head(order(rowVars(assay(vst)),decreasing=TRUE),40)
+mat <- assay(vst)[ topVarGenes, ]
+mat <- mat - rowMeans(mat)
+df <- as.data.frame(colData(vst)[,c("Condition","Condition")])
+pheatmap(mat, annotation_col=df, fontsize_row=5)
+```
+
+```{r}
+qs <- c(0, quantile(resLFC1$baseMean[resLFC1$baseMean > 0], 0:6/6))
+bins <- cut(resLFC1$baseMean, qs) 
+levels(bins) <- paste0("~",round(signif(.5*qs[-1] + .5*qs[-length(qs)],2)))
+ratios <- tapply(resLFC1$pvalue, bins, function(p) mean(p < .05, na.rm=TRUE))
+barplot(ratios, xlab="mean normalized count", ylab="ratio of small p values")
+plotDispEsts(dds, ylim = c(1e-6, 1e1))
+```
+
+```{r}
+hist(res$pvalue, breaks = 20, col = "grey")
+qs <- c( 0, quantile( res$baseMean[res$baseMean > 0], 0:7/7 ) )
+bins <- cut( res$baseMean, qs )
+levels(bins) <- paste0("~",round(.5*qs[-1] + .5*qs[-length(qs)]))
+ratios <- tapply( res$pvalue, bins, function(p) mean( p < .01, na.rm=TRUE ) )
+barplot(ratios, xlab="mean normalized count", ylab="ratio of small p values")
+```
+
+```{r}
+path_out = "/Users/bridgetwong/RNAseq"
+Main_Output = "/Users/bridgetwong/RNAseq"
+outputPrefix <- "DESeq2"
+```
+
+
+```{r}
+
+setwd(path_out)
+## Writing Outputs
+res[1:2,]
+write.csv(as.data.frame(res), file="results.csv" )
+res <- results(dds)
+res1= subset(res, padj<1)
+resdata <- merge(as.data.frame(res1), as.data.frame(counts(dds,normalized =TRUE)), by = 'row.names', sort = FALSE)
+names(resdata)[1] <- 'ensembl_gene_id'
+
+write.csv(resdata,  file = paste0(outputPrefix, "-results-with-normalized.csv"))
+write.table(as.data.frame(counts(dds),normalized=T), file = paste0(outputPrefix, "_normalized_counts.txt"), sep = '\t')
+pcaData <- plotPCA(vst, intgroup=c("Condition"), returnData=TRUE)
+write.table(as.data.frame(pcaData,normalized=T), file = paste0(outputPrefix, "_PCArawData.txt"), sep = '\t')
+
+setwd(Main_Output)
+```
+
+```{r fig.height=8}
+#can change 20 to 15, 10, 30 etc. 
+top20 <- head(resdata[order(resdata$padj),], 1)
+Labels20 <- top20$ensembl_gene_id
+EnhancedVolcano(resdata,
+                lab = resdata$ensembl_gene_id,
+                x = 'log2FoldChange',
+                y = 'padj',
+                title = 'WT vs KO',
+                pCutoff = 0.05,
+                FCcutoff = 0.3,
+                selectLab = c(Labels20),
+                pointSize = 1.0,
+                labSize = 2.5,
+                boxedLabels = TRUE,
+                col=c('black', 'black', 'black', 'red3'), 
+                colAlpha = 1, 
+                drawConnectors = TRUE,
+                widthConnectors = 0.2,
+                colConnectors = 'black')
+```
+
+```{r}
+## Main Excel Output of DEGs.  
+rownames(resdata) <- NULL
+wb <- createWorkbook("250514_FIg4Global_P21_Cortex_Salmon_Results.xlsx")
+addWorksheet(wb, "Output", gridLines = TRUE) 
+writeData(wb, sheet = "Output", resdata, rowNames = FALSE)
+setColWidths(wb, sheet = "Output", cols = 1:12, widths = "15")
+saveWorkbook(wb, "250514_FIg4Global_P21_Cortex_Salmon_Results.xlsx", overwrite = TRUE)
+
+padj <- subset(resdata, padj<0.05)
+addWorksheet(wb, "padj<0.05", gridLines = TRUE) 
+writeData(wb, sheet = "padj<0.05", padj, rowNames = FALSE)
+setColWidths(wb, sheet = "padj<0.05", cols = 1:12, widths = "15")
+saveWorkbook(wb, "250514_FIg4Global_P21_Cortex_Salmon_Results.xlsx", overwrite = TRUE)
+
+log2fc <- subset(padj, log2FoldChange>0.3 | log2FoldChange<(-0.3))
+addWorksheet(wb, "log2fc_and_padj", gridLines = TRUE) 
+writeData(wb, sheet = "log2fc_and_padj", log2fc, rowNames = FALSE)
+setColWidths(wb, sheet = "log2fc_and_padj", cols = 1:12, widths = "15")
+saveWorkbook(wb, "250514_FIg4Global_P21_Cortex_Salmon_Results.xlsx", overwrite = TRUE)
+
+UP <- subset(log2fc, log2FoldChange>0.3)
+addWorksheet(wb, "Upregulated", gridLines = TRUE) 
+writeData(wb, sheet = "Upregulated", UP, rowNames = FALSE)
+setColWidths(wb, sheet = "Upregulated", cols = 1:12, widths = "15")
+saveWorkbook(wb, "250514_FIg4Global_P21_Cortex_Salmon_Results.xlsx", overwrite = TRUE)
+
+DOWN <- subset(log2fc, log2FoldChange< -0.3)
+addWorksheet(wb, "Downregulated", gridLines = TRUE) 
+writeData(wb, sheet = "Downregulated", DOWN, rowNames = FALSE)
+setColWidths(wb, sheet = "Downregulated", cols = 1:12, widths = "15")
+saveWorkbook(wb, "250514_FIg4Global_P21_Cortex_Salmon_Results.xlsx", overwrite = TRUE)
+```
+
+```{r}
+# Create background dataset for hypergeometric testing using all genes tested for significance in the results
+all_genes <- as.character(rownames(res1))
+# Extract significant results
+signif_res <- res[res$padj < 0.05 & !is.na(res$padj), ]
+signif_genes <- as.character(rownames(signif_res))
+```
+
+```{r}
+# Run GO enrichment analysis
+
+
+library(org.Mm.eg.db)
+ego <- enrichGO(gene = signif_genes,
+universe = all_genes,
+keyType = "SYMBOL",
+OrgDb = org.Mm.eg.db,
+ont = "all",
+pAdjustMethod = "BH",
+qvalueCutoff = 0.05,
+readable = TRUE)
+
+# Output results from GO analysis to a table
+cluster_summary <- data.frame(ego)
+
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+
+
+dotplot(ego, showCategory=10)
+
+
+#Enrichment GO plot
+x2 <- pairwise_termsim(ego) 
+emapplot(x2, showCategory = 5)
+
+
+# To color genes by log2 fold changes
+cnetplot(ego, categorySize="pvalue", showCategory = 2, vertex.label.font=6)
+
+```
+
+Now to separate DEGs into up and down for Go analysis
+```{r}
+resSig <- res[which(res$padj < 0.05), ]
+# Separate upregulated and downregulated genes
+upregulated_genes <- rownames(resSig[which(resSig$log2FoldChange > 0), ])
+downregulated_genes <- rownames(resSig[which(resSig$log2FoldChange < 0), ])
+
+# GO enrichment analysis for upregulated genes
+ego_up <- enrichGO(gene = upregulated_genes,
+                   OrgDb = org.Mm.eg.db,
+                   universe = all_genes,
+                   keyType = "SYMBOL",
+                   ont = "ALL",
+                   pAdjustMethod = "BH",
+                   qvalueCutoff = 0.05)
+
+# GO enrichment analysis for downregulated genes
+ego_down <- enrichGO(gene = downregulated_genes,
+                     OrgDb = org.Mm.eg.db,
+                     universe = all_genes,
+                     keyType = "SYMBOL",
+                     ont = "ALL",
+                     pAdjustMethod = "BH",
+                     qvalueCutoff = 0.05)
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+#Visualizations
+dotplot(ego_up, showCategory = 20, title = "GO Enrichment for Upregulated Genes")
+dotplot(ego_down, showCategory = 20, title = "GO Enrichment for Downregulated Genes")
+```
+```{r}
+# Create background dataset for hypergeometric testing using all genes tested for significance in the results
+all_genes <- as.character(rownames(res1))
+# Extract significant results
+signif_res <- res[res$padj < 0.05 & !is.na(res$padj), ]
+signif_genes <- as.character(rownames(signif_res))
+```
+
+```{r}
+# Run GO enrichment analysis
+ego <- enrichGO(gene = signif_genes,
+universe = all_genes,
+keyType = "SYMBOL",
+OrgDb = org.Mm.eg.db,
+ont = "CC",
+pAdjustMethod = "BH",
+qvalueCutoff = 0.05,
+readable = TRUE)
+# Output results from GO analysis to a table
+cluster_summary <- data.frame(ego)
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+#Visualizations
+dotplot(ego, showCategory=20)
+```
+
+Now to separate DEGs into up and down for Go analysis
+```{r}
+resSig <- res[which(res$padj < 0.05), ]
+# Separate upregulated and downregulated genes
+upregulated_genes <- rownames(resSig[which(resSig$log2FoldChange > 0), ])
+downregulated_genes <- rownames(resSig[which(resSig$log2FoldChange < 0), ])
+```
+
+
+```{r}
+# GO enrichment analysis for upregulated genes
+ego_up <- enrichGO(gene = upregulated_genes,
+                   OrgDb = org.Mm.eg.db,
+                   universe = all_genes,
+                   keyType = "SYMBOL",
+                   ont = "BP",
+                   pAdjustMethod = "BH",
+                   qvalueCutoff = 0.05)
+
+# GO enrichment analysis for downregulated genes
+ego_down <- enrichGO(gene = downregulated_genes,
+                     OrgDb = org.Mm.eg.db,
+                     universe = all_genes,
+                     keyType = "SYMBOL",
+                     ont = "BP",
+                     pAdjustMethod = "BH",
+                     qvalueCutoff = 0.05)
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+
+library(clusterProfiler)
+library(org.Mm.eg.db)
+library(GOSemSim)
+library(pheatmap)
+library(rrvgo)
+library(clusterProfiler)
+library(org.Mm.eg.db)  # For mouse data, change to your organism
+
+
+# ---- 1) GO Enrichment ----
+ego_up <- enrichGO(gene = upregulated_genes,
+                   OrgDb = org.Mm.eg.db,
+                   universe = all_genes,
+                   keyType = "SYMBOL",
+                   ont = "BP",
+                   pAdjustMethod = "BH",
+                   qvalueCutoff = 0.05)
+
+ego_down <- enrichGO(gene = downregulated_genes,
+                     OrgDb = org.Mm.eg.db,
+                     universe = all_genes,
+                     keyType = "SYMBOL",
+                     ont = "BP",
+                     pAdjustMethod = "BH",
+                     qvalueCutoff = 0.05)
+
+
+```
+
+```{r}
+
+#Calculate a similarity matrix between terms
+simMatrixup <- calculateSimMatrix(ego_up$ID,
+                                orgdb=org.Mm.eg.db,
+                                keytype = "ENTREZID",
+                                ont="BP",
+                                method="Rel")
+
+simMatrixdown <- calculateSimMatrix(ego_down$ID,
+                                orgdb=org.Mm.eg.db,
+                                keytype = "ENTREZID",
+                                ont="BP",
+                                method="Rel")
+
+scoresup <- setNames(-log10(ego_up$qvalue), ego_up$ID)
+reducedTermsup <- reduceSimMatrix(simMatrixup,
+                                scoresup,
+                                threshold=0.7,
+                                orgdb="org.Mm.eg.db")
+
+scoresdown <- setNames(-log10(ego_down$qvalue), ego_down$ID)
+reducedTermsdown <- reduceSimMatrix(simMatrixdown,
+                                scoresdown,
+                                threshold=0.7,
+                                orgdb="org.Mm.eg.db")
+
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+heatmapPlot(simMatrixup,
+            reducedTermsup,
+            annotateParent=TRUE,
+            annotationLabel="parentTerm",
+            fontsize=8)
+heatmapPlot(simMatrixdown,
+            reducedTermsdown,
+            annotateParent=TRUE,
+            annotationLabel="parentTerm",
+            fontsize=8)
+
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+scatterPlot(simMatrixup, reducedTermsup, size = "score")
+scatterPlot(simMatrixdown, reducedTermsdown, size = "score")
+```
+
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+# Load required packages
+treemapPlot(reducedTermsup)
+treemapPlot(reducedTermsdown)
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+
+library(clusterProfiler)
+library(org.Mm.eg.db)
+library(GOSemSim)
+library(pheatmap)
+library(rrvgo)
+library(clusterProfiler)
+library(org.Mm.eg.db)  # For mouse data, change to your organism
+
+
+# ---- 1) GO Enrichment ----
+ego_up <- enrichGO(gene = upregulated_genes,
+                   OrgDb = org.Mm.eg.db,
+                   universe = all_genes,
+                   keyType = "SYMBOL",
+                   ont = "CC",
+                   pAdjustMethod = "BH",
+                   qvalueCutoff = 0.05)
+
+ego_down <- enrichGO(gene = downregulated_genes,
+                     OrgDb = org.Mm.eg.db,
+                     universe = all_genes,
+                     keyType = "SYMBOL",
+                     ont = "CC",
+                     pAdjustMethod = "BH",
+                     qvalueCutoff = 0.05)
+
+
+```
+
+```{r}
+
+#Calculate a similarity matrix between terms
+simMatrixup <- calculateSimMatrix(ego_up$ID,
+                                orgdb=org.Mm.eg.db,
+                                keytype = "ENTREZID",
+                                ont="CC",
+                                method="Rel")
+
+simMatrixdown <- calculateSimMatrix(ego_down$ID,
+                                orgdb=org.Mm.eg.db,
+                                keytype = "ENTREZID",
+                                ont="CC",
+                                method="Rel")
+
+scoresup <- setNames(-log10(ego_up$qvalue), ego_up$ID)
+reducedTermsup <- reduceSimMatrix(simMatrixup,
+                                scoresup,
+                                threshold=0.7,
+                                orgdb="org.Mm.eg.db")
+
+scoresdown <- setNames(-log10(ego_down$qvalue), ego_down$ID)
+reducedTermsdown <- reduceSimMatrix(simMatrixdown,
+                                scoresdown,
+                                threshold=0.7,
+                                orgdb="org.Mm.eg.db")
+
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+heatmapPlot(simMatrixup,
+            reducedTermsup,
+            annotateParent=TRUE,
+            annotationLabel="parentTerm",
+            fontsize=8)
+heatmapPlot(simMatrixdown,
+            reducedTermsdown,
+            annotateParent=TRUE,
+            annotationLabel="parentTerm",
+            fontsize=8)
+
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+scatterPlot(simMatrixup, reducedTermsup, size = "score")
+scatterPlot(simMatrixdown, reducedTermsdown, size = "score")
+```
+
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+# Load required packages
+treemapPlot(reducedTermsup)
+treemapPlot(reducedTermsdown)
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+
+library(clusterProfiler)
+library(org.Mm.eg.db)
+library(GOSemSim)
+library(pheatmap)
+library(rrvgo)
+library(clusterProfiler)
+library(org.Mm.eg.db)  # For mouse data, change to your organism
+
+
+# ---- 1) GO Enrichment ----
+ego_up <- enrichGO(gene = upregulated_genes,
+                   OrgDb = org.Mm.eg.db,
+                   universe = all_genes,
+                   keyType = "SYMBOL",
+                   ont = "MF",
+                   pAdjustMethod = "BH",
+                   qvalueCutoff = 0.05)
+
+ego_down <- enrichGO(gene = downregulated_genes,
+                     OrgDb = org.Mm.eg.db,
+                     universe = all_genes,
+                     keyType = "SYMBOL",
+                     ont = "MF",
+                     pAdjustMethod = "BH",
+                     qvalueCutoff = 0.05)
+
+
+```
+
+```{r}
+
+#Calculate a similarity matrix between terms
+simMatrixup <- calculateSimMatrix(ego_up$ID,
+                                orgdb=org.Mm.eg.db,
+                                keytype = "ENTREZID",
+                                ont="MF",
+                                method="Rel")
+
+simMatrixdown <- calculateSimMatrix(ego_down$ID,
+                                orgdb=org.Mm.eg.db,
+                                keytype = "ENTREZID",
+                                ont="MF",
+                                method="Rel")
+
+scoresup <- setNames(-log10(ego_up$qvalue), ego_up$ID)
+reducedTermsup <- reduceSimMatrix(simMatrixup,
+                                scoresup,
+                                threshold=0.7,
+                                orgdb="org.Mm.eg.db")
+
+scoresdown <- setNames(-log10(ego_down$qvalue), ego_down$ID)
+reducedTermsdown <- reduceSimMatrix(simMatrixdown,
+                                scoresdown,
+                                threshold=0.7,
+                                orgdb="org.Mm.eg.db")
+
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+heatmapPlot(simMatrixup,
+            reducedTermsup,
+            annotateParent=TRUE,
+            annotationLabel="parentTerm",
+            fontsize=8)
+heatmapPlot(simMatrixdown,
+            reducedTermsdown,
+            annotateParent=TRUE,
+            annotationLabel="parentTerm",
+            fontsize=8)
+
+```
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+scatterPlot(simMatrixup, reducedTermsup, size = "score")
+scatterPlot(simMatrixdown, reducedTermsdown, size = "score")
+```
+
+
+```{r, fig.width=10, fig.height=15, dpi=300}
+# Load required packages
+treemapPlot(reducedTermsup)
+treemapPlot(reducedTermsdown)
+```

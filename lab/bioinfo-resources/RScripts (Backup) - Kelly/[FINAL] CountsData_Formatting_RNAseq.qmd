@@ -1,0 +1,91 @@
+---
+title: "RNAseq_testruns"
+format: html
+---
+
+```{r}
+#Load in featurecounts .txt files
+ctrl1_counts <- read.table("P68_Bap1Math1_ctrl1_pairwise_counts.txt", header=TRUE)
+mut1_counts <- read.table("P68_Bap1Math1_mut1_pairwise_counts.txt", header=TRUE)
+ctrl2_counts <- read.table("P68_Bap1Math1_ctrl2_pairwise_counts.txt", header=TRUE)
+mut2_counts <- read.table("P68_Bap1Math1_mut2_pairwise_counts.txt", header=TRUE)
+
+```
+
+
+```{r}
+library('biomaRt')
+library('stringr')
+```
+
+```{r}
+#using Biomart, repeat for each file
+ensembl_ids <- gsub("\\..*","",mut1_counts$Geneid)
+ensembl <- useMart("ensembl", dataset="mmusculus_gene_ensembl")
+
+gene_symbols <- getBM(attributes=c("ensembl_gene_id", "external_gene_name"),
+                      filters="ensembl_gene_id",
+                      values=ensembl_ids,
+                      mart=ensembl)
+```
+
+
+```{r}
+#Replace Ensembl IDs with gene symbols in row names, repeat for each file
+matched_symbols <- gene_symbols$external_gene_name[match(ensembl_ids, gene_symbols$ensembl_gene_id)]
+unmatched_ids <- ensembl_ids[is.na(matched_symbols)]
+
+#Replace missing gene symbols with original Ensembl IDs
+matched_symbols[is.na(matched_symbols)] <- unmatched_ids[unmatched_ids %in% ensembl_ids]
+
+#Remove ribosomal, mitochondrial, and pseudogenes
+genes_to_remove <- c("mt-*", "Rpl*", "Rps*", "GM*", "*Rik","*-ps*", "*-rs")
+
+mut1_counts $Geneid <- matched_symbols
+mut1_filtered <- mut1_counts [!grepl(paste(genes_to_remove, collapse="|"),
+                                     mut1_counts$Geneid), ]
+```
+
+
+```{r}
+ctrl1_countsonly <- ctrl1_filtered[,-c(2:6)]
+ctrl2_countsonly <- ctrl2_filtered[,-c(2:6)]
+mut1_countsonly <- mut1_filtered[,-c(2:6)]
+mut2_countsonly <- mut2_filtered[,-c(2:6)]
+```
+
+```{r}
+head(ctrl1_countsonly)
+head(mut1_countsonly)
+head(ctrl2_countsonly)
+head(mut1_countsonly)
+```
+
+
+```{r}
+write.table(ctrl1_countsonly, file ="P68_Bap1Math1_ctrl1countsonly.txt", sep = "\t", row.names=FALSE)
+write.table(ctrl2_countsonly, file ="P68_Bap1Math1_ctrl2countsonly.txt", sep = "\t", row.names=FALSE)
+write.table(mut1_countsonly, file ="P68_Bap1Math1_mut1countsonly.txt", sep = "\t", row.names=FALSE)
+write.table(mut2_countsonly, file ="P68_Bap1Math1_mut2countsonly.txt", sep = "\t", row.names=FALSE)
+```
+
+
+
+
+
+
+
+SKIP
+```{r}
+##Using org.Mm.eg.db
+gene_symbols <- mapIds(org.Mm.eg.db, keys=ensembl_ids, column="SYMBOL", keytype="ENSEMBL")
+```
+
+SKIP
+```{r}
+#using annotables
+conversion_table <- as.data.frame(ens2ens(probes = ensembl_ids, from = "ensembl_gene_id", to = "external_gene_id", species = "mmusculus_gene_ensembl"))
+counts_with_symbols <- merge(WT1_counts, conversion_table, by.x="row.names", by.y="ensembl_gene_id", all.x=TRUE)
+colnames(counts_with_symbols)[ncol(counts_with_symbols)] <- "gene_symbol"
+head(counts_with_symbols)
+```

@@ -1,0 +1,133 @@
+---
+title: "RNAseq Normalization"
+format: pdf
+---
+```{r}
+library("biomaRt")
+library("stringr")
+```
+
+
+```{r}
+setwd("/Users/kellywang/genomics_analysis")
+counts <- read.table("250920_UDP0065_Bap1Math1_P12_ctrl_5_S20_L005_allgenes_counts.txt", header=TRUE)
+```
+
+
+```{r}
+#using Biomart, repeat for each file
+ensembl_ids <- gsub("\\..*","",counts$Geneid)
+ensembl <- useMart("ensembl", dataset="mmusculus_gene_ensembl")
+gene_symbols <- getBM(attributes=c("ensembl_gene_id", "external_gene_name"),
+filters="ensembl_gene_id",
+values=ensembl_ids,
+mart=ensembl)
+```
+
+
+```{r}
+#Replace Ensembl IDs with gene symbols in row names, repeat for each file
+matched_symbols <- gene_symbols$external_gene_name[match(ensembl_ids, gene_symbols$ensembl_gene_id)]
+unmatched_ids <- ensembl_ids[is.na(matched_symbols)]
+```
+
+
+```{r}
+#Replace missing gene symbols with original Ensembl IDs
+matched_symbols[is.na(matched_symbols)] <- unmatched_ids[unmatched_ids %in% ensembl_ids]
+```
+
+
+```{r}
+# Integrate the gene symbols into the counts data frame
+counts$GeneSymbol <- matched_symbols
+```
+
+
+```{r}
+# Select only the columns with gene symbols and counts
+counts_only <- counts[,c(8,7)]
+head(counts_only)
+```
+
+
+```{r}
+# Select only the columns with gene symbols and lengths
+lengths_only <- counts[,c(8,6)]
+head(lengths_only)
+```
+
+
+```{r}
+#Function to convert counts to TPM
+tpm <- function(counts, lengths) {
+  rate <- counts[2] / lengths[2]
+  rate / sum(rate) * 1e6
+}
+
+```
+
+
+```{r}
+#Input to convert counts to TPM and save as a data frame
+tpm_values <- tpm(counts_only, lengths_only)
+tpm_df <- data.frame(tpm = tpm_values)
+```
+
+
+```{r}
+#Create dataframe with geneIDs
+
+# Extract geneIDs from column 8 of 'counts'
+geneIDs <- counts[, 8]
+
+# Create a new data frame with geneIDs
+new_data_frame <- data.frame(geneID = geneIDs)
+
+# View the new data frame
+head(new_data_frame)
+
+```
+
+
+```{r}
+# Add a new column named 'lengths' with some example counts
+new_data_frame$lengths <- lengths_only[, 2]
+
+# View the new data frame
+head(new_data_frame)
+
+```
+
+
+```{r}
+# Add a new column named 'counts' with count values
+new_data_frame$counts <- counts[, 7]
+
+# View the new data frame
+head(new_data_frame)
+
+```
+
+```{r}
+# Add a new column named 'tpm' with tpm values
+new_data_frame$tpm <- tpm_values[, 1]
+
+# View the new data frame
+head(new_data_frame)
+
+```
+
+```{r}
+#Remove ribosomal, mitochondrial, and pseudogenes
+genes_to_remove <- c("mt-*")
+new_data_frame_filtered <- new_data_frame[!grepl(paste(genes_to_remove, collapse="|"),
+new_data_frame$geneID), ]
+head(new_data_frame_filtered)
+```
+
+```{r}
+#write output file with only counts and gene symbol
+write.table(new_data_frame_filtered, file ="250920_UDP0065_Bap1Math1_P12_ctrl_5_S20_L005_allgenes_Normalized_CountstoTPM.txt", sep = "\t", row.names=FALSE)
+```
+

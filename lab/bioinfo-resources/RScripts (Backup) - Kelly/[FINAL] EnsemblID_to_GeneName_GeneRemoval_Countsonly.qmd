@@ -1,0 +1,49 @@
+---
+title: "EnsemblID_to_GeneName"
+format: pdf
+---
+```{r}
+library("biomaRt")
+library("stringr")
+```
+
+```{r}
+setwd("/Users/kellywang/genomics_analysis")
+counts <- read.table("250920_UDP0095_Bap1Math1_P12_ctrl_4_S19_L005_allgenes_counts.txt", header=TRUE)
+```
+
+```{r}
+#using Biomart, repeat for each file
+ensembl_ids <- gsub("\\..*","",counts$Geneid)
+ensembl <- useMart("ensembl", dataset="mmusculus_gene_ensembl")
+gene_symbols <- getBM(attributes=c("ensembl_gene_id", "external_gene_name"),
+filters="ensembl_gene_id",
+values=ensembl_ids,
+mart=ensembl)
+```
+
+```{r}
+#Replace Ensembl IDs with gene symbols in row names, repeat for each file
+matched_symbols <- gene_symbols$external_gene_name[match(ensembl_ids, gene_symbols$ensembl_gene_id)]
+unmatched_ids <- ensembl_ids[is.na(matched_symbols)]
+```
+
+```{r}
+#Replace missing gene symbols with original Ensembl IDs
+matched_symbols[is.na(matched_symbols)] <- unmatched_ids[unmatched_ids %in% ensembl_ids]
+```
+
+```{r}
+#Remove mitochondrial
+genes_to_remove <- c("mt-*")
+counts$Geneid <- matched_symbols
+counts_filtered <- counts[!grepl(paste(genes_to_remove, collapse="|"),
+counts$Geneid), ]
+counts_only <- counts_filtered[,-c(2:6)]
+```
+
+```{r}
+#write output file with only counts and gene symbol
+write.table(counts_only, file ="250920_UDP0095_Bap1Math1_P12_ctrl_4_S19_L005_allgenes_countsonly.txt", sep = "\t", row.names=FALSE)
+```
+
