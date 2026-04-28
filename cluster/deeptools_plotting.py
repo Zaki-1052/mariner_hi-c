@@ -12,7 +12,7 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'custom_param
 sns.set_theme(font='arial',style='ticks',rc=custom_params)
 
 # only accepts 'mean' for line measure
-def heatmap_plot(values_path,use_height,pileup_type,color_dict=None,vmax_groups=None,line_measure='mean',bed_color_dict=None,up_down=None,body_length=None):
+def heatmap_plot(values_path,use_height,pileup_type,color_dict=None,vmax_groups=None,line_measure='mean',bed_color_dict=None,up_down=None,body_length=None,xticklabels=None):
     df = pd.read_csv(values_path,sep='\t',header=None,nrows=1)
     datasets = [i.replace('#','') for i in df.loc[0,:].tolist()]
     dataset_names = [i.split(':')[0] for i in datasets]
@@ -97,7 +97,10 @@ def heatmap_plot(values_path,use_height,pileup_type,color_dict=None,vmax_groups=
         line.set_xlim(-n_bins/2 * bin_size,n_bins/2 * bin_size)
         if pileup_type == 'referencePoint':
             line.set_xticks([-n_bins/2 * bin_size,0,n_bins/2 * bin_size])
-            line.set_xticklabels([str((-n_bins/2 * bin_size)/1000) + 'kb',0,'+' + str((n_bins/2 * bin_size)/1000) + 'kb'])
+            if xticklabels is not None:
+                line.set_xticklabels(xticklabels)
+            else:
+                line.set_xticklabels([str((-n_bins/2 * bin_size)/1000) + 'kb',0,'+' + str((n_bins/2 * bin_size)/1000) + 'kb'])
         elif pileup_type == 'scale-regions':
             print(line.get_xticks())
             set_val = -n_bins*(up_down*2 + body_length)

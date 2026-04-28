@@ -22,7 +22,7 @@ def bam_coverage(bam_file,out_file,blacklisted_regions,genome='mm10'):
 # must provide either a bam_dict or bigWig_dict
     # bigWig_dict will be used directly, whereas files in a bam_dict will first be RPKM normalized using bamCoverage
 # bed_dict is a dictionary containing paths to bed files of interest
-def bed_pileup(bed_dict,out_dir,blacklisted_regions,bigWig_dict=None,bam_dict=None,out_name='bed_pileup_matrix',up_down=500,color_dict=None,vmax_groups=None,line_measure='mean',use_height=0.000075,pileup_type='referencePoint'):
+def bed_pileup(bed_dict,out_dir,blacklisted_regions,bigWig_dict=None,bam_dict=None,out_name='bed_pileup_matrix',up_down=500,color_dict=None,vmax_groups=None,line_measure='mean',use_height=0.000075,pileup_type='referencePoint',xticklabels=None):
     if (bigWig_dict is None) and (bam_dict is not None):
         
         bigWig_dict = {}
@@ -61,4 +61,4 @@ def bed_pileup(bed_dict,out_dir,blacklisted_regions,bigWig_dict=None,bam_dict=No
     subprocess.run(func, shell=True)
 
     heatmap_plot(values_path=out_path,
-                 color_dict=color_dict,vmax_groups=vmax_groups,line_measure=line_measure,use_height=use_height,pileup_type=pileup_type,up_down=up_down,body_length=body_length)
+                 color_dict=color_dict,vmax_groups=vmax_groups,line_measure=line_measure,use_height=use_height,pileup_type=pileup_type,up_down=up_down,body_length=body_length,xticklabels=xticklabels)
