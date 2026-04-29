@@ -11,7 +11,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import matplotlib
 matplotlib.use('Agg')
@@ -119,11 +119,8 @@ def compute_profiles(filepath, header, bigwig_indices):
     return result
 
 
-def render_figure(profiles, header, out_dir):
-    # type: (Dict, Dict, Path) -> None
-    n_bins = header['n_bins']
-    x = np.arange(n_bins) * header['bin_size'] - 5000 + header['bin_size'] // 2
-
+def _compute_ymaxes(profiles):
+    # type: (Dict) -> Dict[str, float]
     row_ymaxes = {}  # type: Dict[str, float]
     for mark_name, bw_pairs in MARK_ROWS:
         ymax = 0.0
@@ -133,11 +130,13 @@ def render_figure(profiles, header, out_dir):
                 if peak > ymax:
                     ymax = peak
         row_ymaxes[mark_name] = ymax * 1.12
+    return row_ymaxes
 
-    fig = plt.figure(figsize=(9.5, 8.5))
-    gs = GridSpec(4, 6, figure=fig,
-                  hspace=0.40, wspace=0.12,
-                  left=0.07, right=0.97, top=0.94, bottom=0.06)
+
+def _draw_profile_panels(fig, gs, profiles, header, row_ymaxes, n_profile_rows, is_bottom_row):
+    # type: (plt.Figure, GridSpec, Dict, Dict, Dict[str, float], int, bool) -> None
+    n_bins = header['n_bins']
+    x = np.arange(n_bins) * header['bin_size'] - 5000 + header['bin_size'] // 2
 
     for row_idx, (mark_name, bw_pairs) in enumerate(MARK_ROWS):
         y_max = row_ymaxes[mark_name]
@@ -150,8 +149,7 @@ def render_figure(profiles, header, out_dir):
             ax.axvline(0, color='#888888', linewidth=0.3, linestyle='--', zorder=1)
 
             for bw_name, _ in bw_pairs:
-                is_ctrl = bw_name.endswith('_ctrl')
-                color = CTRL_COLOR if is_ctrl else MUT_COLOR
+                color = CTRL_COLOR if bw_name.endswith('_ctrl') else MUT_COLOR
                 p = profiles[(bw_name, cluster)]
                 ax.plot(x, p['mean'], color=color, linewidth=0.6, zorder=2)
                 ax.fill_between(x, p['mean'] - p['sem'], p['mean'] + p['sem'],
@@ -175,7 +173,8 @@ def render_figure(profiles, header, out_dir):
             else:
                 ax.yaxis.set_ticklabels([])
 
-            if row_idx == 3:
+            show_xticks = (is_bottom_row and row_idx == n_profile_rows - 1)
+            if show_xticks:
                 ax.set_xticks([-5000, 0, 5000])
                 ax.set_xticklabels(['-5kb', 'anchor', '+5kb'], fontsize=4.5)
             else:
@@ -187,6 +186,19 @@ def render_figure(profiles, header, out_dir):
                 ax.legend(fontsize=4.5, loc='upper left', frameon=False,
                           handlelength=1.2, handletextpad=0.3)
 
+
+def render_profiles_only(profiles, header, out_dir):
+    # type: (Dict, Dict, Path) -> None
+    row_ymaxes = _compute_ymaxes(profiles)
+
+    fig = plt.figure(figsize=(9.5, 8.5))
+    gs = GridSpec(4, 6, figure=fig,
+                  hspace=0.40, wspace=0.12,
+                  left=0.07, right=0.97, top=0.94, bottom=0.06)
+
+    _draw_profile_panels(fig, gs, profiles, header, row_ymaxes,
+                         n_profile_rows=4, is_bottom_row=True)
+
     fig.suptitle('Histone mark profiles at loop anchors (per cluster)',
                  fontsize=9, fontweight='bold', y=0.98)
 
@@ -195,7 +207,60 @@ def render_figure(profiles, header, out_dir):
     with multi_format_savefig():
         fig.savefig(str(out_path), dpi=300)
     plt.close(fig)
-    print('Saved: {}.{{png,pdf,svg,jpg}}'.format(out_path.stem))
+    print('  Saved: {}.{{png,pdf,svg,jpg}}'.format(out_path.stem))
+
+
+def render_with_bars(profiles, header, out_dir):
+    # type: (Dict, Dict, Path) -> None
+    row_ymaxes = _compute_ymaxes(profiles)
+
+    fig = plt.figure(figsize=(9.5, 10.5))
+    gs = GridSpec(5, 6, figure=fig,
+                  height_ratios=[1, 1, 1, 1, 0.8],
+                  hspace=0.45, wspace=0.12,
+                  left=0.07, right=0.97, top=0.95, bottom=0.05)
+
+    _draw_profile_panels(fig, gs, profiles, header, row_ymaxes,
+                         n_profile_rows=4, is_bottom_row=False)
+
+    gs_bar = GridSpecFromSubplotSpec(1, 4, subplot_spec=gs[4, :], wspace=0.40)
+
+    x_pos = np.arange(len(BIO_ORDER))
+    bar_width = 0.32
+
+    for j, (mark_name, bw_pairs) in enumerate(MARK_ROWS):
+        ax_bar = fig.add_subplot(gs_bar[0, j])
+
+        ctrl_bw = bw_pairs[0][0]
+        mut_bw = bw_pairs[1][0]
+        ctrl_vals = [float(np.mean(profiles[(ctrl_bw, c)]['mean'])) for c in BIO_ORDER]
+        mut_vals = [float(np.mean(profiles[(mut_bw, c)]['mean'])) for c in BIO_ORDER]
+
+        ax_bar.bar(x_pos - bar_width / 2, ctrl_vals, bar_width, color=CTRL_COLOR,
+                   edgecolor='black', linewidth=0.3, alpha=0.85, label='ctrl')
+        ax_bar.bar(x_pos + bar_width / 2, mut_vals, bar_width, color=MUT_COLOR,
+                   edgecolor='black', linewidth=0.3, alpha=0.85, label='mut')
+
+        ax_bar.set_xticks(x_pos)
+        ax_bar.set_xticklabels([BIO_LABELS[c].split('\n')[0] for c in BIO_ORDER],
+                               fontsize=4.5, rotation=30, ha='right')
+        ax_bar.tick_params(axis='both', length=2, pad=1)
+        ax_bar.set_title(MARK_SHORT[mark_name], fontsize=6, fontweight='bold', pad=3)
+
+        if j == 0:
+            ax_bar.set_ylabel('Mean RPKM', fontsize=6)
+            ax_bar.legend(fontsize=4.5, loc='upper right', frameon=False,
+                          handlelength=1.0, handletextpad=0.3)
+
+    fig.suptitle('Histone mark profiles at loop anchors (per cluster)',
+                 fontsize=9, fontweight='bold', y=0.98)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / 'histone_anchors_metagene_bars.png'
+    with multi_format_savefig():
+        fig.savefig(str(out_path), dpi=300)
+    plt.close(fig)
+    print('  Saved: {}.{{png,pdf,svg,jpg}}'.format(out_path.stem))
 
 
 def main():
@@ -216,8 +281,11 @@ def main():
     print('\n[2/3] Computing profiles...')
     profiles = compute_profiles(VALUES_FILE, header, BIGWIG_INDICES)
 
-    print('\n[3/3] Rendering figure...')
-    render_figure(profiles, header, OUT_DIR)
+    print('\n[3/4] Rendering profiles-only figure...')
+    render_profiles_only(profiles, header, OUT_DIR)
+
+    print('\n[4/4] Rendering profiles + bars figure...')
+    render_with_bars(profiles, header, OUT_DIR)
 
     print('\nDone. Output in: {}'.format(OUT_DIR))
 
