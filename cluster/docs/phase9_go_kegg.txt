@@ -1,0 +1,133 @@
+============================================================
+Phase 9: Per-cluster GO/KEGG enrichment
+Cluster dir: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster
+Started:     Wed Apr 29 11:11:19 PDT 2026
+Log:         docs/phase9_go_kegg.txt
+Rscript:     /usr/local/bin/Rscript
+============================================================
+
+[1/1] Running 12_go_kegg_enrichment.R...
+=== Phase 9: Per-Cluster GO/KEGG Enrichment ===
+  Started: 2026-04-29 11:11:21.74724
+  clusterProfiler: 4.16.0
+  org.Mm.eg.db: 3.21.0
+
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Loading per-cluster gene lists...
+  clust1: 7300 unique Entrez IDs
+  clust2: 5950 unique Entrez IDs
+  clust3: 4942 unique Entrez IDs
+  clust4: 1759 unique Entrez IDs
+  clust5: 237 unique Entrez IDs
+  clust6: 1241 unique Entrez IDs
+  Background universe: 12381 unique Entrez IDs (all anchor-proximal genes)
+
+Running compareCluster GO BP (all 6 clusters)...
+  Total GO BP terms: 388
+    clust4: 263 terms
+    clust5: 120 terms
+    clust6: 5 terms
+  Saved: go_bp_all_clusters/{pdf,svg,jpg}
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+
+Running compareCluster KEGG (all 6 clusters)...
+  NOTE: KEGG requires internet (REST API) -- will skip if offline
+  Total KEGG pathways: 10
+    clust1: 4 pathways
+    clust3: 2 pathways
+    clust4: 1 pathways
+    clust6: 3 pathways
+  Saved: kegg_all_clusters/{pdf,svg,jpg}
+
+Running focused enrichment for clust5 (strong gain, 97% up)...
+  Gene list size: 237
+  GO BP: 120 terms
+  Saved: go_bp_clust5/{pdf,svg,jpg}
+  clust5: 0 significant KEGG pathways
+
+Running focused enrichment for clust6 (strong loss, 78% down)...
+  Gene list size: 1241
+  GO BP: 5 terms
+  Saved: go_bp_clust6/{pdf,svg,jpg}
+  KEGG: 3 pathways
+  Saved: kegg_clust6/{pdf,svg,jpg}
+
+=== Summary ===
+
+Gene list sizes:
+  clust1: 7300 genes
+  clust2: 5950 genes
+  clust3: 4942 genes
+  clust4: 1759 genes
+  clust5: 237 genes
+  clust6: 1241 genes
+  Background: 12381 genes
+
+Enrichment results:
+  compareCluster GO BP: 388 terms/pathways
+  compareCluster KEGG: 10 terms/pathways
+  clust5 GO BP: 120 terms/pathways
+  clust5 KEGG: 0 (no significant terms)
+  clust6 GO BP: 5 terms/pathways
+  clust6 KEGG: 3 terms/pathways
+
+Top 3 clust5 GO BP terms:
+  - energy homeostasis
+  - cellular response to phenylalanine
+  - response to phenylalanine
+
+Top 3 clust6 GO BP terms:
+  - embryonic organ morphogenesis
+  - embryonic skeletal system development
+  - embryonic skeletal system morphogenesis
+
+Top 3 clust6 KEGG pathways:
+  - Systemic lupus erythematosus
+  - Alcoholism
+  - Neutrophil extracellular trap formation
+
+Completed: 2026-04-29 11:12:45.215507
+=== Phase 9 GO/KEGG complete ===
+
+============================================================
+Phase 9 outputs (outputs/bap1_late/figures/go_enrichment/)
+============================================================
+TSV results:
+-rw-r--r--@ 1 zakiralibhai  staff   132K Apr 29 11:12 outputs/bap1_late/figures/go_enrichment/go_bp_all_clusters.tsv
+-rw-r--r--@ 1 zakiralibhai  staff    28K Apr 29 11:12 outputs/bap1_late/figures/go_enrichment/go_bp_clust5.tsv
+-rw-r--r--@ 1 zakiralibhai  staff   2.4K Apr 29 11:12 outputs/bap1_late/figures/go_enrichment/go_bp_clust6.tsv
+-rw-r--r--@ 1 zakiralibhai  staff   5.8K Apr 29 11:12 outputs/bap1_late/figures/go_enrichment/kegg_all_clusters.tsv
+-rw-r--r--@ 1 zakiralibhai  staff   1.3K Apr 29 11:12 outputs/bap1_late/figures/go_enrichment/kegg_clust6.tsv
+
+Figure subfolders:
+  go_bp_all_clusters/
+    go_bp_all_clusters.jpg
+    go_bp_all_clusters.pdf
+    go_bp_all_clusters.svg
+  go_bp_clust5/
+    go_bp_clust5.jpg
+    go_bp_clust5.pdf
+    go_bp_clust5.svg
+  go_bp_clust6/
+    go_bp_clust6.jpg
+    go_bp_clust6.pdf
+    go_bp_clust6.svg
+  kegg_all_clusters/
+    kegg_all_clusters.jpg
+    kegg_all_clusters.pdf
+    kegg_all_clusters.svg
+  kegg_clust6/
+    kegg_clust6.jpg
+    kegg_clust6.pdf
+    kegg_clust6.svg
+
+Phase 9 finished: Wed Apr 29 11:12:45 PDT 2026
