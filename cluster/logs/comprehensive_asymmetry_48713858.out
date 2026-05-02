@@ -1,0 +1,226 @@
+===========================================
+Comprehensive Asymmetry Analysis
+===========================================
+Job ID:      48713858
+Node:        exp-1-53
+CPUs:        16
+Memory:      65536 MB
+CODE_DIR:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+MCOOL_CTRL:  /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/ctrl_merged.mcool
+MCOOL_MUT:   /expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402/mut_merged.mcool
+BIGWIG_DIR:  /expanse/lustre/projects/csd940/zalibhai/bigwigs
+Extra args:  
+Start:       Fri May  1 23:44:09 PDT 2026
+===========================================
+/home/zalibhai/miniforge3/envs/cluster/bin/python
+cooltools 0.6.1
+
+/home/zalibhai/miniforge3/envs/cluster/bin/bedGraphToBigWig
+/home/zalibhai/miniforge3/envs/cluster/bin/computeMatrix
+env OK
+
+
+[0/6] Validating inputs...
+  Histone BigWigs: OK (4)
+  Tools on PATH: OK
+
+  Checking oriented anchor BEDs...
+  BEDs: ['clust5', 'clust6', 'clust6_short', 'clust6_long']
+
+[1/6] Coarsening mcools to 25kb + computing phasing tracks...
+  Coarsening 5kb -> 25kb: ctrl_merged.mcool -> ctrl_25kb.cool
+  Balancing 25kb cool...
+    OK: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/ctrl_25kb.cool
+  Coarsening 5kb -> 25kb: mut_merged.mcool -> mut_25kb.cool
+  Balancing 25kb cool...
+    OK: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/mut_25kb.cool
+  Building phasing track from H3K27acCtrl.bw at 25kb...
+    109032 bins with signal (of 109032 total)
+  Building phasing track from H3K27acMut.bw at 25kb...
+    109032 bins with signal (of 109032 total)
+
+[2/6] Computing PC1 BigWigs (cooltools eigs-cis at 25kb)...
+  Running cooltools eigs-cis -> PC1_ctrl.cis.bw
+    OK: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/PC1_ctrl.cis.bw
+  Running cooltools eigs-cis -> PC1_mut.cis.bw
+    OK: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/PC1_mut.cis.bw
+  PC1 ctrl-mut correlation: r=0.9619 (n=101854)
+
+[3/6] Computing insulation BigWigs (cooltools insulation)...
+  Running cooltools insulation -> insulation_ctrl_10kb.200000.bw
+    OK: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/insulation_ctrl_10kb.200000.bw
+  Running cooltools insulation -> insulation_mut_10kb.200000.bw
+    OK: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/insulation_mut_10kb.200000.bw
+
+[4/6] Running computeMatrix (histone +-5kb + compartment +-50kb)...
+
+  Histone run (+-5kb, 4 BigWigs x 4 groups)...
+  CMD: computeMatrix reference-point --referencePoint center -S /expanse/lustre/projects/csd940/zalibhai/bigwigs/H2AK119ubCtrl.bw /expanse/lustre/projects/csd940/zalibhai/bigwigs/H2AK119ubMut.bw /expanse/lus
+    OK: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/histone_anchors_values
+
+  Compartment run (+-50kb/1kb bins, 4 BigWigs x 4 groups)...
+  CMD: computeMatrix reference-point --referencePoint center -S /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/PC1_ctrl.cis.
+    OK: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/compartment_anchors_values
+
+[5/6] Quantifying exterior/interior asymmetry...
+
+  Histone asymmetry:
+  Sub-groups: ['clust5', 'clust6', 'clust6_short', 'clust6_long']
+  Sizes:      [1171, 3860, 2504, 1474]
+  BigWigs:    4
+  Bins:       1000 per BigWig, half=500
+  Matrix:     9009 rows x 4000 cols
+  Wrote: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/asymmetry_histone.tsv
+
+  Compartment asymmetry:
+  Sub-groups: ['clust5', 'clust6', 'clust6_short', 'clust6_long']
+  Sizes:      [1171, 3860, 2504, 1474]
+  BigWigs:    4
+  Bins:       100 per BigWig, half=50
+  Matrix:     9009 rows x 400 cols
+cluster/scripts/12_comprehensive_asymmetry.py:380: RuntimeWarning: Mean of empty slice
+  ext_per_row = np.nanmean(rows[:, ext_cols], axis=1)
+cluster/scripts/12_comprehensive_asymmetry.py:381: RuntimeWarning: Mean of empty slice
+  int_per_row = np.nanmean(rows[:, int_cols], axis=1)
+  Wrote: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/asymmetry_compartment.tsv
+
+[6/6] Generating figures...
+
+  Histone figure:
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+  Figure: histone_asymmetry
+
+  Compartment figure:
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+  Figure: compartment_asymmetry
+
+  Summary figure:
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+findfont: Font family 'arial' not found.
+  Figure: asymmetry_summary
+
+==========================================================================================
+ H2AK119ub_ctrl
+==========================================================================================
+Cluster         Dir                  n   Exterior   Interior  Ext/Int     Asym    p-value    
+------------------------------------------------------------------------------------------
+clust5          strong gain       1171     1.8169     1.9048   0.9539 -0.02361     0.5548 ns
+clust6          strong loss       3860     1.6522     1.6605   0.9950 -0.00251     0.9138 ns
+clust6_short    loss <800kb       2504     1.5239     1.4928   1.0208 +0.01030     0.2292 ns
+clust6_long     loss >=800kb      1474     1.8541     1.9200   0.9657 -0.01745     0.2313 ns
+
+==========================================================================================
+ H2AK119ub_mut
+==========================================================================================
+Cluster         Dir                  n   Exterior   Interior  Ext/Int     Asym    p-value    
+------------------------------------------------------------------------------------------
+clust5          strong gain       1171     1.6873     1.7466   0.9660 -0.01727     0.6147 ns
+clust6          strong loss       3860     2.2080     2.1972   1.0049 +0.00245     0.3411 ns
+clust6_short    loss <800kb       2504     2.3388     2.2835   1.0242 +0.01198     0.0928 ns
+clust6_long     loss >=800kb      1474     2.0330     2.0850   0.9750 -0.01263     0.5840 ns
+
+==========================================================================================
+ H3K27ac_ctrl
+==========================================================================================
+Cluster         Dir                  n   Exterior   Interior  Ext/Int     Asym    p-value    
+------------------------------------------------------------------------------------------
+clust5          strong gain       1171     1.2407     1.2954   0.9578 -0.02158     0.7543 ns
+clust6          strong loss       3860     7.5889     7.4114   1.0240 +0.01183     0.4842 ns
+clust6_short    loss <800kb       2504     9.3856     8.9461   1.0491 +0.02397     0.1858 ns
+clust6_long     loss >=800kb      1474     5.1973     5.3142   0.9780 -0.01112     0.8150 ns
+
+==========================================================================================
+ H3K27ac_mut
+==========================================================================================
+Cluster         Dir                  n   Exterior   Interior  Ext/Int     Asym    p-value    
+------------------------------------------------------------------------------------------
+clust5          strong gain       1171     1.3905     1.3763   1.0103 +0.00513     0.5383 ns
+clust6          strong loss       3860     4.7741     4.6936   1.0172 +0.00851     0.2471 ns
+clust6_short    loss <800kb       2504     5.5013     5.3060   1.0368 +0.01807     0.0602 ns
+clust6_long     loss >=800kb      1474     3.8429     3.7895   1.0141 +0.00700     0.7025 ns
+
+==========================================================================================
+ PC1_ctrl
+==========================================================================================
+Cluster         Dir                  n   Exterior   Interior  Ext/Int     Asym    p-value    
+------------------------------------------------------------------------------------------
+clust5          strong gain       1167    -0.2383    -0.3331   0.7153 +0.00000   6.29e-44 ***
+clust6          strong loss       3858     0.1669     0.1783   0.9361 -0.03302   1.27e-04 ***
+clust6_short    loss <800kb       2502     0.2686     0.3019   0.8898 -0.05834   1.04e-13 ***
+clust6_long     loss >=800kb      1474    -0.0029    -0.0293   0.0989 +0.00000     0.0026 **
+
+==========================================================================================
+ PC1_mut
+==========================================================================================
+Cluster         Dir                  n   Exterior   Interior  Ext/Int     Asym    p-value    
+------------------------------------------------------------------------------------------
+clust5          strong gain       1165    -0.1132    -0.1641   0.6900 +0.00000   6.65e-13 ***
+clust6          strong loss       3858     0.1028     0.1088   0.9456 -0.02796     0.0319 *
+clust6_short    loss <800kb       2502     0.1925     0.2162   0.8905 -0.05792   4.92e-07 ***
+clust6_long     loss >=800kb      1474    -0.0497    -0.0752   0.6608 +0.00000     0.0051 **
+
+==========================================================================================
+ insulation_ctrl
+==========================================================================================
+Cluster         Dir                  n   Exterior   Interior  Ext/Int     Asym    p-value    
+------------------------------------------------------------------------------------------
+clust5          strong gain       1171    -0.2753    -0.1747   1.5761 +0.00000   3.52e-54 ***
+clust6          strong loss       3859    -0.0591     0.0978  -0.6040 -4.05068  2.94e-179 ***
+clust6_short    loss <800kb       2503     0.0793     0.2606   0.3041 -0.53363  5.43e-141 ***
+clust6_long     loss >=800kb      1474    -0.3007    -0.1813   1.6583 +0.00000   6.95e-52 ***
+
+==========================================================================================
+ insulation_mut
+==========================================================================================
+Cluster         Dir                  n   Exterior   Interior  Ext/Int     Asym    p-value    
+------------------------------------------------------------------------------------------
+clust5          strong gain       1167    -0.2765    -0.1089   2.5401 +0.00000   1.94e-89 ***
+clust6          strong loss       3859    -0.1284     0.0142  -9.0317 +0.00000  7.69e-151 ***
+clust6_short    loss <800kb       2503    -0.0011     0.1548  -0.0074 -1.01492  1.15e-110 ***
+clust6_long     loss >=800kb      1474    -0.3524    -0.2291   1.5379 +0.00000   1.24e-50 ***
+
+
+Comprehensive asymmetry analysis complete.
+Outputs in: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry
+
+===========================================
+Output verification
+===========================================
+  OK: asymmetry_histone.tsv (17 lines)
+  OK: asymmetry_compartment.tsv (17 lines)
+  OK: histone_asymmetry.png (512)
+  OK: compartment_asymmetry.png (512)
+  OK: asymmetry_summary.png (512)
+
+All outputs:
+-rw-r--r-- 1 zalibhai csd940 1.6K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/asymmetry_compartment.tsv
+-rw-r--r-- 1 zalibhai csd940 1.6K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/asymmetry_histone.tsv
+-rw-r--r-- 1 zalibhai csd940 138K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/asymmetry_summary.jpg
+-rw-r--r-- 1 zalibhai csd940  21K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/asymmetry_summary.pdf
+-rw-r--r-- 1 zalibhai csd940  76K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/asymmetry_summary.png
+-rw-r--r-- 1 zalibhai csd940  62K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/asymmetry_summary.svg
+-rw-r--r-- 1 zalibhai csd940 261K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/compartment_asymmetry.jpg
+-rw-r--r-- 1 zalibhai csd940  62K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/compartment_asymmetry.pdf
+-rw-r--r-- 1 zalibhai csd940 328K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/compartment_asymmetry.png
+-rw-r--r-- 1 zalibhai csd940 256K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/compartment_asymmetry.svg
+-rw-r--r-- 1 zalibhai csd940 272K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/histone_asymmetry.jpg
+-rw-r--r-- 1 zalibhai csd940 248K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/histone_asymmetry.pdf
+-rw-r--r-- 1 zalibhai csd940 469K May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/histone_asymmetry.png
+-rw-r--r-- 1 zalibhai csd940 1.1M May  2 01:15 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/histone_asymmetry.svg
+
+BigWigs:
+-rw-r--r-- 1 zalibhai csd940 2.6M May  2 01:11 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/insulation_ctrl_10kb.200000.bw
+-rw-r--r-- 1 zalibhai csd940 2.6M May  2 01:11 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/insulation_mut_10kb.200000.bw
+-rw-r--r-- 1 zalibhai csd940 1.6M May  2 01:09 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/PC1_ctrl.cis.bw
+-rw-r--r-- 1 zalibhai csd940 1.6M May  2 01:11 /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/bigwigs/PC1_mut.cis.bw
+
+End: Sat May  2 01:15:29 PDT 2026
+===========================================
