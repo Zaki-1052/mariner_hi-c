@@ -157,14 +157,43 @@ def _make_oriented(sub):
 # PC1 and insulation computation
 # ---------------------------------------------------------------------------
 
-def compute_phasing_track(mcool_path, h3k27ac_bw, resolution, out_tsv):
+def coarsen_to_25kb(mcool_path, out_cool):
+    # type: (str, Path) -> Path
+    if out_cool.exists():
+        print('  25kb cool already exists: {}'.format(out_cool.name))
+        return out_cool
+    print('  Coarsening 5kb -> 25kb: {} -> {}'.format(
+        Path(mcool_path).name, out_cool.name))
+    cmd = [
+        'cooler', 'coarsen',
+        '{}::/resolutions/5000'.format(mcool_path),
+        '-k', '5',
+        '-o', str(out_cool),
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print('  STDERR: {}'.format(result.stderr[-500:] if result.stderr else '(none)'))
+        raise RuntimeError('cooler coarsen failed (exit={})'.format(result.returncode))
+
+    print('  Balancing 25kb cool...')
+    bal_cmd = ['cooler', 'balance', '--nproc', '2', str(out_cool)]
+    bal_result = subprocess.run(bal_cmd, capture_output=True, text=True)
+    if bal_result.returncode != 0:
+        print('  STDERR: {}'.format(bal_result.stderr[-500:] if bal_result.stderr else '(none)'))
+        raise RuntimeError('cooler balance failed (exit={})'.format(bal_result.returncode))
+
+    print('    OK: {}'.format(out_cool))
+    return out_cool
+
+
+def compute_phasing_track(cool_path, h3k27ac_bw, resolution, out_tsv):
     # type: (str, str, int, Path) -> Path
     import cooler
     import pyBigWig
 
     print('  Building phasing track from {} at {}kb...'.format(
         Path(h3k27ac_bw).name, resolution // 1000))
-    clr = cooler.Cooler('{}::/resolutions/{}'.format(mcool_path, resolution))
+    clr = cooler.Cooler(str(cool_path))
     bins = clr.bins()[['chrom', 'start', 'end']][:]
 
     bw = pyBigWig.open(str(h3k27ac_bw))
@@ -191,13 +220,13 @@ def compute_phasing_track(mcool_path, h3k27ac_bw, resolution, out_tsv):
     return out_tsv
 
 
-def compute_pc1_bigwig(mcool_path, phasing_tsv, resolution, out_prefix):
-    # type: (str, Path, int, Path) -> Path
+def compute_pc1_bigwig(cool_path, phasing_tsv, out_prefix):
+    # type: (str, Path, Path) -> Path
     out_bw = Path('{}.cis.bw'.format(out_prefix))
     print('  Running cooltools eigs-cis -> {}'.format(out_bw.name))
     cmd = [
         'cooltools', 'eigs-cis',
-        '{}::/resolutions/{}'.format(mcool_path, resolution),
+        str(cool_path),
         '--phasing-track', '{}::h3k27ac'.format(phasing_tsv),
         '--n-eigs', '1',
         '--clr-weight-name', 'weight',
@@ -810,16 +839,21 @@ def main():
     bw_out = out_dir / 'bigwigs'
     bw_out.mkdir(parents=True, exist_ok=True)
 
-    # -- [1/6] Phasing tracks ------------------------------------------------
+    # -- [1/6] Coarsen + phasing tracks ----------------------------------------
     if not args.skip_compute:
-        print('\n[1/6] Computing H3K27ac phasing tracks...')
+        print('\n[1/6] Coarsening mcools to 25kb + computing phasing tracks...')
+        ctrl_25kb = coarsen_to_25kb(args.mcool_ctrl, bw_out / 'ctrl_25kb.cool')
+        mut_25kb  = coarsen_to_25kb(args.mcool_mut,  bw_out / 'mut_25kb.cool')
+
         ctrl_phasing = compute_phasing_track(
-            args.mcool_ctrl, str(histone_bws['H3K27ac_ctrl']),
+            str(ctrl_25kb), str(histone_bws['H3K27ac_ctrl']),
             MCOOL_RES_PC1, bw_out / 'ctrl_phasing_25kb.tsv')
         mut_phasing = compute_phasing_track(
-            args.mcool_mut, str(histone_bws['H3K27ac_mut']),
+            str(mut_25kb), str(histone_bws['H3K27ac_mut']),
             MCOOL_RES_PC1, bw_out / 'mut_phasing_25kb.tsv')
     else:
+        ctrl_25kb = bw_out / 'ctrl_25kb.cool'
+        mut_25kb  = bw_out / 'mut_25kb.cool'
         ctrl_phasing = bw_out / 'ctrl_phasing_25kb.tsv'
         mut_phasing  = bw_out / 'mut_phasing_25kb.tsv'
         print('\n[1/6] Skipped (--skip-compute)')
@@ -829,13 +863,12 @@ def main():
     pc1_mut_bw  = Path('{}.cis.bw'.format(bw_out / 'PC1_mut'))
 
     if not args.skip_compute:
-        print('\n[2/6] Computing PC1 BigWigs (cooltools eigs-cis)...')
+        print('\n[2/6] Computing PC1 BigWigs (cooltools eigs-cis at 25kb)...')
         pc1_ctrl_bw = compute_pc1_bigwig(
-            args.mcool_ctrl, ctrl_phasing, MCOOL_RES_PC1, bw_out / 'PC1_ctrl')
+            str(ctrl_25kb), ctrl_phasing, bw_out / 'PC1_ctrl')
         pc1_mut_bw = compute_pc1_bigwig(
-            args.mcool_mut, mut_phasing, MCOOL_RES_PC1, bw_out / 'PC1_mut')
+            str(mut_25kb), mut_phasing, bw_out / 'PC1_mut')
 
-        import cooler
         ctrl_vecs = pd.read_csv(str(bw_out / 'PC1_ctrl.cis.vecs.tsv'), sep='\t')
         mut_vecs  = pd.read_csv(str(bw_out / 'PC1_mut.cis.vecs.tsv'), sep='\t')
         merged = ctrl_vecs.merge(mut_vecs, on=['chrom', 'start', 'end'],
