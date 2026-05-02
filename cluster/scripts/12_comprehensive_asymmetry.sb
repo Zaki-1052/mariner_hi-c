@@ -1,0 +1,150 @@
+#!/bin/bash
+# cluster/scripts/12_comprehensive_asymmetry.sb
+# Comprehensive interior/exterior asymmetry: H2AK119ub, H3K27ac, PC1, insulation.
+#
+# Computes PC1 and insulation BigWigs from mcools, then runs computeMatrix at
+# two spatial scales (+-5kb histone, +-50kb compartment), quantifies ext/int
+# asymmetry via Wilcoxon, and generates 3 multi-panel figures.
+#
+# Prerequisites:
+#   - cluster conda env with cooltools, deeptools, ucsc-bedgraphtobigwig
+#   - ICE-balanced mcools (weight column from cooler_balance.sb)
+#   - Histone BigWigs synced to Expanse ($BIGWIG_DIR)
+#
+# Usage (from repo root on Expanse login node):
+#   sbatch cluster/scripts/12_comprehensive_asymmetry.sb
+#
+# Re-run quantify/visualize only (skip cooltools BigWig generation):
+#   sbatch cluster/scripts/12_comprehensive_asymmetry.sb --skip-compute
+#
+#SBATCH --job-name=comp_asymmetry
+#SBATCH --output=cluster/logs/comprehensive_asymmetry_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/cool/250402"
+BIGWIG_DIR="/expanse/lustre/projects/csd940/zalibhai/bigwigs"
+
+MCOOL_CTRL="${DATA_DIR}/ctrl_merged.mcool"
+MCOOL_MUT="${DATA_DIR}/mut_merged.mcool"
+NCPU="${SLURM_CPUS_PER_TASK:-16}"
+EXTRA_ARGS="$@"
+
+mkdir -p "${CODE_DIR}/cluster/logs"
+
+echo "==========================================="
+echo "Comprehensive Asymmetry Analysis"
+echo "==========================================="
+echo "Job ID:      ${SLURM_JOB_ID}"
+echo "Node:        ${HOSTNAME}"
+echo "CPUs:        ${NCPU}"
+echo "Memory:      ${SLURM_MEM_PER_NODE} MB"
+echo "CODE_DIR:    ${CODE_DIR}"
+echo "MCOOL_CTRL:  ${MCOOL_CTRL}"
+echo "MCOOL_MUT:   ${MCOOL_MUT}"
+echo "BIGWIG_DIR:  ${BIGWIG_DIR}"
+echo "Extra args:  ${EXTRA_ARGS}"
+echo "Start:       $(date)"
+echo "==========================================="
+
+# --- Pre-flight checks ---
+if [ ! -s "${MCOOL_CTRL}" ]; then
+  echo "ERROR: missing or empty ctrl mcool: ${MCOOL_CTRL}" >&2
+  exit 2
+fi
+if [ ! -s "${MCOOL_MUT}" ]; then
+  echo "ERROR: missing or empty mut mcool: ${MCOOL_MUT}" >&2
+  exit 2
+fi
+
+for BW in H2AK119ubCtrl.bw H2AK119ubMut.bw H3K27acCtrl.bw H3K27acMut.bw; do
+  if [ ! -s "${BIGWIG_DIR}/${BW}" ]; then
+    echo "ERROR: BigWig not found: ${BIGWIG_DIR}/${BW}" >&2
+    exit 2
+  fi
+done
+
+# --- Activate environment ---
+source ~/.bashrc
+conda activate cluster
+
+which python
+python -c "import cooltools, cooler, pyBigWig; print('cooltools', cooltools.__version__)"
+echo ""
+
+which bedGraphToBigWig || {
+  echo "ERROR: bedGraphToBigWig not on PATH." >&2
+  echo "Install: conda install -c bioconda ucsc-bedgraphtobigwig" >&2
+  exit 2
+}
+
+which computeMatrix || {
+  echo "ERROR: computeMatrix not on PATH." >&2
+  exit 2
+}
+
+echo "env OK"
+echo ""
+
+# --- Run ---
+export PYTHONWARNINGS="ignore::FutureWarning"
+export PYTHONUNBUFFERED=1
+
+cd "${CODE_DIR}"
+
+python -u cluster/scripts/12_comprehensive_asymmetry.py \
+  --mcool-ctrl "${MCOOL_CTRL}" \
+  --mcool-mut  "${MCOOL_MUT}" \
+  --bigwig-dir "${BIGWIG_DIR}" \
+  --nproc      "${NCPU}" \
+  ${EXTRA_ARGS}
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "" >&2
+  echo "ERROR: 12_comprehensive_asymmetry.py failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+# --- Verify outputs ---
+OUT_DIR="${CODE_DIR}/cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry"
+
+echo ""
+echo "==========================================="
+echo "Output verification"
+echo "==========================================="
+
+for F in asymmetry_histone.tsv asymmetry_compartment.tsv; do
+  if [ -s "${OUT_DIR}/${F}" ]; then
+    ROWS=$(wc -l < "${OUT_DIR}/${F}")
+    echo "  OK: ${F} (${ROWS} lines)"
+  else
+    echo "  MISSING: ${F}" >&2
+  fi
+done
+
+for F in histone_asymmetry.png compartment_asymmetry.png asymmetry_summary.png; do
+  if [ -s "${OUT_DIR}/${F}" ]; then
+    SIZE=$(du -h "${OUT_DIR}/${F}" | cut -f1)
+    echo "  OK: ${F} (${SIZE})"
+  else
+    echo "  MISSING: ${F}" >&2
+  fi
+done
+
+echo ""
+echo "All outputs:"
+ls -lh "${OUT_DIR}/"*.{tsv,png,pdf,svg,jpg} 2>/dev/null
+echo ""
+echo "BigWigs:"
+ls -lh "${OUT_DIR}/bigwigs/"*.bw 2>/dev/null
+
+echo ""
+echo "End: $(date)"
+echo "==========================================="
