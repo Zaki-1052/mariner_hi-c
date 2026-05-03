@@ -14,8 +14,10 @@
 set -e
 
 cd "$(dirname "$0")/.."   # cluster/
+[ -n "${CLUSTER_CONF}" ] && source "${CLUSTER_CONF}"
 
-CLUSTER_ENV_BIN=/opt/homebrew/anaconda3/envs/cluster/bin
+_py="${CLUSTER_PYTHON:-$(command -v python3)}"
+CLUSTER_ENV_BIN="${_py%/*}"
 export PATH="${CLUSTER_ENV_BIN}:${PATH}"
 export PYTHONUNBUFFERED=1
 PYTHON="${CLUSTER_ENV_BIN}/python3"

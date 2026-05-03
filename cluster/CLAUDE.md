@@ -13,29 +13,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Adaptation of the Popay et al. (Nat Genet 2026) Hi-C loop clustering pipeline for BAP1-KO mouse cerebellum (mm10, late/adult timepoint 250402). Answers whether Polycomb enrichment at differential loop anchors vs. loop spans supports an anchor-disruption or extrusion-impediment model. The key result is ChromHMM state enrichment heatmaps (anchor vs. span) across k-means clusters — the BAP1-KO equivalent of Popay Figure 2f.
 
-The original Popay code (hg38/hTERT-RPE1/NIPBL depletion) was cloned from `github.com/tpopay/HiC-clustering` and adapted in Phase 0. Eight Python modules in `modules/` are the modified Popay library; numbered scripts in `scripts/` are the BAP1-KO pipeline.
+The original Popay code (hg38/hTERT-RPE1/NIPBL depletion) was cloned from `github.com/tpopay/HiC-clustering` and adapted in Phase 0. Eight Python modules in `modules/` are the modified Popay library; numbered scripts in `scripts/` are the BAP1-KO pipeline. The pipeline is parameterized via shell `.conf` files and env vars so it can be reused for other organisms, conditions, and mark sets — see **Configuration** below.
 
 ## Environment
 
 **Conda env:** `cluster` (Python 3.8.18). Lockfile: `cluster.yml`. Minimal spec: `environment_mac.yml` / `environment_linux.yml`.
 
 **Python interpreter (Mac):** `/opt/homebrew/anaconda3/envs/cluster/bin/python3`
-- `conda run -n cluster python3` does NOT reliably activate the env (pandas import fails). Always use the absolute path.
+- `conda run -n cluster python3` does NOT reliably activate the env (pandas import fails). Always use the absolute path or set `CLUSTER_PYTHON` in your `.conf` file.
 - Python 3.8: PEP 585 generics (`list[X]`, `dict[X,Y]`) are NOT available. Use `from typing import List, Dict, Tuple, Optional`.
 - pandas 1.5.3: use `lineterminator='\n'` (single word), not deprecated `line_terminator`.
 
-**R (Phase 1 only):** system R 4.5.2 invoked as `/usr/local/bin/Rscript`. Bioconductor packages in `/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library`. `keepSeqlevels()` is in `GenomeInfoDb`, not `GenomicRanges`.
+**R (Phase 1 only):** system R 4.5.2 invoked as `/usr/local/bin/Rscript`. Bioconductor packages in `/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library`. `keepSeqlevels()` is in `GenomeInfoDb`, not `GenomicRanges`. Override with `CLUSTER_RSCRIPT` env var.
 
 **External binaries on PATH:**
-- `cluster` — Cluster 3.0 at `/usr/local/bin/cluster` (k-means engine)
+- `cluster` — Cluster 3.0 at `/usr/local/bin/cluster` (k-means engine). Override with `CLUSTER_BIN` env var.
 - `chromhmm` — wrapper in `ChromHMM/` dir, added to PATH via `~/.zshrc`
 - `bedtools` — v2.31.1
+
+All binary paths are env-var gated in runner scripts (fall back to `command -v` if unset).
 
 Key Python packages: matplotlib 3.7.5, seaborn 0.13.2, scikit-learn 1.3.2, scipy 1.10.1, bioframe 0.6.1, pyBigWig, cooler 0.9.3, cooltools 0.6.1, deeptools 3.5.5.
 
 ## Running the Pipeline
 
 All commands run from `cluster/` (the working directory the runners cd to via `$(dirname "$0")/..`). Invoking via `bash cluster/scripts/run_phaseN.sh` from the repo root works too — runners always end up cwd'd to `cluster/` regardless. Phase drivers do NOT use `set -euo pipefail` (benign Java/awk warnings would abort); they use explicit `$?` checks. Logs default to `docs/phaseN.txt` (relative to `cluster/`, i.e. `cluster/docs/phaseN.txt`).
+
+Runners accept an optional `CLUSTER_CONF` env var pointing to a `.conf` file. If set, the runner sources it before resolving binary paths and other config:
+
+```bash
+CLUSTER_CONF=scripts/config/late.conf bash scripts/run_phase3.sh 6 0.01 0.333 3.0
+```
+
+Without `CLUSTER_CONF`, runners fall back to `$(command -v python3)` etc., so they work if the conda env is already activated.
 
 ```bash
 cd cluster   # (optional — runners cd themselves)
@@ -84,6 +94,41 @@ sbatch scripts/03b_chromhmm_9mark.sb union
 # MANUAL: write 18state_rename_cerebellum.txt in chromHMM_9mark_{intersect,union}/
 bash scripts/run_phase4_9mark.sh intersect 18     # Phase 4.4+4.5 for 9-mark model
 ```
+
+## Configuration
+
+The pipeline is parameterized via shell `.conf` files in `scripts/config/` and env vars read by Python scripts via `os.environ.get()`. All env vars have BAP1-KO defaults so existing runs work without setting anything.
+
+**Config files:**
+
+| File | Purpose |
+|------|---------|
+| `scripts/config/late.conf` | BAP1-KO late/adult timepoint (250402) — fully populated |
+| `scripts/config/early.conf` | BAP1-KO early/P12 timepoint (250831) — partially populated |
+| `scripts/config/template.conf` | Documented template for new projects — copy and fill in |
+
+**Config file sections:**
+- **Timepoint identity:** `CLUSTER_TIMEPOINT_LABEL`, `CLUSTER_TIMEPOINT_ID`, `CLUSTER_OUT_DIR`, `CLUSTER_CELL_NAME`
+- **Clustering parameters:** `CLUSTER_K`, `CLUSTER_FILTER_PCT`, `CLUSTER_MIN_RATIO`, `CLUSTER_MAX_RATIO`
+- **Experimental design:** `CLUSTER_CTRL_REPS`, `CLUSTER_MUT_REPS`, `CLUSTER_COND1_COL`, `CLUSTER_COND2_COL`, `CLUSTER_RESOLUTIONS`
+- **Input data paths:** `CLUSTER_MERGED_BEDPE`, `CLUSTER_COUNTS_TEMPLATE`, `CLUSTER_EDGER_TEMPLATE`
+- **Peak BEDs:** `CLUSTER_PEAK_K27AC`, `CLUSTER_PEAK_K27ME3`, `CLUSTER_PEAK_K4ME1`, `CLUSTER_PEAK_K4ME3`, `CLUSTER_PEAK_CTCF`
+- **Machine-specific binaries:** `CLUSTER_PYTHON`, `CLUSTER_RSCRIPT`, `CLUSTER_BIN`
+- **BigWig directory + overrides:** `CLUSTER_BIGWIG_DIR`, `CLUSTER_BW_<KEY>` per-file overrides
+- **Biological annotation (post-clustering):** `CLUSTER_BIO_ORDER`, `CLUSTER_KEY_STATE_ID`, `CLUSTER_BIO_NAME_*`, `CLUSTER_DIRECTION_*`
+- **Optional validation:** `CLUSTER_EXPECTED_TOTAL`, `CLUSTER_EXPECTED_PER_RES`
+
+**Shared Python config module:** `scripts/utils/pipeline_config.py` centralizes functions previously duplicated across scripts:
+- `get_condition_cols()`, `get_replicate_cols()`, `get_resolutions()` — experimental design
+- `get_cluster_order(k)`, `get_bio_order()`, `get_bio_names()` — cluster ordering/labels
+- `build_bigwig_dict(dir)`, `build_vmax_groups()`, `build_color_dict()` — BigWig configuration
+- `parse_header(filepath)` — deepTools computeMatrix header parser
+- `get_key_state_id()`, `find_state_row()` — ChromHMM state lookup
+- `get_size_threshold()`, `get_palette()`, `COORD_COLS` — shared constants
+
+All functions read env vars with BAP1-KO defaults. Scripts import from `pipeline_config` via `sys.path.insert(0, str(SCRIPT_DIR / 'utils'))`.
+
+**For a new project:** copy `scripts/config/template.conf`, fill in required fields, run with `CLUSTER_CONF=scripts/config/myproject.conf bash scripts/run_phase1.sh`. After inspecting clustering results, add `CLUSTER_BIO_ORDER` and `CLUSTER_BIO_NAME_*` for publication-quality figure labels.
 
 ## Pipeline Architecture
 
@@ -137,9 +182,11 @@ All modules load `modules/custom_params.json` at import time (matplotlib rcParam
 
 `scripts/utils/multi_format_output.py` provides a `multi_format_savefig()` context manager that monkey-patches `Figure.savefig` to auto-emit `.svg`, `.pdf`, `.jpg` alongside any `.png` save.
 
+`scripts/utils/pipeline_config.py` provides shared configuration functions (BigWig dict construction, cluster ordering, biological labels, deepTools header parsing) that were previously copy-pasted across 5+ scripts. All scripts import from it via `sys.path`.
+
 ## Column Naming Convention
 
-The loop count file uses `ctrl_merge` / `mut_merge` (NOT `_merged`). Downstream code does `treatment_group.str.replace('_merge', '')` to get display labels `ctrl` / `mut`. Using `_merged` would produce broken labels `ctrld` / `mutd`.
+The loop count file uses `ctrl_merge` / `mut_merge` (NOT `_merged`) by default, configurable via `CLUSTER_COND1_COL` / `CLUSTER_COND2_COL`. Downstream code does `treatment_group.str.replace('_merge', '')` to get display labels `ctrl` / `mut`. Using `_merged` would produce broken labels `ctrld` / `mutd`. Replicate column names default to `ctrl_M1..M3` / `mut_M1..M3`, configurable via `CLUSTER_CTRL_REPS` / `CLUSTER_MUT_REPS`.
 
 ## Data Locations
 

@@ -17,50 +17,14 @@ from scipy import stats
 import os as _os
 SCRIPT_DIR  = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
+sys.path.insert(0, str(SCRIPT_DIR / 'utils'))
+from pipeline_config import parse_header, get_cluster_direction  # noqa: E402
+
 _out = _os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
 VALUES_FILE = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors/oriented_anchors_values'
 OUT_DIR     = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors'
 
-CLUSTER_DIRECTION = {
-    'clust1': 'unchanged',
-    'clust2': '~unchanged',
-    'clust3': 'mod loss',
-    'clust4': 'mod gain',
-    'clust5': 'strong gain',
-    'clust6': 'strong loss',
-}
-
-
-def parse_header(filepath):
-    # type: (Path) -> Dict
-    with open(filepath) as f:
-        line1 = f.readline().strip()
-        line2 = f.readline().strip()
-        line3 = f.readline().strip()
-
-    tokens1 = [t.replace('#', '') for t in line1.split('\t') if ':' in t]
-    cluster_names = [t.split(':')[0].replace('_oriented_anchors.bed', '') for t in tokens1]
-    cluster_sizes = [int(t.split(':')[1]) for t in tokens1]
-
-    params = {}
-    for p in line2.replace('#', '').split('\t'):
-        if ':' in p:
-            k, v = p.split(':', 1)
-            params[k.strip()] = int(v.strip())
-    bin_size = params['bin size']
-    n_bins = (params['upstream'] + params['downstream']) // bin_size
-
-    group_set = set(tokens1)
-    bigwig_labels = [t for t in line3.split('\t') if t not in group_set]
-    bigwig_order = list(dict.fromkeys(bigwig_labels))
-
-    return {
-        'cluster_names': cluster_names,
-        'cluster_sizes': cluster_sizes,
-        'bin_size': bin_size,
-        'n_bins': n_bins,
-        'bigwig_order': bigwig_order,
-    }
+CLUSTER_DIRECTION = get_cluster_direction()
 
 
 def main():

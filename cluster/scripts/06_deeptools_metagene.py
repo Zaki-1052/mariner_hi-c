@@ -35,6 +35,9 @@ sys.path.insert(0, str(SCRIPT_DIR / 'utils'))   # multi_format_output
 
 from deepTools_pipeline import bed_pileup        # noqa: E402
 from multi_format_output import multi_format_savefig, figure_subfolder  # noqa: E402
+from pipeline_config import (                     # noqa: E402
+    get_cluster_order, build_bigwig_dict, build_vmax_groups, build_color_dict,
+)
 
 # -------- inputs (env-var overridable) --------
 import os as _os
@@ -49,38 +52,11 @@ BLACKLIST    = REPO_ROOT / 'tads/mm10-blacklist.v2.bed'
 ANCHOR_BED_DIR = CLUSTER_DIR / _out / 'figures/deeptools_input'
 DEEPTOOLS_DIR  = CLUSTER_DIR / _out / 'figures/deeptools'
 
-# -------- constants --------
-CLUSTER_ORDER = ['clust1', 'clust2', 'clust3', 'clust4', 'clust5', 'clust6']
-
-# 4 marks x 2 conditions = 8 BigWigs (BAP1-relevant: PR-DUB substrate K119ub,
-# PRC2 product K27me3, K27ac active marker, K27me1 PRC2 intermediate)
-BIGWIG_DICT = {
-    'H3K27ac_ctrl':   BIGWIG_BASE / 'H3K27acCtrl.bw',
-    'H3K27ac_mut':    BIGWIG_BASE / 'H3K27acMut.bw',
-    'H3K27me3_ctrl':  BIGWIG_BASE / 'H3K27me3Ctrl.bw',
-    'H3K27me3_mut':   BIGWIG_BASE / 'H3K27me3Mut.bw',
-    'H2AK119ub_ctrl': BIGWIG_BASE / 'H2AK119ubCtrl.bw',
-    'H2AK119ub_mut':  BIGWIG_BASE / 'H2AK119ubMut.bw',
-    'H3K27me1_ctrl':  BIGWIG_BASE / 'H3K27me1Ctrl.bw',
-    'H3K27me1_mut':   BIGWIG_BASE / 'H3K27me1Mut.bw',
-}
-
-# Pair ctrl + mut so the 98th-percentile vmax is shared across conditions per mark.
-# Without paired vmax, mut signal would render against its own scale and visual
-# differences ctrl vs mut would be artifacts of the colormap rather than biology.
-VMAX_GROUPS = [
-    ['H3K27ac_ctrl',   'H3K27ac_mut'],
-    ['H3K27me3_ctrl',  'H3K27me3_mut'],
-    ['H2AK119ub_ctrl', 'H2AK119ub_mut'],
-    ['H3K27me1_ctrl',  'H3K27me1_mut'],
-]
-
-COLOR_DICT = {
-    'H3K27ac_ctrl':   'Blues',   'H3K27ac_mut':    'Blues',
-    'H3K27me3_ctrl':  'Reds',    'H3K27me3_mut':   'Reds',
-    'H2AK119ub_ctrl': 'Greens',  'H2AK119ub_mut':  'Greens',
-    'H3K27me1_ctrl':  'Purples', 'H3K27me1_mut':   'Purples',
-}
+# -------- constants (derived from config) --------
+CLUSTER_ORDER = get_cluster_order()
+BIGWIG_DICT   = build_bigwig_dict(BIGWIG_BASE)
+VMAX_GROUPS   = build_vmax_groups(BIGWIG_DICT)
+COLOR_DICT    = build_color_dict(BIGWIG_DICT)
 
 
 def build_anchor_beds(cluster_file: Path, out_dir: Path) -> dict:

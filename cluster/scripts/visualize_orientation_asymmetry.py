@@ -22,6 +22,9 @@ SCRIPT_DIR  = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
 sys.path.insert(0, str(SCRIPT_DIR / 'utils'))
 from multi_format_output import multi_format_savefig  # noqa: E402
+from pipeline_config import (                         # noqa: E402
+    parse_header, get_bio_order, get_bio_names, get_cluster_direction,
+)
 
 with open(CLUSTER_DIR / 'modules' / 'custom_params.json') as f:
     plt.rcParams.update(json.load(f))
@@ -31,45 +34,14 @@ VALUES_FILE = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors/oriented_
 ASYM_TSV    = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors/asymmetry_quantification.tsv'
 OUT_DIR     = CLUSTER_DIR / _out / 'figures/deeptools/oriented_anchors'
 
-BIO_ORDER  = ['clust6', 'clust3', 'clust1', 'clust2', 'clust4', 'clust5']
-BIO_LABELS = {
-    'clust6': 'clust6\nloss (78%)',
-    'clust3': 'clust3\nmod loss',
-    'clust1': 'clust1\nunchanged',
-    'clust2': 'clust2\n~unchanged',
-    'clust4': 'clust4\nmod gain',
-    'clust5': 'clust5\ngain (97%)',
-}
-DIRECTION_SHORT = {
-    'clust6': 'loss', 'clust3': 'mod loss', 'clust1': 'unchanged',
-    'clust2': '~unchanged', 'clust4': 'mod gain', 'clust5': 'gain',
-}
+BIO_ORDER  = get_bio_order()
+_bio_names = get_bio_names(BIO_ORDER)
+_directions = get_cluster_direction()
+BIO_LABELS = {c: '{}\n{}'.format(c, _bio_names.get(c, c)) for c in BIO_ORDER}
+DIRECTION_SHORT = _directions
 
 CTRL_COLOR = '#2166ac'
 MUT_COLOR  = '#b2182b'
-
-
-def parse_header(filepath):
-    # type: (Path) -> Dict
-    with open(filepath) as f:
-        line1 = f.readline().strip()
-        line2 = f.readline().strip()
-    tokens1 = [t.replace('#', '') for t in line1.split('\t') if ':' in t]
-    cluster_names = [t.split(':')[0].replace('_oriented_anchors.bed', '') for t in tokens1]
-    cluster_sizes = [int(t.split(':')[1]) for t in tokens1]
-    params = {}
-    for p in line2.replace('#', '').split('\t'):
-        if ':' in p:
-            k, v = p.split(':', 1)
-            params[k.strip()] = int(v.strip())
-    bin_size = params['bin size']
-    n_bins = (params['upstream'] + params['downstream']) // bin_size
-    return {
-        'cluster_names': cluster_names,
-        'cluster_sizes': cluster_sizes,
-        'bin_size': bin_size,
-        'n_bins': n_bins,
-    }
 
 
 def compute_profiles(filepath, header, bigwig_indices):

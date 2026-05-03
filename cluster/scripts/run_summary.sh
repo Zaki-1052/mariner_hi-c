@@ -4,8 +4,9 @@
 # Run from cluster/ (cd is automatic via $0).
 set -e
 cd "$(dirname "$0")/.."   # cluster/
+[ -n "${CLUSTER_CONF}" ] && source "${CLUSTER_CONF}"
 
-PYTHON=/opt/homebrew/anaconda3/envs/cluster/bin/python3
+PYTHON="${CLUSTER_PYTHON:-$(command -v python3)}"
 SCRIPT=scripts/08_summary_figures.py
 LOG=${LOG:-docs/phase8_summary.txt}
 

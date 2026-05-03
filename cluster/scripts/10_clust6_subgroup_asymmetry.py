@@ -31,6 +31,10 @@ sys.path.insert(0, str(SCRIPT_DIR / 'utils'))
 
 from deepTools_pipeline import bed_pileup          # noqa: E402
 from multi_format_output import multi_format_savefig, figure_subfolder  # noqa: E402
+from pipeline_config import (                      # noqa: E402
+    get_size_threshold, build_bigwig_dict, build_vmax_groups, build_color_dict,
+    parse_header,
+)
 
 with open(CLUSTER_DIR / 'modules' / 'custom_params.json') as f:
     plt.rcParams.update(json.load(f))
@@ -46,43 +50,22 @@ BLACKLIST    = REPO_ROOT / 'tads/mm10-blacklist.v2.bed'
 ANCHOR_BED_DIR = CLUSTER_DIR / _out / 'figures/deeptools_input'
 DEEPTOOLS_DIR  = CLUSTER_DIR / _out / 'figures/deeptools'
 
-SIZE_THRESHOLD = 800_000
+SIZE_THRESHOLD = get_size_threshold()
 OUT_NAME = 'clust6_subgroups'
 
 SUB_ORDER = ['clust6_short', 'clust6_long']
 SUB_LABELS = {
-    'clust6_short': 'clust6 short\n(<800kb)',
-    'clust6_long':  'clust6 long\n(>=800kb)',
+    'clust6_short': 'clust6 short\n(<{}kb)'.format(SIZE_THRESHOLD // 1000),
+    'clust6_long':  'clust6 long\n(>={}kb)'.format(SIZE_THRESHOLD // 1000),
 }
 SUB_DIRECTION = {
-    'clust6_short': 'short (<800kb)',
-    'clust6_long':  'long (>=800kb)',
+    'clust6_short': 'short (<{}kb)'.format(SIZE_THRESHOLD // 1000),
+    'clust6_long':  'long (>={}kb)'.format(SIZE_THRESHOLD // 1000),
 }
 
-BIGWIG_DICT = {
-    'H3K27ac_ctrl':   BIGWIG_BASE / 'H3K27acCtrl.bw',
-    'H3K27ac_mut':    BIGWIG_BASE / 'H3K27acMut.bw',
-    'H3K27me3_ctrl':  BIGWIG_BASE / 'H3K27me3Ctrl.bw',
-    'H3K27me3_mut':   BIGWIG_BASE / 'H3K27me3Mut.bw',
-    'H2AK119ub_ctrl': BIGWIG_BASE / 'H2AK119ubCtrl.bw',
-    'H2AK119ub_mut':  BIGWIG_BASE / 'H2AK119ubMut.bw',
-    'H3K27me1_ctrl':  BIGWIG_BASE / 'H3K27me1Ctrl.bw',
-    'H3K27me1_mut':   BIGWIG_BASE / 'H3K27me1Mut.bw',
-}
-
-VMAX_GROUPS = [
-    ['H3K27ac_ctrl',   'H3K27ac_mut'],
-    ['H3K27me3_ctrl',  'H3K27me3_mut'],
-    ['H2AK119ub_ctrl', 'H2AK119ub_mut'],
-    ['H3K27me1_ctrl',  'H3K27me1_mut'],
-]
-
-COLOR_DICT = {
-    'H3K27ac_ctrl':   'Blues',   'H3K27ac_mut':    'Blues',
-    'H3K27me3_ctrl':  'Reds',    'H3K27me3_mut':   'Reds',
-    'H2AK119ub_ctrl': 'Greens',  'H2AK119ub_mut':  'Greens',
-    'H3K27me1_ctrl':  'Purples', 'H3K27me1_mut':   'Purples',
-}
+BIGWIG_DICT = build_bigwig_dict(BIGWIG_BASE)
+VMAX_GROUPS = build_vmax_groups(BIGWIG_DICT)
+COLOR_DICT  = build_color_dict(BIGWIG_DICT)
 
 XTICKLABELS = ['-5kb (exterior)', 'anchor', '+5kb (interior)']
 CTRL_COLOR = '#2166ac'
@@ -139,36 +122,8 @@ def build_subgroup_beds(cluster_file, out_dir):
     return bed_dict
 
 
-def parse_header(filepath):
-    # type: (Path) -> Dict
-    with open(filepath) as f:
-        line1 = f.readline().strip()
-        line2 = f.readline().strip()
-        line3 = f.readline().strip()
 
-    tokens1 = [t.replace('#', '') for t in line1.split('\t') if ':' in t]
-    cluster_names = [t.split(':')[0].replace('_oriented_anchors.bed', '') for t in tokens1]
-    cluster_sizes = [int(t.split(':')[1]) for t in tokens1]
-
-    params = {}
-    for p in line2.replace('#', '').split('\t'):
-        if ':' in p:
-            k, v = p.split(':', 1)
-            params[k.strip()] = int(v.strip())
-    bin_size = params['bin size']
-    n_bins = (params['upstream'] + params['downstream']) // bin_size
-
-    group_set = set(tokens1)
-    bigwig_labels = [t for t in line3.split('\t') if t not in group_set]
-    bigwig_order = list(dict.fromkeys(bigwig_labels))
-
-    return {
-        'cluster_names': cluster_names,
-        'cluster_sizes': cluster_sizes,
-        'bin_size': bin_size,
-        'n_bins': n_bins,
-        'bigwig_order': bigwig_order,
-    }
+# parse_header imported from pipeline_config
 
 
 def compute_profiles(filepath, header, bigwig_indices):

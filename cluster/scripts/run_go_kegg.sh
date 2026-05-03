@@ -13,8 +13,9 @@
 set -e
 
 cd "$(dirname "$0")/.."   # cluster/
+[ -n "${CLUSTER_CONF}" ] && source "${CLUSTER_CONF}"
 
-SYS_RSCRIPT="/usr/local/bin/Rscript"
+SYS_RSCRIPT="${CLUSTER_RSCRIPT:-$(command -v Rscript)}"
 SCRIPT="scripts/12_go_kegg_enrichment.R"
 LOG=${LOG:-docs/phase9_go_kegg.txt}
 

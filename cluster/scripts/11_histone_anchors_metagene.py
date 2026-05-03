@@ -24,6 +24,7 @@ SCRIPT_DIR  = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
 sys.path.insert(0, str(SCRIPT_DIR / 'utils'))
 from multi_format_output import multi_format_savefig  # noqa: E402
+from pipeline_config import parse_header, get_bio_order, get_bio_names  # noqa: E402
 
 with open(CLUSTER_DIR / 'modules' / 'custom_params.json') as f:
     plt.rcParams.update(json.load(f))
@@ -33,15 +34,9 @@ SDSC_DIR    = Path(os.environ.get('CLUSTER_SDSC_DIR', '/Users/zakiralibhai/sdsc'
 VALUES_FILE = SDSC_DIR / 'histone_anchors_values'
 OUT_DIR     = CLUSTER_DIR / _out / 'figures/deeptools/histone_anchors'
 
-BIO_ORDER = ['clust6', 'clust3', 'clust1', 'clust2', 'clust4', 'clust5']
-BIO_LABELS = {
-    'clust6': 'clust6\nloss (78%)',
-    'clust3': 'clust3\nmod loss',
-    'clust1': 'clust1\nunchanged',
-    'clust2': 'clust2\n~unchanged',
-    'clust4': 'clust4\nmod gain',
-    'clust5': 'clust5\ngain (97%)',
-}
+BIO_ORDER  = get_bio_order()
+_bio_names = get_bio_names(BIO_ORDER)
+BIO_LABELS = {c: '{}\n{}'.format(c, _bio_names.get(c, c)) for c in BIO_ORDER}
 
 CTRL_COLOR = '#2166ac'
 MUT_COLOR  = '#b2182b'
@@ -61,36 +56,8 @@ MARK_SHORT = {
 }
 
 
-def parse_header(filepath):
-    # type: (Path) -> Dict
-    with open(filepath) as f:
-        line1 = f.readline().strip()
-        line2 = f.readline().strip()
-        line3 = f.readline().strip()
 
-    tokens1 = [t.replace('#', '') for t in line1.split('\t') if ':' in t]
-    cluster_names = [t.split(':')[0].replace('_anchors.bed', '') for t in tokens1]
-    cluster_sizes = [int(t.split(':')[1]) for t in tokens1]
-
-    params = {}
-    for p in line2.replace('#', '').split('\t'):
-        if ':' in p:
-            k, v = p.split(':', 1)
-            params[k.strip()] = int(v.strip())
-    bin_size = params['bin size']
-    n_bins = (params['upstream'] + params['downstream']) // bin_size
-
-    group_set = set(tokens1)
-    bigwig_labels = [t for t in line3.split('\t') if t not in group_set]
-    bigwig_order = list(dict.fromkeys(bigwig_labels))
-
-    return {
-        'cluster_names': cluster_names,
-        'cluster_sizes': cluster_sizes,
-        'bin_size': bin_size,
-        'n_bins': n_bins,
-        'bigwig_order': bigwig_order,
-    }
+# parse_header imported from pipeline_config
 
 
 def compute_profiles(filepath, header, bigwig_indices):

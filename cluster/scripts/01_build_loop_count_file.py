@@ -7,9 +7,15 @@
 
 import os
 import sys
+from pathlib import Path
 
 import pandas as pd
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR / 'utils'))
+from pipeline_config import (  # noqa: E402
+    get_replicate_cols, get_resolutions, get_expected_total, get_expected_per_res,
+)
 
 REPO_ROOT = os.environ.get('REPO_ROOT',
     os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -28,11 +34,14 @@ OUT_COUNTS = os.environ.get('CLUSTER_COUNT_FILE',
 OUT_META = os.environ.get('CLUSTER_METADATA_FILE',
     os.path.join(REPO_ROOT, 'cluster/data/{}_merged_loop_metadata.tsv'.format(_TP_LABEL)))
 
-EXPECTED_TOTAL = 39344 if _TP_LABEL == 'late' else None
-EXPECTED_PER_RES = {5: 7901, 10: 14553, 25: 16890} if _TP_LABEL == 'late' else None
+COND1_COL = os.environ.get('CLUSTER_COND1_COL', 'ctrl_merge')
+COND2_COL = os.environ.get('CLUSTER_COND2_COL', 'mut_merge')
 
-CTRL_REPS = ['ctrl_M1', 'ctrl_M2', 'ctrl_M3']
-MUT_REPS = ['mut_M1', 'mut_M2', 'mut_M3']
+EXPECTED_TOTAL = get_expected_total()
+EXPECTED_PER_RES = get_expected_per_res()
+RESOLUTIONS = get_resolutions()
+
+CTRL_REPS, MUT_REPS = get_replicate_cols()
 COORD_COLS = ['chr1', 'start1', 'end1', 'chr2', 'start2', 'end2']
 COORD_INT_COLS = ['start1', 'end1', 'start2', 'end2']
 META_COLS = [
@@ -58,9 +67,9 @@ def load_per_resolution_counts(kb):
     if missing:
         fail(f"{counts_path} missing replicate columns: {missing}")
 
-    counts['ctrl_merge'] = counts[CTRL_REPS].mean(axis=1)
-    counts['mut_merge'] = counts[MUT_REPS].mean(axis=1)
-    counts = counts[['ctrl_merge', 'mut_merge']].reset_index()
+    counts[COND1_COL] = counts[CTRL_REPS].mean(axis=1)
+    counts[COND2_COL] = counts[MUT_REPS].mean(axis=1)
+    counts = counts[[COND1_COL, COND2_COL]].reset_index()
 
     edger = pd.read_csv(edger_path, sep='\t', usecols=['loop_id'] + COORD_COLS)
 
@@ -75,8 +84,10 @@ def main():
     merged = pd.read_csv(MERGED_BEDPE, sep='\t', header=0)
     print(f"      rows: {len(merged)}")
 
-    if len(merged) != EXPECTED_TOTAL:
+    if EXPECTED_TOTAL is not None and len(merged) != EXPECTED_TOTAL:
         fail(f"Expected {EXPECTED_TOTAL} merged loops, got {len(merged)}")
+    elif EXPECTED_TOTAL is None:
+        print(f"      (CLUSTER_EXPECTED_TOTAL not set — skipping count validation)")
 
     for col in COORD_COLS + ['kept_from_resolution']:
         if col not in merged.columns:
@@ -88,28 +99,32 @@ def main():
 
     res_counts = merged['kept_from_resolution'].value_counts().to_dict()
     print(f"      kept_from_resolution counts: {res_counts}")
-    for kb, expected in EXPECTED_PER_RES.items():
-        observed = res_counts.get(kb, 0)
-        if observed != expected:
-            fail(f"kept_from_resolution={kb}: expected {expected}, got {observed}")
+    if EXPECTED_PER_RES is not None:
+        for kb, expected in EXPECTED_PER_RES.items():
+            observed = res_counts.get(kb, 0)
+            if observed != expected:
+                fail(f"kept_from_resolution={kb}: expected {expected}, got {observed}")
+    else:
+        print(f"      (CLUSTER_EXPECTED_PER_RES not set — skipping per-res validation)")
 
-    print(f"[2/5] Loading per-resolution counts (5/10/25 kb)...")
+    res_label = '/'.join(str(r) for r in RESOLUTIONS)
+    print(f"[2/5] Loading per-resolution counts ({res_label} kb)...")
     per_res = {}
-    for kb in [5, 10, 25]:
+    for kb in RESOLUTIONS:
         per_res[kb] = load_per_resolution_counts(kb)
         print(f"      res {kb}kb: {len(per_res[kb])} loops with merged-replicate counts")
 
     print(f"[3/5] Per-resolution coordinate join...")
     pieces = []
-    for kb in [5, 10, 25]:
+    for kb in RESOLUTIONS:
         sub = merged[merged['kept_from_resolution'] == kb].copy()
         joined = sub.merge(
-            per_res[kb][COORD_COLS + ['ctrl_merge', 'mut_merge']],
+            per_res[kb][COORD_COLS + [COND1_COL, COND2_COL]],
             on=COORD_COLS,
             how='left',
             validate='one_to_one',
         )
-        unmatched = joined[joined['ctrl_merge'].isna()]
+        unmatched = joined[joined[COND1_COL].isna()]
         if len(unmatched) > 0:
             print(f"FATAL: {len(unmatched)} merged-BEDPE rows at "
                   f"kept_from_resolution={kb}kb did not match per-resolution "
@@ -119,23 +134,24 @@ def main():
         pieces.append(joined)
 
     final = pd.concat(pieces, ignore_index=True)
-    if len(final) != EXPECTED_TOTAL:
+    if EXPECTED_TOTAL is not None and len(final) != EXPECTED_TOTAL:
         fail(f"Concat row count: {len(final)} (expected {EXPECTED_TOTAL})")
 
     print(f"[4/5] Writing count file: {OUT_COUNTS}")
+    out_cols = ['chr1', 'x1', 'x2', 'chr2', 'y1', 'y2', COND1_COL, COND2_COL]
     counts_out = (
-        final[COORD_COLS + ['ctrl_merge', 'mut_merge']]
+        final[COORD_COLS + [COND1_COL, COND2_COL]]
         .rename(columns={'start1': 'x1', 'end1': 'x2', 'start2': 'y1', 'end2': 'y2'})
-        [['chr1', 'x1', 'x2', 'chr2', 'y1', 'y2', 'ctrl_merge', 'mut_merge']]
+        [out_cols]
     )
 
     n_nan = int(counts_out.isna().sum().sum())
     if n_nan != 0:
         fail(f"NaN cells in count output: {n_nan}")
-    if not (counts_out['ctrl_merge'] > 0).all():
-        fail("non-positive ctrl_merge values present")
-    if not (counts_out['mut_merge'] > 0).all():
-        fail("non-positive mut_merge values present")
+    if not (counts_out[COND1_COL] > 0).all():
+        fail(f"non-positive {COND1_COL} values present")
+    if not (counts_out[COND2_COL] > 0).all():
+        fail(f"non-positive {COND2_COL} values present")
 
     counts_out.to_csv(OUT_COUNTS, sep='\t', index=False, lineterminator='\n')
     print(f"      wrote {len(counts_out)} rows × {counts_out.shape[1]} cols")
@@ -157,11 +173,11 @@ def main():
     print("=== Summary ===")
     print(f"Count file: {OUT_COUNTS}")
     print(f"  shape: {counts_out.shape}")
-    print("  ctrl_merge distribution:")
-    print(counts_out['ctrl_merge']
+    print(f"  {COND1_COL} distribution:")
+    print(counts_out[COND1_COL]
           .describe(percentiles=[0.01, 0.05, 0.50, 0.95, 0.99]).to_string())
-    print("  mut_merge distribution:")
-    print(counts_out['mut_merge']
+    print(f"  {COND2_COL} distribution:")
+    print(counts_out[COND2_COL]
           .describe(percentiles=[0.01, 0.05, 0.50, 0.95, 0.99]).to_string())
     print()
     print(f"Metadata sidecar: {OUT_META}")

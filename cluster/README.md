@@ -35,9 +35,11 @@ The oriented metagene analysis (Phase 8) further refines this: K27me3 is asymmet
 
 ## Quick Start
 
+All runner scripts accept an optional `CLUSTER_CONF` env var pointing to a config file. For the BAP1-KO late timepoint:
+
 ```bash
-# All phases run from cluster/ (runners cd themselves)
 cd cluster
+export CLUSTER_CONF=scripts/config/late.conf   # optional — sets all paths/params
 
 # Phase 1: Data prep (~1 min)
 bash scripts/run_phase1.sh
@@ -66,7 +68,7 @@ bash scripts/run_oriented_metagene.sh
 bash scripts/run_clust6_subgroups.sh
 
 # Phase 10: Histone anchors metagene profiles (~1-2 min)
-/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/11_histone_anchors_metagene.py
+bash scripts/run_phase5.sh   # or invoke Python directly
 
 # Phase 11: Comprehensive asymmetry (HPC only — needs mcools)
 sbatch scripts/12_comprehensive_asymmetry.sb
@@ -84,7 +86,54 @@ bash scripts/run_phase4_9mark.sh intersect 18
 - **Cluster 3.0:** k-means engine, must be on PATH as `cluster`. Install from [bonsai.hgc.jp](http://bonsai.hgc.jp/~mdehoon/software/cluster/software.htm).
 - **ChromHMM v1.27:** Installed at `ChromHMM/ChromHMM.jar`. Wrapper script `ChromHMM/chromhmm` must be on PATH.
 - **System R 4.5.2** with Bioconductor packages (Phase 1 only): `TxDb.Mmusculus.UCSC.mm10.knownGene`, `org.Mm.eg.db`.
-- **BigWig files** at `/Users/zakiralibhai/sdsc/bigwigs/` (H3K27ac, H3K27me3, H2AK119ub, H3K27me1 -- ctrl + mut).
+- **BigWig files** (4 marks x ctrl/mut). Default: `/Users/zakiralibhai/sdsc/bigwigs/`. Set `CLUSTER_BIGWIG_DIR` in your `.conf` to override.
+
+---
+
+## Configuration
+
+The pipeline is parameterized via shell `.conf` files sourced by runner scripts. Config files live in `scripts/config/`:
+
+| File | Purpose |
+|------|---------|
+| `late.conf` | BAP1-KO late/adult (250402) -- all values populated |
+| `early.conf` | BAP1-KO early/P12 (250831) -- partially populated |
+| `template.conf` | Documented template for new projects |
+
+Config files define env vars read by Python scripts via `os.environ.get(VAR, default)`. All variables have BAP1-KO defaults, so existing runs produce identical output without any config.
+
+Shared Python utilities live in `scripts/utils/pipeline_config.py` -- BigWig dict construction, cluster ordering, biological labels, deepTools header parsing, condition column names, and other constants previously duplicated across scripts.
+
+### Using for a New Project
+
+```bash
+# 1. Copy the template
+cp scripts/config/template.conf scripts/config/myproject.conf
+
+# 2. Fill in required fields:
+#    - CLUSTER_TIMEPOINT_LABEL, CLUSTER_TIMEPOINT_ID, CLUSTER_OUT_DIR, CLUSTER_CELL_NAME
+#    - CLUSTER_CTRL_REPS, CLUSTER_MUT_REPS, CLUSTER_COND1_COL, CLUSTER_COND2_COL
+#    - CLUSTER_MERGED_BEDPE, CLUSTER_COUNTS_TEMPLATE, CLUSTER_EDGER_TEMPLATE
+#    - CLUSTER_PEAK_* (ChIP-seq peak BEDs for ChromHMM)
+#    - CLUSTER_BIGWIG_DIR (and optionally CLUSTER_BW_* per-file overrides)
+#    - CLUSTER_PYTHON, CLUSTER_BIN (machine-specific binary paths)
+
+# 3. Run the pipeline
+export CLUSTER_CONF=scripts/config/myproject.conf
+bash scripts/run_phase1.sh
+bash scripts/run_phase2.sh
+# ... inspect emissions, create rename file ...
+bash scripts/run_phase3.sh 6 0.01 0.333 3.0
+bash scripts/run_phase4.sh all
+
+# 4. After inspecting clustering results, add biological annotation:
+#    CLUSTER_BIO_ORDER="clust4,clust2,clust1,clust3,clust5,clust6"
+#    CLUSTER_BIO_NAME_clust5="Strong gain"
+#    CLUSTER_BIO_NAME_clust6="Strong loss"
+#    Then re-run Phase 7 for publication-quality summary figures.
+```
+
+The pipeline supports different organisms, condition counts, mark sets, replicate numbers, and machines via the `.conf` system. The only architectural constraint is exactly 2 conditions (for the mut/ctrl ratio used in k-means). Popay's 3-condition comparison (DMSO/4h/24h) would require a separate adaptation.
 
 ---
 
@@ -252,7 +301,22 @@ All figures are saved in 4 formats (PNG + PDF + SVG + JPG) via the `multi_format
 | `03b_chromhmm_9mark.sb` | 2b | SLURM wrapper (creates consensus BEDs + runs segmentation) | ~20 min |
 | `run_phase4_9mark.sh` | 2b | Phase 4.4+4.5 with 9-mark env var overrides | ~15 sec |
 
-Runner scripts in `scripts/run_*.sh` handle PATH setup, environment activation, and log capture.
+Runner scripts in `scripts/run_*.sh` handle PATH setup, environment activation, log capture, and optional `.conf` sourcing via `CLUSTER_CONF`.
+
+### Shared Utilities (`scripts/utils/`)
+
+| Utility | Purpose |
+|---------|---------|
+| `multi_format_output.py` | `multi_format_savefig()` context manager -- auto-emits SVG/PDF/JPG alongside PNG |
+| `pipeline_config.py` | Shared configuration functions -- BigWig dict, cluster ordering, biological labels, deepTools header parser, condition columns, constants |
+
+### Config Files (`scripts/config/`)
+
+| Config | Purpose |
+|--------|---------|
+| `late.conf` | BAP1-KO late timepoint -- all variables populated |
+| `early.conf` | BAP1-KO early timepoint -- partially populated |
+| `template.conf` | Documented template for new projects |
 
 ---
 
@@ -321,4 +385,4 @@ Jesse Dixon (Salk Institute) suggested this analysis during the 2026-04-10 meeti
 | bedtools | 2.31.1 (`/opt/homebrew/bin/bedtools`) |
 | Java | 25 (for ChromHMM) |
 
-**Important:** `conda run -n cluster python3` does NOT reliably activate the environment. Always use the absolute interpreter path.
+**Important:** `conda run -n cluster python3` does NOT reliably activate the environment. Use the absolute interpreter path or set `CLUSTER_PYTHON` in your `.conf` file. All binary paths (`CLUSTER_PYTHON`, `CLUSTER_RSCRIPT`, `CLUSTER_BIN`) are configurable via `.conf` files and fall back to `$(command -v ...)` if unset.

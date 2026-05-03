@@ -18,11 +18,13 @@
 set -e
 
 cd "$(dirname "$0")/.."   # cluster/
+[ -n "${CLUSTER_CONF}" ] && source "${CLUSTER_CONF}"
 
 # Cluster env's bin must be on PATH so the `computeMatrix` subprocess called
 # by bed_pileup resolves. The cluster env has deepTools 3.5.5 installed,
 # but is not the default-active env. PYTHON points to the same env explicitly.
-CLUSTER_ENV_BIN=/opt/homebrew/anaconda3/envs/cluster/bin
+_py="${CLUSTER_PYTHON:-$(command -v python3)}"
+CLUSTER_ENV_BIN="${_py%/*}"
 export PATH="${CLUSTER_ENV_BIN}:${PATH}"
 # Force unbuffered Python so prints stream live through `tee` instead of
 # block-buffering during the long subprocess.run('computeMatrix ...') call.

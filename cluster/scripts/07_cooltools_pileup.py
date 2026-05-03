@@ -33,6 +33,7 @@ sys.path.insert(0, str(SCRIPT_DIR / 'utils'))   # multi_format_output
 
 from cooltools_called import mcool_pileup        # noqa: E402
 from multi_format_output import multi_format_savefig, figure_subfolder  # noqa: E402
+from pipeline_config import get_cluster_order     # noqa: E402
 
 import os as _os
 _out = _os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
@@ -40,7 +41,7 @@ _k = _os.environ.get('CLUSTER_K', '6')
 CLUSTER_FILE  = Path(_os.environ.get('CLUSTER_COMBINED',
     str(CLUSTER_DIR / '{}/cluster3/k-{}/data/combined-clusters.txt'.format(_out, _k))))
 OUT_BASE      = CLUSTER_DIR / _out / 'cooltools'
-CLUSTER_ORDER = ['clust1', 'clust2', 'clust3', 'clust4', 'clust5', 'clust6']
+CLUSTER_ORDER = get_cluster_order()
 
 
 def load_bedpe_dict(path: Path) -> dict:

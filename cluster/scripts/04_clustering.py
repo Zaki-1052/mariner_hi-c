@@ -25,6 +25,7 @@ sys.path.insert(0, str(SCRIPT_DIR / 'utils'))  # multi_format_output
 from cluster_tools import elbow, sort_clusters
 from plotting import heat, line, box, strip, randomize_hex
 from multi_format_output import multi_format_savefig, figure_subfolder
+from pipeline_config import get_condition_cols, get_normalize_col, get_palette, COORD_COLS  # noqa: E402
 
 # -------- config (env-var overridable) --------
 import os as _os
@@ -37,14 +38,10 @@ METADATA_FILE   = Path(_os.environ.get('CLUSTER_METADATA_FILE',
 OUT_DIR         = Path(_os.environ.get('CLUSTER_OUT_DIR_PATH',
     str(REPO_ROOT / 'cluster/{}/cluster3'.format(_out))))
 CLUSTER_BIN     = _os.environ.get('CLUSTER_BIN', '/usr/local/bin/cluster')
-NORMALIZE_COL   = 'ctrl_merge'
-DATA_COLS       = ['ctrl_merge', 'mut_merge']
-COORD_COLS      = ['chr1', 'x1', 'x2', 'chr2', 'y1', 'y2']
+NORMALIZE_COL   = get_normalize_col()
+DATA_COLS       = list(get_condition_cols())
 
-PALETTE = {
-    'ctrl_merge': 'darkgrey', 'mut_merge': 'forestgreen',
-    'ctrl':       'darkgrey', 'mut':       'forestgreen',
-}
+PALETTE = get_palette()
 
 
 def load_and_filter(filter_pct: float,

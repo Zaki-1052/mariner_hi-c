@@ -47,6 +47,7 @@ import statistics_functions  # noqa: E402
 from cluster_tools import sort_by_strings  # noqa: E402
 from chromHMM_heatmap import heatmap_plot  # noqa: E402
 from multi_format_output import multi_format_savefig, figure_subfolder  # noqa: E402
+from pipeline_config import get_cluster_order, build_bigwig_dict, COORD_COLS as _COORD_COLS  # noqa: E402
 
 # -------- inputs (env-var overridable) --------
 import os as _os
@@ -80,16 +81,7 @@ DIFFBIND_FILES = {
 }
 
 BIGWIG_BASE = Path(_os.environ.get('CLUSTER_BIGWIG_DIR', '/Users/zakiralibhai/sdsc/bigwigs'))
-BIGWIG_DICT = {
-    'H3K27ac_ctrl':   BIGWIG_BASE / 'H3K27acCtrl.bw',
-    'H3K27ac_mut':    BIGWIG_BASE / 'H3K27acMut.bw',
-    'H3K27me3_ctrl':  BIGWIG_BASE / 'H3K27me3Ctrl.bw',
-    'H3K27me3_mut':   BIGWIG_BASE / 'H3K27me3Mut.bw',
-    'H2AK119ub_ctrl': BIGWIG_BASE / 'H2AK119ubCtrl.bw',
-    'H2AK119ub_mut':  BIGWIG_BASE / 'H2AK119ubMut.bw',
-    'H3K27me1_ctrl':  BIGWIG_BASE / 'H3K27me1Ctrl.bw',
-    'H3K27me1_mut':   BIGWIG_BASE / 'H3K27me1Mut.bw',
-}
+BIGWIG_DICT = build_bigwig_dict(BIGWIG_BASE)
 
 # -------- outputs --------
 OUT_BASE     = REPO_ROOT / 'cluster' / _out
@@ -97,8 +89,8 @@ FIG_BASE     = OUT_BASE / 'figures'
 CHROMHMM_DIR = OUT_BASE / _chromhmm_sub
 
 # -------- constants --------
-CLUSTER_ORDER = ['clust1', 'clust2', 'clust3', 'clust4', 'clust5', 'clust6']
-COORD_COLS    = ['chr1', 'x1', 'x2', 'chr2', 'y1', 'y2']
+CLUSTER_ORDER = get_cluster_order()
+COORD_COLS    = _COORD_COLS
 
 # 12-state ChromHMM cerebellum model (E-prefix). Quiescent excluded from
 # proportions plots — 92% of genome in this state, would dominate.

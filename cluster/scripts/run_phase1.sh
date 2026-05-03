@@ -7,8 +7,9 @@
 # benign warnings); the underlying Python and R scripts fail loudly themselves.
 
 CLUSTER_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CLUSTER_PY="/opt/homebrew/anaconda3/envs/cluster/bin/python3"
-SYS_RSCRIPT="/usr/local/bin/Rscript"
+[ -n "${CLUSTER_CONF}" ] && source "${CLUSTER_CONF}"
+CLUSTER_PY="${CLUSTER_PYTHON:-$(command -v python3)}"
+SYS_RSCRIPT="${CLUSTER_RSCRIPT:-$(command -v Rscript)}"
 
 cd "${CLUSTER_ROOT}"
 

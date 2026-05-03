@@ -59,7 +59,8 @@ BLACKLIST    = REPO_ROOT / 'tads/mm10-blacklist.v2.bed'
 ANCHOR_BED_DIR = CLUSTER_DIR / _out / 'figures/deeptools_input'
 OUT_BASE       = CLUSTER_DIR / _out / 'figures/deeptools/comprehensive_asymmetry'
 
-SIZE_THRESHOLD       = 800_000
+from pipeline_config import get_size_threshold, parse_header as _parse_header  # noqa: E402
+SIZE_THRESHOLD       = get_size_threshold()
 MCOOL_RES_PC1        = 25000
 MCOOL_RES_INS        = 10000
 INS_WINDOW_BP        = 200_000
@@ -315,36 +316,7 @@ def run_computematrix(bw_dict, bed_dict, out_dir, name, up_down,
 # Parsing and quantification (reused from scripts 09/10)
 # ---------------------------------------------------------------------------
 
-def parse_header(filepath):
-    # type: (Path,) -> Dict
-    with open(filepath) as f:
-        line1 = f.readline().strip()
-        line2 = f.readline().strip()
-        line3 = f.readline().strip()
-
-    tokens1 = [t.replace('#', '') for t in line1.split('\t') if ':' in t]
-    cluster_names = [t.split(':')[0].replace('_oriented_anchors.bed', '') for t in tokens1]
-    cluster_sizes = [int(t.split(':')[1]) for t in tokens1]
-
-    params = {}  # type: Dict[str, int]
-    for p in line2.replace('#', '').split('\t'):
-        if ':' in p:
-            k, v = p.split(':', 1)
-            params[k.strip()] = int(v.strip())
-    bin_size = params['bin size']
-    n_bins = (params['upstream'] + params['downstream']) // bin_size
-
-    group_set = set(tokens1)
-    bigwig_labels = [t for t in line3.split('\t') if t not in group_set]
-    bigwig_order = list(dict.fromkeys(bigwig_labels))
-
-    return {
-        'cluster_names': cluster_names,
-        'cluster_sizes': cluster_sizes,
-        'bin_size': bin_size,
-        'n_bins': n_bins,
-        'bigwig_order': bigwig_order,
-    }
+parse_header = _parse_header
 
 
 def quantify_asymmetry(values_file, header, direction_map, out_tsv):

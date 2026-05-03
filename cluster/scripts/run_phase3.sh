@@ -22,8 +22,9 @@
 set -e
 
 cd "$(dirname "$0")/.."   # cluster/
+[ -n "${CLUSTER_CONF}" ] && source "${CLUSTER_CONF}"
 
-PYTHON=/opt/homebrew/anaconda3/envs/cluster/bin/python3
+PYTHON="${CLUSTER_PYTHON:-$(command -v python3)}"
 SCRIPT=scripts/04_clustering.py
 LOG=${LOG:-docs/phase3.txt}
 
