@@ -15,7 +15,7 @@ Both mechanisms operate simultaneously in different loop populations:
 | **Gained loops** (clust5, n=667, 97% up) | **6.59x** | **3.03x** | Polycomb-domain compaction |
 | **Lost loops** (clust6, n=2,359, 78% down) | **2.09x** | 0.94x | Anchor disruption |
 
-Gained loops sit within expanding Polycomb domains (both anchors and span are heterochromatic). Lost loops have Polycomb gain specifically at anchor sites while the span remains euchromatic. The oriented metagene analysis (Phase 8) further refines this: K27me3 is asymmetrically interior-enriched at gained-loop anchors (Ext/Int = 0.91, p = 0.004) but symmetric at lost-loop anchors (Ext/Int = 1.02, p = 0.52).
+Gained loops sit within expanding Polycomb domains (both anchors and span are heterochromatic). Lost loops have Polycomb gain specifically at anchor sites while the span remains euchromatic. The oriented metagene analysis (Phase 8) further refines this: K27me3 is asymmetrically interior-enriched at gained-loop anchors (Ext/Int = 0.91, p = 0.004) but symmetric at lost-loop anchors (Ext/Int = 1.02, p = 0.52). Comprehensive asymmetry (Phase 11) confirms this with orthogonal signals: gained-loop anchors sit at TAD boundaries (insulation p = 3.5e-54) at the edge of B-compartment domains (PC1 p = 6.3e-44), while lost-loop anchors reside in A-compartment euchromatin with no directional Polycomb spreading.
 
 ---
 
@@ -47,6 +47,15 @@ bash scripts/run_summary.sh
 
 # Phase 8: Oriented anchor metagene (~1.7 h)
 bash scripts/run_oriented_metagene.sh
+
+# Phase 9: Clust6 subgroup asymmetry (~2-4 min)
+bash scripts/run_clust6_subgroups.sh
+
+# Phase 10: Histone anchors metagene profiles (~1-2 min)
+/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/11_histone_anchors_metagene.py
+
+# Phase 11: Comprehensive asymmetry (HPC only — needs mcools)
+sbatch scripts/12_comprehensive_asymmetry.sb
 ```
 
 ### Prerequisites
@@ -80,9 +89,13 @@ Phase 7: 08_summary_figures.py (3 composite lab-meeting figures)
 Phase 8: 09_oriented_anchor_metagene.py (strand-aware anchor metagene)
        + quantify_orientation_asymmetry.py (Wilcoxon ext/int -> TSV)
        + visualize_orientation_asymmetry.py (K27me3 dual-panel figure)
+Phase 9: 10_clust6_subgroup_asymmetry.py (clust6 short/long split + asymmetry)
+Phase 10: 11_histone_anchors_metagene.py (clean profile figure from Phase 5 matrix)
+Phase 11: 12_comprehensive_asymmetry.py (H2AK119ub, H3K27ac, PC1, insulation --
+           HPC only, computes PC1/insulation BigWigs from mcools)
 ```
 
-Phases 2 and 3 are independent (both depend on Phase 1). Phase 4 requires both 2 and 3. Phases 5-8 depend on Phase 3's clustering output.
+Phases 2 and 3 are independent (both depend on Phase 1). Phase 4 requires both 2 and 3. Phases 5-11 depend on Phase 3's clustering output. Phase 11 additionally requires mcools on HPC.
 
 ---
 
@@ -173,6 +186,9 @@ outputs/bap1_late/
     deeptools/
       histone_anchors/                  # Phase 5: 8-BigWig x 6-cluster metagene
       oriented_anchors/                 # Phase 8: strand-aware metagene + asymmetry
+      clust6_subgroups/                 # Phase 9: clust6 short/long asymmetry
+      comprehensive_asymmetry/          # Phase 11: H2AK119ub, H3K27ac, PC1, insulation
+        bigwigs/                        #   PC1 + insulation BigWigs (computed from mcools)
     summary_figures/
       dashboard/                        # 6-panel cluster summary
       mechanism/                        # clust5 vs clust6 mechanism comparison
@@ -200,6 +216,9 @@ All figures are saved in 4 formats (PNG + PDF + SVG + JPG) via the `multi_format
 | `09_oriented_anchor_metagene.py` | 8 | Strand-aware anchor metagene | ~1.7 h |
 | `quantify_orientation_asymmetry.py` | 8 | Ext/Int Wilcoxon signed-rank -> TSV | <1 min |
 | `visualize_orientation_asymmetry.py` | 8 | K27me3 dual-panel figure | <1 min |
+| `10_clust6_subgroup_asymmetry.py` | 9 | Clust6 short/long split + oriented asymmetry | ~2-4 min |
+| `11_histone_anchors_metagene.py` | 10 | Clean profile figure from Phase 5 matrix | ~1-2 min |
+| `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, PC1, insulation asymmetry (HPC) | ~90 min |
 
 Runner scripts in `scripts/run_*.sh` handle PATH setup, environment activation, and log capture.
 

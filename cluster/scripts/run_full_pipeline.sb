@@ -330,6 +330,59 @@ else
 fi
 
 # ============================================================================
+# PHASE 9: Clust6 subgroup asymmetry
+# ============================================================================
+
+if ! phase_skipped 9; then
+    banner "Phase 9: Clust6 Subgroup Asymmetry"
+
+    if [[ ! -d "$CLUSTER_BIGWIG_DIR" ]]; then
+        echo "  WARNING: BigWig dir not found. Skipping Phase 9."
+    else
+        "$PYTHON" -u "${SCRIPT_DIR}/10_clust6_subgroup_asymmetry.py"
+        check_status $? "Phase 9 — clust6 subgroup asymmetry"
+    fi
+else
+    echo "Phase 9: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 10: Histone anchors metagene (profile regeneration)
+# ============================================================================
+
+if ! phase_skipped 10; then
+    banner "Phase 10: Histone Anchors Metagene Profiles"
+
+    "$PYTHON" -u "${SCRIPT_DIR}/11_histone_anchors_metagene.py"
+    check_status $? "Phase 10 — histone anchors metagene"
+else
+    echo "Phase 10: SKIPPED"
+fi
+
+# ============================================================================
+# PHASE 11: Comprehensive asymmetry (H2AK119ub, H3K27ac, PC1, insulation)
+# ============================================================================
+
+if ! phase_skipped 11; then
+    banner "Phase 11: Comprehensive Asymmetry (HPC — needs mcools)"
+
+    if [[ -z "$CLUSTER_MCOOL_CTRL" ]] || [[ ! -f "$CLUSTER_MCOOL_CTRL" ]]; then
+        echo "  WARNING: mcool files not found. Skipping Phase 11."
+        echo "  Set CLUSTER_MCOOL_CTRL and CLUSTER_MCOOL_MUT in config."
+        echo "  Or run standalone: sbatch scripts/12_comprehensive_asymmetry.sb"
+    else
+        "$PYTHON" -u "${SCRIPT_DIR}/12_comprehensive_asymmetry.py" \
+            --mcool-ctrl "$CLUSTER_MCOOL_CTRL" \
+            --mcool-mut  "$CLUSTER_MCOOL_MUT" \
+            --bigwig-dir "$CLUSTER_BIGWIG_DIR" \
+            --nproc "${SLURM_CPUS_PER_TASK:-4}"
+        check_status $? "Phase 11 — comprehensive asymmetry"
+    fi
+else
+    echo "Phase 11: SKIPPED"
+fi
+
+# ============================================================================
 # DONE
 # ============================================================================
 

@@ -68,6 +68,15 @@ bash scripts/run_summary.sh
 bash scripts/run_oriented_metagene.sh
 /opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/quantify_orientation_asymmetry.py
 /opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/visualize_orientation_asymmetry.py
+
+# Phase 9: Clust6 subgroup asymmetry (short vs long, ~2-4 min)
+bash scripts/run_clust6_subgroups.sh
+
+# Phase 10: Histone anchors metagene profile regeneration (~1-2 min)
+/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/11_histone_anchors_metagene.py
+
+# Phase 11: Comprehensive asymmetry — H2AK119ub, H3K27ac, PC1, insulation (HPC only)
+sbatch scripts/12_comprehensive_asymmetry.sb
 ```
 
 ## Pipeline Architecture
@@ -93,9 +102,13 @@ Phase 7: 08_summary_figures.py (3 composite lab-meeting figures —
 Phase 8: 09_oriented_anchor_metagene.py (strand-aware anchor metagene)
        + quantify_orientation_asymmetry.py  (Wilcoxon ext/int → TSV)
        + visualize_orientation_asymmetry.py (K27me3 dual-panel figure)
+Phase 9: 10_clust6_subgroup_asymmetry.py (clust6 short/long split + asymmetry)
+Phase 10: 11_histone_anchors_metagene.py (clean profile figure from Phase 5 matrix)
+Phase 11: 12_comprehensive_asymmetry.py (H2AK119ub, H3K27ac, PC1, insulation
+           asymmetry — HPC only, needs mcools for cooltools eigs-cis + insulation)
 ```
 
-Phases 2 and 3 are independent of each other (both depend on Phase 1). Phase 4 requires both 2 and 3. Phases 5–8 all depend on Phase 3's clustering output.
+Phases 2 and 3 are independent of each other (both depend on Phase 1). Phase 4 requires both 2 and 3. Phases 5–11 all depend on Phase 3's clustering output. Phase 11 additionally requires mcools on HPC.
 
 ## Module Architecture
 
