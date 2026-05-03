@@ -15,7 +15,21 @@ Both mechanisms operate simultaneously in different loop populations:
 | **Gained loops** (clust5, n=667, 97% up) | **6.59x** | **3.03x** | Polycomb-domain compaction |
 | **Lost loops** (clust6, n=2,359, 78% down) | **2.09x** | 0.94x | Anchor disruption |
 
-Gained loops sit within expanding Polycomb domains (both anchors and span are heterochromatic). Lost loops have Polycomb gain specifically at anchor sites while the span remains euchromatic. The oriented metagene analysis (Phase 8) further refines this: K27me3 is asymmetrically interior-enriched at gained-loop anchors (Ext/Int = 0.91, p = 0.004) but symmetric at lost-loop anchors (Ext/Int = 1.02, p = 0.52). Comprehensive asymmetry (Phase 11) confirms this with orthogonal signals: gained-loop anchors sit at TAD boundaries (insulation p = 3.5e-54) at the edge of B-compartment domains (PC1 p = 6.3e-44), while lost-loop anchors reside in A-compartment euchromatin with no directional Polycomb spreading.
+Gained loops sit within expanding Polycomb domains (both anchors and span are heterochromatic). Lost loops have Polycomb gain specifically at anchor sites while the span remains euchromatic.
+
+### 9-Mark ChromHMM Expansion (Phase 2b)
+
+Adding H2AK119ub, ATAC, H3K9ac, and H3K9me3 to the model (18 states) resolves K119ub-specific biology:
+
+| State | clust5 anchor | clust5 span | clust6 anchor | clust6 span |
+|-------|:---:|:---:|:---:|:---:|
+| **Polycomb_K119ub** (K27me3 + K119ub) | **8.20x** | 2.57x | **4.14x** | 0.97x |
+| **Repressed_Enhancer_K119ub** (K4me1 + K119ub + K27me3) | **9.02x** | 2.16x | 2.82x | 0.96x |
+| **Active_Enhancer_K119ub** (active marks + K119ub) | 2.10x | 0.56x | **5.15x** | 1.06x |
+
+Repressed_Enhancer_K119ub (9.02x) is the highest enrichment in the dataset -- fully PRC1+PRC2-silenced enhancers at gained-loop anchors. Active_Enhancer_K119ub (5.15x at clust6) represents the transitional state where BAP1 has failed to remove K119ub from active enhancers at lost-loop anchors.
+
+The oriented metagene analysis (Phase 8) further refines this: K27me3 is asymmetrically interior-enriched at gained-loop anchors (Ext/Int = 0.91, p = 0.004) but symmetric at lost-loop anchors (Ext/Int = 1.02, p = 0.52). Comprehensive asymmetry (Phase 11) confirms this with orthogonal signals: gained-loop anchors sit at TAD boundaries (insulation p = 3.5e-54) at the edge of B-compartment domains (PC1 p = 6.3e-44), while lost-loop anchors reside in A-compartment euchromatin with no directional Polycomb spreading.
 
 ---
 
@@ -56,6 +70,12 @@ bash scripts/run_clust6_subgroups.sh
 
 # Phase 11: Comprehensive asymmetry (HPC only — needs mcools)
 sbatch scripts/12_comprehensive_asymmetry.sb
+
+# Phase 2b: 9-mark ChromHMM expansion (HPC for segmentation, Mac for downstream)
+sbatch scripts/03b_chromhmm_9mark.sb intersect
+sbatch scripts/03b_chromhmm_9mark.sb union
+# MANUAL: write {15,18}state_rename_cerebellum.txt after inspecting emissions
+bash scripts/run_phase4_9mark.sh intersect 18
 ```
 
 ### Prerequisites
@@ -93,6 +113,9 @@ Phase 9: 10_clust6_subgroup_asymmetry.py (clust6 short/long split + asymmetry)
 Phase 10: 11_histone_anchors_metagene.py (clean profile figure from Phase 5 matrix)
 Phase 11: 12_comprehensive_asymmetry.py (H2AK119ub, H3K27ac, PC1, insulation --
            HPC only, computes PC1/insulation BigWigs from mcools)
+Phase 2b: 03b_chromhmm_9mark_segmentation.sh (9-mark ChromHMM, 15+18 states --
+           HPC; adds H2AK119ub, ATAC, H3K9ac, H3K9me3)
+         + run_phase4_9mark.sh (Phase 4.4/4.5 rerun with 9-mark env vars)
 ```
 
 Phases 2 and 3 are independent (both depend on Phase 1). Phase 4 requires both 2 and 3. Phases 5-11 depend on Phase 3's clustering output. Phase 11 additionally requires mcools on HPC.
@@ -193,6 +216,12 @@ outputs/bap1_late/
       dashboard/                        # 6-panel cluster summary
       mechanism/                        # clust5 vs clust6 mechanism comparison
       heatmap/                          # z-scored feature heatmap + feature_values.tsv
+  chromHMM_9mark_intersect/              # Phase 2b: 9-mark model (18-state selected)
+    learned_model_18/                   #   Segmentation + emissions (18 states x 9 marks)
+    18state_rename_cerebellum.txt        #   E1-E18 -> biological name mapping
+    {anchor,span}_18.txt                #   Fold-enrichment tables (18 states x 6 clusters)
+    {anchor,span}_18.{png,pdf,svg,jpg}  #   Anchor-vs-span heatmaps
+  chromHMM_9mark_union/                 # Phase 2b: union consensus (for comparison)
   cooltools/
     obs_exp_contacts/                   # Phase 6: Hi-C pileup (ctrl + mut)
 ```
@@ -219,6 +248,9 @@ All figures are saved in 4 formats (PNG + PDF + SVG + JPG) via the `multi_format
 | `10_clust6_subgroup_asymmetry.py` | 9 | Clust6 short/long split + oriented asymmetry | ~2-4 min |
 | `11_histone_anchors_metagene.py` | 10 | Clean profile figure from Phase 5 matrix | ~1-2 min |
 | `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, PC1, insulation asymmetry (HPC) | ~90 min |
+| `03b_chromhmm_9mark_segmentation.sh` | 2b | 9-mark ChromHMM (BinarizeBed + LearnModel k=15,18) | ~20 min |
+| `03b_chromhmm_9mark.sb` | 2b | SLURM wrapper (creates consensus BEDs + runs segmentation) | ~20 min |
+| `run_phase4_9mark.sh` | 2b | Phase 4.4+4.5 with 9-mark env var overrides | ~15 sec |
 
 Runner scripts in `scripts/run_*.sh` handle PATH setup, environment activation, and log capture.
 

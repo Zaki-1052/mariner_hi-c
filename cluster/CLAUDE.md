@@ -77,6 +77,12 @@ bash scripts/run_clust6_subgroups.sh
 
 # Phase 11: Comprehensive asymmetry — H2AK119ub, H3K27ac, PC1, insulation (HPC only)
 sbatch scripts/12_comprehensive_asymmetry.sb
+
+# Phase 2b: 9-mark ChromHMM expansion (HPC for segmentation, Mac for downstream)
+sbatch scripts/03b_chromhmm_9mark.sb intersect   # or: union, both
+sbatch scripts/03b_chromhmm_9mark.sb union
+# MANUAL: write 18state_rename_cerebellum.txt in chromHMM_9mark_{intersect,union}/
+bash scripts/run_phase4_9mark.sh intersect 18     # Phase 4.4+4.5 for 9-mark model
 ```
 
 ## Pipeline Architecture
@@ -106,6 +112,8 @@ Phase 9: 10_clust6_subgroup_asymmetry.py (clust6 short/long split + asymmetry)
 Phase 10: 11_histone_anchors_metagene.py (clean profile figure from Phase 5 matrix)
 Phase 11: 12_comprehensive_asymmetry.py (H2AK119ub, H3K27ac, PC1, insulation
            asymmetry — HPC only, needs mcools for cooltools eigs-cis + insulation)
+Phase 2b: 03b_chromhmm_9mark_segmentation.sh (9-mark ChromHMM, 15+18 states)
+        + run_phase4_9mark.sh (Phase 4.4/4.5 rerun with 9-mark env vars)
 ```
 
 Phases 2 and 3 are independent of each other (both depend on Phase 1). Phase 4 requires both 2 and 3. Phases 5–11 all depend on Phase 3's clustering output. Phase 11 additionally requires mcools on HPC.
@@ -171,7 +179,7 @@ Clusters sorted by descending mean mut/ctrl signal. Biological ordering for summ
 | clust5 | 667 | 97% up | Strong gain — Polycomb domain compaction (anchor 6.59× / span 3.03×) |
 | clust6 | 2,359 | 78% down | Strong loss — anchor disruption (anchor 2.09× / span 0.94×) |
 
-## ChromHMM 12-State Model
+## ChromHMM 12-State Model (5 marks, original)
 
 | ID | State | Notes |
 |----|-------|-------|
@@ -187,6 +195,35 @@ Clusters sorted by descending mean mut/ctrl signal. Biological ordering for summ
 | E10 | Insulator | |
 | E11 | Polycomb | |
 | E12 | Bivalent_Enhancer | |
+
+## ChromHMM 18-State Model (9 marks, expanded)
+
+9-mark expansion: original 5 + H2AK119ub, ATAC, H3K9ac, H3K9me3. Intersect consensus for H3K9 replicates. H3K9me3 is early-only (limitation). Outputs under `outputs/bap1_late/chromHMM_9mark_intersect/`.
+
+| ID | State | Marks ON |
+|----|-------|----------|
+| E1 | K119ub_Only | K119ub |
+| E2 | Polycomb_K119ub | K119ub + K27me3 |
+| E3 | Repressed_Enhancer_K119ub | K4me1 + K119ub + K27me3 |
+| E4 | K119ub_Poised_Enhancer | K4me1 + K119ub |
+| E5 | Poised_Enhancer | K4me1 |
+| E6 | Active_Enhancer_K9ac | K4me1 + K9ac |
+| E7 | Active_Enhancer | K4me1 + K9ac + K27ac |
+| E8 | Active_Enhancer_K119ub | K4me1 + K9ac + K27ac + K119ub |
+| E9 | Strong_Enhancer | K4me1 + K27ac |
+| E10 | Weak_Enhancer | K27ac |
+| E11 | Active_Promoter | K9ac + K4me3 + K27ac |
+| E12 | K9ac_Promoter | K9ac |
+| E13 | Quiescent | (none) |
+| E14 | CTCF_Open | ATAC |
+| E15 | ATAC_Enhancer | ATAC + K4me1 |
+| E16 | Insulator | CTCF |
+| E17 | Polycomb | K27me3 |
+| E18 | Heterochromatin | K9me3 |
+
+`05_grouped_analyses.py` is parameterizable via env vars to use either model:
+- `CLUSTER_NSTATES` (default `12`), `CLUSTER_CHROMHMM_SUBDIR` (default `chromHMM`), `CLUSTER_MODEL_SUBDIR` (default `learned_model`), `CLUSTER_RENAME_SUFFIX` (default `cerebellum`), `CLUSTER_ENRICH_SUFFIX` (default `''`).
+- 9-mark invocation: `bash scripts/run_phase4_9mark.sh intersect 18`
 
 ## Critical Gotchas
 

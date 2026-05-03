@@ -226,6 +226,69 @@ Three-step pipeline testing whether histone marks are asymmetrically enriched on
 
 ---
 
+### 1.10 Phase 2b -- ChromHMM 9-Mark Expansion (Intersect-18)
+
+Extended ChromHMM segmentation with 4 additional marks: H2AK119ub, ATAC, H3K9ac, H3K9me3 (9 marks total). H3K9 replicates merged via bedtools intersect consensus. Both 15-state and 18-state models learned; 18-state selected for resolving K119ub-specific states critical to BAP1-KO biology.
+
+**Model:** 18 states from 9 marks (H3K27ac, H3K27me3, H3K4me1, H3K4me3, CTCF, H2AK119ub, ATAC, H3K9ac, H3K9me3). Ctrl/wildtype peaks only. Converged in 78 iterations, log-likelihood = -2,674,855. Segmentation: 399,313 merged segments on 21 standard chromosomes.
+
+**Timepoint caveat:** H3K9me3 is early-only (no late peaks exist). H2AK119ub is P51 (~9 days from P60 late, treated as late). All other marks are late timepoint.
+
+**18-state emission profile:**
+
+| State | ID | Marks ON | Key mid marks |
+|-------|----|----------|---------------|
+| K119ub_Only | E1 | K119ub | — |
+| Polycomb_K119ub | E2 | K119ub + K27me3 | — |
+| Repressed_Enhancer_K119ub | E3 | K4me1 + K119ub + K27me3 | K9ac(0.37) |
+| K119ub_Poised_Enhancer | E4 | K4me1 + K119ub | K9ac(0.26) |
+| Poised_Enhancer | E5 | K4me1 | — |
+| Active_Enhancer_K9ac | E6 | K4me1 + K9ac | K4me3(0.26) |
+| Active_Enhancer | E7 | K4me1 + K9ac + K27ac | K4me3(0.41) |
+| Active_Enhancer_K119ub | E8 | K4me1 + K9ac + K27ac + K119ub | K4me3(0.36) |
+| Strong_Enhancer | E9 | K4me1 + K27ac | — |
+| Weak_Enhancer | E10 | K27ac | K9ac(0.24) |
+| Active_Promoter | E11 | K9ac + K4me3 + K27ac | ATAC(0.40) |
+| K9ac_Promoter | E12 | K9ac | K4me3(0.38) |
+| Quiescent | E13 | (none) | — |
+| CTCF_Open | E14 | ATAC | CTCF(0.32) |
+| ATAC_Enhancer | E15 | ATAC + K4me1 | — |
+| Insulator | E16 | CTCF | — |
+| Polycomb | E17 | K27me3 | — |
+| Heterochromatin | E18 | K9me3 | — |
+
+**Key anchor-vs-span enrichment (18-state, clust5 and clust6):**
+
+| State | clust5 anchor | clust5 span | clust6 anchor | clust6 span |
+|-------|:---:|:---:|:---:|:---:|
+| Polycomb (K27me3 only) | 5.66 | 3.23 | 1.12 | 0.93 |
+| **Polycomb_K119ub** (K27me3 + K119ub) | **8.20** | 2.57 | **4.14** | 0.97 |
+| **Repressed_Enhancer_K119ub** (K4me1 + K119ub + K27me3) | **9.02** | 2.16 | 2.82 | 0.96 |
+| K119ub_Only | 2.23 | 0.89 | 2.25 | 0.99 |
+| **Active_Enhancer_K119ub** (K4me1 + K9ac + K27ac + K119ub) | 2.10 | 0.56 | **5.15** | 1.06 |
+| Active_Enhancer (no K119ub) | 0.77 | 0.35 | 5.52 | 1.13 |
+| Active_Promoter | 1.59 | 0.37 | 7.18 | 1.11 |
+| Insulator (CTCF) | 5.13 | 0.75 | 3.21 | 0.97 |
+
+Repressed_Enhancer_K119ub (9.02x) is the single highest anchor enrichment in the dataset -- repressed enhancers with full PRC1+PRC2 at gained-loop anchors. Active_Enhancer_K119ub (5.15x at clust6 anchors) represents the "BAP1 failed to remove K119ub from active enhancers" signature at lost-loop anchors.
+
+**Proportions (18-state, Quiescent excluded):**
+
+| State | clust1 | clust2 | clust3 | clust4 | clust5 | clust6 |
+|-------|--------|--------|--------|--------|--------|--------|
+| Polycomb | 2.4% | 4.0% | 1.1% | 19.5% | **50.0%** | 2.4% |
+| Polycomb_K119ub | 3.8% | 6.6% | 3.3% | 25.0% | **23.5%** | 17.6% |
+| Repressed_Enhancer_K119ub | 1.8% | 3.8% | 2.5% | 8.1% | **11.8%** | 1.9% |
+| Active_Enhancer_K119ub | 10.4% | 13.6% | 8.2% | 5.5% | 0.0% | 7.1% |
+| Active_Promoter | 36.0% | 31.5% | 41.1% | 19.5% | 4.4% | 39.1% |
+| Strong_Enhancer | 15.4% | 12.3% | 16.0% | 3.7% | 0.0% | 15.7% |
+
+Clust5: 50% Polycomb + 23.5% Polycomb_K119ub + 11.8% Repressed_Enhancer_K119ub = **85.3% PRC1/PRC2-marked**. Clust6: heterogeneous with 17.6% Polycomb_K119ub + 7.1% Active_Enhancer_K119ub as the K119ub-involved fraction.
+
+**Comparison with 5-mark 12-state model:** The original "Polycomb" state (6.59x at clust5 anchors) was an undifferentiated mix of K27me3-only (5.66x) and K27me3+K119ub (8.20x) regions. The 9-mark model reveals that PRC1+PRC2 co-marked chromatin (Polycomb_K119ub) is more enriched than K27me3-alone Polycomb, and that repressed enhancers carrying K119ub+K27me3 (Repressed_Enhancer_K119ub, 9.02x) are the most enriched state of all. The original "Bivalent_Enhancer" (K4me1+K27me3, 7.91x) is now better characterized as Repressed_Enhancer_K119ub since K119ub co-marks these regions.
+
+---
+
 ### 1.9 Phase 11 -- Comprehensive Asymmetry (H2AK119ub, H3K27ac, PC1, Insulation)
 
 Extended asymmetry analysis at two spatial scales: histone marks (H2AK119ub, H3K27ac) at +-5kb anchor-local, and compartment features (PC1 eigenvector, insulation score) at +-50kb domain-scale. PC1 computed via `cooltools eigs-cis` at 25kb (coarsened from 5kb mcool, ICE-balanced). Insulation via `cooltools insulation` at 10kb with 200kb diamond window. Focused on clust5, clust6, and clust6 short/long subgroups. Runtime: 91 min on Expanse (job 48713858).
@@ -278,7 +341,7 @@ The central finding is that gained and lost chromatin loops in BAP1-KO cerebellu
 - Insulation: exterior more boundary-like (ext = -0.28, int = -0.17, p = 3.5e-54)
 - H2AK119ub and H3K27ac: no asymmetry (uniform at anchors)
 
-These are new contacts forming **within expanding Polycomb domains**. Both anchors sit in heterochromatin, the chromatin between them is heterochromatic. The interior K27me3 asymmetry indicates the Polycomb domain extends preferentially inward from the anchors into the loop body, consistent with PRC-mediated domain compaction. The PC1 and insulation data confirm that clust5 anchors sit at **TAD boundaries at the edge of B-compartment Polycomb domains** -- the loop interior is deeper in heterochromatin (more B, less insulated / more self-associating) while the exterior faces the A/B boundary.
+These are new contacts forming **within expanding Polycomb domains**. Both anchors sit in heterochromatin, the chromatin between them is heterochromatic. The interior K27me3 asymmetry indicates the Polycomb domain extends preferentially inward from the anchors into the loop body, consistent with PRC-mediated domain compaction. The PC1 and insulation data confirm that clust5 anchors sit at **TAD boundaries at the edge of B-compartment Polycomb domains** -- the loop interior is deeper in heterochromatin (more B, less insulated / more self-associating) while the exterior faces the A/B boundary. The 9-mark model (Phase 2b) further resolves this: PRC1+PRC2 co-marked chromatin (Polycomb_K119ub, 8.20x) is more enriched than K27me3-alone (5.66x), and Repressed_Enhancer_K119ub (K4me1+K119ub+K27me3, 9.02x) is the single highest enrichment -- these are enhancers that have been fully silenced by PRC1+PRC2 at gained-loop anchors.
 
 **Lost loops (clust6, 2,359 loops, 78% down_in_mutant):**
 - Polycomb enriched at anchors (2.09x) but NOT at span (0.94x, genome baseline)
@@ -291,7 +354,7 @@ These are new contacts forming **within expanding Polycomb domains**. Both ancho
 - Insulation: dramatic sign flip across anchor (ext = -0.06, int = +0.10, p = 2.9e-179)
 - H2AK119ub and H3K27ac: no asymmetry
 
-These are existing active/CRE loops whose CTCF anchor sites become invaded by Polycomb upon BAP1 loss. The span remains euchromatic. The symmetric K27me3 at lost-loop anchors indicates Polycomb gain is not side-specific -- it does not create a euchromatin-to-heterochromatin boundary. Instead, the anchor region itself becomes heterochromatinized, disrupting CTCF binding. The insulation data reveals a sharp boundary-to-open transition at these anchors: the exterior is insulated while the interior (loop body) shows open contact structure, consistent with the anchor marking the edge of a structural domain that is being disrupted.
+These are existing active/CRE loops whose CTCF anchor sites become invaded by Polycomb upon BAP1 loss. The span remains euchromatic. The symmetric K27me3 at lost-loop anchors indicates Polycomb gain is not side-specific -- it does not create a euchromatin-to-heterochromatin boundary. Instead, the anchor region itself becomes heterochromatinized, disrupting CTCF binding. The insulation data reveals a sharp boundary-to-open transition at these anchors: the exterior is insulated while the interior (loop body) shows open contact structure, consistent with the anchor marking the edge of a structural domain that is being disrupted. The 9-mark model identifies Active_Enhancer_K119ub (5.15x) at clust6 anchors -- active enhancers that still carry K119ub, representing the transitional state where BAP1 has failed to remove K119ub but full PRC2-mediated silencing has not yet occurred.
 
 ### 2.2 Mapping to the Dixon/Popay Framework
 
@@ -311,6 +374,8 @@ K119ub data connects the two mechanisms to BAP1's enzymatic activity:
 - At **lost-loop anchors** (clust6), K119ub_mut is elevated (ctrl 1.16 -> mut 1.58). BAP1 loss leads to K119ub accumulation at these specific anchor sites, which recruits PRC2 -> H3K27me3 -> CTCF displacement.
 - At **gained-loop anchors** (clust5), K119ub is already high in both conditions (ctrl 1.37, mut 1.25). These are pre-existing Polycomb-marked loci where the chromatin domain is already repressive; BAP1 loss exacerbates domain expansion.
 - The overall pattern is not a uniform mut-up shift but rather increased cluster-level K119ub variance in mutant (Kruskal-Wallis statistic: 926 mut vs 361 ctrl), consistent with locus-specific rather than genome-wide K119ub changes.
+
+The 9-mark ChromHMM model (Phase 2b) provides direct chromatin-state evidence for K119ub's role. At gained-loop anchors (clust5), 85% of anchors are PRC1/PRC2-co-marked: 50% Polycomb + 23.5% Polycomb_K119ub + 11.8% Repressed_Enhancer_K119ub. Repressed_Enhancer_K119ub (K4me1+K119ub+K27me3) — enhancers that have been fully silenced — is the most enriched state in the entire dataset (9.02x at clust5 anchors vs 2.16x in spans), confirming that PRC1-mediated enhancer silencing drives gained-loop formation within Polycomb domains. At lost-loop anchors (clust6), the 18-state model resolves Active_Enhancer_K119ub (K4me1+K9ac+K27ac+K119ub, 5.15x anchor, 1.06x span) — active enhancers carrying K119ub without full K27me3 silencing. These represent a transitional state: BAP1 has failed to remove K119ub, PRC2 recruitment is incomplete, but CTCF binding is already disrupted. This supports a model where K119ub accumulation precedes and drives the chromatin state transition at lost-loop anchors.
 
 ### 2.4 Loop Length and Classification Patterns
 
@@ -413,6 +478,9 @@ The methylation gains at CpG islands appear to occur independently of direct K11
 | `10_clust6_subgroup_asymmetry.py` | 9 | Clust6 short/long split + asymmetry |
 | `11_histone_anchors_metagene.py` | 10 | Clean profile figure from Phase 5 matrix |
 | `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, PC1, insulation asymmetry (HPC) |
+| `03b_chromhmm_9mark_segmentation.sh` | 2b | 9-mark ChromHMM (BinarizeBed + LearnModel k=15,18) |
+| `03b_chromhmm_9mark.sb` | 2b | SLURM wrapper for 9-mark segmentation (HPC) |
+| `run_phase4_9mark.sh` | 2b | Driver for 9-mark Phase 4.4/4.5 rerun |
 
 ### Key Output Files (`bap1_late/`)
 
@@ -434,6 +502,10 @@ The methylation gains at CpG islands appear to occur independently of direct K11
 | `figures/deeptools/comprehensive_asymmetry/bigwigs/` | PC1 + insulation BigWigs (computed from mcools) |
 | `figures/summary_figures/{dashboard,mechanism,heatmap}/` | Phase 7 composites |
 | `cooltools/obs_exp_contacts/` | Phase 6 pileup (ctrl + mut) |
+| `chromHMM_9mark_intersect/` | Phase 2b: 9-mark model outputs (18-state selected) |
+| `chromHMM_9mark_intersect/{anchor,span}_18.txt` | 9-mark anchor-vs-span enrichment (18 states x 6 clusters) |
+| `chromHMM_9mark_intersect/{anchor,span}_18.{png,pdf,svg,jpg}` | 9-mark heatmaps |
+| `figures/chromHMM_anchor_18/` | 9-mark proportions stacked bar |
 
 ### Run Logs (`docs/`)
 
@@ -454,3 +526,5 @@ The methylation gains at CpG islands appear to occur independently of direct K11
 | Log | Phase | Content |
 |-----|-------|---------|
 | `comprehensive_asymmetry_48713858.out` | 11 | H2AK119ub, H3K27ac, PC1, insulation asymmetry (~91 min) |
+| `chromhmm_9mark_48731723.out` | 2b | 9-mark intersect segmentation (15+18 states, ~20 min) |
+| `chromhmm_9mark_48731724.out` | 2b | 9-mark union segmentation (15+18 states, ~19 min) |

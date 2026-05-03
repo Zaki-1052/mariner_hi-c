@@ -2,7 +2,7 @@
 
 Comprehensive context document for the Popay-style Hi-C loop clustering analysis adapted for BAP1-KO cerebellum. This file plus `PLAN-CLUSTER.md` provide full context for AI sessions -- no need to @ individual project files.
 
-**Last updated:** 2026-04-26
+**Last updated:** 2026-05-02
 
 ---
 
@@ -352,6 +352,10 @@ Directional bias reverses between timepoints: more lost at P12, more gained in a
 | H3K4me1 | `peaks/beds/H3K4me1CerebellumLate1.bed` | 113,781 |
 | H3K4me3 | `peaks/beds/H3K4me3CerebellumLate2.bed` | 6,581 |
 | CTCF | `peaks/CTCF.bed` | 32,487 |
+| H2AK119ub (ctrl, P51) | `peaks/intersect/P51_K119ub_ctrl_intersect.bed` | 20,592 |
+| ATAC (ctrl consensus) | `peaks/atac_seq/consensus_control.bed` | 65,799 |
+| H3K9ac (Late, intersect) | `peaks/h3k9/H3K9ac_consensus_intersect.bed` | 17,845 |
+| H3K9me3 (Early, intersect) | `peaks/h3k9/H3K9me3_consensus_intersect.bed` | 5,921 |
 
 ### BigWig files (for deepTools metagene)
 
@@ -391,6 +395,7 @@ Column mapping vs Popay: our files use `Peak_Chr/Peak_Start/Peak_End` (cols 4-6)
 | Activity vs Contact decomposition | DONE | `abc/results/figures/activity_contact_scatter/` |
 | Stripenn full pipeline (Stages 0-7) | DONE | `stripes/stripenn/outputs/` |
 | Developmental comparison | DONE | `output/developmental_comparison/` |
+| ChromHMM 9-mark expansion (Phase 2b) | DONE | `cluster/outputs/bap1_late/chromHMM_9mark_{intersect,union}/` |
 
 ---
 
