@@ -1,0 +1,418 @@
+============================================================
+ChromHMM 9-mark SLURM wrapper
+Job ID:    48731724
+Node:      exp-16-56
+CPUs:      4
+Memory:    32768MB
+Method:    union
+CODE_DIR:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+Started:   Sat May  2 19:35:17 PDT 2026
+============================================================
+
+--- Pre-flight checks ---
+  OK  java: /usr/bin/java
+  OK  bedtools: /home/zalibhai/miniforge3/envs/cluster/bin/bedtools
+  OK  peaks/beds/H3K27acCerebellumLate2.bed (15105 lines)
+  OK  peaks/beds/H3K27me3CerebellumLate1.bed (15809 lines)
+  OK  peaks/beds/H3K4me1CerebellumLate1.bed (113781 lines)
+  OK  peaks/beds/H3K4me3CerebellumLate2.bed (6581 lines)
+  OK  peaks/CTCF.bed (32487 lines)
+  OK  peaks/intersect/P51_K119ub_ctrl_intersect.bed (20592 lines)
+  OK  peaks/atac_seq/consensus_control.bed (65799 lines)
+  OK  peaks/h3k9/H3K9acCerebellumLate1.bed (21668 lines)
+  OK  peaks/h3k9/H3K9acCerebellumLate2.bed (20054 lines)
+  OK  peaks/h3k9/H3K9me3CerebellumEarly1.bed (13105 lines)
+  OK  peaks/h3k9/H3K9me3CerebellumEarly2.bed (15049 lines)
+
+--- Creating H3K9 consensus BEDs ---
+  Union consensus (peaks in EITHER replicate, merged)...
+    H3K9ac union: 23662 peaks
+    H3K9me3 union: 22025 peaks
+
+============================================================
+Running 9-mark segmentation: union consensus
+============================================================
+============================================================
+Phase 2b: ChromHMM 9-mark segmentation (k=15 18)
+Repo root:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+Cell:         cerebellum_late
+Output dir:   /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union
+H3K9ac src:   peaks/h3k9/H3K9ac_consensus_union.bed
+H3K9me3 src:  peaks/h3k9/H3K9me3_consensus_union.bed
+Parallelism:  4 threads
+Started:      Sat May  2 19:35:20 PDT 2026
+============================================================
+
+[1/5] Staging 9 peak BEDs (filter to chr1-19 + chrX + chrY, take cols 1-3)...
+    H3K27ac       peaks/beds/H3K27acCerebellumLate2.bed                         (  15105 ->   15100)
+    H3K27me3      peaks/beds/H3K27me3CerebellumLate1.bed                        (  15809 ->   15801)
+    H3K4me1       peaks/beds/H3K4me1CerebellumLate1.bed                         ( 113781 ->  113722)
+    H3K4me3       peaks/beds/H3K4me3CerebellumLate2.bed                         (   6581 ->    6581)
+    CTCF          peaks/CTCF.bed                                                (  32487 ->   32474)
+    H2AK119ub     peaks/intersect/P51_K119ub_ctrl_intersect.bed                 (  20592 ->   20583)
+    ATAC          peaks/atac_seq/consensus_control.bed                          (  65799 ->   65799)
+    H3K9ac        peaks/h3k9/H3K9ac_consensus_union.bed                         (  23662 ->   23650)
+    H3K9me3       peaks/h3k9/H3K9me3_consensus_union.bed                        (  22025 ->   21501)
+
+[2/5] Filtering chromsizes to chr1-19 + chrX + chrY...
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/mm10_standard.txt: 21 chroms, total 2725521370 bp
+
+[3/5] Writing 9-mark cellmarkfiletable...
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/cellmarkfiletable.txt:
+        cerebellum_late	H3K27ac	H3K27ac.bed
+        cerebellum_late	H3K27me3	H3K27me3.bed
+        cerebellum_late	H3K4me1	H3K4me1.bed
+        cerebellum_late	H3K4me3	H3K4me3.bed
+        cerebellum_late	CTCF	CTCF.bed
+        cerebellum_late	H2AK119ub	H2AK119ub.bed
+        cerebellum_late	ATAC	ATAC.bed
+        cerebellum_late	H3K9ac	H3K9ac.bed
+        cerebellum_late	H3K9me3	H3K9me3.bed
+
+[4/5] Running ChromHMM BinarizeBed (9 marks)...
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr1_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr2_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chrX_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr3_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr4_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr5_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr6_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr7_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr10_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr8_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr14_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr9_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr11_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr13_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr12_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr15_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr16_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr17_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chrY_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr18_binary.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/binarized/cerebellum_late_chr19_binary.txt
+    binary files produced: 21 (expect 21)
+    header columns in chr1 binary: 2 (expect 10 = cell + 9 marks)
+
+[5/5] Running ChromHMM LearnModel (k=15, mm10, -p 4)...
+    Model dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15
+    Started:   Sat May  2 19:35:34 PDT 2026
+Using 4 threads for Baum-Welch training
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/transitions_15.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/emissions_15.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/emissions_15.svg
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/emissions_15.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/transitions_15.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/transitions_15.svg
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/model_15.txt
+ Iteration  Estimated Log Likelihood     Change    Total Time (secs)
+         1              -4968614.706          -                  6.1
+         2              -3204559.285 1764055.422                 12.0
+         3              -3141446.965  63112.319                 15.9
+         4              -3135456.260   5990.706                 19.6
+         5              -3133841.752   1614.508                 23.0
+         6              -3132958.419    883.333                 26.7
+         7              -3132367.219    591.199                 30.4
+         8              -3131738.175    629.044                 34.3
+         9              -3130549.325   1188.851                 37.8
+        10              -3128227.077   2322.248                 41.7
+        11              -3126031.586   2195.491                 45.2
+        12              -3125038.447    993.139                 48.8
+        13              -3124608.495    429.952                 52.1
+        14              -3124376.897    231.598                 55.4
+        15              -3124252.035    124.862                 58.8
+        16              -3124185.409     66.626                 62.1
+        17              -3124150.199     35.210                 65.7
+        18              -3124130.399     19.800                 69.4
+        19              -3124117.801     12.598                 72.9
+        20              -3124109.697      8.104                 76.7
+        21              -3124104.069      5.627                 80.6
+        22              -3124100.140      3.929                 84.3
+        23              -3124097.642      2.499                 88.1
+        24              -3124096.067      1.575                 91.7
+        25              -3124095.056      1.011                 95.6
+        26              -3124094.397      0.660                 99.8
+        27              -3124093.960      0.436                103.8
+        28              -3124093.669      0.291                107.5
+        29              -3124093.473      0.196                111.3
+        30              -3124093.339      0.134                115.0
+        31              -3124093.246      0.092                118.7
+        32              -3124093.181      0.065                122.4
+        33              -3124093.135      0.046                126.2
+        34              -3124093.101      0.034                129.8
+        35              -3124093.076      0.025                133.7
+        36              -3124093.056      0.019                137.8
+        37              -3124093.041      0.015                141.6
+        38              -3124093.029      0.012                145.6
+        39              -3124093.018      0.010                150.1
+        40              -3124093.010      0.009                154.2
+        41              -3124093.002      0.007                157.8
+        42              -3124092.996      0.007                161.9
+        43              -3124092.990      0.006                165.6
+        44              -3124092.985      0.005                170.0
+        45              -3124092.980      0.005                173.9
+        46              -3124092.976      0.004                177.6
+        47              -3124092.972      0.004                181.5
+        48              -3124092.968      0.004                185.3
+        49              -3124092.965      0.003                188.8
+        50              -3124092.962      0.003                192.6
+        51              -3124092.959      0.003                196.0
+        52              -3124092.957      0.003                199.5
+        53              -3124092.954      0.002                203.3
+        54              -3124092.952      0.002                206.8
+        55              -3124092.950      0.002                210.4
+        56              -3124092.948      0.002                214.0
+        57              -3124092.946      0.002                217.8
+        58              -3124092.944      0.002                221.3
+        59              -3124092.943      0.002                225.2
+        60              -3124092.941      0.001                228.8
+        61              -3124092.940      0.001                232.7
+        62              -3124092.939      0.001                236.2
+        63              -3124092.937      0.001                239.8
+        64              -3124092.936      0.001                243.3
+        65              -3124092.935      0.001                247.1
+        66              -3124092.934      0.001                250.9
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_segments.bed
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_dense.bed
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_expanded.bed
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_overlap.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_overlap.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_overlap.svg
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_RefSeqTES_neighborhood.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_RefSeqTES_neighborhood.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_RefSeqTES_neighborhood.svg
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_RefSeqTSS_neighborhood.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_RefSeqTSS_neighborhood.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_RefSeqTSS_neighborhood.svg
+Warning could not automatically open in a browser /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/webpage_15.html
+    Finished:  Sat May  2 19:40:14 PDT 2026
+
+  --- Verification for k=15 ---
+  OK  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/cerebellum_late_15_segments.bed: 408589 segments
+  OK  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_15/emissions_15.txt
+
+  --- emissions_15.txt ---
+State (Emission order)	CTCF	ATAC	H3K4me1	H3K27ac	H3K4me3	H3K9ac	H2AK119ub	H3K27me3	H3K9me3
+1	0.007126898967803566	0.010228872274926176	0.04667335392620057	3.5760155586729527E-60	2.3135646524386235E-15	7.508201678253921E-5	3.238679581560644E-82	0.9941745868675145	0.012412214315916876
+2	0.014263737861723236	0.014036626797978676	4.135153478010933E-6	0.0014072716964069615	0.0030634393810400713	0.07042353671403939	0.9976988748366961	0.9997606109210038	0.01758035901976603
+3	0.017772795342480323	0.018441670704614756	1.0291476223387404E-31	0.006307416380428368	1.5212843160730945E-4	2.481874727901826E-26	0.9951057856001283	2.396275796227055E-35	0.019670196278818105
+4	0.03472857597678771	0.20667368318551246	0.9999999999999732	0.12085584904658148	0.0034547766168472062	8.437383327430335E-67	0.9981338184511402	0.3270512980363693	0.021231164765632707
+5	0.004698508764228399	0.060415660235251654	1.0	3.866625253317069E-97	0.0038432113579455304	2.5170278224447248E-87	1.5231215679372771E-77	1.6285442518966624E-53	1.389255690566627E-5
+6	0.02384790973596004	0.2429653425404576	1.0	0.9987000513815455	0.016576293271044828	3.998488951244006E-76	7.719296096062243E-4	0.0013530918091120157	0.011219545940587229
+7	0.03525342153871283	0.24193303063657562	1.0	0.9999999999996819	0.3105880139364813	0.9982455484954886	0.3613693173131514	0.016094617431976082	0.019124828893850115
+8	0.03997685835660496	0.17730305528189558	1.0	1.0124136010957428E-106	0.12438172021272302	0.9983122802064447	0.3692705257185496	0.15401374958890157	0.01957889114695919
+9	0.02853259608724391	0.1534849872715318	4.494547005261668E-24	8.91932781032412E-66	0.19723766804586262	0.952965277766119	0.175423661328073	0.03175095376302747	0.01834062515432603
+10	0.03971608338202195	0.3179375293820418	7.080043060357662E-33	1.0	0.678919244741059	0.9968759744993494	0.25976615066617026	0.017462615273288545	0.02615634850010944
+11	0.01587589569202913	0.05045215968811294	1.2619706266281616E-17	0.9673681100450643	0.05344760029442728	9.053969696194E-19	0.07300929805799859	0.0030767854366417972	0.011960983665081974
+12	4.7910106666483246E-64	1.51008749908069E-15	1.6842641588414168E-79	1.2460248067911242E-174	1.8768791000609532E-17	7.070261404105283E-154	5.87264947158337E-128	3.9229669060630023E-135	3.611940882122294E-131
+13	0.3788171818809188	0.961394140940828	0.35451416667463137	2.0526474209033905E-86	2.231915820929291E-4	1.6471937292688461E-83	1.0340126484097712E-66	4.424662343021764E-50	0.002522170880711226
+14	0.9940031568118197	0.039223971645536246	0.020382586447549225	5.896896207946112E-46	1.2859796537879716E-29	2.6983285120505876E-46	2.4473600740347637E-52	9.951699471590967E-50	7.442816008909125E-5
+15	0.0021729044721340283	0.016373413349698593	0.03196631195829913	1.508791297557976E-96	1.8893751613406802E-44	6.319439932464542E-71	3.478528320363899E-5	1.8999412433907968E-91	0.9904039625708109
+  --- end emissions ---
+
+  Chrom coverage (expect 21):
+chr1 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chrX chrY 
+  State distribution:
+       156290 E12
+        82276 E5
+        19652 E9
+        17868 E15
+        15566 E14
+        15087 E1
+        14598 E8
+        14063 E13
+        13483 E10
+        11698 E7
+        11071 E3
+        10760 E11
+         9796 E2
+         9663 E4
+         6718 E6
+
+[5/5] Running ChromHMM LearnModel (k=18, mm10, -p 4)...
+    Model dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18
+    Started:   Sat May  2 19:40:15 PDT 2026
+Using 4 threads for Baum-Welch training
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/transitions_18.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/emissions_18.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/emissions_18.svg
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/emissions_18.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/transitions_18.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/transitions_18.svg
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/model_18.txt
+ Iteration  Estimated Log Likelihood     Change    Total Time (secs)
+         1              -4864835.170          -                  9.4
+         2              -3058519.455 1806315.715                 15.9
+         3              -2988888.375  69631.080                 20.8
+         4              -2980248.700   8639.675                 26.5
+         5              -2973098.863   7149.838                 31.4
+         6              -2964029.323   9069.539                 36.5
+         7              -2959735.122   4294.201                 41.6
+         8              -2958549.653   1185.468                 46.3
+         9              -2958044.268    505.386                 51.0
+        10              -2957622.932    421.336                 55.4
+        11              -2957105.353    517.578                 59.9
+        12              -2956262.507    842.846                 64.3
+        13              -2954309.933   1952.574                 68.9
+        14              -2950506.819   3803.113                 73.1
+        15              -2948687.404   1819.415                 77.9
+        16              -2948454.613    232.791                 82.7
+        17              -2948426.914     27.699                 87.0
+        18              -2948421.487      5.426                 91.5
+        19              -2948419.412      2.075                 96.2
+        20              -2948418.225      1.187                100.8
+        21              -2948417.404      0.821                105.5
+        22              -2948416.788      0.616                110.2
+        23              -2948416.306      0.482                114.7
+        24              -2948415.920      0.387                119.3
+        25              -2948415.602      0.317                123.9
+        26              -2948415.337      0.265                128.6
+        27              -2948415.110      0.227                133.2
+        28              -2948414.911      0.199                138.0
+        29              -2948414.730      0.181                142.7
+        30              -2948414.560      0.170                147.7
+        31              -2948414.394      0.166                152.7
+        32              -2948414.228      0.166                156.9
+        33              -2948414.062      0.165                161.7
+        34              -2948413.902      0.160                167.1
+        35              -2948413.753      0.149                172.0
+        36              -2948413.620      0.133                176.6
+        37              -2948413.504      0.116                181.6
+        38              -2948413.405      0.100                185.8
+        39              -2948413.318      0.086                190.0
+        40              -2948413.244      0.075                194.5
+        41              -2948413.178      0.066                199.3
+        42              -2948413.120      0.058                203.8
+        43              -2948413.069      0.051                208.2
+        44              -2948413.024      0.045                212.9
+        45              -2948412.983      0.040                217.2
+        46              -2948412.948      0.036                221.7
+        47              -2948412.916      0.032                226.0
+        48              -2948412.887      0.028                230.5
+        49              -2948412.862      0.025                234.9
+        50              -2948412.840      0.023                240.9
+        51              -2948412.819      0.020                245.9
+        52              -2948412.801      0.018                250.6
+        53              -2948412.785      0.016                255.2
+        54              -2948412.771      0.014                259.5
+        55              -2948412.758      0.013                263.6
+        56              -2948412.747      0.011                268.2
+        57              -2948412.736      0.010                272.5
+        58              -2948412.727      0.009                277.0
+        59              -2948412.719      0.008                281.4
+        60              -2948412.711      0.008                286.7
+        61              -2948412.704      0.007                290.9
+        62              -2948412.698      0.006                295.1
+        63              -2948412.693      0.005                299.4
+        64              -2948412.688      0.005                303.6
+        65              -2948412.684      0.004                308.3
+        66              -2948412.680      0.004                313.0
+        67              -2948412.676      0.004                318.0
+        68              -2948412.673      0.003                322.2
+        69              -2948412.670      0.003                326.4
+        70              -2948412.667      0.003                330.6
+        71              -2948412.664      0.002                334.9
+        72              -2948412.662      0.002                339.0
+        73              -2948412.660      0.002                343.4
+        74              -2948412.658      0.002                348.0
+        75              -2948412.656      0.002                352.1
+        76              -2948412.655      0.002                356.5
+        77              -2948412.653      0.001                360.8
+        78              -2948412.652      0.001                365.0
+        79              -2948412.651      0.001                369.4
+        80              -2948412.650      0.001                373.7
+        81              -2948412.649      0.001                378.0
+        82              -2948412.648      0.001                382.6
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_segments.bed
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_dense.bed
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_expanded.bed
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_overlap.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_overlap.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_overlap.svg
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_RefSeqTES_neighborhood.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_RefSeqTES_neighborhood.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_RefSeqTES_neighborhood.svg
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_RefSeqTSS_neighborhood.txt
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_RefSeqTSS_neighborhood.png
+Writing to file /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_RefSeqTSS_neighborhood.svg
+Warning could not automatically open in a browser /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/webpage_18.html
+    Finished:  Sat May  2 19:47:08 PDT 2026
+
+  --- Verification for k=18 ---
+  OK  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/cerebellum_late_18_segments.bed: 426926 segments
+  OK  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/learned_model_18/emissions_18.txt
+
+  --- emissions_18.txt ---
+State (Emission order)	H3K9me3	H3K27me3	H2AK119ub	H3K9ac	H3K4me3	H3K27ac	H3K4me1	ATAC	CTCF
+1	0.012413230795538674	0.9941611734970307	9.445229105917771E-101	6.309321330197126E-7	1.9577550566364513E-4	4.3577236470100475E-60	0.0467510447236401	0.010248191308318355	0.00713080370707333
+2	0.01692302292800404	0.9997954302184914	0.9985281867637078	8.752693652622842E-64	0.0015218859109211347	0.00126582706142052	4.805222601252904E-8	0.012252747096973953	0.01360331279417574
+3	0.0198018736719187	7.251786865853294E-26	0.9938376281487351	1.306314866106924E-50	0.00125851146169584	0.016207759221619353	3.3005964070950903E-31	0.01857105281326046	0.017737188350288903
+4	0.021228637627723566	0.32690161820122055	0.9979533729140307	4.0424458991696794E-133	0.002259756471719596	0.11902413091454747	0.9999999999954663	0.20666432665030945	0.03470386456617342
+5	1.7541179300051047E-5	2.4427619639547967E-47	1.0038196264409175E-154	2.901953029093607E-128	0.0036097252625515762	1.3078663926689398E-117	1.0	4.601328865156931E-28	0.004793551502348499
+6	0.004643987812142829	5.886178051580748E-71	8.22114547185614E-6	1.792275388359199E-134	3.3522321164586555E-4	1.4474947884996333E-163	1.0	0.979770588523074	0.14916572169200748
+7	2.4523913991183735E-162	9.223310200105558E-166	3.776141644529428E-177	1.4743819406596697E-190	2.906790209134429E-56	3.442309810900616E-215	1.7074213007858342E-101	6.700466453269402E-36	6.527885742629862E-79
+8	5.283117508134619E-4	1.1479394511306486E-184	3.433023408453964E-62	7.041134617813983E-89	1.5697613064664698E-39	9.929959584774528E-87	5.372569680218418E-34	0.9819870956913151	0.3396152069107809
+9	9.409146086086717E-5	9.748602621942978E-56	2.0414915702812697E-80	7.607743002090775E-58	3.2828682096508413E-53	6.753222084251072E-53	0.022013102206993523	0.0361293478825803	0.9939475716504509
+10	0.9904211634021532	7.798330271759002E-115	3.3047473462377374E-5	6.774795655998146E-88	3.014630390384294E-98	9.698499319324804E-105	0.031010300642547298	0.015609318123865358	0.0022180096837140775
+11	0.01134566973442964	0.002250917097222567	0.04862576230612693	2.0426697604433E-21	0.04567059996439851	0.9712529915714526	1.533080731491007E-30	0.04819099637200068	0.015358101004341073
+12	0.011208028905956732	0.001344609231625673	8.15989821672352E-5	1.5980836143262043E-94	0.016926384637018912	0.99873736176606	1.0	0.2429874932003944	0.02383717725239086
+13	0.017354534549424937	0.0037863149527754924	1.8703933174133796E-109	0.9996288413404983	0.31513040993211383	1.0	1.0	0.20975562107368534	0.03171979265209687
+14	0.017524473900539916	0.018018052478776664	7.47544372943712E-108	0.994456107509355	0.13818236206237952	4.8248440607099026E-114	1.0	0.1401136996703568	0.034877116180407106
+15	0.0177721583392043	0.020213712672247173	1.1227698982797623E-41	0.9460323525745272	0.20908794162537414	4.458515215939324E-80	1.915691359107783E-41	0.1664152824247155	0.02899001042987758
+16	0.02401906565504428	0.005896472647064372	1.9718368934436009E-56	0.9934170865374248	0.6633489980044679	1.0	1.5355574918841082E-40	0.3150717475903983	0.03738284198954664
+17	0.025752742081586063	0.043890447333868654	0.999724595420868	0.9903382596642579	0.45638942303947233	0.9999337412525409	0.6357810171064213	0.3080390028567557	0.04343188735645973
+18	0.0229792927569626	0.380327149996404	0.9964210686783305	0.9998315193109303	0.1040808302901104	3.7382354993329446E-120	0.6497143820745126	0.18274497243298235	0.04059518459413851
+  --- end emissions ---
+
+  Chrom coverage (expect 21):
+chr1 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chrX chrY 
+  State distribution:
+       156323 E7
+        90572 E5
+        17861 E10
+        17678 E6
+        16254 E15
+        15577 E9
+        15130 E1
+        11409 E3
+        10959 E16
+        10789 E8
+        10568 E14
+        10291 E11
+         9658 E4
+         9123 E2
+         8963 E13
+         6736 E12
+         5170 E18
+         3865 E17
+
+============================================================
+NEXT (manual):
+  Inspect emissions_15.txt above (9 columns:
+    H3K27ac, H3K27me3, H3K4me1, H3K4me3, CTCF, H2AK119ub, ATAC, H3K9ac, H3K9me3)
+  Write rename file:
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/15state_rename_cerebellum.txt
+  Format: E{N}<TAB>{Biological_Name}  (15 lines)
+
+  Inspect emissions_18.txt above (9 columns:
+    H3K27ac, H3K27me3, H3K4me1, H3K4me3, CTCF, H2AK119ub, ATAC, H3K9ac, H3K9me3)
+  Write rename file:
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/outputs/bap1_late/chromHMM_9mark_union/18state_rename_cerebellum.txt
+  Format: E{N}<TAB>{Biological_Name}  (18 lines)
+
+============================================================
+
+Phase 2b finished: Sat May  2 19:47:09 PDT 2026
+
+============================================================
+All requested models complete.
+
+--- union ---
+  OK  k=15: 408589 segments
+  OK  k=18: 426926 segments
+  Rename files to create:
+    cluster/outputs/bap1_late/chromHMM_9mark_union/15state_rename_cerebellum.txt
+    cluster/outputs/bap1_late/chromHMM_9mark_union/18state_rename_cerebellum.txt
+
+Finished: Sat May  2 19:47:09 PDT 2026
+============================================================
