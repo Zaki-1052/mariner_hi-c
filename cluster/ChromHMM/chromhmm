@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # chromhmm — wrapper to run ChromHMM.jar from anywhere
-CHROMHMM_JAR="/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/ChromHMM/ChromHMM.jar"
+CHROMHMM_JAR="$(cd "$(dirname "$0")" && pwd)/ChromHMM.jar"
 exec java -mx8G -jar "$CHROMHMM_JAR" "$@"
