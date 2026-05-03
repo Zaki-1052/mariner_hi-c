@@ -1,0 +1,201 @@
+#!/bin/bash
+# cluster/scripts/03b_chromhmm_9mark.sb
+# Phase 2b: ChromHMM 9-mark segmentation (15+18 states) on SDSC Expanse.
+# Creates H3K9 consensus BEDs, then runs 03b_chromhmm_9mark_segmentation.sh.
+#
+# Accepts a positional argument for the consensus method:
+#   intersect  — peaks present in both replicates (conservative)
+#   union      — peaks present in either replicate (permissive)
+#   both       — run intersect then union sequentially (default)
+#
+# For concurrent execution, submit twice:
+#   sbatch cluster/scripts/03b_chromhmm_9mark.sb intersect
+#   sbatch cluster/scripts/03b_chromhmm_9mark.sb union
+#
+# Timepoint caveat: H3K9me3 is early-only (no late peaks exist).
+#
+#SBATCH --job-name=chromhmm_9mark
+#SBATCH --output=cluster/logs/chromhmm_9mark_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=06:00:00
+#SBATCH --account=csd940
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+METHOD="${1:-both}"
+
+cd "${CODE_DIR}"
+
+echo "============================================================"
+echo "ChromHMM 9-mark SLURM wrapper"
+echo "Job ID:    ${SLURM_JOB_ID}"
+echo "Node:      ${SLURMD_NODENAME}"
+echo "CPUs:      ${SLURM_CPUS_PER_TASK}"
+echo "Memory:    ${SLURM_MEM_PER_NODE}MB"
+echo "Method:    ${METHOD}"
+echo "CODE_DIR:  ${CODE_DIR}"
+echo "Started:   $(date)"
+echo "============================================================"
+
+# Validate method argument
+case "${METHOD}" in
+  intersect|union|both) ;;
+  *)
+    echo "ERROR: invalid method '${METHOD}'. Must be: intersect, union, or both." >&2
+    exit 1
+    ;;
+esac
+
+# Activate environment
+source ~/.bashrc
+conda activate cluster
+
+# Pre-flight checks
+echo ""
+echo "--- Pre-flight checks ---"
+for cmd in java bedtools; do
+  if ! command -v "${cmd}" &>/dev/null; then
+    echo "ERROR: ${cmd} not found on PATH" >&2
+    exit 1
+  fi
+  echo "  OK  ${cmd}: $(command -v "${cmd}")"
+done
+
+REQUIRED_BEDS=(
+  "peaks/beds/H3K27acCerebellumLate2.bed"
+  "peaks/beds/H3K27me3CerebellumLate1.bed"
+  "peaks/beds/H3K4me1CerebellumLate1.bed"
+  "peaks/beds/H3K4me3CerebellumLate2.bed"
+  "peaks/CTCF.bed"
+  "peaks/intersect/P51_K119ub_ctrl_intersect.bed"
+  "peaks/atac_seq/consensus_control.bed"
+  "peaks/h3k9/H3K9acCerebellumLate1.bed"
+  "peaks/h3k9/H3K9acCerebellumLate2.bed"
+  "peaks/h3k9/H3K9me3CerebellumEarly1.bed"
+  "peaks/h3k9/H3K9me3CerebellumEarly2.bed"
+)
+for bed in "${REQUIRED_BEDS[@]}"; do
+  if [ ! -s "${bed}" ]; then
+    echo "ERROR: missing or empty: ${bed}" >&2
+    exit 1
+  fi
+  echo "  OK  ${bed} ($(wc -l < "${bed}") lines)"
+done
+
+# --- Create consensus BEDs --------------------------------------------------
+echo ""
+echo "--- Creating H3K9 consensus BEDs ---"
+
+H3K9_DIR="peaks/h3k9"
+
+if [ "${METHOD}" = "intersect" ] || [ "${METHOD}" = "both" ]; then
+  echo "  Intersect consensus (peaks in BOTH replicates)..."
+
+  bedtools intersect \
+    -a "${H3K9_DIR}/H3K9acCerebellumLate1.bed" \
+    -b "${H3K9_DIR}/H3K9acCerebellumLate2.bed" -u \
+    > "${H3K9_DIR}/H3K9ac_consensus_intersect.bed"
+  echo "    H3K9ac intersect: $(wc -l < "${H3K9_DIR}/H3K9ac_consensus_intersect.bed") peaks"
+
+  bedtools intersect \
+    -a "${H3K9_DIR}/H3K9me3CerebellumEarly1.bed" \
+    -b "${H3K9_DIR}/H3K9me3CerebellumEarly2.bed" -u \
+    > "${H3K9_DIR}/H3K9me3_consensus_intersect.bed"
+  echo "    H3K9me3 intersect: $(wc -l < "${H3K9_DIR}/H3K9me3_consensus_intersect.bed") peaks"
+fi
+
+if [ "${METHOD}" = "union" ] || [ "${METHOD}" = "both" ]; then
+  echo "  Union consensus (peaks in EITHER replicate, merged)..."
+
+  cat "${H3K9_DIR}/H3K9acCerebellumLate1.bed" "${H3K9_DIR}/H3K9acCerebellumLate2.bed" \
+    | awk 'BEGIN{OFS="\t"}{print $1,$2,$3}' | sort -k1,1 -k2,2n \
+    | bedtools merge -i - \
+    > "${H3K9_DIR}/H3K9ac_consensus_union.bed"
+  echo "    H3K9ac union: $(wc -l < "${H3K9_DIR}/H3K9ac_consensus_union.bed") peaks"
+
+  cat "${H3K9_DIR}/H3K9me3CerebellumEarly1.bed" "${H3K9_DIR}/H3K9me3CerebellumEarly2.bed" \
+    | awk 'BEGIN{OFS="\t"}{print $1,$2,$3}' | sort -k1,1 -k2,2n \
+    | bedtools merge -i - \
+    > "${H3K9_DIR}/H3K9me3_consensus_union.bed"
+  echo "    H3K9me3 union: $(wc -l < "${H3K9_DIR}/H3K9me3_consensus_union.bed") peaks"
+fi
+
+# Verify consensus BEDs
+for suffix in intersect union; do
+  if [ "${METHOD}" = "${suffix}" ] || [ "${METHOD}" = "both" ]; then
+    for bed in "${H3K9_DIR}/H3K9ac_consensus_${suffix}.bed" "${H3K9_DIR}/H3K9me3_consensus_${suffix}.bed"; do
+      if [ ! -s "${bed}" ]; then
+        echo "ERROR: consensus BED is empty or missing: ${bed}" >&2
+        exit 1
+      fi
+    done
+  fi
+done
+
+# --- Run segmentation -------------------------------------------------------
+export REPO_ROOT="${CODE_DIR}"
+export CLUSTER_OUT_DIR="outputs/bap1_late"
+export CLUSTER_CELL_NAME="cerebellum_late"
+
+run_method() {
+  local method="$1"
+  echo ""
+  echo "============================================================"
+  echo "Running 9-mark segmentation: ${method} consensus"
+  echo "============================================================"
+
+  export CLUSTER_CHROMHMM_SUBDIR="chromHMM_9mark_${method}"
+  export CLUSTER_PEAK_K9AC="${H3K9_DIR}/H3K9ac_consensus_${method}.bed"
+  export CLUSTER_PEAK_K9ME3="${H3K9_DIR}/H3K9me3_consensus_${method}.bed"
+
+  bash cluster/scripts/03b_chromhmm_9mark_segmentation.sh
+  local status=$?
+  if [ ${status} -ne 0 ]; then
+    echo "ERROR: segmentation failed for ${method} (exit ${status})" >&2
+    return ${status}
+  fi
+  return 0
+}
+
+if [ "${METHOD}" = "intersect" ] || [ "${METHOD}" = "both" ]; then
+  run_method "intersect"
+  STATUS=$?
+  if [ ${STATUS} -ne 0 ]; then exit ${STATUS}; fi
+fi
+
+if [ "${METHOD}" = "union" ] || [ "${METHOD}" = "both" ]; then
+  run_method "union"
+  STATUS=$?
+  if [ ${STATUS} -ne 0 ]; then exit ${STATUS}; fi
+fi
+
+# --- Final summary ----------------------------------------------------------
+echo ""
+echo "============================================================"
+echo "All requested models complete."
+echo ""
+OUT_ROOT="cluster/${CLUSTER_OUT_DIR}"
+for suffix in intersect union; do
+  if [ "${METHOD}" = "${suffix}" ] || [ "${METHOD}" = "both" ]; then
+    CHM="${OUT_ROOT}/chromHMM_9mark_${suffix}"
+    echo "--- ${suffix} ---"
+    for NS in 15 18; do
+      SEG="${CHM}/learned_model_${NS}/cerebellum_late_${NS}_segments.bed"
+      EMI="${CHM}/learned_model_${NS}/emissions_${NS}.txt"
+      if [ -s "${SEG}" ]; then
+        echo "  OK  k=${NS}: $(wc -l < "${SEG}") segments"
+      else
+        echo "  MISSING  ${SEG}"
+      fi
+    done
+    echo "  Rename files to create:"
+    echo "    ${CHM}/15state_rename_cerebellum.txt"
+    echo "    ${CHM}/18state_rename_cerebellum.txt"
+    echo ""
+  fi
+done
+echo "Finished: $(date)"
+echo "============================================================"

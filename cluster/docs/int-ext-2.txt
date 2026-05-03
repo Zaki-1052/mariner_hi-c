@@ -1,0 +1,1431 @@
+ ▐▛███▜▌   Claude Code v2.1.126
+▝▜█████▛▘  Opus 4.6 · Claude Max
+  ▘▘ ▝▝    ~/Documents/GitHub/mariner_hi-c
+
+❯ /add-dir /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/                   
+  ⎿  Added /Users/zakiralibhai/Documents/GitHub/mariner_hi-c as a working
+     directory for this session · /permissions to manage
+
+❯ /add-dir /Users/zakiralibhai/sdsc                                             
+  ⎿  Added /Users/zakiralibhai/sdsc as a working directory for this session · 
+     /permissions to manage
+
+❯ per @scripts/10_clust6_subgroup_asymmetry.py or rather @/Users/zakiralibhai/D 
+  ocuments/GitHub/mariner_hi-c/cluster/scripts/09_oriented_anchor_metagene.py - 
+   let’s try the interior/exterior analysis with K119ub as well. We could also  
+  try K27ac (but this isn’t quite spread out across euchromatin), PC1, and      
+  insulation score. id say write a script to do them all (maybe clust5 while    
+  youre at it, it can be a big script)                                          
+  (base) zakiralibhai@Zakirs-MacBook-Air ~ % ls -lh /Users/zakiralibhai/sdsc    
+  total 7259184                                                                 
+  drwxr-sr-x@  4 zakiralibhai  staff   128B Apr 27 19:16 apa-anchors            
+  drwxr-xr-x@  4 zakiralibhai  staff   128B Jan 26 13:19 bigs                   
+  drwxr-xr-x@ 18 zakiralibhai  staff   576B Apr 26 16:46 bigwigs                
+  drwxr-xr-x@  3 zakiralibhai  staff    96B Jan 21 12:40 biomodal-log           
+  drwxr-xr-x@  3 zakiralibhai  staff    96B Jan 21 12:41 biomodal-script        
+  -rw-r--r--@  1 zakiralibhai  staff   103M Apr 28 16:59                        
+  clust6_subgroups_values                                                       
+  drwxr-xr-x@  4 zakiralibhai  staff   128B Jan 21 12:17 encode-logs            
+  drwxr-xr-x@  5 zakiralibhai  staff   160B Apr 21 00:08 hic                    
+  -rw-r--r--@  1 zakiralibhai  staff    96M Apr 27 10:10 histone_anchors        
+  -rw-r--r--@  1 zakiralibhai  staff   1.6G Apr 27 10:11 histone_anchors_values 
+  drwxr-xr-x@  4 zakiralibhai  staff   128B Jan 27 11:24 new-beds               
+  -rw-r--r--@  1 zakiralibhai  staff   100M Apr 27 16:38 oriented_anchors       
+  -rw-r--r--@  1 zakiralibhai  staff   1.6G Apr 27 16:39                        
+  oriented_anchors_values                                                       
+  drwxr-xr-x@  4 zakiralibhai  staff   128B Jan 20 10:37 seq-stats              
+  drwxr-xr-x@  3 zakiralibhai  staff    96B Feb  1 17:08 wget                   
+  (base) zakiralibhai@Zakirs-MacBook-Air ~ %                                    
+  @../peaks/ @../tads/  @/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/tads 
+  /tad-pc-analysis/output                                                       
+  since we may need to compute insulation scores and pc1 from mcools on hpc,    
+  and/or use begraphtobigwig which is also there, this should be formatted to   
+  run there. you can examine existing sbatch script patterns for how to submit  
+  it                                                                            
+  ⎿  Read scripts/10_clust6_subgroup_asymmetry.py (493 lines)
+  ⎿  Read scripts/09_oriented_anchor_metagene.py (185 lines)
+  ⎿  Listed directory ../peaks/
+  ⎿  Listed directory ../tads/
+  ⎿  Listed directory ../tads/tad-pc-analysis/output/
+
+⏺ I'll explore the codebase to understand what compartment/insulation data
+  exists, existing sbatch patterns, and what we need to compute on HPC.
+
+  Starting Phase 1: exploring three areas in parallel.
+
+⏺ 3 Explore agents finished (ctrl+o to expand)
+   ├ Explore compartment/insulation data · 0 tool uses
+   │ ⎿  Done
+   ├ Explore sbatch patterns and HPC setup · 0 tool uses
+   │ ⎿  Done
+   └ Explore script 10 and asymmetry approach · 0 tool uses
+     ⎿  Done
+
+⏺ Let me explore directly instead.
+
+  Searched for 2 patterns, read 3 files, listed 3 directories (ctrl+o to expand)
+
+⏺ Now let me check what TADCompare / insulation tooling exists and look at the
+  tads scripts.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Good. Now let me check what TADCompare's R pipeline produces for insulation
+  and what tools are on HPC.
+
+  Searched for 2 patterns, read 3 files, listed 3 directories (ctrl+o to expand)
+
+⏺ Now let me check the existing tad-pc-analysis Rmd to understand how PC1 was
+  computed, and check for bedGraphToBigWig on HPC.
+
+  Searched for 2 patterns, read 1 file, listed 3 directories (ctrl+o to expand)
+
+⏺ Now I have a clear picture. PC1 was computed on HPC via HOMER's
+  tagdirs.25x50kb.PC1.bedGraph. Let me now launch the Plan agent.
+
+⏺ Plan(Design extended asymmetry script) Sonnet 4.6
+  ⎿  Done (140 tool uses · 124.6k tokens · 6h 33m 3s)
+  (ctrl+o to expand)
+
+⏺ Excellent. Now let me read the critical files I still need for the plan before
+   writing it.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ I see that bed_pileup hardcodes -p 4 and --missingDataAsZero and doesn't
+  support --binSize. For the compartment run at +-50kb/binSize 1000, I'll need
+  to build the computeMatrix command directly instead of going through
+  bed_pileup. Let me also check if bedGraphToBigWig is needed or if cooltools
+  has --bigwig natively.
+
+⏺ Bash(/opt/homebrew/anaconda3/envs/cluster/bin/cooltools eigs-cis --help 2>&1 |
+       head -40)
+  ⎿  Usage: cooltools eigs-cis [OPTIONS] COOL_PATH
+
+       Perform eigen value decomposition on a cooler matrix to calculate
+     … +31 lines (ctrl+o to expand)
+
+⏺ Bash(/opt/homebrew/anaconda3/envs/cluster/bin/cooltools insulation --help 2>&1
+       | head -40)
+  ⎿  Usage: cooltools insulation [OPTIONS] IN_PATH WINDOW
+
+       Calculate the diamond insulation scores and call insulating boundari
+     … +33 lines (ctrl+o to expand)
+
+⏺ Bash(/opt/homebrew/anaconda3/envs/cluster/bin/cooltools insulation --help 2>&1
+       | tail -20)
+  ⎿                                   Use to mask bins after insulation cal
+     culation
+                                      and during boundary detection.  [defa
+     … +18 lines (ctrl+o to expand)
+
+⏺ Bash(which bedGraphToBigWig 2>/dev/null;
+      /opt/homebrew/anaconda3/envs/cluster/bin/bedGraphToBigWig 2>&1 | head -5)
+  ⎿  /opt/homebrew/anaconda3/envs/cluster/bin/bedGraphToBigWig
+     bedGraphToBigWig v 2.10 - Convert a bedGraph file to bigWig format (bb
+     i version: 4).
+     … +4 lines (ctrl+o to expand)
+
+⏺ Both cooltools eigs-cis --bigwig and cooltools insulation --bigwig are
+  supported, and bedGraphToBigWig is already in the cluster conda env. Now I
+  have everything I need. Let me write the plan.
+
+⏺ Now writing the plan file with all findings.
+⏺ Updated plan
+  ⎿  /plan to preview
+
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: 
+     ~/.claude/plans/per-scripts-10-clust6-subgroup-asymmetry-buzzing-glacier.md
+      · /plan to edit
+     Plan: Comprehensive Interior/Exterior Asymmetry Analysis
+
+     Context
+
+     The existing oriented-anchor metagene pipeline (scripts 09-10) demonstrated
+      that K27me3 is interior-enriched at clust5 gained-loop anchors
+     (Ext/Int=0.91, p=0.004) and symmetric at clust6 lost-loop anchors
+     (Ext/Int=1.02, p=0.52). The user wants to extend this analysis to
+     additional signal types -- H2AK119ub, H3K27ac, compartment PC1 eigenvector,
+      and insulation scores -- for both clust5 and clust6 (plus clust6
+     short/long subgroups). Since PC1 and insulation must be computed from
+     mcools on HPC, the script is designed as an sbatch job for SDSC Expanse.
+
+     Key Design Decisions
+
+     1. Two spatial scales: Histone marks (H2AK119ub, H3K27ac) at +-5kb/binSize
+     10bp (anchor-local, matching existing Phase 8). Compartment features (PC1,
+     insulation) at +-50kb/binSize 1000bp (domain-scale, since PC1 is 25kb bins
+     and insulation is 10kb bins -- +-5kb would give <1 bin per side).
+     2. Two separate computeMatrix runs: Can't use bed_pileup() for the
+     compartment run because it hardcodes --missingDataAsZero (wrong for PC1
+     which has real zeros and negatives) and doesn't support --binSize. Build
+     computeMatrix commands directly via subprocess.
+     3. Clusters analyzed: clust5, clust6, clust6_short, clust6_long (4 groups).
+      Reuse existing oriented anchor BED6 files from deeptools_input/.
+     4. PC1 from cooltools: cooltools eigs-cis --bigwig at 25kb resolution with
+     H3K27ac phasing track (ensures positive=A compartment). Produces BigWig
+     directly (uses bedGraphToBigWig internally, which is in the cluster conda
+     env).
+     5. Insulation from cooltools: cooltools insulation --bigwig at 10kb
+     resolution, 200kb diamond window.
+     6. All 6 clusters included: Run computeMatrix on all 6 clusters for
+     completeness (the oriented BEDs already exist), but focus visualization on
+     the clust5/clust6/subgroups contrast.
+
+     Files to Create
+
+     cluster/scripts/11_comprehensive_asymmetry.py
+
+     Single orchestrator script with these steps:
+
+     [0/6] Validate inputs
+     [1/6] Compute H3K27ac phasing tracks (pyBigWig per-25kb-bin mean -> TSV)
+     [2/6] Compute PC1 BigWigs (cooltools eigs-cis --bigwig, ctrl + mut)
+     [3/6] Compute insulation BigWigs (cooltools insulation --bigwig, ctrl +
+     mut)
+     [4/6] Run computeMatrix x2 (histone +-5kb + compartment +-50kb)
+     [5/6] Quantify ext/int asymmetry (Wilcoxon, same approach as scripts 09-10)
+     [6/6] Visualize (3 multi-panel figures, all 4 formats via
+     multi_format_savefig)
+
+     CLI args: --mcool-ctrl, --mcool-mut, --bigwig-dir, --nproc, --skip-compute
+     (skip steps 1-3 if BigWigs already exist)
+
+     Function breakdown
+
+     Function: validate_inputs(args)
+     Purpose: Check mcools, BigWigs, BEDs, computeMatrix + bedGraphToBigWig on
+     PATH
+     ────────────────────────────────────────
+     Function: build_oriented_beds(cluster_file, out_dir)
+     Purpose: Build clust5 + clust6 + clust6_short/long oriented anchor BED6
+     (reuse
+       logic from scripts 09/10; only runs if BEDs don't exist)
+     ────────────────────────────────────────
+     Function: compute_phasing_track(mcool, h3k27ac_bw, res, out_tsv)
+     Purpose: Per-chromosome batch pyBigWig.stats -> 4-col TSV for
+     --phasing-track
+     ────────────────────────────────────────
+     Function: compute_pc1_bigwig(mcool, phasing_tsv, res, out_prefix)
+     Purpose: Subprocess cooltools eigs-cis --bigwig --phasing-track 
+     TSV::h3k27ac 
+       --n-eigs 1
+     ────────────────────────────────────────
+     Function: compute_insulation_bigwig(mcool, res, window, out_prefix, nproc)
+     Purpose: Subprocess cooltools insulation --bigwig -p nproc
+     ────────────────────────────────────────
+     Function: run_computematrix(bw_dict, bed_dict, out_dir, name, up_down, 
+       bin_size, blacklist, nproc, missing_as_zero)
+     Purpose: Build and run computeMatrix reference-point directly (not through
+       bed_pileup)
+     ────────────────────────────────────────
+     Function: parse_header(filepath)
+     Purpose: Reuse exact logic from script 10 (parse 3-line computeMatrix
+     values
+       header)
+     ────────────────────────────────────────
+     Function: quantify_asymmetry(values_file, header, direction_map, out_tsv)
+     Purpose: Reuse exact Wilcoxon ext/int logic from script 10
+     ────────────────────────────────────────
+     Function: compute_profiles(values_file, header, bw_indices)
+     Purpose: Reuse profile computation from script 10 for metagene line plots
+     ────────────────────────────────────────
+     Function: visualize_histone(values_file, header, asym_df, out_dir)
+     Purpose: 3-row x N-col figure: H2AK119ub profiles, H3K27ac profiles,
+     Ext/Int
+       bar chart
+     ────────────────────────────────────────
+     Function: visualize_compartment(values_file, header, asym_df, out_dir)
+     Purpose: 3-row x N-col figure: PC1 profiles, insulation profiles, Ext/Int
+     bar
+       chart
+     ────────────────────────────────────────
+     Function: visualize_summary(histone_asym, compartment_asym, out_dir)
+     Purpose: Compact 2x4 panel: clust5 vs clust6 x 4 marks (bar chart only)
+     ────────────────────────────────────────
+     Function: print_summary(histone_df, compartment_df)
+     Purpose: Formatted stdout tables matching existing asymmetry scripts
+
+     computeMatrix command construction
+
+     Histone run (H2AK119ub + H3K27ac, +-5kb):
+     computeMatrix reference-point --referencePoint center \
+       --missingDataAsZero \
+       -S H2AK119ubCtrl.bw H2AK119ubMut.bw H3K27acCtrl.bw H3K27acMut.bw \
+       -R clust5_oriented_anchors.bed clust6_oriented_anchors.bed \
+          clust6_short_oriented_anchors.bed clust6_long_oriented_anchors.bed \
+       -o {out}/histone_anchors -bl {blacklist} -p {nproc} \
+       --outFileNameMatrix {out}/histone_values \
+       -b 5000 -a 5000 --sortRegions keep \
+       --samplesLabel H2AK119ub_ctrl H2AK119ub_mut H3K27ac_ctrl H3K27ac_mut
+
+     Compartment run (PC1 + insulation, +-50kb, 1kb bins):
+     computeMatrix reference-point --referencePoint center \
+       -S PC1_ctrl.cis.bw PC1_mut.cis.bw insulation_ctrl.200000.bw
+     insulation_mut.200000.bw \
+       -R clust5_oriented_anchors.bed clust6_oriented_anchors.bed \
+          clust6_short_oriented_anchors.bed clust6_long_oriented_anchors.bed \
+       -o {out}/compartment_anchors -bl {blacklist} -p {nproc} \
+       --outFileNameMatrix {out}/compartment_values \
+       -b 50000 -a 50000 --binSize 1000 --sortRegions keep \
+       --samplesLabel PC1_ctrl PC1_mut insulation_ctrl insulation_mut
+
+     No --missingDataAsZero for compartment -- PC1 has real negative values and
+     zeros; NaN bins get filtered by the Wilcoxon valid-mask.
+
+     cluster/scripts/11_comprehensive_asymmetry.sb
+
+     SLURM wrapper following existing 07_cooltools_pileup.sb pattern:
+
+     #SBATCH --job-name=comp_asymmetry
+     #SBATCH --output=cluster/logs/comprehensive_asymmetry_%j.out
+     #SBATCH --partition=shared
+     #SBATCH --nodes=1 --ntasks=1
+     #SBATCH --cpus-per-task=16
+     #SBATCH --mem=64G
+     #SBATCH --time=04:00:00
+     #SBATCH --account=csd940
+
+     Resource justification: 16 CPUs for cooltools insulation -p 16 and
+     computeMatrix -p 16. 64GB for insulation at 10kb. 4h wall: ~10 min PC1 x2 +
+      ~15 min insulation x2 + ~10 min computeMatrix x2 + quantify/viz = ~70 min
+     realistic, 4h is safe.
+
+     Key env setup:
+     CODE_DIR=/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+     DATA_DIR=/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn/data/coo
+     l/250402
+     BIGWIG_DIR=/expanse/lustre/projects/csd940/zalibhai/bigwigs
+
+     source ~/.bashrc
+     conda activate cluster
+
+     # Pre-flight: bedGraphToBigWig required by cooltools --bigwig
+     which bedGraphToBigWig || { echo "ERROR: install ucsc-bedgraphtobigwig";
+     exit 2; }
+
+     cd "${CODE_DIR}"
+     python cluster/scripts/11_comprehensive_asymmetry.py \
+       --mcool-ctrl "${DATA_DIR}/ctrl_merged.mcool" \
+       --mcool-mut  "${DATA_DIR}/mut_merged.mcool" \
+       --bigwig-dir "${BIGWIG_DIR}" \
+       --nproc      "${SLURM_CPUS_PER_TASK}"
+
+     Output structure
+
+     cluster/outputs/bap1_late/figures/deeptools/comprehensive_asymmetry/
+       bigwigs/
+         ctrl_phasing_25kb.tsv          # H3K27ac per-25kb-bin for eigs-cis
+         mut_phasing_25kb.tsv
+         PC1_ctrl.cis.bw                # cooltools eigs-cis output
+         PC1_ctrl.cis.vecs.tsv
+         PC1_ctrl.cis.lam.txt
+         PC1_mut.cis.bw
+         PC1_mut.cis.vecs.tsv
+         PC1_mut.cis.lam.txt
+         insulation_ctrl_10kb           # cooltools insulation TSV
+         insulation_ctrl_10kb.200000.bw
+         insulation_mut_10kb
+         insulation_mut_10kb.200000.bw
+       histone_anchors                  # computeMatrix gz (intermediate)
+       histone_values                   # computeMatrix text matrix
+       compartment_anchors
+       compartment_values
+       asymmetry_histone.tsv            # Wilcoxon results (4 marks x 4 clusters
+      = 16 rows)
+       asymmetry_compartment.tsv        # Wilcoxon results (4 marks x 4 clusters
+      = 16 rows)
+       histone_asymmetry.{png,pdf,svg,jpg}
+       compartment_asymmetry.{png,pdf,svg,jpg}
+       asymmetry_summary.{png,pdf,svg,jpg}
+
+     Reuse inventory
+
+     ┌───────────────┬───────────────────────────────────┬─────────────────────┐
+     │     What      │               From                │         How         │
+     ├───────────────┼───────────────────────────────────┼─────────────────────┤
+     │ Oriented      │ deeptools_input/clust{5,6}_orient │ Read directly;      │
+     │ anchor BED6   │ ed_anchors.bed, clust6_{short,lon │ rebuild from        │
+     │ files         │ g}_oriented_anchors.bed           │ cluster file only   │
+     │               │                                   │ if missing          │
+     ├───────────────┼───────────────────────────────────┼─────────────────────┤
+     │ parse_header( │ 10_clust6_subgroup_asymmetry.py:1 │ Copy verbatim       │
+     │ )             │ 42-171                            │                     │
+     ├───────────────┼───────────────────────────────────┼─────────────────────┤
+     │ quantify_asym │ 10_clust6_subgroup_asymmetry.py:1 │ Copy, parameterize  │
+     │ metry()       │ 96-261                            │ direction map       │
+     ├───────────────┼───────────────────────────────────┼─────────────────────┤
+     │ compute_profi │ 10_clust6_subgroup_asymmetry.py:1 │ Copy verbatim       │
+     │ les()         │ 74-193                            │                     │
+     ├───────────────┼───────────────────────────────────┼─────────────────────┤
+     │ multi_format_ │ scripts/utils/multi_format_output │                     │
+     │ savefig / fig │ .py                               │ Import              │
+     │ ure_subfolder │                                   │                     │
+     ├───────────────┼───────────────────────────────────┼─────────────────────┤
+     │ custom_params │ modules/custom_params.json        │ Load for matplotlib │
+     │ .json         │                                   │  rcParams           │
+     ├───────────────┼───────────────────────────────────┼─────────────────────┤
+     │ Blacklist     │ tads/mm10-blacklist.v2.bed        │ Pass to             │
+     │               │                                   │ computeMatrix -bl   │
+     ├───────────────┼───────────────────────────────────┼─────────────────────┤
+     │ sbatch        │ 07_cooltools_pileup.sb            │ Mirror account/part │
+     │ pattern       │                                   │ ition/conda/PATH    │
+     └───────────────┴───────────────────────────────────┴─────────────────────┘
+
+     Potential issues
+
+     1. bedGraphToBigWig not installed on HPC cluster env: The --bigwig flags in
+      cooltools shell out to it. The Mac env has it. If the Linux env doesn't:
+     conda install -c bioconda ucsc-bedgraphtobigwig. validate_inputs() checks
+     this upfront.
+     2. PC1 sign consistency: --phasing-track with H3K27ac orients E1 so
+     positive=A compartment for both ctrl and mut independently. Since we
+     compare ext vs int within each sample (not ctrl vs mut), sign is fine.
+     Script prints ctrl-mut E1 correlation as a sanity check.
+     3. Compartment computeMatrix NaN handling: Without --missingDataAsZero,
+     bins with no PC1 coverage stay NaN. The valid = ~isnan(ext) & ~isnan(int)
+     mask in quantify_asymmetry handles this correctly.
+     4. Clust6 subgroup BEDs: Already exist from script 10. If missing, the
+     script rebuilds them using the same 800kb threshold split logic.
+
+     Verification
+
+     After sbatch completes:
+     1. Check asymmetry_histone.tsv and asymmetry_compartment.tsv -- 16 rows
+     each (4 signals x 4 clusters)
+     2. Verify PC1 BigWigs: python -c "import pyBigWig; 
+     bw=pyBigWig.open('PC1_ctrl.cis.bw'); print(bw.chroms())" -- should show
+     mm10 chroms
+     3. Verify insulation BigWigs similarly
+     4. Visual check: all 3 figure files x 4 formats = 12 files present and
+     non-empty
+     5. Biological expectation: H2AK119ub should follow K27me3 pattern
+     (interior-enriched at clust5, symmetric at clust6) since K119ub recruits
+     PRC2; PC1 should be lower (more B-like) on interior side at clust5
+     (Polycomb domain = B compartment)
+
+⏺ Plan approved. Starting implementation. I'll write both files in parallel.
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ There's already an 11_ script. Let me check what it does and pick the right
+  number.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Script 11 already exists. I'll use 12_comprehensive_asymmetry.py. Now let me
+  write both files.
+
+⏺ Write(cluster/scripts/12_comprehensive_asymmetry.py)
+  ⎿  Wrote 940 lines to cluster/scripts/12_comprehensive_asymmetry.py
+       2 # cluster/scripts/12_comprehensive_asymmetry.py
+       3 """Comprehensive interior/exterior asymmetry for H2AK119ub, H3K2
+       4 7ac, PC1, insulation.
+       5 Two-scale design:
+         +-5kb, binSize=10bpH2AK119ub_{ctrl,mut} + H3K27ac_{ctrl,mut} at 
+       7   Run B (compartment): PC1_{ctrl,mut} + insulation_{ctrl,mut} at
+       8  +-50kb, binSize=1000bp
+       9 Clusters: clust5, clust6, clust6_short (<800kb), clust6_long (>=
+      10 All 6 clusters included in computeMatrix for completeness; focus
+         ed figures on
+     … +1096 lines (ctrl+o to expand)
+
+⏺ Write(cluster/scripts/12_comprehensive_asymmetry.sb)
+  ⎿  Wrote 150 lines to cluster/scripts/12_comprehensive_asymmetry.sb
+       2 # cluster/scripts/12_comprehensive_asymmetry.sb
+       3 # Comprehensive interior/exterior asymmetry: H2AK119ub, H3K27ac,
+       4 #PC1, insulation.
+       5 # Computes PC1 and insulation BigWigs from mcools, then runs com
+         puteMatrix at
+         fies ext/intl scales (+-5kb histone, +-50kb compartment), quanti
+       7 # asymmetry via Wilcoxon, and generates 3 multi-panel figures.
+       9 # Prerequisites:
+      10 #   - cluster conda env with cooltools, deeptools, ucsc-bedgraph
+         tobigwig
+     … +152 lines (ctrl+o to expand)
+  ⎿  Found 10 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Both files created. The Pyright warnings are false positives from pandas type
+  stubs (same as all other scripts in this project). Let me verify the imports
+  work in the cluster env.
+
+⏺ Bash(/opt/homebrew/anaconda3/envs/cluster/bin/python3 -c "
+      import sys…)
+  ⎿  /opt/homebrew/anaconda3/envs/cluster/lib/python3.8/site-packages/reque
+     sts/__init__.py:86: RequestsDependencyWarning: Unable to find acceptab
+     le character detection dependency (chardet or charset_normalizer).
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(/opt/homebrew/anaconda3/envs/cluster/bin/python3 -c "
+      import sys, ast…)
+  ⎿  Syntax OK
+
+⏺ Let me also verify the oriented BEDs exist for the focus clusters and that the
+   --help works.
+
+⏺ Bash(for c in clust5 clust6 clust6_short clust6_long; do
+        f="/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/outputs/bap
+      1_late/figures/deeptools_input/${c…)
+  ⎿  OK: clust5 (    1198 lines)
+     OK: clust6 (    3964 lines)
+     OK: clust6_short (    2576 lines)
+     OK: clust6_long (    1510 lines)
+
+⏺ Bash(/opt/homebrew/anaconda3/envs/cluster/bin/python3 /Users/zakiralibhai/Docu
+      ments/GitHub/mariner_hi-c/cluster/scripts/12_comprehensive_asymmetry.py
+      --help 2>&1)
+  ⎿  usage: 12_comprehensive_asymmetry.py [-h] --mcool-ctrl MCOOL_CTRL --mc
+     ool-mut
+                                          MCOOL_MUT [--bigwig-dir BIGWIG_DI
+     … +17 lines (ctrl+o to expand)
+
+⏺ All oriented BEDs exist and the CLI works. Both files are ready.
+
+  Summary of what was created:
+
+  1. cluster/scripts/12_comprehensive_asymmetry.py -- Single orchestrator that:
+    - Computes PC1 BigWigs from mcools via cooltools eigs-cis --bigwig (H3K27ac
+  phasing track for sign orientation)
+    - Computes insulation BigWigs via cooltools insulation --bigwig (10kb, 200kb
+   diamond)
+    - Runs two computeMatrix reference-point calls: histone (H2AK119ub + H3K27ac
+   at +-5kb) and compartment (PC1 + insulation at +-50kb/1kb bins)
+    - Quantifies ext/int asymmetry via Wilcoxon (reuses logic from scripts
+  09/10)
+    - Produces 3 figures: histone profiles+bars, compartment profiles+bars,
+  summary clust5-vs-clust6 panel
+  2. cluster/scripts/12_comprehensive_asymmetry.sb -- SLURM wrapper for Expanse
+  (csd940/shared, 16 CPUs, 64GB, 4h). Pre-flight checks for mcools, BigWigs,
+  bedGraphToBigWig, computeMatrix. Supports --skip-compute pass-through for
+  re-runs.
+
+  To run on Expanse:
+  cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+  git pull
+  sbatch cluster/scripts/12_comprehensive_asymmetry.sb
+
+  One prerequisite: the H2AK119ub and H3K27ac BigWigs need to be at
+  /expanse/lustre/projects/csd940/zalibhai/bigwigs/. If they're not there yet,
+  rsync them from local sdsc before submitting. Also verify bedGraphToBigWig is
+  in the cluster env on Expanse (conda install -c bioconda ucsc-bedgraphtobigwig
+   if not).
+
+✻ Baked for 45m 59s
+
+❯ thanks! pls give me the rsync cmd                                             
+
+⏺ rsync -avP \
+    /Users/zakiralibhai/sdsc/bigwigs/{H2AK119ubCtrl,H2AK119ubMut,H3K27acCtrl,H3K
+  27acMut}.bw \
+    expanse:/expanse/lustre/projects/csd940/zalibhai/bigwigs/
+
+  And to push the new scripts:
+
+  cd /Users/zakiralibhai/Documents/GitHub/mariner_hi-c
+  git add cluster/scripts/12_comprehensive_asymmetry.py
+  cluster/scripts/12_comprehensive_asymmetry.sb
+  git push
+
+  Then on Expanse: git pull && sbatch 
+  cluster/scripts/12_comprehensive_asymmetry.sb
+
+✻ Churned for 7s
+
+❯ /copy                                                                         
+  ⎿  Copied to clipboard (164 characters, 3 lines)
+     Also written to /tmp/claude-501/copy.bash
+
+※ recap: We wrote a comprehensive interior/exterior asymmetry script (12_comprehensive_asymmetry.py + .sb) that extends the oriented-anchor analysis to H2AK119ub, H3K27ac, PC1, and insulation scores for clust5/clust6. Next step is rsync the BigWigs to Expanse and sbatch it. (disable recaps in /config)
+
+❯                                                                               
+  [0/6] Validating inputs...                                                    
+    Histone BigWigs: OK (4)                                                     
+    Tools on PATH: OK                                                           
+                                                                                
+    Checking oriented anchor BEDs...                                            
+    BEDs: ['clust5', 'clust6', 'clust6_short', 'clust6_long']                   
+                                                                                
+  [1/6] Computing H3K27ac phasing tracks...                                     
+    Building phasing track from H3K27acCtrl.bw at 25kb...                       
+  Traceback (most recent call last):                                            
+    File "cluster/scripts/12_comprehensive_asymmetry.py", line 940, in <module> 
+      main()                                                                    
+    File "cluster/scripts/12_comprehensive_asymmetry.py", line 816, in main     
+      ctrl_phasing = compute_phasing_track(                                     
+    File "cluster/scripts/12_comprehensive_asymmetry.py", line 167, in          
+  compute_phasing_track                                                         
+      clr = cooler.Cooler('{}::/resolutions/{}'.format(mcool_path, resolution)) 
+    File "/home/zalibhai/miniforge3/envs/cluster/lib/python3.8/site-packages/co 
+  oler/api.py", line 85, in __init__                                            
+      self._refresh()                                                           
+    File "/home/zalibhai/miniforge3/envs/cluster/lib/python3.8/site-packages/co 
+  oler/api.py", line 106, in _refresh                                           
+      raise KeyError(err_msg) from None                                         
+  KeyError: "No cooler found at: /expanse/lustre/projects/csd940/zalibhai/strip 
+  es/stripenn/data/cool/250402/ctrl_merged.mcool. Coolers found in              
+  ['/resolutions/5000', '/resolutions/10000']. Use '::' to specify a group      
+  path"                                                                         
+                                                                                
+  ERROR: 12_comprehensive_asymmetry.py failed (exit=1).                         
+  (cluster) [zalibhai@exp-1-05 cluster]$                                        
+  ⎿  ⧉ Selected 1 lines from scripts/12_comprehensive_asymmetry.sb in Visual Studio Code
+
+⏺ The mcool only has 5kb and 10kb resolutions — no 25kb. I'll switch PC1 to
+  10kb.
+
+  Read 1 file (ctrl+o to expand)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ wait no. is 25kb more scientifically accurate? if so we should add it         
+⏺ Yes, 25kb is the standard resolution for compartment PC1 — it captures the
+  megabase-scale A/B structure without noise from local contact variation. Your
+  own existing compartment analysis (compartment_all_annotated.tsv) was done at
+  25kb. At 10kb the eigenvector is noisier.
+
+  The fix is simple: coarsen the 5kb cooler to 25kb (factor of 5) before running
+   eigs-cis. cooler coarsen -k 5 does this. I'll add that step to the script.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now let me add a coarsen_to_25kb function and wire it in. I need to see the
+  main() section where PC1 is called.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Good. Now I'll add a coarsen_mcool function and wire it in before the phasing
+  track step. The mcool has 5kb — coarsen by factor 5 to get 25kb.
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ tbh id rather just do a one off script for this since it's a one time thing.  
+  or have a check to not redo it maybe                                          
+
+⏺ Simplest approach: add a coarsen step inside the script with a file-exists
+  check so it only runs once. Subsequent runs (or --skip-compute) skip it.
+
+⏺ Update(cluster/scripts/12_comprehensive_asymmetry.py)
+  ⎿  Added 23 lines, removed 2 lines
+      157  # PC1 and insulation computation
+      158  # ------------------------------------------------------------
+           ---------------
+      159  
+      160 -def compute_phasing_track(mcool_path, h3k27ac_bw, resolution, 
+          -out_tsv):                                                     
+      160 +def coarsen_to_25kb(mcool_path, out_cool):                    
+      161 +    # type: (str, Path) -> Path                               
+      162 +    if out_cool.exists():                                     
+      163 +        print('  25kb cool already exists: {}'.format(out_cool
+          +.name))                                                       
+      164 +        return out_cool                                       
+      165 +    print('  Coarsening 5kb -> 25kb: {} -> {}'.format(        
+      166 +        Path(mcool_path).name, out_cool.name))                
+      167 +    cmd = [                                                   
+      168 +        'cooler', 'coarsen',                                  
+      169 +        '{}::/resolutions/5000'.format(mcool_path),           
+      170 +        '-k', '5',                                            
+      171 +        '-o', str(out_cool),                                  
+      172 +    ]                                                         
+      173 +    result = subprocess.run(cmd, capture_output=True, text=Tru
+          +e)                                                            
+      174 +    if result.returncode != 0:                                
+      175 +        print('  STDERR: {}'.format(result.stderr[-500:] if re
+          +sult.stderr else '(none)'))                                   
+      176 +        raise RuntimeError('cooler coarsen failed (exit={})'.f
+          +ormat(result.returncode))                                     
+      177 +    print('    OK: {}'.format(out_cool))                      
+      178 +    return out_cool                                           
+      179 +                                                              
+      180 +                                                              
+      181 +def compute_phasing_track(cool_path, h3k27ac_bw, resolution, o
+          +ut_tsv):                                                      
+      182      # type: (str, str, int, Path) -> Path
+      183      import cooler
+      184      import pyBigWig
+      185  
+      186      print('  Building phasing track from {} at {}kb...'.format
+           (
+      187          Path(h3k27ac_bw).name, resolution // 1000))
+      167 -    clr = cooler.Cooler('{}::/resolutions/{}'.format(mcool_pat
+          -h, resolution))                                               
+      188 +    clr = cooler.Cooler(str(cool_path))                       
+      189      bins = clr.bins()[['chrom', 'start', 'end']][:]
+      190  
+      191      bw = pyBigWig.open(str(h3k27ac_bw))
+
+⏺ Now update compute_pc1_bigwig to take a cool path instead of an mcool URI:
+
+⏺ Update(cluster/scripts/12_comprehensive_asymmetry.py)
+  ⎿  Added 3 lines, removed 3 lines
+      212      return out_tsv
+      213  
+      214  
+      215 -def compute_pc1_bigwig(mcool_path, phasing_tsv, resolution, ou
+          -t_prefix):                                                    
+      216 -    # type: (str, Path, int, Path) -> Path                    
+      215 +def compute_pc1_bigwig(cool_path, phasing_tsv, out_prefix):   
+      216 +    # type: (str, Path, Path) -> Path                         
+      217      out_bw = Path('{}.cis.bw'.format(out_prefix))
+      218      print('  Running cooltools eigs-cis -> {}'.format(out_bw.n
+           ame))
+      219      cmd = [
+      220          'cooltools', 'eigs-cis',
+      221 -        '{}::/resolutions/{}'.format(mcool_path, resolution), 
+      221 +        str(cool_path),                                       
+      222          '--phasing-track', '{}::h3k27ac'.format(phasing_tsv),
+      223          '--n-eigs', '1',
+      224          '--clr-weight-name', 'weight',
+
+⏺ Now update main() to coarsen first, then pass the cool paths:
+
+⏺ Update(cluster/scripts/12_comprehensive_asymmetry.py)
+  ⎿  Added 12 lines, removed 8 lines
+      831      bw_out = out_dir / 'bigwigs'
+      832      bw_out.mkdir(parents=True, exist_ok=True)
+      833  
+      834 -    # -- [1/6] Phasing tracks --------------------------------
+          -----------------                                              
+      834 +    # -- [1/6] Coarsen + phasing tracks ----------------------
+          +------------------                                            
+      835      if not args.skip_compute:
+      836 -        print('\n[1/6] Computing H3K27ac phasing tracks...')  
+      836 +        print('\n[1/6] Coarsening mcools to 25kb + computing p
+          +hasing tracks...')                                            
+      837 +        ctrl_25kb = coarsen_to_25kb(args.mcool_ctrl, bw_out / 
+          +'ctrl_25kb.cool')                                             
+      838 +        mut_25kb  = coarsen_to_25kb(args.mcool_mut,  bw_out / 
+          +'mut_25kb.cool')                                              
+      839 +                                                              
+      840          ctrl_phasing = compute_phasing_track(
+      838 -            args.mcool_ctrl, str(histone_bws['H3K27ac_ctrl']),
+      841 +            str(ctrl_25kb), str(histone_bws['H3K27ac_ctrl']), 
+      842              MCOOL_RES_PC1, bw_out / 'ctrl_phasing_25kb.tsv')
+      843          mut_phasing = compute_phasing_track(
+      841 -            args.mcool_mut, str(histone_bws['H3K27ac_mut']),  
+      844 +            str(mut_25kb), str(histone_bws['H3K27ac_mut']),   
+      845              MCOOL_RES_PC1, bw_out / 'mut_phasing_25kb.tsv')
+      846      else:
+      847 +        ctrl_25kb = bw_out / 'ctrl_25kb.cool'                 
+      848 +        mut_25kb  = bw_out / 'mut_25kb.cool'                  
+      849          ctrl_phasing = bw_out / 'ctrl_phasing_25kb.tsv'
+      850          mut_phasing  = bw_out / 'mut_phasing_25kb.tsv'
+      851          print('\n[1/6] Skipped (--skip-compute)')
+     ...
+      855      pc1_mut_bw  = Path('{}.cis.bw'.format(bw_out / 'PC1_mut'))
+      856  
+      857      if not args.skip_compute:
+      853 -        print('\n[2/6] Computing PC1 BigWigs (cooltools eigs-c
+          -is)...')                                                      
+      858 +        print('\n[2/6] Computing PC1 BigWigs (cooltools eigs-c
+          +is at 25kb)...')                                              
+      859          pc1_ctrl_bw = compute_pc1_bigwig(
+      855 -            args.mcool_ctrl, ctrl_phasing, MCOOL_RES_PC1, bw_o
+          -ut / 'PC1_ctrl')                                              
+      860 +            str(ctrl_25kb), ctrl_phasing, bw_out / 'PC1_ctrl')
+      861          pc1_mut_bw = compute_pc1_bigwig(
+      857 -            args.mcool_mut, mut_phasing, MCOOL_RES_PC1, bw_out
+          - / 'PC1_mut')                                                 
+      862 +            str(mut_25kb), mut_phasing, bw_out / 'PC1_mut')   
+      863  
+      859 -        import cooler                                         
+      864          ctrl_vecs = pd.read_csv(str(bw_out / 'PC1_ctrl.cis.vec
+           s.tsv'), sep='\t')
+      865          mut_vecs  = pd.read_csv(str(bw_out / 'PC1_mut.cis.vecs
+           .tsv'), sep='\t')
+      866          merged = ctrl_vecs.merge(mut_vecs, on=['chrom', 'start
+           ', 'end'],
+
+⏺ The coarsened 25kb cool also needs ICE balancing for eigs-cis. Let me add
+  that.
+
+⏺ Update(cluster/scripts/12_comprehensive_asymmetry.py)
+  ⎿  Added 8 lines
+      174      if result.returncode != 0:
+      175          print('  STDERR: {}'.format(result.stderr[-500:] if re
+           sult.stderr else '(none)'))
+      176          raise RuntimeError('cooler coarsen failed (exit={})'.f
+           ormat(result.returncode))
+      177 +                                                              
+      178 +    print('  Balancing 25kb cool...')                         
+      179 +    bal_cmd = ['cooler', 'balance', '--nproc', '2', str(out_co
+          +ol)]                                                          
+      180 +    bal_result = subprocess.run(bal_cmd, capture_output=True, 
+          +text=True)                                                    
+      181 +    if bal_result.returncode != 0:                            
+      182 +        print('  STDERR: {}'.format(bal_result.stderr[-500:] i
+          +f bal_result.stderr else '(none)'))                           
+      183 +        raise RuntimeError('cooler balance failed (exit={})'.f
+          +ormat(bal_result.returncode))                                 
+      184 +                                                              
+      185      print('    OK: {}'.format(out_cool))
+      186      return out_cool
+      187  
+
+⏺ Let me verify the syntax is still clean.
+
+⏺ Bash(/opt/homebrew/anaconda3/envs/cluster/bin/python3 -c "
+      import ast…)
+  ⎿  Syntax OK
+  ⎿  Found 10 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Syntax clean, Pyright warnings are the usual pandas type-stub false positives.
+
+
+  Updated: the script now coarsens 5kb -> 25kb (via cooler coarsen -k 5) +
+  balances it, with a file-exists check so it only runs once. Push and resubmit:
+
+  git add cluster/scripts/12_comprehensive_asymmetry.py && git commit -m "fix: 
+  coarsen 5kb mcool to 25kb for PC1 eigs-cis" && git push
+
+  Then on Expanse: git pull && sbatch 
+  cluster/scripts/12_comprehensive_asymmetry.sb
+
+✻ Churned for 1m 0s
+
+❯ /copy                                                                         
+  ⎿  Copied to clipboard (132 characters, 1 lines)
+     Also written to /tmp/claude-501/copy.bash
+
+※ recap: We're building a comprehensive interior/exterior asymmetry analysis for H2AK119ub, H3K27ac, PC1, and insulation scores at loop anchors. The script and sbatch wrapper are written and fixed to coarsen mcools to 25kb for PC1. Next: push to Expanse and submit. (disable recaps in /config)
+
+❯ great thanks! pls also give me the rsync cmd to sync over the output          
+  directory to its proper place in the repo                                     
+
+⏺ rsync -avP \
+    expanse:/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/output
+  s/bap1_late/figures/deeptools/comprehensive_asymmetry/ \
+    /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/outputs/bap1_late/
+  figures/deeptools/comprehensive_asymmetry/
+
+  And the log:
+
+  rsync -avP \
+    expanse:/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/logs/c
+  omprehensive_asymmetry_*.out \
+    /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/cluster/logs/
+
+✻ Churned for 7s
+
+❯ /copy                                                                         
+  ⎿  Copied to clipboard (495 characters, 13 lines)
+     Also written to /tmp/claude-501/response.md
+
+※ recap: We built script 12 to run interior/exterior asymmetry for H2AK119ub, H3K27ac, PC1, and insulation on clust5/clust6 via HPC. You submitted it to Expanse. Next step is checking if the job finished and rsyncing results back. (disable recaps in /config)
+
+❯ great thanks! howd it go? @/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/ 
+  cluster/logs/comprehensive_asymmetry_48713858.out                             
+  ⎿  Read logs/comprehensive_asymmetry_48713858.out (227 lines)
+⏺ Job completed successfully in ~91 min. Here's the biological interpretation:
+
+  H2AK119ub and H3K27ac: No asymmetry (all p > 0.05). K119ub doesn't show the
+  directional spreading that K27me3 does -- it's deposited more uniformly at
+  anchor regions rather than spreading preferentially into the loop interior.
+  K27ac is similarly symmetric, as you anticipated.
+
+  PC1 (compartment): Highly significant, very clean.
+  - clust5 (gain): Both sides are B-compartment (negative PC1), but the interior
+   is more B (ctrl: -0.24 ext vs -0.33 int, p=6.3e-44). Gained-loop anchors sit
+  at the edge of B/Polycomb domains, with the loop body deeper in
+  heterochromatin. This perfectly complements the K27me3 interior enrichment
+  from Phase 8.
+  - clust6 (loss): Both sides are A-compartment (positive PC1), interior
+  slightly more A (p=1.3e-4). Lost loops span euchromatic regions, consistent
+  with the span-Polycomb=0.94x finding.
+  - clust6_short vs long: Short loops are solidly A-compartment (ext=0.27,
+  int=0.30); long loops straddle the A/B boundary (ext~0, int~0). The long lost
+  loops cross compartment boundaries.
+
+  Insulation: Extremely significant, dramatic contrast.
+  - clust5: Exterior is more insulated (more boundary-like) than interior
+  (p=3.5e-54). Gained-loop anchors sit AT strong TAD boundaries, with the
+  Polycomb domain interior being less insulated (self-associating).
+  - clust6: Exterior slightly insulated, interior NOT insulated at all -- the
+  sign flips across the anchor (ext=-0.06 vs int=+0.10, p=3e-179). The anchor
+  marks a sharp transition between insulated exterior and open interior
+  contacts.
+  - clust6_long: Both sides boundary-like but exterior more so (p=7e-52) -- long
+   lost loops span boundary-rich regions.
+
+  One caveat: The Ext/Int ratio and asymmetry_index columns are unreliable for
+  PC1 and insulation since those signals cross zero. The Wilcoxon p-values and
+  raw means are what to report.
+
+  The mechanistic picture is now very tight: clust5 gained-loop anchors sit at
+  TAD boundaries at the edge of B-compartment Polycomb domains, with K27me3
+  spreading inward. Clust6 lost-loop anchors sit in A-compartment euchromatin
+  with a sharp insulation transition across the anchor but no directional
+  Polycomb spreading.
+
+✻ Baked for 51s
+
+❯ /copy                                                                         
+  ⎿  Copied to clipboard (2259 characters, 17 lines)
+     Also written to /tmp/claude-501/response.md
+
+※ recap: We built and ran a comprehensive interior/exterior asymmetry analysis (script 12) on HPC for H2AK119ub, H3K27ac, PC1, and insulation scores at loop anchors. Results are synced locally and look clean. No pending action unless you want to discuss the results or commit.
+
+❯ thanks! last request, can u pls add this (and any further missing scripts) to 
+   the run full pipeline? and also update the documentation like                
+  cluster/docs/RESULTS-cluster.md cluster/README.md cluster/CLAUDE.md           
+
+⏺ Let me check the current state of the pipeline runner and docs.
+
+  Read 1 file, listed 1 directory (ctrl+o to expand)
+
+⏺ Scripts 10, 11, and 12 are missing from the pipeline. Let me also check the
+  current docs state before editing.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now let me read the relevant sections of CLAUDE.md and README.md to see what
+  needs updating.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Good. Now let me read the README.md pipeline section to see what to update.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Now I have the full picture. Let me make all four edits in parallel.
+
+⏺ Update(cluster/scripts/run_full_pipeline.sb)
+  ⎿  Added 53 lines
+      330  fi
+      331  
+      332  # ============================================================
+           ================
+      333 +# PHASE 9: Clust6 subgroup asymmetry                          
+      334 +# ============================================================
+          +================                                              
+      335 +                                                              
+      336 +if ! phase_skipped 9; then                                    
+      337 +    banner "Phase 9: Clust6 Subgroup Asymmetry"               
+      338 +                                                              
+      339 +    if [[ ! -d "$CLUSTER_BIGWIG_DIR" ]]; then                 
+      340 +        echo "  WARNING: BigWig dir not found. Skipping Phase 
+          +9."                                                           
+      341 +    else                                                      
+      342 +        "$PYTHON" -u "${SCRIPT_DIR}/10_clust6_subgroup_asymmet
+          +ry.py"                                                        
+      343 +        check_status $? "Phase 9 — clust6 subgroup asymmetry" 
+      344 +    fi                                                        
+      345 +else                                                          
+      346 +    echo "Phase 9: SKIPPED"                                   
+      347 +fi                                                            
+      348 +                                                              
+      349 +# ============================================================
+          +================                                              
+      350 +# PHASE 10: Histone anchors metagene (profile regeneration)   
+      351 +# ============================================================
+          +================                                              
+      352 +                                                              
+      353 +if ! phase_skipped 10; then                                   
+      354 +    banner "Phase 10: Histone Anchors Metagene Profiles"      
+      355 +                                                              
+      356 +    "$PYTHON" -u "${SCRIPT_DIR}/11_histone_anchors_metagene.py
+          +"                                                             
+      357 +    check_status $? "Phase 10 — histone anchors metagene"     
+      358 +else                                                          
+      359 +    echo "Phase 10: SKIPPED"                                  
+      360 +fi                                                            
+      361 +                                                              
+      362 +# ============================================================
+          +================                                              
+      363 +# PHASE 11: Comprehensive asymmetry (H2AK119ub, H3K27ac, PC1, 
+          +insulation)                                                   
+      364 +# ============================================================
+          +================                                              
+      365 +                                                              
+      366 +if ! phase_skipped 11; then                                   
+      367 +    banner "Phase 11: Comprehensive Asymmetry (HPC — needs mco
+          +ols)"                                                         
+      368 +                                                              
+      369 +    if [[ -z "$CLUSTER_MCOOL_CTRL" ]] || [[ ! -f "$CLUSTER_MCO
+          +OL_CTRL" ]]; then                                             
+      370 +        echo "  WARNING: mcool files not found. Skipping Phase
+          + 11."                                                         
+      371 +        echo "  Set CLUSTER_MCOOL_CTRL and CLUSTER_MCOOL_MUT i
+          +n config."                                                    
+      372 +        echo "  Or run standalone: sbatch scripts/12_comprehen
+          +sive_asymmetry.sb"                                            
+      373 +    else                                                      
+      374 +        "$PYTHON" -u "${SCRIPT_DIR}/12_comprehensive_asymmetry
+          +.py" \                                                        
+      375 +            --mcool-ctrl "$CLUSTER_MCOOL_CTRL" \              
+      376 +            --mcool-mut  "$CLUSTER_MCOOL_MUT" \               
+      377 +            --bigwig-dir "$CLUSTER_BIGWIG_DIR" \              
+      378 +            --nproc "${SLURM_CPUS_PER_TASK:-4}"               
+      379 +        check_status $? "Phase 11 — comprehensive asymmetry"  
+      380 +    fi                                                        
+      381 +else                                                          
+      382 +    echo "Phase 11: SKIPPED"                                  
+      383 +fi                                                            
+      384 +                                                              
+      385 +# ============================================================
+          +================                                              
+      386  # DONE
+      387  # ============================================================
+           ================
+      388  
+
+⏺ Now update CLAUDE.md:
+
+⏺ Update(cluster/CLAUDE.md)
+  ⎿  Added 9 lines
+      68  bash scripts/run_oriented_metagene.sh
+      69  /opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/quanti
+          fy_orientation_asymmetry.py
+      70  /opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/visual
+          ize_orientation_asymmetry.py
+      71 +                                                               
+      72 +# Phase 9: Clust6 subgroup asymmetry (short vs long, ~2-4 min) 
+      73 +bash scripts/run_clust6_subgroups.sh                           
+      74 +                                                               
+      75 +# Phase 10: Histone anchors metagene profile regeneration (~1-2
+         + min)                                                          
+      76 +/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/11_his
+         +tone_anchors_metagene.py                                       
+      77 +                                                               
+      78 +# Phase 11: Comprehensive asymmetry — H2AK119ub, H3K27ac, PC1, 
+         +insulation (HPC only)                                          
+      79 +sbatch scripts/12_comprehensive_asymmetry.sb                   
+      80  ```
+      81  
+      82  ## Pipeline Architecture
+
+⏺ Update(cluster/CLAUDE.md)
+  ⎿  Added 5 lines, removed 1 line
+      102  Phase 8: 09_oriented_anchor_metagene.py (strand-aware anchor m
+           etagene)
+      103         + quantify_orientation_asymmetry.py  (Wilcoxon ext/int 
+           → TSV)
+      104         + visualize_orientation_asymmetry.py (K27me3 dual-panel
+            figure)
+      105 +Phase 9: 10_clust6_subgroup_asymmetry.py (clust6 short/long sp
+          +lit + asymmetry)                                              
+      106 +Phase 10: 11_histone_anchors_metagene.py (clean profile figure
+          + from Phase 5 matrix)                                         
+      107 +Phase 11: 12_comprehensive_asymmetry.py (H2AK119ub, H3K27ac, P
+          +C1, insulation                                                
+      108 +           asymmetry — HPC only, needs mcools for cooltools ei
+          +gs-cis + insulation)                                          
+      109  ```
+      110  
+      107 -Phases 2 and 3 are independent of each other (both depend on P
+          -hase 1). Phase 4 requires both 2 and 3. Phases 5–8 all depend 
+          -on Phase 3's clustering output.                               
+      111 +Phases 2 and 3 are independent of each other (both depend on P
+          +hase 1). Phase 4 requires both 2 and 3. Phases 5–11 all depend
+          + on Phase 3's clustering output. Phase 11 additionally require
+          +s mcools on HPC.                                              
+      112  
+      113  ## Module Architecture
+      114  
+
+⏺ Now update README.md:
+
+  Read 1 file (ctrl+o to expand)
+  ⎿  Found 72 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Update(cluster/README.md)
+  ⎿  Added 1 line, removed 1 line
+      15  | **Gained loops** (clust5, n=667, 97% up) | **6.59x** | **3.03
+          x** | Polycomb-domain compaction |
+      16  | **Lost loops** (clust6, n=2,359, 78% down) | **2.09x** | 0.94
+          x | Anchor disruption |
+      17  
+      18 -Gained loops sit within expanding Polycomb domains (both anchor
+         -s and span are heterochromatic). Lost loops have Polycomb gain 
+         -specifically at anchor sites while the span remains euchromatic
+         -. The oriented metagene analysis (Phase 8) further refines this
+         -: K27me3 is asymmetrically interior-enriched at gained-loop anc
+         -hors (Ext/Int = 0.91, p = 0.004) but symmetric at lost-loop anc
+         -hors (Ext/Int = 1.02, p = 0.52).                               
+      18 +Gained loops sit within expanding Polycomb domains (both anchor
+         +s and span are heterochromatic). Lost loops have Polycomb gain 
+         +specifically at anchor sites while the span remains euchromatic
+         +. The oriented metagene analysis (Phase 8) further refines this
+         +: K27me3 is asymmetrically interior-enriched at gained-loop anc
+         +hors (Ext/Int = 0.91, p = 0.004) but symmetric at lost-loop anc
+         +hors (Ext/Int = 1.02, p = 0.52). Comprehensive asymmetry (Phase
+         + 11) confirms this with orthogonal signals: gained-loop anchors
+         + sit at TAD boundaries (insulation p = 3.5e-54) at the edge of 
+         +B-compartment domains (PC1 p = 6.3e-44), while lost-loop anchor
+         +s reside in A-compartment euchromatin with no directional Polyc
+         +omb spreading.                                                 
+      19  
+      20  ---
+      21  
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(cluster/README.md)
+  ⎿  Added 9 lines
+      47  
+      48  # Phase 8: Oriented anchor metagene (~1.7 h)
+      49  bash scripts/run_oriented_metagene.sh
+      50 +                                                               
+      51 +# Phase 9: Clust6 subgroup asymmetry (~2-4 min)                
+      52 +bash scripts/run_clust6_subgroups.sh                           
+      53 +                                                               
+      54 +# Phase 10: Histone anchors metagene profiles (~1-2 min)       
+      55 +/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/11_his
+         +tone_anchors_metagene.py                                       
+      56 +                                                               
+      57 +# Phase 11: Comprehensive asymmetry (HPC only — needs mcools)  
+      58 +sbatch scripts/12_comprehensive_asymmetry.sb                   
+      59  ```
+      60  
+      61  ### Prerequisites
+
+⏺ Now update the README pipeline architecture diagram:
+
+⏺ Update(cluster/README.md)
+  ⎿  Added 5 lines, removed 1 line
+       89  Phase 8: 09_oriented_anchor_metagene.py (strand-aware anchor m
+           etagene)
+       90         + quantify_orientation_asymmetry.py (Wilcoxon ext/int -
+           > TSV)
+       91         + visualize_orientation_asymmetry.py (K27me3 dual-panel
+            figure)
+       92 +Phase 9: 10_clust6_subgroup_asymmetry.py (clust6 short/long sp
+          +lit + asymmetry)                                              
+       93 +Phase 10: 11_histone_anchors_metagene.py (clean profile figure
+          + from Phase 5 matrix)                                         
+       94 +Phase 11: 12_comprehensive_asymmetry.py (H2AK119ub, H3K27ac, P
+          +C1, insulation --                                             
+       95 +           HPC only, computes PC1/insulation BigWigs from mcoo
+          +ls)                                                           
+       96  ```
+       97  
+       94 -Phases 2 and 3 are independent (both depend on Phase 1). Phase
+          - 4 requires both 2 and 3. Phases 5-8 depend on Phase 3's clust
+          -ering output.                                                 
+       98 +Phases 2 and 3 are independent (both depend on Phase 1). Phase
+          + 4 requires both 2 and 3. Phases 5-11 depend on Phase 3's clus
+          +tering output. Phase 11 additionally requires mcools on HPC.  
+       99  
+      100  ---
+      101  
+
+⏺ Now update the Scripts table in README.md:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(cluster/README.md)
+  ⎿  Added 3 lines
+      213  | `09_oriented_anchor_metagene.py` | 8 | Strand-aware anchor m
+           etagene | ~1.7 h |
+      214  | `quantify_orientation_asymmetry.py` | 8 | Ext/Int Wilcoxon s
+           igned-rank -> TSV | <1 min |
+      215  | `visualize_orientation_asymmetry.py` | 8 | K27me3 dual-panel
+            figure | <1 min |
+      216 +| `10_clust6_subgroup_asymmetry.py` | 9 | Clust6 short/long sp
+          +lit + oriented asymmetry | ~2-4 min |                         
+      217 +| `11_histone_anchors_metagene.py` | 10 | Clean profile figure
+          + from Phase 5 matrix | ~1-2 min |                             
+      218 +| `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, P
+          +C1, insulation asymmetry (HPC) | ~90 min |                    
+      219  
+      220  Runner scripts in `scripts/run_*.sh` handle PATH setup, enviro
+           nment activation, and log capture.
+      221  
+
+⏺ Now update the output structure in README.md:
+
+⏺ Update(cluster/README.md)  ⎿  Added 3 lines
+      186      deeptools/
+      187        histone_anchors/                  # Phase 5: 8-BigWig x 
+           6-cluster metagene
+      188        oriented_anchors/                 # Phase 8: strand-awar
+           e metagene + asymmetry
+      189 +      clust6_subgroups/                 # Phase 9: clust6 shor
+          +t/long asymmetry                                              
+      190 +      comprehensive_asymmetry/          # Phase 11: H2AK119ub,
+          + H3K27ac, PC1, insulation                                     
+      191 +        bigwigs/                        #   PC1 + insulation B
+          +igWigs (computed from mcools)                                 
+      192      summary_figures/
+      193        dashboard/                        # 6-panel cluster summ
+           ary
+      194        mechanism/                        # clust5 vs clust6 mec
+           hanism comparison
+
+⏺ Now update RESULTS-cluster.md with the Phase 11 results and update the file
+  inventory:
+
+⏺ Update(cluster/docs/RESULTS-cluster.md)
+  ⎿  Added 1 line, removed 1 line
+       4  
+       5  **Data source of truth:** `docs/phase{1..5}.txt`, `docs/phase3_
+          v2.txt`, `docs/phase4_test_4.4.txt`, `docs/phase8_summary.txt`,
+           `docs/oriented_metagene.txt`, `docs/orientation.txt`, and the 
+          output tables under `bap1_late/`.
+       6  
+       7 -**Last updated:** 2026-04-27                                   
+       7 +**Last updated:** 2026-05-02                                   
+       8  
+       9  ---
+      10  
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now add the Phase 11 section after Phase 8 results:
+
+⏺ Update(cluster/docs/RESULTS-cluster.md)
+  ⎿  Added 34 lines
+      226  
+      227  ---
+      228  
+      229 +### 1.9 Phase 11 -- Comprehensive Asymmetry (H2AK119ub, H3K27a
+          +c, PC1, Insulation)                                           
+      230 +                                                              
+      231 +Extended asymmetry analysis at two spatial scales: histone mar
+          +ks (H2AK119ub, H3K27ac) at +-5kb anchor-local, and compartment
+          + features (PC1 eigenvector, insulation score) at +-50kb domain
+          +-scale. PC1 computed via `cooltools eigs-cis` at 25kb (coarsen
+          +ed from 5kb mcool, ICE-balanced). Insulation via `cooltools in
+          +sulation` at 10kb with 200kb diamond window. Focused on clust5
+          +, clust6, and clust6 short/long subgroups. Runtime: 91 min on 
+          +Expanse (job 48713858).                                       
+      232 +                                                              
+      233 +**PC1 ctrl-mut correlation:** r = 0.9619 (n = 101,854 bins). H
+          +igh consistency confirms phasing-track sign orientation worked
+          + correctly.                                                   
+      234 +                                                              
+      235 +**H2AK119ub and H3K27ac: No asymmetry** (all p > 0.05 for all 
+          +4 groups). K119ub is deposited uniformly at anchor regions wit
+          +hout directional spreading. K27ac similarly symmetric.        
+      236 +                                                              
+      237 +**PC1 (compartment eigenvector):**                            
+      238 +                                                              
+      239 +| Cluster | Direction | n | ctrl ext | ctrl int | ctrl p | mut
+          + ext | mut int | mut p |                                      
+      240 +|---------|-----------|---|---------|---------|--------|------
+          +---|---------|-------|                                        
+      241 +| clust5 | strong gain | 1,167 | -0.238 | -0.333 | 6.3e-44 ***
+          + | -0.113 | -0.164 | 6.7e-13 *** |                            
+      242 +| clust6 | strong loss | 3,858 | 0.167 | 0.178 | 1.3e-4 *** | 
+          +0.103 | 0.109 | 0.032 * |                                     
+      243 +| clust6_short | loss <800kb | 2,502 | 0.269 | 0.302 | 1.0e-13
+          + *** | 0.193 | 0.216 | 4.9e-7 *** |                           
+      244 +| clust6_long | loss >=800kb | 1,474 | -0.003 | -0.029 | 0.003
+          + ** | -0.050 | -0.075 | 0.005 ** |                            
+      245 +                                                              
+      246 +Clust5 gained-loop anchors are in B compartment (negative PC1)
+          +, with **interior more B** (deeper in heterochromatin). Clust6
+          + lost-loop anchors are in A compartment (positive PC1), with i
+          +nterior slightly more A. Clust6_long straddles the A/B boundar
+          +y.                                                            
+      247 +                                                              
+      248 +**Insulation score (log2, 200kb diamond):**                   
+      249 +                                                              
+      250 +| Cluster | Direction | n | ctrl ext | ctrl int | ctrl p | mut
+          + ext | mut int | mut p |                                      
+      251 +|---------|-----------|---|---------|---------|--------|------
+          +---|---------|-------|                                        
+      252 +| clust5 | strong gain | 1,171 | -0.275 | -0.175 | 3.5e-54 ***
+          + | -0.277 | -0.109 | 1.9e-89 *** |                            
+      253 +| clust6 | strong loss | 3,859 | -0.059 | +0.098 | 2.9e-179 **
+          +* | -0.128 | +0.014 | 7.7e-151 *** |                          
+      254 +| clust6_short | loss <800kb | 2,503 | +0.079 | +0.261 | 5.4e-
+          +141 *** | -0.001 | +0.155 | 1.2e-110 *** |                    
+      255 +| clust6_long | loss >=800kb | 1,474 | -0.301 | -0.181 | 7.0e-
+          +52 *** | -0.352 | -0.229 | 1.2e-50 *** |                      
+      256 +                                                              
+      257 +Clust5: exterior more insulated (boundary-like) than interior 
+          +-- gained-loop anchors sit AT strong TAD boundaries, with the 
+          +Polycomb domain interior being less insulated (self-associatin
+          +g). Clust6: dramatic sign flip across anchor (exterior insulat
+          +ed, interior open), marking a sharp boundary-to-open transitio
+          +n. Clust6_long: both sides boundary-like, exterior more so.   
+      258 +                                                              
+      259 +Note: Ext/Int ratio and asymmetry_index columns are unreliable
+          + for PC1 and insulation since those signals cross zero. Wilcox
+          +on p-values and raw means are the correct metrics.            
+      260 +                                                              
+      261 +---                                                           
+      262 +                                                              
+      263  ## 2. Biological Interpretation
+      264  
+      265  This section synthesizes the statistical results above into bi
+           ological conclusions. Interpretations are grounded in the meas
+           ured data; speculative extensions are flagged as such.
+
+⏺ Now update the biological interpretation to integrate Phase 11 findings, and
+  update clust5/clust6 descriptions:
+
+⏺ Update(cluster/docs/RESULTS-cluster.md)
+  ⎿  Added 4 lines, removed 1 line
+      274  - 55% structural (CTCF-CTCF), only 3% CRE
+      275  - Median size: 350 kb
+      276  - K27me3 is asymmetrically interior-enriched (Ext/Int = 0.91, 
+           p = 0.004)
+      277 +- PC1: interior more B-compartment than exterior (ext = -0.24,
+          + int = -0.33, p = 6.3e-44)                                    
+      278 +- Insulation: exterior more boundary-like (ext = -0.28, int = 
+          +-0.17, p = 3.5e-54)                                           
+      279 +- H2AK119ub and H3K27ac: no asymmetry (uniform at anchors)    
+      280  
+      278 -These are new contacts forming **within expanding Polycomb dom
+          -ains**. Both anchors sit in heterochromatin, the chromatin bet
+          -ween them is heterochromatic. The interior K27me3 asymmetry in
+          -dicates the Polycomb domain extends preferentially inward from
+          - the anchors into the loop body, consistent with PRC-mediated 
+          -domain compaction.                                            
+      281 +These are new contacts forming **within expanding Polycomb dom
+          +ains**. Both anchors sit in heterochromatin, the chromatin bet
+          +ween them is heterochromatic. The interior K27me3 asymmetry in
+          +dicates the Polycomb domain extends preferentially inward from
+          + the anchors into the loop body, consistent with PRC-mediated 
+          +domain compaction. The PC1 and insulation data confirm that cl
+          +ust5 anchors sit at **TAD boundaries at the edge of B-compartm
+          +ent Polycomb domains** -- the loop interior is deeper in heter
+          +ochromatin (more B, less insulated / more self-associating) wh
+          +ile the exterior faces the A/B boundary.                      
+      282  
+      283  **Lost loops (clust6, 2,359 loops, 78% down_in_mutant):**
+      284  - Polycomb enriched at anchors (2.09x) but NOT at span (0.94x,
+            genome baseline)
+
+⏺ Update(cluster/docs/RESULTS-cluster.md)
+  ⎿  Added 4 lines, removed 1 line
+      287  - Median size: 575 kb -- longest of any cluster
+      288  - K27me3 shows NO asymmetry (Ext/Int = 1.02, p = 0.52)
+      289  - K119ub_mut elevated (ctrl 1.16 -> mut 1.58)
+      290 +- PC1: both sides A-compartment, interior slightly more A (ext
+          + = 0.17, int = 0.18, p = 1.3e-4)                              
+      291 +- Insulation: dramatic sign flip across anchor (ext = -0.06, i
+          +nt = +0.10, p = 2.9e-179)                                     
+      292 +- H2AK119ub and H3K27ac: no asymmetry                         
+      293  
+      291 -These are existing active/CRE loops whose CTCF anchor sites be
+          -come invaded by Polycomb upon BAP1 loss. The span remains euch
+          -romatic. The symmetric K27me3 at lost-loop anchors indicates P
+          -olycomb gain is not side-specific -- it does not create a euch
+          -romatin-to-heterochromatin boundary. Instead, the anchor regio
+          -n itself becomes heterochromatinized, disrupting CTCF binding.
+      294 +These are existing active/CRE loops whose CTCF anchor sites be
+          +come invaded by Polycomb upon BAP1 loss. The span remains euch
+          +romatic. The symmetric K27me3 at lost-loop anchors indicates P
+          +olycomb gain is not side-specific -- it does not create a euch
+          +romatin-to-heterochromatin boundary. Instead, the anchor regio
+          +n itself becomes heterochromatinized, disrupting CTCF binding.
+          + The insulation data reveals a sharp boundary-to-open transiti
+          +on at these anchors: the exterior is insulated while the inter
+          +ior (loop body) shows open contact structure, consistent with 
+          +the anchor marking the edge of a structural domain that is bei
+          +ng disrupted.                                                 
+      295  
+      296  ### 2.2 Mapping to the Dixon/Popay Framework
+      297  
+
+⏺ Now update the file inventory tables:
+
+⏺ Update(cluster/docs/RESULTS-cluster.md)
+  ⎿  Added 3 lines
+      410  | `09_oriented_anchor_metagene.py` | 8 | Strand-aware anchor m
+           etagene |
+      411  | `quantify_orientation_asymmetry.py` | 8 | Ext/Int Wilcoxon -
+           > TSV |
+      412  | `visualize_orientation_asymmetry.py` | 8 | K27me3 dual-panel
+            figure |
+      413 +| `10_clust6_subgroup_asymmetry.py` | 9 | Clust6 short/long sp
+          +lit + asymmetry |                                             
+      414 +| `11_histone_anchors_metagene.py` | 10 | Clean profile figure
+          + from Phase 5 matrix |                                        
+      415 +| `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, P
+          +C1, insulation asymmetry (HPC) |                              
+      416  
+      417  ### Key Output Files (`bap1_late/`)
+      418  
+
+⏺ Update(cluster/docs/RESULTS-cluster.md)
+  ⎿  Added 3 lines
+      429  | `figures/annotation/` | Per-cluster gene lists |
+      430  | `figures/deeptools/histone_anchors/` | Phase 5 combined heat
+           map |
+      431  | `figures/deeptools/oriented_anchors/` | Phase 8 strand-aware
+            heatmap + asymmetry TSV + K27me3 figure |
+      432 +| `figures/deeptools/clust6_subgroups/` | Phase 9 clust6 short
+          +/long asymmetry |                                             
+      433 +| `figures/deeptools/comprehensive_asymmetry/` | Phase 11 H2AK
+          +119ub, H3K27ac, PC1, insulation asymmetry |                   
+      434 +| `figures/deeptools/comprehensive_asymmetry/bigwigs/` | PC1 +
+          + insulation BigWigs (computed from mcools) |                  
+      435  | `figures/summary_figures/{dashboard,mechanism,heatmap}/` | P
+           hase 7 composites |
+      436  | `cooltools/obs_exp_contacts/` | Phase 6 pileup (ctrl + mut) 
+           |
+      437  
+
+⏺ Now update the "Unanswered Questions" section to mark the insulation score
+  question as done:
+
+⏺ Update(cluster/docs/RESULTS-cluster.md)
+  ⎿  Added 1 line, removed 1 line
+      377  
+      378  7. **RAD21/cohesin ChIP-seq.** Popay normalizes ChIP signal to
+            RAD21 at anchor peaks. Generating RAD21 ChIP-seq for BAP1-KO 
+           cerebellum would enable direct comparison with Popay's NIPBL-d
+           epletion results and test whether cohesin occupancy is reduced
+            at clust6 anchors.
+      379  
+      380 -8. **Insulation score analysis.** Dixon suggested Cooltools in
+          -sulation scores to complement the loop-level analysis. This wo
+          -uld test whether TAD boundaries are weakened at loci where lon
+          -g loops are lost (clust6).                                    
+      380 +8. **Insulation score analysis.** ~~Dixon suggested Cooltools 
+          +insulation scores to complement the loop-level analysis.~~ **D
+          +ONE (Phase 11).** Insulation scores computed at 10kb/200kb dia
+          +mond and tested for ext/int asymmetry. Clust5 anchors sit at s
+          +trong TAD boundaries (p = 3.5e-54); clust6 anchors mark a shar
+          +p boundary-to-open transition (p = 2.9e-179).                 
+      381  
+      382  9. **SNIPER subcompartment analysis.** Dixon suggested SNIPER 
+           for fine-grained subcompartment calling. This would test wheth
+           er gained loops (clust5) specifically map to Polycomb-associat
+           ed subcompartments (B2/B3).
+      383  
+
+⏺ Add a log entry:
+
+⏺ Update(cluster/docs/RESULTS-cluster.md)
+  ⎿  Added 6 lines
+      448  | `phase5.txt` | 5 | deepTools metagene (~96 min) |
+      449  | `phase8_summary.txt` | 7 | Summary figures + K119ub query |
+      450  | `oriented_metagene.txt` | 8 | Oriented anchor metagene (~1.7
+            h) |
+      451 +                                                              
+      452 +### HPC Logs (`logs/`)                                        
+      453 +                                                              
+      454 +| Log | Phase | Content |                                     
+      455 +|-----|-------|---------|                                     
+      456 +| `comprehensive_asymmetry_48713858.out` | 11 | H2AK119ub, H3K
+          +27ac, PC1, insulation asymmetry (~91 min) |                   
+
+⏺ Let me verify all edits are consistent:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ All updated. Here's what changed across 4 files:
+
+  run_full_pipeline.sb -- Added Phases 9 (clust6 subgroup), 10 (histone metagene
+   profiles), and 11 (comprehensive asymmetry). Phase 11 checks for mcools and
+  falls back gracefully with a message to use the standalone sbatch.
+
+  CLAUDE.md -- Added run commands for Phases 9-11 in the Quick Start section,
+  and added 3 new pipeline stages to the architecture diagram.
+
+  README.md -- Updated Key Result paragraph with Phase 11 insulation/PC1
+  findings, added Phases 9-11 to Quick Start, pipeline diagram, scripts table,
+  and output structure.
+
+  docs/RESULTS-cluster.md -- Added Section 1.9 (Phase 11 statistical outputs
+  with full tables for PC1 and insulation), updated biological interpretation
+  for clust5 and clust6 with PC1/insulation data, added scripts and outputs to
+  file inventory, marked insulation score question as DONE, added HPC log entry.
+
+✻ Crunched for 3m 44s
+
+❯ /exit                                                                         
+  ⎿  Bye!

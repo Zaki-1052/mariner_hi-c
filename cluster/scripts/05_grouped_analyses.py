@@ -54,14 +54,21 @@ _tp = _os.environ.get('CLUSTER_TIMEPOINT_LABEL', 'late')
 _out = _os.environ.get('CLUSTER_OUT_DIR', 'outputs/bap1_late')
 _cell = _os.environ.get('CLUSTER_CELL_NAME', 'cerebellum_late')
 _k = _os.environ.get('CLUSTER_K', '6')
+_nstates       = _os.environ.get('CLUSTER_NSTATES', '12')
+_chromhmm_sub  = _os.environ.get('CLUSTER_CHROMHMM_SUBDIR', 'chromHMM')
+_model_sub     = _os.environ.get('CLUSTER_MODEL_SUBDIR', 'learned_model')
+_rename_suffix = _os.environ.get('CLUSTER_RENAME_SUFFIX', 'cerebellum')
+_enrich_suffix = _os.environ.get('CLUSTER_ENRICH_SUFFIX', '')
 
 CLUSTER_FILE  = Path(_os.environ.get('CLUSTER_COMBINED',
     str(REPO_ROOT / 'cluster/{}/cluster3/k-{}/data/combined-clusters.txt'.format(_out, _k))))
 METADATA_FILE = Path(_os.environ.get('CLUSTER_METADATA_FILE',
     str(REPO_ROOT / 'cluster/data/{}_merged_loop_metadata.tsv'.format(_tp))))
 PROMOTER_BED  = REPO_ROOT / 'cluster/data/mm10_knownGene_pp.bed'
-SEGMENT_BED   = REPO_ROOT / 'cluster/{}/chromHMM/learned_model/{}_12_segments.bed'.format(_out, _cell)
-RENAME_FILE   = REPO_ROOT / 'cluster/{}/chromHMM/12state_rename_{}.txt'.format(_out, _cell)
+SEGMENT_BED   = REPO_ROOT / 'cluster/{}/{}/{}/{}_{}_segments.bed'.format(
+    _out, _chromhmm_sub, _model_sub, _cell, _nstates)
+RENAME_FILE   = REPO_ROOT / 'cluster/{}/{}/{}state_rename_{}.txt'.format(
+    _out, _chromhmm_sub, _nstates, _rename_suffix)
 
 CTCF_BED      = REPO_ROOT / _os.environ.get('CLUSTER_PEAK_CTCF', 'peaks/CTCF.bed')
 ENHANCER_BED  = REPO_ROOT / _os.environ.get('CLUSTER_ENHANCER_BED', 'peaks/beds/H3K27acCerebellumLate2.bed')
@@ -87,7 +94,7 @@ BIGWIG_DICT = {
 # -------- outputs --------
 OUT_BASE     = REPO_ROOT / 'cluster' / _out
 FIG_BASE     = OUT_BASE / 'figures'
-CHROMHMM_DIR = OUT_BASE / 'chromHMM'
+CHROMHMM_DIR = OUT_BASE / _chromhmm_sub
 
 # -------- constants --------
 CLUSTER_ORDER = ['clust1', 'clust2', 'clust3', 'clust4', 'clust5', 'clust6']
@@ -107,6 +114,12 @@ STATE_COLORS = {
     'Polycomb':              '#17becf',
     'CTCF_Boundary':         '#7f7f7f',
     'Insulator':             '#c7c7c7',
+    'Heterochromatin':       '#1a1a2e',
+    'Polycomb_K119ub':       '#4a0e4e',
+    'Polycomb_K9me3':        '#8c564b',
+    'Open_Chromatin':        '#00ced1',
+    'ATAC_Enhancer':         '#a8e6cf',
+    'Active_K9ac':           '#e377c2',
 }
 
 DIRECTION_COLORS = {
@@ -409,7 +422,7 @@ def _run_overlap_enrichment(coord_kind: str, filenames: list) -> Path:
     coordlist.write_text('\n'.join(filenames) + '\n')
 
     input_dir = CHROMHMM_DIR / f'{coord_kind}_input'
-    output_prefix = CHROMHMM_DIR / coord_kind
+    output_prefix = CHROMHMM_DIR / f'{coord_kind}{_enrich_suffix}'
     cmd = [
         'chromhmm', 'OverlapEnrichment',
         '-noimage', '-uniformscale',
@@ -426,7 +439,7 @@ def _run_overlap_enrichment(coord_kind: str, filenames: list) -> Path:
         print('  STDOUT:', proc.stdout)
         print('  STDERR:', proc.stderr)
         raise RuntimeError(f'OverlapEnrichment failed for {coord_kind} (exit {proc.returncode})')
-    out_txt = CHROMHMM_DIR / f'{coord_kind}.txt'
+    out_txt = CHROMHMM_DIR / f'{coord_kind}{_enrich_suffix}.txt'
     if not out_txt.exists() or out_txt.stat().st_size == 0:
         raise RuntimeError(f'OverlapEnrichment produced no output: {out_txt}')
     return out_txt
@@ -484,7 +497,7 @@ def run_chromhmm_proportions(bedpe_df: pd.DataFrame, group_order: list) -> None:
     and a dynamic palette built from our underscored state names.
     """
     print('\n=== [4.5] ChromHMM proportions per cluster ===')
-    sub = figure_subfolder(FIG_BASE, 'chromHMM_anchor')
+    sub = figure_subfolder(FIG_BASE, 'chromHMM_anchor{}'.format(_enrich_suffix))
 
     segment_bed = pd.read_csv(SEGMENT_BED, sep='\t', header=None,
                               names=['chr', 'start', 'end', 'state'])
