@@ -1,0 +1,134 @@
+=== CTCF Motif Analysis: late ===
+Date: 2026-05-09
+
+--- 2a: Re-Centering on CTCF Motifs ---
+Total loops: 2910
+Total anchors: 5820
+Anchors with >=1 CTCF motif: 4068 (69.9%)
+Anchors with 0 CTCF motifs: 1752 (30.1%)
+
+Motif count distribution:
+  0 motifs: 1514 (26.0%)
+  1 motifs: 2226 (38.2%)
+  2 motifs: 1183 (20.3%)
+  3+ motifs: 897 (15.4%)
+
+Concordance (10kb type == motif-window consensus): 2937 / 4306 (68.2%)
+
+Type transition matrix (10kb -> motif window):
+  Active_Enhancer -> Active_Enhancer: 170
+  Active_Enhancer -> CTCF_Site: 90
+  Active_Enhancer -> Poised_Enhancer: 57
+  Active_Enhancer -> Polycomb: 10
+  Active_Enhancer -> Active_Promoter: 5
+  Active_Enhancer -> Repressed_Promoter: 1
+  Active_Promoter -> Active_Promoter: 117
+  Active_Promoter -> CTCF_Site: 108
+  Active_Promoter -> Poised_Enhancer: 47
+  Active_Promoter -> Active_Enhancer: 32
+  Active_Promoter -> Polycomb: 3
+  Active_Promoter -> Repressed_Promoter: 1
+  Bivalent_Promoter -> Repressed_Promoter: 8
+  Bivalent_Promoter -> CTCF_Site: 6
+  Bivalent_Promoter -> Bivalent_Promoter: 5
+  Bivalent_Promoter -> Active_Promoter: 4
+  Bivalent_Promoter -> Poised_Enhancer: 3
+  Bivalent_Promoter -> Active_Enhancer: 1
+  CTCF_Site -> CTCF_Site: 1454
+  CTCF_Site -> Poised_Enhancer: 53
+  CTCF_Site -> Polycomb: 21
+  CTCF_Site -> Active_Enhancer: 17
+  CTCF_Site -> Repressed_Promoter: 4
+  CTCF_Site -> Active_Promoter: 2
+  Other -> CTCF_Site: 11
+  Other -> Poised_Enhancer: 8
+  Other -> Polycomb: 3
+  Other -> Repressed_Promoter: 2
+  Poised_Enhancer -> Poised_Enhancer: 539
+  Poised_Enhancer -> CTCF_Site: 333
+  Poised_Enhancer -> Polycomb: 7
+  Poised_Enhancer -> Active_Enhancer: 2
+  Poised_Enhancer -> Bivalent_Promoter: 1
+  Polycomb -> Polycomb: 470
+  Polycomb -> CTCF_Site: 211
+  Polycomb -> Poised_Enhancer: 47
+  Polycomb -> Repressed_Promoter: 4
+  Polycomb -> Active_Promoter: 3
+  Polycomb -> Active_Enhancer: 2
+  Repressed_Promoter -> Repressed_Promoter: 182
+  Repressed_Promoter -> Polycomb: 143
+  Repressed_Promoter -> CTCF_Site: 105
+  Repressed_Promoter -> Poised_Enhancer: 9
+  Repressed_Promoter -> Active_Promoter: 3
+  Repressed_Promoter -> Active_Enhancer: 2
+
+Window size sensitivity:
+  500 bp window: concordance = 65.8% (7287 windows)
+  1000 bp window: concordance = 68.2% (7287 windows)
+  2000 bp window: concordance = 71.6% (7287 windows)
+
+--- 2b: CTCF Motif Filter ---
+All loops: 2910
+  0-CTCF anchor loops: 369 (12.7%) | up=128 down=241
+  1-CTCF anchor loops: 897 (30.8%) | up=480 down=417
+  2-CTCF anchor loops: 1644 (56.5%) | up=1115 down=529
+>=1 CTCF filtered: 2541 (87.3% retained)
+
+Fisher tests (filtered vs excluded, per loop type):
+  Other-Other: OR=0.00 [0.00-0.02] p=1.828e-23
+  CTCF_Site-CTCF_Site: OR=Inf [15.17-Inf] p=1.196e-21
+  Active_Enhancer-Active_Enhancer: OR=0.17 [0.12-0.24] p=1.726e-20
+  Poised_Enhancer-CTCF_Site: OR=Inf [13.53-Inf] p=1.071e-19
+  Polycomb-CTCF_Site: OR=Inf [7.96-Inf] p=3.531e-12
+  Active_Promoter-Active_Enhancer: OR=0.25 [0.17-0.39] p=2.923e-10
+  Active_Promoter-Other: OR=0.08 [0.03-0.21] p=1.198e-08
+  Repressed_Promoter-CTCF_Site: OR=Inf [5.33-Inf] p=2.038e-08
+  CTCF_Site-Other: OR=Inf [5.20-Inf] p=3.198e-08
+  Active_Enhancer-Other: OR=0.11 [0.05-0.26] p=1.106e-07
+  Active_Enhancer-Poised_Enhancer: OR=0.35 [0.24-0.51] p=1.35e-07
+  Poised_Enhancer-Other: OR=0.29 [0.17-0.48] p=2.302e-06
+  Active_Promoter-CTCF_Site: OR=Inf [2.50-Inf] p=0.000371
+  Active_Enhancer-CTCF_Site: OR=Inf [1.84-Inf] p=0.003186
+  Repressed_Promoter-Poised_Enhancer: OR=5.50 [1.46-46.48] p=0.004422
+  Polycomb-Other: OR=0.42 [0.21-0.89] p=0.01344
+  Repressed_Promoter-Other: OR=0.39 [0.16-1.11] p=0.03822
+  Bivalent_Promoter-Poised_Enhancer: OR=0.36 [0.13-1.14] p=0.04103
+
+--- 2c: Other-End Anchor Types ---
+1-CTCF loops: 897
+2-CTCF loops: 1644
+
+Other-end type distribution (1-CTCF loops):
+  Other: 261 (29.1%)
+  Poised_Enhancer: 159 (17.7%)
+  Active_Enhancer: 146 (16.3%)
+  Polycomb: 125 (13.9%)
+  Active_Promoter: 110 (12.3%)
+  Repressed_Promoter: 82 (9.1%)
+  Bivalent_Promoter: 14 (1.6%)
+
+Fisher tests (other-end type, up vs down):
+  Other: OR=2.81 [2.04-3.89] p=1.535e-11
+  Active_Enhancer: OR=0.07 [0.04-0.12] p=6.995e-33
+  Active_Promoter: OR=0.33 [0.21-0.51] p=1.324e-07
+  Poised_Enhancer: OR=1.06 [0.74-1.52] p=0.7927
+  Polycomb: OR=3.90 [2.45-6.41] p=2.733e-10
+  Repressed_Promoter: OR=1.66 [1.01-2.77] p=0.03671
+  Bivalent_Promoter: OR=1.16 [0.35-4.09] p=1
+
+2-CTCF loop anchor type pairs:
+  CTCF_Site - CTCF_Site: 338
+  CTCF_Site - Poised_Enhancer: 136
+  Poised_Enhancer - CTCF_Site: 130
+  Polycomb - Polycomb: 105
+  Polycomb - CTCF_Site: 87
+  CTCF_Site - Polycomb: 79
+  Poised_Enhancer - Poised_Enhancer: 76
+  CTCF_Site - Repressed_Promoter: 60
+  Repressed_Promoter - CTCF_Site: 55
+  Polycomb - Repressed_Promoter: 53
+  Poised_Enhancer - Polycomb: 50
+  Repressed_Promoter - Polycomb: 48
+  Polycomb - Poised_Enhancer: 36
+  Poised_Enhancer - Repressed_Promoter: 34
+  Poised_Enhancer - Active_Enhancer: 33

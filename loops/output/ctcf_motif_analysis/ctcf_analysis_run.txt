@@ -1,0 +1,151 @@
+===== CTCF Motif Analysis =====
+Started: Sat May  9 08:39:12 PDT 2026
+Working directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c
+
+--- Running: late ---
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+
+========== CTCF Motif Analysis: late ==========
+
+Step 1: Loading annotated loops...
+  Loaded 2910 loops (1723 up, 1187 down) for late
+
+Step 2: Loading ChIP-seq peaks and CTCF motifs...
+  Loaded 15100 H3K27ac peaks
+  Loaded 15801 H3K27me3 peaks
+  Loaded 113722 H3K4me1 peaks
+  Loaded 6581 H3K4me3 peaks
+  Loaded 318 Bivalent peaks
+  Loaded 32474 CTCF_ChIP peaks
+  Loaded 113854 CTCF motifs
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+  TSS reference: 24528 gene starts
+
+Step 3: Finding CTCF motifs within loop anchors...
+  Motif-anchor pairs: 7287
+  Anchors with motif: 4068 / 5820 (69.9%)
+
+Step 4: Re-annotating motif-centered windows (+/-500 bp)...
+  Re-annotated 7287 motif windows
+
+Step 5: Computing per-anchor motif consensus...
+  Concordance (10kb == motif window): 2937 / 4306 (68.2%)
+
+Step 6: Window size sensitivity analysis...
+  +/-250 bp (total 500 bp): concordance = 65.8%
+  +/-500 bp (total 1000 bp): concordance = 68.2%
+  +/-1000 bp (total 2000 bp): concordance = 71.6%
+
+Step 7: CTCF motif filter analysis...
+  All loops: 2910 | >=1 CTCF anchor: 2541 | Reduction: 12.7%
+
+Step 8: Other-end anchor type analysis...
+  1-CTCF loops: 897 | 2-CTCF loops: 1644
+
+Step 9: Writing statistics...
+  Statistics written to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/loops/output/ctcf_motif_analysis/late/statistics/ctcf_motif_statistics.txt
+
+Step 10: Writing tables...
+  Tables written to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/loops/output/ctcf_motif_analysis/late/tables
+
+Step 11: Generating plots...
+  Saved: 2a_motif_count_per_anchor/{pdf,svg,jpg}
+  Saved: 2a_state_concordance/{pdf,svg,jpg}
+  Saved: 2a_no_motif_anchor_types/{pdf,svg,jpg}
+  Saved: 2b_ctcf_filter_comparison/{pdf,svg,jpg}
+  Saved: 2b_ctcf_count_distribution/{pdf,svg,jpg}
+  Saved: 2c_other_end_types/{pdf,svg,jpg}
+  Saved: 2c_both_ctcf_heatmap/{pdf,svg,jpg}
+
+  All plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/loops/output/ctcf_motif_analysis/late
+
+========== late complete ==========
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '≥1 CTCF anchor' in 'mbcsToSbcs': >= substituted for ≥ (U+2265)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '≥1 CTCF anchor' in 'mbcsToSbcs': >= substituted for ≥ (U+2265)
+
+Done.
+
+--- Running: early ---
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+
+========== CTCF Motif Analysis: early ==========
+
+Step 1: Loading annotated loops...
+  Loaded 165 loops (73 up, 92 down) for early
+
+Step 2: Loading ChIP-seq peaks and CTCF motifs...
+  Loaded 18158 H3K27ac peaks
+  Loaded 12467 H3K27me3 peaks
+  Loaded 93798 H3K4me1 peaks
+  Loaded 10360 H3K4me3 peaks
+  Loaded 930 Bivalent peaks
+  Loaded 32474 CTCF_ChIP peaks
+  Loaded 113854 CTCF motifs
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+  TSS reference: 24528 gene starts
+
+Step 3: Finding CTCF motifs within loop anchors...
+  Motif-anchor pairs: 398
+  Anchors with motif: 243 / 330 (73.6%)
+
+Step 4: Re-annotating motif-centered windows (+/-500 bp)...
+  Re-annotated 398 motif windows
+
+Step 5: Computing per-anchor motif consensus...
+  Concordance (10kb == motif window): 149 / 245 (60.8%)
+
+Step 6: Window size sensitivity analysis...
+  +/-250 bp (total 500 bp): concordance = 59.6%
+  +/-500 bp (total 1000 bp): concordance = 60.8%
+  +/-1000 bp (total 2000 bp): concordance = 64.9%
+
+Step 7: CTCF motif filter analysis...
+  All loops: 165 | >=1 CTCF anchor: 155 | Reduction: 6.1%
+
+Step 8: Other-end anchor type analysis...
+  1-CTCF loops: 66 | 2-CTCF loops: 89
+
+Step 9: Writing statistics...
+  Statistics written to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/loops/output/ctcf_motif_analysis/early/statistics/ctcf_motif_statistics.txt
+
+Step 10: Writing tables...
+  Tables written to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/loops/output/ctcf_motif_analysis/early/tables
+
+Step 11: Generating plots...
+  Saved: 2a_motif_count_per_anchor/{pdf,svg,jpg}
+  Saved: 2a_state_concordance/{pdf,svg,jpg}
+  Saved: 2a_no_motif_anchor_types/{pdf,svg,jpg}
+  Saved: 2b_ctcf_filter_comparison/{pdf,svg,jpg}
+  Saved: 2b_ctcf_count_distribution/{pdf,svg,jpg}
+  Saved: 2c_other_end_types/{pdf,svg,jpg}
+  Saved: 2c_both_ctcf_heatmap/{pdf,svg,jpg}
+
+  All plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/loops/output/ctcf_motif_analysis/early
+
+========== early complete ==========
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '≥1 CTCF anchor' in 'mbcsToSbcs': >= substituted for ≥ (U+2265)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '≥1 CTCF anchor' in 'mbcsToSbcs': >= substituted for ≥ (U+2265)
+
+Done.
+
+===== Completed: Sat May  9 08:39:29 PDT 2026 =====

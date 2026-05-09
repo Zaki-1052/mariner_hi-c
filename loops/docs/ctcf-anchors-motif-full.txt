@@ -1,0 +1,648 @@
+ ▐▛███▜▌   Claude Code v2.1.136
+▝▜█████▛▘  Opus 4.6 · Claude Max
+  ▘▘ ▝▝    ~/Documents/GitHub/mariner_hi-c
+
+❯ Please make a plan to complete the selected analysis given the context of the 
+   referenced documents. Explore the directories and md (claude and readme)     
+  docs in the appropriate places and use sonnet subagents for understanding all 
+   the reference data. The SE analysis from the previous few commits (mainly    
+  "se apa scripts" or c2ed63a01acea58accf82ef4e0d2039d602a4263, and especially  
+  for longer code 0561b2a7b4b187632d0bbeb84faaf056f1892515 or "SE analysis" -   
+  se_*.R scripts) are a good example of the kind of code to write.              
+  Additionally, please do not overwrite the existing loop script, since         
+  everything needs to be preserved when we write the paper. Write a new script  
+  for this analysis and ultrathink about your plan.                             
+  ⎿  ⧉ Selected 35 lines from loops/TODO.md in Visual Studio Code
+
+⏺ I'll explore the codebase to understand the existing loop annotation pipeline,
+   the SE analysis code style, and the input data before planning. Launching
+  three parallel explore agents.
+
+⏺ 3 Explore agents finished (ctrl+o to expand)
+   ├ Explore loop annotation pipeline · 18 tool uses · 78.8k tokens
+   │ ⎿  Done
+   ├ Explore SE analysis scripts · 11 tool uses · 66.1k tokens
+   │ ⎿  Done
+   └ Explore project structure and data · 28 tool uses · 46.1k tokens
+     ⎿  Done
+
+⏺ Excellent. I now have comprehensive understanding of the codebase. Let me read
+   a few critical files directly to verify specific details before designing the
+   plan.
+
+  Read 3 files (ctrl+o to expand)
+
+⏺ Now let me read the annotate_loops_extended.R classification logic and the
+  existing CTCF analysis scripts more closely.
+
+  Read 4 files (ctrl+o to expand)
+  ⎿  Loaded peaks/CLAUDE.md
+
+⏺ Good. Now let me read the classify_anchor_type_extended function and
+  understand the CTCF motif overlap mechanism more precisely, plus check the
+  existing CTCF analysis scripts.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ Now I have a thorough understanding of everything. Let me launch a Plan agent
+  to design the implementation.
+
+⏺ Plan(Design CTCF motif analysis plan) Sonnet 4.6
+  ⎿  Done (60 tool uses · 111.4k tokens · 5m 1s)
+  (ctrl+o to expand)
+
+⏺ Now let me read the multi_format_output.R utility and the anchor colors/type
+  order from the existing script to capture exact values for the plan.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ I have all the details needed. Let me also quickly check the bash
+  orchestration script pattern and verify the output directory doesn't already
+  exist.
+
+  Listed 2 directories (ctrl+o to expand)
+
+⏺ Good — both the script and output directory are clean. Now let me write the
+  final plan.
+
+⏺ Now I'll write the final plan.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/please-make-a-plan-calm-squirrel.md · /plan 
+     to edit
+     Plan: Loop Anchor CTCF Motif Analysis (TODO #2)
+
+     Context
+
+     The CTEA meeting and Dixon meeting (slide 13) raised the question: "Are 
+     changes happening at the actual CTCF motif?" Current loop anchors are 10 kb
+      Hi-C resolution bins — too coarse for motif-level insight. The 19 bp CTCF
+     DNA motifs within those anchors may tell a different chromatin story than
+     the broad 10 kb window. This script implements TODO item #2 (sections 2a,
+     2b, 2c) as a standalone analysis that reads the already-computed annotated
+     loops and refines them at motif resolution.
+
+     The existing annotate_loops_extended.R is not modified — a new
+     self-contained script is created following the SE analysis code style.
+
+     ---
+     Deliverable
+
+     New file: loops/scripts/ctcf_motif_analysis.R
+
+     Bash wrapper: loops/scripts/run_ctcf_analysis.sh (follows
+     run_se_analysis.sh pattern)
+
+     Output directory: loops/output/ctcf_motif_analysis/{early,late}/
+
+     ---
+     Input Files
+
+     File: peaks/loop_annotation_extended/{tp}/extended_characterized_loops.tsv
+     Purpose: Pre-computed 37-col annotated loops (165 early / 2,910 late)
+     ────────────────────────────────────────
+     File: peaks/ctcf_motifs_mm10.bed
+     Purpose: 114,081 genome-wide CTCF DNA motifs (19 bp, 6-col BED)
+     ────────────────────────────────────────
+     File: peaks/CTCF.bed
+     Purpose: 32,487 CTCF ChIP-seq peaks (narrowPeak, ~230 bp)
+     ────────────────────────────────────────
+     File: peaks/beds/H3K27ac*.bed, H3K27me3*.bed, H3K4me1*.bed, H3K4me3*.bed, 
+       Bivalent_*.bed
+     Purpose: Histone mark ChIP-seq peaks (for 2a re-annotation)
+
+     ---
+     Script Structure (following SE analysis pattern)
+
+     Section 1: Header
+
+     - Path: loops/scripts/ctcf_motif_analysis.R
+     - Module: 2. Loop Anchor CTCF Motif Analysis
+     - Usage, Output blocks matching se_deg_proximity.R format
+
+     Section 2: Libraries + Source
+
+     - GenomicRanges, IRanges, TxDb.Mmusculus.UCSC.mm10.knownGene, tidyverse,
+     ggplot2, ggpubr, patchwork, RColorBrewer
+     - source(file.path(BASE_DIR, "loops/scripts/utils/multi_format_output.R"))
+     - No shared utils file needed — all helpers self-contained
+
+     Section 3: CONFIGURATION
+
+     - BASE_DIR <- getwd() (runs from project root)
+     - MOTIF_WINDOW_BP <- 500L (±500 bp around each motif center for 2a)
+     - PEAK_FILES — named list with absolute paths to ChIP-seq BEDs per
+     timepoint (same files as annotate_loops_extended.R but using
+     file.path(BASE_DIR, ...))
+     - INPUT_FILES — paths to extended_characterized_loops.tsv per timepoint
+     - CTCF_MOTIF_FILE, CTCF_CHIP_FILE — absolute paths
+     - ANCHOR_TYPE_ORDER — identical 8-element vector from existing script
+     - ANCHOR_COLORS — identical named color vector
+     - TSS_THRESHOLD <- 2000L
+     - VALID_CHROMS <- paste0("chr", c(1:19, "X", "Y"))
+
+     Section 4: ARGUMENT PARSING
+
+     - Manual while(i <= length(args)) loop with --timepoint {early|late|both}
+     flag
+     - Default: "both"
+
+     Section 5: CORE FUNCTIONS
+
+     Self-contained helpers (faithful copies of logic from
+     annotate_loops_extended.R, adapted for project-root execution):
+
+     ┌─────────────────────────────────┬────────────────────────────┬──────────┐
+     │            Function             │          Purpose           │ Returns  │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │                                 │ Read extended_characterize │          │
+     │ load_loops(timepoint)           │ d_loops.tsv, validate      │ tibble   │
+     │                                 │ columns                    │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ load_chip_peaks_local(bed_path, │ Load any BED → GRanges     │ GRanges  │
+     │  mark_name)                     │                            │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ load_ctcf_motifs()              │ Load ctcf_motifs_mm10.bed  │ GRanges  │
+     │                                 │ with strand                │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ anchors_to_granges(loops_df,    │ Extract anchor 1 or 2      │          │
+     │ anchor_num)                     │ coords → GRanges with      │ GRanges  │
+     │                                 │ loop_id mcol               │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ find_motifs_in_anchors(anchor_g │ findOverlaps() →           │ data.fra │
+     │ r, motif_gr)                    │ data.frame of motif-anchor │ me       │
+     │                                 │  pairs                     │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ build_motif_windows(motif_df,   │ Create ±window_bp GRanges  │ GRanges  │
+     │ window_bp)                      │ around each motif center   │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ annotate_chip_overlaps_local(wi │ countOverlaps > 0 for 5    │ data.fra │
+     │ ndow_gr, ...)                   │ marks + motif              │ me (bool │
+     │                                 │                            │ eans)    │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ compute_tss_distances(window_gr │ distanceToNearest() →      │ numeric  │
+     │ , tss_gr)                       │ numeric vector             │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │                                 │ 8-category priority        │ characte │
+     │ classify_anchor_type_local(...) │ waterfall (same logic as   │ r vector │
+     │                                 │ existing)                  │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ classify_loop_type_local(a1,    │ Canonical pair label using │ characte │
+     │ a2)                             │  ANCHOR_TYPE_ORDER         │ r vector │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ add_ctcf_anchor_count(loops_df) │ Sum anchor{1,2}_CTCF_motif │ tibble   │
+     │                                 │ _overlap → 0/1/2 column    │          │
+     ├─────────────────────────────────┼────────────────────────────┼──────────┤
+     │ extract_other_end_types(loops_d │ For 1-CTCF loops: identify │ data.fra │
+     │ f)                              │  CTCF end + other end      │ me       │
+     │                                 │ types                      │          │
+     └─────────────────────────────────┴────────────────────────────┴──────────┘
+
+     Section 6: PLOTTING FUNCTIONS
+
+     7 plots, all using theme_classic(base_size = 14) and
+     save_multiformat_ggplot():
+
+     Plot: plot_2a_motif_count_per_anchor
+     Sub-analysis: 2a
+     Type: Grouped bar
+     Description: Motifs per anchor (0/1/2/3+), colored by anchor type, faceted
+     by
+       direction
+     ────────────────────────────────────────
+     Plot: plot_2a_state_concordance
+     Sub-analysis: 2a
+     Type: Side-by-side stacked bar
+     Description: 10 kb type vs motif-window type — shows reclassification rates
+     ────────────────────────────────────────
+     Plot: plot_2a_no_motif_anchors
+     Sub-analysis: 2a
+     Type: Bar
+     Description: Anchors lacking any CTCF motif, broken down by anchor type
+     ────────────────────────────────────────
+     Plot: plot_2b_ctcf_filter_comparison
+     Sub-analysis: 2b
+     Type: Stacked bar (position=fill)
+     Description: Loop type distribution: all loops vs ≥1-CTCF filtered, faceted
+      by
+       direction
+     ────────────────────────────────────────
+     Plot: plot_2b_ctcf_count_distribution
+     Sub-analysis: 2b
+     Type: Stacked bar
+     Description: Fraction of 0/1/2-CTCF loops, split by direction, with counts
+     on
+       bars
+     ────────────────────────────────────────
+     Plot: plot_2c_other_end_types
+     Sub-analysis: 2c
+     Type: Stacked bar (position=fill)
+     Description: Other-end anchor types for 1-CTCF loops, faceted by direction
+     ────────────────────────────────────────
+     Plot: plot_2c_both_ctcf_heatmap
+     Sub-analysis: 2c
+     Type: Heatmap tile
+     Description: Anchor type pair matrix for 2-CTCF loops, with count labels
+
+     Section 7: MAIN ANALYSIS — run_analysis(timepoint)
+
+     Step 1: Load pre-computed annotated loops (load_loops())
+     Step 2: Load CTCF motif BED + ChIP-seq BEDs + TxDb for TSS distances (2a
+     only)
+     Step 3: Extract anchor GRanges; find motifs within anchors via
+     findOverlaps()
+     Step 4: Build ±500 bp motif-centered windows; re-annotate with ChIP marks;
+     classify types
+     Step 5: Summarize per-anchor: n_motifs, motif-level consensus type
+     (highest-priority across windows), concordance with 10 kb type
+     Step 6: Window size sensitivity — repeat re-annotation at ±250 bp and ±1000
+      bp; report concordance rates for all three in statistics (no extra plots)
+     Step 7: CTCF motif filter (2b) — add ctcf_anchor_count, compute
+     distribution for all vs ≥1-CTCF, Fisher tests
+     Step 8: Other-end analysis (2c) — extract other-end types for 1-CTCF and
+     2-CTCF loops
+     Step 9: Write statistics to statistics/ctcf_motif_statistics.txt
+     Step 10: Write tables to tables/
+     Step 11: Generate all 7 plots
+
+     Section 8: DISPATCH
+
+     if (parsed$timepoint == "both") {
+       for (tp in c("late", "early")) run_analysis(tp)
+     } else {
+       run_analysis(parsed$timepoint)
+     }
+
+     ---
+     Output Structure
+
+     loops/output/ctcf_motif_analysis/
+     ├── late/
+     │   ├── tables/
+     │   │   ├── motif_window_annotations.tsv      # One row per motif-in-anchor
+      (2a)
+     │   │   ├── anchor_motif_summary.tsv           # One row per anchor:
+     n_motifs, consensus type, concordance (2a)
+     │   │   ├── loops_ctcf_count.tsv               # All loops +
+     ctcf_anchor_count column (2b)
+     │   │   ├── loop_type_filtered_comparison.tsv   # Distribution: all vs
+     filtered (2b)
+     │   │   ├── other_end_types.tsv                 # Other-end types for
+     1-CTCF loops (2c)
+     │   │   ├── fisher_2b_results.tsv               # Fisher tests: filtered vs
+      unfiltered per loop type
+     │   │   └── fisher_2c_results.tsv               # Fisher tests: other-end
+     types by direction
+     │   ├── statistics/
+     │   │   └── ctcf_motif_statistics.txt           # All stats in plain text
+     (2a+2b+2c)
+     │   ├── 2a_motif_count_per_anchor/             (PDF+SVG+JPG)
+     │   ├── 2a_state_concordance/                  (PDF+SVG+JPG)
+     │   ├── 2a_no_motif_anchor_types/              (PDF+SVG+JPG)
+     │   ├── 2b_ctcf_filter_comparison/             (PDF+SVG+JPG)
+     │   ├── 2b_ctcf_count_distribution/            (PDF+SVG+JPG)
+     │   ├── 2c_other_end_types/                    (PDF+SVG+JPG)
+     │   └── 2c_both_ctcf_heatmap/                  (PDF+SVG+JPG)
+     └── early/
+         └── (same structure)
+
+     ---
+     Key Design Decisions
+
+     Self-contained helpers over sourcing annotate_loops_extended.R: The
+     existing script uses relative paths from peaks/ and would require
+     refactoring to source from project root. Faithful copies of the
+     classification logic avoid coupling.
+
+     ±500 bp motif window: The CTCF footprint is 19 bp; ChIP-seq peaks are ~230
+     bp; flanking nucleosome histone marks extend ~150-300 bp from the motif. A
+     ±500 bp window (1 kb total) captures the motif + co-localizing ChIP signal
+     without overlapping adjacent motifs in most cases. Sensitivity analysis at
+     ±250 bp and ±1000 bp validates this choice.
+
+     Multiple motifs per anchor: Each motif gets its own window and annotation.
+     Per-anchor consensus uses the highest-priority type (earliest in
+     ANCHOR_TYPE_ORDER) across all motif windows — this captures the most
+     biologically significant signal (e.g., if one window is Active_Promoter, it
+      dominates over a neighboring CTCF_Site window).
+
+     Motif-centered windows always have CTCF motif overlap: By construction,
+     every window is built around a motif, so CTCF_motif_overlap = TRUE for all.
+      The interesting question is whether a higher-priority histone mark also
+     overlaps the window, reclassifying it away from CTCF_Site.
+
+     2b uses pre-computed columns: The anchor{1,2}_CTCF_motif_overlap booleans
+     in the TSV are sufficient for the filter — no re-computation needed.
+
+     ---
+     Statistics to Compute
+
+     ┌─────────────────────────────────────────┬────────────────┬──────────────┐
+     │                Statistic                │     Method     │ Sub-analysis │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Motif count per anchor (0/1/2/3+) by    │ tabulation     │ 2a           │
+     │ type                                    │                │              │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Concordance rate (10 kb type ==         │ % agreement    │ 2a           │
+     │ motif-window consensus)                 │                │              │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Type-change transition matrix           │ table()        │ 2a           │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Window-size sensitivity (concordance at │ comparison     │ 2a           │
+     │  250/500/1000 bp)                       │ table          │              │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Filtered loop count and % reduction     │ arithmetic     │ 2b           │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Direction split within 0/1/2-CTCF       │ tabulation     │ 2b           │
+     │ groups                                  │                │              │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Fisher test per loop type: filtered vs  │ fisher.test()  │ 2b           │
+     │ unfiltered × direction                  │                │              │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Other-end type distribution for 1-CTCF  │ tabulation     │ 2c           │
+     │ loops                                   │                │              │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ Fisher test per other-end type by       │ fisher.test()  │ 2c           │
+     │ direction                               │                │              │
+     ├─────────────────────────────────────────┼────────────────┼──────────────┤
+     │ 2-CTCF pair type matrix                 │ table()        │ 2c           │
+     └─────────────────────────────────────────┴────────────────┴──────────────┘
+
+     ---
+     Verification
+
+     1. Run from project root: Rscript loops/scripts/ctcf_motif_analysis.R 
+     --timepoint late
+     2. Confirm output directory loops/output/ctcf_motif_analysis/late/ is
+     created with tables/, statistics/, and 7 plot subdirectories
+     3. Check anchor_motif_summary.tsv — verify n_motifs column has reasonable
+     distribution (mostly 0-2)
+     4. Check statistics/ctcf_motif_statistics.txt — verify concordance rates
+     are reported for all 3 window sizes
+     5. Open one PDF plot from each sub-analysis to verify correct formatting
+     6. Run early timepoint: Rscript loops/scripts/ctcf_motif_analysis.R 
+     --timepoint early
+     7. Run both: bash loops/scripts/run_ctcf_analysis.sh
+
+     ---
+     Critical Files
+
+     File: peaks/loop_annotation_extended/{tp}/extended_characterized_loops.tsv
+     Role: Primary input
+     ────────────────────────────────────────
+     File: peaks/ctcf_motifs_mm10.bed
+     Role: CTCF motif coordinates
+     ────────────────────────────────────────
+     File: peaks/beds/*.bed
+     Role: ChIP-seq peaks for re-annotation
+     ────────────────────────────────────────
+     File: peaks/scripts/annotate_loops_extended.R
+     Role: Reference for classification logic (NOT modified)
+     ────────────────────────────────────────
+     File: loops/scripts/se_deg_proximity.R
+     Role: Code style template
+     ────────────────────────────────────────
+     File: loops/scripts/utils/multi_format_output.R
+     Role: Plot saving utility (sourced)
+     ────────────────────────────────────────
+     File: loops/scripts/utils/se_utils.R
+     Role: Reference for loading patterns
+
+⏺ Plan approved. I'll implement the R script and bash wrapper now. Let me
+  re-read a few more reference sections for exact code patterns before writing.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Good — I can see the existing TSS computation uses resize(genes, width = 1, 
+  fix = "start") which is strand-aware (gives 5' end). Now I have all the
+  reference code I need. Writing the main script.
+
+⏺ Write(loops/scripts/ctcf_motif_analysis.R)
+  ⎿  Wrote 960 lines to loops/scripts/ctcf_motif_analysis.R
+       2 # loops/scripts/ctcf_motif_analysis.R
+       3 # 2. Loop Anchor CTCF Motif Analysis
+       4 #
+         hin anchors.op anchor annotation by centering on CTCF motifs wit
+       6 # Current 10 kb anchors are coarse; this script examines motif-l
+         evel signal.
+       8 #   2a. Re-center chromatin state annotation on individual CTCF 
+         motifs
+       9 #   2b. CTCF motif filter for loop type classification
+      10 #   2c. "Other-end" anchor type for CTCF-anchored loops
+     … +1155 lines (ctrl+o to expand)
+
+⏺ Now the bash wrapper script.
+
+⏺ Write(loops/scripts/run_ctcf_analysis.sh)
+  ⎿  Wrote 27 lines to loops/scripts/run_ctcf_analysis.sh
+       1 #!/usr/bin/env bash
+       2 # loops/scripts/run_ctcf_analysis.sh
+       3 #
+       4 # Runs the CTCF Motif Analysis pipeline (2a, 2b, 2c)
+       5 # for both timepoints.
+       6 #
+       7 # Usage:
+       8 #   bash loops/scripts/run_ctcf_analysis.sh
+       9 #
+      10 # Must be run from the project root (mariner_hi-c/).
+     … +18 lines (ctrl+o to expand)
+
+⏺ Now let me verify the script by checking for any issues — correct file paths,
+  consistent function signatures, and proper data flow.
+
+⏺ Bash(Rscript -e "tryCatch(source('loops/scripts/ctcf_motif_analysis.R',
+      local=TRUE), error=function(e) cat('Parse error:', conditionMessage(e),
+      '\n'))" --args --help…)
+  ⎿  Loaded multi_format_output.R - Functions available:
+       - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+       - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+     … +4 lines (ctrl+o to expand)  ⎿  Found 21 new diagnostic issues in 1 file (ctrl+o to expand)
+
+⏺ Script parses cleanly and the --help flag works. Let me verify the input files
+   all exist before attempting a full run.
+
+⏺ Bash(for f in \
+        "peaks/loop_annotation_extended/late/extended_characterized_loops.tsv"
+      \…)
+  ⎿  OK: peaks/loop_annotation_extended/late/extended_characterized_loops.t
+     sv
+     OK: peaks/loop_annotation_extended/early/extended_characterized_loops.
+     … +14 lines (ctrl+o to expand)
+
+⏺ All 15 input files exist. Let me run the script on the late timepoint to
+  validate.
+
+⏺ Bash(Rscript loops/scripts/ctcf_motif_analysis.R --timepoint late 2>&1)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ i ran it for both. how does it look?                                          
+  @/Users/zakiralibhai/Documents/GitHub/mariner_hi-c/loops/output/ctcf_motif_an 
+  alysis/late/statistics/ctcf_motif_statistics.txt @/Users/zakiralibhai/Documen 
+  ts/GitHub/mariner_hi-c/loops/output/ctcf_motif_analysis/ctcf_analysis_run.txt 
+  ⎿  Read loops/output/ctcf_motif_analysis/late/statistics/ctcf_motif_statistics.txt (135 lines)
+  ⎿  Read loops/output/ctcf_motif_analysis/ctcf_analysis_run.txt (152 lines)
+  ⎿  ⧉ Selected 1 lines from loops/scripts/run_ctcf_analysis.sh in Visual Studio Code
+
+⏺ Both timepoints ran cleanly — all 11 steps completed, 7 plots generated each,
+  17 seconds total. The only warnings are cosmetic (UTF-8 ≥ in JPEG labels). Let
+   me fix that and then walk through the results.
+
+⏺ Update(loops/scripts/ctcf_motif_analysis.R)
+  ⎿  Added 1 line, removed 1 line
+      714    }
+      715  
+      716    dist_all      <- compute_dist(loops_counted, "All loops")
+      717 -  dist_filtered <- compute_dist(loops_filtered, "≥1 CTCF ancho
+          -r")                                                           
+      717 +  dist_filtered <- compute_dist(loops_filtered, ">=1 CTCF anch
+          +or")                                                          
+      718  
+      719    fisher_2b_results <- tibble(loop_type = character(), odds_ra
+           tio = numeric(),
+      720                                ci_low = numeric(), ci_high = nu
+           meric(),
+
+⏺ Now let me look at one of the key plots to verify visual quality.
+
+  Read 3 files (ctrl+o to expand)
+
+⏺ Plots look clean. Here's a summary of the results:
+
+  Everything ran successfully — both timepoints, all 14 plots (7 each), tables
+  and statistics generated in ~17 seconds.
+
+  Key Findings (Late)
+
+  2a — Re-centering on CTCF motifs:
+  - 70% of anchors contain a CTCF motif; 38% have exactly 1, 20% have 2, 15%
+  have 3+
+  - 68% concordance between 10 kb and motif-window classifications — so ~32% of
+  anchors get reclassified at motif level
+  - The concordance plot tells the story clearly: CTCF_Site expands dramatically
+   at motif resolution (from ~36% to ~55%), absorbing signal from
+  Poised_Enhancer, Polycomb, and Active_Promoter. Those histone marks are real
+  at 10 kb but the actual motif sits in a mark-free region.
+  - CTCF_Site itself is 94% concordant (1454/1551) — the most stable type
+  - Concordance scales with window: 66% (500 bp) → 68% (1000 bp) → 72% (2000 bp)
+
+  2b — CTCF filter:
+  - Only 12.7% of loops lost when requiring ≥1 CTCF anchor
+  - The CTCF count plot is striking: gained loops (up) are 65% both-CTCF vs only
+   45% for lost loops (down). Loops without any CTCF motif are 3x more likely to
+   be down (241 vs 128). This supports the structural loop interpretation — BAP1
+   mutant gains CTCF-CTCF structural loops while losing enhancer-driven
+  regulatory loops.
+  - Fisher tests confirm: CTCF_Site-CTCF_Site infinitely enriched in filtered
+  set; Active_Enhancer-Active_Enhancer depleted (OR=0.17, p=2e-20)
+
+  2c — Other-end types:
+  - For 1-CTCF loops, the other-end plot shows a dramatic direction asymmetry:
+    - Active_Enhancer at the other end → overwhelmingly lost (OR=0.07, p=7e-33)
+    - Polycomb at the other end → overwhelmingly gained (OR=3.90, p=3e-10)
+    - This separates regulatory (CTCF-Enhancer, lost) from structural
+  (CTCF-Polycomb, gained) loop types
+  - 2-CTCF loops dominated by CTCF_Site-CTCF_Site (338/1644)
+
+  Early timepoint shows similar patterns but with smaller sample size (165
+  loops). Concordance is slightly lower at 61%.
+
+  The one minor fix I made: replaced the ≥ Unicode character in the filter label
+   with >= to suppress a JPEG encoding warning.
+
+✻ Cogitated for 2m 18s
+
+❯ /copy                                                                         
+  ⎿  Copied to clipboard (2095 characters, 28 lines)
+     Also written to /tmp/claude-501/response.md
+
+❯ thanks! which is/are the best plots that show this effect                     
+
+⏺ Let me check all the remaining plots to give you a complete answer.
+
+  Read 4 files (ctrl+o to expand)
+
+⏺ The two strongest are 2b_ctcf_count_distribution and 2c_other_end_types.
+
+  2b_ctcf_count_distribution is the single clearest figure — the contrast
+  between Up (65% both-CTCF, 7% neither) and Down (45% both, 20% neither) is
+  immediately readable. It makes the case in one glance: gained loops are
+  CTCF-anchored structural loops, lost loops lack CTCF.
+
+  2c_other_end_types is the most biologically informative — the direction
+  asymmetry is striking. Down loops have ~30% Active_Enhancer at the other end
+  (regulatory loops losing contact), Up loops have almost none. Up loops instead
+   show Polycomb and Other. That's the structural vs. regulatory distinction in
+  one panel, directly tied to the BAP1 phenotype.
+
+  2a_state_concordance is the best answer to the PI's specific question ("are
+  changes at the actual motif?") — the CTCF_Site expansion from ~36% to ~55% at
+  motif resolution shows that many anchors classified by histone marks at 10 kb
+  have their motif sitting in a mark-free zone.
+
+  2c_both_ctcf_heatmap is solid supplementary — the CTCF_Site-CTCF_Site hot cell
+   (338) with Polycomb-Polycomb (105) as the next cluster gives nice structural
+  detail.
+
+  The weakest are 2b_ctcf_filter_comparison (too many colors, hard to parse
+  visually) and 2a_no_motif_anchors / 2a_motif_count_per_anchor (more
+  QC/descriptive).
+
+  If you were picking two for a slide deck: the count distribution + the
+  other-end types. If three: add the concordance.
+
+✻ Crunched for 48s
+
+❯ /copy                                                                         
+  ⎿  Copied to clipboard (1448 characters, 13 lines)
+     Also written to /tmp/claude-501/response.md
+
+❯ hmm what does this mean? the CTCF_Site expansion from ~36% to ~55% at motif   
+  resolution shows that many anchors classified by histone marks at 10 kb have  
+  their motif sitting in a mark-free zone.                                      
+
+⏺ Good question — let me unpack that.
+
+  A 10 kb anchor is a Hi-C resolution bin. It can contain multiple regulatory
+  elements that are spatially distinct within the bin. The classification
+  priority system means histone marks always trump CTCF: if the anchor has
+  H3K4me1, it gets called Poised_Enhancer even if it also contains a CTCF motif.
+
+  When you zoom to ±500 bp around the actual CTCF motif, the histone mark often
+  isn't there. It's elsewhere in the same 10 kb bin. So the motif window gets
+  classified as CTCF_Site because there's no histone signal at that specific
+  location.
+
+  Concrete example: a 10 kb anchor has a CTCF motif at position 3 kb and an
+  H3K4me1 peak at position 8 kb. At 10 kb, both overlap the anchor →
+  "Poised_Enhancer" (H3K4me1 is higher priority than CTCF). At ±500 bp around
+  the motif (2.5-3.5 kb), the H3K4me1 peak is 4.5 kb away and outside the window
+   → "CTCF_Site."
+
+  The transition matrix confirms this pattern — the biggest reclassifications
+  are all [histone type] → CTCF_Site:
+  - 333 Poised_Enhancer → CTCF_Site (38% of that type)
+  - 211 Polycomb → CTCF_Site (29%)
+  - 108 Active_Promoter → CTCF_Site (35%)
+  - 90 Active_Enhancer → CTCF_Site (27%)
+
+  The biological interpretation: CTCF and histone marks are adjacent but not 
+  co-localized within most anchors. The CTCF motif provides the structural
+  anchor for the loop, and the nearby enhancer/promoter/polycomb element
+  provides the regulatory function — but they're separate elements that happen
+  to fall in the same 10 kb bin.
+
+✻ Baked for 29s
+
+※ recap: We built and ran a new CTCF motif analysis script (loops/scripts/ctcf_motif_analysis.R) covering TODO item 2a/2b/2c, which completed successfully for both timepoints with 7 plots each. We were reviewing the results and discussing the biological interpretation of the concordance plot. (disable recaps in /config)
+
+❯ /copy                                                                         
+  ⎿  Copied to clipboard (1500 characters, 15 lines)
+     Also written to /tmp/claude-501/response.md
+
+※ recap: We built a CTCF motif analysis script (TODO item 2) to refine loop anchor annotation at motif resolution. Both timepoints ran successfully with all plots and statistics generated. No pending action unless you want to commit the new files or review specific results further. (disable recaps in /config)
+
+❯ /export                                                                       
+  ⎿  Conversation copied to clipboard
