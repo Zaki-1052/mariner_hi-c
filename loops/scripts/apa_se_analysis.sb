@@ -1,0 +1,127 @@
+#!/bin/bash
+#SBATCH --job-name=apa_se_analysis
+#SBATCH --output=logs/apa_se_analysis_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=8:00:00
+#SBATCH --account=csd940
+
+# =============================================================================
+# APA SE-DEG Contact Frequency Analysis
+# =============================================================================
+#
+# Runs apa_se_analysis.R on Expanse HPC to measure Hi-C contact enrichment
+# between DEG promoters and superenhancers across BAP1-KO vs control.
+#
+# Prerequisites:
+#   - se_deg_proximity.R must have been run locally first (generates BEDPEs)
+#   - Sync the apa_inputs/ directory to Expanse before running
+#
+# Usage:
+#   sbatch scripts/apa_se_analysis.sb                    # late, 10kb (default)
+#   sbatch scripts/apa_se_analysis.sb late 10000         # explicit
+#   sbatch scripts/apa_se_analysis.sb both 10000         # both timepoints
+#   sbatch scripts/apa_se_analysis.sb late 5000          # 5kb resolution
+#
+# Expected runtime: ~2-4 hours per timepoint at 10kb
+
+echo "========================================"
+echo "APA SE-DEG Contact Frequency Analysis"
+echo "========================================"
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $(hostname)"
+echo "Started: $(date)"
+echo ""
+
+# --- Configuration ---
+
+TIMEPOINT="${1:-late}"
+RESOLUTION="${2:-10000}"
+PROJECT_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+
+cd "$PROJECT_DIR" || { echo "Cannot cd to $PROJECT_DIR"; exit 1; }
+
+echo "Project dir: $PROJECT_DIR"
+echo "Timepoint: $TIMEPOINT"
+echo "Resolution: $RESOLUTION"
+echo ""
+
+# --- Check inputs exist ---
+
+APA_INPUT_DIR="loops/output/superenhancer_analysis/1a_se_deg_proximity/apa_inputs"
+
+if [ "$TIMEPOINT" = "both" ]; then
+  CHECK_TPS="late early"
+else
+  CHECK_TPS="$TIMEPOINT"
+fi
+
+for TP in $CHECK_TPS; do
+  BEDPE="${APA_INPUT_DIR}/${TP}_deg_se_pairs.bedpe"
+  if [ ! -f "$BEDPE" ]; then
+    echo "ERROR: BEDPE not found: $BEDPE"
+    echo "Run se_deg_proximity.R locally first, then sync apa_inputs/ to Expanse."
+    exit 1
+  fi
+  echo "Found: $BEDPE ($(wc -l < "$BEDPE") pairs)"
+done
+
+# --- Check .hic files ---
+
+HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+
+for TP in $CHECK_TPS; do
+  if [ "$TP" = "late" ]; then
+    HIC_TP_DIR="${HIC_ROOT}/250402"
+  else
+    HIC_TP_DIR="${HIC_ROOT}/250831"
+  fi
+
+  for SAMPLE in ctrl_M1 ctrl_M2 ctrl_M3 mut_M1 mut_M2 mut_M3; do
+    HIC_FILE="${HIC_TP_DIR}/${SAMPLE}.hic"
+    if [ ! -f "$HIC_FILE" ]; then
+      echo "ERROR: .hic file not found: $HIC_FILE"
+      exit 1
+    fi
+  done
+  echo "All 6 .hic files found for $TP at ${HIC_TP_DIR}/"
+done
+echo ""
+
+# --- Activate environment ---
+
+module purge
+module load cpu/0.15.4
+module load anaconda3
+
+conda activate mariner_env
+
+echo "R version: $(Rscript --version 2>&1)"
+echo ""
+
+# --- Run analysis ---
+
+echo "Starting APA analysis..."
+echo ""
+
+Rscript loops/scripts/apa_se_analysis.R \
+  --timepoint "$TIMEPOINT" \
+  --resolution "$RESOLUTION" \
+  2>&1
+
+EXIT_CODE=$?
+
+echo ""
+echo "========================================"
+if [ $EXIT_CODE -eq 0 ]; then
+  echo "Completed successfully: $(date)"
+  echo "Results at: loops/output/superenhancer_analysis/1a_se_deg_proximity/apa_results/"
+else
+  echo "FAILED (exit code $EXIT_CODE): $(date)"
+fi
+echo "========================================"
+
+exit $EXIT_CODE
