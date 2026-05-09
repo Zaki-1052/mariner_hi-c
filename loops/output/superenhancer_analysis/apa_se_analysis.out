@@ -1,0 +1,70 @@
+========================================
+APA SE-DEG Contact Frequency Analysis
+========================================
+Job ID: 48851413
+Node: exp-16-56
+Started: Fri May  8 19:25:27 PDT 2026
+
+Project dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+Timepoint: late
+Resolution: 10000
+
+Found: loops/output/superenhancer_analysis/1a_se_deg_proximity/apa_inputs/late_deg_se_pairs.bedpe (4276 pairs)
+All 6 .hic files found for late at /expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402/
+
+R version: Rscript (R) version 4.4.2 (2024-10-31)
+
+Starting APA analysis...
+
+Warning messages:
+1: package ‘matrixStats’ was built under R version 4.4.3 
+2: package ‘Matrix’ was built under R version 4.4.3 
+3: package ‘S4Arrays’ was built under R version 4.4.3 
+4: package ‘abind’ was built under R version 4.4.3 
+5: package ‘dplyr’ was built under R version 4.4.3 
+6: package ‘yaml’ was built under R version 4.4.3 
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+
+========== APA SE Analysis: LATE at 10kb ==========
+
+  All .hic files found. Normalization: KR
+
+--- DEG-SE: DEG promoters x Superenhancers ---
+  Loaded 4276 pairs from late_deg_se_pairs.bedpe (binned to 10kb)
+  Extracting: 4276 pairs x 6 samples (11x11 matrices)
+  Aggregating 4276 pairs across 6 samples...
+  Mean aggregate P2LL — ctrl: 1.30, mut: 1.27
+  Saved: apa_heatmap_ctrl/{pdf,svg,jpg}
+  Saved: apa_heatmap_mut/{pdf,svg,jpg}
+  Saved: apa_heatmap_diff/{pdf,svg,jpg}
+  Saved outputs to /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/loops/output/superenhancer_analysis/1a_se_deg_proximity/apa_results/late/res_10kb/deg_se/
+
+--- Invariant-SE: Invariant gene promoters x Superenhancers ---
+  Loaded 14335 pairs from late_invariant_se_pairs.bedpe (binned to 10kb)
+  Extracting: 14335 pairs x 6 samples (11x11 matrices)
+  Aggregating 14335 pairs across 6 samples...
+  Mean aggregate P2LL — ctrl: 1.14, mut: 1.13
+  Saved: apa_heatmap_ctrl/{pdf,svg,jpg}
+  Saved: apa_heatmap_mut/{pdf,svg,jpg}
+  Saved: apa_heatmap_diff/{pdf,svg,jpg}
+  Saved outputs to /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/loops/output/superenhancer_analysis/1a_se_deg_proximity/apa_results/late/res_10kb/invariant_se/
+
+--- Generating comparison plots ---
+  Saved: enrichment_comparison/{pdf,svg,jpg}
+  Saved: deg_vs_invariant_enrichment/{pdf,svg,jpg}
+
+--- Statistical tests ---
+  DEG-SE: Wilcoxon p = 3.57e-02, Cliff's d = -0.015
+  Invariant-SE: Wilcoxon p = 2.75e-06, Cliff's d = -0.019
+
+  Wrote statistics to /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/loops/output/superenhancer_analysis/1a_se_deg_proximity/apa_results/late/res_10kb/apa_statistics.txt
+
+========== Done: LATE ==========
+
+========================================
+Completed successfully: Fri May  8 20:53:28 PDT 2026
+Results at: loops/output/superenhancer_analysis/1a_se_deg_proximity/apa_results/
+========================================
