@@ -93,6 +93,11 @@ CLUSTER_DIRECTION = {
 CTRL_COLOR = '#2166ac'
 MUT_COLOR  = '#b2182b'
 
+ZERO_CROSSING_MARKS = {
+    'PC1_ctrl', 'PC1_mut',
+    'insulation_ctrl', 'insulation_mut',
+}
+
 
 # ---------------------------------------------------------------------------
 # Oriented BED construction (reused from scripts 09/10)
@@ -440,20 +445,26 @@ def _profile_panel(ax, x, profiles, cluster, bw_ctrl, bw_mut, asym_df):
     row_m = asym_df[(asym_df['mark'] == bw_mut) & (asym_df['cluster'] == cluster)]
     if len(row_c) > 0 and len(row_m) > 0:
         n = row_c['n_anchors'].values[0]
-        rc = row_c['ext_int_ratio'].values[0]
         pc = row_c['wilcoxon_pval'].values[0]
-        rm = row_m['ext_int_ratio'].values[0]
         pm = row_m['wilcoxon_pval'].values[0]
-        ax.text(0.97, 0.97,
-                'n={:,}\nctrl E/I={:.2f} {}\nmut  E/I={:.2f} {}'.format(
-                    n, rc, _sig(pc), rm, _sig(pm)),
+        if bw_ctrl in ZERO_CROSSING_MARKS:
+            dc = row_c['exterior_mean'].values[0] - row_c['interior_mean'].values[0]
+            dm = row_m['exterior_mean'].values[0] - row_m['interior_mean'].values[0]
+            txt = 'n={:,}\nctrl E-I={:+.3f} {}\nmut  E-I={:+.3f} {}'.format(
+                n, dc, _sig(pc), dm, _sig(pm))
+        else:
+            rc = row_c['ext_int_ratio'].values[0]
+            rm = row_m['ext_int_ratio'].values[0]
+            txt = 'n={:,}\nctrl E/I={:.2f} {}\nmut  E/I={:.2f} {}'.format(
+                n, rc, _sig(pc), rm, _sig(pm))
+        ax.text(0.97, 0.97, txt,
                 transform=ax.transAxes, fontsize=3.5, ha='right', va='top',
                 family='monospace', linespacing=1.3,
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           alpha=0.7, linewidth=0.3))
 
 
-def _bar_panel(ax, asym_df, marks_colors, clusters, y_label):
+def _bar_panel(ax, asym_df, marks_colors, clusters, y_label, use_difference=False):
     # type: (...) -> None
     bar_width = 0.28
     x_pos = np.arange(len(clusters))
@@ -464,7 +475,10 @@ def _bar_panel(ax, asym_df, marks_colors, clusters, y_label):
         for c in clusters:
             row = asym_df[(asym_df['mark'] == mark) & (asym_df['cluster'] == c)]
             if len(row) > 0:
-                vals.append(row['ext_int_ratio'].values[0])
+                if use_difference:
+                    vals.append(row['exterior_mean'].values[0] - row['interior_mean'].values[0])
+                else:
+                    vals.append(row['ext_int_ratio'].values[0])
                 pvals.append(row['wilcoxon_pval'].values[0])
             else:
                 vals.append(float('nan'))
@@ -474,15 +488,17 @@ def _bar_panel(ax, asym_df, marks_colors, clusters, y_label):
         ax.bar(x_pos + offset, vals, bar_width, color=color,
                edgecolor='black', linewidth=0.3, alpha=0.85, label=label)
 
+        ref = 0.0 if use_difference else 1.0
         for k, (v, p) in enumerate(zip(vals, pvals)):
             if not pd.isna(p) and p < 0.05:
                 s = '***' if p < 0.001 else '**' if p < 0.01 else '*'
-                y_off = 0.004 if v >= 1.0 else -0.008
-                va = 'bottom' if v >= 1.0 else 'top'
+                y_off = 0.004 if v >= ref else -0.008
+                va = 'bottom' if v >= ref else 'top'
                 ax.text(x_pos[k] + offset, v + y_off, s,
                         ha='center', va=va, fontsize=5, fontweight='bold')
 
-    ax.axhline(1.0, color='#888888', linewidth=0.5, linestyle='--', zorder=0)
+    ref_line = 0.0 if use_difference else 1.0
+    ax.axhline(ref_line, color='#888888', linewidth=0.5, linestyle='--', zorder=0)
     ax.set_xticks(x_pos)
     ax.set_xticklabels([CLUSTER_LABELS.get(c, c).replace('\n', ' ') for c in clusters],
                        fontsize=5)
@@ -632,7 +648,7 @@ def visualize_compartment(values_file, header, asym_df, out_dir):
     _bar_panel(ax_bar, asym_df, [
         ('PC1_ctrl', CTRL_COLOR, 'PC1 ctrl'),
         ('PC1_mut',  MUT_COLOR,  'PC1 mut'),
-    ], clusters, 'Ext / Int ratio')
+    ], clusters, 'Ext − Int (PC1)', use_difference=True)
 
     fig.suptitle('PC1 and insulation score orientation asymmetry at loop anchors',
                  fontsize=8, fontweight='bold', y=0.98)
@@ -662,6 +678,7 @@ def visualize_summary(histone_asym, compartment_asym, out_dir):
 
     for col_i, (ctrl, mut, title) in enumerate(mark_groups):
         ax = fig.add_subplot(gs[0, col_i])
+        is_diff = ctrl in ZERO_CROSSING_MARKS
         bar_width = 0.22
         x_pos = np.arange(len(focus))
 
@@ -673,7 +690,10 @@ def visualize_summary(histone_asym, compartment_asym, out_dir):
             for c in focus:
                 row = combined[(combined['mark'] == mark) & (combined['cluster'] == c)]
                 if len(row) > 0:
-                    vals.append(row['ext_int_ratio'].values[0])
+                    if is_diff:
+                        vals.append(row['exterior_mean'].values[0] - row['interior_mean'].values[0])
+                    else:
+                        vals.append(row['ext_int_ratio'].values[0])
                     pvals.append(row['wilcoxon_pval'].values[0])
                 else:
                     vals.append(float('nan'))
@@ -683,15 +703,17 @@ def visualize_summary(histone_asym, compartment_asym, out_dir):
             ax.bar(x_pos + offset, vals, bar_width, color=color,
                    edgecolor='black', linewidth=0.3, alpha=0.85, label=label)
 
+            ref = 0.0 if is_diff else 1.0
             for k, (v, p) in enumerate(zip(vals, pvals)):
                 if not pd.isna(p) and p < 0.05:
                     s = '***' if p < 0.001 else '**' if p < 0.01 else '*'
-                    y_off = 0.004 if v >= 1.0 else -0.008
-                    va = 'bottom' if v >= 1.0 else 'top'
+                    y_off = 0.004 if v >= ref else -0.008
+                    va = 'bottom' if v >= ref else 'top'
                     ax.text(x_pos[k] + offset, v + y_off, s,
                             ha='center', va=va, fontsize=6, fontweight='bold')
 
-        ax.axhline(1.0, color='#888888', linewidth=0.5, linestyle='--', zorder=0)
+        ref_line = 0.0 if is_diff else 1.0
+        ax.axhline(ref_line, color='#888888', linewidth=0.5, linestyle='--', zorder=0)
         ax.set_xticks(x_pos)
         ax.set_xticklabels(['clust5\n(gain)', 'clust6\n(loss)'], fontsize=6)
         ax.set_title(title, fontsize=7, fontweight='bold')
@@ -700,6 +722,8 @@ def visualize_summary(histone_asym, compartment_asym, out_dir):
             ax.set_ylabel('Ext / Int ratio', fontsize=6)
             ax.legend(fontsize=5, loc='best', frameon=False,
                       handlelength=1.0, handletextpad=0.3)
+        elif col_i == 2:
+            ax.set_ylabel('Ext − Int', fontsize=6)
 
     fig.suptitle('Asymmetry summary: gained vs lost loops',
                  fontsize=9, fontweight='bold', y=0.97)
@@ -748,164 +772,188 @@ def main():
     # type: () -> None
     ap = argparse.ArgumentParser(
         description='Comprehensive interior/exterior asymmetry analysis')
-    ap.add_argument('--mcool-ctrl', required=True, help='Path to ctrl mcool')
-    ap.add_argument('--mcool-mut',  required=True, help='Path to mut mcool')
+    ap.add_argument('--mcool-ctrl', default=None, help='Path to ctrl mcool (required unless --viz-only)')
+    ap.add_argument('--mcool-mut',  default=None, help='Path to mut mcool (required unless --viz-only)')
     ap.add_argument('--bigwig-dir', default='/Users/zakiralibhai/sdsc/bigwigs',
                     help='Directory with H2AK119ub/H3K27ac BigWigs')
     ap.add_argument('--nproc', type=int, default=4,
                     help='Number of processes for cooltools/computeMatrix')
     ap.add_argument('--skip-compute', action='store_true',
                     help='Skip PC1/insulation BigWig generation (use existing)')
+    ap.add_argument('--viz-only', action='store_true',
+                    help='Skip steps 1-4; re-run quantification + visualization '
+                         'from existing computeMatrix outputs')
     args = ap.parse_args()
-
-    # -- [0/6] Validate inputs ------------------------------------------------
-    print('\n[0/6] Validating inputs...')
-    for path, label in [(CLUSTER_FILE, 'Cluster file'),
-                        (BLACKLIST,    'Blacklist BED')]:
-        if not path.exists():
-            raise FileNotFoundError('{} not found: {}'.format(label, path))
-    for label, path_str in [('ctrl mcool', args.mcool_ctrl),
-                            ('mut mcool',  args.mcool_mut)]:
-        if not Path(path_str).exists():
-            raise FileNotFoundError('{} not found: {}'.format(label, path_str))
-
-    bw_dir = Path(args.bigwig_dir)
-    histone_bws = OrderedDict([
-        ('H2AK119ub_ctrl', bw_dir / 'H2AK119ubCtrl.bw'),
-        ('H2AK119ub_mut',  bw_dir / 'H2AK119ubMut.bw'),
-        ('H3K27ac_ctrl',   bw_dir / 'H3K27acCtrl.bw'),
-        ('H3K27ac_mut',    bw_dir / 'H3K27acMut.bw'),
-    ])
-    for label, path in histone_bws.items():
-        if not path.exists():
-            raise FileNotFoundError('BigWig not found: {} -> {}'.format(label, path))
-    print('  Histone BigWigs: OK ({})'.format(len(histone_bws)))
-
-    if shutil.which('computeMatrix') is None:
-        raise RuntimeError(
-            'computeMatrix not on PATH. Activate the cluster conda env.')
-    if not args.skip_compute and shutil.which('bedGraphToBigWig') is None:
-        raise RuntimeError(
-            'bedGraphToBigWig not on PATH. Install: '
-            'conda install -c bioconda ucsc-bedgraphtobigwig')
-    print('  Tools on PATH: OK')
-
-    # -- Build oriented BED files if needed -----------------------------------
-    print('\n  Checking oriented anchor BEDs...')
-    bed_dict = build_oriented_beds(CLUSTER_FILE, ANCHOR_BED_DIR)
-    focus_beds = OrderedDict()
-    for c in FOCUS_ORDER:
-        if c in bed_dict:
-            focus_beds[c] = bed_dict[c]
-        else:
-            bed_path = ANCHOR_BED_DIR / '{}_oriented_anchors.bed'.format(c)
-            if bed_path.exists():
-                focus_beds[c] = str(bed_path)
-            else:
-                raise FileNotFoundError(
-                    'Oriented BED not found for {}: {}'.format(c, bed_path))
-    print('  BEDs: {}'.format(list(focus_beds.keys())))
+    if args.viz_only:
+        args.skip_compute = True
+    elif not args.mcool_ctrl or not args.mcool_mut:
+        ap.error('--mcool-ctrl and --mcool-mut are required unless --viz-only')
 
     out_dir = OUT_BASE
     out_dir.mkdir(parents=True, exist_ok=True)
     bw_out = out_dir / 'bigwigs'
     bw_out.mkdir(parents=True, exist_ok=True)
 
-    # -- [1/6] Coarsen + phasing tracks ----------------------------------------
-    if not args.skip_compute:
-        print('\n[1/6] Coarsening mcools to 25kb + computing phasing tracks...')
-        ctrl_25kb = coarsen_to_25kb(args.mcool_ctrl, bw_out / 'ctrl_25kb.cool')
-        mut_25kb  = coarsen_to_25kb(args.mcool_mut,  bw_out / 'mut_25kb.cool')
+    histone_values     = out_dir / 'histone_anchors_values'
+    compartment_values = out_dir / 'compartment_anchors_values'
 
-        ctrl_phasing = compute_phasing_track(
-            str(ctrl_25kb), str(histone_bws['H3K27ac_ctrl']),
-            MCOOL_RES_PC1, bw_out / 'ctrl_phasing_25kb.tsv')
-        mut_phasing = compute_phasing_track(
-            str(mut_25kb), str(histone_bws['H3K27ac_mut']),
-            MCOOL_RES_PC1, bw_out / 'mut_phasing_25kb.tsv')
+    if args.viz_only:
+        # ---- fast path: reuse existing computeMatrix outputs ----------------
+        print('\n[0-4/6] Skipped (--viz-only)')
+        for f, label in [(histone_values, 'histone_anchors_values'),
+                         (compartment_values, 'compartment_anchors_values')]:
+            if not f.exists():
+                raise FileNotFoundError(
+                    '{} not found: {}. Run full pipeline first.'.format(label, f))
+        print('  Using cached: {}'.format(histone_values))
+        print('  Using cached: {}'.format(compartment_values))
+
     else:
-        ctrl_25kb = bw_out / 'ctrl_25kb.cool'
-        mut_25kb  = bw_out / 'mut_25kb.cool'
-        ctrl_phasing = bw_out / 'ctrl_phasing_25kb.tsv'
-        mut_phasing  = bw_out / 'mut_phasing_25kb.tsv'
-        print('\n[1/6] Skipped (--skip-compute)')
+        # ---- full path: validate, compute, run computeMatrix ----------------
 
-    # -- [2/6] PC1 BigWigs ---------------------------------------------------
-    pc1_ctrl_bw = Path('{}.cis.bw'.format(bw_out / 'PC1_ctrl'))
-    pc1_mut_bw  = Path('{}.cis.bw'.format(bw_out / 'PC1_mut'))
+        # -- [0/6] Validate inputs --------------------------------------------
+        print('\n[0/6] Validating inputs...')
+        for path, label in [(CLUSTER_FILE, 'Cluster file'),
+                            (BLACKLIST,    'Blacklist BED')]:
+            if not path.exists():
+                raise FileNotFoundError('{} not found: {}'.format(label, path))
+        for label, path_str in [('ctrl mcool', args.mcool_ctrl),
+                                ('mut mcool',  args.mcool_mut)]:
+            if not Path(path_str).exists():
+                raise FileNotFoundError('{} not found: {}'.format(label, path_str))
 
-    if not args.skip_compute:
-        print('\n[2/6] Computing PC1 BigWigs (cooltools eigs-cis at 25kb)...')
-        pc1_ctrl_bw = compute_pc1_bigwig(
-            str(ctrl_25kb), ctrl_phasing, bw_out / 'PC1_ctrl')
-        pc1_mut_bw = compute_pc1_bigwig(
-            str(mut_25kb), mut_phasing, bw_out / 'PC1_mut')
+        bw_dir = Path(args.bigwig_dir)
+        histone_bws = OrderedDict([
+            ('H2AK119ub_ctrl', bw_dir / 'H2AK119ubCtrl.bw'),
+            ('H2AK119ub_mut',  bw_dir / 'H2AK119ubMut.bw'),
+            ('H3K27ac_ctrl',   bw_dir / 'H3K27acCtrl.bw'),
+            ('H3K27ac_mut',    bw_dir / 'H3K27acMut.bw'),
+        ])
+        for label, path in histone_bws.items():
+            if not path.exists():
+                raise FileNotFoundError('BigWig not found: {} -> {}'.format(label, path))
+        print('  Histone BigWigs: OK ({})'.format(len(histone_bws)))
 
-        ctrl_vecs = pd.read_csv(str(bw_out / 'PC1_ctrl.cis.vecs.tsv'), sep='\t')
-        mut_vecs  = pd.read_csv(str(bw_out / 'PC1_mut.cis.vecs.tsv'), sep='\t')
-        merged = ctrl_vecs.merge(mut_vecs, on=['chrom', 'start', 'end'],
-                                 suffixes=('_ctrl', '_mut'))
-        e1_cols = [c for c in merged.columns if c.startswith('E1')]
-        if len(e1_cols) >= 2:
-            valid = merged.dropna(subset=e1_cols[:2])
-            corr = valid[e1_cols[0]].corr(valid[e1_cols[1]])
-            print('  PC1 ctrl-mut correlation: r={:.4f} (n={})'.format(corr, len(valid)))
-    else:
-        print('\n[2/6] Skipped (--skip-compute)')
+        if shutil.which('computeMatrix') is None:
+            raise RuntimeError(
+                'computeMatrix not on PATH. Activate the cluster conda env.')
+        if not args.skip_compute and shutil.which('bedGraphToBigWig') is None:
+            raise RuntimeError(
+                'bedGraphToBigWig not on PATH. Install: '
+                'conda install -c bioconda ucsc-bedgraphtobigwig')
+        print('  Tools on PATH: OK')
 
-    # -- [3/6] Insulation BigWigs ---------------------------------------------
-    ins_ctrl_bw = Path('{}.{}.bw'.format(bw_out / 'insulation_ctrl_10kb', INS_WINDOW_BP))
-    ins_mut_bw  = Path('{}.{}.bw'.format(bw_out / 'insulation_mut_10kb', INS_WINDOW_BP))
+        # -- Build oriented BED files if needed -------------------------------
+        print('\n  Checking oriented anchor BEDs...')
+        bed_dict = build_oriented_beds(CLUSTER_FILE, ANCHOR_BED_DIR)
+        focus_beds = OrderedDict()
+        for c in FOCUS_ORDER:
+            if c in bed_dict:
+                focus_beds[c] = bed_dict[c]
+            else:
+                bed_path = ANCHOR_BED_DIR / '{}_oriented_anchors.bed'.format(c)
+                if bed_path.exists():
+                    focus_beds[c] = str(bed_path)
+                else:
+                    raise FileNotFoundError(
+                        'Oriented BED not found for {}: {}'.format(c, bed_path))
+        print('  BEDs: {}'.format(list(focus_beds.keys())))
 
-    if not args.skip_compute:
-        print('\n[3/6] Computing insulation BigWigs (cooltools insulation)...')
-        ins_ctrl_bw = compute_insulation_bigwig(
-            args.mcool_ctrl, MCOOL_RES_INS, INS_WINDOW_BP,
-            bw_out / 'insulation_ctrl_10kb', args.nproc)
-        ins_mut_bw = compute_insulation_bigwig(
-            args.mcool_mut, MCOOL_RES_INS, INS_WINDOW_BP,
-            bw_out / 'insulation_mut_10kb', args.nproc)
-    else:
-        print('\n[3/6] Skipped (--skip-compute)')
+        # -- [1/6] Coarsen + phasing tracks ------------------------------------
+        if not args.skip_compute:
+            print('\n[1/6] Coarsening mcools to 25kb + computing phasing tracks...')
+            ctrl_25kb = coarsen_to_25kb(args.mcool_ctrl, bw_out / 'ctrl_25kb.cool')
+            mut_25kb  = coarsen_to_25kb(args.mcool_mut,  bw_out / 'mut_25kb.cool')
 
-    for bw, label in [(pc1_ctrl_bw, 'PC1 ctrl'), (pc1_mut_bw, 'PC1 mut'),
-                      (ins_ctrl_bw, 'insulation ctrl'), (ins_mut_bw, 'insulation mut')]:
-        if not bw.exists():
-            raise FileNotFoundError('{} BigWig not found: {}. '
-                                    'Run without --skip-compute first.'.format(label, bw))
+            ctrl_phasing = compute_phasing_track(
+                str(ctrl_25kb), str(histone_bws['H3K27ac_ctrl']),
+                MCOOL_RES_PC1, bw_out / 'ctrl_phasing_25kb.tsv')
+            mut_phasing = compute_phasing_track(
+                str(mut_25kb), str(histone_bws['H3K27ac_mut']),
+                MCOOL_RES_PC1, bw_out / 'mut_phasing_25kb.tsv')
+        else:
+            ctrl_25kb = bw_out / 'ctrl_25kb.cool'
+            mut_25kb  = bw_out / 'mut_25kb.cool'
+            ctrl_phasing = bw_out / 'ctrl_phasing_25kb.tsv'
+            mut_phasing  = bw_out / 'mut_phasing_25kb.tsv'
+            print('\n[1/6] Skipped (--skip-compute)')
 
-    # -- [4/6] computeMatrix x2 ----------------------------------------------
-    print('\n[4/6] Running computeMatrix (histone +-5kb + compartment +-50kb)...')
+        # -- [2/6] PC1 BigWigs ------------------------------------------------
+        pc1_ctrl_bw = Path('{}.cis.bw'.format(bw_out / 'PC1_ctrl'))
+        pc1_mut_bw  = Path('{}.cis.bw'.format(bw_out / 'PC1_mut'))
 
-    histone_bw_paths = OrderedDict([
-        ('H2AK119ub_ctrl', str(histone_bws['H2AK119ub_ctrl'])),
-        ('H2AK119ub_mut',  str(histone_bws['H2AK119ub_mut'])),
-        ('H3K27ac_ctrl',   str(histone_bws['H3K27ac_ctrl'])),
-        ('H3K27ac_mut',    str(histone_bws['H3K27ac_mut'])),
-    ])
+        if not args.skip_compute:
+            print('\n[2/6] Computing PC1 BigWigs (cooltools eigs-cis at 25kb)...')
+            pc1_ctrl_bw = compute_pc1_bigwig(
+                str(ctrl_25kb), ctrl_phasing, bw_out / 'PC1_ctrl')
+            pc1_mut_bw = compute_pc1_bigwig(
+                str(mut_25kb), mut_phasing, bw_out / 'PC1_mut')
 
-    compartment_bw_paths = OrderedDict([
-        ('PC1_ctrl',       str(pc1_ctrl_bw)),
-        ('PC1_mut',        str(pc1_mut_bw)),
-        ('insulation_ctrl', str(ins_ctrl_bw)),
-        ('insulation_mut',  str(ins_mut_bw)),
-    ])
+            ctrl_vecs = pd.read_csv(str(bw_out / 'PC1_ctrl.cis.vecs.tsv'), sep='\t')
+            mut_vecs  = pd.read_csv(str(bw_out / 'PC1_mut.cis.vecs.tsv'), sep='\t')
+            merged = ctrl_vecs.merge(mut_vecs, on=['chrom', 'start', 'end'],
+                                     suffixes=('_ctrl', '_mut'))
+            e1_cols = [c for c in merged.columns if c.startswith('E1')]
+            if len(e1_cols) >= 2:
+                valid = merged.dropna(subset=e1_cols[:2])
+                corr = valid[e1_cols[0]].corr(valid[e1_cols[1]])
+                print('  PC1 ctrl-mut correlation: r={:.4f} (n={})'.format(corr, len(valid)))
+        else:
+            print('\n[2/6] Skipped (--skip-compute)')
 
-    focus_bed_paths = OrderedDict([(k, str(v)) for k, v in focus_beds.items()])
+        # -- [3/6] Insulation BigWigs -----------------------------------------
+        ins_ctrl_bw = Path('{}.{}.bw'.format(bw_out / 'insulation_ctrl_10kb', INS_WINDOW_BP))
+        ins_mut_bw  = Path('{}.{}.bw'.format(bw_out / 'insulation_mut_10kb', INS_WINDOW_BP))
 
-    print('\n  Histone run (+-5kb, {} BigWigs x {} groups)...'.format(
-        len(histone_bw_paths), len(focus_bed_paths)))
-    histone_values = run_computematrix(
-        histone_bw_paths, focus_bed_paths, out_dir, 'histone_anchors',
-        HISTONE_UP_DOWN, str(BLACKLIST), args.nproc,
-        missing_as_zero=True)
+        if not args.skip_compute:
+            print('\n[3/6] Computing insulation BigWigs (cooltools insulation)...')
+            ins_ctrl_bw = compute_insulation_bigwig(
+                args.mcool_ctrl, MCOOL_RES_INS, INS_WINDOW_BP,
+                bw_out / 'insulation_ctrl_10kb', args.nproc)
+            ins_mut_bw = compute_insulation_bigwig(
+                args.mcool_mut, MCOOL_RES_INS, INS_WINDOW_BP,
+                bw_out / 'insulation_mut_10kb', args.nproc)
+        else:
+            print('\n[3/6] Skipped (--skip-compute)')
 
-    print('\n  Compartment run (+-50kb/1kb bins, {} BigWigs x {} groups)...'.format(
-        len(compartment_bw_paths), len(focus_bed_paths)))
-    compartment_values = run_computematrix(
-        compartment_bw_paths, focus_bed_paths, out_dir, 'compartment_anchors',
-        COMPARTMENT_UP_DOWN, str(BLACKLIST), args.nproc,
-        bin_size=COMPARTMENT_BIN_SIZE, missing_as_zero=False)
+        for bw, label in [(pc1_ctrl_bw, 'PC1 ctrl'), (pc1_mut_bw, 'PC1 mut'),
+                          (ins_ctrl_bw, 'insulation ctrl'), (ins_mut_bw, 'insulation mut')]:
+            if not bw.exists():
+                raise FileNotFoundError('{} BigWig not found: {}. '
+                                        'Run without --skip-compute first.'.format(label, bw))
+
+        # -- [4/6] computeMatrix x2 ------------------------------------------
+        print('\n[4/6] Running computeMatrix (histone +-5kb + compartment +-50kb)...')
+
+        histone_bw_paths = OrderedDict([
+            ('H2AK119ub_ctrl', str(histone_bws['H2AK119ub_ctrl'])),
+            ('H2AK119ub_mut',  str(histone_bws['H2AK119ub_mut'])),
+            ('H3K27ac_ctrl',   str(histone_bws['H3K27ac_ctrl'])),
+            ('H3K27ac_mut',    str(histone_bws['H3K27ac_mut'])),
+        ])
+
+        compartment_bw_paths = OrderedDict([
+            ('PC1_ctrl',       str(pc1_ctrl_bw)),
+            ('PC1_mut',        str(pc1_mut_bw)),
+            ('insulation_ctrl', str(ins_ctrl_bw)),
+            ('insulation_mut',  str(ins_mut_bw)),
+        ])
+
+        focus_bed_paths = OrderedDict([(k, str(v)) for k, v in focus_beds.items()])
+
+        print('\n  Histone run (+-5kb, {} BigWigs x {} groups)...'.format(
+            len(histone_bw_paths), len(focus_bed_paths)))
+        histone_values = run_computematrix(
+            histone_bw_paths, focus_bed_paths, out_dir, 'histone_anchors',
+            HISTONE_UP_DOWN, str(BLACKLIST), args.nproc,
+            missing_as_zero=True)
+
+        print('\n  Compartment run (+-50kb/1kb bins, {} BigWigs x {} groups)...'.format(
+            len(compartment_bw_paths), len(focus_bed_paths)))
+        compartment_values = run_computematrix(
+            compartment_bw_paths, focus_bed_paths, out_dir, 'compartment_anchors',
+            COMPARTMENT_UP_DOWN, str(BLACKLIST), args.nproc,
+            bin_size=COMPARTMENT_BIN_SIZE, missing_as_zero=False)
 
     # -- [5/6] Quantify asymmetry ---------------------------------------------
     print('\n[5/6] Quantifying exterior/interior asymmetry...')
