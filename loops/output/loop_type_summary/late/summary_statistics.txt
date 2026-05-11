@@ -1,0 +1,66 @@
+========================================
+Loop Type Summary Statistics (LATE)
+========================================
+
+Script: loops/scripts/loop_type_summary_figures.R
+Input: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/peaks/loop_annotation_extended/late/extended_characterized_loops.tsv
+Output: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/loops/output/loop_type_summary/late
+Generated: 2026-05-11
+
+Total loops: 2910
+  Up in mutant (strengthened):   1723 (59.2%)
+  Down in mutant (weakened):     1187 (40.8%)
+
+--- FIGURE 1: 8-Category Anchor Type Composition ---
+
+  Strengthened (up_in_mutant), n_loops=1723, n_anchors=3446:
+    Active_Promoter          149 (4.3%)
+    Repressed_Promoter       385 (11.2%)
+    Bivalent_Promoter         33 (1.0%)
+    Polycomb                 784 (22.8%)
+    Active_Enhancer           93 (2.7%)
+    Poised_Enhancer          674 (19.6%)
+    CTCF_Site               1082 (31.4%)
+    Other                    246 (7.1%)
+
+  Weakened (down_in_mutant), n_loops=1187, n_anchors=2374:
+    Active_Promoter          361 (15.2%)
+    Repressed_Promoter       175 (7.4%)
+    Bivalent_Promoter         16 (0.7%)
+    Polycomb                 144 (6.1%)
+    Active_Enhancer          570 (24.0%)
+    Poised_Enhancer          498 (21.0%)
+    CTCF_Site                469 (19.8%)
+    Other                    141 (5.9%)
+
+--- FIGURE 2: CRE vs Structural Classification ---
+
+Classification logic:
+  CTCF: anchor1_CTCF_motif_overlap + anchor2_CTCF_motif_overlap
+  EorP: anchor type in {Active_Promoter, Repressed_Promoter, Bivalent_Promoter,
+                        Active_Enhancer, Poised_Enhancer}
+  structural:   CTCF==2 AND EorP<2
+  CRE:          CTCF<2  AND EorP==2
+  mixed:        CTCF==2 AND EorP==2
+  unclassified: all other combinations
+
+  Strengthened (up_in_mutant) (n=1723):
+    structural         949 (55.1%)
+    CRE                148 (8.6%)
+    mixed              166 (9.6%)
+    unclassified       460 (26.7%)
+
+  Weakened (down_in_mutant) (n=1187):
+    structural         337 (28.4%)
+    CRE                441 (37.2%)
+    mixed              192 (16.2%)
+    unclassified       217 (18.3%)
+
+Contingency table (counts):
+                         structural           CRE         mixed  unclassified
+  down:                         337           441           192           217
+  up:                           949           148           166           460
+
+Chi-squared test: chi2 = 442.39, df = 3, p = 1.45e-95
+
+========================================
