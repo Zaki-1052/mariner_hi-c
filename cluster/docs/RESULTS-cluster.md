@@ -299,27 +299,27 @@ Extended asymmetry analysis at two spatial scales: histone marks (H2AK119ub, H3K
 
 **PC1 (compartment eigenvector):**
 
-| Cluster | Direction | n | ctrl ext | ctrl int | ctrl p | mut ext | mut int | mut p |
-|---------|-----------|---|---------|---------|--------|---------|---------|-------|
-| clust5 | strong gain | 1,167 | -0.238 | -0.333 | 6.3e-44 *** | -0.113 | -0.164 | 6.7e-13 *** |
-| clust6 | strong loss | 3,858 | 0.167 | 0.178 | 1.3e-4 *** | 0.103 | 0.109 | 0.032 * |
-| clust6_short | loss <800kb | 2,502 | 0.269 | 0.302 | 1.0e-13 *** | 0.193 | 0.216 | 4.9e-7 *** |
-| clust6_long | loss >=800kb | 1,474 | -0.003 | -0.029 | 0.003 ** | -0.050 | -0.075 | 0.005 ** |
+| Cluster | Direction | n | ctrl ext | ctrl int | ctrl Ext-Int | ctrl p | mut ext | mut int | mut Ext-Int | mut p |
+|---------|-----------|---|---------|---------|-------------|--------|---------|---------|------------|-------|
+| clust5 | strong gain | 1,167 | -0.238 | -0.333 | +0.095 | 6.3e-44 *** | -0.113 | -0.164 | +0.051 | 6.7e-13 *** |
+| clust6 | strong loss | 3,858 | 0.167 | 0.178 | -0.011 | 1.3e-4 *** | 0.103 | 0.109 | -0.006 | 0.032 * |
+| clust6_short | loss <800kb | 2,502 | 0.269 | 0.302 | -0.033 | 1.0e-13 *** | 0.193 | 0.216 | -0.024 | 4.9e-7 *** |
+| clust6_long | loss >=800kb | 1,474 | -0.003 | -0.029 | +0.026 | 0.003 ** | -0.050 | -0.075 | +0.025 | 0.005 ** |
 
-Clust5 gained-loop anchors are in B compartment (negative PC1), with **interior more B** (deeper in heterochromatin). Clust6 lost-loop anchors are in A compartment (positive PC1), with interior slightly more A. Clust6_long straddles the A/B boundary.
+Clust5 gained-loop anchors are in B compartment (negative PC1), with **interior more B** (deeper in heterochromatin); Ext-Int = +0.095 ctrl / +0.051 mut. Clust6 lost-loop anchors are in A compartment (positive PC1), with interior slightly more A. Clust6_long straddles the A/B boundary with nearly identical ctrl/mut differences (+0.026 / +0.025).
 
 **Insulation score (log2, 200kb diamond):**
 
-| Cluster | Direction | n | ctrl ext | ctrl int | ctrl p | mut ext | mut int | mut p |
-|---------|-----------|---|---------|---------|--------|---------|---------|-------|
-| clust5 | strong gain | 1,171 | -0.275 | -0.175 | 3.5e-54 *** | -0.277 | -0.109 | 1.9e-89 *** |
-| clust6 | strong loss | 3,859 | -0.059 | +0.098 | 2.9e-179 *** | -0.128 | +0.014 | 7.7e-151 *** |
-| clust6_short | loss <800kb | 2,503 | +0.079 | +0.261 | 5.4e-141 *** | -0.001 | +0.155 | 1.2e-110 *** |
-| clust6_long | loss >=800kb | 1,474 | -0.301 | -0.181 | 7.0e-52 *** | -0.352 | -0.229 | 1.2e-50 *** |
+| Cluster | Direction | n | ctrl ext | ctrl int | ctrl Ext-Int | ctrl p | mut ext | mut int | mut Ext-Int | mut p |
+|---------|-----------|---|---------|---------|-------------|--------|---------|---------|------------|-------|
+| clust5 | strong gain | 1,171 | -0.275 | -0.175 | -0.101 | 3.5e-54 *** | -0.277 | -0.109 | -0.168 | 1.9e-89 *** |
+| clust6 | strong loss | 3,859 | -0.059 | +0.098 | -0.157 | 2.9e-179 *** | -0.128 | +0.014 | -0.143 | 7.7e-151 *** |
+| clust6_short | loss <800kb | 2,503 | +0.079 | +0.261 | -0.181 | 5.4e-141 *** | -0.001 | +0.155 | -0.157 | 1.2e-110 *** |
+| clust6_long | loss >=800kb | 1,474 | -0.301 | -0.181 | -0.119 | 7.0e-52 *** | -0.352 | -0.229 | -0.123 | 1.2e-50 *** |
 
 Clust5: exterior more insulated (boundary-like) than interior -- gained-loop anchors sit AT strong TAD boundaries, with the Polycomb domain interior being less insulated (self-associating). Clust6: dramatic sign flip across anchor (exterior insulated, interior open), marking a sharp boundary-to-open transition. Clust6_long: both sides boundary-like, exterior more so.
 
-Note: Ext/Int ratio and asymmetry_index columns are unreliable for PC1 and insulation since those signals cross zero. Wilcoxon p-values and raw means are the correct metrics.
+Note: Figures and tables report Ext-Int difference (not Ext/Int ratio) for PC1 and insulation, since these signals cross zero and ratios become dominated by near-zero denominators. Wilcoxon p-values test paired per-anchor differences directly and are unaffected by this choice.
 
 ---
 
@@ -337,8 +337,8 @@ The central finding is that gained and lost chromatin loops in BAP1-KO cerebellu
 - 55% structural (CTCF-CTCF), only 3% CRE
 - Median size: 350 kb
 - K27me3 is asymmetrically interior-enriched (Ext/Int = 0.91, p = 0.004)
-- PC1: interior more B-compartment than exterior (ext = -0.24, int = -0.33, p = 6.3e-44)
-- Insulation: exterior more boundary-like (ext = -0.28, int = -0.17, p = 3.5e-54)
+- PC1: interior more B-compartment than exterior (Ext-Int = +0.095, p = 6.3e-44)
+- Insulation: exterior more boundary-like (Ext-Int = -0.101, p = 3.5e-54)
 - H2AK119ub and H3K27ac: no asymmetry (uniform at anchors)
 
 These are new contacts forming **within expanding Polycomb domains**. Both anchors sit in heterochromatin, the chromatin between them is heterochromatic. The interior K27me3 asymmetry indicates the Polycomb domain extends preferentially inward from the anchors into the loop body, consistent with PRC-mediated domain compaction. The PC1 and insulation data confirm that clust5 anchors sit at **TAD boundaries at the edge of B-compartment Polycomb domains** -- the loop interior is deeper in heterochromatin (more B, less insulated / more self-associating) while the exterior faces the A/B boundary. The 9-mark model (Phase 2b) further resolves this: PRC1+PRC2 co-marked chromatin (Polycomb_K119ub, 8.20x) is more enriched than K27me3-alone (5.66x), and Repressed_Enhancer_K119ub (K4me1+K119ub+K27me3, 9.02x) is the single highest enrichment -- these are enhancers that have been fully silenced by PRC1+PRC2 at gained-loop anchors.
@@ -350,8 +350,8 @@ These are new contacts forming **within expanding Polycomb domains**. Both ancho
 - Median size: 575 kb -- longest of any cluster
 - K27me3 shows NO asymmetry (Ext/Int = 1.02, p = 0.52)
 - K119ub_mut elevated (ctrl 1.16 -> mut 1.58)
-- PC1: both sides A-compartment, interior slightly more A (ext = 0.17, int = 0.18, p = 1.3e-4)
-- Insulation: dramatic sign flip across anchor (ext = -0.06, int = +0.10, p = 2.9e-179)
+- PC1: both sides A-compartment, interior slightly more A (Ext-Int = -0.011, p = 1.3e-4)
+- Insulation: dramatic sign flip across anchor (Ext-Int = -0.157, p = 2.9e-179)
 - H2AK119ub and H3K27ac: no asymmetry
 
 These are existing active/CRE loops whose CTCF anchor sites become invaded by Polycomb upon BAP1 loss. The span remains euchromatic. The symmetric K27me3 at lost-loop anchors indicates Polycomb gain is not side-specific -- it does not create a euchromatin-to-heterochromatin boundary. Instead, the anchor region itself becomes heterochromatinized, disrupting CTCF binding. The insulation data reveals a sharp boundary-to-open transition at these anchors: the exterior is insulated while the interior (loop body) shows open contact structure, consistent with the anchor marking the edge of a structural domain that is being disrupted. The 9-mark model identifies Active_Enhancer_K119ub (5.15x) at clust6 anchors -- active enhancers that still carry K119ub, representing the transitional state where BAP1 has failed to remove K119ub but full PRC2-mediated silencing has not yet occurred.

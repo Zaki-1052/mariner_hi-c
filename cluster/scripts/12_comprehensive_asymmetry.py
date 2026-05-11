@@ -750,18 +750,24 @@ def print_summary(histone_df, compartment_df):
 
     for mark in combined['mark'].unique():
         sub = combined[combined['mark'] == mark]
+        is_diff = mark in ZERO_CROSSING_MARKS
+        metric_label = 'Ext-Int' if is_diff else 'Ext/Int'
         print('\n{}'.format('=' * 90))
         print(' {}'.format(mark))
         print('{}'.format('=' * 90))
-        print('{:<15} {:<15} {:>6} {:>10} {:>10} {:>8} {:>8} {:>10} {:>3}'.format(
-            'Cluster', 'Dir', 'n', 'Exterior', 'Interior', 'Ext/Int', 'Asym', 'p-value', ''))
+        print('{:<15} {:<15} {:>6} {:>10} {:>10} {:>8} {:>10} {:>3}'.format(
+            'Cluster', 'Dir', 'n', 'Exterior', 'Interior', metric_label, 'p-value', ''))
         print('-' * 90)
         for _, r in sub.iterrows():
-            print('{:<15} {:<15} {:>6} {:>10.4f} {:>10.4f} {:>8.4f} {:>+8.5f} {} {}'.format(
+            if is_diff:
+                metric_val = r['exterior_mean'] - r['interior_mean']
+                metric_str = '{:>+8.4f}'.format(metric_val)
+            else:
+                metric_str = '{:>8.4f}'.format(r['ext_int_ratio'])
+            print('{:<15} {:<15} {:>6} {:>10.4f} {:>10.4f} {} {} {}'.format(
                 r['cluster'], r['direction'], r['n_anchors'],
                 r['exterior_mean'], r['interior_mean'],
-                r['ext_int_ratio'], r['asymmetry_index'],
-                p_str(r['wilcoxon_pval']), _sig(r['wilcoxon_pval'])))
+                metric_str, p_str(r['wilcoxon_pval']), _sig(r['wilcoxon_pval'])))
 
 
 # ---------------------------------------------------------------------------

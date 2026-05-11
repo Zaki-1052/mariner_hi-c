@@ -72,6 +72,8 @@ bash scripts/run_phase5.sh   # or invoke Python directly
 
 # Phase 11: Comprehensive asymmetry (HPC only — needs mcools)
 sbatch scripts/12_comprehensive_asymmetry.sb
+# Re-run visualization only (works locally with cached values files):
+/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/12_comprehensive_asymmetry.py --viz-only
 
 # Phase 2b: 9-mark ChromHMM expansion (HPC for segmentation, Mac for downstream)
 sbatch scripts/03b_chromhmm_9mark.sb intersect
@@ -296,7 +298,7 @@ All figures are saved in 4 formats (PNG + PDF + SVG + JPG) via the `multi_format
 | `visualize_orientation_asymmetry.py` | 8 | K27me3 dual-panel figure | <1 min |
 | `10_clust6_subgroup_asymmetry.py` | 9 | Clust6 short/long split + oriented asymmetry | ~2-4 min |
 | `11_histone_anchors_metagene.py` | 10 | Clean profile figure from Phase 5 matrix | ~1-2 min |
-| `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, PC1, insulation asymmetry (HPC) | ~90 min |
+| `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, PC1, insulation asymmetry (HPC; `--viz-only` for local re-render) | ~90 min / ~10s viz-only |
 | `03b_chromhmm_9mark_segmentation.sh` | 2b | 9-mark ChromHMM (BinarizeBed + LearnModel k=15,18) | ~20 min |
 | `03b_chromhmm_9mark.sb` | 2b | SLURM wrapper (creates consensus BEDs + runs segmentation) | ~20 min |
 | `run_phase4_9mark.sh` | 2b | Phase 4.4+4.5 with 9-mark env var overrides | ~15 sec |

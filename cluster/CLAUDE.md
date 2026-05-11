@@ -87,6 +87,8 @@ bash scripts/run_clust6_subgroups.sh
 
 # Phase 11: Comprehensive asymmetry — H2AK119ub, H3K27ac, PC1, insulation (HPC only)
 sbatch scripts/12_comprehensive_asymmetry.sb
+# Re-run visualization only (skip computeMatrix; works locally with cached values files):
+/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/12_comprehensive_asymmetry.py --viz-only
 
 # Phase 2b: 9-mark ChromHMM expansion (HPC for segmentation, Mac for downstream)
 sbatch scripts/03b_chromhmm_9mark.sb intersect   # or: union, both
