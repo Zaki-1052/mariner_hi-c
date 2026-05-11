@@ -265,7 +265,9 @@ outputs/bap1_late/
         bigwigs/                        #   PC1 + insulation BigWigs (computed from mcools)
     summary_figures/
       dashboard/                        # 6-panel cluster summary
-      mechanism/                        # clust5 vs clust6 mechanism comparison
+      mechanism/                        # clust5 vs clust6 mechanism comparison (5-mark)
+      mechanism_9mark/                  # clust5 vs clust6 mechanism (9-mark, 18-state)
+      mechanism_9mark_clust6_split/     # clust6 short vs long mechanism (9-mark, 18-state)
       heatmap/                          # z-scored feature heatmap + feature_values.tsv
   chromHMM_9mark_intersect/              # Phase 2b: 9-mark model (18-state selected)
     learned_model_18/                   #   Segmentation + emissions (18 states x 9 marks)
@@ -299,6 +301,8 @@ All figures are saved in 4 formats (PNG + PDF + SVG + JPG) via the `multi_format
 | `10_clust6_subgroup_asymmetry.py` | 9 | Clust6 short/long split + oriented asymmetry | ~2-4 min |
 | `11_histone_anchors_metagene.py` | 10 | Clean profile figure from Phase 5 matrix | ~1-2 min |
 | `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, PC1, insulation asymmetry (HPC; `--viz-only` for local re-render) | ~90 min / ~10s viz-only |
+| `13_mechanism_9mark.py` | 2b | 9-mark mechanism figure (clust5 vs clust6) | ~5 sec |
+| `14_mechanism_9mark_clust6_split.py` | 2b | 9-mark mechanism figure (clust6 short vs long) | ~10 sec |
 | `03b_chromhmm_9mark_segmentation.sh` | 2b | 9-mark ChromHMM (BinarizeBed + LearnModel k=15,18) | ~20 min |
 | `03b_chromhmm_9mark.sb` | 2b | SLURM wrapper (creates consensus BEDs + runs segmentation) | ~20 min |
 | `run_phase4_9mark.sh` | 2b | Phase 4.4+4.5 with 9-mark env var overrides | ~15 sec |

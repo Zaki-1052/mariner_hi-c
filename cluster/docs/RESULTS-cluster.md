@@ -4,7 +4,7 @@ Results document for the Popay-style Hi-C loop clustering analysis adapted for B
 
 **Data source of truth:** `docs/phase{1..5}.txt`, `docs/phase3_v2.txt`, `docs/phase4_test_4.4.txt`, `docs/phase8_summary.txt`, `docs/oriented_metagene.txt`, `docs/orientation.txt`, and the output tables under `bap1_late/`.
 
-**Last updated:** 2026-05-02
+**Last updated:** 2026-05-11
 
 ---
 
@@ -289,6 +289,36 @@ Clust5: 50% Polycomb + 23.5% Polycomb_K119ub + 11.8% Repressed_Enhancer_K119ub =
 
 ---
 
+### 1.11 Clust6 Short/Long 9-Mark Mechanism Figure
+
+Split clust6 (lost loops) at the 800kb size threshold and ran ChromHMM OverlapEnrichment with the 18-state 9-mark model separately for each subgroup. Companion to the Phase 2b mechanism figure (`13_mechanism_9mark.py`) which shows clust5 vs full clust6.
+
+**Subgroup sizes:** clust6_short = 1,438 loops (<800kb), clust6_long = 921 loops (>=800kb).
+
+**Key anchor enrichment (18-state, clust6_short vs clust6_long):**
+
+| State | clust6_short anchor | clust6_short span | clust6_long anchor | clust6_long span |
+|-------|:---:|:---:|:---:|:---:|
+| Active_Promoter | **9.07** | 1.06 | 6.24 | 1.17 |
+| Active_Enhancer | **6.63** | 1.19 | 5.08 | 1.06 |
+| Active_Enhancer_K119ub | **6.76** | 1.13 | 3.93 | 0.97 |
+| Strong_Enhancer | **6.27** | 1.16 | 2.87 | 0.89 |
+| Polycomb_K119ub | 1.24 | 0.94 | **6.62** | 1.01 |
+| Repressed_Enhancer_K119ub | 1.01 | 0.93 | **4.44** | 1.00 |
+| Polycomb (K27me3 only) | 0.56 | 0.90 | **1.54** | 0.96 |
+
+The short/long split reveals two distinct loss mechanisms within clust6:
+
+- **clust6_short (<800kb):** Dominated by active chromatin states at anchors -- Active_Promoter (9.07x), Active_Enhancer_K119ub (6.76x), Active_Enhancer (6.63x). These are active CRE loops where K119ub has accumulated at enhancers but full PRC2-mediated silencing has not yet occurred. Mechanism: **active anchor disruption**.
+
+- **clust6_long (>=800kb):** Dominated by Polycomb states at anchors -- Polycomb_K119ub (6.62x), Repressed_Enhancer_K119ub (4.44x). These longer loops have anchors that are already PRC1+PRC2-silenced, resembling clust5's Polycomb signature but with span enrichment at genome baseline (~1.0x). Mechanism: **Polycomb anchor silencing**.
+
+Both subgroups show span enrichment near genome baseline (0.89--1.19x for all states), confirming the anchor-specific nature of clust6's chromatin state changes regardless of loop size.
+
+**Script:** `14_mechanism_9mark_clust6_split.py`. **Output:** `figures/summary_figures/mechanism_9mark_clust6_split/`.
+
+---
+
 ### 1.9 Phase 11 -- Comprehensive Asymmetry (H2AK119ub, H3K27ac, PC1, Insulation)
 
 Extended asymmetry analysis at two spatial scales: histone marks (H2AK119ub, H3K27ac) at +-5kb anchor-local, and compartment features (PC1 eigenvector, insulation score) at +-50kb domain-scale. PC1 computed via `cooltools eigs-cis` at 25kb (coarsened from 5kb mcool, ICE-balanced). Insulation via `cooltools insulation` at 10kb with 200kb diamond window. Focused on clust5, clust6, and clust6 short/long subgroups. Runtime: 91 min on Expanse (job 48713858).
@@ -478,6 +508,8 @@ The methylation gains at CpG islands appear to occur independently of direct K11
 | `10_clust6_subgroup_asymmetry.py` | 9 | Clust6 short/long split + asymmetry |
 | `11_histone_anchors_metagene.py` | 10 | Clean profile figure from Phase 5 matrix |
 | `12_comprehensive_asymmetry.py` | 11 | H2AK119ub, H3K27ac, PC1, insulation asymmetry (HPC) |
+| `13_mechanism_9mark.py` | 2b | 9-mark mechanism figure (clust5 vs clust6) |
+| `14_mechanism_9mark_clust6_split.py` | 2b | 9-mark mechanism figure (clust6 short vs long) |
 | `03b_chromhmm_9mark_segmentation.sh` | 2b | 9-mark ChromHMM (BinarizeBed + LearnModel k=15,18) |
 | `03b_chromhmm_9mark.sb` | 2b | SLURM wrapper for 9-mark segmentation (HPC) |
 | `run_phase4_9mark.sh` | 2b | Driver for 9-mark Phase 4.4/4.5 rerun |
@@ -501,6 +533,9 @@ The methylation gains at CpG islands appear to occur independently of direct K11
 | `figures/deeptools/comprehensive_asymmetry/` | Phase 11 H2AK119ub, H3K27ac, PC1, insulation asymmetry |
 | `figures/deeptools/comprehensive_asymmetry/bigwigs/` | PC1 + insulation BigWigs (computed from mcools) |
 | `figures/summary_figures/{dashboard,mechanism,heatmap}/` | Phase 7 composites |
+| `figures/summary_figures/mechanism_9mark/` | 9-mark mechanism figure (clust5 vs clust6) |
+| `figures/summary_figures/mechanism_9mark_clust6_split/` | 9-mark mechanism figure (clust6 short vs long) |
+| `chromHMM_9mark_intersect/{anchor,span}_split_18.txt` | 9-mark clust6 short/long enrichment (18 states x 2 subgroups) |
 | `cooltools/obs_exp_contacts/` | Phase 6 pileup (ctrl + mut) |
 | `chromHMM_9mark_intersect/` | Phase 2b: 9-mark model outputs (18-state selected) |
 | `chromHMM_9mark_intersect/{anchor,span}_18.txt` | 9-mark anchor-vs-span enrichment (18 states x 6 clusters) |

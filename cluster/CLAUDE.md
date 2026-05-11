@@ -95,6 +95,10 @@ sbatch scripts/03b_chromhmm_9mark.sb intersect   # or: union, both
 sbatch scripts/03b_chromhmm_9mark.sb union
 # MANUAL: write 18state_rename_cerebellum.txt in chromHMM_9mark_{intersect,union}/
 bash scripts/run_phase4_9mark.sh intersect 18     # Phase 4.4+4.5 for 9-mark model
+
+# 9-mark mechanism figures (~10 sec each)
+/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/13_mechanism_9mark.py
+/opt/homebrew/anaconda3/envs/cluster/bin/python3 scripts/14_mechanism_9mark_clust6_split.py
 ```
 
 ## Configuration
@@ -161,6 +165,8 @@ Phase 11: 12_comprehensive_asymmetry.py (H2AK119ub, H3K27ac, PC1, insulation
            asymmetry — HPC only, needs mcools for cooltools eigs-cis + insulation)
 Phase 2b: 03b_chromhmm_9mark_segmentation.sh (9-mark ChromHMM, 15+18 states)
         + run_phase4_9mark.sh (Phase 4.4/4.5 rerun with 9-mark env vars)
+        + 13_mechanism_9mark.py (clust5 vs clust6 mechanism, 18-state)
+        + 14_mechanism_9mark_clust6_split.py (clust6 short vs long, 18-state)
 ```
 
 Phases 2 and 3 are independent of each other (both depend on Phase 1). Phase 4 requires both 2 and 3. Phases 5–11 all depend on Phase 3's clustering output. Phase 11 additionally requires mcools on HPC.
