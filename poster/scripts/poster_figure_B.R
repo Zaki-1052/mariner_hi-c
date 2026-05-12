@@ -159,49 +159,52 @@ for (i in seq_len(nrow(plot_data))) {
 }
 
 # ---------------------------------------------------------------------------
-# 5. Build ggplot with ggpattern
+# 5. Build ggplot: dark+solid (anchor) vs light+striped (span)
 # ---------------------------------------------------------------------------
 
-# Assign pattern: Anchor = solid (none), Span = stripe
-# ggpattern uses pattern aesthetic for geom_col_pattern
+lighten <- function(hex, amount = 0.45) {
+  rgb_vals <- col2rgb(hex) / 255
+  light <- rgb_vals + (1 - rgb_vals) * amount
+  rgb(light[1], light[2], light[3])
+}
+
+# Build fill color per group x region_type
+plot_data$fill_key <- paste(plot_data$group, plot_data$region_type, sep = ".")
+
+fill_colors <- c()
+for (grp in names(GROUP_COLORS)) {
+  fill_colors[[paste0(grp, ".Anchor")]] <- GROUP_COLORS[[grp]]
+  fill_colors[[paste0(grp, ".Span")]]   <- lighten(GROUP_COLORS[[grp]])
+}
+
+plot_data$fill_key <- factor(plot_data$fill_key, levels = names(fill_colors))
 
 p <- ggplot(plot_data,
-            aes(x = enrichment,
-                y = group,
-                fill = group,
-                pattern = region_type)) +
+            aes(x = enrichment, y = group,
+                fill = fill_key, pattern = region_type)) +
   geom_col_pattern(
-    position       = position_dodge(width = 0.75),
-    width          = 0.65,
-    color          = "grey30",
-    linewidth      = 0.4,
-    pattern_fill   = "grey30",
-    pattern_colour = NA,
-    pattern_spacing = 0.025,
-    pattern_density = 0.4,
+    position        = position_dodge(width = 0.75),
+    width           = 0.65,
+    color           = "grey30",
+    linewidth       = 0.3,
+    pattern_fill    = "white",
+    pattern_colour  = "grey50",
+    pattern_spacing = 0.03,
+    pattern_density = 0.3,
     pattern_angle   = 45
   ) +
-  # Dashed vertical reference line at enrichment = 1.0 (genome baseline)
   geom_vline(xintercept = 1.0, linetype = "dashed", color = "grey40",
              linewidth = 0.6) +
-  # Facet by cluster
   facet_wrap(~ cluster, ncol = 2) +
-  # Colors
-  scale_fill_manual(
-    values = GROUP_COLORS,
-    guide  = "none"
-  ) +
+  scale_fill_manual(values = fill_colors, guide = "none") +
   scale_pattern_manual(
     values = c("Anchor" = "none", "Span" = "stripe"),
-    name   = NULL,
-    labels = c("Anchor" = "Anchor", "Span" = "Span")
+    name   = NULL
   ) +
-  # Axis labels
   labs(
     x = "Fold enrichment (vs genome)",
     y = NULL
   ) +
-  # Theme
   theme_minimal(base_size = 16) +
   theme(
     panel.grid.minor   = element_blank(),
@@ -215,12 +218,11 @@ p <- ggplot(plot_data,
     legend.key.size    = unit(1.2, "lines"),
     plot.margin        = margin(t = 10, r = 15, b = 40, l = 10, unit = "pt")
   ) +
-  # Override legend key glyphs for pattern visibility
   guides(
     pattern = guide_legend(
       override.aes = list(
-        fill          = "grey70",
-        pattern_fill  = "grey30",
+        fill            = c("grey40", "grey80"),
+        pattern_fill    = "white",
         pattern_spacing = 0.02
       )
     )

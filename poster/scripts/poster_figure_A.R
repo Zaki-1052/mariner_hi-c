@@ -46,8 +46,7 @@ stopifnot(all(c("clust5", "clust6") %in% raw$V1))
 # --- 3. Build full 6-cluster x 7-feature matrix (z-score across all 6) ---
 
 feature_names <- c(
-  "n", "Median\nlogFC", "Median\nsize (kb)",
-  "% CRE", "Polycomb\nanchor", "Polycomb\nspan", "K119ub\n(mutant)"
+  "n", "Median\nlogFC", "Median\nsize (kb)", "% CRE", "K119ub\n(mutant)"
 )
 
 # Hardcoded sample sizes per cluster (not in the input file)
@@ -59,25 +58,22 @@ cluster_n <- c(
 all_clusters <- raw$V1
 mat_all <- data.frame(
   cluster         = all_clusters,
-  median_logfc    = raw$V2,
   n               = cluster_n[all_clusters],
+  median_logfc    = raw$V2,
   median_size_kb  = raw$V5,
   pct_cre         = raw$V7,
-  polycomb_anchor = raw$V8,
-  polycomb_span   = raw$V9,
   k119ub_mut      = raw$V13,
   stringsAsFactors = FALSE
 )
 
 # --- 4. Z-score normalize each feature across all 6 clusters, then subset ---
 
-value_cols <- c(
-  "n", "median_logfc", "median_size_kb",
-  "pct_cre", "polycomb_anchor", "polycomb_span", "k119ub_mut"
-)
+value_cols <- c("n", "median_logfc", "median_size_kb", "pct_cre", "k119ub_mut")
+
+bio_cols <- setdiff(value_cols, "n")
 
 zscore_all <- mat_all
-for (col in value_cols) {
+for (col in bio_cols) {
   zscore_all[[col]] <- as.numeric(scale(mat_all[[col]]))
 }
 
@@ -86,16 +82,17 @@ show_clusters <- c("clust5", "clust6")
 mat <- mat_all[mat_all$cluster %in% show_clusters, ]
 zscore_mat <- zscore_all[zscore_all$cluster %in% show_clusters, ]
 
+# Z-score n across just the 2 displayed rows (not all 6 clusters)
+zscore_mat$n <- as.numeric(scale(mat$n))
+
 # --- 5. Format raw annotations per feature ---
 
 format_raw <- function(col_name, value) {
   switch(col_name,
-    median_logfc    = sprintf("%+.2f", value),
     n               = format(as.integer(value), big.mark = ","),
+    median_logfc    = sprintf("%+.2f", value),
     median_size_kb  = sprintf("%.0f", value),
     pct_cre         = sprintf("%.1f%%", value),
-    polycomb_anchor = sprintf("%.2fx", value),
-    polycomb_span   = sprintf("%.2fx", value),
     k119ub_mut      = sprintf("%.2f", value),
     as.character(value)
   )
@@ -123,9 +120,6 @@ raw_long <- mat %>%
 plot_df <- left_join(zscore_long, raw_long, by = c("cluster", "feature_id"))
 
 plot_df$label <- mapply(format_raw, plot_df$feature_id, plot_df$raw_value)
-
-# n is sample size, not a biological feature — use neutral grey instead of z-score
-plot_df$zscore[plot_df$feature_id == "n"] <- NA
 
 # Map internal column names to display names
 feature_display <- setNames(feature_names, value_cols)
@@ -158,8 +152,7 @@ p <- ggplot(plot_df, aes(x = feature, y = row_label, fill = zscore)) +
     mid      = "white",
     high     = "#b2182b",
     midpoint = 0,
-    name     = "Z-score",
-    na.value = "grey85"
+    name     = "Z-score"
   ) +
   labs(title = "Differential loop cluster features") +
   theme_minimal(base_size = 14) +
