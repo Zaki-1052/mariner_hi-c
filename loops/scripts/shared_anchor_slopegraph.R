@@ -17,9 +17,10 @@ source("scripts/utils/multi_format_output.R")
 
 # ---- Configuration -----------------------------------------------------------
 
-BASE     <- getwd()
-DATA_TSV <- file.path(BASE, "output/shared_anchor_analysis/late/tables/paired_distance_stats.tsv")
-OUT_DIR  <- file.path(BASE, "output/shared_anchor_analysis/late/plots")
+BASE      <- getwd()
+DATA_TSV  <- file.path(BASE, "output/shared_anchor_analysis/late/tables/paired_distance_stats.tsv")
+LOOPS_TSV <- file.path(BASE, "output/shared_anchor_analysis/late/tables/shared_anchor_loops.tsv")
+OUT_DIR   <- file.path(BASE, "output/shared_anchor_analysis/late/plots")
 
 COL_LOST   <- "#d73027"
 COL_GAINED <- "#4575b4"
@@ -27,8 +28,13 @@ COL_GAINED <- "#4575b4"
 # ---- Load & classify ---------------------------------------------------------
 
 df <- read_tsv(DATA_TSV, show_col_types = FALSE)
+loops_df <- read_tsv(LOOPS_TSV, show_col_types = FALSE)
+
+n_lost_loops   <- sum(loops_df$direction == "down_in_mutant")
+n_gained_loops <- sum(loops_df$direction == "up_in_mutant")
 
 cat(sprintf("Loaded %d shared anchors\n", nrow(df)))
+cat(sprintf("  Unique loops — lost: %d, gained: %d\n", n_lost_loops, n_gained_loops))
 
 df <- df %>%
   mutate(
@@ -100,18 +106,21 @@ build_slopegraph <- function(df, median_df) {
       guide  = "none"
     ) +
     scale_y_log10(
-      breaks = c(1e4, 5e4, 1e5, 5e5, 1e6, 5e6, 1e7, 5e7),
+      breaks = c(1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7, 2e7, 5e7),
+      minor_breaks = NULL,
       labels = label_number(scale = 1e-3, suffix = " kb", big.mark = ","),
       expand = expansion(mult = c(0.05, 0.12))
     ) +
     scale_x_continuous(
       breaks = c(1, 2),
-      labels = c("Lost", "Gained"),
+      labels = c(sprintf("Lost\n(n = %d)", n_lost_loops),
+                 sprintf("Gained\n(n = %d)", n_gained_loops)),
       limits = c(0.55, 2.45),
       expand = expansion(0)
     ) +
     annotate(
-      "text", x = 1.5, y = max(df$median_lost_distance) * 1.3,
+      "text", x = 1.5,
+      y = max(df$median_lost_distance, df$median_gained_distance) * 2.0,
       label = sprintf("%d%% of anchors: lost loop is longer\nPaired Wilcoxon p = %.2e",
                       pct_lost, wilcox_p),
       size = 3.5, hjust = 0.5, vjust = 1,
@@ -177,18 +186,21 @@ build_slopegraph_poster <- function(df, median_df) {
       guide  = "none"
     ) +
     scale_y_log10(
-      breaks = c(1e4, 5e4, 1e5, 5e5, 1e6, 5e6, 1e7, 5e7),
+      breaks = c(1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7, 2e7, 5e7),
+      minor_breaks = NULL,
       labels = label_number(scale = 1e-3, suffix = " kb", big.mark = ","),
       expand = expansion(mult = c(0.05, 0.12))
     ) +
     scale_x_continuous(
       breaks = c(1, 2),
-      labels = c("Lost", "Gained"),
+      labels = c(sprintf("Lost\n(n = %d)", n_lost_loops),
+                 sprintf("Gained\n(n = %d)", n_gained_loops)),
       limits = c(0.3, 2.7),
       expand = expansion(0)
     ) +
     annotate(
-      "text", x = 1.5, y = max(df$median_lost_distance) * 1.3,
+      "text", x = 1.5,
+      y = max(df$median_lost_distance, df$median_gained_distance) * 2.0,
       label = sprintf("%d%% of anchors: lost loop is longer\nPaired Wilcoxon p = %.2e",
                       pct_lost, wilcox_p),
       size = 5.5, hjust = 0.5, vjust = 1,
