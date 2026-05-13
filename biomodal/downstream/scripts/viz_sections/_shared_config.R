@@ -284,6 +284,14 @@ theme_biomodal <- function(base_size = 12) {
     )
 }
 
+dedup_by_gene <- function(df) {
+  if (is.null(df) || nrow(df) == 0) return(df)
+  df %>%
+    dplyr::group_by(gene) %>%
+    dplyr::slice_min(dmr_qvalue, n = 1, with_ties = FALSE) %>%
+    dplyr::ungroup()
+}
+
 # =============================================================================
 # ChIP-seq HELPER FUNCTIONS (Section 10)
 # =============================================================================
@@ -507,14 +515,18 @@ cat("===========================================================================
 cat("LOADING DATA\n")
 cat("================================================================================\n\n")
 
-# Load gene body DMR data
+# Load gene body DMR data (deduplicate: one row per gene, lowest q-value wins)
 cat("Loading gene body mC DMRs...\n")
-mc_dmr <- load_dmr_bed(DATA_PATHS$mc_dmr)
-cat(sprintf("  Loaded %d genes\n", nrow(mc_dmr)))
+mc_dmr_raw <- load_dmr_bed(DATA_PATHS$mc_dmr)
+mc_dmr <- dedup_by_gene(mc_dmr_raw)
+cat(sprintf("  Loaded %d rows, deduplicated to %d unique genes\n",
+            nrow(mc_dmr_raw), nrow(mc_dmr)))
 
 cat("Loading gene body hmC DMRs...\n")
-hmc_dmr <- load_dmr_bed(DATA_PATHS$hmc_dmr)
-cat(sprintf("  Loaded %d genes\n", nrow(hmc_dmr)))
+hmc_dmr_raw <- load_dmr_bed(DATA_PATHS$hmc_dmr)
+hmc_dmr <- dedup_by_gene(hmc_dmr_raw)
+cat(sprintf("  Loaded %d rows, deduplicated to %d unique genes\n",
+            nrow(hmc_dmr_raw), nrow(hmc_dmr)))
 
 # Load BioQC JSON
 cat("Loading Biological QC data...\n")

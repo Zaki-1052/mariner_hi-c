@@ -70,16 +70,7 @@ dir.create(COMP_DIR, recursive = TRUE, showWarnings = FALSE)
 
 cat("Loading deep-8 (run-4) and sex-covariate (run-5) DMR data...\n")
 
-# Deduplicate DMR BED: some genes have multiple regions annotated to the same
-# gene name. Keep the entry with the lowest q-value per gene.
-dedup_by_gene <- function(df) {
-  df %>%
-    dplyr::group_by(gene) %>%
-    dplyr::slice_min(dmr_qvalue, n = 1, with_ties = FALSE) %>%
-    dplyr::ungroup()
-}
-
-# Gene body DMRs
+# Gene body DMRs (dedup_by_gene() is defined in _shared_config.R)
 shallow_mc <- dedup_by_gene(load_dmr_bed(SHALLOW_PATHS$mc_dmr))
 shallow_hmc <- dedup_by_gene(load_dmr_bed(SHALLOW_PATHS$hmc_dmr))
 deep_mc <- dedup_by_gene(mc_dmr)  # mc_dmr loaded by _shared_config.R
