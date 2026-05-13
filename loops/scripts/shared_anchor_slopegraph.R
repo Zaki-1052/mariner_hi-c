@@ -189,7 +189,7 @@ build_slopegraph_poster <- function(df, median_df) {
       breaks = c(1e4, 2e4, 5e4, 1e5, 2e5, 5e5, 1e6, 2e6, 5e6, 1e7, 2e7, 5e7),
       minor_breaks = NULL,
       labels = label_number(scale = 1e-3, suffix = " kb", big.mark = ","),
-      expand = expansion(mult = c(0.05, 0.12))
+      expand = expansion(mult = c(0.05, 0.05))
     ) +
     scale_x_continuous(
       breaks = c(1, 2),
@@ -243,7 +243,7 @@ POSTER_OUT <- file.path(REPO_ROOT, "poster/figures/shared_anchor_slopegraph_post
 save_multiformat_ggplot(
   p_poster,
   POSTER_OUT,
-  width = 6, height = 7, dpi = 300
+  width = 6.5, height = 7, dpi = 300
 )
 
 cat("Done.\n")

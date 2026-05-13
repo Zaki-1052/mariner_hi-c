@@ -90,7 +90,9 @@ p <- ggplot(plot_df, aes(x = timepoint, y = count, fill = direction)) +
     name   = NULL
   ) +
   scale_y_continuous(
-    expand = expansion(mult = c(0, 0.38)),
+    limits = c(0, 4000),
+    breaks = seq(0, 4000, 1000),
+    expand = expansion(mult = c(0, 0.02)),
     labels = comma
   ) +
   geom_text(
