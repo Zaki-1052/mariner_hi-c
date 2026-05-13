@@ -121,7 +121,7 @@ build_hic_tracks <- function(loops_df, region_gr) {
     genome(a1) <- "mm10"; genome(a2) <- "mm10"
     gi <- GenomicInteractions(a1, a2)
     gi$name <- lost$loop_id
-    tracks$lost <- InteractionTrack(gi, name = "Lost Loops", chromosome = chr)
+    tracks$lost <- InteractionTrack(gi, name = "Lost\nLoops", chromosome = chr)
     displayPars(tracks$lost) <- list(
       col.interactions = COL$hic_lost,
       col.anchors.fill = COL$hic_lost,
@@ -132,6 +132,8 @@ build_hic_tracks <- function(loops_df, region_gr) {
       plot.outside = TRUE,
       col.outside = adjustcolor(COL$hic_lost, alpha.f = 0.7),
       anchor.height = 0.1,
+      background.title = COL$hic_lost,
+      col.title = "white",
       cex.title = 1.2
     )
   }
@@ -143,7 +145,7 @@ build_hic_tracks <- function(loops_df, region_gr) {
     genome(a1) <- "mm10"; genome(a2) <- "mm10"
     gi <- GenomicInteractions(a1, a2)
     gi$name <- gained$loop_id
-    tracks$gained <- InteractionTrack(gi, name = "Gained Loops", chromosome = chr)
+    tracks$gained <- InteractionTrack(gi, name = "Gained\nLoops", chromosome = chr)
     displayPars(tracks$gained) <- list(
       col.interactions = COL$hic_gained,
       col.anchors.fill = COL$hic_gained,
@@ -154,6 +156,8 @@ build_hic_tracks <- function(loops_df, region_gr) {
       plot.outside = TRUE,
       col.outside = adjustcolor(COL$hic_gained, alpha.f = 0.7),
       anchor.height = 0.1,
+      background.title = COL$hic_gained,
+      col.title = "white",
       cex.title = 1.2
     )
   }
@@ -210,11 +214,11 @@ track_list$gene <- GeneRegionTrack(
   background.title = COL$gene,
   col.title = "white", cex.title = 1.2
 )
-sizes <- c(sizes, 1.2)
+sizes <- c(sizes, 0.6)
 
 track_list$k119ub_ctrl <- DataTrack(
   range = k119_ctrl_gr, genome = "mm10", type = "histogram",
-  name = "H2AK119ub\nControl",
+  name = "K119ub\nCtrl",
   fill.histogram = COL$ctrl, col.histogram = COL$ctrl,
   ylim = k119_ylim,
   background.title = COL$ctrl,
@@ -224,7 +228,7 @@ sizes <- c(sizes, 1.0)
 
 track_list$k119ub_mut <- DataTrack(
   range = k119_mut_gr, genome = "mm10", type = "histogram",
-  name = "H2AK119ub\nMutant",
+  name = "K119ub\nMut",
   fill.histogram = COL$mut, col.histogram = COL$mut,
   ylim = k119_ylim,
   background.title = COL$mut,
