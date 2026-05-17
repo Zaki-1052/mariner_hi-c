@@ -1,0 +1,56 @@
+DEG-ABC Contact Strength Analysis
+Timepoint: Early (P12)
+Date: 2026-05-17 15:09:46.061958
+Thresholds: padj < 0.05, |LFC| > 0.3, invariant ratio 3:1
+
+Genes: 337 DEG_up, 908 DEG_down, 3735 invariant
+
+Gene-ABC join: 4563 / 4980 matched (91.6%)
+  DEG_up matched: 303
+  DEG_down matched: 829
+  invariant matched: 3431
+
+=== 3a: DEG vs Invariant Delta-ABC ===
+
+--- sum_delta_abc ---
+  DEG_up vs invariant: median 0.0031 vs -0.0022, W = 565834, p = 1.05e-02
+  DEG_down vs invariant: median -0.0156 vs -0.0022, W = 1149396, p = 9.28e-18
+  DEG_up vs DEG_down: median 0.0031 vs -0.0156, W = 156276, p = 2.97e-10
+  Kruskal-Wallis: chi-sq = 83.82, df = 2, p = 6.28e-19
+
+--- max_delta_abc ---
+  DEG_up vs invariant: median 0.0105 vs -0.0093, W = 572482, p = 3.40e-03
+  DEG_down vs invariant: median -0.0181 vs -0.0093, W = 1233535, p = 2.94e-09
+  DEG_up vs DEG_down: median 0.0105 vs -0.0181, W = 149284, p = 1.15e-06
+  Kruskal-Wallis: chi-sq = 45.53, df = 2, p = 1.30e-10
+
+Spearman: sum_delta_abc vs log2FC (DEGs only, n=1132)
+  rho = 0.1460, p = 8.07e-07
+  DEG_up: n_gained>0 = 243/303 (80.2%), n_lost>0 = 248/303 (81.8%)
+  DEG_down: n_gained>0 = 665/829 (80.2%), n_lost>0 = 737/829 (88.9%)
+  invariant: n_gained>0 = 2443/3431 (71.2%), n_lost>0 = 2526/3431 (73.6%)
+
+=== 3b: Enhancer-Level Analysis ===
+Enhancer-gene pairs (distal): 19284 for 4349 genes
+SE enhancer overlap: 5738 / 19284 pairs (29.8%)
+
+SE proportion Fisher (DEG_up vs invariant):
+  DEG_up: 395 SE / 1113 regular (26.2%)
+  invariant: 4116 SE / 9211 regular (30.9%)
+  OR = 0.794 [0.702 - 0.897], p = 1.56e-04
+
+SE proportion Fisher (DEG_down vs invariant):
+  DEG_down: 1227 SE / 3222 regular (27.6%)
+  invariant: 4116 SE / 9211 regular (30.9%)
+  OR = 0.852 [0.790 - 0.919], p = 3.00e-05
+  SE vs regular: median -0.0256 vs -0.0032, W = 3337970, p = 2.63e-03
+
+Spearman: K27ac Fold vs log2fc_contact (DEGs, n=3388)
+  rho = 0.1966, p = 7.45e-31
+
+K27ac concordance at SE contacts (Fisher):
+  OR = 0.087 [0.018 - 0.353], p = 1.87e-04
+  Concordant: 380 / 440 (86.4%)
+  gained_k27ac vs lost_k27ac: median 0.1104 vs -0.1069, W = 965492, p = 1.73e-40
+  gained_k27ac vs stable_k27ac: median 0.1104 vs 0.0035, W = 1801854, p = 1.23e-14
+  lost_k27ac vs stable_k27ac: median -0.1069 vs 0.0035, W = 10804849, p = 7.41e-57
