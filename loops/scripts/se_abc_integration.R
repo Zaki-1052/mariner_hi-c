@@ -192,13 +192,20 @@ plot_delta_abc_violin <- function(gene_abc, metric, metric_label, output_dir) {
     c("DEG_up", "DEG_down")
   )
 
+  n_counts <- gene_abc %>% dplyr::count(gene_class)
+  x_labels <- setNames(
+    sprintf("%s\n(n=%s)", n_counts$gene_class, trimws(format(n_counts$n, big.mark = ","))),
+    n_counts$gene_class
+  )
+
   p <- ggplot(gene_abc, aes(x = gene_class, y = .data[[metric]], fill = gene_class)) +
     geom_violin(trim = TRUE, alpha = 0.7) +
     geom_boxplot(width = 0.15, outlier.shape = NA, fill = "white", alpha = 0.5) +
     stat_compare_means(comparisons = comparisons, method = "wilcox.test",
                        label = "p.format", tip.length = 0.02) +
     scale_fill_manual(values = DEG_CLASS_COLORS) +
-    labs(title = metric_label, x = "Gene Class", y = metric_label) +
+    scale_x_discrete(labels = x_labels) +
+    labs(title = metric_label, x = "", y = metric_label) +
     theme_classic(base_size = 14) +
     theme(legend.position = "none")
 
@@ -262,13 +269,24 @@ plot_se_contact_violin <- function(pairs_df, output_dir) {
 
   if (nrow(plot_df) < 10) return(NULL)
 
+  n_counts <- plot_df %>% dplyr::count(gene_class, enhancer_type)
+  n_labels <- n_counts %>%
+    dplyr::mutate(label = sprintf("%s\n(n=%s)", enhancer_type,
+                                  trimws(format(n, big.mark = ","))))
+  et_labels <- plot_df %>%
+    dplyr::count(enhancer_type) %>%
+    dplyr::mutate(label = sprintf("%s\n(n=%s)", enhancer_type,
+                                  trimws(format(n, big.mark = ","))))
+  x_labels <- setNames(et_labels$label, et_labels$enhancer_type)
+
   p <- ggplot(plot_df, aes(x = enhancer_type, y = log2fc_contact, fill = enhancer_type)) +
     geom_violin(trim = TRUE, alpha = 0.7) +
     geom_boxplot(width = 0.15, outlier.shape = NA, fill = "white", alpha = 0.5) +
-    stat_compare_means(method = "wilcox.test", label = "p.format") +
+    stat_compare_means(method = "wilcox.test", label = "p.format",
+                       label.y = 2.5) +
     facet_wrap(~gene_class, nrow = 1) +
     scale_fill_manual(values = c("Superenhancer" = "#e0a730", "Regular Enhancer" = "#999999")) +
-    coord_cartesian(ylim = c(-3, 3)) +
+    coord_cartesian(ylim = c(-3, 3.5)) +
     labs(title = "Contact Frequency Change: SE vs Regular Enhancers",
          x = "", y = "log2FC Contact (KO/WT)") +
     theme_classic(base_size = 14) +
@@ -339,18 +357,27 @@ plot_k27ac_class_violin <- function(pairs_df, output_dir) {
     c("lost_k27ac", "stable_k27ac")
   )
 
+  n_counts <- plot_df %>% dplyr::count(k27ac_class)
+  display_labels <- c("gained_k27ac" = "Gained K27ac",
+                      "lost_k27ac" = "Lost K27ac",
+                      "stable_k27ac" = "Stable K27ac")
+  x_labels <- setNames(
+    sprintf("%s\n(n=%s)", display_labels[n_counts$k27ac_class],
+            trimws(format(n_counts$n, big.mark = ","))),
+    n_counts$k27ac_class
+  )
+
   p <- ggplot(plot_df, aes(x = k27ac_class, y = log2fc_contact, fill = k27ac_class)) +
     geom_violin(trim = TRUE, alpha = 0.7) +
     geom_boxplot(width = 0.15, outlier.shape = NA, fill = "white", alpha = 0.5) +
     stat_compare_means(comparisons = comparisons, method = "wilcox.test",
-                       label = "p.format", tip.length = 0.02) +
+                       label = "p.format", tip.length = 0.02,
+                       label.y = c(2.5, 3.0, 3.5)) +
     scale_fill_manual(values = K27AC_CLASS_COLORS) +
-    scale_x_discrete(labels = c("gained_k27ac" = "Gained K27ac",
-                                "lost_k27ac" = "Lost K27ac",
-                                "stable_k27ac" = "Stable K27ac")) +
-    coord_cartesian(ylim = c(-3, 3)) +
+    scale_x_discrete(labels = x_labels) +
+    coord_cartesian(ylim = c(-3, 4.2)) +
     labs(title = "Contact Frequency Change by K27ac Status",
-         x = "K27ac Change at Enhancer", y = "log2FC Contact (KO/WT)") +
+         x = "", y = "log2FC Contact (KO/WT)") +
     theme_classic(base_size = 14) +
     theme(legend.position = "none")
 
