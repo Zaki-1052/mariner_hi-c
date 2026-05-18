@@ -1,12 +1,13 @@
 # scripts/utils/multi_format_output.R
-# Utility functions for multi-format plot output (PDF + SVG + JPEG)
+# Utility functions for multi-format plot output (PDF + SVG + PNG + JPEG)
 # Author: Zakir Alibhai
 # Date: 2026-01-14
 #
 # Purpose:
-#   Provides helper functions to output plots in three formats simultaneously:
+#   Provides helper functions to output plots in four formats simultaneously:
 #   - PDF (publication standard, vector)
 #   - SVG (Illustrator-friendly, editable vector)
+#   - PNG (web/markdown/raster with transparency)
 #   - JPEG (Google Slides, presentations)
 #
 # Usage:
@@ -28,13 +29,13 @@ if (!requireNamespace("svglite", quietly = TRUE)) {
 }
 library(svglite)
 
-#' Save ggplot object in multiple formats (PDF, SVG, JPEG)
+#' Save ggplot object in multiple formats (PDF, SVG, PNG, JPEG)
 #'
 #' @param plot ggplot object to save
 #' @param base_path Output path WITHOUT file extension (e.g., "outputs/volcano" not "outputs/volcano.pdf")
 #' @param width Plot width in inches (default: 10)
 #' @param height Plot height in inches (default: 8)
-#' @param dpi DPI for JPEG output (default: 300 for print quality)
+#' @param dpi DPI for raster outputs (PNG and JPEG; default: 300 for print quality)
 #' @param verbose Print confirmation messages (default: TRUE)
 #' @param use_subfolders If TRUE, creates a subfolder with the figure name and puts all formats inside (default: TRUE)
 #'
@@ -43,7 +44,7 @@ library(svglite)
 #' @examples
 #' p <- ggplot(mtcars, aes(mpg, hp)) + geom_point()
 #' save_multiformat_ggplot(p, "outputs/my_plot", width = 8, height = 6)
-#' # Creates: outputs/my_plot/my_plot.pdf, outputs/my_plot/my_plot.svg, outputs/my_plot/my_plot.jpg
+#' # Creates: outputs/my_plot/my_plot.{pdf,svg,png,jpg}
 save_multiformat_ggplot <- function(plot, base_path, width = 10, height = 8, dpi = 300, verbose = TRUE, use_subfolders = TRUE) {
   figure_name <- basename(base_path)
   parent_dir <- dirname(base_path)
@@ -70,15 +71,19 @@ save_multiformat_ggplot <- function(plot, base_path, width = 10, height = 8, dpi
   svg_path <- paste0(file_prefix, ".svg")
   ggplot2::ggsave(svg_path, plot, width = width, height = height, device = svglite::svglite)
 
+  # PNG (web/markdown/raster with transparency)
+  png_path <- paste0(file_prefix, ".png")
+  ggplot2::ggsave(png_path, plot, width = width, height = height, dpi = dpi, device = "png")
+
   # JPEG (presentations/slides)
   jpg_path <- paste0(file_prefix, ".jpg")
   ggplot2::ggsave(jpg_path, plot, width = width, height = height, dpi = dpi, device = "jpeg")
 
   if (verbose) {
     if (use_subfolders) {
-      cat(sprintf("  Saved: %s/{pdf,svg,jpg}\n", figure_name))
+      cat(sprintf("  Saved: %s/{pdf,svg,png,jpg}\n", figure_name))
     } else {
-      cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", figure_name))
+      cat(sprintf("  Saved: %s.{pdf,svg,png,jpg}\n", figure_name))
     }
   }
 
@@ -86,14 +91,14 @@ save_multiformat_ggplot <- function(plot, base_path, width = 10, height = 8, dpi
 }
 
 
-#' Save base R graphics in multiple formats (PDF, SVG, JPEG)
+#' Save base R graphics in multiple formats (PDF, SVG, PNG, JPEG)
 #'
 #' @param plot_expr A quoted expression containing the plotting code.
 #'   Use quote({...}) to wrap multiple plotting commands.
 #' @param base_path Output path WITHOUT file extension
 #' @param width Plot width in inches (default: 10)
 #' @param height Plot height in inches (default: 8)
-#' @param dpi DPI for JPEG output (default: 300)
+#' @param dpi DPI for raster outputs (PNG and JPEG; default: 300)
 #' @param verbose Print confirmation messages (default: TRUE)
 #' @param use_subfolders If TRUE, creates a subfolder with the figure name (default: TRUE)
 #'
@@ -143,6 +148,15 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
     dev.off()
   })
 
+  # PNG (raster with transparency support)
+  png_path <- paste0(file_prefix, ".png")
+  png(png_path, width = width * dpi, height = height * dpi, res = dpi)
+  tryCatch({
+    eval(plot_expr)
+  }, finally = {
+    dev.off()
+  })
+
   # JPEG
   jpg_path <- paste0(file_prefix, ".jpg")
   jpeg(jpg_path, width = width * dpi, height = height * dpi, res = dpi, quality = 95)
@@ -154,9 +168,9 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
 
   if (verbose) {
     if (use_subfolders) {
-      cat(sprintf("  Saved: %s/{pdf,svg,jpg}\n", figure_name))
+      cat(sprintf("  Saved: %s/{pdf,svg,png,jpg}\n", figure_name))
     } else {
-      cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", figure_name))
+      cat(sprintf("  Saved: %s.{pdf,svg,png,jpg}\n", figure_name))
     }
   }
 
@@ -164,7 +178,7 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
 }
 
 
-#' Save pheatmap in multiple formats (PDF, SVG, JPEG)
+#' Save pheatmap in multiple formats (PDF, SVG, PNG, JPEG)
 #'
 #' pheatmap is special because it draws directly and doesn't return a ggplot object.
 #' This wrapper handles pheatmap's unique behavior.
@@ -173,7 +187,7 @@ save_multiformat_base <- function(plot_expr, base_path, width = 10, height = 8, 
 #' @param base_path Output path WITHOUT file extension
 #' @param width Plot width in inches (default: 8)
 #' @param height Plot height in inches (default: 10)
-#' @param dpi DPI for JPEG output (default: 300)
+#' @param dpi DPI for raster outputs (PNG and JPEG; default: 300)
 #' @param verbose Print confirmation messages (default: TRUE)
 #' @param use_subfolders If TRUE, creates a subfolder with the figure name (default: TRUE)
 #'
@@ -220,6 +234,15 @@ save_multiformat_pheatmap <- function(pheatmap_call, base_path, width = 8, heigh
     dev.off()
   })
 
+  # PNG (raster with transparency)
+  png_path <- paste0(file_prefix, ".png")
+  png(png_path, width = width * dpi, height = height * dpi, res = dpi)
+  tryCatch({
+    eval(pheatmap_call)
+  }, finally = {
+    dev.off()
+  })
+
   # JPEG
   jpg_path <- paste0(file_prefix, ".jpg")
   jpeg(jpg_path, width = width * dpi, height = height * dpi, res = dpi, quality = 95)
@@ -231,9 +254,9 @@ save_multiformat_pheatmap <- function(pheatmap_call, base_path, width = 8, heigh
 
   if (verbose) {
     if (use_subfolders) {
-      cat(sprintf("  Saved: %s/{pdf,svg,jpg}\n", figure_name))
+      cat(sprintf("  Saved: %s/{pdf,svg,png,jpg}\n", figure_name))
     } else {
-      cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", figure_name))
+      cat(sprintf("  Saved: %s.{pdf,svg,png,jpg}\n", figure_name))
     }
   }
 
