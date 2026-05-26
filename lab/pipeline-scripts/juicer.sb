@@ -1,0 +1,74 @@
+#!/bin/bash
+#SBATCH --job-name="hiccups"
+#SBATCH --output="hiccups.%j.%N.out"
+#SBATCH --partition=gpu-shared
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=90G
+#SBATCH --account=csd940
+#SBATCH --export=ALL
+#SBATCH --gpus=1
+#SBATCH -t 10:00:00
+
+##
+module reset
+#module load gpu/0.15.4  gcc/7.2.0
+module load singularitypro
+#module load cuda/11.0.2
+
+# Input experimental folder
+Exp_date=$1
+#Exp_date=juicerpre/merged/hic
+
+##
+export TMPDIR=/scratch/$USER/job_$SLURM_JOBID
+
+# Parameters
+INPUT_DIR="/expanse/lustre/projects/csd940/ctea/nf-hic/$Exp_date"  # Root directory containing sample folders
+OUTPUT_DIR="hiccups_results/${Exp_date}" # Directory to store HiCCUPS results
+JUICER_CONTAINER="/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif"
+
+# Create output directory if it doesn't exist
+mkdir -p "$OUTPUT_DIR"
+
+# Function to run HiCCUPS for a single sample
+run_hiccups() {
+  SAMPLE_NAME="$1"
+  HIC_FILE="$INPUT_DIR/$SAMPLE_NAME.hic"
+  SAMPLE_OUTPUT_DIR="$OUTPUT_DIR/$SAMPLE_NAME"
+  mkdir -p "$SAMPLE_OUTPUT_DIR"
+  OUTPUT_FILE="$SAMPLE_OUTPUT_DIR" # Define the output file
+
+  # Check if the hic file exists
+  if [ ! -f "$HIC_FILE" ]; then
+    echo "Error: HIC file not found: $HIC_FILE"
+    return 1 # Indicate failure
+  fi
+
+  # Run HiCCUPS inside the singularity container
+  singularity exec --nv --bind /scratch,/expanse "$JUICER_CONTAINER" juicer_tools hiccups \
+          "$HIC_FILE" "$OUTPUT_FILE"
+
+  if [ $? -eq 0 ]; then
+    echo "HiCCUPS completed successfully for $SAMPLE_NAME. Results in: $OUTPUT_FILE"
+  else
+    echo "HiCCUPS failed for $SAMPLE_NAME."
+    return 1 # Indicate failure
+  fi
+}
+
+# Find all samples within the input directory
+find "$INPUT_DIR" -name "*.hic" -print0 | while IFS= read -r -d '' sample_file; do
+  # Extract sample name from the directory path
+  SAMPLE_FILE=$(basename "$sample_file")
+
+  # Remove the original suffix to get the sample name
+  SAMPLE_NAME="${SAMPLE_FILE%.hic}"
+
+  echo "Processing sample: $SAMPLE_NAME"
+
+  run_hiccups "$SAMPLE_NAME"
+done
+
+echo "HiCCUPS pipeline completed."
