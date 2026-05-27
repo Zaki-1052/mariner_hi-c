@@ -8,9 +8,8 @@
 # into every sbatch call, for chaining into a prior stage.
 
 CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
-DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
 SBATCH_SCRIPT="${CODE_DIR}/scripts/A1_run_calder2.sb"
-LOG_DIR="${DATA_DIR}/logs"
+LOG_DIR="${CODE_DIR}/logs"
 
 mkdir -p "${LOG_DIR}"
 

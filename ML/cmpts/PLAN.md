@@ -68,6 +68,8 @@ The Dixon meeting (2026-04-10) identified subcompartment calling as a key analys
 
 4 jobs: {250402, 250831} × {ctrl_merged, mut_merged}.
 
+**CALDER2 source patch (2026-05-27):** `repos/CALDER2/R/compartment_data_generation_fun.R:42-45` — changed `|`/`&` to `||`/`&&` and `class(x)==` to `inherits(x,)` in the normalization fallback chain. The 250402 merged .hic files lack KR normalization (only have VC_SQRT, VC). CALDER2's fallback logic (KR → VC_SQRT → VC) was broken: `try()` returns a try-error object, `nrow()` on it returns NULL, `NULL < 100` = `logical(0)`, and `TRUE | logical(0)` = `logical(0)` in R, crashing the `if` statement. The patch uses short-circuit `||`/`&&` so the `nrow()` branch is never evaluated when `try()` catches the error. Verified: chr1 completes with VC_SQRT fallback, correlation 0.68 against mm10 reference. **CALDER must be reinstalled from source after syncing the patch.**
+
 **CALDER2 function call:**
 ```r
 library(CALDER)
@@ -76,7 +78,7 @@ CALDER(
   contact_file_hic    = hic_path,            # .hic file, strawr extracts KR-normalized contacts
   chrs                = as.character(1:19),   # autosomes only, no "chr" prefix (CALDER strips it)
   bin_size            = 50000,               # 50kb — CALDER2 auto-extends to {50kb, 100kb}
-  save_dir            = out_dir,
+  save_dir            = work_dir,
   save_intermediate_data = TRUE,             # needed for sub_domains and debugging
   genome              = "mm10",              # activates mm10 reference for A/B polarity
   n_cores             = 8,                   # parallel per-chromosome processing
@@ -87,15 +89,23 @@ CALDER(
 
 **Resolution choice:** `bin_size=50000` (50kb). CALDER2 automatically extends to `{50000, 100000}` when `genome='mm10'` and `single_binsize_only=FALSE`. The output `all_sub_compartments.tsv` contains bins at the optimal resolution per region. For uniform 100kb output (needed for SNIPER integration), we'll aggregate in A2.
 
-**Key outputs per sample:**
+**Key outputs per sample (in repo, rsync-able):**
 ```
-DATA_DIR/calder2/{tp}/{sample}/
+ML/cmpts/outputs/calder2/{tp}/{sample}/
   sub_compartments/
     all_sub_compartments.bed     # BED9, hierarchical labels (e.g., A.1.1, B.2.2.1.2...)
-    all_sub_compartments.tsv     # 6-col: chr, pos_start, pos_end, comp_name, comp_rank, continuous_rank
+    all_sub_compartments.tsv     # 6-col: chr, pos_start, pos_end, comp_name, comp_rank, continous_rank
     cor_with_ref.txt             # per-chr correlation with mm10 reference
-  intermediate_data/             # per-chr per-resolution .Rds files
+    cor_with_ref.ALL.txt         # all bin sizes
+    cor_with_ref.pdf             # correlation plot
 ```
+
+**Large intermediates (HPC only, not synced):**
+```
+DATA_DIR/calder2/{tp}/{sample}/intermediate_data/   # per-chr per-resolution .Rds files (~1-3GB)
+```
+
+**SLURM logs (in repo):** `ML/cmpts/logs/A1_calder2_{tp}_{sample}_{jobid}.out`
 
 **CALDER2 label hierarchy:**
 - Depth 1: A, B (2 classes — standard compartments)
@@ -111,6 +121,7 @@ For SNIPER compatibility (5 classes: A1/A2/B1/B2/B3), we use depth 2 (4 classes)
 - All 4 `all_sub_compartments.tsv` files exist with rows for all 19 autosomes
 - Per-sample label distribution at depth 2: A.1 ~25-35%, A.2 ~20-25%, B.1 ~15-25%, B.2 ~20-30% (rough expectation from mm10 reference: A.1=29%, A.2=24%, B.1=20%, B.2=26%)
 - `cor_with_ref.txt` shows positive correlations (>0.3) for most chromosomes
+- SLURM logs in `ML/cmpts/logs/` show exit 0
 
 ### A2 — Differential Subcompartment Analysis — PENDING
 
@@ -501,6 +512,8 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 ├── PLAN.md                               # This document
 ├── config/
 │   └── sniper_config.yaml
+├── logs/                                 # SLURM logs (rsync to local, inspect in VS Code)
+│   └── A1_calder2_{tp}_{sample}_{jobid}.out
 ├── scripts/
 │   ├── A0_setup_calder2_env.sh           # Interactive: conda + R package install ✅
 │   ├── A1_run_calder2.R                  # CALDER2 wrapper R script
@@ -533,8 +546,10 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 │   ├── run_full_integration.sh           # Track C master driver
 │   └── utils/
 │       └── multi_format_output.R         # save_multiformat_ggplot() utility
-├── outputs/                              # Small results (GitHub-synced)
-│   ├── calder2/                          # A2 transition TSVs, summaries
+├── outputs/                              # All results <100MB (GitHub-synced, rsync-able)
+│   ├── calder2/                          # A1 subcompartment calls + A2 transition TSVs
+│   │   ├── {tp}/{sample}/sub_compartments/  # TSV, BED, cor_with_ref (copied from DATA_DIR)
+│   │   └── ...
 │   ├── sniper/                           # B5 concordance results
 │   └── integration/                      # C1-C4 integration tables
 ├── docs/                                 # Context docs
@@ -553,15 +568,12 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
         ├── sniper_train_mm10.py           # NEW: mm10 training entry point
         └── sniper_apply_mm10.py           # NEW: mm10 application entry point
 
-/expanse/.../sniper/                      # DATA_DIR (HPC-only, never synced)
+/expanse/.../sniper/                      # DATA_DIR (HPC-only, large intermediates >100MB)
 ├── calder2/
 │   ├── 250402/
-│   │   ├── ctrl_merged/                  # CALDER2 output
-│   │   │   ├── sub_compartments/
-│   │   │   │   ├── all_sub_compartments.bed
-│   │   │   │   ├── all_sub_compartments.tsv
-│   │   │   │   └── cor_with_ref.txt
-│   │   │   └── intermediate_data/
+│   │   ├── ctrl_merged/                  # CALDER2 work directory
+│   │   │   ├── sub_compartments/         # small results (copied to repo by R script)
+│   │   │   └── intermediate_data/        # large .Rds files (~1-3GB, stays here)
 │   │   └── mut_merged/                   # Same structure
 │   └── 250831/                           # Same structure
 ├── sniper_mm10/
