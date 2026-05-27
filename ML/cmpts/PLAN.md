@@ -62,7 +62,7 @@ The Dixon meeting (2026-04-10) identified subcompartment calling as a key analys
 
 **Status:** `calder2_env` conda env created and all packages installed. CALDER v2.0 loads successfully with mm10 reference BED (15,364 bins). Key deps verified: strawr 0.0.92, GenomicRanges 1.50.2, rhdf5 2.42.1, data.table 1.18.4, ggplot2 4.0.3, doParallel 1.0.17, igraph 2.0.3.
 
-### A1 — Run CALDER2 on Each Sample — READY (scripts created 2026-05-26)
+### A1 — Run CALDER2 on Each Sample — DONE (2026-05-27)
 
 **Script:** `scripts/A1_run_calder2.R` + `scripts/A1_run_calder2.sb` + `scripts/A1_submit_calder2.sh`
 
@@ -125,20 +125,20 @@ For SNIPER compatibility (5 classes: A1/A2/B1/B2/B3), we use depth 2 (4 classes)
 
 ### A2 — Differential Subcompartment Analysis — READY (scripts created 2026-05-27)
 
-**Script:** `scripts/A2_differential_subcompartments.R` + `scripts/A2_run.sb`
+**Script:** `scripts/A2_differential_subcompartments.R` + `scripts/A2_run.sb` + `scripts/A2_submit_differential.sh`
 
-Dependencies: All 4 A1 jobs complete.
+2 jobs: {250402, 250831}. Dependencies: All 4 A1 jobs complete.
 
-**Logic:**
-1. Load all 4 `all_sub_compartments.tsv` files
+**Logic (per timepoint):**
+1. Load 2 `all_sub_compartments.tsv` files (ctrl + mut for this timepoint)
 2. Truncate hierarchical labels to depth 2 (e.g., `A.1.1.2.1` → `A.1`) for 4-class analysis
 3. Bin to uniform 100kb resolution: for variable-width CALDER2 output, assign each 100kb bin the label of the largest overlapping CALDER2 segment (plurality vote)
-4. For each timepoint, join ctrl and mut labels on (chr, 100kb_bin_start)
+4. Join ctrl and mut labels on (chr, 100kb_bin_start)
 5. Classify transitions: `ctrl_label → mut_label` for each bin
 6. Compute transition matrix (4×4: A.1, A.2, B.1, B.2)
 7. Chi-squared independence test + Cramer's V effect size
 
-**Outputs:**
+**Outputs (per timepoint):**
 ```
 ML/cmpts/outputs/calder2/
   {tp}_subcompartment_labels_100kb.tsv     # chr, start, end, ctrl_label, mut_label, continous_rank_ctrl, continous_rank_mut, label_changed
@@ -149,7 +149,7 @@ ML/cmpts/outputs/calder2/
   {tp}_subcompartment_genome_pct/          # multi-format figure
 ```
 
-**SLURM:** `--cpus-per-task=4 --mem=16G --time=02:00:00` (single job, both timepoints)
+**SLURM:** `--cpus-per-task=4 --mem=16G --time=02:00:00` (1 job per timepoint, 2 jobs total)
 
 **Additional dependency:** `ggalluvial` R package (installed on first run if missing)
 
@@ -216,7 +216,7 @@ BigWig path on HPC: `/expanse/lustre/projects/csd940/zalibhai/bigwigs/`
 
 **Outputs:**
 ```
-ML/cmpts/sniper/outputs/integration/
+ML/cmpts/outputs/integration/
   homer_calder2_crosstab.tsv
   homer_weakening_decomposition.tsv
   homer_calder2_sankey/            # multi-format figure
@@ -254,7 +254,7 @@ pip install tensorflow==1.15.5 keras==2.2.4 numpy==1.15.4 scipy==1.1.0 \
 
 This creates mm10-adapted copies of SNIPER's core modules. We modify copies, not the original SNIPER source, to preserve the upstream repo.
 
-**Files to create in `ML/cmpts/SNIPER/`:**
+**Files to create in `ML/cmpts/repos/SNIPER/`:**
 
 | File | Purpose |
 |------|---------|
@@ -522,8 +522,9 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 │   ├── A1_run_calder2.R                  # CALDER2 wrapper R script
 │   ├── A1_run_calder2.sb                 # SLURM worker (8c/64G/12h)
 │   ├── A1_submit_calder2.sh              # Submit 4 jobs, print job IDs to stdout
-│   ├── A2_differential_subcompartments.R # Ctrl vs mut transitions per tp
-│   ├── A2_run.sb                         # SLURM wrapper (4c/16G/2h)
+│   ├── A2_differential_subcompartments.R # Ctrl vs mut transitions (1 tp)
+│   ├── A2_run.sb                         # SLURM worker (4c/16G/2h)
+│   ├── A2_submit_differential.sh         # Submit 2 jobs, print job IDs to stdout
 │   ├── A3_epigenomic_validation.R        # BigWig signal × subcompartment heatmap
 │   ├── A3_run.sb                         # SLURM wrapper (8c/32G/4h)
 │   ├── A4_integrate_homer_compartments.R # HOMER 25kb A/B × CALDER2 100kb
@@ -596,7 +597,7 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 
 ```bash
 #!/bin/bash
-# ML/cmpts/sniper/scripts/run_full_calder2.sh
+# ML/cmpts/scripts/run_full_calder2.sh
 # Master driver for Track A: CALDER2 subcompartment calling.
 # Chains stages A1-A4 via SLURM --dependency=afterok.
 # Run from login node: bash run_full_calder2.sh
@@ -616,17 +617,18 @@ JIDS_A1=$(bash A1_submit_calder2.sh 2>/dev/null | paste -sd:)
 if [ -z "${JIDS_A1}" ]; then echo "ERROR: A1 submission failed." >&2; exit 1; fi
 echo "A1 jobs: ${JIDS_A1}"
 
-# A2: Differential — 1 job (depends on all A1)
-A2_JID=$(sbatch --parsable --dependency=afterok:${JIDS_A1} A2_run.sb)
-echo "A2 job: ${A2_JID}"
+# A2: Differential — 2 jobs (1 per tp, depends on all A1)
+JIDS_A2=$(bash A2_submit_differential.sh --dependency=afterok:${JIDS_A1} 2>/dev/null | paste -sd:)
+if [ -z "${JIDS_A2}" ]; then echo "ERROR: A2 submission failed." >&2; exit 1; fi
+echo "A2 jobs: ${JIDS_A2}"
 
-# A3 + A4: parallel, both depend on A2
-A3_JID=$(sbatch --parsable --dependency=afterok:${A2_JID} A3_run.sb)
-A4_JID=$(sbatch --parsable --dependency=afterok:${A2_JID} A4_run.sb)
+# A3 + A4: parallel, both depend on all A2 jobs
+A3_JID=$(sbatch --parsable --dependency=afterok:${JIDS_A2} A3_run.sb)
+A4_JID=$(sbatch --parsable --dependency=afterok:${JIDS_A2} A4_run.sb)
 echo "A3 job: ${A3_JID} | A4 job: ${A4_JID}"
 
 echo "==========================================="
-echo "Track A submitted. Total: 4+1+1+1 = 7 jobs"
+echo "Track A submitted. Total: 4+2+1+1 = 8 jobs"
 echo "Monitor: squeue -u $USER"
 echo "==========================================="
 ```
@@ -646,8 +648,9 @@ Same pattern. B1 (cropmap) → B2 → B3 → B4 → B5. B2 depends on A2 complet
 | `scripts/A1_run_calder2.R` | A | R | CALDER2 wrapper |
 | `scripts/A1_run_calder2.sb` | A | SLURM | Worker: 8c/64G/12h |
 | `scripts/A1_submit_calder2.sh` | A | Wrapper | Submit 4 jobs |
-| `scripts/A2_differential_subcompartments.R` | A | R | Ctrl vs mut transitions |
-| `scripts/A2_run.sb` | A | SLURM | Wrapper |
+| `scripts/A2_differential_subcompartments.R` | A | R | Ctrl vs mut transitions (1 tp) |
+| `scripts/A2_run.sb` | A | SLURM | Worker: 4c/16G/2h |
+| `scripts/A2_submit_differential.sh` | A | Wrapper | Submit 2 jobs |
 | `scripts/A3_epigenomic_validation.R` | A | R | BigWig × subcompartment |
 | `scripts/A3_run.sb` | A | SLURM | Wrapper |
 | `scripts/A4_integrate_homer_compartments.R` | A | R | HOMER integration |
@@ -688,7 +691,7 @@ Same pattern. B1 (cropmap) → B2 → B3 → B4 → B5. B2 depends on A2 complet
 | Stage | Criterion | Expected |
 |-------|-----------|----------|
 | A0 | `library(CALDER)` loads | Exit 0 |
-| A1 | 4× `all_sub_compartments.tsv` exist, all 19 chroms | ~25,600 bins at 100kb |
+| A1 | 4× `all_sub_compartments.tsv` exist, all 19 chroms | Variable-width segments (~237k rows); 24,639 bins after A2 100kb binning |
 | A1 | Label distribution at depth 2 | A.1 ~25-35%, A.2 ~20-25%, B.1 ~15-25%, B.2 ~20-30% |
 | A1 | Reference correlation | >0.3 per chromosome |
 | A2 | Transition matrix non-uniform | Chi-squared p < 0.05 (late) |
@@ -726,6 +729,6 @@ Total wall time: ~3 days with no failures. Track A alone completes in 1.5 days.
 
 2. **H3K36me3 BigWig** — RESOLVED (2026-05-26). Per-replicate BigWigs (6 ctrl + 6 mut, `_norm.bw` + `_rnorm.bw`) synced from EC2 (`/media/rs_256/normalization/`) to `sdsc/bigwigs/h3k36me3/`. On HPC at `/expanse/lustre/projects/csd940/zalibhai/bigwigs/h3k36me3/`.
 
-3. **CALDER2 conda install** — Verify whether `conda install -c bioconda r-calder2` works on Expanse, or if local source install (`install.packages("path/to/CALDER2", repos=NULL, type="source")`) is needed. The cloned repo at `ML/cmpts/CALDER2/` can be installed directly.
+3. **CALDER2 conda install** — Verify whether `conda install -c bioconda r-calder2` works on Expanse, or if local source install (`install.packages("path/to/CALDER2", repos=NULL, type="source")`) is needed. The cloned repo at `ML/cmpts/repos/CALDER2/` can be installed directly.
 
 4. **TF 1.15 + Python 3.7 on Expanse** — Verify conda-forge still has Python 3.7 packages. If not, fall back to Python 3.6 + TF 1.12.2 (CPU).

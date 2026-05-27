@@ -1,26 +1,27 @@
 # ML/cmpts/scripts/A2_differential_subcompartments.R
-# Stage A2: Differential subcompartment analysis (ctrl vs mut, both timepoints).
+# Stage A2: Differential subcompartment analysis for a single timepoint.
 #
 # Bins variable-width CALDER2 segments to uniform 100kb resolution via
 # plurality vote, then computes transition matrices and chi-squared tests
 # comparing ctrl vs mut subcompartment assignments.
 #
 # Usage:
-#   Rscript --vanilla A2_differential_subcompartments.R <data_root> <code_root>
+#   Rscript --vanilla A2_differential_subcompartments.R <timepoint> <data_root> <code_root>
+#     <timepoint> : 250402 | 250831
 #     <data_root> : HPC data directory (kept for CLI consistency with A1)
 #     <code_root> : repo directory (e.g. /expanse/.../mariner_hi-c/ML/cmpts)
 
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) != 2) {
-  stop("Usage: Rscript A2_differential_subcompartments.R <data_root> <code_root>")
+if (length(args) != 3) {
+  stop("Usage: Rscript A2_differential_subcompartments.R <timepoint> <data_root> <code_root>")
 }
 
-DATA_ROOT <- args[1]
-CODE_ROOT <- args[2]
+TP        <- args[1]
+DATA_ROOT <- args[2]
+CODE_ROOT <- args[3]
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
-TIMEPOINTS  <- c("250402", "250831")
 SAMPLES     <- c("ctrl_merged", "mut_merged")
 BIN_SIZE    <- 100000L
 LABEL_ORDER <- c("A.1", "A.2", "B.1", "B.2")
@@ -40,6 +41,8 @@ MM10_CHROM_SIZES <- c(
   chr17 = 94987271L,  chr18 = 90702639L,  chr19 = 61431566L
 )
 
+TP_LABELS <- c("250402" = "late/adult", "250831" = "early/P12")
+
 OUT_DIR   <- file.path(CODE_ROOT, "outputs", "calder2")
 UTIL_PATH <- file.path(CODE_ROOT, "scripts", "utils", "multi_format_output.R")
 
@@ -57,6 +60,7 @@ source(UTIL_PATH)
 cat("===========================================\n")
 cat("A2: Differential Subcompartment Analysis\n")
 cat("===========================================\n")
+cat(sprintf("Timepoint:  %s (%s)\n", TP, TP_LABELS[TP]))
 cat(sprintf("CODE_ROOT:  %s\n", CODE_ROOT))
 cat(sprintf("Output dir: %s\n", OUT_DIR))
 cat(sprintf("Start:      %s\n", date()))
@@ -66,17 +70,14 @@ cat("===========================================\n\n")
 
 cat("=== Pre-flight validation ===\n")
 input_files <- list()
-for (tp in TIMEPOINTS) {
-  for (samp in SAMPLES) {
-    key  <- paste(tp, samp, sep = "_")
-    path <- file.path(CODE_ROOT, "outputs", "calder2", tp, samp,
-                      "sub_compartments", "all_sub_compartments.tsv")
-    if (!file.exists(path)) stop(sprintf("Missing A1 output: %s", path))
-    if (file.info(path)$size == 0) stop(sprintf("Empty A1 output: %s", path))
-    input_files[[key]] <- path
-    cat(sprintf("  OK: %s/%s (%s bytes)\n", tp, samp,
-                format(file.info(path)$size, big.mark = ",")))
-  }
+for (samp in SAMPLES) {
+  path <- file.path(CODE_ROOT, "outputs", "calder2", TP, samp,
+                    "sub_compartments", "all_sub_compartments.tsv")
+  if (!file.exists(path)) stop(sprintf("Missing A1 output: %s", path))
+  if (file.info(path)$size == 0) stop(sprintf("Empty A1 output: %s", path))
+  input_files[[samp]] <- path
+  cat(sprintf("  OK: %s/%s (%s bytes)\n", TP, samp,
+              format(file.info(path)$size, big.mark = ",")))
 }
 
 if (!file.exists(UTIL_PATH)) stop(sprintf("Missing utility: %s", UTIL_PATH))
@@ -153,262 +154,235 @@ grid_dt <- build_100kb_grid(MM10_CHROM_SIZES)
 cat(sprintf("  Total bins: %d across %d chromosomes\n",
             nrow(grid_dt), length(MM10_CHROM_SIZES)))
 
-# ── Load all 4 CALDER2 files ──────────────────────────────────────────────────
+# ── Load CALDER2 files for this timepoint ─────────────────────────────────────
 
 cat("\n=== Loading CALDER2 outputs ===\n")
 calder_data <- list()
-for (tp in TIMEPOINTS) {
-  for (samp in SAMPLES) {
-    key  <- paste(tp, samp, sep = "_")
-    path <- input_files[[key]]
-    comp <- fread(path)
+for (samp in SAMPLES) {
+  path <- input_files[[samp]]
+  comp <- fread(path)
 
-    expected_cols <- c("chr", "pos_start", "pos_end", "comp_name",
-                       "comp_rank", "continous_rank")
-    if (!all(expected_cols %in% names(comp))) {
-      stop(sprintf("Unexpected columns in %s: %s",
-                   path, paste(names(comp), collapse = ", ")))
-    }
-
-    comp[, label_d2 := truncate_to_depth2(comp_name)]
-    unknown_labels <- setdiff(unique(comp$label_d2), LABEL_ORDER)
-    if (length(unknown_labels) > 0) {
-      warning(sprintf("Unexpected depth-2 labels in %s: %s",
-                      key, paste(unknown_labels, collapse = ", ")))
-    }
-
-    cat(sprintf("  %-25s %7d rows  chroms=%d\n",
-                key, nrow(comp), length(unique(comp$chr))))
-    calder_data[[key]] <- comp[, .(chr, pos_start, pos_end, label_d2, continous_rank)]
+  expected_cols <- c("chr", "pos_start", "pos_end", "comp_name",
+                     "comp_rank", "continous_rank")
+  if (!all(expected_cols %in% names(comp))) {
+    stop(sprintf("Unexpected columns in %s: %s",
+                 path, paste(names(comp), collapse = ", ")))
   }
+
+  comp[, label_d2 := truncate_to_depth2(comp_name)]
+  unknown_labels <- setdiff(unique(comp$label_d2), LABEL_ORDER)
+  if (length(unknown_labels) > 0) {
+    warning(sprintf("Unexpected depth-2 labels in %s/%s: %s",
+                    TP, samp, paste(unknown_labels, collapse = ", ")))
+  }
+
+  cat(sprintf("  %-25s %7d rows  chroms=%d\n",
+              samp, nrow(comp), length(unique(comp$chr))))
+  calder_data[[samp]] <- comp[, .(chr, pos_start, pos_end, label_d2, continous_rank)]
 }
 
-# ── Per-timepoint analysis ─────────────────────────────────────────────────────
+# ── Plurality-vote binning ─────────────────────────────────────────────────────
 
-all_results <- list()
+cat("\n=== Binning to 100kb grid ===\n")
 
-for (tp in TIMEPOINTS) {
-  cat(sprintf("\n=== Timepoint: %s ===\n", tp))
+cat("  Binning ctrl to 100kb grid...\n")
+ctrl_binned <- bin_plurality_vote(calder_data[["ctrl_merged"]], grid_dt)
+setnames(ctrl_binned,
+         c("label_d2", "continous_rank_wt"),
+         c("ctrl_label", "continous_rank_ctrl"))
 
-  # --- Plurality-vote binning ---
-  cat("  Binning ctrl to 100kb grid...\n")
-  ctrl_binned <- bin_plurality_vote(
-    calder_data[[paste(tp, "ctrl_merged", sep = "_")]], grid_dt
-  )
-  setnames(ctrl_binned,
-           c("label_d2", "continous_rank_wt"),
-           c("ctrl_label", "continous_rank_ctrl"))
+cat("  Binning mut to 100kb grid...\n")
+mut_binned <- bin_plurality_vote(calder_data[["mut_merged"]], grid_dt)
+setnames(mut_binned,
+         c("label_d2", "continous_rank_wt"),
+         c("mut_label", "continous_rank_mut"))
 
-  cat("  Binning mut to 100kb grid...\n")
-  mut_binned <- bin_plurality_vote(
-    calder_data[[paste(tp, "mut_merged", sep = "_")]], grid_dt
-  )
-  setnames(mut_binned,
-           c("label_d2", "continous_rank_wt"),
-           c("mut_label", "continous_rank_mut"))
+# ── Join ctrl and mut ──────────────────────────────────────────────────────────
 
-  # --- Join ctrl and mut ---
-  labeled <- merge(
-    ctrl_binned[, .(chr, bin_index, bin_start, bin_end,
-                    ctrl_label, continous_rank_ctrl)],
-    mut_binned[, .(chr, bin_index, mut_label, continous_rank_mut)],
-    by = c("chr", "bin_index"), all = TRUE
-  )
-  labeled[, label_changed := (!is.na(ctrl_label) & !is.na(mut_label) &
-                                as.character(ctrl_label) != as.character(mut_label))]
+labeled <- merge(
+  ctrl_binned[, .(chr, bin_index, bin_start, bin_end,
+                  ctrl_label, continous_rank_ctrl)],
+  mut_binned[, .(chr, bin_index, mut_label, continous_rank_mut)],
+  by = c("chr", "bin_index"), all = TRUE
+)
+labeled[, label_changed := (!is.na(ctrl_label) & !is.na(mut_label) &
+                              as.character(ctrl_label) != as.character(mut_label))]
 
-  n_total    <- nrow(labeled)
-  n_callable <- sum(!is.na(labeled$ctrl_label) & !is.na(labeled$mut_label))
-  n_changed  <- sum(labeled$label_changed, na.rm = TRUE)
-  pct_changed <- 100 * n_changed / n_callable
+n_total    <- nrow(labeled)
+n_callable <- sum(!is.na(labeled$ctrl_label) & !is.na(labeled$mut_label))
+n_changed  <- sum(labeled$label_changed, na.rm = TRUE)
+pct_changed <- 100 * n_changed / n_callable
 
-  cat(sprintf("  Total bins:    %d\n", n_total))
-  cat(sprintf("  Callable bins: %d (both ctrl and mut labeled)\n", n_callable))
-  cat(sprintf("  Changed bins:  %d (%.1f%% of callable)\n", n_changed, pct_changed))
+cat(sprintf("\n  Total bins:    %d\n", n_total))
+cat(sprintf("  Callable bins: %d (both ctrl and mut labeled)\n", n_callable))
+cat(sprintf("  Changed bins:  %d (%.1f%% of callable)\n", n_changed, pct_changed))
 
-  # --- Write labels TSV ---
-  out_labels <- file.path(OUT_DIR, sprintf("%s_subcompartment_labels_100kb.tsv", tp))
-  fwrite(labeled[, .(chr, bin_start, bin_end, ctrl_label, mut_label,
-                     continous_rank_ctrl, continous_rank_mut, label_changed)],
-         out_labels, sep = "\t", quote = FALSE, na = "NA")
-  cat(sprintf("  Written: %s\n", basename(out_labels)))
+# ── Write labels TSV ───────────────────────────────────────────────────────────
 
-  # --- Transition matrix ---
-  trans_mat <- compute_transition_matrix(labeled)
-  cat(sprintf("  Transition matrix total: %d (expected ~24,639)\n", sum(trans_mat)))
+out_labels <- file.path(OUT_DIR, sprintf("%s_subcompartment_labels_100kb.tsv", TP))
+fwrite(labeled[, .(chr, bin_start, bin_end, ctrl_label, mut_label,
+                   continous_rank_ctrl, continous_rank_mut, label_changed)],
+       out_labels, sep = "\t", quote = FALSE, na = "NA")
+cat(sprintf("  Written: %s\n", basename(out_labels)))
 
-  # --- Chi-squared test ---
-  chisq_result <- chisq.test(trans_mat, simulate.p.value = FALSE)
-  cramer_v     <- sqrt(chisq_result$statistic / (sum(trans_mat) * (min(nrow(trans_mat), ncol(trans_mat)) - 1)))
+# ── Transition matrix ──────────────────────────────────────────────────────────
 
-  cat(sprintf("  Chi-squared: X2=%.1f, df=%d, p=%.3e\n",
-              chisq_result$statistic, chisq_result$parameter, chisq_result$p.value))
-  cat(sprintf("  Cramer's V:  %.4f\n", unname(cramer_v)))
-  cat(sprintf("  %% bins changed: %.1f%%\n", pct_changed))
+cat("\n=== Transition analysis ===\n")
+trans_mat <- compute_transition_matrix(labeled)
+cat(sprintf("  Transition matrix total: %d (expected ~24,639)\n", sum(trans_mat)))
 
-  # --- Write transition matrix ---
-  out_mat <- file.path(OUT_DIR, sprintf("%s_transition_matrix.tsv", tp))
-  write.table(trans_mat, out_mat, sep = "\t", quote = FALSE, col.names = NA)
-  cat(sprintf("  Written: %s\n", basename(out_mat)))
+# ── Chi-squared test ───────────────────────────────────────────────────────────
 
-  # --- Write transition summary ---
-  trans_long <- as.data.table(as.table(trans_mat))
-  names(trans_long) <- c("ctrl_label", "mut_label", "count")
-  trans_long[, pct_of_total := round(100 * count / n_callable, 2)]
-  trans_long[, is_diagonal := (as.character(ctrl_label) == as.character(mut_label))]
-  trans_long <- trans_long[order(ctrl_label, mut_label)]
-  out_summary <- file.path(OUT_DIR, sprintf("%s_transition_summary.tsv", tp))
-  fwrite(trans_long, out_summary, sep = "\t", quote = FALSE)
-  cat(sprintf("  Written: %s\n", basename(out_summary)))
+chisq_result <- chisq.test(trans_mat, simulate.p.value = FALSE)
+cramer_v     <- sqrt(chisq_result$statistic / (sum(trans_mat) * (min(nrow(trans_mat), ncol(trans_mat)) - 1)))
 
-  # --- Figures ---
-  cat("  Generating figures...\n")
+cat(sprintf("  Chi-squared: X2=%.1f, df=%d, p=%.3e\n",
+            chisq_result$statistic, chisq_result$parameter, chisq_result$p.value))
+cat(sprintf("  Cramer's V:  %.4f\n", unname(cramer_v)))
+cat(sprintf("  %% bins changed: %.1f%%\n", pct_changed))
 
-  tp_label <- sprintf("%s (%s)", tp,
-                      ifelse(tp == "250402", "late/adult", "early/P12"))
+# ── Write transition matrix ───────────────────────────────────────────────────
 
-  # 1. Transition heatmap
-  mat_long <- as.data.table(as.table(trans_mat))
-  names(mat_long) <- c("ctrl_label", "mut_label", "count")
-  mat_long[, log10_count := log10(count + 1)]
-  mat_long[, on_diagonal := (as.character(ctrl_label) == as.character(mut_label))]
-  mat_long[, ctrl_label := factor(ctrl_label, levels = rev(LABEL_ORDER))]
-  mat_long[, mut_label  := factor(mut_label,  levels = LABEL_ORDER)]
+out_mat <- file.path(OUT_DIR, sprintf("%s_transition_matrix.tsv", TP))
+write.table(trans_mat, out_mat, sep = "\t", quote = FALSE, col.names = NA)
+cat(sprintf("  Written: %s\n", basename(out_mat)))
 
-  p_heatmap <- ggplot(mat_long, aes(x = mut_label, y = ctrl_label, fill = log10_count)) +
-    geom_tile(aes(color = on_diagonal), linewidth = 1.2) +
-    geom_text(aes(label = format(count, big.mark = ",")), fontface = "bold", size = 5) +
-    scale_fill_gradient(low = "white", high = "#2166ac", name = "log10(count+1)") +
-    scale_color_manual(values = c("TRUE" = "#d7301f", "FALSE" = "grey85"), guide = "none") +
-    scale_x_discrete(position = "top") +
-    labs(x = "Mutant label", y = "Control label",
-         title = sprintf("Subcompartment Transitions: %s", tp_label),
-         subtitle = sprintf("X²=%.1f, p=%.2e, %.1f%% bins changed",
-                            chisq_result$statistic, chisq_result$p.value, pct_changed)) +
-    theme_minimal(base_size = 14) +
-    theme(panel.grid = element_blank(),
-          axis.text  = element_text(face = "bold", size = 12))
+# ── Write transition summary ──────────────────────────────────────────────────
 
-  save_multiformat_ggplot(p_heatmap,
-    file.path(OUT_DIR, sprintf("%s_transition_heatmap", tp)),
-    width = 7, height = 6)
+trans_long <- as.data.table(as.table(trans_mat))
+names(trans_long) <- c("ctrl_label", "mut_label", "count")
+trans_long[, pct_of_total := round(100 * count / n_callable, 2)]
+trans_long[, is_diagonal := (as.character(ctrl_label) == as.character(mut_label))]
+trans_long <- trans_long[order(ctrl_label, mut_label)]
+out_summary <- file.path(OUT_DIR, sprintf("%s_transition_summary.tsv", TP))
+fwrite(trans_long, out_summary, sep = "\t", quote = FALSE)
+cat(sprintf("  Written: %s\n", basename(out_summary)))
 
-  # 2. Sankey / alluvial diagram
-  alluv_dt <- labeled[!is.na(ctrl_label) & !is.na(mut_label),
-                       .N, by = .(ctrl_label, mut_label)]
-  alluv_dt[, flow_type := fifelse(as.character(ctrl_label) == as.character(mut_label),
-                                   as.character(ctrl_label), "change")]
-  alluv_dt[, ctrl_label := factor(ctrl_label, levels = LABEL_ORDER)]
-  alluv_dt[, mut_label  := factor(mut_label,  levels = LABEL_ORDER)]
+# ── Figures ────────────────────────────────────────────────────────────────────
 
-  p_sankey <- ggplot(alluv_dt, aes(axis1 = ctrl_label, axis2 = mut_label, y = N)) +
-    geom_alluvium(aes(fill = flow_type), width = 1/4, alpha = 0.75, knot.pos = 0.4) +
-    geom_stratum(width = 1/4, fill = "white", color = "grey40", linewidth = 0.5) +
-    geom_text(stat = "stratum", aes(label = after_stat(stratum)),
-              size = 4, fontface = "bold") +
-    scale_fill_manual(values = LABEL_COLORS, name = "Flow") +
-    scale_x_discrete(limits = c("Control", "Mutant"), expand = c(0.05, 0.05)) +
-    labs(y = "Number of 100kb bins",
-         title = sprintf("Subcompartment Flow: %s", tp_label),
-         subtitle = sprintf("%.1f%% of bins change subcompartment", pct_changed)) +
-    theme_minimal(base_size = 14) +
-    theme(panel.grid = element_blank())
+cat("\n=== Generating figures ===\n")
 
-  save_multiformat_ggplot(p_sankey,
-    file.path(OUT_DIR, sprintf("%s_transition_sankey", tp)),
-    width = 8, height = 7)
+tp_label <- sprintf("%s (%s)", TP, TP_LABELS[TP])
 
-  # 3. Genome percentage barplot
-  pct_long <- rbind(
-    labeled[!is.na(ctrl_label), .(label = ctrl_label, condition = "Control")],
-    labeled[!is.na(mut_label),  .(label = mut_label,  condition = "Mutant")]
-  )
-  pct_long[, condition := factor(condition, levels = c("Control", "Mutant"))]
-  pct_long[, label := factor(label, levels = LABEL_ORDER)]
-  pct_summary <- pct_long[, .N, by = .(condition, label)]
-  pct_summary[, pct := 100 * N / sum(N), by = condition]
+# 1. Transition heatmap
+mat_long <- as.data.table(as.table(trans_mat))
+names(mat_long) <- c("ctrl_label", "mut_label", "count")
+mat_long[, log10_count := log10(count + 1)]
+mat_long[, on_diagonal := (as.character(ctrl_label) == as.character(mut_label))]
+mat_long[, ctrl_label := factor(ctrl_label, levels = rev(LABEL_ORDER))]
+mat_long[, mut_label  := factor(mut_label,  levels = LABEL_ORDER)]
 
-  p_pct <- ggplot(pct_summary, aes(x = condition, y = pct, fill = label)) +
-    geom_bar(stat = "identity", position = "stack", color = "white", linewidth = 0.5) +
-    geom_text(aes(label = sprintf("%.1f%%", pct)),
-              position = position_stack(vjust = 0.5),
-              size = 3.5, color = "white", fontface = "bold") +
-    scale_fill_manual(values = LABEL_COLORS[LABEL_ORDER], name = "Subcompartment") +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, 101)) +
-    labs(x = NULL, y = "% of 100kb bins",
-         title = sprintf("Subcompartment Fractions: %s", tp_label)) +
-    theme_minimal(base_size = 14)
+p_heatmap <- ggplot(mat_long, aes(x = mut_label, y = ctrl_label, fill = log10_count)) +
+  geom_tile(aes(color = on_diagonal), linewidth = 1.2) +
+  geom_text(aes(label = format(count, big.mark = ",")), fontface = "bold", size = 5) +
+  scale_fill_gradient(low = "white", high = "#2166ac", name = "log10(count+1)") +
+  scale_color_manual(values = c("TRUE" = "#d7301f", "FALSE" = "grey85"), guide = "none") +
+  scale_x_discrete(position = "top") +
+  labs(x = "Mutant label", y = "Control label",
+       title = sprintf("Subcompartment Transitions: %s", tp_label),
+       subtitle = sprintf("X²=%.1f, p=%.2e, %.1f%% bins changed",
+                          chisq_result$statistic, chisq_result$p.value, pct_changed)) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid = element_blank(),
+        axis.text  = element_text(face = "bold", size = 12))
 
-  save_multiformat_ggplot(p_pct,
-    file.path(OUT_DIR, sprintf("%s_subcompartment_genome_pct", tp)),
-    width = 5, height = 7)
+save_multiformat_ggplot(p_heatmap,
+  file.path(OUT_DIR, sprintf("%s_transition_heatmap", TP)),
+  width = 7, height = 6)
 
-  all_results[[tp]] <- list(
-    labeled     = labeled,
-    trans_mat   = trans_mat,
-    chisq       = chisq_result,
-    cramer_v    = unname(cramer_v),
-    pct_changed = pct_changed,
-    n_callable  = n_callable
-  )
-}
+# 2. Sankey / alluvial diagram
+alluv_dt <- labeled[!is.na(ctrl_label) & !is.na(mut_label),
+                     .N, by = .(ctrl_label, mut_label)]
+alluv_dt[, flow_type := fifelse(as.character(ctrl_label) == as.character(mut_label),
+                                 as.character(ctrl_label), "change")]
+alluv_dt[, ctrl_label := factor(ctrl_label, levels = LABEL_ORDER)]
+alluv_dt[, mut_label  := factor(mut_label,  levels = LABEL_ORDER)]
 
-# ── Cross-timepoint comparison ─────────────────────────────────────────────────
+p_sankey <- ggplot(alluv_dt, aes(axis1 = ctrl_label, axis2 = mut_label, y = N)) +
+  geom_alluvium(aes(fill = flow_type), width = 1/4, alpha = 0.75, knot.pos = 0.4) +
+  geom_stratum(width = 1/4, fill = "white", color = "grey40", linewidth = 0.5) +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)),
+            size = 4, fontface = "bold") +
+  scale_fill_manual(values = LABEL_COLORS, name = "Flow") +
+  scale_x_discrete(limits = c("Control", "Mutant"), expand = c(0.05, 0.05)) +
+  labs(y = "Number of 100kb bins",
+       title = sprintf("Subcompartment Flow: %s", tp_label),
+       subtitle = sprintf("%.1f%% of bins change subcompartment", pct_changed)) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid = element_blank())
 
-cat("\n=== Cross-timepoint comparison ===\n")
-for (tp in TIMEPOINTS) {
-  r <- all_results[[tp]]
-  cat(sprintf("  %s: %.1f%% bins changed (%d/%d), p=%.3e, V=%.4f\n",
-              tp, r$pct_changed, sum(r$trans_mat) - sum(diag(r$trans_mat)),
-              r$n_callable, r$chisq$p.value, r$cramer_v))
-}
+save_multiformat_ggplot(p_sankey,
+  file.path(OUT_DIR, sprintf("%s_transition_sankey", TP)),
+  width = 8, height = 7)
+
+# 3. Genome percentage barplot
+pct_long <- rbind(
+  labeled[!is.na(ctrl_label), .(label = ctrl_label, condition = "Control")],
+  labeled[!is.na(mut_label),  .(label = mut_label,  condition = "Mutant")]
+)
+pct_long[, condition := factor(condition, levels = c("Control", "Mutant"))]
+pct_long[, label := factor(label, levels = LABEL_ORDER)]
+pct_summary <- pct_long[, .N, by = .(condition, label)]
+pct_summary[, pct := 100 * N / sum(N), by = condition]
+
+p_pct <- ggplot(pct_summary, aes(x = condition, y = pct, fill = label)) +
+  geom_bar(stat = "identity", position = "stack", color = "white", linewidth = 0.5) +
+  geom_text(aes(label = sprintf("%.1f%%", pct)),
+            position = position_stack(vjust = 0.5),
+            size = 3.5, color = "white", fontface = "bold") +
+  scale_fill_manual(values = LABEL_COLORS[LABEL_ORDER], name = "Subcompartment") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 101)) +
+  labs(x = NULL, y = "% of 100kb bins",
+       title = sprintf("Subcompartment Fractions: %s", tp_label)) +
+  theme_minimal(base_size = 14)
+
+save_multiformat_ggplot(p_pct,
+  file.path(OUT_DIR, sprintf("%s_subcompartment_genome_pct", TP)),
+  width = 5, height = 7)
 
 # ── Verification ───────────────────────────────────────────────────────────────
 
 cat("\n=== Verification ===\n")
 any_warn <- FALSE
-for (tp in TIMEPOINTS) {
-  mat   <- all_results[[tp]]$trans_mat
-  total <- sum(mat)
-  cat(sprintf("  [%s] Matrix total: %d (expected ~24,639)\n", tp, total))
 
-  if (total < 20000 || total > 25000) {
-    warning(sprintf("Unexpected bin count for %s: %d", tp, total))
+total <- sum(trans_mat)
+cat(sprintf("  Matrix total: %d (expected ~24,639)\n", total))
+if (total < 20000 || total > 25000) {
+  warning(sprintf("Unexpected bin count for %s: %d", TP, total))
+  any_warn <- TRUE
+}
+
+if (TP == "250402" && chisq_result$p.value >= 0.05) {
+  warning(sprintf("Late timepoint %s chi-squared p=%.4f (expected p<0.05)",
+                  TP, chisq_result$p.value))
+  any_warn <- TRUE
+}
+
+col_totals <- colSums(trans_mat)
+for (lbl in LABEL_ORDER) {
+  pct <- 100 * col_totals[lbl] / total
+  if (pct < 5 || pct > 60) {
+    warning(sprintf("Unexpected %s fraction in mut: %.1f%%", lbl, pct))
     any_warn <- TRUE
   }
+}
 
-  p <- all_results[[tp]]$chisq$p.value
-  if (tp == "250402" && p >= 0.05) {
-    warning(sprintf("Late timepoint %s chi-squared p=%.4f (expected p<0.05)", tp, p))
+expected_files <- c(
+  sprintf("%s_subcompartment_labels_100kb.tsv", TP),
+  sprintf("%s_transition_matrix.tsv", TP),
+  sprintf("%s_transition_summary.tsv", TP)
+)
+for (f in expected_files) {
+  fpath <- file.path(OUT_DIR, f)
+  if (!file.exists(fpath)) {
+    warning(sprintf("Missing output: %s", fpath))
     any_warn <- TRUE
-  }
-
-  col_totals <- colSums(mat)
-  for (lbl in LABEL_ORDER) {
-    pct <- 100 * col_totals[lbl] / total
-    if (pct < 5 || pct > 60) {
-      warning(sprintf("[%s] Unexpected %s fraction in mut: %.1f%%", tp, lbl, pct))
-      any_warn <- TRUE
-    }
-  }
-
-  expected_files <- c(
-    sprintf("%s_subcompartment_labels_100kb.tsv", tp),
-    sprintf("%s_transition_matrix.tsv", tp),
-    sprintf("%s_transition_summary.tsv", tp)
-  )
-  for (f in expected_files) {
-    fpath <- file.path(OUT_DIR, f)
-    if (!file.exists(fpath)) {
-      warning(sprintf("Missing output: %s", fpath))
-      any_warn <- TRUE
-    }
   }
 }
 
 if (!any_warn) cat("  All checks passed.\n")
 
 cat("\n===========================================\n")
-cat("A2 COMPLETE\n")
+cat(sprintf("A2 COMPLETE: %s\n", TP))
 cat(sprintf("Finished: %s\n", date()))
 cat("===========================================\n")

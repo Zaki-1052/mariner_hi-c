@@ -1,8 +1,8 @@
 #!/bin/bash
 # ML/cmpts/scripts/A2_run.sb
-# Stage A2: Differential subcompartment analysis (ctrl vs mut, both timepoints).
-# Single job — processes both timepoints sequentially.
-# Usage: sbatch A2_run.sb
+# Stage A2: Differential subcompartment analysis for a single timepoint.
+# Usage: sbatch A2_run.sb <timepoint>
+#   <timepoint> : 250402 | 250831
 #SBATCH --job-name=a2_diff_subcomp
 #SBATCH --output=a2_diff_subcomp_%j.out
 #SBATCH --partition=shared
@@ -13,6 +13,8 @@
 #SBATCH --time=02:00:00
 #SBATCH --account=csd940
 
+TP="${1:?usage: sbatch A2_run.sb <timepoint>}"
+
 CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
 DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
 
@@ -21,11 +23,12 @@ mkdir -p "${CODE_DIR}/logs" "${CODE_DIR}/outputs/calder2"
 echo "==========================================="
 echo "A2: Differential Subcompartment Analysis"
 echo "==========================================="
-echo "Job ID:   ${SLURM_JOB_ID}"
-echo "Node:     ${HOSTNAME}"
-echo "CPUs:     ${SLURM_CPUS_PER_TASK}"
-echo "Start:    $(date)"
-echo "Code dir: ${CODE_DIR}"
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Timepoint:  ${TP}"
+echo "Start:      $(date)"
+echo "Code dir:   ${CODE_DIR}"
 echo "==========================================="
 
 source ~/.bashrc
@@ -42,7 +45,7 @@ Rscript --vanilla -e "
 "
 
 Rscript --vanilla "${CODE_DIR}/scripts/A2_differential_subcompartments.R" \
-  "${DATA_DIR}" "${CODE_DIR}"
+  "${TP}" "${DATA_DIR}" "${CODE_DIR}"
 STATUS=$?
 
 if [ ${STATUS} -ne 0 ]; then
