@@ -123,7 +123,7 @@ For SNIPER compatibility (5 classes: A1/A2/B1/B2/B3), we use depth 2 (4 classes)
 - `cor_with_ref.txt` shows positive correlations (>0.3) for most chromosomes
 - SLURM logs in `ML/cmpts/logs/` show exit 0
 
-### A2 — Differential Subcompartment Analysis — PENDING
+### A2 — Differential Subcompartment Analysis — READY (scripts created 2026-05-27)
 
 **Script:** `scripts/A2_differential_subcompartments.R` + `scripts/A2_run.sb`
 
@@ -136,22 +136,25 @@ Dependencies: All 4 A1 jobs complete.
 4. For each timepoint, join ctrl and mut labels on (chr, 100kb_bin_start)
 5. Classify transitions: `ctrl_label → mut_label` for each bin
 6. Compute transition matrix (4×4: A.1, A.2, B.1, B.2)
-7. Chi-squared test on transition counts vs expected (no-change null)
+7. Chi-squared independence test + Cramer's V effect size
 
 **Outputs:**
 ```
-ML/cmpts/sniper/outputs/calder2/
-  {tp}_subcompartment_labels_100kb.tsv     # chr, start, end, ctrl_label, mut_label, continuous_rank_ctrl, continuous_rank_mut
+ML/cmpts/outputs/calder2/
+  {tp}_subcompartment_labels_100kb.tsv     # chr, start, end, ctrl_label, mut_label, continous_rank_ctrl, continous_rank_mut, label_changed
   {tp}_transition_matrix.tsv               # 4x4 counts
   {tp}_transition_summary.tsv              # counts per transition type
+  {tp}_transition_heatmap/                 # multi-format figure (pdf/svg/png/jpg)
   {tp}_transition_sankey/                  # multi-format figure
   {tp}_subcompartment_genome_pct/          # multi-format figure
 ```
 
-**SLURM:** `--cpus-per-task=4 --mem=16G --time=02:00:00`
+**SLURM:** `--cpus-per-task=4 --mem=16G --time=02:00:00` (single job, both timepoints)
+
+**Additional dependency:** `ggalluvial` R package (installed on first run if missing)
 
 **Verification:**
-- Transition matrices sum to total number of 100kb autosomal bins (~25,600 for mm10)
+- Transition matrices sum to ~24,639 (exact total of 100kb autosomal bins for mm10 chr1-19)
 - Chi-squared p-value < 0.05 (late timepoint expected to show significant transitions)
 - Key question answered: what fraction of bins change subcompartment? If <5%, the A/B system is largely stable; if >10%, there are substantial sub-compartment rearrangements
 
