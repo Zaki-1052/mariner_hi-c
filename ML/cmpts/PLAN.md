@@ -56,38 +56,13 @@ The Dixon meeting (2026-04-10) identified subcompartment calling as a key analys
 
 ## Track A: CALDER2 (Primary Subcompartment Calling)
 
-### A0 — Environment Setup — SCRIPT CREATED (2026-05-26)
+### A0 — Environment Setup — DONE (2026-05-26)
 
-**Script:** `scripts/A0_setup_calder2_env.sh` (interactive, run once on Expanse login node)
+**Scripts:** `scripts/A0_setup_calder2_env.sh` (conda env) + `scripts/utils/install_calder2_deps.R` (R package installation). Run interactively on Expanse login node.
 
-CALDER2 (`library(CALDER)`) is an R package with C++ compiled code (RcppArmadillo + OpenMP) and Bioconductor dependencies. It accepts .hic files directly via `strawr`, ships an mm10 reference BED (`inst/extdata/mm10_all_sub_compartments.bed`, 15,364 bins), and is fully mm10-aware via `genome='mm10'`.
+**Status:** `calder2_env` conda env created and all packages installed. CALDER v2.0 loads successfully with mm10 reference BED (15,364 bins). Key deps verified: strawr 0.0.92, GenomicRanges 1.50.2, rhdf5 2.42.1, data.table 1.18.4, ggplot2 4.0.3, doParallel 1.0.17, igraph 2.0.3.
 
-**Dependencies (from DESCRIPTION):**
-- R ≥ 3.5.2
-- Bioconductor: `GenomicRanges`, `rhdf5`
-- CRAN: `strawr` (≥0.0.9), `data.table`, `ape`, `dendextend`, `fitdistrplus`, `igraph`, `Matrix`, `rARPACK`, `factoextra`, `fields`, `ggplot2`, `optparse`, `R.utils`, `doParallel`
-- LinkingTo: `Rcpp`, `RcppArmadillo`
-- System: C++11 compiler with OpenMP, BLAS/LAPACK
-
-**Install approach:**
-```bash
-conda create -n calder2_env r-base=4.2 r-rcpp r-rcpparmadillo -c conda-forge -y
-conda activate calder2_env
-Rscript -e '
-  if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager")
-  BiocManager::install(c("GenomicRanges", "rhdf5"))
-  install.packages(c("strawr", "data.table", "ape", "dendextend", "fitdistrplus",
-                      "igraph", "Matrix", "rARPACK", "factoextra", "fields",
-                      "ggplot2", "optparse", "R.utils", "doParallel"))
-  install.packages("/path/to/ML/cmpts/CALDER2", repos=NULL, type="source")
-'
-```
-
-Alternatively: `conda install -c bioconda r-calder2` (if available).
-
-**Verification:** `Rscript -e "library(CALDER); cat('CALDER loaded OK\n')"` exits 0.
-
-### A1 — Run CALDER2 on Each Sample — PENDING
+### A1 — Run CALDER2 on Each Sample — READY (scripts created 2026-05-26)
 
 **Script:** `scripts/A1_run_calder2.R` + `scripts/A1_run_calder2.sb` + `scripts/A1_submit_calder2.sh`
 
@@ -734,7 +709,7 @@ Total wall time: ~3 days with no failures. Track A alone completes in 1.5 days.
 
 1. **juicer_tools.jar location on Expanse** — SNIPER calls `java -jar {juicer_tools} dump`. The existing `lab/pipeline-scripts/juicer.sb` uses a Singularity container. Need to confirm standalone JAR location or extract from container.
 
-2. **H3K36me3 BigWig** — Available as peaks (SEACR) but not as signal track in `sdsc/bigwigs/`. May need to generate from BAM, or use peak overlap fraction instead of continuous signal for A3 validation.
+2. **H3K36me3 BigWig** — RESOLVED (2026-05-26). Per-replicate BigWigs (6 ctrl + 6 mut, `_norm.bw` + `_rnorm.bw`) synced from EC2 (`/media/rs_256/normalization/`) to `sdsc/bigwigs/h3k36me3/`. On HPC at `/expanse/lustre/projects/csd940/zalibhai/bigwigs/h3k36me3/`.
 
 3. **CALDER2 conda install** — Verify whether `conda install -c bioconda r-calder2` works on Expanse, or if local source install (`install.packages("path/to/CALDER2", repos=NULL, type="source")`) is needed. The cloned repo at `ML/cmpts/CALDER2/` can be installed directly.
 

@@ -1,0 +1,73 @@
+# ML/cmpts/config/sniper_config.yaml
+# Configuration for CALDER2 + SNIPER subcompartment calling pipeline.
+# Paths are absolute HPC (Expanse) paths.
+
+paths:
+  code_root: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
+  data_root: "/expanse/lustre/projects/csd940/zalibhai/sniper"
+  hic_root: "/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+  sniper_source: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/repos/SNIPER"
+  bigwig_dir: "/expanse/lustre/projects/csd940/zalibhai/bigwigs"
+
+timepoints:
+  early: "250831"
+  late: "250402"
+
+samples:
+  merged: ["ctrl_merged", "mut_merged"]
+  groups: ["ctrl", "mut"]
+
+reference:
+  genome: "mm10"
+  chromosomes: ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19"]
+  chrom_sizes: "data/mm10.chrom.sizes"
+  blacklist: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/mm10-blacklist.v2.bed"
+
+calder2:
+  bin_size: 50000
+  genome: "mm10"
+  conda_env: "calder2_env"
+  n_cores: 8
+
+sniper:
+  resolution: 100000
+  conda_env: "sniper_env"
+  n_classes: 4
+  juicer_tools: "/path/to/juicer_tools.jar"  # TODO: confirm JAR location on Expanse
+
+existing:
+  homer_compartments: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis/compartment_all_annotated.tsv"
+  loop_clusters: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt"
+  stripe_results: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn/outputs"
+
+bigwigs:
+  H3K27ac_ctrl: "H3K27acCtrl.bw"
+  H3K27ac_mut: "H3K27acMut.bw"
+  H3K27me3_ctrl: "H3K27me3Ctrl.bw"
+  H3K27me3_mut: "H3K27me3Mut.bw"
+  H3K4me3_ctrl: "H3K4me3Ctrl.bw"
+  H3K4me3_mut: "H3K4me3Mut.bw"
+  H2AK119ub_ctrl: "H2AK119ubCtrl.bw"
+  H2AK119ub_mut: "H2AK119ubMut.bw"
+  ATAC_ctrl: "ATACctrl.bw"
+  ATAC_mut: "ATACmut.bw"
+  RNA_ctrl: "RNActrl.bw"
+  RNA_mut: "RNAmut.bw"
+  DNAmethylation_ctrl: "DNAmethylationCtrl.bw"
+  DNAmethylation_mut: "DNAmethylationMut.bw"
+  H3K27me1_ctrl: "H3K27me1Ctrl.bw"
+  H3K27me1_mut: "H3K27me1Mut.bw"
+
+slurm:
+  account: "csd940"
+  partition: "shared"
+  A1_calder2: { cpus: 8, mem: "64G", time: "12:00:00" }
+  A2_diff: { cpus: 4, mem: "16G", time: "02:00:00" }
+  A3_epigenomic: { cpus: 8, mem: "32G", time: "04:00:00" }
+  A4_homer: { cpus: 4, mem: "16G", time: "02:00:00" }
+  B1_cropmap: { cpus: 8, mem: "64G", time: "04:00:00" }
+  B3_train: { cpus: 16, mem: "96G", time: "24:00:00" }
+  B4_apply: { cpus: 8, mem: "64G", time: "08:00:00" }
+
+filtering:
+  exclude_chromosomes: ["X", "Y", "M"]
