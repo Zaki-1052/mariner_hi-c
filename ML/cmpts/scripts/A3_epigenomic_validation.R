@@ -151,16 +151,18 @@ compute_enrichment <- function(signals_dt, label_col, mark_cols, mark_names) {
                              by = label_col]
     setnames(by_subcomp, label_col, "subcompartment")
 
-    by_subcomp[, `:=`(
-      mark            = mark_names[i],
-      genome_median   = genome_median,
-      fold_enrichment = fifelse(genome_median > 0,
-                                median_signal / genome_median,
-                                NA_real_),
-      log2_fold       = fifelse(genome_median > 0 & median_signal > 0,
-                                log2(median_signal / genome_median),
-                                NA_real_)
-    )]
+    by_subcomp[, `:=`(mark = mark_names[i], genome_median = genome_median)]
+
+    if (genome_median > 0) {
+      by_subcomp[, fold_enrichment := median_signal / genome_median]
+      by_subcomp[, log2_fold := fifelse(
+        median_signal > 0,
+        log2(median_signal / genome_median),
+        NA_real_
+      )]
+    } else {
+      by_subcomp[, `:=`(fold_enrichment = NA_real_, log2_fold = NA_real_)]
+    }
 
     by_subcomp
   }))
