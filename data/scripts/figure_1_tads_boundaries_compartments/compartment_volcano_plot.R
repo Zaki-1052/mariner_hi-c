@@ -262,6 +262,32 @@ min_pval <- 1e-300
 comp_df$adj_pvalue[comp_df$adj_pvalue == 0] <- min_pval
 comp_df$adj_pvalue[comp_df$adj_pvalue < min_pval] <- min_pval
 
+# Validate PC1 polarity using gene density before assigning direction.
+# A compartment (positive PC1) should be gene-rich; B compartment (negative PC1)
+# should be gene-poor. HOMER's eigenvector sign is arbitrary — if flipped, the
+# Difference sign and all downstream direction labels will be wrong.
+if (!all(is.na(comp_df$Annotation))) {
+  is_intergenic <- startsWith(comp_df$Annotation, "Intergenic")
+  genic_mean      <- mean(comp_df$ctrl_avg_PC1[!is_intergenic], na.rm = TRUE)
+  intergenic_mean <- mean(comp_df$ctrl_avg_PC1[is_intergenic],  na.rm = TRUE)
+
+  cat(sprintf("\nPC1 polarity check (gene density):\n"))
+  cat(sprintf("  Mean ctrl PC1 (genic bins):      %+.4f\n", genic_mean))
+  cat(sprintf("  Mean ctrl PC1 (intergenic bins):  %+.4f\n", intergenic_mean))
+
+  if (intergenic_mean > genic_mean) {
+    cat("  ** PC1 polarity is FLIPPED — intergenic bins have higher PC1.\n")
+    cat("  ** Correcting: negating ctrl_avg_PC1, mut_avg_PC1, and Difference.\n\n")
+    comp_df$ctrl_avg_PC1 <- -comp_df$ctrl_avg_PC1
+    comp_df$mut_avg_PC1  <- -comp_df$mut_avg_PC1
+    comp_df$Difference   <- -comp_df$Difference
+  } else {
+    cat("  PC1 polarity OK (genic > intergenic).\n\n")
+  }
+} else {
+  cat("\n  Annotation column not available — skipping PC1 polarity check.\n\n")
+}
+
 # Classify compartment shift direction
 # Positive Difference = shift toward A compartment (more active) in mutant
 # Negative Difference = shift toward B compartment (more inactive) in mutant

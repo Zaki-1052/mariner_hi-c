@@ -137,6 +137,27 @@ load_homer <- function(path, autosomes) {
               format(n_auto, big.mark = ","),
               n_raw - n_auto))
 
+  if ("Annotation" %in% names(dt) && !all(is.na(dt$Annotation))) {
+    is_intergenic   <- startsWith(dt$Annotation, "Intergenic")
+    genic_mean      <- mean(dt$ctrl_avg_PC1[!is_intergenic], na.rm = TRUE)
+    intergenic_mean <- mean(dt$ctrl_avg_PC1[is_intergenic],  na.rm = TRUE)
+    cat(sprintf("  Polarity check: genic mean=%+.4f, intergenic mean=%+.4f\n",
+                genic_mean, intergenic_mean))
+
+    if (intergenic_mean > genic_mean) {
+      cat("  ** PC1 polarity FLIPPED — correcting Difference and direction.\n")
+      dt[, ctrl_avg_PC1 := -ctrl_avg_PC1]
+      dt[, mut_avg_PC1  := -mut_avg_PC1]
+      dt[, Difference   := -Difference]
+      dt[, direction := fifelse(Difference > 0,
+                                "B_to_A_in_Mutant", "A_to_B_in_Mutant")]
+      dt[, direction_label := fifelse(Difference > 0,
+                                      "More Active (B->A)", "More Inactive (A->B)")]
+    } else {
+      cat("  Polarity OK (genic > intergenic).\n")
+    }
+  }
+
   dt[, is_significant := (adj_pvalue < HOMER_SIG_FDR & abs(Difference) > HOMER_SIG_DIFF)]
   dt[, calder_bin_start := floor(Start / 100000L) * 100000L + 1L]
   dt

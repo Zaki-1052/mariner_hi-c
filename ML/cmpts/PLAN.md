@@ -34,7 +34,7 @@ The Dixon meeting (2026-04-10) identified subcompartment calling as a key analys
                                      │                                        |
   Track B: SNIPER (Secondary) ───────┼────────────────────────────────────────|
                                      │                                        |
-  B0: Python 3.7 + TF 1.15 env      │                                        |
+  B0: Python 3.6 + TF 1.12 env      │                                        |
   B1: Adapt SNIPER for mm10 ────────>│                                        |
        │                             v                                        |
        └────────────────────> B3: Train SNIPER (2 jobs, 1 per tp)             |
@@ -227,7 +227,7 @@ ML/cmpts/outputs/calder2/
 - Runtime: 2.8 min total (1.5 + 1.4 min per TP). 23,853/23,823 callable bins per TP.
 - SLURM log: `logs/a3_epigenomic_49836042.out`
 
-### A4 — Integration with HOMER A/B Compartments — READY (2026-05-28)
+### A4 — Integration with HOMER A/B Compartments — DONE (2026-05-28)
 
 **Script:** `scripts/A4_integrate_homer_compartments.R` + `scripts/A4_run.sb`
 
@@ -267,6 +267,20 @@ ML/cmpts/outputs/integration/
 
 **SLURM:** `--cpus-per-task=4 --mem=16G --time=02:00:00` (single job, both TPs, ~5 min expected)
 
+**Results (2026-05-28):**
+- Runtime: 0.2 min total. SLURM log: `logs/a4_homer_integration_49838312.out`
+- 250402 (late): 7,575 significant autosomal bins (8,189 total minus 614 on chrX/Y). 0% uncallable. 28.4% true compartment flips (2,152/7,575). B→A bins: 34.7% true B→A, 32.6% stable, 18.4% within-B, 14.2% within-A. A→B bins: 58.6% stable, 14.0% true A→B, 15.2% within-A, 11.3% within-B.
+- 250831 (early): 5,036 significant autosomal bins. 0% uncallable. 29.9% true flips (1,508/5,036).
+- **Polarity discrepancy (early timepoint, initial run):** The early HOMER `direction` column was systematically inverted relative to CALDER2 orientation — HOMER's PC1 eigenvector had the wrong sign for the 250831 analysis. CALDER2 orients against an mm10 reference BED; HOMER does not validate eigenvector polarity. This manifested as HOMER "B→A" bins showing 36.1% `True_A_to_B` by CALDER2 (and only 0.1% `True_B_to_A`).
+- **Fix (2026-05-28):** Added gene-density polarity validation to `compartment_volcano_plot.R` (both copies) and `A4_integrate_homer_compartments.R`. The check compares mean ctrl PC1 for genic vs intergenic bins (A compartment must be gene-rich). If flipped, `ctrl_avg_PC1`, `mut_avg_PC1`, and `Difference` are negated before direction assignment. A4 re-run needed to produce corrected decomposition.
+- Key biological finding: Jesse's hypothesis confirmed at late timepoint — ~71% of significant HOMER bins are NOT true compartment flips. They are quantitative weakening within subcompartments (within-A/B shifts) or subcompartment-stable (PC1 change without label change).
+
+**Verification:**
+- All checks passed for both timepoints
+- 0% uncallable (excellent coordinate join coverage)
+- All 13 output files written (4 TSV + 2 figure dirs per TP + 1 combined TSV)
+- Polarity fix must be validated by re-running A4 on HPC (early TP should now show HOMER/CALDER2 direction agreement)
+
 ---
 
 ## Track B: SNIPER (Secondary Validation)
@@ -275,20 +289,18 @@ ML/cmpts/outputs/integration/
 
 **Script:** `scripts/B0_setup_sniper_env.sh` (interactive, run once)
 
-SNIPER requires legacy Python + TensorFlow. Using TF 1.15 instead of 1.12 (backward-compatible, supports Python 3.7, last TF 1.x release).
+SNIPER requires Python 3.6 + TensorFlow-GPU 1.12.0 (pinned exact versions from upstream `requirements.txt`). Python 3.7 is explicitly unsupported by TF 1.12 via pip. Per README, SNIPER "should work with recent versions of CUDA and cuDNN" beyond the 9.0/7.0.5 it was developed on. Expanse has `cuda/9.1.85`.
 
 ```bash
-conda create -n sniper_env python=3.7 -c conda-forge -y
+conda create -n sniper_env python=3.6.7 -c conda-forge -y
 conda activate sniper_env
-pip install tensorflow==1.15.5 keras==2.2.4 numpy==1.15.4 scipy==1.1.0 \
-            pandas==0.24.2 h5py==2.8.0 PyYAML==4.2b2
+module load cuda/9.1.85
+pip install -r repos/SNIPER/requirements.txt   # tensorflow-gpu==1.12.0
 ```
-
-**Note:** TF 1.15 GPU requires CUDA 10.0 (Expanse has CUDA 11+). Use CPU-only TF 1.15. Training on CPU is feasible — the mm10 inter-chromosomal matrix is ~12.8k × 11.8k entries, and the autoencoder has ~15M parameters. Training takes 12-20h on CPU.
 
 **juicer_tools:** SNIPER calls `java -jar {juicer_tools} dump observed KR {hic} {chr1} {chr2} BP 100000 {output}`. Need juicer_tools.jar on HPC. Check existing paths: `lab/pipeline-scripts/juicer.sb` uses Singularity container (`juicer_2.0.1.sif`), but SNIPER needs the JAR directly. Verify/locate: the tads pipeline extracts via `straw` (R), but SNIPER needs the Java `dump` command.
 
-**Verification:** `python -c "import tensorflow as tf; print(tf.__version__)"` → `1.15.5`
+**Verification:** `python -c "import tensorflow as tf; print(tf.__version__)"` → `1.12.0`
 
 ### B1 — Adapt SNIPER for mm10 — PENDING
 
@@ -773,4 +785,4 @@ Total wall time: ~3 days with no failures. Track A alone completes in 1.5 days.
 
 3. **CALDER2 conda install** — Verify whether `conda install -c bioconda r-calder2` works on Expanse, or if local source install (`install.packages("path/to/CALDER2", repos=NULL, type="source")`) is needed. The cloned repo at `ML/cmpts/repos/CALDER2/` can be installed directly.
 
-4. **TF 1.15 + Python 3.7 on Expanse** — Verify conda-forge still has Python 3.7 packages. If not, fall back to Python 3.6 + TF 1.12.2 (CPU).
+4. **TF 1.12 + Python 3.6 on Expanse** — Verify conda-forge still has Python 3.6.7 packages. SNIPER requires Python 3.6 + TF-GPU 1.12.0 per upstream `requirements.txt`. CUDA 9.1.85 available on Expanse (`module load cuda/9.1.85`); need to confirm cuDNN availability.
