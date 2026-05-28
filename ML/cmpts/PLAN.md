@@ -309,11 +309,13 @@ conda install "cudnn>=7,<8" -c nvidia  # TF 1.12 needs cuDNN 7.x; version resolv
 
 **Verification:** `python -c "import tensorflow as tf; print(tf.__version__); print(tf.test.is_gpu_available())"` → `1.12.0`, `True`
 
-### B1 — Adapt SNIPER for mm10 — PENDING
+### B1 — Adapt SNIPER for mm10 — CODE WRITTEN (2026-05-28)
 
-**Script:** `scripts/B1_adapt_sniper_mm10.py` (one-time utility, run interactively or as SLURM job)
+**Script:** `scripts/B1_adapt_sniper_mm10.py` + `scripts/B1_generate_cropmap.sb` (SLURM job)
 
 This creates mm10-adapted copies of SNIPER's core modules. We modify copies, not the original SNIPER source, to preserve the upstream repo.
+
+**Status (2026-05-28):** All 7 files written and import-tested locally. The 5 mm10-adapted modules (`utilities/mm10_config.py`, `utilities/data_processing_mm10.py`, `utilities/interchromosome_matrix_mm10.py`, `sniper_train_mm10.py`, `sniper_apply_mm10.py`) pass all local verification tests. The circular import between `data_processing_mm10` ↔ `interchromosome_matrix_mm10` is resolved via lazy import in `constructAndSave()`. Crop map generation (`B1_adapt_sniper_mm10.py` + `B1_generate_cropmap.sb`) awaits HPC execution — submit via `sbatch B1_generate_cropmap.sb 250831` (or 250402).
 
 **Files to create in `ML/cmpts/repos/SNIPER/`:**
 

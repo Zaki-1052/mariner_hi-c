@@ -1,0 +1,79 @@
+#!/bin/bash
+# ML/cmpts/scripts/B1_generate_cropmap.sb
+# Stage B1: Generate mm10 crop map for SNIPER from ctrl_merged.hic.
+# Usage: sbatch B1_generate_cropmap.sb <timepoint>
+#   <timepoint> : 250402 | 250831
+#SBATCH --job-name=b1_cropmap
+#SBATCH --output=b1_cropmap_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+TP="${1:?usage: sbatch B1_generate_cropmap.sb <timepoint>}"
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
+HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+
+case "${TP}" in
+  250402) TP_DIR="late" ;;
+  250831) TP_DIR="early" ;;
+  *) echo "ERROR: Unknown timepoint ${TP}" >&2; exit 1 ;;
+esac
+
+HIC="${HIC_ROOT}/${TP}/ctrl_merged.hic"
+BLACKLIST="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/mm10-blacklist.v2.bed"
+OUTPUT_DIR="${CODE_DIR}/repos/SNIPER/crop_map"
+TMP_DIR="${DATA_DIR}/sniper_mm10/dump_cropmap"
+SCRIPT="${CODE_DIR}/scripts/B1_adapt_sniper_mm10.py"
+
+mkdir -p "${TMP_DIR}" "${OUTPUT_DIR}" "${CODE_DIR}/logs"
+
+echo "==========================================="
+echo "B1: SNIPER mm10 Crop Map Generation"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Timepoint:  ${TP}"
+echo "HiC:        ${HIC}"
+echo "Blacklist:  ${BLACKLIST}"
+echo "Output:     ${OUTPUT_DIR}"
+echo "Tmp dir:    ${TMP_DIR}"
+echo "Start:      $(date)"
+echo "==========================================="
+
+if [ ! -s "${HIC}" ]; then
+  echo "ERROR: missing or empty .hic: ${HIC}" >&2
+  exit 2
+fi
+
+if [ ! -f "${BLACKLIST}" ]; then
+  echo "ERROR: blacklist not found: ${BLACKLIST}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+module load singularitypro
+conda activate sniper_env
+
+python "${SCRIPT}" \
+  "${HIC}" \
+  "${BLACKLIST}" \
+  "${OUTPUT_DIR}" \
+  --tmp-dir "${TMP_DIR}"
+
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: B1_adapt_sniper_mm10.py failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+echo ""
+echo "End: $(date)"
+echo "==========================================="
