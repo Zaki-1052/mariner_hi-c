@@ -13,8 +13,8 @@
 #     <code_root> : repo directory (e.g. /expanse/.../mariner_hi-c/ML/cmpts)
 
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) != 4) {
-  stop("Usage: Rscript A1_run_calder2.R <timepoint> <sample> <data_root> <code_root>")
+if (length(args) < 4) {
+  stop("Usage: Rscript A1_run_calder2.R <timepoint> <sample> <data_root> <code_root> [hic_path]")
 }
 
 TP        <- args[1]
@@ -23,7 +23,11 @@ DATA_ROOT <- args[3]
 CODE_ROOT <- args[4]
 
 HIC_ROOT <- "/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
-hic_path <- file.path(HIC_ROOT, TP, paste0(SAMPLE, ".hic"))
+if (length(args) >= 5 && nzchar(args[5])) {
+  hic_path <- args[5]
+} else {
+  hic_path <- file.path(HIC_ROOT, TP, paste0(SAMPLE, ".hic"))
+}
 work_dir <- file.path(DATA_ROOT, "calder2", TP, SAMPLE)
 repo_dir <- file.path(CODE_ROOT, "outputs", "calder2", TP, SAMPLE)
 

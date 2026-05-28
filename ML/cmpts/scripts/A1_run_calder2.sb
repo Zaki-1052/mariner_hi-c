@@ -1,9 +1,10 @@
 #!/bin/bash
 # ML/cmpts/scripts/A1_run_calder2.sb
 # Stage A1: Run CALDER2 subcompartment calling on a single sample.
-# Usage: sbatch A1_run_calder2.sb <timepoint> <sample>
-#   <timepoint> : 250402 | 250831
-#   <sample>    : ctrl_merged | mut_merged
+# Usage: sbatch A1_run_calder2.sb <timepoint> <sample> [hic_override]
+#   <timepoint>    : 250402 | 250831
+#   <sample>       : ctrl_merged | mut_merged
+#   [hic_override] : optional path to .hic file (overrides default HIC_ROOT/tp/sample.hic)
 #SBATCH --job-name=calder2
 #SBATCH --output=calder2_%j.out
 #SBATCH --partition=shared
@@ -14,14 +15,19 @@
 #SBATCH --time=12:00:00
 #SBATCH --account=csd940
 
-TP="${1:?usage: sbatch A1_run_calder2.sb <timepoint> <sample>}"
-SAMPLE="${2:?usage: sbatch A1_run_calder2.sb <timepoint> <sample>}"
+TP="${1:?usage: sbatch A1_run_calder2.sb <timepoint> <sample> [hic_override]}"
+SAMPLE="${2:?usage: sbatch A1_run_calder2.sb <timepoint> <sample> [hic_override]}"
+HIC_OVERRIDE="${3:-}"
 
 CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
 DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
 HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
 
-HIC="${HIC_ROOT}/${TP}/${SAMPLE}.hic"
+if [ -n "${HIC_OVERRIDE}" ]; then
+  HIC="${HIC_OVERRIDE}"
+else
+  HIC="${HIC_ROOT}/${TP}/${SAMPLE}.hic"
+fi
 WORK_DIR="${DATA_DIR}/calder2/${TP}/${SAMPLE}"
 
 mkdir -p "${WORK_DIR}" "${CODE_DIR}/logs" "${CODE_DIR}/outputs/calder2/${TP}/${SAMPLE}"
@@ -48,7 +54,7 @@ fi
 source ~/.bashrc
 conda activate calder2_env
 
-Rscript "${CODE_DIR}/scripts/A1_run_calder2.R" "${TP}" "${SAMPLE}" "${DATA_DIR}" "${CODE_DIR}"
+Rscript "${CODE_DIR}/scripts/A1_run_calder2.R" "${TP}" "${SAMPLE}" "${DATA_DIR}" "${CODE_DIR}" "${HIC}"
 STATUS=$?
 
 if [ ${STATUS} -ne 0 ]; then

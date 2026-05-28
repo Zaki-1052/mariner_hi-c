@@ -294,8 +294,9 @@ SNIPER requires Python 3.6 + TensorFlow-GPU 1.12.0 (pinned exact versions from u
 ```bash
 conda create -n sniper_env python=3.6.7 -c conda-forge -y
 conda activate sniper_env
-module load cuda/9.1.85
+module load gpu/0.15.4 gcc/7.2.0 cuda/9.1.85
 pip install -r repos/SNIPER/requirements.txt   # tensorflow-gpu==1.12.0
+pip install PyYAML==5.4.1                      # requirements.txt pins 3.13, which fails to compile on Expanse gcc 7.2.0; 5.4.1 has a pre-built wheel
 ```
 
 **juicer_tools:** SNIPER calls `java -jar {juicer_tools} dump observed KR {hic} {chr1} {chr2} BP 100000 {output}`. The JAR is inside the Singularity container at `/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif` — paths `/opt/juicer/CPU/common/juicer_tools.jar` and `/opt/scripts/common/juicer_tools.jar` (used by `abc/scripts/addnorm.sb`). SNIPER's `data_processing.py:45` shells out via `os.system()`, so the mm10 adapter will need to wrap calls through `singularity exec --bind /scratch,/expanse {container} java -jar {jar} dump ...`.
