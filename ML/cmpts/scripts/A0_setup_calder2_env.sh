@@ -62,7 +62,7 @@ echo "[3/3] Installing R packages via ${INSTALL_SCRIPT}..."
 eval "$(conda shell.bash hook 2>/dev/null)"
 conda activate "${ENV_NAME}"
 
-Rscript --vanilla "${INSTALL_SCRIPT}" "${CALDER2_SRC}"
+Rscript "${INSTALL_SCRIPT}" "${CALDER2_SRC}"
 
 echo ""
 echo "==========================================="

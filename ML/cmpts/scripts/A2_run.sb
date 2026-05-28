@@ -34,17 +34,7 @@ echo "==========================================="
 source ~/.bashrc
 conda activate calder2_env
 
-Rscript --vanilla -e "
-  if (!requireNamespace('ggalluvial', quietly=TRUE)) {
-    install.packages('ggalluvial', repos='https://cloud.r-project.org')
-  }
-  if (!requireNamespace('svglite', quietly=TRUE)) {
-    install.packages('svglite', repos='https://cloud.r-project.org')
-  }
-  cat('Package check complete\n')
-"
-
-Rscript --vanilla "${CODE_DIR}/scripts/A2_differential_subcompartments.R" \
+Rscript "${CODE_DIR}/scripts/A2_differential_subcompartments.R" \
   "${TP}" "${DATA_DIR}" "${CODE_DIR}"
 STATUS=$?
 

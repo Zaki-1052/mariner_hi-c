@@ -6,7 +6,7 @@
 # for local rsync.
 #
 # Usage:
-#   Rscript --vanilla A1_run_calder2.R <timepoint> <sample> <data_root> <code_root>
+#   Rscript A1_run_calder2.R <timepoint> <sample> <data_root> <code_root>
 #     <timepoint> : 250402 | 250831
 #     <sample>    : ctrl_merged | mut_merged
 #     <data_root> : HPC data directory (e.g. /expanse/.../sniper)

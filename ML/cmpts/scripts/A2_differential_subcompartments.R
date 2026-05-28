@@ -6,7 +6,7 @@
 # comparing ctrl vs mut subcompartment assignments.
 #
 # Usage:
-#   Rscript --vanilla A2_differential_subcompartments.R <timepoint> <data_root> <code_root>
+#   Rscript A2_differential_subcompartments.R <timepoint> <data_root> <code_root>
 #     <timepoint> : 250402 | 250831
 #     <data_root> : HPC data directory (kept for CLI consistency with A1)
 #     <code_root> : repo directory (e.g. /expanse/.../mariner_hi-c/ML/cmpts)
