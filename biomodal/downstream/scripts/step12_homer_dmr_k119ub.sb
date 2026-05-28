@@ -1,0 +1,341 @@
+#!/bin/bash
+# biomodal/downstream/scripts/step12_homer_dmr_k119ub.sb
+#SBATCH --job-name=homer_dmr_k119ub
+#SBATCH --output=logs/homer_dmr_k119ub_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+
+echo "================================================================="
+echo "HOMER TF Motif Enrichment — DMRs + H2AK119ub Sites"
+echo "================================================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "================================================================="
+echo ""
+
+source ~/.bashrc
+source activate homer1
+
+# ─────────────────────────────────────────────────────────────────────
+# Configuration
+# ─────────────────────────────────────────────────────────────────────
+
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+DMR_BED_DIR="${BASE_DIR}/biomodal/downstream/modality/DMR_processed/CG/genes/bed"
+K119UB_DIR="${BASE_DIR}/peaks/new"
+DIFFBIND_FILE="${BASE_DIR}/peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt"
+COORD_CHARS="${BASE_DIR}/biomodal/downstream/plots/visualizations/tables/coordinated_gene_characteristics.tsv"
+OUTPUT_BASE="${BASE_DIR}/biomodal/downstream/results/homer_motif_enrichment"
+BED_DIR="${OUTPUT_BASE}/beds"
+GENOME="mm10"
+CPUS=${SLURM_CPUS_PER_TASK:-8}
+
+echo "Configuration:"
+echo "  DMR BED dir:  ${DMR_BED_DIR}"
+echo "  K119ub dir:   ${K119UB_DIR}"
+echo "  DiffBind:     ${DIFFBIND_FILE}"
+echo "  Coordinated:  ${COORD_CHARS}"
+echo "  Output base:  ${OUTPUT_BASE}"
+echo "  Genome:       ${GENOME}"
+echo "  CPUs:         ${CPUS}"
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────
+# Input validation
+# ─────────────────────────────────────────────────────────────────────
+
+echo "Input validation:"
+REQUIRED_SOURCES=(
+    "${DMR_BED_DIR}/mc_significant_hyper.bed"
+    "${DMR_BED_DIR}/mc_significant_hypo.bed"
+    "${DMR_BED_DIR}/hmc_significant_hyper.bed"
+    "${DMR_BED_DIR}/hmc_significant_hypo.bed"
+    "${K119UB_DIR}/H2AK119ub_up.bed"
+    "${K119UB_DIR}/H2AK119ub_down.bed"
+    "${DIFFBIND_FILE}"
+    "${COORD_CHARS}"
+)
+
+MISSING=0
+for SRC in "${REQUIRED_SOURCES[@]}"; do
+    if [ ! -s "${SRC}" ]; then
+        echo "  ERROR: Missing or empty: ${SRC}"
+        MISSING=$((MISSING + 1))
+    else
+        COUNT=$(wc -l < "${SRC}")
+        echo "  OK: $(basename "${SRC}") (${COUNT} lines)"
+    fi
+done
+
+if [ ${MISSING} -gt 0 ]; then
+    echo ""
+    echo "ERROR: ${MISSING} required source file(s) missing. Exiting."
+    exit 1
+fi
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────
+# Part 1: Prepare BED files for HOMER
+# ─────────────────────────────────────────────────────────────────────
+
+echo "================================================================="
+echo "Part 1: Preparing BED files"
+echo "================================================================="
+echo ""
+
+mkdir -p "${BED_DIR}"
+
+# --- A1-A4: DMR BEDs (add chr prefix, extract BED3, skip header) ---
+
+echo "Converting DMR BEDs (adding chr prefix)..."
+
+awk -F'\t' 'NR>1 {print "chr"$1"\t"$2"\t"$3}' \
+    "${DMR_BED_DIR}/mc_significant_hyper.bed" > "${BED_DIR}/mc_hyper_homer.bed"
+
+awk -F'\t' 'NR>1 {print "chr"$1"\t"$2"\t"$3}' \
+    "${DMR_BED_DIR}/mc_significant_hypo.bed" > "${BED_DIR}/mc_hypo_homer.bed"
+
+awk -F'\t' 'NR>1 {print "chr"$1"\t"$2"\t"$3}' \
+    "${DMR_BED_DIR}/hmc_significant_hyper.bed" > "${BED_DIR}/hmc_hyper_homer.bed"
+
+awk -F'\t' 'NR>1 {print "chr"$1"\t"$2"\t"$3}' \
+    "${DMR_BED_DIR}/hmc_significant_hypo.bed" > "${BED_DIR}/hmc_hypo_homer.bed"
+
+echo "  mc_hyper_homer.bed:  $(wc -l < "${BED_DIR}/mc_hyper_homer.bed") regions"
+echo "  mc_hypo_homer.bed:   $(wc -l < "${BED_DIR}/mc_hypo_homer.bed") regions"
+echo "  hmc_hyper_homer.bed: $(wc -l < "${BED_DIR}/hmc_hyper_homer.bed") regions"
+echo "  hmc_hypo_homer.bed:  $(wc -l < "${BED_DIR}/hmc_hypo_homer.bed") regions"
+echo ""
+
+# --- A5: Coordinated (Q4) vs discordant (Q2) gene body BEDs ---
+# coordinated_gene_characteristics.tsv col5 = quadrant
+# mc_significant_hyper.bed col14 = gene name (Name)
+# mc_significant_hypo.bed col14 = gene name (Name)
+
+echo "Extracting coordinated (Q4: mC up/hmC dn) and discordant (Q2: mC dn/hmC up) BEDs..."
+
+awk -F'\t' '
+    NR==FNR && FNR>1 && $5=="Q4: mC up/hmC dn" {genes[$1]=1; next}
+    NR!=FNR && FNR>1 && ($14 in genes) {print "chr"$1"\t"$2"\t"$3}
+' "${COORD_CHARS}" "${DMR_BED_DIR}/mc_significant_hyper.bed" \
+    > "${BED_DIR}/coordinated_q4.bed"
+
+awk -F'\t' '
+    NR==FNR && FNR>1 && $5=="Q2: mC dn/hmC up" {genes[$1]=1; next}
+    NR!=FNR && FNR>1 && ($14 in genes) {print "chr"$1"\t"$2"\t"$3}
+' "${COORD_CHARS}" "${DMR_BED_DIR}/mc_significant_hypo.bed" \
+    > "${BED_DIR}/discordant_q2.bed"
+
+echo "  coordinated_q4.bed:  $(wc -l < "${BED_DIR}/coordinated_q4.bed") regions"
+echo "  discordant_q2.bed:   $(wc -l < "${BED_DIR}/discordant_q2.bed") regions"
+echo ""
+
+# --- B1-B2: K119ub differential peaks (already HOMER-ready) ---
+
+echo "Copying K119ub differential peak BEDs..."
+
+cp "${K119UB_DIR}/H2AK119ub_up.bed"   "${BED_DIR}/k119ub_gained.bed"
+cp "${K119UB_DIR}/H2AK119ub_down.bed"  "${BED_DIR}/k119ub_lost.bed"
+
+echo "  k119ub_gained.bed:   $(wc -l < "${BED_DIR}/k119ub_gained.bed") regions"
+echo "  k119ub_lost.bed:     $(wc -l < "${BED_DIR}/k119ub_lost.bed") regions"
+echo ""
+
+# --- B3-B4: DiffBind summit windows (FDR < 0.05, canonical chr only) ---
+# DiffBind cols: 1=Summit_Chr 2=Summit_Start 3=Summit_End ... 12=Fold 14=FDR
+# Summit windows are already 400bp with chr prefix
+
+echo "Extracting DiffBind significant summit windows (FDR < 0.05)..."
+
+awk -F'\t' 'NR>1 && $1~/^chr[0-9XY]+$/ && $14+0 < 0.05 && $12+0 > 0 {
+    print $1"\t"$2"\t"$3
+}' "${DIFFBIND_FILE}" > "${BED_DIR}/diffbind_gained_fdr05.bed"
+
+awk -F'\t' 'NR>1 && $1~/^chr[0-9XY]+$/ && $14+0 < 0.05 && $12+0 < 0 {
+    print $1"\t"$2"\t"$3
+}' "${DIFFBIND_FILE}" > "${BED_DIR}/diffbind_lost_fdr05.bed"
+
+echo "  diffbind_gained_fdr05.bed: $(wc -l < "${BED_DIR}/diffbind_gained_fdr05.bed") regions"
+echo "  diffbind_lost_fdr05.bed:   $(wc -l < "${BED_DIR}/diffbind_lost_fdr05.bed") regions"
+echo ""
+
+# --- Validate all prepared BEDs ---
+
+echo "Final BED validation:"
+ALL_VALID=1
+for BED_FILE in mc_hyper_homer.bed mc_hypo_homer.bed hmc_hyper_homer.bed hmc_hypo_homer.bed \
+                coordinated_q4.bed discordant_q2.bed \
+                k119ub_gained.bed k119ub_lost.bed \
+                diffbind_gained_fdr05.bed diffbind_lost_fdr05.bed; do
+    FPATH="${BED_DIR}/${BED_FILE}"
+    if [ ! -s "${FPATH}" ]; then
+        echo "  ERROR: ${BED_FILE} is empty or missing"
+        ALL_VALID=0
+    fi
+done
+
+if [ ${ALL_VALID} -eq 0 ]; then
+    echo "ERROR: One or more prepared BED files are empty. Exiting."
+    exit 1
+fi
+echo "  All 10 BED files validated."
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────
+# Part 2: Run HOMER findMotifsGenome.pl
+# ─────────────────────────────────────────────────────────────────────
+
+echo "================================================================="
+echo "Part 2: HOMER Motif Enrichment"
+echo "================================================================="
+echo ""
+
+# Format: "foreground.bed|background.bed_or_GENOME|output_dir_name"
+# GENOME = use default genome background (no -bg flag)
+COMPARISONS=(
+    "mc_hyper_homer.bed|GENOME|A1_mc_hyper_vs_genome"
+    "mc_hypo_homer.bed|GENOME|A2_mc_hypo_vs_genome"
+    "hmc_hyper_homer.bed|GENOME|A3_hmc_hyper_vs_genome"
+    "hmc_hypo_homer.bed|GENOME|A4_hmc_hypo_vs_genome"
+    "coordinated_q4.bed|discordant_q2.bed|A5_coordinated_vs_discordant"
+    "k119ub_gained.bed|k119ub_lost.bed|B1_k119ub_gained_vs_lost"
+    "k119ub_lost.bed|k119ub_gained.bed|B2_k119ub_lost_vs_gained"
+    "diffbind_gained_fdr05.bed|diffbind_lost_fdr05.bed|B3_diffbind_gained_vs_lost"
+    "diffbind_lost_fdr05.bed|diffbind_gained_fdr05.bed|B4_diffbind_lost_vs_gained"
+)
+
+FAILED=0
+TOTAL=${#COMPARISONS[@]}
+
+for i in "${!COMPARISONS[@]}"; do
+    IFS='|' read -r FG_FILE BG_SPEC OUTDIR <<< "${COMPARISONS[$i]}"
+    RUN_NUM=$((i + 1))
+    OUTPATH="${OUTPUT_BASE}/${OUTDIR}"
+
+    echo "========================================="
+    echo "Run ${RUN_NUM}/${TOTAL}: ${OUTDIR}"
+    echo "========================================="
+    echo "  Foreground:  ${FG_FILE} ($(wc -l < "${BED_DIR}/${FG_FILE}") regions)"
+
+    if [ "${BG_SPEC}" = "GENOME" ]; then
+        echo "  Background:  genome (auto-sampled)"
+    else
+        echo "  Background:  ${BG_SPEC} ($(wc -l < "${BED_DIR}/${BG_SPEC}") regions)"
+    fi
+
+    echo "  Output:      ${OUTPATH}"
+    echo "  Start:       $(date)"
+    echo ""
+
+    mkdir -p "${OUTPATH}"
+
+    if [ "${BG_SPEC}" = "GENOME" ]; then
+        findMotifsGenome.pl \
+            "${BED_DIR}/${FG_FILE}" \
+            "${GENOME}" \
+            "${OUTPATH}" \
+            -size given \
+            -mask \
+            -p ${CPUS}
+    else
+        findMotifsGenome.pl \
+            "${BED_DIR}/${FG_FILE}" \
+            "${GENOME}" \
+            "${OUTPATH}" \
+            -bg "${BED_DIR}/${BG_SPEC}" \
+            -size given \
+            -mask \
+            -p ${CPUS}
+    fi
+
+    EXIT_CODE=$?
+
+    if [ ${EXIT_CODE} -ne 0 ]; then
+        echo "  FAILED (exit code ${EXIT_CODE})"
+        FAILED=$((FAILED + 1))
+    else
+        echo "  Complete: $(date)"
+    fi
+    echo ""
+done
+
+# ─────────────────────────────────────────────────────────────────────
+# Part 3: Results Summary
+# ─────────────────────────────────────────────────────────────────────
+
+echo "================================================================="
+echo "Results Summary"
+echo "================================================================="
+echo ""
+
+MOTIFS_OF_INTEREST=(
+    "REST" "NRSF" "YY1" "SUZ12" "EZH2"
+    "NeuroD" "MEF2" "CREB" "Brn2" "POU3F2"
+    "FOXK1" "FOXK2" "ASXL"
+    "CXXC" "IDAX" "TET"
+)
+
+for i in "${!COMPARISONS[@]}"; do
+    IFS='|' read -r FG_FILE BG_SPEC OUTDIR <<< "${COMPARISONS[$i]}"
+    OUTPATH="${OUTPUT_BASE}/${OUTDIR}"
+    KNOWN="${OUTPATH}/knownResults.txt"
+
+    echo "--- ${OUTDIR} ---"
+
+    if [ -f "${KNOWN}" ]; then
+        SIG_COUNT=$(awk -F'\t' 'NR>1 && $6+0 < 0.05' "${KNOWN}" | wc -l | tr -d ' ')
+        echo "  Significant known motifs (q < 0.05): ${SIG_COUNT}"
+
+        echo "  Top 5 known motifs:"
+        awk -F'\t' 'NR>1 && NR<=6 {printf "    %s  p=%s  q=%s\n", $1, $3, $6}' "${KNOWN}"
+
+        echo "  Motifs of interest:"
+        for MOTIF in "${MOTIFS_OF_INTEREST[@]}"; do
+            HIT=$(grep -i "${MOTIF}" "${KNOWN}" | head -1)
+            if [ -n "${HIT}" ]; then
+                MOT_NAME=$(echo "${HIT}" | cut -f1)
+                MOT_P=$(echo "${HIT}" | cut -f3)
+                MOT_Q=$(echo "${HIT}" | cut -f6)
+                echo "    ${MOTIF}: ${MOT_NAME}  p=${MOT_P}  q=${MOT_Q}"
+            fi
+        done
+
+        DENOVO_COUNT=$(ls "${OUTPATH}"/homerResults/motif*.motif 2>/dev/null | wc -l | tr -d ' ')
+        echo "  De novo motifs found: ${DENOVO_COUNT}"
+    else
+        echo "  WARNING: knownResults.txt not found"
+    fi
+    echo ""
+done
+
+# ─────────────────────────────────────────────────────────────────────
+# Final status
+# ─────────────────────────────────────────────────────────────────────
+
+echo "================================================================="
+if [ ${FAILED} -eq 0 ]; then
+    echo "All ${TOTAL} HOMER runs completed successfully."
+else
+    echo "${FAILED}/${TOTAL} HOMER runs FAILED."
+fi
+echo ""
+echo "Output directory: ${OUTPUT_BASE}"
+echo ""
+echo "Next steps:"
+echo "  1. Review HTML reports: \${OUTPUT_BASE}/*/knownResults.html"
+echo "  2. Transfer results to local:"
+echo "     scp -r expanse:${OUTPUT_BASE} biomodal/downstream/results/"
+echo "  3. Check B1/B3 (K119ub gained) for Polycomb-related motifs (REST, YY1, SUZ12)"
+echo "  4. Check A1/A5 (mC hyper/coordinated) for neuron-specific TFs (NeuroD, MEF2, CREB)"
+echo "  5. Compare A1 vs A2 for direction-specific motif enrichment"
+echo ""
+echo "End time: $(date)"
+echo "================================================================="
+
+exit ${FAILED}

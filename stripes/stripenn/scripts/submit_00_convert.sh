@@ -17,11 +17,19 @@ mkdir -p "${LOG_DIR}"
 
 # Pass-through dependency flag (optional).
 DEP_ARG=""
-if [[ "${1:-}" == --dependency=* ]]; then
-  DEP_ARG="$1"
-fi
+TP_FILTER=""
+for arg in "$@"; do
+  case "$arg" in
+    --dependency=*) DEP_ARG="$arg" ;;
+    --timepoint=*)  TP_FILTER="${arg#--timepoint=}" ;;
+  esac
+done
 
-TIMEPOINTS=("250831" "250402")
+if [ -n "${TP_FILTER}" ]; then
+  TIMEPOINTS=("${TP_FILTER}")
+else
+  TIMEPOINTS=("250831" "250402")
+fi
 SAMPLES=("ctrl_M1" "ctrl_M2" "ctrl_M3" "ctrl_merged" \
          "mut_M1"  "mut_M2"  "mut_M3"  "mut_merged")
 

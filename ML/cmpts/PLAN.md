@@ -285,23 +285,29 @@ ML/cmpts/outputs/integration/
 
 ## Track B: SNIPER (Secondary Validation)
 
-### B0 — Environment Setup — PENDING
+### B0 — Environment Setup — DONE (2026-05-28)
 
 **Script:** `scripts/B0_setup_sniper_env.sh` (interactive, run once)
 
-SNIPER requires Python 3.6 + TensorFlow-GPU 1.12.0 (pinned exact versions from upstream `requirements.txt`). Python 3.7 is explicitly unsupported by TF 1.12 via pip. Per README, SNIPER "should work with recent versions of CUDA and cuDNN" beyond the 9.0/7.0.5 it was developed on. Expanse has `cuda/9.1.85`.
+SNIPER requires Python 3.6 + TensorFlow-GPU 1.12.0 (pinned exact versions from upstream `requirements.txt`). Python 3.7 is explicitly unsupported by TF 1.12 via pip.
 
+**Status:** `sniper_env` conda env created. TF-GPU 1.12.0 verified on Tesla V100-SXM2-32GB (gpu-debug partition, 31.7GB VRAM). No system CUDA modules needed — CUDA 9.0 runtime and cuDNN 7.x installed via conda into the env.
+
+**Setup steps (run interactively on login node, except GPU test on gpu-debug):**
 ```bash
 conda create -n sniper_env python=3.6.7 -c conda-forge -y
 conda activate sniper_env
-module load gpu/0.15.4 gcc/7.2.0 cuda/9.1.85
-pip install -r repos/SNIPER/requirements.txt   # tensorflow-gpu==1.12.0
-pip install PyYAML==5.4.1                      # requirements.txt pins 3.13, which fails to compile on Expanse gcc 7.2.0; 5.4.1 has a pre-built wheel
+grep -v PyYAML repos/SNIPER/requirements.txt | pip install -r /dev/stdin
+pip install PyYAML==5.4.1              # 3.13 fails to compile on Expanse gcc 7.2.0; 5.4.1 has a pre-built wheel
+conda install cudatoolkit=9.0 -c nvidia
+conda install "cudnn>=7,<8" -c nvidia  # TF 1.12 needs cuDNN 7.x; version resolved by conda against cudatoolkit 9.0
 ```
 
-**juicer_tools:** SNIPER calls `java -jar {juicer_tools} dump observed KR {hic} {chr1} {chr2} BP 100000 {output}`. The JAR is inside the Singularity container at `/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif` — paths `/opt/juicer/CPU/common/juicer_tools.jar` and `/opt/scripts/common/juicer_tools.jar` (used by `abc/scripts/addnorm.sb`). SNIPER's `data_processing.py:45` shells out via `os.system()`, so the mm10 adapter will need to wrap calls through `singularity exec --bind /scratch,/expanse {container} java -jar {jar} dump ...`.
+**GPU partition for SLURM jobs:** `--partition=gpu-shared --gpus=1` (or `gpu-debug` for interactive testing, 30 min max). No `module load cuda` needed — conda env provides CUDA/cuDNN runtime libraries.
 
-**Verification:** `python -c "import tensorflow as tf; print(tf.__version__)"` → `1.12.0`
+**juicer_tools:** SNIPER calls `java -jar {juicer_tools} dump observed KR {hic} {chr1} {chr2} BP 100000 {output}`. The JAR is inside the Singularity container at `/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif` — path `/opt/juicer/CPU/common/juicer_tools.jar` (also at `/opt/scripts/common/juicer_tools.jar`, used by `abc/scripts/addnorm.sb`). SNIPER's `data_processing.py:45` shells out via `os.system()`, so the mm10 adapter will need to wrap calls through `singularity exec --bind /scratch,/expanse {container} java -jar {jar} dump ...`.
+
+**Verification:** `python -c "import tensorflow as tf; print(tf.__version__); print(tf.test.is_gpu_available())"` → `1.12.0`, `True`
 
 ### B1 — Adapt SNIPER for mm10 — PENDING
 
@@ -406,7 +412,7 @@ SNIPER's classifier has 5 output neurons (A1/A2/B1/B2/B3). Since mm10 lacks B3, 
 
 **Training split:** `inputM[:7000] / inputM[7000:]` (hardcoded in `pipeline/training.py`). mm10 has ~12,808 odd bins pre-crop → after crop ~9-11k → safely above 7000.
 
-**SLURM:** `--cpus-per-task=16 --mem=96G --time=24:00:00 --account=csd940 --partition=shared`
+**SLURM:** `--cpus-per-task=8 --mem=32G --gpus=1 --time=04:00:00 --account=csd940 --partition=gpu-shared`
 
 **Outputs per timepoint:**
 ```
@@ -423,7 +429,7 @@ DATA_DIR/sniper_mm10/models_{tp}/
 
 4 jobs: {ctrl_merged, mut_merged} × {250402, 250831}. Uses timepoint-specific trained models.
 
-**SLURM:** `--cpus-per-task=8 --mem=64G --time=08:00:00`
+**SLURM:** `--cpus-per-task=8 --mem=32G --gpus=1 --time=02:00:00 --partition=gpu-shared`
 
 **Outputs:**
 ```
@@ -521,7 +527,8 @@ sniper:
   resolution: 100000
   conda_env: "sniper_env"
   n_classes: 4
-  juicer_tools: "/path/to/juicer_tools.jar"
+  juicer_container: "/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif"
+  juicer_tools_jar: "/opt/juicer/CPU/common/juicer_tools.jar"
 
 existing:
   homer_compartments: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis/compartment_all_annotated.tsv"
@@ -554,8 +561,8 @@ slurm:
   A3_epigenomic: { cpus: 8, mem: "32G", time: "04:00:00" }
   A4_homer: { cpus: 4, mem: "16G", time: "02:00:00" }
   B1_cropmap: { cpus: 8, mem: "64G", time: "04:00:00" }
-  B3_train: { cpus: 16, mem: "96G", time: "24:00:00" }
-  B4_apply: { cpus: 8, mem: "64G", time: "08:00:00" }
+  B3_train: { cpus: 8, mem: "32G", gpus: 1, time: "04:00:00", partition: "gpu-shared" }
+  B4_apply: { cpus: 8, mem: "32G", gpus: 1, time: "02:00:00", partition: "gpu-shared" }
 
 filtering:
   exclude_chromosomes: ["X", "Y", "M"]
@@ -584,7 +591,7 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 │   ├── A3_run.sb                         # SLURM wrapper (8c/32G/4h)
 │   ├── A4_integrate_homer_compartments.R # HOMER 25kb A/B × CALDER2 100kb
 │   ├── A4_run.sb                         # SLURM wrapper (4c/16G/2h)
-│   ├── B0_setup_sniper_env.sh            # Interactive: Python 3.7 + TF 1.15
+│   ├── B0_setup_sniper_env.sh            # Interactive: Python 3.6 + TF-GPU 1.12
 │   ├── B1_adapt_sniper_mm10.py           # Generate mm10 variants + crop map
 │   ├── B1_generate_cropmap.sb            # SLURM worker (8c/64G/4h)
 │   ├── B2_generate_labels_from_calder2.R # CALDER2 → SNIPER .mat labels
@@ -710,7 +717,7 @@ Same pattern. B1 (cropmap) → B2 → B3 → B4 → B5. B2 depends on A2 complet
 | `scripts/A3_run.sb` | A | SLURM | Wrapper |
 | `scripts/A4_integrate_homer_compartments.R` | A | R | HOMER integration |
 | `scripts/A4_run.sb` | A | SLURM | Wrapper |
-| `scripts/B0_setup_sniper_env.sh` | B | Setup | Python 3.7 + TF 1.15 |
+| `scripts/B0_setup_sniper_env.sh` | B | Setup | Python 3.6 + TF-GPU 1.12 |
 | `scripts/B1_adapt_sniper_mm10.py` | B | Python | mm10 adaptation + crop map |
 | `scripts/B1_generate_cropmap.sb` | B | SLURM | Worker: 8c/64G/4h |
 | `scripts/B2_generate_labels_from_calder2.R` | B | R | CALDER2 → .mat labels |
@@ -753,7 +760,7 @@ Same pattern. B1 (cropmap) → B2 → B3 → B4 → B5. B2 depends on A2 complet
 | A3 | H3K27ac gradient A.1 → B.2 | Monotonic decrease |
 | A3 | H3K27me3 enriched in B.1 | >1.5× fold enrichment |
 | A4 | Cross-tab significant | Chi-squared p << 0.05 |
-| B0 | TF 1.15 importable | `tensorflow.__version__` = 1.15.5 |
+| B0 | TF-GPU 1.12 importable, GPU detected | `tensorflow.__version__` = 1.12.0, `is_gpu_available()` = True |
 | B1 | mm10 crop map files exist | rowMap ~(11k,3), colMap ~(10k,3) |
 | B2 | Label .mat files valid | `rows`/`cols` fields match crop dims |
 | B3 | 6 .h5 model files per tp | Each >1MB, decreasing training loss |
@@ -786,4 +793,4 @@ Total wall time: ~3 days with no failures. Track A alone completes in 1.5 days.
 
 3. **CALDER2 conda install** — Verify whether `conda install -c bioconda r-calder2` works on Expanse, or if local source install (`install.packages("path/to/CALDER2", repos=NULL, type="source")`) is needed. The cloned repo at `ML/cmpts/repos/CALDER2/` can be installed directly.
 
-4. **TF 1.12 + Python 3.6 + CUDA/cuDNN on Expanse** — Verify conda-forge still has Python 3.6.7 packages. SNIPER requires Python 3.6 + TF-GPU 1.12.0 per upstream `requirements.txt`. Available on Expanse: `cuda/9.1.85`, `cudnn/8.1.1.33-10.2` (requires `gpu/0.17.3b` + `gcc/8.4.0`), `cudnn/8.1.1.33-11.2`. No cuDNN module paired with CUDA 9.x — need to determine which CUDA+cuDNN combination works with TF 1.12.0 (README says "should work with recent versions").
+4. **TF 1.12 + Python 3.6 + CUDA/cuDNN on Expanse** — RESOLVED (2026-05-28). System CUDA modules (9.1, 10.2, 11.x) don't match TF 1.12's requirement for CUDA 9.0 exactly (`libcublas.so.9.0`). Solution: `conda install cudatoolkit=9.0 cudnn>=7,<8 -c nvidia` provides CUDA 9.0 runtime + cuDNN 7.x inside the conda env. No `module load cuda` needed. Verified: TF 1.12.0 GPU on Tesla V100-SXM2-32GB via `gpu-debug` partition.

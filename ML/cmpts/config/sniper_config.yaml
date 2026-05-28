@@ -70,8 +70,8 @@ slurm:
   A3_epigenomic: { cpus: 8, mem: "32G", time: "04:00:00" }
   A4_homer: { cpus: 4, mem: "16G", time: "02:00:00" }
   B1_cropmap: { cpus: 8, mem: "64G", time: "04:00:00" }
-  B3_train: { cpus: 16, mem: "96G", time: "24:00:00" }
-  B4_apply: { cpus: 8, mem: "64G", time: "08:00:00" }
+  B3_train: { cpus: 8, mem: "32G", gpus: 1, time: "04:00:00", partition: "gpu-shared" }
+  B4_apply: { cpus: 8, mem: "32G", gpus: 1, time: "02:00:00", partition: "gpu-shared" }
 
 filtering:
   exclude_chromosomes: ["X", "Y", "M"]

@@ -12,11 +12,19 @@ LOG_DIR="${DATA_DIR}/logs"
 mkdir -p "${LOG_DIR}"
 
 DEP_ARG=""
-if [[ "${1:-}" == --dependency=* ]]; then
-  DEP_ARG="$1"
-fi
+TP_FILTER=""
+for arg in "$@"; do
+  case "$arg" in
+    --dependency=*) DEP_ARG="$arg" ;;
+    --timepoint=*)  TP_FILTER="${arg#--timepoint=}" ;;
+  esac
+done
 
-TIMEPOINTS=("250831" "250402")
+if [ -n "${TP_FILTER}" ]; then
+  TIMEPOINTS=("${TP_FILTER}")
+else
+  TIMEPOINTS=("250831" "250402")
+fi
 RESOLUTIONS=("5000" "10000")
 
 for TP in "${TIMEPOINTS[@]}"; do
