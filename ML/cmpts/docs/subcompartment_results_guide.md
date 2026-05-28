@@ -2,6 +2,8 @@
 
 Personal reference for understanding the CALDER2 results. Last updated: 2026-05-28.
 
+> **IMPORTANT CAVEAT (added 2026-05-28):** The differential enrichment panel (Section 4) uses BigWigs that have been RPKM + 99th-percentile normalized across replicates. This normalization **masks global abundance changes** for ChIP marks. H2AK119ub and DNA methylation differential values in the heatmaps do NOT reflect their known genome-wide increases -- they show relative redistribution only. See Section 4 for full explanation.
+
 ---
 
 ## 1. Background: What Are We Looking For?
@@ -112,9 +114,21 @@ Note that B.1 itself barely changes in size (-0.3pp at late, -1.3pp at early). T
 
 ---
 
-## 4. Key Finding 2: Epigenomic Marks Confirm the Story
+## 4. Key Finding 2: Epigenomic Marks Confirm the Subcompartment Calls
 
 We overlaid 9 epigenomic marks (ChIP-seq, ATAC-seq, RNA-seq, DNA methylation) onto the subcompartment labels to validate them and find differential signals.
+
+### Important caveat: what the differential panel can and cannot show
+
+The BigWig files used in this analysis were generated through a pipeline of RPKM normalization, then 99th-percentile cross-sample scaling, then replicate averaging. This normalization chain **compresses global abundance differences** for ChIP-seq marks. If a mark increases uniformly across the genome (as H2AK119ub does in BAP1-KO), the 99th-percentile step rescales the mutant signal back down toward the control level before we ever compute the differential.
+
+The differential panel therefore shows **relative redistribution between subcompartments**, not absolute changes in abundance. A mark that goes up everywhere will appear flat or even negative in the heatmap because the normalization has already absorbed the global shift.
+
+This caveat applies to all ChIP-seq marks (H3K27ac, H3K4me3, H3K36me3, H3K27me1, H3K27me3, H2AK119ub, ATAC). It does NOT apply to RNA-seq (count-based) or DNA methylation (fraction-based, 0-1 scale -- see below). The ctrl enrichment panel (which compares subcompartments within a single condition) is unaffected -- it correctly validates the calls.
+
+**Known ground-truth from other analyses in this repo:**
+- **H2AK119ub increases genome-wide in BAP1-KO.** DiffBind found 21,812 significant peaks, ALL with positive fold change (zero significant decreases). This is the expected biology: BAP1 is a deubiquitinase for H2AK119ub, so its loss causes H2AK119ub accumulation. (Source: `peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt`)
+- **DNA methylation (5mC) increases globally in BAP1-KO.** Biomodal analysis: 75.1% of significant genes are hypermethylated, mean +2.27%. (Source: `notes/BIOMODAL_RESULTS.md`)
 
 ### Validation: the calls are correct
 
@@ -130,11 +144,11 @@ The ctrl enrichment heatmaps show exactly the expected pattern:
 
 All gradients are monotonic and in the right direction. The subcompartment calls are biologically real.
 
-### Differential: what changes in BAP1-KO
+### Differential: what the redistribution pattern shows
 
-Three marks stand out in the differential panel (log2 fold-change, mut vs ctrl):
+Given the normalization caveat above, the differential panel is best read as "where does this mark's signal concentrate or deplete *relative to the normalized genome-wide level*" -- not as absolute changes. Large signals here are informative about redistribution even though absolute levels are masked.
 
-**H3K27me1 -- the biggest mover.**
+**H3K27me1 -- massive redistribution into B compartments.**
 
 | Subcompartment | Late log2FC | Early log2FC |
 |---------------|------------|-------------|
@@ -143,9 +157,9 @@ Three marks stand out in the differential panel (log2 fold-change, mut vs ctrl):
 | B.1 | **+1.18** | **+1.17** |
 | B.2 | **+1.35** | **+1.29** |
 
-H3K27me1 (monomethylation of H3K27) increases by 2-2.5 fold in B compartments of the mutant. This mark is associated with PRC2 activity (PRC2 places mono-, di-, and trimethylation on H3K27). The massive B-compartment increase could indicate PRC2 redistribution -- PRC2 spreading into or concentrating in heterochromatic regions when BAP1 is lost.
+Even after normalization, H3K27me1 shows a 2-2.5 fold relative increase in B compartments of the mutant. This is the largest differential signal for any mark in the heatmap. H3K27me1 is placed by PRC2 (the same complex that trimethylates to H3K27me3). The B-compartment concentration could indicate PRC2 redistribution -- spreading into or concentrating in heterochromatic regions when BAP1 is lost. Because the normalization compresses global changes, the true absolute increase may be even larger.
 
-**H3K27me3 -- Polycomb spreading into active regions.**
+**H3K27me3 -- relative enrichment in A compartments.**
 
 | Subcompartment | Late log2FC | Early log2FC |
 |---------------|------------|-------------|
@@ -154,29 +168,36 @@ H3K27me1 (monomethylation of H3K27) increases by 2-2.5 fold in B compartments of
 | B.1 | +0.13 | +0.22 |
 | B.2 | -0.07 | -0.14 |
 
-H3K27me3 (the canonical Polycomb repressive mark) increases in A compartments. This is ectopic Polycomb spreading into active regions, which is biologically coherent with BAP1 loss: without the antagonist, Polycomb marks encroach on territory they normally wouldn't occupy.
+The redistribution pattern shows H3K27me3 concentrating in A compartments in the mutant. Even if the absolute level doesn't change much genome-wide, the relative shift toward A.1 (+0.40 log2FC) suggests ectopic Polycomb encroachment into active regions. This is biologically coherent: without BAP1 to antagonize Polycomb, H3K27me3 spreads into territory it normally wouldn't occupy.
 
-**H2AK119ub -- BAP1's direct substrate.**
+**H2AK119ub -- redistribution pattern (NOT absolute decrease).**
 
 | Subcompartment | Late log2FC | Early log2FC |
 |---------------|------------|-------------|
 | A.1 | -0.29 | -0.37 |
 | A.2 | -0.09 | -0.13 |
 | B.1 | -0.16 | -0.15 |
-| B.2 | **-0.32** | **-0.34** |
+| B.2 | -0.32 | -0.34 |
 
-H2AK119ub *decreases* in the mutant. This is surprising because BAP1 removes H2AK119ub, so knocking BAP1 out should cause H2AK119ub to accumulate, not decrease. Possible explanations:
-- Compensatory mechanisms (other deubiquitinases upregulated)
-- The BAP1-KO samples reflect a steady-state after adaptation, not the acute response
-- The effect may be cell-type or developmental-stage specific
-- This is worth discussing with the PI
+The negative values here are a **normalization artifact**, not a real decrease. H2AK119ub is known to increase genome-wide from DiffBind (21,812 peaks, all up). The 99th-percentile normalization rescaled the mutant BigWig downward to match the control, making the signal appear decreased. What the redistribution pattern does tell us: relative to the (elevated) genome-wide level, B.2 bins have relatively less H2AK119ub enrichment than A bins. Combined with the cluster-level analysis (which found K119ub specifically elevated at lost-loop anchors in clust6: ctrl 1.16 -> mut 1.58), the picture is that H2AK119ub spreads broadly but concentrates at specific loci (lost enhancers, Polycomb targets) rather than uniformly.
 
-**Other marks:**
-- DNA methylation globally decreases (-0.22 to -0.37 log2FC in all compartments)
-- H3K36me3 and H3K4me3 decrease in B compartments, increase slightly in A.2
-- ATAC shows very slight increases everywhere (open chromatin gaining)
+**DNA methylation -- negative values need investigation.**
 
-> **Figure (show to PI):** `outputs/calder2/late/250402_enrichment_combined/` -- the three-panel heatmap with ctrl, mut, and differential side by side. Also `outputs/calder2/early/250831_enrichment_combined/` for comparison.
+| Subcompartment | Late log2FC | Early log2FC |
+|---------------|------------|-------------|
+| A.1 | -0.24 | -0.24 |
+| A.2 | -0.22 | -0.23 |
+| B.1 | -0.26 | -0.26 |
+| B.2 | -0.34 | -0.37 |
+
+The Biomodal analysis shows global hypermethylation (+2.27% mean, 75% of genes up). DNA methylation BigWigs encode methylation fractions (0-1), not RPKM counts, so the 99th-percentile normalization issue should not apply in the same way. However, these BigWigs may have been generated from a different data type (CpG fraction scores from DUET evoC) and further investigation is needed to confirm whether the apparent decrease here reflects a genuine subcompartment-level pattern, a difference in CpG density between bins, or a BigWig construction artifact. The Biomodal result (gene-level, replicate-controlled) should be treated as the ground truth.
+
+**Other marks (redistribution patterns):**
+- H3K36me3 depletes from B compartments (-0.32 to -0.40) -- gene-body mark redistributing toward A
+- H3K4me3 depletes from B.2 (-1.05 log2FC) but gains in A.2 (+0.36) -- active promoter mark concentrating in active regions
+- ATAC shows very slight uniform increases (+0.06) -- consistent with mild global chromatin opening
+
+> **Figure (show to PI):** `outputs/calder2/late/250402_enrichment_combined/` -- the three-panel heatmap with ctrl, mut, and differential side by side. The ctrl and mut panels are reliable for subcompartment validation. **The differential panel should be shown with the verbal caveat that it shows redistribution, not absolute changes, due to normalization.** Also `outputs/calder2/early/250831_enrichment_combined/` for comparison.
 
 ---
 
@@ -266,21 +287,15 @@ These are the "so what" analyses that connect subcompartments to the rest of the
 
 ## 8. Open Questions
 
-### H2AK119ub goes down -- why?
+### BigWig normalization limits the differential panel
 
-BAP1 removes H2AK119ub. Knocking BAP1 out should cause H2AK119ub to accumulate. But we see it decrease (log2FC -0.15 to -0.37 across compartments). Three possibilities:
+The most important methodological limitation of the A3 analysis: the RPKM + 99th-percentile normalization pipeline used to generate ChIP BigWigs compresses global abundance differences. For marks that change globally in BAP1-KO (H2AK119ub increases, DNA methylation increases), the differential panel shows redistribution patterns, not absolute changes. The ctrl and mut enrichment panels are unaffected -- they correctly validate subcompartment identity within each condition.
 
-1. **Compensation:** Other deubiquitinases (USP16, MYSM1) may be upregulated to compensate for BAP1 loss, overshooting and removing more H2AK119ub than normal.
-2. **Steady state vs acute:** Our samples are from stable BAP1-KO tissue, not acute depletion. The chromatin has had time to reorganize. The initial response (H2AK119ub accumulation) may have been followed by adaptation.
-3. **Indirect effect:** If BAP1 loss disrupts PRC1 recruitment or stability at its target sites (not just its catalytic activity), PRC1 may leave those sites entirely, taking H2AK119ub deposition with it.
+**Possible future fix:** Re-run A3 with spike-in-normalized or unnormalized BigWigs if available, or apply a correction factor derived from the DiffBind global fold-change estimate. Alternatively, compute the differential at peak regions rather than genome-wide bins (matching the DiffBind approach).
 
-This needs discussion with the PI.
+### H3K27me1 -- what does the massive redistribution mean?
 
-### H3K27me1 -- what does the massive increase mean?
-
-H3K27me1 increases by 2-2.5 fold in B compartments. This mark is placed by PRC2 (the same complex that places H3K27me3). The pattern -- increase in me1, slight increase in me3 in A regions -- could indicate PRC2 is being redistributed: spreading more broadly (hence more me1, the initial methylation step) rather than deeply methylating specific targets (me3).
-
-Alternatively, if BAP1 loss disrupts the normal Polycomb feedback loop (H2AK119ub recruits PRC2 for H3K27me3), PRC2 may be depositing more "shallow" methylation (me1) without progressing to full me3.
+Even after normalization compresses global changes, H3K27me1 shows the largest redistribution signal: +1.2-1.35 log2FC in B compartments. This is placed by PRC2 (the same complex that places H3K27me3). The pattern -- relative increase in me1 at B compartments, relative increase in me3 at A compartments -- could indicate PRC2 redistribution: PRC2 spreading more broadly into heterochromatin (depositing initial me1) while also encroaching on active regions (depositing me3 at new targets). Whether this redistribution reflects a real mechanistic change in PRC2 targeting or is secondary to H2AK119ub accumulation (which recruits PRC2 via PRC1) is an open question.
 
 ### B.1 as a throughput compartment
 
@@ -289,6 +304,110 @@ B.1 barely changes in total size, but this masks huge turnover: ~850-1250 bins l
 ### HOMER early timepoint polarity
 
 A polarity fix was applied to the HOMER eigenvector for the early timepoint (the PC1 sign was inverted relative to CALDER2 orientation). The A4 script now includes a gene-density polarity check. The re-run showed correct directionality, but the early sankey/dotplot should be interpreted knowing this correction was applied.
+
+### DNA methylation BigWig source
+
+The `DNAmethylationCtrl.bw` / `DNAmethylationMut.bw` files encode CpG methylation fractions (0-1, from Biomodal DUET evoC), not RPKM counts. In principle this should preserve global methylation changes. But the A3 differential shows global decreases (-0.22 to -0.37), contradicting the Biomodal gene-level result (+2.27% hypermethylation). This discrepancy needs investigation -- it may reflect differences in how the BigWigs were constructed (CpG density weighting, genomic context, or a different normalization applied during BigWig generation) versus the gene-level methylKit analysis.
+
+---
+
+## 9. Figure-by-Figure Explainer
+
+How to read each figure, what the axes mean, and the key result to point out.
+
+### Transition Heatmap (both timepoints)
+
+`250402_transition_heatmap/` and `250831_transition_heatmap/`
+
+**Format:** 4x4 grid (confusion matrix style). Rows = ctrl subcompartment label, columns = mut subcompartment label. Each cell contains the number of 100kb genomic bins with that ctrl-to-mut transition. Color intensity = log10(count+1), so darker blue = more bins. Red borders highlight the diagonal (bins that kept the same label). Subtitle shows the chi-squared statistic and the percentage of bins that changed.
+
+**How to read it:** The diagonal is stability -- bins that stayed the same. Everything off-diagonal is a transition. Look at the *asymmetry*: in the late heatmap, B.1->A.2 has 852 bins but A.2->B.1 has only 233. That 3.7:1 ratio is the directional bias of BAP1-KO.
+
+**Key results to point out:**
+- Diagonal dominates (84-82% of bins are stable -- overall architecture is preserved)
+- Below the diagonal is mostly empty (A->B transitions are rare)
+- Above the diagonal has substantial counts (B->A transitions are common)
+- B.1->A.2 is the single largest off-diagonal cell at both timepoints -- the Polycomb compartment opening up
+- A.2->A.1 is the second-largest -- already-active regions strengthening
+- Early has 18.3% changed vs late 15.3% -- more plasticity at P12
+
+### Genome Fraction Bar Chart (both timepoints)
+
+`250402_subcompartment_genome_pct/` and `250831_subcompartment_genome_pct/`
+
+**Format:** Two stacked bar charts side by side. Left bar = control, right bar = mutant. Each segment is a subcompartment (A.1 red, A.2 orange, B.1 green, B.2 blue), sized by its percentage of the genome. Y-axis = % of 100kb bins.
+
+**How to read it:** Compare the heights of each color segment between ctrl and mut. The red (A.1) section grows, the blue (B.2) section shrinks. This is the simplest visual of the A-compartment expansion.
+
+**Key results to point out:**
+- Late: A.1 grows from 30.6% to 32.5% (+1.9pp), B.2 shrinks from 41.6% to 38.7% (-2.9pp)
+- Early: A.1 grows from 32.0% to 35.9% (+3.9pp), B.2 shrinks from 33.7% to 30.5% (-3.2pp)
+- B.1 (green) barely changes -- it's a throughput compartment (losing bins to A.2 but gaining from B.2)
+- Early ctrl starts with more A (51%) than late ctrl (45%) -- developmental difference, P12 brain is more open
+
+### Enrichment Combined Heatmap (both timepoints)
+
+`250402_enrichment_combined/` and `250831_enrichment_combined/`
+
+**Format:** Three panels side by side, each a 9-row x 4-column grid. Rows = epigenomic marks (H3K27ac, H3K4me3, ATAC, H3K36me3, RNA, DNAmethylation, H3K27me1, H2AK119ub, H3K27me3). Columns = subcompartments (A.1, A.2, B.1, B.2). Color = red for high values, blue for low, white = neutral.
+
+- **Left panel (Ctrl Enrichment):** fold-enrichment of each mark over the genome-wide median, using ctrl labels and ctrl signal. This validates the subcompartment calls.
+- **Middle panel (Mut Enrichment):** same but using mut labels and mut signal.
+- **Right panel (Differential):** log2(mut_median / ctrl_median) per mark per subcompartment, using ctrl labels. Shows redistribution of signal between conditions. **Caveat: BigWig normalization masks global changes for ChIP marks -- these values show relative redistribution, not absolute direction. See Section 4.**
+
+**How to read it:** In the ctrl panel, look for the expected gradient: H3K27ac/H3K4me3/ATAC/RNA should be dark red in A.1 and white/blue in B.2 (active marks concentrated in active compartment). H3K27me3 should be red in B.1 (Polycomb compartment). If these gradients are correct, the subcompartment calls are validated. In the differential panel, look for the largest color blocks -- H3K27me1 in B.1/B.2 is bright red (+1.2-1.35), the biggest redistribution signal.
+
+**Key results to point out:**
+- Ctrl panel: all expected gradients are correct and monotonic -- calls are real
+- H3K27me3 lights up in B.1 (2.25x at late, 1.41x at early) -- Polycomb compartment confirmed
+- RNA is 21.8x enriched in A.1 vs 0.01 in B.2 -- extreme dynamic range validates A/B identity
+- Differential: H3K27me1 has the strongest redistribution signal (B.2 = +1.35 log2FC at late)
+- Differential: H3K27me3 shifts toward A.1 (+0.40 log2FC) -- Polycomb encroaching on active regions
+- **When presenting:** note that the differential panel shows WHERE marks concentrate, not WHETHER they go up or down globally. H2AK119ub goes UP genome-wide (DiffBind) but appears negative here due to normalization
+
+### HOMER -> CALDER2 Sankey (late timepoint)
+
+`250402_homer_calder2_sankey/`
+
+**Format:** Three-axis alluvial/sankey flow diagram. Left axis = HOMER call direction (A->B or B->A). Middle axis = CALDER2 ctrl subcompartment label. Right axis = CALDER2 mut subcompartment label. Colored ribbons connect them, showing the flow. Ribbon width = number of 25kb bins. Colors: red=A.1, orange=A.2, green=B.1, blue=B.2, gray=change (bins that switched subcompartment). Y-axis = number of 25kb bins. Title shows total significant HOMER bins (7,575 at late).
+
+**How to read it:** Follow the ribbons from left to right. The bottom group (HOMER: B->A) is the majority. From there, ribbons flow through B.1 and B.2 in the middle (their ctrl label) and then either stay the same color on the right (stable) or turn gray and jump to a different subcompartment (true flip). The amount of gray vs colored ribbon is the key: gray = true flips, colored = stable despite HOMER flagging them.
+
+**Key results to point out:**
+- This directly tests Jesse's hypothesis from the Dixon meeting
+- The large mass of colored (non-gray) ribbons staying on the diagonal = bins that HOMER calls significant but CALDER2 says didn't actually change subcompartment
+- Only ~28% of significant HOMER bins are true A<->B flips (the gray ribbons that cross from B to A)
+- ~33% are "stable" (same CALDER2 label in ctrl and mut -- HOMER sees a quantitative PC1 shift but it doesn't cross a subcompartment boundary)
+- ~32% are within-compartment shifts (B.2->B.1 or A.2->A.1 -- moving within the same broad compartment)
+- **Punchline: most of what HOMER calls a "compartment switch" is actually quantitative weakening, not a true flip. Jesse was right.**
+
+### HOMER -> CALDER2 Dotplot (late timepoint)
+
+`250402_homer_calder2_dotplot/`
+
+**Format:** Two panels side by side. Left = HOMER A->B bins, Right = HOMER B->A bins. X-axis = CALDER2 ctrl label, Y-axis = CALDER2 mut label. Each dot = one transition type; dot size = number of bins; dot color = transition category (green=True_A_to_B, pink=True_B_to_A, orange=Within_A_shift, blue=Within_B_shift, gray=Stable). Dashed diagonal = no change.
+
+**How to read it:** Dots on the diagonal are stable (same ctrl and mut label). Dots above the diagonal moved "up" (toward more active). Dots below moved "down." The largest dot in the B->A panel (right) is the pink B.1->A.2 bubble -- the dominant true compartment flip. The large gray dots on the diagonal are the "stable" bins that HOMER flagged but CALDER2 says didn't change.
+
+**Key results to point out:**
+- Right panel (B->A): pink B.1->A.2 is the largest single transition -- Polycomb opening
+- Right panel: large gray dots on the diagonal show many bins are HOMER-significant but CALDER2-stable
+- Left panel (A->B): dominated by gray diagonal dots -- most HOMER A->B calls are not confirmed by CALDER2
+- The asymmetry between panels (right has more and larger off-diagonal dots than left) shows the directional bias
+
+### Subcompartment Flow Sankey (both timepoints)
+
+`250402_transition_sankey/` and `250831_transition_sankey/`
+
+**Format:** Two-axis alluvial diagram. Left axis = ctrl subcompartment distribution (sized by bin count). Right axis = mut distribution. Colored ribbons show which bins flow where. Gray ribbons = bins that changed subcompartment. Y-axis = number of 100kb bins.
+
+**How to read it:** Wide colored bands on the diagonal = stability. Thin gray threads crossing between levels = transitions. The more gray, the more change. The B.2 block (bottom, blue) is visibly smaller on the right (mut) than the left (ctrl) -- the genome is opening.
+
+**Key results to point out:**
+- Mostly stable (thick colored diagonal bands)
+- Visible gray threads from B.1 crossing up to A.2 level
+- B.2 block shrinks, A.1 block grows
+- These are visually busy -- the heatmap and bar chart are cleaner for presenting. Use this as supplementary if someone asks "but what does the flow look like?"
 
 ---
 
