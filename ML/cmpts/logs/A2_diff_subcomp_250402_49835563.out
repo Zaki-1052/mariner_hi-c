@@ -1,0 +1,69 @@
+===========================================
+A2: Differential Subcompartment Analysis
+===========================================
+Job ID:     49835563
+Node:       exp-1-44
+CPUs:       4
+Timepoint:  250402
+Start:      Wed May 27 21:03:34 PDT 2026
+Code dir:   /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+===========================================
+Package check complete
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+===========================================
+A2: Differential Subcompartment Analysis
+===========================================
+Timepoint:  250402 (late/adult)
+CODE_ROOT:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+Output dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/calder2
+Start:      Wed May 27 21:03:39 2026
+===========================================
+
+=== Pre-flight validation ===
+  OK: 250402/ctrl_merged (15,485,676 bytes)
+  OK: 250402/mut_merged (15,466,051 bytes)
+
+=== Building 100kb reference grid ===
+  Total bins: 24639 across 19 chromosomes
+
+=== Loading CALDER2 outputs ===
+  ctrl_merged                237575 rows  chroms=19
+  mut_merged                 237575 rows  chroms=19
+
+=== Binning to 100kb grid ===
+  Binning ctrl to 100kb grid...
+  Binning mut to 100kb grid...
+
+  Total bins:    24639
+  Callable bins: 23853 (both ctrl and mut labeled)
+  Changed bins:  3659 (15.3% of callable)
+  Written: 250402_subcompartment_labels_100kb.tsv
+
+=== Transition analysis ===
+  Transition matrix total: 23853 (expected ~24,639)
+  Chi-squared: X2=39956.9, df=9, p=0.000e+00
+  Cramer's V:  0.7472
+  % bins changed: 15.3%
+  Written: 250402_transition_matrix.tsv
+  Written: 250402_transition_summary.tsv
+
+=== Generating figures ===
+  Saved: 250402_transition_heatmap/{pdf,svg,png,jpg}
+  Saved: 250402_transition_sankey/{pdf,svg,png,jpg}
+There were 12 warnings (use warnings() to see them)
+  Saved: 250402_subcompartment_genome_pct/{pdf,svg,png,jpg}
+
+=== Verification ===
+  Matrix total: 23853 (expected ~24,639)
+  All checks passed.
+
+===========================================
+A2 COMPLETE: 250402
+Finished: Wed May 27 21:03:44 2026
+===========================================
+
+End: Wed May 27 21:03:44 PDT 2026
+===========================================

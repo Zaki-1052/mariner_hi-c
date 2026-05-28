@@ -298,7 +298,7 @@ module load cuda/9.1.85
 pip install -r repos/SNIPER/requirements.txt   # tensorflow-gpu==1.12.0
 ```
 
-**juicer_tools:** SNIPER calls `java -jar {juicer_tools} dump observed KR {hic} {chr1} {chr2} BP 100000 {output}`. Need juicer_tools.jar on HPC. Check existing paths: `lab/pipeline-scripts/juicer.sb` uses Singularity container (`juicer_2.0.1.sif`), but SNIPER needs the JAR directly. Verify/locate: the tads pipeline extracts via `straw` (R), but SNIPER needs the Java `dump` command.
+**juicer_tools:** SNIPER calls `java -jar {juicer_tools} dump observed KR {hic} {chr1} {chr2} BP 100000 {output}`. The JAR is inside the Singularity container at `/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif` — paths `/opt/juicer/CPU/common/juicer_tools.jar` and `/opt/scripts/common/juicer_tools.jar` (used by `abc/scripts/addnorm.sb`). SNIPER's `data_processing.py:45` shells out via `os.system()`, so the mm10 adapter will need to wrap calls through `singularity exec --bind /scratch,/expanse {container} java -jar {jar} dump ...`.
 
 **Verification:** `python -c "import tensorflow as tf; print(tf.__version__)"` → `1.12.0`
 
@@ -779,10 +779,10 @@ Total wall time: ~3 days with no failures. Track A alone completes in 1.5 days.
 
 ## Open Questions for Execution
 
-1. **juicer_tools.jar location on Expanse** — SNIPER calls `java -jar {juicer_tools} dump`. The existing `lab/pipeline-scripts/juicer.sb` uses a Singularity container. Need to confirm standalone JAR location or extract from container.
+1. **juicer_tools.jar location on Expanse** — RESOLVED (2026-05-28). JAR is inside Singularity container `/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif` at `/opt/juicer/CPU/common/juicer_tools.jar`. SNIPER's mm10 adapter will call via `singularity exec`. Pattern established in `abc/scripts/addnorm.sb`.
 
 2. **H3K36me3 BigWig** — RESOLVED (2026-05-26). Per-replicate BigWigs (6 ctrl + 6 mut, `_norm.bw` + `_rnorm.bw`) synced from EC2 (`/media/rs_256/normalization/`) to `sdsc/bigwigs/h3k36me3/`. On HPC at `/expanse/lustre/projects/csd940/zalibhai/bigwigs/h3k36me3/`.
 
 3. **CALDER2 conda install** — Verify whether `conda install -c bioconda r-calder2` works on Expanse, or if local source install (`install.packages("path/to/CALDER2", repos=NULL, type="source")`) is needed. The cloned repo at `ML/cmpts/repos/CALDER2/` can be installed directly.
 
-4. **TF 1.12 + Python 3.6 on Expanse** — Verify conda-forge still has Python 3.6.7 packages. SNIPER requires Python 3.6 + TF-GPU 1.12.0 per upstream `requirements.txt`. CUDA 9.1.85 available on Expanse (`module load cuda/9.1.85`); need to confirm cuDNN availability.
+4. **TF 1.12 + Python 3.6 + CUDA/cuDNN on Expanse** — Verify conda-forge still has Python 3.6.7 packages. SNIPER requires Python 3.6 + TF-GPU 1.12.0 per upstream `requirements.txt`. Available on Expanse: `cuda/9.1.85`, `cudnn/8.1.1.33-10.2` (requires `gpu/0.17.3b` + `gcc/8.4.0`), `cudnn/8.1.1.33-11.2`. No cuDNN module paired with CUDA 9.x — need to determine which CUDA+cuDNN combination works with TF 1.12.0 (README says "should work with recent versions").

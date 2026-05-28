@@ -1,0 +1,154 @@
+===========================================
+A4: HOMER A/B x CALDER2 Integration
+===========================================
+Job ID:     49838750
+Node:       exp-4-50
+CPUs:       4
+Start:      Thu May 28 07:48:18 PDT 2026
+Code dir:   /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+===========================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+===========================================
+A4: HOMER A/B x CALDER2 Subcompartment Integration
+===========================================
+CODE_ROOT:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+REPO_ROOT:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c
+Timepoints: 250402, 250831
+Output dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/integration
+Sig thresh: FDR<0.05, |Diff|>0.30
+Start:      Thu May 28 07:48:22 2026
+===========================================
+
+=== Pre-flight validation ===
+  OK: HOMER 250402 (20,946,537 bytes)
+  OK: HOMER 250831 (20,432,358 bytes)
+  OK: CALDER2 250402 (1,792,766 bytes)
+  OK: CALDER2 250831 (1,787,253 bytes)
+  Pre-flight passed.
+
+===========================================
+  Timepoint: 250402 (late/adult)
+===========================================
+
+=== Load CALDER2 labels ===
+  CALDER2: 24,639 100kb bins, 23,853 callable
+
+=== Load HOMER data ===
+  Loaded HOMER: 104,071 total, 95,460 autosomal (8611 on sex/other chroms dropped)
+  Polarity check: genic mean=+0.4368, intergenic mean=-0.3323
+  Polarity OK (genic > intergenic).
+  Significant bins: 7,575 (FDR<0.05, |Diff|>0.30)
+    A→B: 2,417,  B→A: 5,158
+
+=== Aggregate HOMER to 100kb ===
+  Written: 250402_homer_100kb_aggregated.tsv (23,943 rows)
+
+=== Join HOMER x CALDER2 ===
+  Joined: 95,460 rows (95,119 with CALDER2 labels, 341 without)
+  Written: 250402_homer_calder2_joined.tsv
+
+=== Cross-tabulate significant bins ===
+  Significant bins: 7,575 total, 7,575 callable, 0 uncallable
+  Written: 250402_homer_calder2_crosstab.tsv (27 rows)
+
+=== Weakening decomposition ===
+
+  HOMER: B→A (n=5,158):
+    True_B_to_A       1,788 ( 34.7%)
+    Stable            1,683 ( 32.6%)
+    Within_B_shift      947 ( 18.4%)
+    Within_A_shift      735 ( 14.2%)
+    True_A_to_B           5 (  0.1%)
+
+  HOMER: A→B (n=2,417):
+    Stable            1,416 ( 58.6%)
+    Within_A_shift      368 ( 15.2%)
+    True_A_to_B         339 ( 14.0%)
+    Within_B_shift      274 ( 11.3%)
+    True_B_to_A          20 (  0.8%)
+
+  Written: 250402_homer_weakening_decomposition.tsv
+
+=== Generating figures ===
+  Saved: 250402_homer_calder2_sankey/{pdf,svg,png,jpg}
+  Saved: 250402_homer_calder2_dotplot/{pdf,svg,png,jpg}
+
+=== Verification ===
+  Uncallable: 0 of 7575 sig bins (0.0%)
+  True compartment flips: 2,152 of 7,575 sig bins (28.4%)
+  All checks passed.
+
+  Timepoint 250402 complete: 0.2 min
+
+===========================================
+  Timepoint: 250831 (early/P12)
+===========================================
+
+=== Load CALDER2 labels ===
+  CALDER2: 24,639 100kb bins, 23,823 callable
+
+=== Load HOMER data ===
+  Loaded HOMER: 101,684 total, 95,424 autosomal (6260 on sex/other chroms dropped)
+  Polarity check: genic mean=+0.3886, intergenic mean=-0.2955
+  Polarity OK (genic > intergenic).
+  Significant bins: 5,036 (FDR<0.05, |Diff|>0.30)
+    A→B: 1,279,  B→A: 3,757
+
+=== Aggregate HOMER to 100kb ===
+  Written: 250831_homer_100kb_aggregated.tsv (23,940 rows)
+
+=== Join HOMER x CALDER2 ===
+  Joined: 95,424 rows (95,059 with CALDER2 labels, 365 without)
+  Written: 250831_homer_calder2_joined.tsv
+
+=== Cross-tabulate significant bins ===
+  Significant bins: 5,036 total, 5,036 callable, 0 uncallable
+  Written: 250831_homer_calder2_crosstab.tsv (24 rows)
+
+=== Weakening decomposition ===
+
+  HOMER: A→B (n=1,279):
+    Stable              915 ( 71.5%)
+    Within_A_shift      199 ( 15.6%)
+    True_B_to_A         139 ( 10.9%)
+    Within_B_shift       17 (  1.3%)
+    True_A_to_B           9 (  0.7%)
+
+  HOMER: B→A (n=3,757):
+    True_A_to_B       1,357 ( 36.1%)
+    Stable            1,282 ( 34.1%)
+    Within_A_shift      701 ( 18.7%)
+    Within_B_shift      414 ( 11.0%)
+    True_B_to_A           3 (  0.1%)
+
+  Written: 250831_homer_weakening_decomposition.tsv
+
+=== Generating figures ===
+  Saved: 250831_homer_calder2_sankey/{pdf,svg,png,jpg}
+  Saved: 250831_homer_calder2_dotplot/{pdf,svg,png,jpg}
+
+=== Verification ===
+  Uncallable: 0 of 5036 sig bins (0.0%)
+  True compartment flips: 1,508 of 5,036 sig bins (29.9%)
+  All checks passed.
+
+  Timepoint 250831 complete: 0.1 min
+There were 50 or more warnings (use warnings() to see the first 50)
+
+=== Cross-timepoint summary ===
+  Written: combined_weakening_decomposition.tsv (20 rows)
+
+=== Final verification ===
+  All checks passed.
+
+===========================================
+A4 COMPLETE
+Total runtime: 0.3 min
+Finished: Thu May 28 07:48:39 2026
+===========================================
+
+End: Thu May 28 07:48:39 PDT 2026
+===========================================

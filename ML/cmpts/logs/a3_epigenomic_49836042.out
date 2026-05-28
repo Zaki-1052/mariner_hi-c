@@ -1,0 +1,150 @@
+===========================================
+A3: Epigenomic Validation
+===========================================
+Job ID:     49836042
+Node:       exp-1-44
+CPUs:       8
+Start:      Wed May 27 22:45:36 PDT 2026
+Code dir:   /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+===========================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+===========================================
+A3: Epigenomic Validation
+===========================================
+CODE_ROOT:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+BIGWIG_DIR: /expanse/lustre/projects/csd940/zalibhai/bigwigs
+Timepoints: 250402, 250831
+Marks:      9 marks x 2 conditions = 18 BigWigs
+Output dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/calder2
+Start:      Wed May 27 22:45:45 2026
+===========================================
+
+=== Pre-flight validation ===
+  All 18 BigWig files found.
+  OK: 250402_subcompartment_labels_100kb.tsv (1,792,766 bytes)
+  OK: 250831_subcompartment_labels_100kb.tsv (1,787,253 bytes)
+  Pre-flight passed.
+
+
+###################################################
+### Timepoint: 250402 (late/adult)
+###################################################
+
+=== Loading subcompartment labels ===
+  Loaded: 24639 bins total, 23853 callable (both labels present)
+
+=== Extracting signals from 18 BigWigs ===
+  [ 1/9] H3K27ac            ctrl=6.5s  mut=3.2s
+  [ 2/9] H3K4me3            ctrl=1.2s  mut=1.0s
+  [ 3/9] ATAC               ctrl=6.0s  mut=3.6s
+  [ 4/9] H3K36me3           ctrl=11.7s  mut=10.3s
+  [ 5/9] RNA                ctrl=2.4s  mut=1.9s
+  [ 6/9] DNAmethylation     ctrl=3.0s  mut=2.9s
+  [ 7/9] H3K27me1           ctrl=3.7s  mut=5.2s
+  [ 8/9] H2AK119ub          ctrl=6.7s  mut=6.2s
+  [ 9/9] H3K27me3           ctrl=5.0s  mut=2.8s
+
+  Written: 250402_bin_signals.tsv (23853 rows x 26 cols)
+
+=== Computing enrichment ===
+  Ctrl validation: 36 values (label=ctrl_label, signal=ctrl)
+  Mut  validation: 36 values (label=mut_label, signal=mut)
+  Differential:    36 values (label=ctrl_label, signal=mut/ctrl)
+  Written: 250402_enrichment_matrix.tsv
+  Written: 250402_differential_matrix.tsv
+
+=== Generating heatmaps ===
+  Saved: 250402_enrichment_heatmap_ctrl/{pdf,svg,png,jpg}
+  Saved: 250402_enrichment_heatmap_mut/{pdf,svg,png,jpg}
+  Saved: 250402_enrichment_heatmap_diff/{pdf,svg,png,jpg}
+  Saved: 250402_enrichment_combined/{pdf,svg,png,jpg}
+
+=== Verification ===
+  Ctrl fold-enrichment matrix:
+           mark        A.1      A.2       B.1        B.2
+         <fctr>      <num>    <num>     <num>      <num>
+        H3K27ac  3.8929335 1.583841 0.8892397 0.35825440
+        H3K4me3 14.7538209 2.740828 0.8556677 0.33662622
+           ATAC  3.8982288 1.738654 0.9666600 0.39561236
+       H3K36me3  1.4779896 1.171981 0.9989788 0.66922226
+            RNA 21.8232323 5.035354 0.4949495 0.01010101
+ DNAmethylation  1.3163595 1.237784 1.1009861 0.67449666
+       H3K27me1  5.5874975 1.505323 0.6702154 0.55557839
+      H2AK119ub  1.4711398 1.478746 1.2540922 0.51943957
+       H3K27me3  0.6616889 1.747196 2.2473434 0.87620958
+
+  H3K27ac gradient OK: 3.89 > 1.58 > 0.89 > 0.36
+  H3K27me3 B.1 enrichment: 2.25 (OK, >= 1.5)
+  H2AK119ub B.1 enrichment: 1.25
+  No NaN/Inf values detected.
+  All verification checks passed.
+
+  Timepoint 250402 complete: 1.5 min
+
+
+###################################################
+### Timepoint: 250831 (early/P12)
+###################################################
+
+=== Loading subcompartment labels ===
+  Loaded: 24639 bins total, 23823 callable (both labels present)
+
+=== Extracting signals from 18 BigWigs ===
+  [ 1/9] H3K27ac            ctrl=2.8s  mut=3.1s
+  [ 2/9] H3K4me3            ctrl=1.1s  mut=1.0s
+  [ 3/9] ATAC               ctrl=4.6s  mut=3.2s
+  [ 4/9] H3K36me3           ctrl=11.2s  mut=11.1s
+  [ 5/9] RNA                ctrl=2.4s  mut=1.9s
+  [ 6/9] DNAmethylation     ctrl=3.0s  mut=2.9s
+  [ 7/9] H3K27me1           ctrl=3.7s  mut=5.2s
+  [ 8/9] H2AK119ub          ctrl=7.1s  mut=5.9s
+  [ 9/9] H3K27me3           ctrl=4.9s  mut=3.3s
+
+  Written: 250831_bin_signals.tsv (23823 rows x 26 cols)
+
+=== Computing enrichment ===
+  Ctrl validation: 36 values (label=ctrl_label, signal=ctrl)
+  Mut  validation: 36 values (label=mut_label, signal=mut)
+  Differential:    36 values (label=ctrl_label, signal=mut/ctrl)
+  Written: 250831_enrichment_matrix.tsv
+  Written: 250831_differential_matrix.tsv
+
+=== Generating heatmaps ===
+  Saved: 250831_enrichment_heatmap_ctrl/{pdf,svg,png,jpg}
+  Saved: 250831_enrichment_heatmap_mut/{pdf,svg,png,jpg}
+  Saved: 250831_enrichment_heatmap_diff/{pdf,svg,png,jpg}
+  Saved: 250831_enrichment_combined/{pdf,svg,png,jpg}
+
+=== Verification ===
+  Ctrl fold-enrichment matrix:
+           mark       A.1      A.2       B.1       B.2
+         <fctr>     <num>    <num>     <num>     <num>
+        H3K27ac  2.739814 1.235395 0.6777037 0.2878775
+        H3K4me3 10.037051 1.321172 0.5681350 0.2807460
+           ATAC  3.207359 1.161180 0.6713319 0.3137740
+       H3K36me3  1.459020 1.097755 0.8569670 0.5796965
+            RNA 13.950980 2.220588 0.2745098 0.0000000
+ DNAmethylation  1.437239 1.122516 0.8671499 0.5719216
+       H3K27me1  3.758089 1.018151 0.6158537 0.6103228
+      H2AK119ub  1.684588 1.229131 0.8556522 0.3986203
+       H3K27me3  1.155631 1.813972 1.4076010 0.5750277
+
+  H3K27ac gradient OK: 2.74 > 1.24 > 0.68 > 0.29
+  H2AK119ub B.1 enrichment: 0.86
+  No NaN/Inf values detected.
+
+  Timepoint 250831 complete: 1.4 min
+Warning message:
+H3K27me3 B.1 fold=1.41 (expected >= 1.5) 
+
+===========================================
+A3 COMPLETE
+Total runtime: 2.8 min
+Finished: Wed May 27 22:48:36 2026
+===========================================
+
+End: Wed May 27 22:48:36 PDT 2026
+===========================================
