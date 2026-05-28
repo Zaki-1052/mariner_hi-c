@@ -166,7 +166,7 @@ ML/cmpts/outputs/calder2/
 - Both timepoints show substantial rearrangements (>10%). Early timepoint has more transitions than late (unexpected — may reflect developmental plasticity at P12).
 - ~800 bins per timepoint uncallable (centromeric/telomeric gaps).
 
-### A3 — Epigenomic Validation — SCRIPTED (2026-05-27)
+### A3 — Epigenomic Validation — DONE (2026-05-27)
 
 **Script:** `scripts/A3_epigenomic_validation.R` + `scripts/A3_run.sb`
 
@@ -220,35 +220,52 @@ ML/cmpts/outputs/calder2/
 - No NaN/Inf in enrichment results
 - If gradients are flat or inverted, something is wrong with compartment polarity
 
-### A4 — Integration with HOMER A/B Compartments — PENDING
+**Results (2026-05-27):**
+- Both timepoints validate: H3K27ac monotonically decreasing A.1→B.2 (late: 3.89→1.58→0.89→0.36; early: 2.74→1.24→0.68→0.29). All active marks (H3K4me3, ATAC, RNA) show strong A.1 enrichment.
+- 250402 (late): H3K27me3 B.1=2.25× (strong Polycomb compartment); H2AK119ub B.1=1.25×. All checks passed.
+- 250831 (early): H3K27me3 B.1=1.41× (marginally below 1.5 threshold — Polycomb may be less concentrated at P12); H2AK119ub B.1=0.86× (below 1.0, not enriched at early timepoint). RNA B.2=0.00 (no transcription in constitutive heterochromatin).
+- Runtime: 2.8 min total (1.5 + 1.4 min per TP). 23,853/23,823 callable bins per TP.
+- SLURM log: `logs/a3_epigenomic_49836042.out`
+
+### A4 — Integration with HOMER A/B Compartments — READY (2026-05-28)
 
 **Script:** `scripts/A4_integrate_homer_compartments.R` + `scripts/A4_run.sb`
 
+Single SLURM job processes both timepoints. Uses data.table arithmetic join (no GenomicRanges needed — 25kb bins tile 100kb bins exactly). Classifies each significant HOMER bin as a true compartment flip, within-compartment shift, subcompartment-stable, or uncallable.
+
 **Input:**
-- HOMER: `tads/tad-pc-analysis/output/compartment_analysis/compartment_all_annotated.tsv` (104,071 × 25kb bins)
-- CALDER2: `{tp}_subcompartment_labels_100kb.tsv` (from A2)
+- HOMER late: `tads/tad-pc-analysis/output/compartment_analysis/compartment_all_annotated.tsv` (104,071 × 25kb bins)
+- HOMER early: `tads/tad-pc-analysis/output/compartment_analysis_early/compartment_all_annotated.tsv` (101,684 × 25kb bins)
+- CALDER2: `outputs/calder2/{tp}_subcompartment_labels_100kb.tsv` (from A2)
+
+**Coordinate join:** `floor(Start / 100000) * 100000 + 1` maps HOMER 0-based Start to CALDER2 1-based bin_start. Merge on `(Chr, calder_bin_start) = (chr, bin_start)`.
 
 **Logic:**
-1. Aggregate HOMER 25kb bins to 100kb: mean PC1 per 100kb window (4 bins per window)
-2. Join HOMER 100kb bins with CALDER2 labels via `GenomicRanges::findOverlaps()`
-3. For the 8,189 significant HOMER differential bins (FDR<0.05, |Diff|>0.30):
-   - Extract ctrl_label and mut_label from CALDER2
-   - Cross-tabulate: HOMER direction × CALDER2 transition type
-4. Key decomposition:
-   - 2,704 HOMER A→B bins: how many are A.1→B.1 vs A.2→B.1 vs A.1→B.2?
-   - 5,485 HOMER B→A bins: how many are B.1→A.2 vs B.2→A.2 vs B.2→A.1?
-   - "Weakening" bins (same A or same B, but significant PC1 change): A.1→A.2 or B.1→B.2?
+1. Load HOMER 25kb bins, filter to autosomes (chr1-19)
+2. Left-join each 25kb bin to its containing CALDER2 100kb bin
+3. For significant bins (adj_pvalue<0.05, |Difference|>0.30), classify transition:
+   - `True_A_to_B`: CALDER2 ctrl=A.x → mut=B.y
+   - `True_B_to_A`: CALDER2 ctrl=B.x → mut=A.y
+   - `Within_A_shift`: A.1↔A.2 (quantitative weakening/strengthening)
+   - `Within_B_shift`: B.1↔B.2
+   - `Stable`: same CALDER2 label despite significant HOMER change
+   - `Uncallable`: CALDER2 label is NA (centromeric/telomeric gaps)
+4. Cross-tabulate: HOMER direction × CALDER2 ctrl_label × mut_label
+5. Aggregate HOMER to 100kb (mean PC1, n_sig_bins) for C4 reuse
 
-**Outputs:**
+**Outputs (per timepoint):**
 ```
 ML/cmpts/outputs/integration/
-  homer_calder2_crosstab.tsv
-  homer_weakening_decomposition.tsv
-  homer_calder2_sankey/            # multi-format figure
-  homer_calder2_dotplot/           # multi-format figure
+  {tp}_homer_calder2_joined.tsv          # all autosomal 25kb bins with CALDER2 labels
+  {tp}_homer_100kb_aggregated.tsv        # HOMER aggregated to 100kb (C4 handoff)
+  {tp}_homer_calder2_crosstab.tsv        # sig bins: direction × ctrl × mut counts
+  {tp}_homer_weakening_decomposition.tsv # summary by transition category
+  {tp}_homer_calder2_sankey/             # multi-format 3-axis alluvial figure
+  {tp}_homer_calder2_dotplot/            # multi-format bubble plot
+  combined_weakening_decomposition.tsv   # both TPs stacked
 ```
 
-**SLURM:** `--cpus-per-task=4 --mem=16G --time=02:00:00`
+**SLURM:** `--cpus-per-task=4 --mem=16G --time=02:00:00` (single job, both TPs, ~5 min expected)
 
 ---
 
