@@ -123,7 +123,7 @@ For SNIPER compatibility (5 classes: A1/A2/B1/B2/B3), we use depth 2 (4 classes)
 - `cor_with_ref.txt` shows positive correlations (>0.3) for most chromosomes
 - SLURM logs in `ML/cmpts/logs/` show exit 0
 
-### A2 — Differential Subcompartment Analysis — READY (scripts created 2026-05-27)
+### A2 — Differential Subcompartment Analysis — DONE (2026-05-27)
 
 **Script:** `scripts/A2_differential_subcompartments.R` + `scripts/A2_run.sb` + `scripts/A2_submit_differential.sh`
 
@@ -157,6 +157,12 @@ ML/cmpts/outputs/calder2/
 - Transition matrices sum to ~24,639 (exact total of 100kb autosomal bins for mm10 chr1-19)
 - Chi-squared p-value < 0.05 (late timepoint expected to show significant transitions)
 - Key question answered: what fraction of bins change subcompartment? If <5%, the A/B system is largely stable; if >10%, there are substantial sub-compartment rearrangements
+
+**Results (2026-05-27):**
+- 250402 (late/adult): 15.3% bins changed (3,659/23,853), X²=39,957, p≈0, V=0.747
+- 250831 (early/P12): 18.3% bins changed (4,371/23,823), X²=39,122, p≈0, V=0.740
+- Both timepoints show substantial rearrangements (>10%). Early timepoint has more transitions than late (unexpected — may reflect developmental plasticity at P12).
+- ~800 bins per timepoint uncallable (centromeric/telomeric gaps).
 
 ### A3 — Epigenomic Validation — PENDING
 

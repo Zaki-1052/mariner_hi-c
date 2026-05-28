@@ -1,0 +1,103 @@
+#!/bin/bash
+# ML/cmpts/scripts/utils/merge_h3k36me3_bigwigs.sb
+# One-off: merge per-replicate H3K36me3 BigWigs into ctrl/mut merged files.
+# Uses rnorm-normalized BigWigs (*_norm_rnorm.bw).
+# Output goes to the shared bigwigs/ directory alongside the other marks.
+#
+# Usage: sbatch merge_h3k36me3_bigwigs.sb
+#SBATCH --job-name=merge_h3k36me3
+#SBATCH --output=merge_h3k36me3_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=01:00:00
+#SBATCH --account=csd940
+
+BW_DIR="/expanse/lustre/projects/csd940/zalibhai/bigwigs"
+H3K_DIR="${BW_DIR}/h3k36me3"
+LOG_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/logs"
+
+mkdir -p "${LOG_DIR}"
+
+echo "==========================================="
+echo "Merge H3K36me3 per-replicate BigWigs"
+echo "==========================================="
+echo "Job ID:   ${SLURM_JOB_ID}"
+echo "Node:     ${HOSTNAME}"
+echo "Input:    ${H3K_DIR}"
+echo "Output:   ${BW_DIR}"
+echo "Start:    $(date)"
+echo "==========================================="
+
+source ~/.bashrc
+conda activate calder2_env
+
+# ── Validate inputs ──
+
+CTRL_FILES=( ${H3K_DIR}/*_ctrl*_H3K36me3_*_norm_rnorm.bw )
+MUT_FILES=(  ${H3K_DIR}/*_mut*_H3K36me3_*_norm_rnorm.bw )
+
+echo ""
+echo "Ctrl replicates (${#CTRL_FILES[@]}):"
+for f in "${CTRL_FILES[@]}"; do echo "  $(basename $f)"; done
+
+echo ""
+echo "Mut replicates (${#MUT_FILES[@]}):"
+for f in "${MUT_FILES[@]}"; do echo "  $(basename $f)"; done
+
+if [ ${#CTRL_FILES[@]} -ne 6 ]; then
+  echo "ERROR: expected 6 ctrl replicates, found ${#CTRL_FILES[@]}" >&2
+  exit 2
+fi
+
+if [ ${#MUT_FILES[@]} -ne 6 ]; then
+  echo "ERROR: expected 6 mut replicates, found ${#MUT_FILES[@]}" >&2
+  exit 2
+fi
+
+# ── Merge ──
+
+echo ""
+echo "Merging ctrl (6 reps)..."
+bigwigAverage -b "${CTRL_FILES[@]}" -o "${BW_DIR}/H3K36me3Ctrl.bw" -p 4 &
+PID_CTRL=$!
+
+echo "Merging mut (6 reps)..."
+bigwigAverage -b "${MUT_FILES[@]}" -o "${BW_DIR}/H3K36me3Mut.bw" -p 4 &
+PID_MUT=$!
+
+wait ${PID_CTRL}
+STATUS_CTRL=$?
+wait ${PID_MUT}
+STATUS_MUT=$?
+
+if [ ${STATUS_CTRL} -ne 0 ]; then
+  echo "ERROR: bigwigAverage failed for ctrl (exit=${STATUS_CTRL})" >&2
+  exit 1
+fi
+
+if [ ${STATUS_MUT} -ne 0 ]; then
+  echo "ERROR: bigwigAverage failed for mut (exit=${STATUS_MUT})" >&2
+  exit 1
+fi
+
+# ── Verify outputs ──
+
+echo ""
+echo "=== Verification ==="
+for OUT in "${BW_DIR}/H3K36me3Ctrl.bw" "${BW_DIR}/H3K36me3Mut.bw"; do
+  if [ -s "${OUT}" ]; then
+    SIZE=$(ls -lh "${OUT}" | awk '{print $5}')
+    echo "  OK: $(basename ${OUT}) (${SIZE})"
+  else
+    echo "  ERROR: missing or empty: ${OUT}" >&2
+    exit 1
+  fi
+done
+
+echo ""
+echo "==========================================="
+echo "Done: $(date)"
+echo "==========================================="

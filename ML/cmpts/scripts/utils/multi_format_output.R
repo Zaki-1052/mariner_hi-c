@@ -22,11 +22,6 @@
 # Note: Requires svglite package for high-quality SVG output
 #   install.packages("svglite")
 
-# Load svglite for Illustrator-friendly SVG output
-if (!requireNamespace("svglite", quietly = TRUE)) {
-  message("Installing svglite package for SVG output...")
-  install.packages("svglite", repos = "https://cloud.r-project.org")
-}
 library(svglite)
 
 #' Save ggplot object in multiple formats (PDF, SVG, PNG, JPEG)
