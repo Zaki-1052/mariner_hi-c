@@ -1,0 +1,45 @@
+#!/bin/bash
+# ML/cmpts/scripts/A3_run.sb
+# Stage A3: Epigenomic validation of CALDER2 subcompartment calls.
+# Processes both timepoints in a single job (BigWigs are not timepoint-specific).
+# Usage: sbatch A3_run.sb
+#SBATCH --job-name=a3_epigenomic
+#SBATCH --output=a3_epigenomic_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
+
+mkdir -p "${CODE_DIR}/logs" "${CODE_DIR}/outputs/calder2"
+
+echo "==========================================="
+echo "A3: Epigenomic Validation"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Start:      $(date)"
+echo "Code dir:   ${CODE_DIR}"
+echo "==========================================="
+
+source ~/.bashrc
+conda activate calder2_env
+
+Rscript "${CODE_DIR}/scripts/A3_epigenomic_validation.R" \
+  "${DATA_DIR}" "${CODE_DIR}"
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: A3_epigenomic_validation.R failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+echo ""
+echo "End: $(date)"
+echo "==========================================="

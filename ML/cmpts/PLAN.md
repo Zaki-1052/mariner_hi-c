@@ -62,6 +62,8 @@ The Dixon meeting (2026-04-10) identified subcompartment calling as a key analys
 
 **Status:** `calder2_env` conda env created and all packages installed. CALDER v2.0 loads successfully with mm10 reference BED (15,364 bins). Key deps verified: strawr 0.0.92, GenomicRanges 1.50.2, rhdf5 2.42.1, data.table 1.18.4, ggplot2 4.0.3, doParallel 1.0.17, igraph 2.0.3.
 
+**Addendum (A3 prerequisite):** `rtracklayer` must also be installed for BigWig signal extraction in A3. Run interactively: `Rscript -e 'BiocManager::install("rtracklayer", update = FALSE, ask = FALSE)'`
+
 ### A1 — Run CALDER2 on Each Sample — DONE (2026-05-27)
 
 **Script:** `scripts/A1_run_calder2.R` + `scripts/A1_run_calder2.sb` + `scripts/A1_submit_calder2.sh`
@@ -164,18 +166,21 @@ ML/cmpts/outputs/calder2/
 - Both timepoints show substantial rearrangements (>10%). Early timepoint has more transitions than late (unexpected — may reflect developmental plasticity at P12).
 - ~800 bins per timepoint uncallable (centromeric/telomeric gaps).
 
-### A3 — Epigenomic Validation — PENDING
+### A3 — Epigenomic Validation — SCRIPTED (2026-05-27)
 
 **Script:** `scripts/A3_epigenomic_validation.R` + `scripts/A3_run.sb`
 
+Single SLURM job processes both timepoints (BigWigs are not timepoint-specific). Produces ctrl validation, mut validation, and differential heatmaps per timepoint. Prerequisites: `rtracklayer` installed in `calder2_env`, A2 outputs exist, `merge_h3k36me3_bigwigs.sb` complete.
+
 Replicates SNIPER paper Figure 2c: fold-enrichment heatmap of epigenomic marks per subcompartment.
 
-**Available marks for validation (10 marks × ctrl/mut = 20 BigWigs):**
+**Available marks for validation (9 marks × ctrl/mut = 18 BigWigs):**
 
 | Mark | BigWig | Subcompartment expectation |
 |------|--------|--------------------------|
 | H3K27ac | `{H3K27acCtrl,H3K27acMut}.bw` | A.1 >> A.2 > B.1 > B.2 |
 | H3K4me3 | `{H3K4me3Ctrl,H3K4me3Mut}.bw` | A.1 >> A.2 > B.1 > B.2 |
+| H3K36me3 | `{H3K36me3Ctrl,H3K36me3Mut}.bw` | A.1 > A.2 >> B.1 > B.2 (active gene bodies) |
 | H3K27me3 | `{H3K27me3Ctrl,H3K27me3Mut}.bw` | B.1 >> B.2 > A.2 > A.1 |
 | H2AK119ub | `{H2AK119ubCtrl,H2AK119ubMut}.bw` | B.1 enriched (Polycomb) |
 | ATAC-seq | `{ATACctrl,ATACmut}.bw` | A.1 >> A.2 > B.1 > B.2 |
@@ -183,7 +188,7 @@ Replicates SNIPER paper Figure 2c: fold-enrichment heatmap of epigenomic marks p
 | DNA methylation | `{DNAmethylationCtrl,DNAmethylationMut}.bw` | Complex |
 | H3K27me1 | `{H3K27me1Ctrl,H3K27me1Mut}.bw` | Not well characterized |
 
-Missing: H3K36me3 BigWig (peaks exist but no signal track), H3K79me2, H4K20me1, LMNB1. B.2 vs B.3 validation is limited without these.
+Missing: H3K79me2, H4K20me1, LMNB1. B.2 vs B.3 validation is limited without these.
 
 BigWig path on HPC: `/expanse/lustre/projects/csd940/zalibhai/bigwigs/`
 
@@ -194,11 +199,25 @@ BigWig path on HPC: `/expanse/lustre/projects/csd940/zalibhai/bigwigs/`
 4. Compute fold-enrichment: `median_in_subcomp / median_across_all_bins`
 5. Plot as heatmap (rows=marks, cols=subcompartments A.1→B.2, color=RdBu fold-enrichment)
 
-**SLURM:** `--cpus-per-task=8 --mem=32G --time=04:00:00`
+**SLURM:** `--cpus-per-task=8 --mem=32G --time=04:00:00` (single job, both TPs)
+
+**Outputs (per timepoint):**
+```
+ML/cmpts/outputs/calder2/
+  {tp}_bin_signals.tsv                    # ~24k rows × 23 cols (reusable by C-stage)
+  {tp}_enrichment_matrix.tsv              # long format: mark, subcompartment, fold, log2
+  {tp}_differential_matrix.tsv            # ctrl_label × log2(mut/ctrl) per mark
+  {tp}_enrichment_heatmap_ctrl/           # 4 formats: pdf/svg/png/jpg
+  {tp}_enrichment_heatmap_mut/
+  {tp}_enrichment_heatmap_diff/
+  {tp}_enrichment_combined/               # 3-panel combined figure
+```
 
 **Verification:**
 - H3K27ac gradient monotonically decreasing A.1 → B.2 in ctrl
 - H3K27me3 enriched in B.1 (>1.5× fold) — this is the key Polycomb compartment
+- H2AK119ub enriched in B.1 (Polycomb signature)
+- No NaN/Inf in enrichment results
 - If gradients are flat or inverted, something is wrong with compartment polarity
 
 ### A4 — Integration with HOMER A/B Compartments — PENDING
