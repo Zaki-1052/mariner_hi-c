@@ -42,8 +42,9 @@ MM10_CHROM_SIZES <- c(
 )
 
 TP_LABELS <- c("250402" = "late/adult", "250831" = "early/P12")
+TP_DIRS   <- c("250402" = "late", "250831" = "early")
 
-OUT_DIR   <- file.path(CODE_ROOT, "outputs", "calder2")
+OUT_DIR   <- file.path(CODE_ROOT, "outputs", "calder2", TP_DIRS[TP])
 UTIL_PATH <- file.path(CODE_ROOT, "scripts", "utils", "multi_format_output.R")
 
 # ── Libraries ──────────────────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ cat("===========================================\n\n")
 cat("=== Pre-flight validation ===\n")
 input_files <- list()
 for (samp in SAMPLES) {
-  path <- file.path(CODE_ROOT, "outputs", "calder2", TP, samp,
+  path <- file.path(CODE_ROOT, "outputs", "calder2", TP_DIRS[TP], TP, samp,
                     "sub_compartments", "all_sub_compartments.tsv")
   if (!file.exists(path)) stop(sprintf("Missing A1 output: %s", path))
   if (file.info(path)$size == 0) stop(sprintf("Empty A1 output: %s", path))

@@ -22,10 +22,11 @@ SAMPLE    <- args[2]
 DATA_ROOT <- args[3]
 CODE_ROOT <- args[4]
 
+TP_DIRS  <- c("250402" = "late", "250831" = "early")
 HIC_ROOT <- "/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
 hic_path <- file.path(HIC_ROOT, TP, paste0(SAMPLE, ".hic"))
 work_dir <- file.path(DATA_ROOT, "calder2", TP, SAMPLE)
-repo_dir <- file.path(CODE_ROOT, "outputs", "calder2", TP, SAMPLE)
+repo_dir <- file.path(CODE_ROOT, "outputs", "calder2", TP_DIRS[TP], TP, SAMPLE)
 
 # ── Pre-flight validation ──
 

@@ -18,7 +18,11 @@ TP="${1:?usage: sbatch A2_run.sb <timepoint>}"
 CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
 DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
 
-mkdir -p "${CODE_DIR}/logs" "${CODE_DIR}/outputs/calder2"
+case "${TP}" in
+  250402) TP_DIR="late" ;;
+  250831) TP_DIR="early" ;;
+esac
+mkdir -p "${CODE_DIR}/logs" "${CODE_DIR}/outputs/calder2/${TP_DIR}"
 
 echo "==========================================="
 echo "A2: Differential Subcompartment Analysis"

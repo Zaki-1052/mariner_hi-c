@@ -25,6 +25,7 @@ CODE_ROOT <- args[2]
 
 TPS <- c("250402", "250831")
 TP_LABELS <- c("250402" = "late/adult", "250831" = "early/P12")
+TP_DIRS   <- c("250402" = "late", "250831" = "early")
 
 BIGWIG_DIR <- "/expanse/lustre/projects/csd940/zalibhai/bigwigs"
 
@@ -51,7 +52,8 @@ MARKS <- data.table::data.table(
 
 MARK_ORDER <- MARKS$mark
 
-OUT_DIR   <- file.path(CODE_ROOT, "outputs", "calder2")
+OUT_BASE  <- file.path(CODE_ROOT, "outputs", "calder2")
+OUT_DIR   <- OUT_BASE
 UTIL_PATH <- file.path(CODE_ROOT, "scripts", "utils", "multi_format_output.R")
 
 # ── Libraries ──────────────────────────────────────────────────────────────────
@@ -97,7 +99,8 @@ if (length(missing_bws) > 0) {
 cat(sprintf("  All %d BigWig files found.\n", length(all_bw_paths)))
 
 for (tp in TPS) {
-  labels_path <- file.path(OUT_DIR,
+  tp_dir <- file.path(OUT_BASE, TP_DIRS[tp])
+  labels_path <- file.path(tp_dir,
                            sprintf("%s_subcompartment_labels_100kb.tsv", tp))
   if (!file.exists(labels_path))
     stop(sprintf("Missing A2 output: %s", labels_path))
@@ -108,7 +111,6 @@ for (tp in TPS) {
 }
 
 if (!file.exists(UTIL_PATH)) stop(sprintf("Missing utility: %s", UTIL_PATH))
-dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 cat("  Pre-flight passed.\n")
 
 # ── Function definitions ───────────────────────────────────────────────────────
@@ -234,6 +236,8 @@ plot_enrichment_heatmap <- function(enrichment_dt, title, mark_order,
 for (tp in TPS) {
   tp_start <- proc.time()
   tp_label <- sprintf("%s (%s)", tp, TP_LABELS[tp])
+  OUT_DIR  <- file.path(OUT_BASE, TP_DIRS[tp])
+  dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
   cat(sprintf("\n\n###################################################\n"))
   cat(sprintf("### Timepoint: %s\n", tp_label))

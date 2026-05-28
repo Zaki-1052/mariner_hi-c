@@ -72,8 +72,9 @@ DIRECTION_LABELS <- c(
   "B_to_A_in_Mutant" = "HOMER: B→A"
 )
 
-CALDER2_DIR <- file.path(CODE_ROOT, "outputs", "calder2")
-OUT_DIR     <- file.path(CODE_ROOT, "outputs", "integration")
+TP_DIRS     <- c("250402" = "late", "250831" = "early")
+CALDER2_BASE <- file.path(CODE_ROOT, "outputs", "calder2")
+OUT_BASE     <- file.path(CODE_ROOT, "outputs", "integration")
 UTIL_PATH   <- file.path(CODE_ROOT, "scripts", "utils", "multi_format_output.R")
 
 # ── Libraries ──────────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ cat("===========================================\n")
 cat(sprintf("CODE_ROOT:  %s\n", CODE_ROOT))
 cat(sprintf("REPO_ROOT:  %s\n", REPO_ROOT))
 cat(sprintf("Timepoints: %s\n", paste(TPS, collapse = ", ")))
-cat(sprintf("Output dir: %s\n", OUT_DIR))
+cat(sprintf("Output base: %s\n", OUT_BASE))
 cat(sprintf("Sig thresh: FDR<%.2f, |Diff|>%.2f\n", HOMER_SIG_FDR, HOMER_SIG_DIFF))
 cat(sprintf("Start:      %s\n", date()))
 cat("===========================================\n\n")
@@ -114,7 +115,8 @@ for (tp in TPS) {
 }
 
 for (tp in TPS) {
-  lp <- file.path(CALDER2_DIR, sprintf("%s_subcompartment_labels_100kb.tsv", tp))
+  lp <- file.path(CALDER2_BASE, TP_DIRS[tp],
+                   sprintf("%s_subcompartment_labels_100kb.tsv", tp))
   if (!file.exists(lp)) stop(sprintf("Missing CALDER2 labels: %s", lp))
   if (file.info(lp)$size == 0) stop(sprintf("Empty CALDER2 labels: %s", lp))
   cat(sprintf("  OK: CALDER2 %s (%s bytes)\n", tp,
@@ -122,7 +124,6 @@ for (tp in TPS) {
 }
 
 if (!file.exists(UTIL_PATH)) stop(sprintf("Missing utility: %s", UTIL_PATH))
-dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 cat("  Pre-flight passed.\n")
 
 # ── Function definitions ───────────────────────────────────────────────────────
@@ -287,6 +288,9 @@ for (tp in TPS) {
 
   tp_start <- proc.time()
   tp_label <- sprintf("%s (%s)", tp, TP_LABELS[tp])
+  CALDER2_DIR <- file.path(CALDER2_BASE, TP_DIRS[tp])
+  OUT_DIR     <- file.path(OUT_BASE, TP_DIRS[tp])
+  dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
   cat("\n===========================================\n")
   cat(sprintf("  Timepoint: %s\n", tp_label))
@@ -482,7 +486,7 @@ for (tp in TPS) {
 
 cat("\n=== Cross-timepoint summary ===\n")
 combined <- rbindlist(decomp_list)
-out_combined <- file.path(OUT_DIR, "combined_weakening_decomposition.tsv")
+out_combined <- file.path(OUT_BASE, "combined_weakening_decomposition.tsv")
 fwrite(combined, out_combined, sep = "\t", quote = FALSE, na = "NA")
 cat(sprintf("  Written: %s (%d rows)\n", basename(out_combined), nrow(combined)))
 
@@ -491,22 +495,29 @@ cat(sprintf("  Written: %s (%d rows)\n", basename(out_combined), nrow(combined))
 cat("\n=== Final verification ===\n")
 any_warn <- FALSE
 
-all_expected <- c(
-  paste0(TPS, "_homer_calder2_joined.tsv"),
-  paste0(TPS, "_homer_100kb_aggregated.tsv"),
-  paste0(TPS, "_homer_calder2_crosstab.tsv"),
-  paste0(TPS, "_homer_weakening_decomposition.tsv"),
-  "combined_weakening_decomposition.tsv"
-)
-for (f in all_expected) {
-  fpath <- file.path(OUT_DIR, f)
-  if (!file.exists(fpath)) {
-    warning(sprintf("Missing output: %s", f))
-    any_warn <- TRUE
-  } else if (file.info(fpath)$size == 0) {
-    warning(sprintf("Empty output: %s", f))
-    any_warn <- TRUE
+for (tp in TPS) {
+  tp_out <- file.path(OUT_BASE, TP_DIRS[tp])
+  per_tp_expected <- c(
+    sprintf("%s_homer_calder2_joined.tsv", tp),
+    sprintf("%s_homer_100kb_aggregated.tsv", tp),
+    sprintf("%s_homer_calder2_crosstab.tsv", tp),
+    sprintf("%s_homer_weakening_decomposition.tsv", tp)
+  )
+  for (f in per_tp_expected) {
+    fpath <- file.path(tp_out, f)
+    if (!file.exists(fpath)) {
+      warning(sprintf("Missing output: %s", f))
+      any_warn <- TRUE
+    } else if (file.info(fpath)$size == 0) {
+      warning(sprintf("Empty output: %s", f))
+      any_warn <- TRUE
+    }
   }
+}
+combined_path <- file.path(OUT_BASE, "combined_weakening_decomposition.tsv")
+if (!file.exists(combined_path)) {
+  warning("Missing combined_weakening_decomposition.tsv")
+  any_warn <- TRUE
 }
 
 if (!any_warn) cat("  All checks passed.\n")

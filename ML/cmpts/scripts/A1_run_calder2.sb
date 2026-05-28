@@ -21,10 +21,16 @@ CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
 DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
 HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
 
+case "${TP}" in
+  250402) TP_DIR="late" ;;
+  250831) TP_DIR="early" ;;
+  *) echo "ERROR: Unknown timepoint ${TP}" >&2; exit 1 ;;
+esac
+
 HIC="${HIC_ROOT}/${TP}/${SAMPLE}.hic"
 WORK_DIR="${DATA_DIR}/calder2/${TP}/${SAMPLE}"
 
-mkdir -p "${WORK_DIR}" "${CODE_DIR}/logs" "${CODE_DIR}/outputs/calder2/${TP}/${SAMPLE}"
+mkdir -p "${WORK_DIR}" "${CODE_DIR}/logs" "${CODE_DIR}/outputs/calder2/${TP_DIR}/${TP}/${SAMPLE}"
 
 echo "==========================================="
 echo "A1: CALDER2 Subcompartment Calling"
@@ -36,7 +42,7 @@ echo "Timepoint:  ${TP}"
 echo "Sample:     ${SAMPLE}"
 echo "Input:      ${HIC}"
 echo "Work dir:   ${WORK_DIR}"
-echo "Repo dir:   ${CODE_DIR}/outputs/calder2/${TP}/${SAMPLE}"
+echo "Repo dir:   ${CODE_DIR}/outputs/calder2/${TP_DIR}/${TP}/${SAMPLE}"
 echo "Start:      $(date)"
 echo "==========================================="
 
