@@ -1,0 +1,198 @@
+#!/bin/bash
+# biomodal/downstream/scripts/homer/prepare_beds.sb
+#SBATCH --job-name=homer_prepare_beds
+#SBATCH --output=logs/homer_prepare_beds_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=8G
+#SBATCH --time=00:30:00
+#SBATCH --account=csd940
+
+echo "================================================================="
+echo "HOMER BED Preparation — DMRs + H2AK119ub + H3K27ac"
+echo "================================================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "================================================================="
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────
+# Configuration
+# ─────────────────────────────────────────────────────────────────────
+
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+DMR_BED_DIR="${BASE_DIR}/biomodal/downstream/modality/DMR_processed/CG/genes/bed"
+K119UB_DIR="${BASE_DIR}/peaks/new"
+DIFFBIND_K119UB="${BASE_DIR}/peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt"
+DIFFBIND_K27AC="${BASE_DIR}/peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt"
+COORD_CHARS="${BASE_DIR}/biomodal/downstream/plots/visualizations/tables/coordinated_gene_characteristics.tsv"
+OUTPUT_BASE="${BASE_DIR}/biomodal/downstream/results/homer_motif_enrichment"
+BED_DIR="${OUTPUT_BASE}/beds"
+
+echo "Configuration:"
+echo "  DMR BED dir:     ${DMR_BED_DIR}"
+echo "  K119ub dir:      ${K119UB_DIR}"
+echo "  DiffBind K119ub: ${DIFFBIND_K119UB}"
+echo "  DiffBind K27ac:  ${DIFFBIND_K27AC}"
+echo "  Coordinated:     ${COORD_CHARS}"
+echo "  Output BED dir:  ${BED_DIR}"
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────
+# Input validation
+# ─────────────────────────────────────────────────────────────────────
+
+echo "Input validation:"
+REQUIRED_SOURCES=(
+    "${DMR_BED_DIR}/mc_significant_hyper.bed"
+    "${DMR_BED_DIR}/mc_significant_hypo.bed"
+    "${DMR_BED_DIR}/hmc_significant_hyper.bed"
+    "${DMR_BED_DIR}/hmc_significant_hypo.bed"
+    "${K119UB_DIR}/H2AK119ub_up.bed"
+    "${K119UB_DIR}/H2AK119ub_down.bed"
+    "${DIFFBIND_K119UB}"
+    "${DIFFBIND_K27AC}"
+    "${COORD_CHARS}"
+)
+
+MISSING=0
+for SRC in "${REQUIRED_SOURCES[@]}"; do
+    if [ ! -s "${SRC}" ]; then
+        echo "  ERROR: Missing or empty: ${SRC}"
+        MISSING=$((MISSING + 1))
+    else
+        COUNT=$(wc -l < "${SRC}")
+        echo "  OK: $(basename "${SRC}") (${COUNT} lines)"
+    fi
+done
+
+if [ ${MISSING} -gt 0 ]; then
+    echo ""
+    echo "ERROR: ${MISSING} required source file(s) missing. Exiting."
+    exit 1
+fi
+echo ""
+
+# ─────────────────────────────────────────────────────────────────────
+# Prepare BED files
+# ─────────────────────────────────────────────────────────────────────
+
+mkdir -p "${BED_DIR}"
+
+# --- A1-A4: DMR BEDs (add chr prefix, extract BED3, skip header) ---
+
+echo "Converting DMR BEDs (adding chr prefix)..."
+
+awk -F'\t' 'NR>1 {print "chr"$1"\t"$2"\t"$3}' \
+    "${DMR_BED_DIR}/mc_significant_hyper.bed" > "${BED_DIR}/mc_hyper_homer.bed"
+
+awk -F'\t' 'NR>1 {print "chr"$1"\t"$2"\t"$3}' \
+    "${DMR_BED_DIR}/mc_significant_hypo.bed" > "${BED_DIR}/mc_hypo_homer.bed"
+
+awk -F'\t' 'NR>1 {print "chr"$1"\t"$2"\t"$3}' \
+    "${DMR_BED_DIR}/hmc_significant_hyper.bed" > "${BED_DIR}/hmc_hyper_homer.bed"
+
+awk -F'\t' 'NR>1 {print "chr"$1"\t"$2"\t"$3}' \
+    "${DMR_BED_DIR}/hmc_significant_hypo.bed" > "${BED_DIR}/hmc_hypo_homer.bed"
+
+echo "  mc_hyper_homer.bed:  $(wc -l < "${BED_DIR}/mc_hyper_homer.bed") regions"
+echo "  mc_hypo_homer.bed:   $(wc -l < "${BED_DIR}/mc_hypo_homer.bed") regions"
+echo "  hmc_hyper_homer.bed: $(wc -l < "${BED_DIR}/hmc_hyper_homer.bed") regions"
+echo "  hmc_hypo_homer.bed:  $(wc -l < "${BED_DIR}/hmc_hypo_homer.bed") regions"
+echo ""
+
+# --- A5: Coordinated (Q4) vs discordant (Q2) gene body BEDs ---
+
+echo "Extracting coordinated (Q4: mC up/hmC dn) and discordant (Q2: mC dn/hmC up) BEDs..."
+
+awk -F'\t' '
+    NR==FNR && FNR>1 && $5=="Q4: mC up/hmC dn" {genes[$1]=1; next}
+    NR!=FNR && FNR>1 && ($14 in genes) {print "chr"$1"\t"$2"\t"$3}
+' "${COORD_CHARS}" "${DMR_BED_DIR}/mc_significant_hyper.bed" \
+    > "${BED_DIR}/coordinated_q4.bed"
+
+awk -F'\t' '
+    NR==FNR && FNR>1 && $5=="Q2: mC dn/hmC up" {genes[$1]=1; next}
+    NR!=FNR && FNR>1 && ($14 in genes) {print "chr"$1"\t"$2"\t"$3}
+' "${COORD_CHARS}" "${DMR_BED_DIR}/mc_significant_hypo.bed" \
+    > "${BED_DIR}/discordant_q2.bed"
+
+echo "  coordinated_q4.bed:  $(wc -l < "${BED_DIR}/coordinated_q4.bed") regions"
+echo "  discordant_q2.bed:   $(wc -l < "${BED_DIR}/discordant_q2.bed") regions"
+echo ""
+
+# --- B1-B2: K119ub differential peaks (already HOMER-ready) ---
+
+echo "Copying K119ub differential peak BEDs..."
+
+cp "${K119UB_DIR}/H2AK119ub_up.bed"   "${BED_DIR}/k119ub_gained.bed"
+cp "${K119UB_DIR}/H2AK119ub_down.bed"  "${BED_DIR}/k119ub_lost.bed"
+
+echo "  k119ub_gained.bed:   $(wc -l < "${BED_DIR}/k119ub_gained.bed") regions"
+echo "  k119ub_lost.bed:     $(wc -l < "${BED_DIR}/k119ub_lost.bed") regions"
+echo ""
+
+# --- B3-B4: DiffBind K119ub summit windows (FDR < 0.05, canonical chr) ---
+
+echo "Extracting DiffBind K119ub significant summit windows (FDR < 0.05)..."
+
+awk -F'\t' 'NR>1 && $1~/^chr[0-9XY]+$/ && $14+0 < 0.05 && $12+0 > 0 {
+    print $1"\t"$2"\t"$3
+}' "${DIFFBIND_K119UB}" > "${BED_DIR}/diffbind_gained_fdr05.bed"
+
+awk -F'\t' 'NR>1 && $1~/^chr[0-9XY]+$/ && $14+0 < 0.05 && $12+0 < 0 {
+    print $1"\t"$2"\t"$3
+}' "${DIFFBIND_K119UB}" > "${BED_DIR}/diffbind_lost_fdr05.bed"
+
+echo "  diffbind_gained_fdr05.bed: $(wc -l < "${BED_DIR}/diffbind_gained_fdr05.bed") regions"
+echo "  diffbind_lost_fdr05.bed:   $(wc -l < "${BED_DIR}/diffbind_lost_fdr05.bed") regions"
+echo ""
+
+# --- C1-C4: DiffBind K27ac summit windows (FDR < 0.05, |Fold| > 0.5) ---
+
+echo "Extracting DiffBind K27ac significant summit windows (FDR < 0.05, |Fold| > 0.5)..."
+
+awk -F'\t' 'NR>1 && $1~/^chr[0-9XY]+$/ && $14+0 < 0.05 && $12+0 > 0.5 {
+    print $1"\t"$2"\t"$3
+}' "${DIFFBIND_K27AC}" > "${BED_DIR}/k27ac_gained_fdr05.bed"
+
+awk -F'\t' 'NR>1 && $1~/^chr[0-9XY]+$/ && $14+0 < 0.05 && $12+0 < -0.5 {
+    print $1"\t"$2"\t"$3
+}' "${DIFFBIND_K27AC}" > "${BED_DIR}/k27ac_lost_fdr05.bed"
+
+echo "  k27ac_gained_fdr05.bed: $(wc -l < "${BED_DIR}/k27ac_gained_fdr05.bed") regions"
+echo "  k27ac_lost_fdr05.bed:   $(wc -l < "${BED_DIR}/k27ac_lost_fdr05.bed") regions"
+echo ""
+
+# --- Final validation ---
+
+echo "Final BED validation:"
+ALL_VALID=1
+for BED_FILE in mc_hyper_homer.bed mc_hypo_homer.bed hmc_hyper_homer.bed hmc_hypo_homer.bed \
+                coordinated_q4.bed discordant_q2.bed \
+                k119ub_gained.bed k119ub_lost.bed \
+                diffbind_gained_fdr05.bed diffbind_lost_fdr05.bed \
+                k27ac_gained_fdr05.bed k27ac_lost_fdr05.bed; do
+    FPATH="${BED_DIR}/${BED_FILE}"
+    if [ ! -s "${FPATH}" ]; then
+        echo "  ERROR: ${BED_FILE} is empty or missing"
+        ALL_VALID=0
+    else
+        echo "  OK: ${BED_FILE} ($(wc -l < "${FPATH}") regions)"
+    fi
+done
+
+if [ ${ALL_VALID} -eq 0 ]; then
+    echo ""
+    echo "ERROR: One or more prepared BED files are empty. Exiting."
+    exit 1
+fi
+echo ""
+echo "All 12 BED files validated successfully."
+echo "End time: $(date)"
+echo "================================================================="
+
+exit 0
