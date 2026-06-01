@@ -43,7 +43,7 @@ def hicToMat(h,juicer_cmd,tmp_dir='.',prefix='hic',autoremove=False,overwrite=Fa
 			if os.path.isfile(output_path) and not overwrite:
 				continue
 
-			cmd = '{0} dump observed KR {1} {2} {3} BP 100000 {4}'.format(juicer_cmd,h,chrm1,chrm2,output_path)
+			cmd = '{0} dump observed KR {1} chr{2} chr{3} BP 100000 {4}'.format(juicer_cmd,h,chrm1,chrm2,output_path)
 			call([cmd],shell=True)
 
 	""" File path of the inter-chromosomal matrix """

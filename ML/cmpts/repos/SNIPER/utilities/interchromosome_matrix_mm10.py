@@ -27,35 +27,35 @@ def construct(hic_dir='.',prefix='hic',hic_res=100000,sizes_file='data/mm10.chro
 
 			filepath = os.path.join(hic_dir, '{2}_chrm{0}_chrm{1}.txt'.format(i,j,prefix))
 
-			# file = open(filepath,'r')
-
-			txt_data = pd.read_csv(filepath, sep='\t', header=None).values
-
 			nrow = int(chromosome_lengths['chr' + str(i)] / hic_res + 1)
 			ncol = int(chromosome_lengths['chr' + str(j)] / hic_res + 1)
+			SM = np.zeros((nrow, ncol))
 
-			SM = np.zeros((nrow,ncol))
+			if not os.path.isfile(filepath) or os.path.getsize(filepath) == 0:
+				print('WARNING: {0} missing or empty, using zeros'.format(os.path.basename(filepath)))
+			else:
+				txt_data = pd.read_csv(filepath, sep='\t', header=None).values
 
-			rows = txt_data[:,0] / hic_res
-			cols = txt_data[:,1] / hic_res
+				rows = txt_data[:,0] / hic_res
+				cols = txt_data[:,1] / hic_res
 
-			if i > j:
-				rows = txt_data[:,1] / hic_res
-				cols = txt_data[:,0] / hic_res
+				if i > j:
+					rows = txt_data[:,1] / hic_res
+					cols = txt_data[:,0] / hic_res
 
-			data = txt_data[:,2]
+				data = txt_data[:,2]
 
-			rows = rows.astype(int)
-			cols = cols.astype(int)
+				rows = rows.astype(int)
+				cols = cols.astype(int)
 
-			try:
-				SM[rows,cols]=data
-			except IndexError:
-				temp = rows.copy()
-				rows = cols
-				cols = temp
-				del temp
-				SM[rows,cols] = data
+				try:
+					SM[rows,cols]=data
+				except IndexError:
+					temp = rows.copy()
+					rows = cols
+					cols = temp
+					del temp
+					SM[rows,cols] = data
 
 			if rowSM is None:
 				rowSM = SM

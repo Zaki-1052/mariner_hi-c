@@ -58,7 +58,7 @@ def dump_interchromosomal_contacts(hic_path, tmp_dir, overwrite):
                     done += 1
                     continue
 
-            cmd = '{0} dump observed KR {1} {2} {3} BP {4} {5}'.format(
+            cmd = '{0} dump observed KR {1} chr{2} chr{3} BP {4} {5}'.format(
                 JUICER_CMD, hic_path, chrm1, chrm2, RESOLUTION, output_path
             )
             call([cmd], shell=True)
@@ -225,6 +225,21 @@ def main():
     # ── Step 1: Dump inter-chromosomal contacts ──
     print('Step 1: Dumping inter-chromosomal contacts (90 pairs)...')
     dump_interchromosomal_contacts(args.hic_path, args.tmp_dir, args.overwrite)
+
+    dump_files = [f for f in os.listdir(args.tmp_dir)
+                  if f.startswith('cropmap_chrm') and f.endswith('.txt')]
+    non_empty = [f for f in dump_files
+                 if os.path.getsize(os.path.join(args.tmp_dir, f)) > 0]
+    print('  Dump inventory: {0} files, {1} non-empty'.format(
+        len(dump_files), len(non_empty)))
+    if len(non_empty) < len(ODD_CHROMS) * len(EVEN_CHROMS):
+        missing = set('cropmap_chrm{0}_chrm{1}.txt'.format(o, e)
+                      for o in ODD_CHROMS for e in EVEN_CHROMS) - set(dump_files)
+        empty = set(dump_files) - set(non_empty)
+        if missing:
+            print('  Missing files: {0}'.format(sorted(missing)))
+        if empty:
+            print('  Empty files:   {0}'.format(sorted(empty)))
 
     # ── Step 2: Build full matrix ──
     print('Step 2: Building inter-chromosomal matrix...')
