@@ -1,0 +1,72 @@
+===========================================
+B0: Add KR Normalization to 250402 .hic files
+===========================================
+Job ID:     49956770
+Node:       exp-2-32
+CPUs:       8
+Resolution: 100000
+Start:      Mon Jun  1 16:17:31 PDT 2026
+===========================================
+
+--- ctrl_merged ---
+  Source: /expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402/ctrl_merged.hic
+  Copy:   /expanse/lustre/projects/csd940/zalibhai/sniper/sniper_mm10/ctrl_merged_addnorm.hic
+  Copying ctrl_merged.hic to working directory...
+  Copy complete.
+  Running: addNorm -k KR -r 100000 -j 8...
+WARN [2026-06-01T23:17:53,541]  [Globals.java:138] [main]  Development mode is enabled
+Using 8 CPU thread(s) for primary task
+
+Calculating norms for zoom BP_2500000
+Calculating norms for zoom BP_1000000
+Calculating norms for zoom BP_500000
+Calculating norms for zoom BP_250000
+Calculating norms for zoom BP_100000skipping zoomBP_50000
+skipping zoomBP_25000
+skipping zoomBP_10000
+skipping zoomBP_5000
+skipping zoomBP_1000
+Finished writing norms
+  addNorm completed (exit=0).
+  Verifying: dump norm KR chr1 BP 100000...
+WARN [2026-06-01T23:18:50,441]  [Globals.java:138] [main]  Development mode is enabled
+  Verifying: dump observed KR chr1 chr2 BP 100000...
+WARN [2026-06-01T23:18:51,355]  [Globals.java:138] [main]  Development mode is enabled
+  KR norm vector lines (chr1):       1955
+  KR inter-chrom lines (chr1 x chr2): 1258791
+  PASS: KR normalization verified for ctrl_merged.
+
+--- mut_merged ---
+  Source: /expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic/250402/mut_merged.hic
+  Copy:   /expanse/lustre/projects/csd940/zalibhai/sniper/sniper_mm10/mut_merged_addnorm.hic
+  Copying mut_merged.hic to working directory...
+  Copy complete.
+  Running: addNorm -k KR -r 100000 -j 8...
+WARN [2026-06-01T23:19:26,934]  [Globals.java:138] [main]  Development mode is enabled
+Using 8 CPU thread(s) for primary task
+
+Calculating norms for zoom BP_2500000
+Calculating norms for zoom BP_1000000
+Calculating norms for zoom BP_500000
+Calculating norms for zoom BP_250000
+Calculating norms for zoom BP_100000skipping zoomBP_50000
+skipping zoomBP_25000
+skipping zoomBP_10000
+skipping zoomBP_5000
+skipping zoomBP_1000
+Finished writing norms
+  addNorm completed (exit=0).
+  Verifying: dump norm KR chr1 BP 100000...
+WARN [2026-06-01T23:20:29,313]  [Globals.java:138] [main]  Development mode is enabled
+  Verifying: dump observed KR chr1 chr2 BP 100000...
+WARN [2026-06-01T23:20:30,218]  [Globals.java:138] [main]  Development mode is enabled
+  KR norm vector lines (chr1):       1955
+  KR inter-chrom lines (chr1 x chr2): 1198435
+  PASS: KR normalization verified for mut_merged.
+
+===========================================
+B0 complete. KR-normalized copies:
+  /expanse/lustre/projects/csd940/zalibhai/sniper/sniper_mm10/ctrl_merged_addnorm.hic
+  /expanse/lustre/projects/csd940/zalibhai/sniper/sniper_mm10/mut_merged_addnorm.hic
+End: Mon Jun  1 16:20:31 PDT 2026
+===========================================

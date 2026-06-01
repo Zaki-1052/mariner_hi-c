@@ -37,6 +37,7 @@ def parse_args():
     parser.add_argument('blacklist_path', help='Path to mm10-blacklist.v2.bed')
     parser.add_argument('output_dir', help='Directory for mm10_cropMap.mat and mm10_cropIndices.mat')
     parser.add_argument('--tmp-dir', default='.', help='Directory for juicer_tools .txt intermediates')
+    parser.add_argument('--timepoint', default=None, help='Timepoint label (e.g. 250402) appended to output filenames')
     parser.add_argument('--overwrite', action='store_true', help='Overwrite existing .txt files')
     parser.add_argument('--sizes-file', default=None,
                         help='Path to mm10.chrom.sizes (default: data/mm10.chrom.sizes relative to SNIPER repo)')
@@ -173,12 +174,13 @@ def build_crop_arrays(retain_rows, retain_cols):
     return rowMap, colMap, odd_global_indices, even_global_indices
 
 
-def save_crop_maps(output_dir, rowMap, colMap, odd_indices, even_indices):
+def save_crop_maps(output_dir, rowMap, colMap, odd_indices, even_indices, timepoint=None):
     """Save cropMap and cropIndices as .mat files."""
     os.makedirs(output_dir, exist_ok=True)
 
-    cropmap_path = os.path.join(output_dir, 'mm10_cropMap.mat')
-    cropidx_path = os.path.join(output_dir, 'mm10_cropIndices.mat')
+    suffix = '_{0}'.format(timepoint) if timepoint else ''
+    cropmap_path = os.path.join(output_dir, 'mm10_cropMap{0}.mat'.format(suffix))
+    cropidx_path = os.path.join(output_dir, 'mm10_cropIndices{0}.mat'.format(suffix))
 
     savemat(cropmap_path, {'rowMap': rowMap, 'colMap': colMap})
     savemat(cropidx_path, {
@@ -264,7 +266,7 @@ def main():
 
     # ── Step 6: Save ──
     print('Step 6: Saving crop map files...')
-    save_crop_maps(args.output_dir, rowMap, colMap, odd_indices, even_indices)
+    save_crop_maps(args.output_dir, rowMap, colMap, odd_indices, even_indices, args.timepoint)
 
     # ── Summary ──
     print('')
