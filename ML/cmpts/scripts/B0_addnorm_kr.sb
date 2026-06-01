@@ -1,0 +1,112 @@
+#!/bin/bash
+# ML/cmpts/scripts/B0_addnorm_kr.sb
+# Add KR normalization at 100kb to 250402 merged .hic files.
+# The 250402 files were created without `-k KR` and only have VC/VC_SQRT/SCALE.
+# SNIPER B1+ stages use juicer_tools `dump observed KR` and need KR at 100kb.
+# Works on copies in DATA_DIR — originals are not modified.
+# Usage: sbatch B0_addnorm_kr.sb
+#SBATCH --job-name=b0_addnorm
+#SBATCH --output=b0_addnorm_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
+WORK_DIR="${DATA_DIR}/sniper_mm10"
+
+JUICER_CONTAINER="/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif"
+JUICER_JAR="/opt/juicer/CPU/common/juicer_tools.jar"
+JUICER_CMD="singularity exec --bind /scratch,/expanse ${JUICER_CONTAINER} java -jar ${JUICER_JAR}"
+
+TP="250402"
+RESOLUTION=100000
+NCPUS="${SLURM_CPUS_PER_TASK}"
+
+mkdir -p "${WORK_DIR}" "${CODE_DIR}/logs"
+
+echo "==========================================="
+echo "B0: Add KR Normalization to ${TP} .hic files"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${NCPUS}"
+echo "Resolution: ${RESOLUTION}"
+echo "Start:      $(date)"
+echo "==========================================="
+
+source ~/.bashrc
+module load singularitypro
+
+STATUS=0
+
+for SAMPLE in ctrl_merged mut_merged; do
+  SRC="${HIC_ROOT}/${TP}/${SAMPLE}.hic"
+  COPY="${WORK_DIR}/${SAMPLE}_addnorm.hic"
+
+  echo ""
+  echo "--- ${SAMPLE} ---"
+  echo "  Source: ${SRC}"
+  echo "  Copy:   ${COPY}"
+
+  if [ ! -s "${SRC}" ]; then
+    echo "ERROR: source .hic not found or empty: ${SRC}" >&2
+    STATUS=1
+    continue
+  fi
+
+  echo "  Copying ${SAMPLE}.hic to working directory..."
+  cp "${SRC}" "${COPY}"
+  echo "  Copy complete."
+
+  echo "  Running: addNorm -k KR -r ${RESOLUTION} -j ${NCPUS}..."
+  ${JUICER_CMD} addNorm -k KR -r ${RESOLUTION} -j ${NCPUS} "${COPY}"
+  RC=$?
+  if [ ${RC} -ne 0 ]; then
+    echo "ERROR: addNorm failed for ${SAMPLE} (exit=${RC})" >&2
+    STATUS=1
+    continue
+  fi
+  echo "  addNorm completed (exit=0)."
+
+  echo "  Verifying: dump norm KR chr1 BP ${RESOLUTION}..."
+  VERIFY_NORM="${WORK_DIR}/verify_norm_${SAMPLE}.txt"
+  ${JUICER_CMD} dump norm KR "${COPY}" chr1 BP ${RESOLUTION} "${VERIFY_NORM}"
+  NORM_LINES=$(wc -l < "${VERIFY_NORM}" 2>/dev/null || echo 0)
+
+  echo "  Verifying: dump observed KR chr1 chr2 BP ${RESOLUTION}..."
+  VERIFY_INTER="${WORK_DIR}/verify_inter_${SAMPLE}.txt"
+  ${JUICER_CMD} dump observed KR "${COPY}" chr1 chr2 BP ${RESOLUTION} "${VERIFY_INTER}"
+  INTER_LINES=$(wc -l < "${VERIFY_INTER}" 2>/dev/null || echo 0)
+
+  echo "  KR norm vector lines (chr1):       ${NORM_LINES}"
+  echo "  KR inter-chrom lines (chr1 x chr2): ${INTER_LINES}"
+
+  if [ "${NORM_LINES}" -gt 0 ] && [ "${INTER_LINES}" -gt 0 ]; then
+    echo "  PASS: KR normalization verified for ${SAMPLE}."
+  else
+    echo "  FAIL: KR normalization not readable for ${SAMPLE}." >&2
+    STATUS=1
+  fi
+
+  rm -f "${VERIFY_NORM}" "${VERIFY_INTER}"
+done
+
+echo ""
+echo "==========================================="
+if [ ${STATUS} -eq 0 ]; then
+  echo "B0 complete. KR-normalized copies:"
+  echo "  ${WORK_DIR}/ctrl_merged_addnorm.hic"
+  echo "  ${WORK_DIR}/mut_merged_addnorm.hic"
+else
+  echo "B0 FAILED — check errors above."
+fi
+echo "End: $(date)"
+echo "==========================================="
+
+exit ${STATUS}

@@ -31,7 +31,7 @@ COMPARISONS <- list(
 )
 
 K119UB_IDS <- c("B1", "B2", "B3", "B4")
-K27AC_IDS  <- c("C1", "C2", "C3", "C4")
+K27AC_IDS  <- c("C1", "C2")
 
 # =============================================================================
 # Load all knownResults.txt
@@ -190,8 +190,10 @@ cat("  Saved: homer_k27ac_matrix_dotplot\n\n")
 
 cat("Plot 2: TF family bar chart (all 8 comparisons)...\n")
 
+ALL_PLOT_IDS <- c(K119UB_IDS, K27AC_IDS)
+
 family_data <- all_results %>%
-  filter(qvalue < 0.05) %>%
+  filter(qvalue < 0.05, comparison %in% ALL_PLOT_IDS) %>%
   mutate(mark = ifelse(grepl("^B", comparison), "H2AK119ub", "H3K27ac")) %>%
   count(comparison, comp_label, mark, family, name = "n_motifs")
 
@@ -202,10 +204,9 @@ top_families <- family_data %>%
   pull(family)
 
 BAR_LABELS <- c(
-  B1 = "Gained vs Lost", B2 = "Lost vs Gained",
-  B3 = "DiffBind Gained vs Lost", B4 = "DiffBind Lost vs Gained",
-  C1 = "Gained vs Lost", C2 = "Lost vs Gained",
-  C3 = "Gained vs Genome", C4 = "Lost vs Genome"
+  B1 = "K119ub Gained vs Lost", B2 = "K119ub Lost vs Gained",
+  B3 = "K119ub DiffBind Gained vs Lost", B4 = "K119ub DiffBind Lost vs Gained",
+  C1 = "K27ac Gained vs Lost", C2 = "K27ac Lost vs Gained"
 )
 
 family_plot_data <- family_data %>%
@@ -217,7 +218,7 @@ family_plot_data <- family_data %>%
 
 mark_palettes <- setNames(
   c("#7B3294", "#C2A5CF", "#E7298A", "#F1B6DA",
-    "#1B7837", "#7FBC41", "#D95F02", "#FDAE61"),
+    "#1B7837", "#7FBC41"),
   BAR_LABELS
 )
 
@@ -231,7 +232,7 @@ p_family <- ggplot(family_plot_data,
     x = "TF Family",
     y = "Significant Motifs (q < 0.05)",
     title = "TF Family Enrichment at Differential Chromatin Sites",
-    subtitle = "H2AK119ub (left) and H3K27ac (right), all comparisons"
+    subtitle = "H2AK119ub (left) and H3K27ac (right), differential comparisons only"
   ) +
   theme_biomodal() +
   theme(
@@ -250,7 +251,7 @@ cat("  Saved: homer_family_barchart_all\n\n")
 cat("Exporting summary tables...\n")
 
 summary_all <- all_results %>%
-  filter(qvalue < 0.05) %>%
+  filter(qvalue < 0.05, comparison %in% ALL_PLOT_IDS) %>%
   group_by(comparison) %>%
   slice_min(order_by = pvalue, n = 25, with_ties = FALSE) %>%
   ungroup() %>%
@@ -262,7 +263,7 @@ write_tsv(summary_all, file.path(SECTION_DIR, "homer_top25_per_comparison.tsv"))
 cat(sprintf("  Saved: homer_top25_per_comparison.tsv (%d rows)\n", nrow(summary_all)))
 
 sig_all <- all_results %>%
-  filter(qvalue < 0.05) %>%
+  filter(qvalue < 0.05, comparison %in% ALL_PLOT_IDS) %>%
   dplyr::select(comparison, comp_label, tf_name, family, consensus,
                 pvalue, qvalue, target_pct, bg_pct, fold_enrichment) %>%
   arrange(comparison, pvalue)
