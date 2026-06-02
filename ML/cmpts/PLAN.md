@@ -599,15 +599,37 @@ ML/cmpts/outputs/sniper/
 ## Track C: Visualization & Integration
 
 User Note: These can be run/computed locally.
+Second Note: Don't worry about complexity or dependencies; write the scripts as you would for HPC using appropriate local paths; I will install necessary packages and we have BigWigs, etc. available on Mac. This is purely a convenience decision; bias towards deps.
 
-### C1 — Combined Subcompartment Comparison — PENDING
+### C1 — Combined Subcompartment Comparison — DONE (2026-06-01)
 
 **Script:** `scripts/C1_combined_comparison.R`
 
-- Genome-wide subcompartment karyotype track (CALDER2 ctrl vs mut, both timepoints)
-- Transition matrix heatmap: ctrl → mut, counts colored by log10(n)
-- Developmental comparison: early vs late transition rates
-- Subcompartment stability analysis: what fraction of bins change between timepoints?
+Processes both timepoints in one invocation. No HPC dependencies — runs locally with `data.table`, `ggplot2`, `scales`.
+
+**Usage:** `Rscript C1_combined_comparison.R <data_root> <code_root>`
+
+**Inputs:** A2 output files `{tp}_subcompartment_labels_100kb.tsv` (both timepoints).
+
+**Outputs (in `outputs/calder2/combined/`):**
+```
+combined_transition_rates.tsv          # both TPs stacked (32 rows)
+developmental_stability.tsv            # cross-TP join (24,639 rows)
+developmental_transition_matrix.tsv    # early→late per condition (32 rows)
+combined_karyotype_track/              # Fig 1: genome-wide ctrl vs mut (4 formats)
+combined_transition_heatmap/           # Fig 2: 4×4 heatmap early|late (4 formats)
+combined_developmental_comparison/     # Fig 3: per-transition rates early vs late (4 formats)
+combined_stability_barplot/            # Fig 4a: 4 change rates (4 formats)
+combined_developmental_heatmap/        # Fig 4b: early→late ctrl|mut (4 formats)
+```
+
+**Results (2026-06-01):**
+- Within-TP genotype change rates match A2: 250402=15.3%, 250831=18.3%
+- Cross-TP developmental change rates: ctrl=32.7% (7,790/23,796), mut=35.5% (8,436/23,782)
+- Developmental axis ~2× larger than genotype effect — the genome reorganizes more subcompartments during normal cerebellum maturation (P12→adult) than from BAP1 knockout
+- Mutant is more developmentally dynamic than ctrl (p=3.34e-38 homogeneity test), suggesting BAP1 loss destabilizes subcompartment maintenance
+- Cross-TP join coverage excellent: 23,796 ctrl, 23,782 mut callable in both TPs
+- Runtime: 3.4s locally. All 5 verification checks passed.
 
 ### C2 — Epigenomic Enrichment (Publication Figure) — PENDING
 

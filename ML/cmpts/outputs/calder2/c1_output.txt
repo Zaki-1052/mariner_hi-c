@@ -1,0 +1,78 @@
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+===========================================
+C1: Combined Subcompartment Comparison
+===========================================
+CODE_ROOT:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/ML/cmpts
+Output dir: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/ML/cmpts/outputs/calder2
+Timepoints: 250402, 250831
+Start:      Mon Jun  1 21:44:34 2026
+===========================================
+
+=== Pre-flight validation ===
+  OK: 250402_subcompartment_labels_100kb.tsv (1,792,766 bytes)
+  OK: 250831_subcompartment_labels_100kb.tsv (1,787,253 bytes)
+=== Loading A2 label files ===
+  250402: 24639 bins (23853 callable)
+  250831: 24639 bins (23823 callable)
+
+=== Phase 1: Within-timepoint transitions ===
+  250402 (late/adult):
+    Callable: 23853 | Changed: 3659 (15.3%)
+    X2=39956.9, p=0.00e+00, V=0.747
+  250831 (early/P12):
+    Callable: 23823 | Changed: 4371 (18.3%)
+    X2=39121.8, p=0.00e+00, V=0.740
+
+=== Phase 2: Cross-timepoint developmental join ===
+  Total bins: 24639
+  Ctrl callable both TPs: 23796
+  Mut callable both TPs:  23782
+  Ctrl developmental change: 7790 bins (32.7%)
+  Mut developmental change:  8436 bins (35.5%)
+
+=== Phase 3: Developmental transition matrices ===
+  Ctrl early->late: X2=22238.9, p=0.00e+00
+  Mut early->late:  X2=19935.5, p=0.00e+00
+
+=== Phase 4: Stability summary ===
+  Change rates:
+    Ctrl developmental: 32.7% (7790 / 23796)
+    Mut developmental: 35.5% (8436 / 23782)
+    Early genotype: 18.3% (4371 / 23823)
+    Late genotype: 15.3% (3659 / 23853)
+  Ctrl vs Mut developmental homogeneity: X2=218.7, p=3.34e-38
+
+=== Writing TSV outputs ===
+  Written: combined_transition_rates.tsv (32 rows)
+  Written: developmental_stability.tsv (24639 rows)
+  Written: developmental_transition_matrix.tsv (32 rows)
+
+=== Generating figures ===
+  Figure 1: Karyotype track...
+  Saved: combined_karyotype_track/{pdf,svg,png,jpg}
+  Figure 2: Combined transition heatmap...
+  Saved: combined_transition_heatmap/{pdf,svg,png,jpg}
+  Figure 3: Developmental comparison...
+  Saved: combined_developmental_comparison/{pdf,svg,png,jpg}
+  Figure 4a: Stability barplot...
+  Saved: combined_stability_barplot/{pdf,svg,png,jpg}
+  Figure 4b: Developmental transition heatmap...
+  Saved: combined_developmental_heatmap/{pdf,svg,png,jpg}
+
+=== Verification ===
+  250402 matrix total: 23853
+  250831 matrix total: 23823
+  Cross-TP coverage: ctrl=23796, mut=23782
+  Developmental rates: ctrl=32.7%, mut=35.5%
+  Within-TP rates: 250402=15.3% (A2: 15.3%), 250831=18.3% (A2: 18.3%)
+  All checks passed.
+
+===========================================
+C1 COMPLETE
+Runtime: 3.4 seconds
+Outputs: 3 TSVs + 5 figure sets
+Finished: Mon Jun  1 21:44:37 2026
+===========================================
