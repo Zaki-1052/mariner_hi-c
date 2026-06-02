@@ -87,6 +87,11 @@ def apply_on_mat_mm10(params):
         'even_predictions' : even_predictions,
     })
 
+    predictionsToBed(
+        os.path.splitext(params['output_path'])[0] + '.bed',
+        odd_predictions, even_predictions, params['cropMap']
+    )
+
 
 if __name__ == '__main__':
     params = get_application_params()

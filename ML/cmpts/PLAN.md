@@ -420,7 +420,7 @@ Dependencies: A1 (CALDER2 output) + B1 (crop map).
 - All 7 validation checks passed for both timepoints. Dimension match exact. All labels in {0..3}.
 - **Note:** Required `.astype(np.int64)` on bin arithmetic for Python 3.6 / old pandas compatibility (floor division produced float64).
 
-### B3 — Train SNIPER on Control Merged — SCRIPTS WRITTEN (2026-06-01)
+### B3 — Train SNIPER on Control Merged — DONE (2026-06-01)
 
 **Script:** `scripts/B3_train_sniper.sb` + `scripts/B3_submit_train.sh`
 
@@ -471,24 +471,58 @@ DATA_DIR/sniper_mm10/dump_train_{tp}/
   target_matrix.mat              # identical to input (self-supervised)
 ```
 
-**Verification:** All 6 .h5 files exist in models_{tp}/ (each >1MB). Training log shows decreasing DAE loss over 10 epochs and increasing classifier accuracy over 25 epochs.
+**Verification:** All 6 .h5 files exist in models_{tp}/ (each >1MB). Training log shows decreasing DAE loss over 25 epochs and classifier trains successfully.
 
 **Crop map path fix (2026-06-01):** `sniper_train_mm10.py` and `sniper_apply_mm10.py` originally hardcoded `crop_map/mm10_cropMap.mat` (no timepoint suffix), but B1 generates `mm10_cropMap_{tp}.mat`. Fixed: both scripts now require `-tp <timepoint>` flag and construct the correct timepoint-suffixed filenames. B3/B4 wrappers must pass `-tp ${TP}`.
 
-### B4 — Apply SNIPER to All Samples — PENDING
+**Results (2026-06-01):**
+- 250402 (late): DAE converged by epoch ~20 (train_loss=0.458, val_loss=0.503). Val_loss minimum at epoch 21 (0.5034), slight uptick by epoch 25 (0.5094) — expected plateau behavior. All 6 models copied (~1MB each). Training time ~2s/epoch on V100.
+- 250831 (early): Both timepoints complete. All 12 model files (6 per TP) in `outputs/sniper/models_{tp}/`.
+- SLURM logs: `logs/b3_train_250402_*.out`, `logs/b3_train_250831_*.out`
+
+### B4 — Apply SNIPER to All Samples — READY
 
 **Script:** `scripts/B4_apply_sniper.sb` + `scripts/B4_submit_apply.sh`
 
-4 jobs: {ctrl_merged, mut_merged} × {250402, 250831}. Uses timepoint-specific trained models.
+4 jobs: {ctrl_merged, mut_merged} × {250402, 250831}. Uses timepoint-specific trained models. Takes two positional args: `<timepoint> <sample>`.
 
-**SLURM:** `--cpus-per-task=8 --mem=32G --gpus=1 --time=02:00:00 --partition=gpu-shared`
+**Bug fix (pre-requisite):** `sniper_apply_mm10.py:apply_on_mat_mm10()` was missing `predictionsToBed()` — the `.mat` code path saved `predictions.mat` but not `predictions.bed`. Fixed by adding 4 lines mirroring the `.hic` code path. All imports and `params['cropMap']` were already available.
+
+**Input selection:** ctrl_merged reuses B3's saved inter-chromosomal matrix (`dump_train_{tp}/input_matrix.mat`, saved by B3's `-sm` flag), skipping ~2h of juicer dumps. The `.mat` extension auto-triggers `apply_on_mat_mm10()` via `get_application_params()`. mut_merged uses the `.hic` path (no pre-extracted matrix exists) and saves its matrix with `-sm` for potential reuse.
+
+**SLURM:** `--cpus-per-task=8 --mem=64G --gpus=1 --time=04:00:00 --partition=gpu-shared`
+
+Resource adjustment from original plan: 64G (was 32G) because mut_merged builds the full 12,808×11,831 matrix in memory, same as B3. 4h (was 2h) because juicer dumps alone take ~2h for 90 chromosome pairs.
+
+**Invocation:**
+```bash
+# Both timepoints, both samples:
+cd /expanse/.../mariner_hi-c/ML/cmpts
+bash scripts/B4_submit_apply.sh
+
+# Chained after B3:
+B3_JIDS=$(bash scripts/B3_submit_train.sh | paste -sd:)
+bash scripts/B4_submit_apply.sh --dependency=afterok:${B3_JIDS}
+
+# Single job:
+sbatch scripts/B4_apply_sniper.sb 250402 mut_merged
+```
 
 **Outputs:**
 ```
 CODE_DIR/outputs/sniper/predictions/{tp}/{sample}/
   predictions.mat      # softmax probabilities (N_bins × 4)
-  predictions.bed      # BED9 with subcompartment labels
+  predictions.bed      # BED9 with subcompartment labels (~20,148 lines)
+DATA_DIR/sniper_mm10/dump_apply_{tp}_{sample}/
+  input_matrix.mat     # saved inter-chromosomal matrix (mut_merged only, via -sm)
 ```
+
+**Verification:**
+- All 4 `predictions.mat` files exist and are >1MB
+- All 4 `predictions.bed` files have ~20,148 lines (10,686 odd + 9,462 even bins)
+- BED contains all 4 labels (A1, A2, B1, B2) — no degenerate single-class predictions
+- SLURM logs show exit 0
+- ctrl_merged BED should closely match CALDER2 labels (model trained on this data)
 
 ### B5 — SNIPER-CALDER2 Concordance — PENDING
 

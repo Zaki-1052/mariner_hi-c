@@ -1,0 +1,163 @@
+#!/bin/bash
+# ML/cmpts/scripts/B4_apply_sniper.sb
+# Stage B4: Apply trained SNIPER models to predict subcompartments.
+# Usage: sbatch B4_apply_sniper.sb <timepoint> <sample>
+#   <timepoint> : 250402 | 250831
+#   <sample>    : ctrl_merged | mut_merged
+#SBATCH --job-name=b4_apply
+#SBATCH --output=logs/b4_apply_%j.out
+#SBATCH --partition=gpu-shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --gpus=1
+#SBATCH --time=04:00:00
+#SBATCH --account=csd940
+
+TP="${1:?usage: sbatch B4_apply_sniper.sb <timepoint> <sample>}"
+SAMPLE="${2:?usage: sbatch B4_apply_sniper.sb <timepoint> <sample>}"
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
+HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+SNIPER_DIR="${CODE_DIR}/repos/SNIPER"
+REPO_ROOT="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+
+case "${TP}" in
+  250402) TP_DIR="late" ;;
+  250831) TP_DIR="early" ;;
+  *) echo "ERROR: Unknown timepoint ${TP}. Expected 250402 or 250831" >&2; exit 1 ;;
+esac
+
+HIC="${HIC_ROOT}/${TP}/${SAMPLE}.hic"
+MODEL_DIR="${CODE_DIR}/outputs/sniper/models_${TP}"
+DUMP_DIR="${DATA_DIR}/sniper_mm10/dump_apply_${TP}_${SAMPLE}"
+PRED_DIR="${CODE_DIR}/outputs/sniper/predictions/${TP}/${SAMPLE}"
+OUTPUT_MAT="${PRED_DIR}/predictions.mat"
+CROP_MAP="${SNIPER_DIR}/crop_map/mm10_cropMap_${TP}.mat"
+CROP_IDX="${SNIPER_DIR}/crop_map/mm10_cropIndices_${TP}.mat"
+
+# ctrl_merged can reuse B3's saved inter-chromosomal matrix (skips ~2h of juicer dumps)
+SAVED_MAT="${DATA_DIR}/sniper_mm10/dump_train_${TP}/input_matrix.mat"
+if [ "${SAMPLE}" = "ctrl_merged" ] && [ -f "${SAVED_MAT}" ]; then
+  INPUT="${SAVED_MAT}"
+  echo "Input mode: pre-extracted .mat (reusing B3 dump)"
+else
+  INPUT="${HIC}"
+  echo "Input mode: .hic (juicer dumps required)"
+fi
+
+mkdir -p "${DUMP_DIR}" "${PRED_DIR}" "${CODE_DIR}/logs"
+
+echo "==========================================="
+echo "B4: SNIPER mm10 Application"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Timepoint:  ${TP} (${TP_DIR})"
+echo "Sample:     ${SAMPLE}"
+echo "Input:      ${INPUT}"
+echo "Model dir:  ${MODEL_DIR}"
+echo "Dump dir:   ${DUMP_DIR}"
+echo "Output dir: ${PRED_DIR}"
+echo "Start:      $(date)"
+echo "==========================================="
+
+if [ ! -s "${INPUT}" ]; then
+  echo "ERROR: missing or empty input: ${INPUT}" >&2
+  exit 2
+fi
+
+for MNAME in odd_chrm_encoder.h5 odd_chrm_classifier.h5 even_chrm_encoder.h5 even_chrm_classifier.h5; do
+  if [ ! -f "${MODEL_DIR}/${MNAME}" ]; then
+    echo "ERROR: model file not found: ${MODEL_DIR}/${MNAME}" >&2
+    exit 2
+  fi
+done
+
+if [ ! -f "${CROP_MAP}" ]; then
+  echo "ERROR: crop map not found: ${CROP_MAP}" >&2
+  exit 2
+fi
+
+if [ ! -f "${CROP_IDX}" ]; then
+  echo "ERROR: crop indices not found: ${CROP_IDX}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+module load singularitypro
+conda activate sniper_env
+
+export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
+
+cd "${SNIPER_DIR}"
+
+echo ""
+echo "Applying SNIPER: ${SAMPLE} (${TP_DIR})"
+echo "  python sniper_apply_mm10.py \\"
+echo "    ${INPUT} \\"
+echo "    ${OUTPUT_MAT} \\"
+echo "    ${MODEL_DIR}/odd_chrm_encoder.h5 \\"
+echo "    ${MODEL_DIR}/odd_chrm_classifier.h5 \\"
+echo "    ${MODEL_DIR}/even_chrm_encoder.h5 \\"
+echo "    ${MODEL_DIR}/even_chrm_classifier.h5 \\"
+echo "    -tp ${TP} -dd ${DUMP_DIR} -sm -ar"
+echo ""
+
+python sniper_apply_mm10.py \
+  "${INPUT}" \
+  "${OUTPUT_MAT}" \
+  "${MODEL_DIR}/odd_chrm_encoder.h5" \
+  "${MODEL_DIR}/odd_chrm_classifier.h5" \
+  "${MODEL_DIR}/even_chrm_encoder.h5" \
+  "${MODEL_DIR}/even_chrm_classifier.h5" \
+  -tp "${TP}" \
+  -dd "${DUMP_DIR}" \
+  -sm \
+  -ar
+
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: sniper_apply_mm10.py failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+PRED_BED="${PRED_DIR}/predictions.bed"
+
+if [ ! -f "${OUTPUT_MAT}" ]; then
+  echo "ERROR: predictions.mat not found: ${OUTPUT_MAT}" >&2
+  exit 1
+fi
+
+if [ ! -f "${PRED_BED}" ]; then
+  echo "ERROR: predictions.bed not found: ${PRED_BED}" >&2
+  exit 1
+fi
+
+MAT_SIZE=$(du -m "${OUTPUT_MAT}" | cut -f1)
+BED_LINES=$(wc -l < "${PRED_BED}")
+
+echo ""
+echo "Output validation:"
+echo "  predictions.mat: ${MAT_SIZE} MB"
+echo "  predictions.bed: ${BED_LINES} lines"
+
+if [ "${BED_LINES}" -lt 15000 ]; then
+  echo "WARNING: predictions.bed has suspiciously few lines (${BED_LINES})" >&2
+fi
+
+echo ""
+echo "==========================================="
+echo "B4 complete."
+echo "  Timepoint: ${TP} (${TP_DIR}), Sample: ${SAMPLE}"
+echo "  predictions.mat: ${MAT_SIZE} MB"
+echo "  predictions.bed: ${BED_LINES} lines"
+echo "  Output: ${PRED_DIR}/"
+echo "End: $(date)"
+echo "==========================================="
+
+exit 0
