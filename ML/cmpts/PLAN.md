@@ -309,7 +309,7 @@ conda install "cudnn>=7,<8" -c nvidia  # TF 1.12 needs cuDNN 7.x; version resolv
 
 **Verification:** `python -c "import tensorflow as tf; print(tf.__version__); print(tf.test.is_gpu_available())"` → `1.12.0`, `True`
 
-### B1 — Adapt SNIPER for mm10 — CODE WRITTEN (2026-05-28)
+### B1 — Adapt SNIPER for mm10 — DONE (2026-06-01)
 
 **Script:** `scripts/B1_adapt_sniper_mm10.py` + `scripts/B1_generate_cropmap.sb` (SLURM job)
 
@@ -364,23 +364,31 @@ sbatch scripts/B1_generate_cropmap.sb 250831
 **SLURM for crop map generation:** `--cpus-per-task=8 --mem=64G --time=04:00:00` (juicer_tools dump of 10×9=90 chromosome pairs takes ~2h)
 
 **Verification:**
-- `mm10_cropMap.mat` exists with `rowMap` shape (~11k, 3) and `colMap` shape (~10k, 3)
-- `mm10_cropIndices.mat` exists with `odd_indices` and `even_indices` arrays
+- `mm10_cropMap_{tp}.mat` exists with `rowMap` shape (~11k, 3) and `colMap` shape (~10k, 3)
+- `mm10_cropIndices_{tp}.mat` exists with `odd_indices` and `even_indices` arrays
 - Test extraction: `python -c "from utilities.data_processing_mm10 import hicToMat; print('OK')"` from SNIPER directory
 
-### B2 — Generate Ground Truth Labels from CALDER2 — PENDING
+**Results (2026-06-01):**
+- Both timepoints complete. Dimensions nearly identical: rowMap ~(10,686, 3), colMap ~(9,462–9,463, 3). ~80–83% bin retention after blacklist + sparse filtering.
+- Each timepoint had 1 empty inter-chromosomal dump (different pairs); handled with zeros, not a blocker.
 
-**Script:** `scripts/B2_generate_labels_from_calder2.R` + `scripts/B2_run.sb`
+### B2 — Generate Ground Truth Labels from CALDER2 — DONE (2026-06-01)
+
+**Script:** `scripts/B2_generate_labels_from_calder2.py` + `scripts/B2_run.sb`
 
 Dependencies: A1 (CALDER2 output) + B1 (crop map).
 
+**Implementation note (2026-06-01):** Changed from R (`.R`) to Python (`.py`) running in `sniper_env`. The .mat I/O requirement (reading B1 crop indices via `scipy.io.loadmat`, writing labels for B3's `scipy.io.loadmat`) made Python the natural choice. Avoids adding `R.matlab` dependency to `calder2_env` and eliminates cross-library .mat format compatibility risk. The plurality vote logic is reimplemented in pandas/numpy, mirroring A2's R `bin_plurality_vote()` exactly.
+
 **Logic:**
 1. Load CALDER2 `all_sub_compartments.tsv` for ctrl_merged (one per timepoint)
-2. Truncate labels to depth 2: A.1→0, A.2→1, B.1→2, B.2→3 (4-class, no B3 in mm10)
-3. Bin to 100kb and assign labels (plurality vote for variable-width CALDER2 segments)
-4. For each 100kb bin in the odd-chromosome order (chr1, chr3, ..., chr19), look up label
-5. Apply `mm10_cropIndices_{tp}` mask to keep only non-sparse bins
-6. Save as `mm10_labels_{tp}.mat` with struct fields `rows` (odd labels) and `cols` (even labels)
+2. Truncate labels to depth 2 via regex `^([AB]\.[12])`: A.1→0, A.2→1, B.1→2, B.2→3 (4-class, no B3 in mm10)
+3. Bin to 100kb via plurality vote (expand segments to bins, compute bp overlap, pick max-overlap label per bin)
+4. For each 100kb bin in odd-chromosome order (chr1, chr3, ..., chr19), look up label; separately for even (chr2, chr4, ..., chr18)
+5. Apply `mm10_cropIndices_{tp}` mask to keep only non-sparse bins; impute any gaps with chromosome-mode label
+6. Save as `mm10_labels_{tp}.mat` with fields `rows` (odd labels, shape 1×K_odd) and `cols` (even labels, shape 1×K_even)
+
+**Coordinate conversion:** CALDER2 1-based → SNIPER 0-based: `bin_0based = (pos_start - 1) // 100000`. Cross-validated against A2's `ceiling(pos_start / BIN_SIZE)` (1-based bin N = 0-based bin N-1).
 
 **Mapping:** CALDER2 depth-2 → SNIPER integer labels:
 | CALDER2 | SNIPER int | SNIPER name |
@@ -390,13 +398,20 @@ Dependencies: A1 (CALDER2 output) + B1 (crop map).
 | B.1 | 2 | B1 |
 | B.2 | 3 | B2 |
 
-SNIPER's classifier has 5 output neurons (A1/A2/B1/B2/B3). Since mm10 lacks B3, we train with 4 classes. Modify the classifier output from 5 → 4 neurons in the mm10 training script, or keep 5 and accept that B3 will never be predicted (the bootstrap resampling handles class imbalance, but an empty class would cause errors). **Decision: use 4-class classifier.**
+**Decision: use 4-class classifier** (mm10 has no B.3). `mm10_config.N_CLASSES=4` and `Classifier_mm10` output layer uses 4 softmax neurons.
 
 **SLURM:** `--cpus-per-task=4 --mem=16G --time=01:00:00`
 
-**Verification:**
-- `.mat` files have `rows` and `cols` arrays matching cropped bin counts
-- Label distribution matches CALDER2 genome fractions (±5%)
+**Verification (7 checks in script):**
+1. Input existence: CALDER2 TSV and crop indices `.mat` exist and non-empty
+2. Chromosome completeness: All 19 autosomes present in CALDER2 TSV
+3. Label distribution: Per-class percentages; warn if any <5% or >60%
+4. Dimension match: `len(rows) == len(odd_indices)`, `len(cols) == len(even_indices)`
+5. No invalid labels: All values in {0,1,2,3}
+6. Coverage: All retained bins labeled (uncallable bins imputed)
+7. Training split: K_odd > 7000 and K_even > 7000
+
+**Output:** `{DATA_DIR}/sniper_mm10/mm10_labels_{tp}.mat`
 
 ### B3 — Train SNIPER on Control Merged — PENDING
 
@@ -600,7 +615,7 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 │   ├── B0_setup_sniper_env.sh            # Interactive: Python 3.6 + TF-GPU 1.12
 │   ├── B1_adapt_sniper_mm10.py           # Generate mm10 variants + crop map
 │   ├── B1_generate_cropmap.sb            # SLURM worker (8c/64G/4h)
-│   ├── B2_generate_labels_from_calder2.R # CALDER2 → SNIPER .mat labels
+│   ├── B2_generate_labels_from_calder2.py # CALDER2 → SNIPER .mat labels
 │   ├── B2_run.sb                         # SLURM wrapper (4c/16G/1h)
 │   ├── B3_train_sniper.sb                # SLURM worker (16c/96G/24h)
 │   ├── B3_submit_train.sh               # Submit 2 jobs (1 per tp)
@@ -726,7 +741,7 @@ Same pattern. B1 (cropmap) → B2 → B3 → B4 → B5. B2 depends on A2 complet
 | `scripts/B0_setup_sniper_env.sh` | B | Setup | Python 3.6 + TF-GPU 1.12 |
 | `scripts/B1_adapt_sniper_mm10.py` | B | Python | mm10 adaptation + crop map |
 | `scripts/B1_generate_cropmap.sb` | B | SLURM | Worker: 8c/64G/4h |
-| `scripts/B2_generate_labels_from_calder2.R` | B | R | CALDER2 → .mat labels |
+| `scripts/B2_generate_labels_from_calder2.py` | B | Python | CALDER2 → .mat labels |
 | `scripts/B2_run.sb` | B | SLURM | Wrapper |
 | `scripts/B3_train_sniper.sb` | B | SLURM | Worker: 16c/96G/24h |
 | `scripts/B3_submit_train.sh` | B | Wrapper | Submit 2 jobs |
