@@ -413,6 +413,13 @@ Dependencies: A1 (CALDER2 output) + B1 (crop map).
 
 **Output:** `{CODE_DIR}/outputs/sniper/mm10_labels_{tp}.mat`
 
+**Results (2026-06-01):**
+- Runtime: ~8s per timepoint. SLURM logs: `logs/b2_labels_49961411.out` (late), `logs/b2_labels_49961412.out` (early).
+- 250402 (late): rows=10,686, cols=9,463. 50+23 uncallable bins imputed. Labels: A.1=31.7%/33.5%, A.2=14.6%/14.2%, B.1=13.6%/13.9%, B.2=40.1%/38.4% (odd/even). B.2-heavy vs mm10 reference (~26%).
+- 250831 (early): rows=10,686, cols=9,462. 45+25 uncallable bins imputed. Labels: A.1=33.1%/35.5%, A.2=20.0%/19.3%, B.1=16.4%/14.7%, B.2=30.5%/30.6% (odd/even). More balanced, closer to mm10 reference.
+- All 7 validation checks passed for both timepoints. Dimension match exact. All labels in {0..3}.
+- **Note:** Required `.astype(np.int64)` on bin arithmetic for Python 3.6 / old pandas compatibility (floor division produced float64).
+
 ### B3 — Train SNIPER on Control Merged — PENDING
 
 **Script:** `scripts/B3_train_sniper.sb` + `scripts/B3_submit_train.sh`

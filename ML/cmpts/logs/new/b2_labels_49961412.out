@@ -1,0 +1,62 @@
+===========================================
+B2: SNIPER Labels from CALDER2
+===========================================
+Job ID:     49961412
+Node:       exp-10-35
+Timepoint:  250831 (early)
+CALDER2:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/calder2/early/250831/ctrl_merged/sub_compartments/all_sub_compartments.tsv
+Crop idx:   /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/repos/SNIPER/crop_map/mm10_cropIndices_250831.mat
+Output:     /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/mm10_labels_250831.mat
+Start:      Mon Jun  1 17:50:23 PDT 2026
+===========================================
+===========================================
+B2: Generate SNIPER Labels from CALDER2
+===========================================
+Timepoint:  250831 (early)
+Data dir:   /expanse/lustre/projects/csd940/zalibhai/sniper
+Code dir:   /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+
+CALDER2 TSV: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/calder2/early/250831/ctrl_merged/sub_compartments/all_sub_compartments.tsv
+Crop idx:    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/repos/SNIPER/crop_map/mm10_cropIndices_250831.mat
+Output:      /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/mm10_labels_250831.mat
+
+Loading CALDER2 ctrl_merged subcompartments...
+  Loaded 237045 segments across 19 chromosomes
+Truncating labels to depth 2...
+Loading crop indices...
+  odd_indices: 10686 bins, even_indices: 9462 bins
+
+Binning odd chromosomes (chr1, chr3, chr5, chr7, chr9, chr11, chr13, chr15, chr17, chr19) to 100kb...
+  12406 bins labeled
+Binning even chromosomes (chr2, chr4, chr6, chr8, chr10, chr12, chr14, chr16, chr18) to 100kb...
+  11438 bins labeled
+
+Building odd-chromosome label array...
+  12406 bins labeled out of 12808 total (before crop)
+  45 uncallable bins in crop mask — imputing with chromosome mode
+Building even-chromosome label array...
+  11438 bins labeled out of 11831 total (before crop)
+  25 uncallable bins in crop mask — imputing with chromosome mode
+
+--- Validation ---
+[1/7] Input existence: PASS (validated during load)
+[2/7] Chromosome completeness: PASS (validated during load)
+[3/7] Label distribution:
+  rows (odd):   A.1=33.1%,   A.2=20.0%,   B.1=16.4%,   B.2=30.5%
+  cols (even):   A.1=35.5%,   A.2=19.3%,   B.1=14.7%,   B.2=30.6%
+  Status: PASS
+[4/7] Dimension match: rows=10686 vs odd_indices=10686, cols=9462 vs even_indices=9462 — PASS
+[5/7] All labels in {0..3}: PASS
+[6/7] Coverage: rows=10686 bins, cols=9462 bins (all labeled)
+[7/7] Training split: rows=10686 > 7000, cols=9462 > 7000 — PASS
+
+Result: 7/7 checks passed
+
+Saved: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/mm10_labels_250831.mat
+  rows: shape=(10686,), dtype=int32
+  cols: shape=(9462,), dtype=int32
+
+B2 complete.
+
+End: Mon Jun  1 17:50:32 PDT 2026
+===========================================
