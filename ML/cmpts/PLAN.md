@@ -411,7 +411,7 @@ Dependencies: A1 (CALDER2 output) + B1 (crop map).
 6. Coverage: All retained bins labeled (uncallable bins imputed)
 7. Training split: K_odd > 7000 and K_even > 7000
 
-**Output:** `{DATA_DIR}/sniper_mm10/mm10_labels_{tp}.mat`
+**Output:** `{CODE_DIR}/outputs/sniper/mm10_labels_{tp}.mat`
 
 ### B3 — Train SNIPER on Control Merged — PENDING
 
@@ -437,7 +437,7 @@ Dependencies: A1 (CALDER2 output) + B1 (crop map).
 
 **Outputs per timepoint:**
 ```
-DATA_DIR/sniper_mm10/models_{tp}/
+CODE_DIR/outputs/sniper/models_{tp}/
   odd_chrm_autoencoder.h5, odd_chrm_encoder.h5, odd_chrm_classifier.h5
   even_chrm_autoencoder.h5, even_chrm_encoder.h5, even_chrm_classifier.h5
 ```
@@ -454,7 +454,7 @@ DATA_DIR/sniper_mm10/models_{tp}/
 
 **Outputs:**
 ```
-DATA_DIR/sniper_mm10/predictions/{tp}/{sample}/
+CODE_DIR/outputs/sniper/predictions/{tp}/{sample}/
   predictions.mat      # softmax probabilities (N_bins × 4)
   predictions.bed      # BED9 with subcompartment labels
 ```
@@ -637,7 +637,11 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 │   ├── calder2/                          # A1 subcompartment calls + A2 transition TSVs
 │   │   ├── {tp}/{sample}/sub_compartments/  # TSV, BED, cor_with_ref (copied from DATA_DIR)
 │   │   └── ...
-│   ├── sniper/                           # B5 concordance results
+│   ├── sniper/                           # All Track B small outputs (<100MB)
+│   │   ├── mm10_labels_{tp}.mat          # B2: CALDER2-derived training labels
+│   │   ├── models_{tp}/                  # B3: 6 × .h5 trained models (~5MB each)
+│   │   ├── predictions/{tp}/{sample}/    # B4: predictions.mat + predictions.bed
+│   │   └── ...                           # B5: concordance results
 │   └── integration/                      # C1-C4 integration tables
 ├── docs/                                 # Context docs
 │
@@ -664,10 +668,7 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 │   │   └── mut_merged/                   # Same structure
 │   └── 250831/                           # Same structure
 ├── sniper_mm10/
-│   ├── dump_{tp}_{sample}/               # juicer_tools intermediate .txt
-│   ├── models_{tp}/                      # 6 × .h5 trained models
-│   ├── predictions/{tp}/{sample}/        # predictions.mat + predictions.bed
-│   └── mm10_labels_{tp}.mat              # CALDER2-derived training labels
+│   └── dump_{tp}_{sample}/               # juicer_tools intermediate .txt (large, stays here)
 ├── integration/                          # C-stage outputs (figures, large TSVs)
 └── logs/                                 # SLURM logs
 ```

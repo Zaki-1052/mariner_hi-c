@@ -83,10 +83,10 @@ def plurality_vote_100kb(df, chrom_strs, offsets, bin_counts):
               file=sys.stderr)
         sys.exit(1)
 
-    df['bin_first'] = (df['pos_start'] - 1) // RESOLUTION
-    df['bin_last'] = (df['pos_end'] - 1) // RESOLUTION
+    df['bin_first'] = ((df['pos_start'] - 1) // RESOLUTION).astype(np.int64)
+    df['bin_last'] = ((df['pos_end'] - 1) // RESOLUTION).astype(np.int64)
 
-    n_bins_each = (df['bin_last'] - df['bin_first'] + 1).to_numpy()
+    n_bins_each = (df['bin_last'] - df['bin_first'] + 1).to_numpy().astype(np.int64)
     repeated = df.loc[df.index.repeat(n_bins_each)].reset_index(drop=True)
 
     bin_indices = np.concatenate([
@@ -116,7 +116,7 @@ def plurality_vote_100kb(df, chrom_strs, offsets, bin_counts):
     chrom_to_offset = dict(zip(chrom_strs, offsets))
     winners['global_idx'] = (
         winners['chr'].map(chrom_to_offset).to_numpy() + winners['bin_0based'].to_numpy()
-    )
+    ).astype(np.int64)
     winners['label_int'] = winners['label_d2'].map(LABEL_MAP).astype(np.int32)
 
     n_total = sum(bin_counts)
@@ -274,7 +274,7 @@ def main():
         code_dir, 'repos', 'SNIPER', 'crop_map',
         'mm10_cropIndices_{}.mat'.format(tp)
     )
-    output_dir = os.path.join(data_dir, 'sniper_mm10')
+    output_dir = os.path.join(code_dir, 'outputs', 'sniper')
     output_path = os.path.join(output_dir, 'mm10_labels_{}.mat'.format(tp))
 
     print('CALDER2 TSV: {}'.format(tsv_path))
