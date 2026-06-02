@@ -1,0 +1,143 @@
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+===========================================
+C3: Loop/Stripe x Subcompartment Integration
+===========================================
+CODE_ROOT:  ML/cmpts
+REPO_ROOT:  .
+Output dir: ML/cmpts/outputs/integration/loops_stripes
+Timepoints: 250402, 250831
+Start:      Mon Jun  1 23:25:57 2026
+===========================================
+
+=== Pre-flight validation ===
+  OK: 250402_subcompartment_labels_100kb.tsv (1,792,766 bytes)
+  OK: 250831_subcompartment_labels_100kb.tsv (1,787,253 bytes)
+  OK: combined-clusters.txt (3,543,703 bytes)
+  OK: cross_res_merged.tsv (2,916,142 bytes)
+  OK: cross_res_merged.tsv (1,548,254 bytes)
+
+=== Phase 1: Loading data ===
+  CALDER2 250402 (late/adult): 24639 bins, 23853 callable
+  CALDER2 250831 (early/P12): 24639 bins, 23823 callable
+  Loops: 38948 rows, 6 clusters
+  Stripes 250402: 8415 rows
+  Stripes 250831: 4486 rows
+
+=== Phase 2: Loop anchor x subcompartment mapping ===
+
+  --- 250402 (late/adult) ---
+  Total anchors: 77896, callable: 75447 (96.9%)
+  Ctrl chi-squared: X2=5463.0, p=0.00e+00, df=15
+  Mut  chi-squared: X2=3780.0, p=0.00e+00, df=15
+  KEY: clust5 in B.1 (ctrl): OR=3.22, p=2.96e-63 [2.83, 3.65]
+  KEY: clust5 in B.1 (mut):  OR=2.98, p=3.93e-51 [2.61, 3.40]
+  clust6 in A.1 (ctrl): OR=0.64, p=1.19e-49
+  Per-cluster ctrl distribution (%):
+    clust1 (n=23833): A.1=67.6  A.2=16.6  B.1=8.4  B.2=7.4
+    clust2 (n=20974): A.1=62.0  A.2=18.2  B.1=10.2  B.2=9.6
+    clust3 (n=17088): A.1=62.6  A.2=18.9  B.1=9.2  B.2=9.3
+    clust4 (n=7598): A.1=34.7  A.2=22.5  B.1=20.2  B.2=22.6
+    clust5 (n=1296): A.1=13.2  A.2=16.8  B.1=27.5  B.2=42.4
+    clust6 (n=4658): A.1=49.1  A.2=22.9  B.1=13.0  B.2=14.9
+
+  --- 250831 (early/P12) ---
+  Total anchors: 77896, callable: 75703 (97.2%)
+  Ctrl chi-squared: X2=3089.1, p=0.00e+00, df=15
+  Mut  chi-squared: X2=2617.4, p=0.00e+00, df=15
+  KEY: clust5 in B.1 (ctrl): OR=2.39, p=7.67e-33 [2.09, 2.73]
+  KEY: clust5 in B.1 (mut):  OR=1.74, p=2.08e-11 [1.48, 2.02]
+  clust6 in A.1 (ctrl): OR=0.44, p=3.29e-161
+  Per-cluster ctrl distribution (%):
+    clust1 (n=23949): A.1=64.2  A.2=20.4  B.1=8.9  B.2=6.5
+    clust2 (n=21084): A.1=65.4  A.2=18.9  B.1=9.0  B.2=6.7
+    clust3 (n=17107): A.1=54.2  A.2=24.4  B.1=12.3  B.2=9.1
+    clust4 (n=7609): A.1=45.1  A.2=26.3  B.1=16.0  B.2=12.6
+    clust5 (n=1295): A.1=23.2  A.2=31.2  B.1=22.8  B.2=22.8
+    clust6 (n=4659): A.1=39.0  A.2=29.6  B.1=17.9  B.2=13.5
+
+=== Phase 3: Transition analysis at loop anchors ===
+
+  250402 (late/adult):
+    clust5:
+      Stable: 810 (62.8%)
+      B_to_A: 216 (16.8%)
+      Within_B: 139 (10.8%)
+      Within_A: 114 (8.8%)
+      A_to_B: 10 (0.8%)
+    clust6:
+      Stable: 3773 (81.0%)
+      Within_A: 403 (8.7%)
+      A_to_B: 201 (4.3%)
+      Within_B: 157 (3.4%)
+      B_to_A: 123 (2.6%)
+
+  250831 (early/P12):
+    clust5:
+      Stable: 884 (68.4%)
+      Within_A: 176 (13.6%)
+      B_to_A: 154 (11.9%)
+      Within_B: 70 (5.4%)
+      A_to_B: 9 (0.7%)
+    clust6:
+      Stable: 3750 (80.5%)
+      Within_A: 385 (8.3%)
+      B_to_A: 236 (5.1%)
+      Within_B: 178 (3.8%)
+      A_to_B: 110 (2.4%)
+
+=== Phase 4: Stripe x subcompartment mapping ===
+
+  --- 250402 (late/adult) ---
+  Callable: 8351 / 8415 (99.2%)
+  Chi-squared: X2=155.5, p=5.21e-31
+  Gained in B.1: OR=1.28, p=3.76e-04
+  Body composition: 7976 stripes analyzed, median bins/stripe: 8
+    gained (n=2314): mean B.1=15.1%, B.2=15.5%
+    lost (n=1680): mean B.1=10.3%, B.2=7.4%
+    unchanged (n=3982): mean B.1=12.8%, B.2=9.1%
+
+  --- 250831 (early/P12) ---
+  Callable: 4475 / 4486 (99.8%)
+  Chi-squared: X2=37.9, p=1.17e-06
+  Gained in B.1: OR=1.21, p=6.13e-02
+  Body composition: 4284 stripes analyzed, median bins/stripe: 6
+    gained (n=1076): mean B.1=15.3%, B.2=13.1%
+    lost (n=863): mean B.1=12.5%, B.2=9.1%
+    unchanged (n=2345): mean B.1=11.5%, B.2=6.4%
+
+=== Phase 5: Writing TSV outputs ===
+  Wrote 15 TSV files
+
+=== Phase 6: Generating figures ===
+  Fig 1: Loop subcompartment enrichment balloon plot
+  Saved: c3_loop_subcompartment_enrichment/{pdf,svg,png,jpg}
+  Fig 2: Subcompartment stacked bar per cluster
+  Saved: c3_loop_subcompartment_stacked/{pdf,svg,png,jpg}
+  Fig 3: Enrichment heatmap
+  Saved: c3_loop_subcompartment_heatmap/{pdf,svg,png,jpg}
+  Fig 4: Stripe subcompartment enrichment
+  Saved: c3_stripe_subcompartment_enrichment/{pdf,svg,png,jpg}
+  Fig 5: clust5/clust6 transition alluvial
+  Saved: c3_clust5_clust6_transitions/{pdf,svg,png,jpg}
+There were 12 warnings (use warnings() to see them)
+  Fig 6: Developmental comparison for clust5
+  Saved: c3_developmental_comparison/{pdf,svg,png,jpg}
+  Generated 6 figure sets
+
+=== Verification ===
+  Expected anchors: 77896
+  250402 callable: 75379 / 77896 (96.8%)
+  250831 callable: 75681 / 77896 (97.2%)
+  clust5 anchors (late): 1289, clust6: 4657
+  [PASS] clust5 enriched in B.1 (ctrl, late): OR=3.22, p=2.96e-63
+  All checks passed.
+
+===========================================
+C3 COMPLETE
+Runtime: 271.2 seconds
+Outputs: 15 TSVs + 6 figure sets
+Finished: Mon Jun  1 23:30:28 2026
+===========================================

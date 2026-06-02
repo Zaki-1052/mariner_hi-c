@@ -662,102 +662,64 @@ c2_enrichment_dotplot/               # ggplot2 dot plot, faceted by TP × condit
 - 32/36 mark-subcompartment pairs significant per timepoint (Wilcoxon padj < 0.05). Non-significant pairs: DNAmethylation (relatively uniform across subcompartments) and H3K27me1 in some subcompartments.
 - Main publication figure (`c2_enrichment_panel`) shows all 4 condition × timepoint panels in a single unified heatmap with shared color scale, category annotations, and A|B column splits.
 
-### C3 — Loop/Stripe × Subcompartment Integration — PENDING
+### C3 — Loop/Stripe × Subcompartment Integration — READY TO RUN
 
 **Script:** `scripts/C3_loops_stripes_integration.R`
 
+**Usage:** `Rscript C3_loops_stripes_integration.R <data_root> <code_root>`
+
 Key biological question: do gained Polycomb loops (cluster pipeline clust5) sit in B.1 (facultative heterochromatin)?
+
+**Dependencies:** `data.table`, `ggplot2`, `scales`, `ggalluvial` (all available)
 
 **Logic:**
 1. Load `cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt` (38,948 loops × 6 clusters)
-2. For each loop anchor midpoint, look up CALDER2 subcompartment label at 100kb
-3. Cross-tabulate: cluster × subcompartment (chi-squared)
-4. Test: clust5 (gained, 97% up_in_mutant) enriched in B.1 vs other clusters?
-5. Repeat for stripes: `stripes/stripenn/outputs/{tp}/cross_res_merged.tsv`
+2. For each loop anchor midpoint, map to CALDER2 100kb bin (0-based→1-based: `floor(mid/100000)*100000+1`)
+3. Look up subcompartment labels from **both** timepoints (developmental comparison)
+4. Cross-tabulate: cluster × subcompartment (chi-squared + Fisher's exact for key pairs)
+5. KEY TEST: clust5 enriched in B.1? clust6 enriched in A.1?
+6. Transition analysis: ctrl→mut subcompartment changes at clust5/clust6 anchors
+7. Stripe analysis: map `anchor_center` (1-based) and stripe body (pos3-pos4) to subcompartments
+8. Stripe body composition: vectorized bin expansion + merge for per-stripe subcompartment fractions
+
+**Inputs:**
+- CALDER2: `outputs/calder2/{early,late}/{tp}_subcompartment_labels_100kb.tsv` (A2 output)
+- Loops: `cluster/outputs/bap1_late/cluster3/k-6/data/combined-clusters.txt` (late timepoint)
+- Stripes: `stripes/stripenn/outputs/{tp}/cross_res_merged.tsv` (both timepoints)
+
+**Outputs (in `outputs/integration/loops_stripes/`):**
+```
+{tp}_loop_anchor_labels.tsv              # per-anchor: cluster, labels, transition (~77k rows)
+{tp}_loop_subcompartment_crosstab_ctrl.tsv  # 6×4 counts
+{tp}_loop_subcompartment_crosstab_mut.tsv   # 6×4 counts
+{tp}_loop_transition_summary.tsv         # per-cluster transition counts
+{tp}_stripe_subcompartment_enrichment.tsv   # stripe direction × subcompartment
+{tp}_stripe_body_composition.tsv         # per-stripe body subcompartment fractions
+loop_subcompartment_enrichment.tsv       # obs/exp enrichment (all TPs, both conditions)
+loop_enrichment_tests.tsv                # Fisher's exact for all cluster×subcompartment pairs
+combined_summary.tsv                     # key test results
+c3_loop_subcompartment_enrichment/       # balloon plot, faceted by TP
+c3_loop_subcompartment_stacked/          # stacked bar (late)
+c3_loop_subcompartment_heatmap/          # tile heatmap, faceted by TP
+c3_stripe_subcompartment_enrichment/     # stripe dot plot, faceted by TP
+c3_clust5_clust6_transitions/            # alluvial (late)
+c3_developmental_comparison/             # clust5 early vs late stacked bar
+```
+
+**Verification (7 checks):**
+1. Anchor count = 77,896 (38,948 × 2)
+2. Callable fraction > 85%
+3. Cluster sizes correct (clust5=~1,334, clust6=~4,718 anchors)
+4. Chi-squared p < 0.05
+5. KEY: clust5 B.1 Fisher's exact OR and p-value
+6. All output TSVs non-empty
+7. All 6 figure directories have 4 files each
 
 ### C4 — HOMER A/B Decomposition — PENDING
 
 **Script:** `scripts/C4_homer_decomposition.R`
 
 The key integrative analysis: decompose HOMER's coarse A/B transitions into subcompartment-resolution switches.
-
----
-
-## Configuration
-
-**`config/sniper_config.yaml`:**
-```yaml
-paths:
-  code_root: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
-  data_root: "/expanse/lustre/projects/csd940/zalibhai/sniper"
-  hic_root: "/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
-  sniper_source: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/repos/SNIPER"
-  bigwig_dir: "/expanse/lustre/projects/csd940/zalibhai/bigwigs"
-
-timepoints:
-  early: "250831"
-  late: "250402"
-
-samples:
-  merged: ["ctrl_merged", "mut_merged"]
-  groups: ["ctrl", "mut"]
-
-reference:
-  genome: "mm10"
-  chromosomes: ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19"]
-  chrom_sizes: "data/mm10.chrom.sizes"
-  blacklist: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/mm10-blacklist.v2.bed"
-
-calder2:
-  bin_size: 50000
-  genome: "mm10"
-  conda_env: "calder2_env"
-  n_cores: 8
-
-sniper:
-  resolution: 100000
-  conda_env: "sniper_env"
-  n_classes: 4
-  juicer_container: "/cm/shared/apps/containers/singularity/juicer/juicer_2.0.1.sif"
-  juicer_tools_jar: "/opt/juicer/CPU/common/juicer_tools.jar"
-
-existing:
-  homer_compartments: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/tads/tad-pc-analysis/output/compartment_analysis/compartment_all_annotated.tsv"
-  loop_clusters: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/cluster/bap1_late/cluster3/k-6/data/combined-clusters.txt"
-  stripe_results: "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn/outputs"
-
-bigwigs:
-  H3K27ac_ctrl: "H3K27acCtrl.bw"
-  H3K27ac_mut: "H3K27acMut.bw"
-  H3K27me3_ctrl: "H3K27me3Ctrl.bw"
-  H3K27me3_mut: "H3K27me3Mut.bw"
-  H3K4me3_ctrl: "H3K4me3Ctrl.bw"
-  H3K4me3_mut: "H3K4me3Mut.bw"
-  H2AK119ub_ctrl: "H2AK119ubCtrl.bw"
-  H2AK119ub_mut: "H2AK119ubMut.bw"
-  ATAC_ctrl: "ATACctrl.bw"
-  ATAC_mut: "ATACmut.bw"
-  RNA_ctrl: "RNActrl.bw"
-  RNA_mut: "RNAmut.bw"
-  DNAmethylation_ctrl: "DNAmethylationCtrl.bw"
-  DNAmethylation_mut: "DNAmethylationMut.bw"
-  H3K27me1_ctrl: "H3K27me1Ctrl.bw"
-  H3K27me1_mut: "H3K27me1Mut.bw"
-
-slurm:
-  account: "csd940"
-  partition: "shared"
-  A1_calder2: { cpus: 8, mem: "64G", time: "12:00:00" }
-  A2_diff: { cpus: 4, mem: "16G", time: "02:00:00" }
-  A3_epigenomic: { cpus: 8, mem: "32G", time: "04:00:00" }
-  A4_homer: { cpus: 4, mem: "16G", time: "02:00:00" }
-  B1_cropmap: { cpus: 8, mem: "64G", time: "04:00:00" }
-  B3_train: { cpus: 8, mem: "32G", gpus: 1, time: "04:00:00", partition: "gpu-shared" }
-  B4_apply: { cpus: 8, mem: "32G", gpus: 1, time: "02:00:00", partition: "gpu-shared" }
-
-filtering:
-  exclude_chromosomes: ["X", "Y", "M"]
-```
 
 ---
 
