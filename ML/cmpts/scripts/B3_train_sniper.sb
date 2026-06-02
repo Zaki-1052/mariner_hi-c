@@ -1,0 +1,152 @@
+#!/bin/bash
+# ML/cmpts/scripts/B3_train_sniper.sb
+# Stage B3: Train SNIPER on ctrl_merged inter-chromosomal contacts (self-supervised DAE + classifier).
+# Usage: sbatch B3_train_sniper.sb <timepoint>
+#   <timepoint> : 250402 | 250831
+#SBATCH --job-name=b3_train
+#SBATCH --output=logs/b3_train_%j.out
+#SBATCH --partition=gpu-shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --gpus=1
+#SBATCH --time=08:00:00
+#SBATCH --account=csd940
+
+TP="${1:?usage: sbatch B3_train_sniper.sb <timepoint>}"
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
+HIC_ROOT="/expanse/lustre/projects/csd940/zalibhai/stripes/StripeCaller/data/hic"
+SNIPER_DIR="${CODE_DIR}/repos/SNIPER"
+REPO_ROOT="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+
+case "${TP}" in
+  250402) TP_DIR="late" ;;
+  250831) TP_DIR="early" ;;
+  *) echo "ERROR: Unknown timepoint ${TP}. Expected 250402 or 250831" >&2; exit 1 ;;
+esac
+
+HIC="${HIC_ROOT}/${TP}/ctrl_merged.hic"
+LABEL_FILE="${CODE_DIR}/outputs/sniper/mm10_labels_${TP}.mat"
+DUMP_DIR="${DATA_DIR}/sniper_mm10/dump_train_${TP}"
+MODEL_DIR="${CODE_DIR}/outputs/sniper/models_${TP}"
+CROP_MAP="${SNIPER_DIR}/crop_map/mm10_cropMap_${TP}.mat"
+CROP_IDX="${SNIPER_DIR}/crop_map/mm10_cropIndices_${TP}.mat"
+
+mkdir -p "${DUMP_DIR}" "${MODEL_DIR}" "${CODE_DIR}/logs"
+
+echo "==========================================="
+echo "B3: SNIPER mm10 Training"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Timepoint:  ${TP} (${TP_DIR})"
+echo "HiC:        ${HIC}"
+echo "Labels:     ${LABEL_FILE}"
+echo "Dump dir:   ${DUMP_DIR}"
+echo "Model dir:  ${MODEL_DIR}"
+echo "Start:      $(date)"
+echo "==========================================="
+
+if [ ! -s "${HIC}" ]; then
+  echo "ERROR: missing or empty .hic: ${HIC}" >&2
+  exit 2
+fi
+
+if [ ! -f "${LABEL_FILE}" ]; then
+  echo "ERROR: label file not found: ${LABEL_FILE}" >&2
+  exit 2
+fi
+
+if [ ! -f "${CROP_MAP}" ]; then
+  echo "ERROR: crop map not found: ${CROP_MAP}" >&2
+  exit 2
+fi
+
+if [ ! -f "${CROP_IDX}" ]; then
+  echo "ERROR: crop indices not found: ${CROP_IDX}" >&2
+  exit 2
+fi
+
+source ~/.bashrc
+module load singularitypro
+conda activate sniper_env
+
+export PYTHONPATH="${REPO_ROOT}:${PYTHONPATH:-}"
+
+cd "${SNIPER_DIR}"
+
+echo ""
+echo "Training: input=target=ctrl_merged.hic (self-supervised DAE)"
+echo "  python sniper_train_mm10.py \\"
+echo "    ${HIC} \\"
+echo "    ${HIC} \\"
+echo "    ${LABEL_FILE} \\"
+echo "    -tp ${TP} -dd ${DUMP_DIR} -sm -ar"
+echo ""
+
+python sniper_train_mm10.py \
+  "${HIC}" \
+  "${HIC}" \
+  "${LABEL_FILE}" \
+  -tp "${TP}" \
+  -dd "${DUMP_DIR}" \
+  -sm \
+  -ar
+
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: sniper_train_mm10.py failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+echo ""
+echo "Copying model files to ${MODEL_DIR}..."
+
+MODEL_NAMES=(
+  odd_chrm_autoencoder.h5
+  odd_chrm_encoder.h5
+  odd_chrm_classifier.h5
+  even_chrm_autoencoder.h5
+  even_chrm_encoder.h5
+  even_chrm_classifier.h5
+)
+
+COPY_OK=0
+for FNAME in "${MODEL_NAMES[@]}"; do
+  SRC="${DUMP_DIR}/${FNAME}"
+  DST="${MODEL_DIR}/${FNAME}"
+  if [ ! -f "${SRC}" ]; then
+    echo "ERROR: expected model file not found: ${SRC}" >&2
+    COPY_OK=1
+  else
+    cp "${SRC}" "${DST}"
+    FSIZE=$(du -m "${DST}" | cut -f1)
+    if [ "${FSIZE}" -lt 1 ]; then
+      echo "WARNING: ${FNAME} is suspiciously small (${FSIZE} MB)" >&2
+    else
+      echo "  Copied: ${FNAME} (${FSIZE} MB)"
+    fi
+  fi
+done
+
+if [ ${COPY_OK} -ne 0 ]; then
+  echo "ERROR: Model copy step failed. Training may have not saved all models." >&2
+  exit 1
+fi
+
+N_MODELS=$(ls "${MODEL_DIR}"/*.h5 2>/dev/null | wc -l)
+
+echo ""
+echo "==========================================="
+echo "B3 complete."
+echo "  ${N_MODELS}/6 model files in ${MODEL_DIR}"
+echo "  Dump dir (keep for B4 -usemat): ${DUMP_DIR}"
+echo "End: $(date)"
+echo "==========================================="
+
+exit 0

@@ -5,6 +5,11 @@ import os
 import sys
 import numpy as np
 
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_repo_root = os.path.abspath(os.path.join(_script_dir, '..', '..', '..', '..'))
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -86,8 +91,13 @@ def apply_on_mat_mm10(params):
 if __name__ == '__main__':
     params = get_application_params()
 
-    params['cropMap'] = loadmat('crop_map/mm10_cropMap.mat')
-    params['cropIndices'] = loadmat('crop_map/mm10_cropIndices.mat')
+    if '-tp' not in sys.argv:
+        print('ERROR: must specify timepoint with -tp <250402|250831>', file=sys.stderr)
+        sys.exit(1)
+    tp = sys.argv[sys.argv.index('-tp') + 1]
+
+    params['cropMap'] = loadmat('crop_map/mm10_cropMap_{}.mat'.format(tp))
+    params['cropIndices'] = loadmat('crop_map/mm10_cropIndices_{}.mat'.format(tp))
 
     if not params['usemat']:
         apply_on_hic_mm10(params)

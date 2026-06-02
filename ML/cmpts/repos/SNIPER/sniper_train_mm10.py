@@ -5,6 +5,11 @@ import os
 import sys
 import numpy as np
 
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_repo_root = os.path.abspath(os.path.join(_script_dir, '..', '..', '..', '..'))
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -63,9 +68,9 @@ def trainNN_mm10(inputM, targetM, params):
     odd_dae_model, odd_encoder, _ = DenoisingAutoencoder(inputM, targetM)
     even_dae_model, even_encoder, _ = DenoisingAutoencoder(inputM.T, targetM.T)
 
-    odd_dae_model.fit(inputM[:S], targetM[:S], epochs=10, batch_size=32,
+    odd_dae_model.fit(inputM[:S], targetM[:S], epochs=25, batch_size=32,
             validation_data=[inputM[S:], targetM[S:]])
-    even_dae_model.fit(inputM.T[:S], targetM.T[:S], epochs=10, batch_size=32,
+    even_dae_model.fit(inputM.T[:S], targetM.T[:S], epochs=25, batch_size=32,
             validation_data=[inputM.T[S:], targetM.T[S:]])
 
     odd_encodings = Sigmoid(odd_encoder.predict(inputM))
@@ -150,8 +155,13 @@ def train_with_mat_mm10(params):
 if __name__ == '__main__':
     params = get_params()
 
-    params['cropMap'] = loadmat('crop_map/mm10_cropMap.mat')
-    params['cropIndices'] = loadmat('crop_map/mm10_cropIndices.mat')
+    if '-tp' not in sys.argv:
+        print('ERROR: must specify timepoint with -tp <250402|250831>', file=sys.stderr)
+        sys.exit(1)
+    tp = sys.argv[sys.argv.index('-tp') + 1]
+
+    params['cropMap'] = loadmat('crop_map/mm10_cropMap_{}.mat'.format(tp))
+    params['cropIndices'] = loadmat('crop_map/mm10_cropIndices_{}.mat'.format(tp))
 
     if not params['usemat']:
         train_with_hic_mm10(params)

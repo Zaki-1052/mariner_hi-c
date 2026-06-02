@@ -420,36 +420,60 @@ Dependencies: A1 (CALDER2 output) + B1 (crop map).
 - All 7 validation checks passed for both timepoints. Dimension match exact. All labels in {0..3}.
 - **Note:** Required `.astype(np.int64)` on bin arithmetic for Python 3.6 / old pandas compatibility (floor division produced float64).
 
-### B3 — Train SNIPER on Control Merged — PENDING
+### B3 — Train SNIPER on Control Merged — SCRIPTS WRITTEN (2026-06-01)
 
 **Script:** `scripts/B3_train_sniper.sb` + `scripts/B3_submit_train.sh`
 
-2 jobs: one per timepoint.
+2 jobs: one per timepoint. Dependencies: B1 (crop maps) + B2 (labels).
 
-**Training protocol (from SNIPER paper):**
-1. Extract inter-chromosomal contacts from ctrl_merged.hic via juicer_tools dump (KR, 100kb)
+**Training protocol (self-supervised, from SNIPER paper):**
+1. Extract inter-chromosomal contacts from ctrl_merged.hic via juicer_tools dump (KR, 100kb) — 90 chromosome pairs (10 odd × 9 even), ~2h
 2. Build contact probability matrix: P_ij = exp(-1 / (C_ij + 1e-10))
 3. Trim with mm10 crop indices
-4. Train denoising autoencoder (DAE): input=sparse probabilities, target=same (self-supervised on this single sample since we don't have a high-coverage reference like GM12878)
-5. Extract latent variables from encoder
-6. Train MLP classifier on latent variables using CALDER2-derived labels
+4. Train denoising autoencoder (DAE): input=target=same ctrl_merged.hic (self-supervised — no high-coverage reference like GM12878 available)
+5. Extract latent variables from encoder (128-dim)
+6. Train MLP classifier on latent variables using CALDER2-derived labels (B2 output)
 
 **Architecture (from `pipeline/models.py`, dimensions adapt to mm10):**
 - DAE: Input(N_even_bins) → Dense(1024,ReLU) → Dropout(0.25) → Dense(512,ReLU) → Dense(256,ReLU) → Dropout(0.25) → Dense(128,sigmoid) [latent] → Dense(256,ReLU) → Dense(512,ReLU) → Dense(1024,ReLU) → Dense(N_even_bins,sigmoid)
 - Classifier: Input(128) → Dense(64,ReLU) → Dropout(0.25) → Dense(16,ReLU) → Dropout(0.25) → Dense(4,softmax) [modified from 5 to 4 for mm10]
 
-**Training split:** `inputM[:7000] / inputM[7000:]` (hardcoded in `pipeline/training.py`). mm10 has ~12,808 odd bins pre-crop → after crop ~9-11k → safely above 7000.
+**Training split:** `inputM[:7000] / inputM[7000:]` (TRAIN_VAL_SPLIT=7000 in `mm10_config.py`). mm10 has ~12,808 odd bins pre-crop → after crop ~10,686 → safely above 7000.
 
-**SLURM:** `--cpus-per-task=8 --mem=32G --gpus=1 --time=04:00:00 --account=csd940 --partition=gpu-shared`
+**SLURM:** `--cpus-per-task=8 --mem=64G --gpus=1 --time=08:00:00 --account=csd940 --partition=gpu-shared`
+
+**Invocation:**
+```bash
+# Both timepoints:
+cd /expanse/.../mariner_hi-c/ML/cmpts
+bash scripts/B3_submit_train.sh
+
+# Chain after B2:
+bash scripts/B3_submit_train.sh --dependency=afterok:${B2_JID_1}:${B2_JID_2}
+
+# Single timepoint:
+sbatch scripts/B3_train_sniper.sb 250402
+```
+
+**dump_dir dual purpose:** `sniper_train_mm10.py` saves both juicer dump intermediates AND .h5 models to `params['dump_dir']`. The SLURM wrapper sets dump_dir to `DATA_DIR/sniper_mm10/dump_train_{tp}` (large intermediates on Lustre), then copies the 6 small .h5 files to `CODE_DIR/outputs/sniper/models_{tp}/` post-training. The `-sm` flag also saves `input_matrix.mat` in dump_dir for B4 `-usemat` reuse. The `-ar` flag removes the 90 intermediate .txt files after matrix construction.
+
+**DAE epoch fix (2026-06-01):** The upstream SNIPER code ships with `epochs=10` for the DAE, but the published paper (Xiong & Ma 2019, Methods p.10 and Fig 1a) specifies 25 epochs for both the DAE and classifier. Fixed `sniper_train_mm10.py` to use `epochs=25` for the DAE (classifier was already 25). This is especially important for our self-supervised protocol (input=target) where the DAE needs more training to learn meaningful latent structure without a separate high-coverage target.
+
+**Import path fix (2026-06-01):** Added `sys.path` resolution (3-line `__file__`-relative pattern, same as B1) to `sniper_train_mm10.py` and `sniper_apply_mm10.py`. Both scripts previously depended on the caller to set PYTHONPATH; they are now self-contained. The SLURM wrapper also sets `PYTHONPATH` as belt-and-suspenders.
 
 **Outputs per timepoint:**
 ```
 CODE_DIR/outputs/sniper/models_{tp}/
   odd_chrm_autoencoder.h5, odd_chrm_encoder.h5, odd_chrm_classifier.h5
   even_chrm_autoencoder.h5, even_chrm_encoder.h5, even_chrm_classifier.h5
+DATA_DIR/sniper_mm10/dump_train_{tp}/
+  input_matrix.mat               # saved inter-chromosomal matrix (for B4 -usemat)
+  target_matrix.mat              # identical to input (self-supervised)
 ```
 
-**Verification:** All 6 .h5 files exist (each >1MB). Training log shows decreasing loss.
+**Verification:** All 6 .h5 files exist in models_{tp}/ (each >1MB). Training log shows decreasing DAE loss over 10 epochs and increasing classifier accuracy over 25 epochs.
+
+**Crop map path fix (2026-06-01):** `sniper_train_mm10.py` and `sniper_apply_mm10.py` originally hardcoded `crop_map/mm10_cropMap.mat` (no timepoint suffix), but B1 generates `mm10_cropMap_{tp}.mat`. Fixed: both scripts now require `-tp <timepoint>` flag and construct the correct timepoint-suffixed filenames. B3/B4 wrappers must pass `-tp ${TP}`.
 
 ### B4 — Apply SNIPER to All Samples — PENDING
 
@@ -624,7 +648,7 @@ ML/cmpts/                                 # CODE_DIR (GitHub-synced)
 │   ├── B1_generate_cropmap.sb            # SLURM worker (8c/64G/4h)
 │   ├── B2_generate_labels_from_calder2.py # CALDER2 → SNIPER .mat labels
 │   ├── B2_run.sb                         # SLURM wrapper (4c/16G/1h)
-│   ├── B3_train_sniper.sb                # SLURM worker (16c/96G/24h)
+│   ├── B3_train_sniper.sb                # SLURM worker (8c/64G/1GPU/8h, gpu-shared)
 │   ├── B3_submit_train.sh               # Submit 2 jobs (1 per tp)
 │   ├── B4_apply_sniper.sb               # SLURM worker (8c/64G/8h)
 │   ├── B4_submit_apply.sh               # Submit 4 jobs
