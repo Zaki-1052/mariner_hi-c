@@ -782,7 +782,7 @@ plots/
 - **SNIPER validation:** Confirms stable bins best (65-74%) but true flips at ~32%. Expected — SNIPER's A.2/B.1 boundary confusion (F1=0.53-0.57 from B5) means true-flip bins in the transition zone are exactly where SNIPER disagrees. High-confidence when both tools agree.
 - **Cosmetic:** Unicode warnings (Δ, →) on JPEG device only; PDF/SVG/PNG outputs clean.
 
-### C5 — SNIPER Concordant Transitions — READY TO RUN
+### C5 — SNIPER Concordant Transitions — DONE (2026-06-02)
 
 **Script:** `scripts/C5_sniper_concordant_transitions.R`
 
@@ -836,6 +836,13 @@ plots/
 5. Confirmation rate ∈ [5%, 50%]
 6. All 9 TSVs per TP exist and non-empty
 7. All 9 figure directories per TP have 4 files each
+
+**Results (2026-06-02):**
+- Runtime: 10s locally. Log: `logs/c5_sniper_concordance.txt`. All 7 checks passed for both timepoints.
+- 19 TSVs + 18 figure directories (72 plot files) written to `outputs/integration/sniper_concordant/`.
+- **SNIPER differential:** 250402: 13.9% bins changed (2,800/20,149), X²=39,241, V=0.806. 250831: 14.1% changed (2,843/20,148), X²=40,182, V=0.815. SNIPER detects fewer transitions than CALDER2 (13.9% vs 15.3% late, 14.1% vs 18.3% early).
+- **Epigenomic validation:** SNIPER H3K27ac gradient monotonically decreasing in both TPs. Late: 4.25→1.55→0.80→0.31 (steeper than CALDER2's 3.89→1.58→0.89→0.36 — SNIPER's extreme compartment calls are purer). H3K4me3 A.1 fold=15.3× confirms strong active enrichment.
+- **Concordant transitions:** 707 bins (late, 19.3% confirmation), 695 bins (early, 15.9%). Nearly all concordant transitions are nearest-neighbor (A.1↔A.2, A.2↔B.1, B.1↔B.2); zero skip-transitions (A.1→B.2, B.2→A.1). Dominant transition: B.2→B.1 (261 bins, 29% confirmation rate) — Polycomb activation from BAP1 loss. B.1→A.2 at 21%, A.2→B.1 at 21%. The concordant heatmap is clean of A.2/B.1 boundary noise.
 
 ---
 
