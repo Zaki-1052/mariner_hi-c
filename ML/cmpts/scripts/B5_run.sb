@@ -1,0 +1,45 @@
+#!/bin/bash
+# ML/cmpts/scripts/B5_run.sb
+# Stage B5: Concordance analysis between CALDER2 and SNIPER predictions.
+# Processes both timepoints in a single job.
+# Usage: sbatch B5_run.sb
+#SBATCH --job-name=b5_concordance
+#SBATCH --output=logs/b5_concordance_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+CODE_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts"
+DATA_DIR="/expanse/lustre/projects/csd940/zalibhai/sniper"
+
+mkdir -p "${CODE_DIR}/logs"
+
+echo "==========================================="
+echo "B5: SNIPER-CALDER2 Concordance Analysis"
+echo "==========================================="
+echo "Job ID:     ${SLURM_JOB_ID}"
+echo "Node:       ${HOSTNAME}"
+echo "CPUs:       ${SLURM_CPUS_PER_TASK}"
+echo "Start:      $(date)"
+echo "Code dir:   ${CODE_DIR}"
+echo "==========================================="
+
+source ~/.bashrc
+conda activate calder2_env
+
+Rscript "${CODE_DIR}/scripts/B5_concordance_analysis.R" \
+  "${DATA_DIR}" "${CODE_DIR}"
+STATUS=$?
+
+if [ ${STATUS} -ne 0 ]; then
+  echo "ERROR: B5_concordance_analysis.R failed (exit=${STATUS})." >&2
+  exit 1
+fi
+
+echo ""
+echo "End: $(date)"
+echo "==========================================="

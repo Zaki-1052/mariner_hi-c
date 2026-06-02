@@ -1,0 +1,44 @@
+Input mode: pre-extracted .mat (reusing B3 dump)
+===========================================
+B4: SNIPER mm10 Application
+===========================================
+Job ID:     49989727
+Node:       exp-12-60
+CPUs:       8
+Timepoint:  250402 (late)
+Sample:     ctrl_merged
+Input:      /expanse/lustre/projects/csd940/zalibhai/sniper/sniper_mm10/dump_train_250402/input_matrix.mat
+Model dir:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/models_250402
+Dump dir:   /expanse/lustre/projects/csd940/zalibhai/sniper/sniper_mm10/dump_apply_250402_ctrl_merged
+Output dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/predictions/250402/ctrl_merged
+Start:      Mon Jun  1 19:48:22 PDT 2026
+===========================================
+
+Applying SNIPER: ctrl_merged (late)
+  python sniper_apply_mm10.py \
+    /expanse/lustre/projects/csd940/zalibhai/sniper/sniper_mm10/dump_train_250402/input_matrix.mat \
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/predictions/250402/ctrl_merged/predictions.mat \
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/models_250402/odd_chrm_encoder.h5 \
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/models_250402/odd_chrm_classifier.h5 \
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/models_250402/even_chrm_encoder.h5 \
+    /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/models_250402/even_chrm_classifier.h5 \
+    -tp 250402 -dd /expanse/lustre/projects/csd940/zalibhai/sniper/sniper_mm10/dump_apply_250402_ctrl_merged -sm -ar
+
+Using TensorFlow backend.
+/home/zalibhai/miniforge3/envs/sniper_env/lib/python3.6/site-packages/keras/engine/saving.py:292: UserWarning: No training configuration found in save file: the model was *not* compiled. Compile it manually.
+  warnings.warn('No training configuration found in save file: '
+Trimming sparse, NA, and B4 regions...
+Computing contact probabilities
+
+Output validation:
+  predictions.mat: 1 MB
+  predictions.bed: 20149 lines
+
+===========================================
+B4 complete.
+  Timepoint: 250402 (late), Sample: ctrl_merged
+  predictions.mat: 1 MB
+  predictions.bed: 20149 lines
+  Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper/predictions/250402/ctrl_merged/
+End: Mon Jun  1 19:48:36 PDT 2026
+===========================================

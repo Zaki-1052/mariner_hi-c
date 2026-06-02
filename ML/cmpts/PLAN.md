@@ -480,7 +480,7 @@ DATA_DIR/sniper_mm10/dump_train_{tp}/
 - 250831 (early): Both timepoints complete. All 12 model files (6 per TP) in `outputs/sniper/models_{tp}/`.
 - SLURM logs: `logs/b3_train_250402_*.out`, `logs/b3_train_250831_*.out`
 
-### B4 — Apply SNIPER to All Samples — READY
+### B4 — Apply SNIPER to All Samples — DONE (2026-06-01)
 
 **Script:** `scripts/B4_apply_sniper.sb` + `scripts/B4_submit_apply.sh`
 
@@ -524,19 +524,57 @@ DATA_DIR/sniper_mm10/dump_apply_{tp}_{sample}/
 - SLURM logs show exit 0
 - ctrl_merged BED should closely match CALDER2 labels (model trained on this data)
 
-### B5 — SNIPER-CALDER2 Concordance — PENDING
+**Results (2026-06-01):**
+- All 4 jobs completed successfully. SLURM logs: `logs/b4_apply_{tp}_{sample}_*.out`
+- ctrl_merged jobs used mat path (~16s each); mut_merged used .hic path with juicer dumps (~3.5 min each — much faster than B3's ~2h because inference skips training epochs)
+- 250402 (late): ctrl=20,149 lines, mut=20,149 lines. Label distribution ctrl: B2=7,048, A1=5,540, A2=3,854, B1=3,707. Label distribution mut: B2=6,579, A1=5,184, A2=4,381, B1=4,005. Shift toward A2/B1 in mutant consistent with Polycomb derepression.
+- 250831 (early): ctrl=20,148 lines, mut=20,148 lines. Label distribution ctrl: A1=6,553, A2=4,791, B2=4,522, B1=4,282. Label distribution mut: A1=6,580, A2=5,431, B2=4,210, B1=3,927. More balanced; A1 dominant in both conditions.
+- 1-bin difference (20,149 vs 20,148) between timepoints reflects crop map differences (B1 generated per-timepoint crop indices from ctrl_merged.hic).
+- Keras "No training configuration found" warning is benign — models loaded for inference only.
+- Juicer "Development mode is enabled" warnings (90 per mut_merged job) are benign — standard juicer_tools stderr output.
+
+### B5 — SNIPER-CALDER2 Concordance — READY (2026-06-01)
 
 **Script:** `scripts/B5_concordance_analysis.R` + `scripts/B5_run.sb`
 
-**Logic:**
-1. Load SNIPER `predictions.bed` and CALDER2 `{tp}_subcompartment_labels_100kb.tsv` for ctrl_merged
-2. Map to common 100kb bins via `GenomicRanges::findOverlaps()`
-3. Compute confusion matrix (SNIPER × CALDER2), Cohen's kappa, per-class precision/recall
-4. For differential analysis: compare ctrl→mut transitions between both tools
+Both timepoints processed in a single job. Uses `calder2_env` (R + data.table). No GenomicRanges — coordinate join via data.table merge after converting SNIPER 0-based BED start to CALDER2 1-based bin_start (+1L). Label mapping: SNIPER `A1`/`A2`/`B1`/`B2` → CALDER2 `A.1`/`A.2`/`B.1`/`B.2`. Cohen's kappa computed manually (no `irr` dependency).
 
-**Expected concordance:** Since SNIPER is trained on CALDER2 labels, concordance on ctrl should be high (kappa > 0.7). On mut (unseen), concordance tests whether SNIPER's inter-chromosomal approach generalizes beyond training data.
+**Logic:**
+1. Load SNIPER `predictions.bed` (BED9, 0-based) and CALDER2 `{tp}_subcompartment_labels_100kb.tsv` (1-based) for both ctrl and mut
+2. Left-join on SNIPER bins (sparse ~20,149) → CALDER2 labels (dense ~24,639), excluding CALDER2 NA bins
+3. Per-condition (ctrl, mut): confusion matrix (4×4), Cohen's kappa, per-class precision/recall/F1, accuracy
+4. Differential transition concordance: intersect bins with all 4 labels (SNIPER ctrl+mut, CALDER2 ctrl+mut), classify into 5 categories: Both_stable, Both_change_agree, Both_change_disagree, SNIPER_only, CALDER2_only
+
+**Expected concordance:** Ctrl kappa > 0.5 (trained on these labels). Mut kappa likely lower but > 0.3 if SNIPER generalizes.
+
+**Outputs per timepoint (7 TSVs + 5 figure dirs):**
+```
+ML/cmpts/outputs/sniper/
+  {tp}_concordance_ctrl.tsv              # per-bin: chr, bin_start, sniper_label, calder_label, concordant
+  {tp}_concordance_mut.tsv               # same for mut
+  {tp}_confusion_matrix_ctrl.tsv         # 4×4 matrix
+  {tp}_confusion_matrix_mut.tsv          # 4×4 matrix
+  {tp}_per_class_metrics.tsv             # long format: class, condition, precision, recall, f1
+  {tp}_transition_concordance.tsv        # per-bin with all 4 labels + agreement category
+  {tp}_transition_agreement_summary.tsv  # counts per category
+  {tp}_confusion_heatmap_ctrl/           # multi-format figure
+  {tp}_confusion_heatmap_mut/            # multi-format figure
+  {tp}_discordant_alluvial/              # multi-format figure
+  {tp}_per_class_concordance/            # multi-format figure
+  {tp}_transition_agreement/             # multi-format figure
+  combined_concordance_summary.tsv       # both TPs stacked: accuracy, kappa, per-class F1
+```
 
 **SLURM:** `--cpus-per-task=4 --mem=16G --time=02:00:00`
+
+**Verification (7 checks):**
+1. Join coverage ≥ 95% of SNIPER bins
+2. Ctrl accuracy > 70%
+3. Ctrl kappa > 0.5
+4. No empty classes in confusion matrix
+5. Mut kappa > 0.3
+6. Both_stable > 80% of transition bins
+7. All output files exist
 
 ---
 
