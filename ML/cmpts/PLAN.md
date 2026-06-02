@@ -631,11 +631,36 @@ combined_developmental_heatmap/        # Fig 4b: early→late ctrl|mut (4 format
 - Cross-TP join coverage excellent: 23,796 ctrl, 23,782 mut callable in both TPs
 - Runtime: 3.4s locally. All 5 verification checks passed.
 
-### C2 — Epigenomic Enrichment (Publication Figure) — PENDING
+### C2 — Epigenomic Enrichment (Publication Figure) — DONE (2026-06-01)
 
 **Script:** `scripts/C2_epigenomic_enrichment.R`
 
-Full SNIPER paper Figure 2c equivalent using CALDER2 calls + all available marks. Uses `ComplexHeatmap` for publication quality.
+**Usage:** `Rscript C2_epigenomic_enrichment.R <data_root> <code_root>` (runs locally, no BigWigs needed — reads A3 pre-computed enrichment TSVs)
+
+**Dependencies:** `ComplexHeatmap` (Bioconductor), `circlize` (CRAN), `grid` (base R), `data.table`, `ggplot2`
+
+Full SNIPER paper Figure 2c equivalent using CALDER2 calls + all 9 available marks. Uses `ComplexHeatmap` for publication quality with row annotations (mark functional category: Active/Gene body/Methylation/Repressive), column annotations (subcompartment color bar, n_bins barplot), row split by mark category, and column split by A/B compartment class.
+
+**Wilcoxon statistics:** Paired Wilcoxon rank-sum tests (ctrl vs mut signal per bin) for each mark × subcompartment, BH-corrected. 64/72 pairs significant across both timepoints. Asterisks overlaid on differential heatmap cells.
+
+**Outputs (in `outputs/calder2/enrichment/`):**
+```
+enrichment_wide.tsv                  # 36 rows (9 marks × 2 conds × 2 TPs), wide format
+differential_wide.tsv                # 18 rows (9 marks × 2 TPs), wide format
+enrichment_statistics.tsv            # 72 rows, Wilcoxon p-values + BH-adjusted
+c2_enrichment_ctrl_late/             # Per-TP ctrl heatmap with anno_barplot (4 formats)
+c2_enrichment_ctrl_early/            # Same for early
+c2_enrichment_panel/                 # MAIN: 4-panel (2 TP × 2 cond) combined heatmap (4 formats)
+c2_differential_panel/               # 2-panel differential with significance stars (4 formats)
+c2_enrichment_dotplot/               # ggplot2 dot plot, faceted by TP × condition (4 formats)
+```
+
+**Results (2026-06-01):**
+- Runtime: 3.8s locally. 6/6 verification checks passed.
+- H3K27ac gradient monotonically decreasing A.1→B.2 in ctrl (late: 3.89→1.58→0.89→0.36). All active marks (H3K4me3, ATAC, RNA) show strong A.1 enrichment.
+- H3K27me3 B.1 fold = 2.25× (late), confirming Polycomb compartment.
+- 32/36 mark-subcompartment pairs significant per timepoint (Wilcoxon padj < 0.05). Non-significant pairs: DNAmethylation (relatively uniform across subcompartments) and H3K27me1 in some subcompartments.
+- Main publication figure (`c2_enrichment_panel`) shows all 4 condition × timepoint panels in a single unified heatmap with shared color scale, category annotations, and A|B column splits.
 
 ### C3 — Loop/Stripe × Subcompartment Integration — PENDING
 
