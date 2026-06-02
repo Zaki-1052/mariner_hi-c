@@ -1,0 +1,186 @@
+===========================================
+B5: SNIPER-CALDER2 Concordance Analysis
+===========================================
+Job ID:     50017438
+Node:       exp-7-20
+CPUs:       4
+Start:      Mon Jun  1 20:58:55 PDT 2026
+Code dir:   /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+===========================================
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+===========================================
+B5: SNIPER-CALDER2 Concordance Analysis
+===========================================
+CODE_ROOT:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts
+Output dir: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/ML/cmpts/outputs/sniper
+Start:      Mon Jun  1 20:59:08 2026
+===========================================
+
+
+###############################################
+### Timepoint: 250402 (late/adult)
+###############################################
+
+=== Pre-flight validation ===
+  OK: sniper_ctrl (1,202,040 bytes)
+  OK: sniper_mut (1,203,094 bytes)
+  OK: calder2 (1,792,766 bytes)
+
+=== Loading data ===
+  Loading SNIPER ctrl predictions...
+    20149 bins
+  Loading SNIPER mut predictions...
+    20149 bins
+  Loading CALDER2 ctrl labels...
+    23874 callable bins
+  Loading CALDER2 mut labels...
+    23865 callable bins
+
+=== Concordance: CTRL ===
+  Joining predictions...
+    SNIPER bins: 20149, matched: 20076, unmatched/NA: 73
+  Accuracy: 78.0% (15657/20076)
+  Cohen's kappa: 0.6946 (p_o=0.7799, p_e=0.2793)
+  Per-class metrics:
+    A.1   P=0.942  R=0.788  F1=0.858  (SNIPER=5482, CALDER2=6554)
+    A.2   P=0.499  R=0.663  F1=0.570  (SNIPER=3854, CALDER2=2905)
+    B.1   P=0.507  R=0.677  F1=0.580  (SNIPER=3707, CALDER2=2774)
+    B.2   P=0.951  R=0.853  F1=0.899  (SNIPER=7033, CALDER2=7843)
+  Written: 250402_concordance_ctrl.tsv
+  Written: 250402_confusion_matrix_ctrl.tsv
+
+=== Concordance: MUT ===
+  Joining predictions...
+    SNIPER bins: 20149, matched: 20073, unmatched/NA: 76
+  Accuracy: 74.8% (15012/20073)
+  Cohen's kappa: 0.6557 (p_o=0.7479, p_e=0.2678)
+  Per-class metrics:
+    A.1   P=0.961  R=0.707  F1=0.815  (SNIPER=5126, CALDER2=6968)
+    A.2   P=0.457  R=0.635  F1=0.532  (SNIPER=4381, CALDER2=3155)
+    B.1   P=0.479  R=0.708  F1=0.572  (SNIPER=4005, CALDER2=2712)
+    B.2   P=0.939  R=0.851  F1=0.893  (SNIPER=6561, CALDER2=7238)
+  Written: 250402_concordance_mut.tsv
+  Written: 250402_confusion_matrix_mut.tsv
+
+  Written: 250402_per_class_metrics.tsv
+
+=== Differential transition concordance ===
+    Bins with all 4 labels: 20063
+  Agreement categories:
+    Both_stable                15123 ( 75.4%)
+    Both_change_agree            707 (  3.5%)
+    Both_change_disagree         339 (  1.7%)
+    SNIPER_only                 1754 (  8.7%)
+    CALDER2_only                2140 ( 10.7%)
+  Written: 250402_transition_concordance.tsv
+  Written: 250402_transition_agreement_summary.tsv
+
+=== Generating figures ===
+  Saved: 250402_confusion_heatmap_ctrl/{pdf,svg,png,jpg}
+  Saved: 250402_confusion_heatmap_mut/{pdf,svg,png,jpg}
+  Saved: 250402_discordant_alluvial/{pdf,svg,png,jpg}
+  Saved: 250402_per_class_concordance/{pdf,svg,png,jpg}
+  Saved: 250402_transition_agreement/{pdf,svg,png,jpg}
+
+=== Verification ===
+  ctrl join coverage: 99.6% (20076/20149)
+  mut join coverage: 99.6% (20073/20149)
+
+###############################################
+### Timepoint: 250831 (early/P12)
+###############################################
+
+=== Pre-flight validation ===
+  OK: sniper_ctrl (1,203,852 bytes)
+  OK: sniper_mut (1,205,132 bytes)
+  OK: calder2 (1,787,253 bytes)
+
+=== Loading data ===
+  Loading SNIPER ctrl predictions...
+    20148 bins
+  Loading SNIPER mut predictions...
+    20148 bins
+  Loading CALDER2 ctrl labels...
+    23844 callable bins
+  Loading CALDER2 mut labels...
+    23836 callable bins
+
+=== Concordance: CTRL ===
+  Joining predictions...
+    SNIPER bins: 20148, matched: 20078, unmatched/NA: 70
+  Accuracy: 74.8% (15015/20078)
+  Cohen's kappa: 0.6595 (p_o=0.7478, p_e=0.2595)
+  Per-class metrics:
+    A.1   P=0.901  R=0.856  F1=0.878  (SNIPER=6517, CALDER2=6862)
+    A.2   P=0.590  R=0.713  F1=0.646  (SNIPER=4789, CALDER2=3963)
+    B.1   P=0.473  R=0.643  F1=0.545  (SNIPER=4273, CALDER2=3142)
+    B.2   P=0.956  R=0.703  F1=0.810  (SNIPER=4499, CALDER2=6111)
+  Written: 250831_concordance_ctrl.tsv
+  Written: 250831_confusion_matrix_ctrl.tsv
+
+=== Concordance: MUT ===
+  Joining predictions...
+    SNIPER bins: 20148, matched: 20078, unmatched/NA: 70
+  Accuracy: 73.7% (14804/20078)
+  Cohen's kappa: 0.6430 (p_o=0.7373, p_e=0.2641)
+  Per-class metrics:
+    A.1   P=0.928  R=0.791  F1=0.855  (SNIPER=6554, CALDER2=7688)
+    A.2   P=0.546  R=0.730  F1=0.625  (SNIPER=5431, CALDER2=4063)
+    B.1   P=0.459  R=0.640  F1=0.534  (SNIPER=3922, CALDER2=2813)
+    B.2   P=0.948  R=0.717  F1=0.816  (SNIPER=4171, CALDER2=5514)
+  Written: 250831_concordance_mut.tsv
+  Written: 250831_confusion_matrix_mut.tsv
+
+  Written: 250831_per_class_metrics.tsv
+
+=== Differential transition concordance ===
+    Bins with all 4 labels: 20067
+  Agreement categories:
+    Both_stable                14487 ( 72.2%)
+    Both_change_agree            695 (  3.5%)
+    Both_change_disagree         273 (  1.4%)
+    SNIPER_only                 1861 (  9.3%)
+    CALDER2_only                2751 ( 13.7%)
+  Written: 250831_transition_concordance.tsv
+  Written: 250831_transition_agreement_summary.tsv
+
+=== Generating figures ===
+  Saved: 250831_confusion_heatmap_ctrl/{pdf,svg,png,jpg}
+  Saved: 250831_confusion_heatmap_mut/{pdf,svg,png,jpg}
+  Saved: 250831_discordant_alluvial/{pdf,svg,png,jpg}
+  Saved: 250831_per_class_concordance/{pdf,svg,png,jpg}
+  Saved: 250831_transition_agreement/{pdf,svg,png,jpg}
+
+=== Verification ===
+  ctrl join coverage: 99.7% (20078/20148)
+  mut join coverage: 99.7% (20078/20148)
+There were 26 warnings (use warnings() to see them)
+
+===========================================
+Combined Summary
+===========================================
+Written: combined_concordance_summary.tsv
+
+   timepoint   tp_label condition n_bins accuracy  kappa  f1_A1  f1_A2  f1_B1
+      <char>     <char>    <char>  <int>    <num>  <num>  <num>  <num>  <num>
+1:    250402 late/adult      ctrl  20076   0.7799 0.6946 0.8583 0.5696 0.5798
+2:    250402 late/adult       mut  20073   0.7479 0.6557 0.8149 0.5318 0.5717
+3:    250831  early/P12      ctrl  20078   0.7478 0.6595 0.8776 0.6456 0.5448
+4:    250831  early/P12       mut  20078   0.7373 0.6430 0.8545 0.6250 0.5342
+    f1_B2
+    <num>
+1: 0.8992
+2: 0.8928
+3: 0.8104
+4: 0.8163
+
+===========================================
+B5 COMPLETE
+Finished: Mon Jun  1 20:59:25 2026
+===========================================
+
+End: Mon Jun  1 20:59:26 PDT 2026
+===========================================

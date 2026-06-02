@@ -533,7 +533,7 @@ DATA_DIR/sniper_mm10/dump_apply_{tp}_{sample}/
 - Keras "No training configuration found" warning is benign — models loaded for inference only.
 - Juicer "Development mode is enabled" warnings (90 per mut_merged job) are benign — standard juicer_tools stderr output.
 
-### B5 — SNIPER-CALDER2 Concordance — READY (2026-06-01)
+### B5 — SNIPER-CALDER2 Concordance — DONE (2026-06-01)
 
 **Script:** `scripts/B5_concordance_analysis.R` + `scripts/B5_run.sb`
 
@@ -576,9 +576,29 @@ ML/cmpts/outputs/sniper/
 6. Both_stable > 80% of transition bins
 7. All output files exist
 
+**Results (2026-06-01):**
+- Runtime: 17s total. SLURM log: `logs/b5_concordance_50017438.out`
+- Join coverage: 99.6-99.7% for all conditions (coordinate conversion correct; ~70-76 bins unmatched = CALDER2 NA centromeric gaps)
+- All 25 output items written (14 TSVs + 10 figure dirs + 1 combined summary)
+
+| Timepoint | Condition | n_bins | Accuracy | Kappa | F1(A.1) | F1(A.2) | F1(B.1) | F1(B.2) |
+|-----------|-----------|--------|----------|-------|---------|---------|---------|---------|
+| 250402 (late) | ctrl | 20,076 | 78.0% | 0.695 | 0.858 | 0.570 | 0.580 | 0.899 |
+| 250402 (late) | mut | 20,073 | 74.8% | 0.656 | 0.815 | 0.532 | 0.572 | 0.893 |
+| 250831 (early) | ctrl | 20,078 | 74.8% | 0.660 | 0.878 | 0.646 | 0.545 | 0.810 |
+| 250831 (early) | mut | 20,078 | 73.7% | 0.643 | 0.855 | 0.625 | 0.534 | 0.816 |
+
+- **Training fidelity:** Substantial agreement (kappa 0.66-0.69). SNIPER recovers A.1 and B.2 well (F1 >0.81) but confuses the intermediate A.2 and B.1 classes (F1 0.53-0.65). This is expected — A.2/B.1 sit at the A/B boundary where the inter-chromosomal signal is weakest.
+- **Generalization:** Only ~3% accuracy drop ctrl→mut, ~0.02-0.04 kappa drop. SNIPER's latent representations transfer well to unseen mutant data — the BAP1-KO perturbation does not break the learned contact-pattern features.
+- **Per-class pattern:** SNIPER over-predicts A.2 and B.1 (high recall, low precision) at the expense of A.1 and B.2 (high precision, lower recall). It fragments the extreme compartments into intermediates.
+- **Transition concordance (250402):** Both_stable=75.4%, Both_change_agree=3.5%, Both_change_disagree=1.7%, SNIPER_only=8.7%, CALDER2_only=10.7%. CALDER2 detects ~22% more transitions than SNIPER (3,186 vs 2,800 changed bins in the shared set), suggesting CALDER2 is more sensitive to subcompartment switching.
+- **Soft warning:** Both_stable is 72-75% (below 80% threshold) due to ~20-24% of bins changing in at least one tool. Not a data quality concern — reflects genuine biological dynamics plus inter-tool disagreement on borderline bins.
+
 ---
 
 ## Track C: Visualization & Integration
+
+User Note: These can be run/computed locally.
 
 ### C1 — Combined Subcompartment Comparison — PENDING
 

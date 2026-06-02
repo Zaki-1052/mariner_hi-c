@@ -43,6 +43,8 @@ SNIPER_TO_CALDER <- c(
 CONDITION_LABELS <- c("ctrl_merged" = "ctrl_label", "mut_merged" = "mut_label")
 
 OUT_BASE  <- file.path(CODE_ROOT, "outputs", "sniper")
+TSV_DIR   <- file.path(OUT_BASE, "tsvs")
+PLOT_DIR  <- file.path(OUT_BASE, "plots")
 UTIL_PATH <- file.path(CODE_ROOT, "scripts", "utils", "multi_format_output.R")
 
 AGREEMENT_COLORS <- c(
@@ -65,11 +67,15 @@ source(UTIL_PATH)
 
 # ── Header ─────────────────────────────────────────────────────────────────────
 
+dir.create(TSV_DIR,  recursive = TRUE, showWarnings = FALSE)
+dir.create(PLOT_DIR, recursive = TRUE, showWarnings = FALSE)
+
 cat("===========================================\n")
 cat("B5: SNIPER-CALDER2 Concordance Analysis\n")
 cat("===========================================\n")
 cat(sprintf("CODE_ROOT:  %s\n", CODE_ROOT))
-cat(sprintf("Output dir: %s\n", OUT_BASE))
+cat(sprintf("TSV dir:    %s\n", TSV_DIR))
+cat(sprintf("Plot dir:   %s\n", PLOT_DIR))
 cat(sprintf("Start:      %s\n", date()))
 cat("===========================================\n\n")
 
@@ -313,7 +319,6 @@ for (tp in TPS) {
 
   tp_label <- sprintf("%s (%s)", tp, TP_LABELS[tp])
   tp_dir   <- TP_DIRS[tp]
-  OUT_DIR  <- OUT_BASE
 
   cat(sprintf("\n###############################################\n"))
   cat(sprintf("### Timepoint: %s\n", tp_label))
@@ -398,13 +403,13 @@ for (tp in TPS) {
     )
 
     # Write per-bin concordance TSV
-    out_conc <- file.path(OUT_DIR, sprintf("%s_concordance_%s.tsv", tp, cond))
+    out_conc <- file.path(TSV_DIR, sprintf("%s_concordance_%s.tsv", tp, cond))
     fwrite(joined[, .(chr, bin_start = calder_bin_start, sniper_label, calder_label, concordant)],
            out_conc, sep = "\t", quote = FALSE)
     cat(sprintf("  Written: %s\n", basename(out_conc)))
 
     # Write confusion matrix TSV
-    out_cm <- file.path(OUT_DIR, sprintf("%s_confusion_matrix_%s.tsv", tp, cond))
+    out_cm <- file.path(TSV_DIR, sprintf("%s_confusion_matrix_%s.tsv", tp, cond))
     write.table(conf_mat, out_cm, sep = "\t", quote = FALSE, col.names = NA)
     cat(sprintf("  Written: %s\n", basename(out_cm)))
   }
@@ -415,7 +420,7 @@ for (tp in TPS) {
   metrics_ctrl[, condition := "ctrl"]
   metrics_mut[,  condition := "mut"]
   all_metrics <- rbind(metrics_ctrl, metrics_mut)
-  out_metrics <- file.path(OUT_DIR, sprintf("%s_per_class_metrics.tsv", tp))
+  out_metrics <- file.path(TSV_DIR, sprintf("%s_per_class_metrics.tsv", tp))
   fwrite(all_metrics, out_metrics, sep = "\t", quote = FALSE)
   cat(sprintf("\n  Written: %s\n", basename(out_metrics)))
 
@@ -437,14 +442,14 @@ for (tp in TPS) {
                 trans_summary$agreement[i], trans_summary$N[i], trans_summary$pct[i]))
   }
 
-  out_trans <- file.path(OUT_DIR, sprintf("%s_transition_concordance.tsv", tp))
+  out_trans <- file.path(TSV_DIR, sprintf("%s_transition_concordance.tsv", tp))
   fwrite(trans_dt[, .(chr, bin_start = calder_bin_start,
                        sniper_ctrl, sniper_mut, calder_ctrl, calder_mut,
                        sniper_changed, calder_changed, agreement)],
          out_trans, sep = "\t", quote = FALSE)
   cat(sprintf("  Written: %s\n", basename(out_trans)))
 
-  out_trans_summ <- file.path(OUT_DIR, sprintf("%s_transition_agreement_summary.tsv", tp))
+  out_trans_summ <- file.path(TSV_DIR, sprintf("%s_transition_agreement_summary.tsv", tp))
   fwrite(trans_summary, out_trans_summ, sep = "\t", quote = FALSE)
   cat(sprintf("  Written: %s\n", basename(out_trans_summ)))
 
@@ -459,7 +464,7 @@ for (tp in TPS) {
     sprintf("Training data | Accuracy=%.1f%%, kappa=%.3f",
             100 * tp_results$ctrl$accuracy, tp_results$ctrl$kappa$kappa))
   save_multiformat_ggplot(p_cm_ctrl,
-    file.path(OUT_DIR, sprintf("%s_confusion_heatmap_ctrl", tp)),
+    file.path(PLOT_DIR, sprintf("%s_confusion_heatmap_ctrl", tp)),
     width = 7, height = 6)
 
   # 2. Confusion heatmap — mut
@@ -469,7 +474,7 @@ for (tp in TPS) {
     sprintf("Unseen data | Accuracy=%.1f%%, kappa=%.3f",
             100 * tp_results$mut$accuracy, tp_results$mut$kappa$kappa))
   save_multiformat_ggplot(p_cm_mut,
-    file.path(OUT_DIR, sprintf("%s_confusion_heatmap_mut", tp)),
+    file.path(PLOT_DIR, sprintf("%s_confusion_heatmap_mut", tp)),
     width = 7, height = 6)
 
   # 3. Discordant alluvial
@@ -477,7 +482,7 @@ for (tp in TPS) {
     tp_results$ctrl$joined, tp_results$mut$joined, tp_label)
   if (!is.null(p_disc)) {
     save_multiformat_ggplot(p_disc,
-      file.path(OUT_DIR, sprintf("%s_discordant_alluvial", tp)),
+      file.path(PLOT_DIR, sprintf("%s_discordant_alluvial", tp)),
       width = 10, height = 7)
   }
 
@@ -486,13 +491,13 @@ for (tp in TPS) {
   metrics_mut_plot  <- copy(tp_results$mut$metrics)
   p_class <- plot_per_class_concordance(metrics_ctrl_plot, metrics_mut_plot, tp_label)
   save_multiformat_ggplot(p_class,
-    file.path(OUT_DIR, sprintf("%s_per_class_concordance", tp)),
+    file.path(PLOT_DIR, sprintf("%s_per_class_concordance", tp)),
     width = 9, height = 6)
 
   # 5. Transition agreement bar chart
   p_trans <- plot_transition_agreement(trans_dt, tp_label)
   save_multiformat_ggplot(p_trans,
-    file.path(OUT_DIR, sprintf("%s_transition_agreement", tp)),
+    file.path(PLOT_DIR, sprintf("%s_transition_agreement", tp)),
     width = 8, height = 6)
 
   # ── Build summary row for combined output ────────────────────────────────
@@ -585,7 +590,7 @@ cat("Combined Summary\n")
 cat("===========================================\n")
 
 summary_dt <- rbindlist(combined_summary)
-out_combined <- file.path(OUT_BASE, "combined_concordance_summary.tsv")
+out_combined <- file.path(TSV_DIR, "combined_concordance_summary.tsv")
 fwrite(summary_dt, out_combined, sep = "\t", quote = FALSE)
 cat(sprintf("Written: %s\n\n", basename(out_combined)))
 
