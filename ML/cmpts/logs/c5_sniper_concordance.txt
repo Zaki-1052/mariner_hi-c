@@ -1,0 +1,156 @@
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+===========================================
+C5: SNIPER Concordant Transitions
+===========================================
+CODE_ROOT:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/ML/cmpts
+Output dir: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/ML/cmpts/outputs/integration/sniper_concordant
+Timepoints: 250402, 250831
+Start:      Tue Jun  2 00:50:50 2026
+===========================================
+
+=== Pre-flight validation ===
+  OK: 250402/sniper_ctrl (1,202,040 bytes)
+  OK: 250402/sniper_mut (1,203,094 bytes)
+  OK: 250402/calder_labels (1,792,766 bytes)
+  OK: 250402/bin_signals (8,773,005 bytes)
+  OK: 250402/concordance (1,099,549 bytes)
+  OK: 250831/sniper_ctrl (1,203,852 bytes)
+  OK: 250831/sniper_mut (1,205,132 bytes)
+  OK: 250831/calder_labels (1,787,253 bytes)
+  OK: 250831/bin_signals (8,756,843 bytes)
+  OK: 250831/concordance (1,099,182 bytes)
+  Pre-flight passed.
+
+
+###################################################
+### Timepoint: 250402 (late/adult)
+###################################################
+
+=== Part 1: SNIPER Differential ===
+  Loaded SNIPER ctrl: 20149 bins
+  Loaded SNIPER mut:  20149 bins
+  Joined bins:    20149
+  Changed bins:   2800 (13.9%)
+  Matrix total:   20149
+  Chi-squared: X2=39240.6, df=9, p=0.000e+00
+  Cramer's V:  0.8057
+  Written: 3 SNIPER differential TSVs
+
+  Generating SNIPER figures...
+  Saved: c5_sniper_transition_heatmap_late/{pdf,svg,png,jpg}
+  Saved: c5_sniper_transition_sankey_late/{pdf,svg,png,jpg}
+
+=== Part 2: SNIPER Epigenomic Validation ===
+  Loaded bin_signals: 23853 rows x 26 cols
+  SNIPER ctrl x bin_signals join: 20063 rows
+  Ctrl enrichment: 36 values
+  SNIPER mut x bin_signals join: 20063 rows
+  Mut enrichment:  36 values
+  Written: 250402_sniper_enrichment.tsv
+  Generating enrichment heatmaps...
+  Saved: c5_sniper_enrichment_ctrl_late/{pdf,svg,png,jpg}
+  Saved: c5_sniper_enrichment_mut_late/{pdf,svg,png,jpg}
+
+=== Part 3: Concordant Transitions ===
+  Loaded concordance: 20063 rows
+  Agreement breakdown:
+    Both_stable               15123 (75.4%)
+    Both_change_agree           707 (3.5%)
+    Both_change_disagree        339 (1.7%)
+    SNIPER_only                1754 (8.7%)
+    CALDER2_only               2140 (10.7%)
+
+  Concordant bins: 707
+  Concordant matrix total: 707
+  Chi-squared (MC): X2=1066.0, p=9.999e-05
+  Discordant bins: 339
+  CALDER2 changed bins: 3659
+  Overall confirmation rate: 707/3659 = 19.3%
+  Written: 5 concordant TSVs
+
+  Generating concordant figures...
+  Saved: c5_concordant_heatmap_late/{pdf,svg,png,jpg}
+  Saved: c5_concordant_vs_discordant_late/{pdf,svg,png,jpg}
+  Saved: c5_three_way_comparison_late/{pdf,svg,png,jpg}
+  Saved: c5_confirmation_rates_late/{pdf,svg,png,jpg}
+  Saved: c5_concordant_sankey_late/{pdf,svg,png,jpg}
+
+=== Verification ===
+  H3K27ac SNIPER gradient OK: 4.25 > 1.55 > 0.80 > 0.31
+  All 707 concordant bins confirmed in CALDER2 changed set.
+  Confirmation rate: 19.3% (plausible)
+  All verification checks passed.
+
+  Timepoint 250402 complete.
+
+
+###################################################
+### Timepoint: 250831 (early/P12)
+###################################################
+
+=== Part 1: SNIPER Differential ===
+  Loaded SNIPER ctrl: 20148 bins
+  Loaded SNIPER mut:  20148 bins
+  Joined bins:    20148
+  Changed bins:   2843 (14.1%)
+  Matrix total:   20148
+  Chi-squared: X2=40182.0, df=9, p=0.000e+00
+  Cramer's V:  0.8153
+  Written: 3 SNIPER differential TSVs
+
+  Generating SNIPER figures...
+  Saved: c5_sniper_transition_heatmap_early/{pdf,svg,png,jpg}
+  Saved: c5_sniper_transition_sankey_early/{pdf,svg,png,jpg}
+
+=== Part 2: SNIPER Epigenomic Validation ===
+  Loaded bin_signals: 23823 rows x 26 cols
+  SNIPER ctrl x bin_signals join: 20067 rows
+  Ctrl enrichment: 36 values
+  SNIPER mut x bin_signals join: 20067 rows
+  Mut enrichment:  36 values
+  Written: 250831_sniper_enrichment.tsv
+  Generating enrichment heatmaps...
+  Saved: c5_sniper_enrichment_ctrl_early/{pdf,svg,png,jpg}
+  Saved: c5_sniper_enrichment_mut_early/{pdf,svg,png,jpg}
+
+=== Part 3: Concordant Transitions ===
+  Loaded concordance: 20067 rows
+  Agreement breakdown:
+    Both_stable               14487 (72.2%)
+    Both_change_agree           695 (3.5%)
+    Both_change_disagree        273 (1.4%)
+    SNIPER_only                1861 (9.3%)
+    CALDER2_only               2751 (13.7%)
+
+  Concordant bins: 695
+  Concordant matrix total: 695
+  Chi-squared (MC): X2=1199.1, p=9.999e-05
+  Discordant bins: 273
+  CALDER2 changed bins: 4371
+  Overall confirmation rate: 695/4371 = 15.9%
+  Written: 5 concordant TSVs
+
+  Generating concordant figures...
+  Saved: c5_concordant_heatmap_early/{pdf,svg,png,jpg}
+  Saved: c5_concordant_vs_discordant_early/{pdf,svg,png,jpg}
+  Saved: c5_three_way_comparison_early/{pdf,svg,png,jpg}
+  Saved: c5_confirmation_rates_early/{pdf,svg,png,jpg}
+  Saved: c5_concordant_sankey_early/{pdf,svg,png,jpg}
+
+=== Verification ===
+  H3K27ac SNIPER gradient OK: 3.07 > 1.26 > 0.56 > 0.24
+  All 695 concordant bins confirmed in CALDER2 changed set.
+  Confirmation rate: 15.9% (plausible)
+  All verification checks passed.
+
+  Timepoint 250831 complete.
+
+  Written: c5_combined_summary.tsv
+
+===========================================
+C5 COMPLETE
+Finished: Tue Jun  2 00:51:00 2026
+===========================================

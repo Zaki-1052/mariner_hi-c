@@ -782,6 +782,61 @@ plots/
 - **SNIPER validation:** Confirms stable bins best (65-74%) but true flips at ~32%. Expected — SNIPER's A.2/B.1 boundary confusion (F1=0.53-0.57 from B5) means true-flip bins in the transition zone are exactly where SNIPER disagrees. High-confidence when both tools agree.
 - **Cosmetic:** Unicode warnings (Δ, →) on JPEG device only; PDF/SVG/PNG outputs clean.
 
+### C5 — SNIPER Concordant Transitions — READY TO RUN
+
+**Script:** `scripts/C5_sniper_concordant_transitions.R`
+
+**Usage:** `Rscript C5_sniper_concordant_transitions.R <data_root> <code_root>`
+
+Three-part analysis: (1) SNIPER-based differential subcompartment analysis (A2-equivalent), (2) epigenomic validation of SNIPER calls using A3's pre-computed bin signals, (3) concordant transition heatmap — bins where both SNIPER and CALDER2 agree on the exact ctrl→mut transition.
+
+**Dependencies:** `data.table`, `ggplot2`, `ggalluvial`, `scales`, `patchwork` (all available locally)
+
+**Inputs:**
+- SNIPER predictions: `outputs/sniper/predictions/{tp}/{sample}/predictions.bed` (B4 output)
+- CALDER2 labels: `outputs/calder2/{tp_dir}/{tp}_subcompartment_labels_100kb.tsv` (A2 output)
+- A3 signals: `outputs/calder2/{tp_dir}/{tp}_bin_signals.tsv` (A3 output, 9 marks × 2 conditions)
+- B5 concordance: `outputs/sniper/tsvs/{tp}_transition_concordance.tsv` (B5 output)
+
+**Logic:**
+1. **Part 1 (SNIPER differential):** Load SNIPER BED files (already at 100kb), join ctrl+mut, compute 4×4 transition matrix + chi-squared + Cramer's V. No plurality-vote binning needed.
+2. **Part 2 (Epigenomic validation):** Inner-join SNIPER labels with A3's bin_signals (~20k overlapping bins). Compute fold-enrichment per SNIPER-assigned subcompartment using the SNIPER-intersected subset for genome-wide median. Validate H3K27ac gradient.
+3. **Part 3 (Concordant transitions):** Filter B5's `Both_change_agree` bins (~707/~695 per TP). Build concordant 4×4 matrix + discordant matrix. Compute per-transition confirmation rates (n_concordant/n_calder_changed). Three-way comparison: CALDER2 | SNIPER | Concordant.
+
+**Outputs (in `outputs/integration/sniper_concordant/`):**
+```
+tsv/
+  {tp}_sniper_differential.tsv              # per-bin SNIPER ctrl→mut labels
+  {tp}_sniper_transition_matrix.tsv         # 4×4 SNIPER transition counts
+  {tp}_sniper_transition_summary.tsv        # long format with pct_of_total
+  {tp}_sniper_enrichment.tsv               # fold-enrichment per SNIPER label × mark
+  {tp}_concordant_transitions.tsv          # ~707 high-confidence bins
+  {tp}_concordant_transition_matrix.tsv    # definitive 4×4 matrix
+  {tp}_discordant_transitions.tsv          # ~339 bins where tools disagree
+  {tp}_confirmation_rates.tsv             # per-transition confirmation rate
+  {tp}_concordant_summary.tsv             # summary statistics
+  c5_combined_summary.tsv                 # both TPs stacked
+plots/
+  c5_sniper_transition_heatmap_{tp_dir}/   # SNIPER A2-equivalent heatmap
+  c5_sniper_transition_sankey_{tp_dir}/    # SNIPER flow diagram
+  c5_sniper_enrichment_ctrl_{tp_dir}/      # SNIPER epigenomic validation (ctrl)
+  c5_sniper_enrichment_mut_{tp_dir}/       # SNIPER epigenomic validation (mut)
+  c5_concordant_heatmap_{tp_dir}/          # KEY: definitive transition heatmap
+  c5_concordant_vs_discordant_{tp_dir}/    # side-by-side concordant vs discordant
+  c5_three_way_comparison_{tp_dir}/        # 3-panel: CALDER2 | SNIPER | Concordant
+  c5_confirmation_rates_{tp_dir}/          # per-transition confirmation rates
+  c5_concordant_sankey_{tp_dir}/           # concordant flow diagram
+```
+
+**Verification (7 checks):**
+1. SNIPER matrix sum ∈ [19000, 21000] (~20,149 expected)
+2. Concordant matrix sum ∈ [400, 1200] (~707 expected)
+3. H3K27ac gradient monotonically decreasing A.1→B.2 on SNIPER ctrl labels
+4. All concordant bins exist in CALDER2 changed set
+5. Confirmation rate ∈ [5%, 50%]
+6. All 9 TSVs per TP exist and non-empty
+7. All 9 figure directories per TP have 4 files each
+
 ---
 
 ## Directory Structure
@@ -947,6 +1002,7 @@ Same pattern. B1 (cropmap) → B2 → B3 → B4 → B5. B2 depends on A2 complet
 | `scripts/C2_epigenomic_enrichment.R` | C | R | Fig 2c equivalent |
 | `scripts/C3_loops_stripes_integration.R` | C | R | Loop × subcompartment |
 | `scripts/C4_homer_decomposition.R` | C | R | A/B breakdown |
+| `scripts/C5_sniper_concordant_transitions.R` | C | R | SNIPER differential + concordant heatmap |
 | `scripts/C_run.sb` | C | SLURM | Wrapper for all C |
 | `scripts/run_full_calder2.sh` | A | Driver | Track A master |
 | `scripts/run_full_sniper.sh` | B | Driver | Track B master |
@@ -982,6 +1038,10 @@ Same pattern. B1 (cropmap) → B2 → B3 → B4 → B5. B2 depends on A2 complet
 | B4 | `predictions.bed` for all 4 samples | Correct bin count |
 | B5 | SNIPER-CALDER2 concordance on ctrl | Cohen's kappa > 0.6 |
 | C1-C4 | All figures in 4 formats | Non-zero file sizes |
+| C5 | SNIPER matrix sum | ~20,149 bins |
+| C5 | Concordant matrix sum | ~707 bins (Both_change_agree) |
+| C5 | H3K27ac gradient on SNIPER labels | Monotonic decrease A.1→B.2 |
+| C5 | Confirmation rate | 5-50% of CALDER2 transitions SNIPER-confirmed |
 
 ---
 
