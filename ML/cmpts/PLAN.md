@@ -715,11 +715,72 @@ c3_developmental_comparison/             # clust5 early vs late stacked bar
 6. All output TSVs non-empty
 7. All 6 figure directories have 4 files each
 
-### C4 — HOMER A/B Decomposition — PENDING
+### C4 — HOMER A/B Decomposition — DONE (2026-06-02)
 
 **Script:** `scripts/C4_homer_decomposition.R`
 
-The key integrative analysis: decompose HOMER's coarse A/B transitions into subcompartment-resolution switches.
+**Usage:** `Rscript C4_homer_decomposition.R <data_root> <code_root>`
+
+The key integrative analysis: decompose HOMER's coarse A/B transitions into subcompartment-resolution switches. Builds on A4's 100kb handoff file with native-resolution join, PC1 effect-size statistics, genome-wide "iceberg" fractions, cross-timepoint comparison, SNIPER validation overlay, and per-chromosome breakdown.
+
+**Dependencies:** `data.table`, `ggplot2`, `scales`, `ggalluvial`, `patchwork` (all available locally)
+
+**Logic:**
+1. Load A4 `{tp}_homer_100kb_aggregated.tsv` + CALDER2 `{tp}_subcompartment_labels_100kb.tsv`
+2. Native 1:1 merge at 100kb (`Chr`/`calder_bin_start` ↔ `chr`/`bin_start`)
+3. Classify transitions via `classify_transition()` + assign iceberg categories (Non_sig / Sig_stable / Sig_within_shift / Sig_true_flip)
+4. PC1 effect-size distributions: |mean_Difference| by transition category + pairwise Wilcoxon tests (BH-corrected)
+5. Genome-wide "iceberg" fractions: all bins, not just significant
+6. Cross-timepoint comparison: decomposition rates + bins significant in both TPs
+7. SNIPER validation overlay: B5 concordance stratified by transition type (conditional on data availability)
+8. Per-chromosome breakdown: chromosomal heterogeneity in true flip rates
+
+**Inputs:**
+- A4 handoff: `outputs/integration/{early,late}/{tp}_homer_100kb_aggregated.tsv`
+- CALDER2: `outputs/calder2/{early,late}/{tp}_subcompartment_labels_100kb.tsv`
+- SNIPER: `outputs/sniper/tsvs/{tp}_transition_concordance.tsv` (optional)
+- A4 summary: `outputs/integration/combined_weakening_decomposition.tsv` (optional)
+
+**Outputs (in `outputs/integration/homer_decomposition/`):**
+```
+tsv/
+  {tp}_native_join_100kb.tsv               # master integration table (~24k rows)
+  {tp}_effect_size_summary.tsv             # median/mean |ΔPC1| per transition category
+  {tp}_wilcoxon_tests.tsv                  # pairwise Wilcoxon tests (BH-corrected)
+  {tp}_sniper_homer_validation.tsv         # SNIPER agreement per transition type (if available)
+  iceberg_summary.tsv                      # genome-wide fractions (both TPs)
+  decomposition_rates_combined.tsv         # A→B/B→A decomposition by transition type
+  cross_timepoint_sig_bins.tsv             # bins significant in both TPs
+  chromosome_breakdown.tsv                 # per-chr true flip rates (both TPs)
+  c4_combined_summary.tsv                  # key metrics summary
+plots/
+  c4_iceberg_stacked/                      # genome-wide fractions bar
+  c4_effect_size_violin/                   # |ΔPC1| violin + box by category
+  c4_decomposition_comparison/             # A→B/B→A stacked bar, early vs late
+  c4_cross_tp_alluvial/                    # alluvial: early→late transition stability
+  c4_chromosome_heatmap/                   # chr × TP tile heatmap
+  c4_sniper_validation/                    # SNIPER agreement bar (if available)
+  c4_publication_panel/                    # 2×2 patchwork combined figure
+```
+
+**Verification (7 checks):**
+1. Join row count preserved (joined == homer per TP)
+2. True flip bins > 0 per TP
+3. Wilcoxon tests ≥ 3 per TP
+4. All TSV outputs exist and non-empty
+5. All figure directories have 4 files each
+6. SNIPER validation produced results (if available)
+7. Significant bin counts plausible
+
+**Results (2026-06-02):**
+- Runtime: 21.4s locally. SLURM log: `logs/c4_homer_decomposition.txt`. All 7 checks passed.
+- 13 TSVs + 7 figure sets (28 plot files across 7 directories).
+- **Iceberg fractions:** 250402 (late): 88.5% non-significant, 5.2% sig+stable, 3.5% sig+within-shift, 2.8% sig+true-flip. 250831 (early): 92.2% non-sig, 3.8% stable, 2.0% within, 1.9% true-flip. Only ~2-3% of the genome undergoes genuine A↔B compartment flips.
+- **True flip fraction lower at 100kb than A4's 25kb:** 24.5% of sig bins (late) vs A4's 28.4%. Aggregation smooths borderline 25kb bins, making the decomposition cleaner.
+- **Effect sizes validate classification:** True flips have significantly larger |ΔPC1| than within-shifts > stable (monotonic gradient). Late: median 0.414 vs 0.352 vs 0.311; all pairwise Wilcoxon p < 10^-15. Early: 0.376 vs 0.327 vs 0.303; all p < 10^-11. Not circular — HOMER significance uses PC1 change, but subcompartment classification is from CALDER2's independent contact-based labels.
+- **Cross-TP concordance low (33.9%):** 439 bins significant in both TPs, only 149 agree on transition type. Likely reflects developmental progression (within-B shift at P12 → true flip in adult) rather than noise.
+- **SNIPER validation:** Confirms stable bins best (65-74%) but true flips at ~32%. Expected — SNIPER's A.2/B.1 boundary confusion (F1=0.53-0.57 from B5) means true-flip bins in the transition zone are exactly where SNIPER disagrees. High-confidence when both tools agree.
+- **Cosmetic:** Unicode warnings (Δ, →) on JPEG device only; PDF/SVG/PNG outputs clean.
 
 ---
 
