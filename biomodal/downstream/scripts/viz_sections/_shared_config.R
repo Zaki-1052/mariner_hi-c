@@ -44,7 +44,7 @@ CHG_DATA_PATHS <- list(
   hmc_dmr = file.path(BASE_DIR, "modality/outputs/run-5/outputs_CHG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260402_222845/DMR_hmc_control__mutant_20260402_222845.bed")
 )
 
-# ChIP-seq peak file paths (from peaks/beds/)
+# Histone mark peak file paths (from peaks/beds/)
 # Use Late timepoint peaks to match the adult BAP1-KO analysis
 CHIP_PEAK_FILES <- list(
   ctcf     = file.path(REPO_ROOT, "peaks/CTCF.bed"),
@@ -157,7 +157,7 @@ COLORS <- list(
 
 # Chromatin state classification (consistent with annotate_loops_extended.R)
 CHROMATIN_STATE_ORDER <- c("Active_Promoter", "Repressed_Promoter", "Bivalent_Promoter",
-                           "Polycomb", "Active_Enhancer", "Poised_Enhancer", "Other")
+                           "Polycomb", "Active_Enhancer", "Poised_Enhancer", "Unmarked")
 
 CHROMATIN_STATE_COLORS <- c(
   "Active_Promoter" = "#e41a1c",     # Red - active transcription
@@ -166,7 +166,7 @@ CHROMATIN_STATE_COLORS <- c(
   "Polycomb" = "#4daf4a",            # Green - distal repressive
   "Active_Enhancer" = "#377eb8",     # Blue - active enhancer
   "Poised_Enhancer" = "#ff7f00",     # Orange - primed enhancer
-  "Other" = "#999999"                # Gray - unmarked
+  "Unmarked" = "#999999"              # Gray - no histone mark overlap
 )
 
 # TSS threshold for promoter classification
@@ -199,14 +199,14 @@ suppressPackageStartupMessages({
   library(enrichplot)
   library(org.Mm.eg.db)
   library(ggVennDiagram)
-  # ChIP-seq analysis packages (Section 10)
+  # Histone mark analysis packages (Section 10)
   library(GenomicRanges)
   library(rtracklayer)
   library(TxDb.Mmusculus.UCSC.mm10.knownGene)
 })
 
 # Source multi-format output utility
-util_path <- file.path(REPO_ROOT, "scripts/utils/multi_format_output.R")
+util_path <- file.path(BASE_DIR, "scripts/utils/multi_format_output.R")
 source(util_path)
 
 # Create output directories
@@ -293,10 +293,10 @@ dedup_by_gene <- function(df) {
 }
 
 # =============================================================================
-# ChIP-seq HELPER FUNCTIONS (Section 10)
+# HISTONE MARK HELPER FUNCTIONS (Section 10)
 # =============================================================================
 
-#' Load ChIP-seq peaks from BED file as GRanges
+#' Load histone mark peaks from BED file as GRanges
 #' @param bed_path Path to BED file
 #' @param mark_name Name of the mark (for logging)
 #' @return GRanges object
@@ -331,9 +331,9 @@ dmr_to_granges <- function(dmr_df) {
   )
 }
 
-#' Compute ChIP-seq overlaps for DMR GRanges
+#' Compute histone mark overlaps for DMR GRanges
 #' @param dmr_gr GRanges with DMR coordinates
-#' @param chip_peaks List of GRanges for each ChIP mark
+#' @param chip_peaks List of GRanges for each histone mark
 #' @return data.frame with overlap columns
 compute_chip_overlaps <- function(dmr_gr, chip_peaks) {
   overlaps <- data.frame(
@@ -412,7 +412,7 @@ load_diffbind_flex <- function(filepath, mark_name = "Mark", fdr_threshold = 0.0
 #' @return Character vector with chromatin state classifications
 classify_chromatin_state <- function(overlaps, distance_to_tss, tss_threshold = 2000) {
   n <- nrow(overlaps)
-  chromatin_state <- rep("Other", n)
+  chromatin_state <- rep("Unmarked", n)
 
   # Extract overlap columns
   h3k27ac <- overlaps$H3K27ac_overlap
@@ -454,7 +454,7 @@ classify_chromatin_state <- function(overlaps, distance_to_tss, tss_threshold = 
     (is.na(distance_to_tss) | distance_to_tss > tss_threshold)
   chromatin_state[is_poised_enhancer] <- "Poised_Enhancer"
 
-  # 7. Other: Default (no marks)
+  # 7. Unmarked: Default (no histone marks)
   return(factor(chromatin_state, levels = CHROMATIN_STATE_ORDER))
 }
 

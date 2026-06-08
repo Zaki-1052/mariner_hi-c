@@ -1,5 +1,5 @@
 # biomodal/downstream/scripts/viz_sections/section_10_chromatin_state.R
-# Section 10: ChIP-seq Chromatin State Analysis
+# Section 10: Histone Mark Chromatin State Analysis
 # Standalone script - sources shared config for all dependencies and data
 # NOTE: This section depends on the 'coordinated' data frame from Section 5.
 # The coordinated analysis is re-computed here so this script is self-contained.
@@ -31,14 +31,14 @@ coordinated <- coordinated %>%
   arrange(desc(combined_effect))
 
 # =============================================================================
-# SECTION 10: ChIP-seq CHROMATIN STATE ANALYSIS
+# SECTION 10: HISTONE MARK CHROMATIN STATE ANALYSIS
 # =============================================================================
 
 cat("================================================================================\n")
-cat("SECTION 10: ChIP-seq CHROMATIN STATE ANALYSIS\n")
+cat("SECTION 10: HISTONE MARK CHROMATIN STATE ANALYSIS\n")
 cat("================================================================================\n\n")
 
-cat("Loading ChIP-seq peak files...\n")
+cat("Loading histone mark peak files...\n")
 
 # Load all ChIP-seq peak files
 chip_peaks <- list(
@@ -52,7 +52,7 @@ chip_peaks <- list(
 
 # Check if all peaks loaded successfully
 if (any(sapply(chip_peaks, is.null))) {
-  cat("  WARNING: Some ChIP-seq peak files not found. Skipping Section 10.\n")
+  cat("  WARNING: Some histone mark peak files not found. Skipping Section 10.\n")
 } else {
   cat("\nCreating GRanges from mC DMR data...\n")
 
@@ -79,7 +79,7 @@ if (any(sapply(chip_peaks, is.null))) {
               100 * mean(distance_to_tss <= TSS_THRESHOLD, na.rm = TRUE)))
 
   # Compute ChIP-seq overlaps
-  cat("\nComputing ChIP-seq overlaps...\n")
+  cat("\nComputing histone mark overlaps...\n")
   mc_overlaps <- compute_chip_overlaps(mc_gr, chip_peaks)
 
   cat("  Overlap summary:\n")
@@ -168,7 +168,7 @@ if (any(sapply(chip_peaks, is.null))) {
     plot_layout(widths = c(2, 1)) +
     plot_annotation(
       title = "Chromatin State Analysis of Differentially Methylated Genes",
-      subtitle = "Based on ChIP-seq peak overlaps (Late timepoint)",
+      subtitle = "Based on histone mark overlaps (Late timepoint)",
       theme = theme(
         plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
         plot.subtitle = element_text(hjust = 0.5, size = 12, color = "grey40")
@@ -219,9 +219,40 @@ if (any(sapply(chip_peaks, is.null))) {
                           width = 12, height = 10)
 
   # -----------------------------------------------------------------------
-  # FIGURE 10c: ChIP mark overlap heatmap
+  # FIGURE 10f: Standalone stacked bar for presentation
   # -----------------------------------------------------------------------
-  cat("Creating Figure 10c: ChIP mark overlap heatmap...\n")
+  cat("Creating Figure 10f: Presentation stacked bar...\n")
+
+  direction_totals <- mc_sig %>%
+    group_by(direction) %>%
+    summarise(n_total = n(), .groups = "drop")
+
+  p_10f <- ggplot(state_summary, aes(x = direction, y = percentage, fill = chromatin_state)) +
+    geom_bar(stat = "identity", position = "stack", color = "white", linewidth = 0.3) +
+    geom_text(aes(label = ifelse(percentage > 3, sprintf("%.1f%%", percentage), "")),
+              position = position_stack(vjust = 0.5), size = 3.5, fontface = "bold") +
+    geom_text(data = direction_totals,
+              aes(x = direction, y = 103, label = sprintf("n = %s", formatC(n_total, format = "d", big.mark = ","))),
+              inherit.aes = FALSE, size = 4, fontface = "italic") +
+    scale_fill_manual(values = CHROMATIN_STATE_COLORS, name = "Chromatin State") +
+    scale_y_continuous(limits = c(0, 108), expand = c(0, 0)) +
+    labs(
+      title = "Chromatin State of Significant mC DMRs by Methylation Direction",
+      subtitle = "Classified by histone mark overlaps at DMR loci",
+      x = "Direction", y = "Percentage (%)"
+    ) +
+    theme_biomodal() +
+    theme(legend.position = "bottom",
+          legend.text = element_text(size = 10),
+          axis.text.x = element_text(size = 12, face = "bold"))
+
+  save_multiformat_ggplot(p_10f, file.path(OUTPUT_DIR, "10f_chromatin_stacked_presentation"),
+                          width = 8, height = 7)
+
+  # -----------------------------------------------------------------------
+  # FIGURE 10c: Histone mark overlap heatmap
+  # -----------------------------------------------------------------------
+  cat("Creating Figure 10c: Histone mark overlap heatmap...\n")
 
   # Calculate overlap percentages by direction
   mark_overlap <- mc_sig %>%
@@ -260,9 +291,9 @@ if (any(sapply(chip_peaks, is.null))) {
     scale_fill_gradient2(low = "white", mid = "#fee090", high = "#d73027",
                          midpoint = 50, name = "% Overlap", limits = c(0, 100)) +
     labs(
-      title = "ChIP-seq Mark Overlap at Significant mC DMRs",
-      subtitle = "% of DMRs overlapping each ChIP-seq mark",
-      x = "ChIP-seq Mark", y = ""
+      title = "Histone Mark Overlap at Significant mC DMRs",
+      subtitle = "% of DMRs overlapping each histone mark",
+      x = "Histone Mark", y = ""
     ) +
     theme_minimal(base_size = 12) +
     theme(
