@@ -159,7 +159,8 @@ Note the **repeatable `--label` flag** (passed exactly twice). The legacy `--lab
 | RNA-seq | `#984EA3` | Purple |
 | ATAC-seq | `#E6AB02` | Amber |
 | MeCP2 | `#D95F02` | Orange |
-| 5mC / 5hmC | `#2166AC` | Blue |
+| 5mC | `#D95F02` | Orange (distinct from Ub blue) |
+| 5hmC | `#7570B3` | Purple (distinct from 5mC orange and Ub blue) |
 
 These are defaults seen in published figures. Use any hex color — the script doesn't enforce a palette.
 
@@ -175,6 +176,64 @@ Rscript scripts/pub_browser.R \
 ```
 
 The script averages across replicates using `rowMeans` of binned coverage.
+
+### Sparse binning for CpG methylation tracks
+
+Standard BigWig binning uses `viewMeans` (sum of signal / bin width), which works for continuous ChIP-seq coverage. CpG methylation BigWigs are **sparse point data** — values exist only at individual CpG positions, with zero signal between them. When `viewMeans` averages a 780bp bin, it divides by the full bin width, diluting a 0.8 methylation fraction down to ~0.005.
+
+The `sparse: true` YAML flag switches to **CpG-aware binning**: `sum(scores) / count(CpGs)` per bin. The result is the mean methylation fraction per CpG within each bin — the biologically meaningful quantity.
+
+```yaml
+marks:
+  - name: '5mC'
+    color: '#D95F02'
+    sparse: true          # mean over CpG positions, not full bin width
+    ctrl: [rep1_ctrl.bw, rep2_ctrl.bw, rep3_ctrl.bw, rep4_ctrl.bw]
+    mut:  [rep1_mut.bw,  rep2_mut.bw,  rep3_mut.bw,  rep4_mut.bw]
+    average: true
+```
+
+Use `sparse: true` for any BigWig containing per-site point data (CpG methylation, hydroxymethylation, etc.). Do **not** use it for continuous coverage tracks (ChIP-seq, ATAC-seq, RNA-seq) — those are correctly handled by the default `viewMeans` binning.
+
+### Percent difference tracks
+
+When ctrl and mut signals are visually similar (common with CpG methylation), a difference track reveals the actual changes. The `diff: true` YAML flag adds a third panel below each mark pair showing `(mut - ctrl)` as a diverging area chart:
+
+- Gains (mut > ctrl): filled in the mark's color above the zero line
+- Losses (mut < ctrl): filled in a desaturated shade below the zero line
+- Symmetric y-axis with `nice_ceiling` rounding
+
+For sparse/fraction marks (`sparse: true`), the difference is automatically multiplied by 100 and displayed as percentage points (e.g., ±5% means 5 percentage point change in methylation).
+
+```yaml
+marks:
+  - name: '5mC'
+    color: '#D95F02'
+    sparse: true
+    diff: true            # add (mut - ctrl) diverging panel
+    ctrl: [...]
+    mut:  [...]
+```
+
+Requires `colorspace` (installed with ggplot2). The diff panel uses `colorspace::desaturate(colorspace::lighten(...))` for the loss color.
+
+### Multiple focal genes
+
+By default, the gene model panel shows either a single focal gene (from `--gene` or `--gene-symbol`) or all overlapping genes (`--show-all-genes`). The `focal_genes` option provides a middle ground: specify exactly which genes to display.
+
+```yaml
+focal_genes: [Syt1, Pawr]       # show only these two genes
+```
+
+Or via CLI (repeatable flag):
+
+```bash
+--focal-gene Syt1 --focal-gene Pawr
+```
+
+Each symbol is resolved via OrgDb → entrez → TxDb, so strand and exons are correct. Genes not overlapping the view region are silently skipped. If none of the specified genes overlap, falls back to showing all overlapping genes.
+
+`focal_genes` takes priority over `--show-all-genes` and `--gene-symbol` for gene model filtering. The `--gene-symbol` flag still controls region resolution metadata (printed in the startup echo).
 
 ### Region workflow (iterate from gene to coordinates)
 
@@ -365,6 +424,7 @@ out/syt1_pub/
 | `--highlight-label` | string | — | Label above highlight (repeatable, paired) |
 | `--hic-loops` | path | — | Hi-C loops TSV |
 | `--show-all-genes` | flag | `false` | Show all overlapping genes (vs. just the focal gene) |
+| `--focal-gene` | string | — | Gene symbol to include in gene model (repeatable). Shows exactly these genes, resolved via OrgDb→TxDb. Takes priority over `--show-all-genes`. |
 | `--gene-symbol` | string | — | Displayed gene symbol. With `--region`, this also resolves the focal gene from TxDb so the gene model shows just that gene with correct strand/exons. |
 | `--genotype-italic` | flag | `false` | Legacy: italicize second condition label as a whole. Superseded by `--label '*genotype*'`. |
 
@@ -391,12 +451,22 @@ Changes made in this pass:
 - **PNG output**: added alongside PDF/SVG/JPEG. Shared utility `scripts/utils/multi_format_output.R` also got PNG.
 - **Robustness**: numeric CLI args now stop with `"--extend requires an integer, got 'abc'"` instead of returning NA silently. No-args invocation prints help instead of failing in validate_config. `dir.create` calls wrapped in `tryCatch` with actionable error messages. TxDb/OrgDb errors include the install command.
 
+### Methylation and multi-gene enhancements (2026-06)
+
+This pass added support for CpG methylation tracks and multi-gene views. Reference render: `figures/syt1_pawr_methylation/`.
+
+Changes made in this pass:
+
+- **Sparse binning mode** (`sparse: true`): per-mark YAML flag that switches `import_bigwig_binned` from `viewMeans` (sum/bin_width) to `viewSums(scores) / viewSums(occupancy)` — mean over CpG positions only. Fixes the signal dilution bug where methylation fractions (0-1 per CpG) were averaged over full bin widths (mostly zero between CpGs), producing near-zero values (e.g., 0.005 instead of 0.65). Backward-compatible: default is `FALSE`, existing ChIP-seq marks unaffected.
+- **Percent difference tracks** (`diff: true`): per-mark YAML flag that adds a third panel below each ctrl/mut pair showing `(mut - ctrl)` as a diverging area chart. For sparse marks, values are automatically converted to percentage points (×100). Uses `colorspace::desaturate(colorspace::lighten(...))` for the loss color. Assembly and left-column labels adjusted to span 3 rows when a diff panel is present.
+- **Multiple focal genes** (`focal_genes: [Syt1, Pawr]` / `--focal-gene`): YAML array or repeatable CLI flag that specifies exactly which genes to show in the gene model panel. Each symbol is resolved via OrgDb→TxDb. Takes priority over `--show-all-genes` and single `--gene-symbol`. Solves the problem where `--show-all-genes` pulled in pseudogenes (Gm36283, Brcc3dc, 1r12a) alongside the two genes of interest.
+- **BigWig path update**: per-sample methylation BigWigs moved from the old `/Users/zakiralibhai/Documents/BIO_LAB/methylation-tracks/` path to `/Users/zakiralibhai/sdsc/bigwigs/methylation/{mc,hmc}/`.
+
 ### Known areas for potential refinement (remaining)
 
 - Condition label font size and positioning for very long richtext strings (multi-line wrap not yet supported)
 - Highlight rectangle colors — currently gray-only; published figures (g007, g008 panel A) use pink/green for functional annotations. Adding `--highlight-color` per region would close this gap.
 - Panel letters (the "K" in `FIGK.png`, the A/B/C/... in `figs/journal.pgen.*.PNG`) — would need a `--panel-label` flag.
-- Multi-row gene model layout when `--show-all-genes` produces many overlapping genes (current greedy row-packing works but spacing isn't tuned for >2 rows)
 - Signal curve smoothness — `--bin-size` controls this; defaults are reasonable but extreme zooms may need explicit overrides.
 
 ### What NOT to change
@@ -406,6 +476,7 @@ Changes made in this pass:
 - The general layout (left labels | signal tracks | gene model at bottom)
 - The `nice_ceiling` rounding logic (produces y-axis values matching PI's manual choices)
 - The repeatable `--label` flag — comma-split parsing was a bug, do not reintroduce it.
+- The sparse binning algorithm (`viewSums / cpg_counts`) — `viewMeans` produces biologically wrong values for CpG methylation.
 
 ### How to test
 

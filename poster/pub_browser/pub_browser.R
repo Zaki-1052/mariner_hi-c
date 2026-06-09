@@ -90,6 +90,7 @@ parse_cli_args <- function(args = commandArgs(trailingOnly = TRUE)) {
     txdb_pkg         = "TxDb.Mmusculus.UCSC.mm10.knownGene",
     orgdb_pkg        = "org.Mm.eg.db",
     gene_symbol      = NULL,
+    focal_genes      = list(),
     show_all_genes   = FALSE,
     bin_size         = NULL,
     genotype_italic  = FALSE,
@@ -121,6 +122,7 @@ parse_cli_args <- function(args = commandArgs(trailingOnly = TRUE)) {
       "--txdb"            = { cfg$txdb_pkg <- val; i <- i + 2L },
       "--orgdb"           = { cfg$orgdb_pkg <- val; i <- i + 2L },
       "--gene-symbol"     = { cfg$gene_symbol <- val; i <- i + 2L },
+      "--focal-gene"      = { cfg$focal_genes[[length(cfg$focal_genes) + 1L]] <- val; i <- i + 2L },
       "--show-all-genes"  = { cfg$show_all_genes <- TRUE; i <- i + 1L },
       "--bin-size"        = { cfg$bin_size <- parse_int(val, "--bin-size"); i <- i + 2L },
       "--genotype-italic" = { cfg$genotype_italic <- TRUE; i <- i + 1L },
@@ -318,6 +320,11 @@ resolve_config <- function(cli) {
     cfg$show_all_genes  <- cli$show_all_genes || isTRUE(yml$show_all_genes)
     cfg$genotype_italic <- cli$genotype_italic || isTRUE(yml$genotype_italic)
     cfg$bin_size        <- cli$bin_size %||% yml$bin_size
+
+    # Focal genes: CLI --focal-gene list, then YAML focal_genes array
+    if (length(cli$focal_genes) == 0L && !is.null(yml$focal_genes)) {
+      cfg$focal_genes <- as.list(as.character(yml$focal_genes))
+    }
 
     # Labels: prefer CLI --label list, then YAML labels array, then CLI --labels (legacy)
     if (length(cli$label_list) == 0L && !is.null(yml$labels)) {
@@ -802,15 +809,22 @@ build_gene_model <- function(view_start, view_end, chr, region_gr,
     if (is.na(e) || !nzchar(as.character(e))) NULL else as.character(e)
   } else NULL
 
-  if (cfg$show_all_genes) {
+  focal_symbols <- unlist(cfg$focal_genes, use.names = FALSE)
+  if (length(focal_symbols) > 0L) {
+    orgdb <- get(cfg$orgdb_pkg, envir = asNamespace(cfg$orgdb_pkg))
+    focal_entrez_ids <- suppressMessages(
+      AnnotationDbi::mapIds(orgdb, keys = focal_symbols,
+                            column = "ENTREZID", keytype = "SYMBOL",
+                            multiVals = "first"))
+    focal_entrez_ids <- focal_entrez_ids[!is.na(focal_entrez_ids)]
+    target_genes <- overlap_genes[names(overlap_genes) %in% focal_entrez_ids]
+    if (length(target_genes) == 0L) target_genes <- overlap_genes
+  } else if (cfg$show_all_genes) {
     target_genes <- overlap_genes
   } else if (!is.null(focal_entrez)) {
     target_genes <- overlap_genes[names(overlap_genes) == focal_entrez]
-    # Fall back to all overlapping if the focal gene doesn't overlap the view
-    # (e.g. --region was set to flanking sequence outside the gene body)
     if (length(target_genes) == 0L) target_genes <- overlap_genes
   } else if (!is.null(cfg$gene)) {
-    # Legacy path: --gene was set but resolve_region didn't fill in entrez (rare)
     orgdb <- get(cfg$orgdb_pkg, envir = asNamespace(cfg$orgdb_pkg))
     entrez <- suppressMessages(
       AnnotationDbi::mapIds(orgdb, keys = cfg$gene,
@@ -1346,7 +1360,11 @@ main <- function() {
               (view_end - view_start) / 1000))
 
   # Echo gene model mode so the user can see what will be shown
-  if (cfg$show_all_genes) {
+  focal_symbols <- unlist(cfg$focal_genes, use.names = FALSE)
+  if (length(focal_symbols) > 0L) {
+    cat(sprintf("  gene model: focal genes %s\n",
+                paste(focal_symbols, collapse = ", ")))
+  } else if (cfg$show_all_genes) {
     cat("  gene model: all overlapping genes\n")
   } else if ("entrez" %in% names(mcols(region_gr))) {
     fe <- mcols(region_gr)$entrez[1]
