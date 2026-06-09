@@ -269,7 +269,8 @@ parse_mark_spec <- function(spec) {
     ctrl    = strsplit(parts[3], ",", fixed = TRUE)[[1]],
     mut     = strsplit(parts[4], ",", fixed = TRUE)[[1]],
     average = TRUE,
-    sparse  = FALSE
+    sparse  = FALSE,
+    diff    = FALSE
   )
 }
 
@@ -332,7 +333,8 @@ resolve_config <- function(cli) {
           ctrl    = as.character(m$ctrl),
           mut     = as.character(m$mut),
           average = m$average %||% TRUE,
-          sparse  = isTRUE(m$sparse)
+          sparse  = isTRUE(m$sparse),
+          diff    = isTRUE(m$diff)
         )
       })
     } else if (length(cli$marks) > 0L) {
@@ -711,6 +713,73 @@ build_signal_panel <- function(signal_df, color, ylim,
       italic = italic_label
     )
   }
+
+  p
+}
+
+# Percent difference panel: (mut - ctrl) as diverging area chart.
+# Positive values (gain in mut) filled in mark color above zero line;
+# negative values (loss in mut) filled in a desaturated shade below.
+build_diff_panel <- function(ctrl_df, mut_df, color,
+                             view_start, view_end,
+                             highlights = list(),
+                             is_fraction = FALSE) {
+  diff_df <- data.frame(
+    pos  = ctrl_df$pos,
+    diff = mut_df$score - ctrl_df$score
+  )
+  if (is_fraction) diff_df$diff <- diff_df$diff * 100
+
+  diff_df$gain <- pmax(diff_df$diff, 0)
+  diff_df$loss <- pmin(diff_df$diff, 0)
+
+  abs_max <- max(abs(diff_df$diff), na.rm = TRUE)
+  if (abs_max <= 0 || !is.finite(abs_max)) abs_max <- 1
+  ylim <- nice_ceiling(abs_max)
+
+  loss_color <- colorspace::desaturate(colorspace::lighten(color, 0.3), 0.4)
+
+  p <- ggplot(diff_df, aes(x = pos))
+
+  if (length(highlights) > 0L) {
+    for (h in highlights) {
+      p <- p + annotate("rect",
+                        xmin = h$start, xmax = h$end,
+                        ymin = -Inf, ymax = Inf,
+                        fill = "grey85", alpha = 0.55, color = NA)
+    }
+  }
+
+  p <- p +
+    geom_area(aes(y = gain), fill = color, alpha = 0.90, linewidth = 0.15) +
+    geom_area(aes(y = loss), fill = loss_color, alpha = 0.90, linewidth = 0.15) +
+    geom_hline(yintercept = 0, color = "black", linewidth = 0.25) +
+    scale_y_continuous(limits = c(-ylim, ylim),
+                       expand = expansion(mult = c(0.02, 0.02))) +
+    scale_x_continuous(limits = c(view_start, view_end),
+                       expand = c(0, 0)) +
+    theme_void() +
+    theme(
+      plot.background  = element_rect(fill = "white", color = NA),
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.margin      = margin(0, 2, 0, 0, "pt")
+    )
+
+  unit_label <- if (is_fraction) "%" else "Δ"
+  scale_text <- sprintf("±%g%s", ylim, unit_label)
+  p <- p + annotate("text",
+                     x = view_start + (view_end - view_start) * 0.05,
+                     y = ylim * 0.85,
+                     label = scale_text,
+                     hjust = 0, vjust = 1,
+                     size = 2.0, color = color)
+
+  p <- p + annotate("text",
+                     x = view_start + (view_end - view_start) * 0.015,
+                     y = ylim * 0.55,
+                     label = "mut-ctrl",
+                     hjust = 0, vjust = 1,
+                     size = 1.8, color = "grey40")
 
   p
 }
@@ -1103,7 +1172,7 @@ assemble_figure <- function(track_panels, mark_configs,
     right_heights <- c(right_heights, L$header_h)
   }
 
-  # Mark groups: ctrl, mut, then mark_gap spacer (except after last mark)
+  # Mark groups: ctrl, mut, [optional diff], then mark_gap spacer
   mark_names <- names(track_panels)
   for (i in seq_along(mark_names)) {
     mn <- mark_names[i]
@@ -1111,6 +1180,10 @@ assemble_figure <- function(track_panels, mark_configs,
     right_heights <- c(right_heights, L$track_h)
     right_panels[[length(right_panels) + 1L]] <- track_panels[[mn]]$mut
     right_heights <- c(right_heights, L$track_h)
+    if (!is.null(track_panels[[mn]]$diff)) {
+      right_panels[[length(right_panels) + 1L]] <- track_panels[[mn]]$diff
+      right_heights <- c(right_heights, L$track_h)
+    }
     if (i < length(mark_names)) {
       right_panels[[length(right_panels) + 1L]] <- patchwork::plot_spacer()
       right_heights <- c(right_heights, L$mark_gap)
@@ -1146,16 +1219,17 @@ assemble_figure <- function(track_panels, mark_configs,
     left_heights <- c(left_heights, L$header_h)
   }
 
-  # One rotated label panel per mark group (spans ctrl+mut pair)
+  # One rotated label panel per mark group (spans ctrl+mut+diff)
   for (i in seq_along(mark_names)) {
     mn <- mark_names[i]
     cfg_mark <- mark_configs[[mn]]
+    n_rows <- if (cfg_mark$has_diff) 3L else 2L
     label_panel <- build_mark_label_panel(
       mark_name = cfg_mark$display_name,
       color     = cfg_mark$color
     )
     left_panels[[length(left_panels) + 1L]] <- label_panel
-    left_heights <- c(left_heights, L$track_h * 2)
+    left_heights <- c(left_heights, L$track_h * n_rows)
 
     if (i < length(mark_names)) {
       left_panels[[length(left_panels) + 1L]] <- build_empty_label_panel()
@@ -1308,10 +1382,12 @@ main <- function() {
     raw_max <- max(c(ctrl_gr$score, mut_gr$score), na.rm = TRUE)
     if (raw_max <= 0 || !is.finite(raw_max)) raw_max <- 1
     mark_data[[mk$name]] <- list(
-      ctrl  = ctrl_gr,
-      mut   = mut_gr,
-      color = mk$color,
-      ylim  = nice_ceiling(raw_max)
+      ctrl   = ctrl_gr,
+      mut    = mut_gr,
+      color  = mk$color,
+      ylim   = nice_ceiling(raw_max),
+      diff   = mk$diff,
+      sparse = mk$sparse
     )
   }
 
@@ -1347,11 +1423,23 @@ main <- function() {
       italic_label    = cfg$genotype_italic
     )
 
-    track_panels[[mn]] <- list(ctrl = ctrl_panel, mut = mut_panel)
+    diff_panel <- NULL
+    if (isTRUE(md$diff)) {
+      diff_panel <- build_diff_panel(
+        ctrl_df, mut_df, md$color,
+        view_start, view_end,
+        highlights    = cfg$highlights,
+        is_fraction   = isTRUE(md$sparse)
+      )
+    }
+
+    track_panels[[mn]] <- list(ctrl = ctrl_panel, mut = mut_panel,
+                               diff = diff_panel)
     mark_configs[[mn]] <- list(
       display_name = mn,
       color        = md$color,
-      ylim         = md$ylim
+      ylim         = md$ylim,
+      has_diff     = !is.null(diff_panel)
     )
   }
 
