@@ -1,0 +1,52 @@
+# poster/pub_browser/syt1_pawr_methylation.yaml
+# Syt1/Pawr locus: 5mC, 5hmC (4 reps averaged, sparse), H2AK119ub
+# Run: Rscript pub_browser/pub_browser.R --config pub_browser/syt1_pawr_methylation.yaml
+
+genome: mm10
+region: 'chr10:108280000-109060000'
+gene_symbol: Syt1
+show_all_genes: true
+
+labels:
+  - 'control'
+  - '*Bap1*^f/f^,Math1-cre'
+
+output: figures/syt1_pawr_methylation
+scale_bar_kb: 100
+
+marks:
+  - name: '5mC'
+    color: '#D95F02'
+    sparse: true
+    ctrl:
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/mc/evoC-Bap1-ctrl-F.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/mc/evoC-Bap1-ctrl-M.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/mc/evoC-Bap1-ctrl-F-B2.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/mc/evoC-Bap1-ctrl-M-B2.genome.mc_bedgraph.bw
+    mut:
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/mc/evoC-Bap1-mut-F.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/mc/evoC-Bap1-mut-M.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/mc/evoC-Bap1-mut-F-B2.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/mc/evoC-Bap1-mut-M-B2.genome.mc_bedgraph.bw
+    average: true
+
+  - name: '5hmC'
+    color: '#7570B3'
+    sparse: true
+    ctrl:
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/hmc/evoC-Bap1-ctrl-F.genome.hmc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/hmc/evoC-Bap1-ctrl-M.genome.hmc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/hmc/evoC-Bap1-ctrl-F-B2.genome.hmc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/hmc/evoC-Bap1-ctrl-M-B2.genome.hmc_bedgraph.bw
+    mut:
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/hmc/evoC-Bap1-mut-F.genome.hmc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/hmc/evoC-Bap1-mut-M.genome.hmc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/hmc/evoC-Bap1-mut-F-B2.genome.hmc_bedgraph.bw
+      - /Users/zakiralibhai/sdsc/bigwigs/methylation/hmc/evoC-Bap1-mut-M-B2.genome.hmc_bedgraph.bw
+    average: true
+
+  - name: 'H2AK119ub'
+    color: '#2171B5'
+    ctrl: /Users/zakiralibhai/sdsc/bigwigs/H2AK119ubCtrl.bw
+    mut:  /Users/zakiralibhai/sdsc/bigwigs/H2AK119ubMut.bw
+    average: true

@@ -264,11 +264,12 @@ parse_mark_spec <- function(spec) {
       "Bad --mark spec: '%s'\nExpected 'name:color:ctrl.bw:mut.bw'", spec))
   }
   list(
-    name  = parts[1],
-    color = parts[2],
-    ctrl  = strsplit(parts[3], ",", fixed = TRUE)[[1]],
-    mut   = strsplit(parts[4], ",", fixed = TRUE)[[1]],
-    average = TRUE
+    name    = parts[1],
+    color   = parts[2],
+    ctrl    = strsplit(parts[3], ",", fixed = TRUE)[[1]],
+    mut     = strsplit(parts[4], ",", fixed = TRUE)[[1]],
+    average = TRUE,
+    sparse  = FALSE
   )
 }
 
@@ -330,7 +331,8 @@ resolve_config <- function(cli) {
           color   = m$color,
           ctrl    = as.character(m$ctrl),
           mut     = as.character(m$mut),
-          average = m$average %||% TRUE
+          average = m$average %||% TRUE,
+          sparse  = isTRUE(m$sparse)
         )
       })
     } else if (length(cli$marks) > 0L) {
@@ -522,7 +524,8 @@ resolve_region <- function(cfg) {
 
 # Bin a single BigWig over the view region using viewMeans (correct for
 # continuous coverage tracks like RNA-seq, ChIP-seq, ATAC-seq, etc.)
-import_bigwig_binned <- function(bw_path, region_gr, bin_size = NULL) {
+import_bigwig_binned <- function(bw_path, region_gr, bin_size = NULL,
+                                 sparse = FALSE) {
   chr   <- as.character(seqnames(region_gr)[1])
   rstart <- start(region_gr)
   rend   <- end(region_gr)
@@ -540,19 +543,29 @@ import_bigwig_binned <- function(bw_path, region_gr, bin_size = NULL) {
   cov <- coverage(bw, weight = "score")
   if (!chr %in% names(cov)) { bins_gr$score <- 0; return(bins_gr) }
 
-  bins_gr$score <- as.numeric(viewMeans(Views(cov[[chr]], ranges(bins_gr))))
-  bins_gr$score[is.na(bins_gr$score)] <- 0
+  if (sparse) {
+    score_sums <- as.numeric(viewSums(Views(cov[[chr]], ranges(bins_gr))))
+    occ <- coverage(bw)
+    cpg_counts <- as.numeric(viewSums(Views(occ[[chr]], ranges(bins_gr))))
+    bins_gr$score <- ifelse(cpg_counts > 0L, score_sums / cpg_counts, 0)
+  } else {
+    bins_gr$score <- as.numeric(viewMeans(Views(cov[[chr]], ranges(bins_gr))))
+    bins_gr$score[is.na(bins_gr$score)] <- 0
+  }
   bins_gr
 }
 
 # Average multiple BigWig files (replicates) into a single binned GRanges
-average_bigwigs <- function(bw_paths, region_gr, bin_size = NULL) {
+average_bigwigs <- function(bw_paths, region_gr, bin_size = NULL,
+                            sparse = FALSE) {
   if (length(bw_paths) == 1L) {
-    return(import_bigwig_binned(bw_paths[1], region_gr, bin_size))
+    return(import_bigwig_binned(bw_paths[1], region_gr, bin_size,
+                                sparse = sparse))
   }
 
   bins_list <- lapply(bw_paths, import_bigwig_binned,
-                      region_gr = region_gr, bin_size = bin_size)
+                      region_gr = region_gr, bin_size = bin_size,
+                      sparse = sparse)
   scores <- do.call(cbind, lapply(bins_list, function(g) g$score))
 
   result <- bins_list[[1]]
@@ -1288,8 +1301,10 @@ main <- function() {
   for (mk in cfg$marks) {
     cat(sprintf("  %s (%d ctrl, %d mut)...\n",
                 mk$name, length(mk$ctrl), length(mk$mut)))
-    ctrl_gr <- average_bigwigs(mk$ctrl, region_gr, cfg$bin_size)
-    mut_gr  <- average_bigwigs(mk$mut, region_gr, cfg$bin_size)
+    ctrl_gr <- average_bigwigs(mk$ctrl, region_gr, cfg$bin_size,
+                               sparse = mk$sparse)
+    mut_gr  <- average_bigwigs(mk$mut, region_gr, cfg$bin_size,
+                               sparse = mk$sparse)
     raw_max <- max(c(ctrl_gr$score, mut_gr$score), na.rm = TRUE)
     if (raw_max <= 0 || !is.finite(raw_max)) raw_max <- 1
     mark_data[[mk$name]] <- list(
