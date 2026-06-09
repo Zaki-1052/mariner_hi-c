@@ -44,6 +44,20 @@ CHG_DATA_PATHS <- list(
   hmc_dmr = file.path(BASE_DIR, "modality/outputs/run-5/outputs_CHG/Results/gencode.vM25.mouse.genes.annotation/DMR_20260402_222845/DMR_hmc_control__mutant_20260402_222845.bed")
 )
 
+# CHH context DMR paths (gene body only — minimal signal expected)
+CHH_DATA_PATHS <- list(
+  mc_dmr = file.path(BASE_DIR, "modality/outputs/run-5/outputs_CHH/Results/gencode.vM25.mouse.genes.annotation/DMR_20260403_162803/DMR_mc_control__mutant_20260403_162803.bed"),
+  hmc_dmr = file.path(BASE_DIR, "modality/outputs/run-5/outputs_CHH/Results/gencode.vM25.mouse.genes.annotation/DMR_20260403_162803/DMR_hmc_control__mutant_20260403_162803.bed")
+)
+
+# CHG/CHH per-sample feature extraction paths (regional fractions at gene bodies)
+CHG_EXTRACT_PATHS <- list(
+  mc_regional_frac = file.path(BASE_DIR, "modality/outputs/run-5/outputs_CHG/Results/gencode.vM25.mouse.genes.annotation/Extract_20260402_211353/Extract_mc_regional-frac_20260402_211353.tsv.gz")
+)
+CHH_EXTRACT_PATHS <- list(
+  mc_regional_frac = file.path(BASE_DIR, "modality/outputs/run-5/outputs_CHH/Results/gencode.vM25.mouse.genes.annotation/Extract_20260403_151546/Extract_mc_regional-frac_20260403_151546.tsv.gz")
+)
+
 # Histone mark peak file paths (from peaks/beds/)
 # Use Late timepoint peaks to match the adult BAP1-KO analysis
 CHIP_PEAK_FILES <- list(
