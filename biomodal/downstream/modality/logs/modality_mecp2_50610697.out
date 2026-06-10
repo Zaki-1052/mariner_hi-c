@@ -1,0 +1,187 @@
+=========================================
+Modality MeCP2 - CHG Context
+=========================================
+Job ID:   50610697
+Node:     exp-1-21
+CPUs:     8
+Memory:   64GB
+Start:    Tue Jun  9 16:17:04 PDT 2026
+=========================================
+
+[INFO] 2026-06-09 16:17:09 - Validating inputs...
+[INFO] 2026-06-09 16:17:09 - All inputs validated.
+
+=====================================
+STEP 0: PREPARING BED FILE
+=====================================
+[INFO] 2026-06-09 16:17:09 - Decompressing MeCP2 regions BED...
+[INFO] 2026-06-09 16:17:15 - Processed BED written: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_peaks.annotation.bed (8887 lines including header)
+[INFO] 2026-06-09 16:17:15 - Chromosome format OK (first chrom: 1)
+
+=====================================
+STEP 1: FEATURE EXTRACTION - COUNT
+=====================================
+[INFO] 2026-06-09 16:17:15 - Running: modality get count (total_c)...
+Logged in using stored credentials
+[38;5;23m2026-06-09 16:18:30[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-06-09 16:18:31[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get count --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_peaks.annotation.bed --fields total_c --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation'
+timestamp=2026-06-09T16:18:30.832153
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-06-09 16:18:31[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHG.zarrz'][39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_peaks.annotation.bed[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-06-09 16:18:31[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-06-09 16:18:31[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-06-09 16:19:08[39m | [38;5;23mINFO[39m | Performing ['count'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-06-09 16:19:08[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-06-09 16:19:08[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-06-09 16:19:37[39m | [38;5;23mINFO[39m | Summarized over 8886 regions.[39m
+[38;5;23m2026-06-09 16:19:37[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-06-09 16:19:37[39m | [38;5;23mINFO[39m | Dataframe has 8886 rows, processing large dataset[39m
+[38;5;23m2026-06-09 16:19:37[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-06-09 16:19:37[39m | [38;5;23mINFO[39m | Exported total_c stats for count to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1555063e4610>.[39m
+[38;5;23m2026-06-09 16:19:37[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-06-09 16:19:37[39m  8886 regions extracted.[39m
+[38;5;23m2026-06-09 16:19:37[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_161937[39m
+[38;5;23m2026-06-09 16:19:37[39m | [38;5;23mINFO[39m | No plots generated. Sample sheet / group provided but no plots requested.[39m
+[38;5;23m2026-06-09 16:19:37[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_161937/modality_metadata_20260609_161937.json[39m
+[INFO] 2026-06-09 16:19:38 - Count step complete.
+
+=====================================
+STEP 2: FEATURE EXTRACTION - MEAN
+=====================================
+[INFO] 2026-06-09 16:19:38 - Running: modality get mean (total_c)...
+Logged in using stored credentials
+[38;5;23m2026-06-09 16:19:42[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-06-09 16:19:42[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get mean --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_peaks.annotation.bed --fields total_c --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation'
+timestamp=2026-06-09T16:19:42.851811
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-06-09 16:19:46[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHG.zarrz'][39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_peaks.annotation.bed[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mFields[39m: ['num_total_c'][39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mMin Coverage[39m: 0[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-06-09 16:19:46[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-06-09 16:19:46[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-06-09 16:19:46[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-06-09 16:19:46[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-06-09 16:20:19[39m | [38;5;23mINFO[39m | Performing ['mean'] on variables ['num_total_c'] and min coverage 0.[39m
+[38;5;23m2026-06-09 16:20:19[39m | [38;5;23mINFO[39m | ['num_total_c'][39m
+[38;5;23m2026-06-09 16:20:19[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-06-09 16:20:34[39m | [38;5;23mINFO[39m | Summarized over 8886 regions.[39m
+[38;5;23m2026-06-09 16:20:34[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-06-09 16:20:34[39m | [38;5;23mINFO[39m | Dataframe has 8886 rows, processing large dataset[39m
+[38;5;23m2026-06-09 16:20:35[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-06-09 16:20:35[39m | [38;5;23mINFO[39m | Exported total_c stats for mean to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x1555058accd0>.[39m
+[38;5;23m2026-06-09 16:20:35[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-06-09 16:20:35[39m  8886 regions extracted.[39m
+[38;5;23m2026-06-09 16:20:35[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162034[39m
+[38;5;23m2026-06-09 16:20:35[39m  Generating plots: violin, correlation[39m
+[38;5;23m2026-06-09 16:20:35[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162034/total_c_mean_extract_report_20260609_162034.html[39m
+[38;5;23m2026-06-09 16:20:35[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162034/total_c_mean_extract_report_20260609_162034.json[39m
+[38;5;23m2026-06-09 16:20:35[39m  [1m[38;5;154mFeature report with violin, correlation visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162034/total_c_mean_extract_report_20260609_162034.html.[39m
+[38;5;23m2026-06-09 16:20:35[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162034/modality_metadata_20260609_162035.json[39m
+[INFO] 2026-06-09 16:20:36 - Mean step complete.
+
+=====================================
+STEP 3: FEATURE EXTRACTION - REGIONAL-FRAC
+=====================================
+[INFO] 2026-06-09 16:20:36 - Running: modality get regional-frac (mc hmc, min-coverage 10)...
+Logged in using stored credentials
+[38;5;23m2026-06-09 16:20:40[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-06-09 16:20:40[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v get regional-frac --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_peaks.annotation.bed --fields mc hmc --min-coverage 10 --order-by-group condition --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation'
+timestamp=2026-06-09T16:20:40.230441
+version=1.0.0
+user=zalibhai
+
+[39m
+[38;5;23m2026-06-09 16:20:40[39m  [1m[38;5;123mExtracting methylation features:[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mZarr path(s)[39m: ['/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHG.zarrz'][39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mSample Sheet[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mBedfile[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_peaks.annotation.bed[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mFields[39m: ['num_mc', 'num_hmc'][39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mMin Coverage[39m: 10[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mOrder By Group[39m: condition[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mOutput Dir[39m: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mNum Contexts[39m: 0[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mDisable Strand Merging[39m: False[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mWindow Size[39m: None[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mTabix[39m: False[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mRegion[39m: None[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mAggregate By Group[39m: None[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mCase Sensitive[39m: False[39m
+[38;5;23m2026-06-09 16:20:40[39m  [38;5;248mHeatmap[39m: False[39m
+[38;5;23m2026-06-09 16:20:40[39m | [38;5;23mINFO[39m | Sample sheet: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv[39m
+[38;5;23m2026-06-09 16:20:40[39m | [38;5;23mINFO[39m | Order samples by: condition, case-insensitive[39m
+[38;5;23m2026-06-09 16:20:40[39m | [38;5;23mINFO[39m | Loading Zarr dataset...[39m
+[38;5;23m2026-06-09 16:24:59[39m | [38;5;23mINFO[39m | Performing ['regional-frac'] on variables ['num_mc', 'num_hmc'] and min coverage 10.[39m
+[38;5;23m2026-06-09 16:24:59[39m | [38;5;23mINFO[39m | ['num_mc', 'num_hmc', 'num_total_c'][39m
+[38;5;23m2026-06-09 16:24:59[39m | [38;5;23mINFO[39m | Adding Ranges_ID column to validate merging.[39m
+[38;5;23m2026-06-09 16:25:29[39m | [38;5;23mINFO[39m | Summarized over 8886 regions.[39m
+[38;5;23m2026-06-09 16:25:29[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-06-09 16:25:29[39m | [38;5;23mINFO[39m | Dataframe has 8886 rows, processing large dataset[39m
+[38;5;23m2026-06-09 16:25:29[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-06-09 16:25:29[39m | [38;5;23mINFO[39m | Exported mc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x15551f2b2d90>.[39m
+[38;5;23m2026-06-09 16:25:29[39m | [38;5;23mINFO[39m | Applying post-processor <lambda> to DataFrame.[39m
+[38;5;23m2026-06-09 16:25:30[39m | [38;5;23mINFO[39m | Dataframe has 8886 rows, processing large dataset[39m
+[38;5;23m2026-06-09 16:25:30[39m | [38;5;23mINFO[39m | Concatenating files without compression.[39m
+[38;5;23m2026-06-09 16:25:30[39m | [38;5;23mINFO[39m | Exported hmc stats for regional-frac to <modality.infrastructure.file_name_service.ExtractDataFileName object at 0x155507c55790>.[39m
+[38;5;23m2026-06-09 16:25:30[39m | [38;5;23mINFO[39m | Results written to file[39m
+[38;5;23m2026-06-09 16:25:30[39m  8886 regions extracted.[39m
+[38;5;23m2026-06-09 16:25:30[39m  [1m[38;5;154mData extracted successfully to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162529[39m
+[38;5;23m2026-06-09 16:25:30[39m  Generating plots: violin, correlation[39m
+[38;5;23m2026-06-09 16:25:30[39m | [38;5;23mINFO[39m | Feature report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162529/hmc-mc_regional-frac_extract_report_20260609_162529.html[39m
+[38;5;23m2026-06-09 16:25:31[39m | [38;5;23mINFO[39m | JSON report saved to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162529/hmc-mc_regional-frac_extract_report_20260609_162529.json[39m
+[38;5;23m2026-06-09 16:25:31[39m  [1m[38;5;154mFeature report with violin, correlation visualizations generated successfully at /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162529/hmc-mc_regional-frac_extract_report_20260609_162529.html.[39m
+[38;5;23m2026-06-09 16:25:31[39m  Wrote provenance sidecar file to /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162529/modality_metadata_20260609_162531.json[39m
+[INFO] 2026-06-09 16:30:34 - Regional-frac step complete.
+
+=====================================
+STEP 4: DMR CALLING
+=====================================
+[INFO] 2026-06-09 16:30:34 - Running: modality dmr call...
+Logged in using stored credentials
+[38;5;23m2026-06-09 16:30:39[39m  [1m[38;5;123mProvenance information:[39m
+[38;5;23m2026-06-09 16:30:39[39m  cmd='/home/zalibhai/miniforge3/envs/modality/bin/modality -v dmr call --zarr-path /expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHG.zarrz --sample-sheet /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/metadata.tsv --bedfile /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_peaks.annotation.bed --group-column condition --condition-order control mutant --covariates sex --min-coverage 10 --output-dir /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation'
+timestamp=2026-06-09T16:30:39.341264
+version=1.0.0
+user=zalibhai
+
+[39m
+Usage: modality dmr call [OPTIONS]
+Try 'modality dmr call --help' for help.
+
+Error: No such option: --group-column
+[INFO] 2026-06-09 16:30:39 - DMR calling complete.
+
+=========================================
+[INFO] 2026-06-09 16:30:39 - All steps completed successfully.
+[INFO] 2026-06-09 16:30:39 - Results: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation
+[INFO] 2026-06-09 16:30:39 - Reports: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/outputs_CHG_mecp2/Reports/mecp2_peaks.annotation
+[INFO] 2026-06-09 16:30:39 - Total runtime: 815 seconds
+End: Tue Jun  9 16:30:39 PDT 2026
+=========================================
