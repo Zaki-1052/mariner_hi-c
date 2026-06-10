@@ -1,0 +1,35 @@
+# poster/pub_browser/configs/mecp2_noncg_top_chh.yaml
+# Top CHH methylation peak at MeCP2 binding site
+# chr7:113708512-113708912 — MeCP2_Up, ctrl=1.75%, mut=0.28%, all_mean=1.01%
+
+genome: mm10
+region: 'chr7:113698000-113719000'
+extend_bp: 0
+labels: ['control', '*Bap1*^f/f^,Math1-cre']
+output: poster/pub_browser/output/mecp2_noncg/top_chh_chr7_113708512
+
+marks:
+  - name: MeCP2
+    color: '#D95F02'
+    ctrl: /Users/zakiralibhai/sdsc/bigwigs/MeCP2Ctrl.bw
+    mut:  /Users/zakiralibhai/sdsc/bigwigs/MeCP2Mut.bw
+
+  - name: 'mCHH'
+    color: '#1B9E77'
+    sparse: true
+    diff: true
+    ctrl:
+      - /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/modality/exports/bigwig/CHH_mc/evoC-Bap1-ctrl-F.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/modality/exports/bigwig/CHH_mc/evoC-Bap1-ctrl-M.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/modality/exports/bigwig/CHH_mc/evoC-Bap1-ctrl-F-B2.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/modality/exports/bigwig/CHH_mc/evoC-Bap1-ctrl-M-B2.genome.mc_bedgraph.bw
+    mut:
+      - /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/modality/exports/bigwig/CHH_mc/evoC-Bap1-mut-F.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/modality/exports/bigwig/CHH_mc/evoC-Bap1-mut-M.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/modality/exports/bigwig/CHH_mc/evoC-Bap1-mut-F-B2.genome.mc_bedgraph.bw
+      - /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/modality/exports/bigwig/CHH_mc/evoC-Bap1-mut-M-B2.genome.mc_bedgraph.bw
+    average: true
+
+highlights:
+  - region: 'chr7:113708512-113708912'
+    label: 'MeCP2 peak (CHH 1.01%)'
