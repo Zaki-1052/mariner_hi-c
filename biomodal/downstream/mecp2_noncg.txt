@@ -1,0 +1,99 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-10 13:36:21 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+================================================================================
+SECTION 53: MeCP2 NON-CG METHYLATION AT PEAK RESOLUTION
+================================================================================
+
+Loading MeCP2 peak-resolution data...
+  CHG regional-frac: 8886 regions
+  CHH regional-frac: 8886 regions
+  CHG count: 8886 regions
+  CHH count: 8886 regions
+
+Loading MeCP2 peak DMR results...
+  CHG DMR: 8356 peaks tested
+  CHH DMR: 8886 peaks tested
+
+Loading control region data...
+  Control CHG regional-frac: 8886 regions
+  Control CHH regional-frac: 8886 regions
+
+Loading Section 51 summary...
+  6 rows loaded
+
+  4 ctrl columns, 4 mut columns
+
+--- Figure 53a: Non-CG detection rate at MeCP2 peaks ---
+
+  Detection breakdown:
+    CHG All: 45/8886 (0.5%) detected | Ctrl & Mut=15  Ctrl Only=13  Mut Only=17  
+    CHG MeCP2_Up: 42/7686 (0.5%) detected | Ctrl & Mut=14  Ctrl Only=13  Mut Only=15  
+    CHG MeCP2_Down: 3/1200 (0.2%) detected | Ctrl & Mut=1  Ctrl Only=0  Mut Only=2  
+    CHH All: 146/8886 (1.6%) detected | Ctrl & Mut=48  Ctrl Only=42  Mut Only=56  
+    CHH MeCP2_Up: 138/7686 (1.8%) detected | Ctrl & Mut=47  Ctrl Only=36  Mut Only=55  
+    CHH MeCP2_Down: 8/1200 (0.7%) detected | Ctrl & Mut=1  Ctrl Only=6  Mut Only=1  
+  Saved: 53a_detection_rate/{pdf,svg,jpg}
+
+--- Figure 53b: Methylation levels at non-zero peaks ---
+  CHG: 45 non-zero peaks
+  CHH: 146 non-zero peaks
+  Saved: 53b_nonzero_peak_scatter/{pdf,svg,jpg}
+
+--- Figure 53c: MeCP2 peaks vs shuffled control regions ---
+  CHG: MeCP2=45/8886 (0.5%) vs Control=26/8886 (0.3%) | Fisher OR=1.73 p=3.16e-02
+  CHH: MeCP2=146/8886 (1.6%) vs Control=92/8886 (1.0%) | Fisher OR=1.60 p=5.17e-04
+  CHG mean mC: MeCP2=1.9612e-05 vs Control=1.1434e-05
+  CHH mean mC: MeCP2=1.3762e-05 vs Control=8.3478e-06
+  Saved: 53c_mecp2_vs_control_baseline/{pdf,svg,jpg}
+
+--- Figure 53d: DMR q-value rank plot ---
+  CHG: 0/8356 peaks at q < 0.05
+  CHH: 2/8886 peaks at q < 0.05
+  Saved: 53d_dmr_rank_plot/{pdf,svg,jpg}
+
+--- Figure 53e: Chr8 CHH cluster spotlight ---
+  55 CHH peaks on chr8 (35-50 Mb)
+  Saved: 53e_chr8_cluster_spotlight/{pdf,svg,jpg}
+
+--- Figure 53f: Peak vs gene-body resolution comparison ---
+  Peak-level Wilcoxon: CHG p=2.857e-02, CHH p=1.143e-01
+  Saved: 53f_resolution_comparison/{pdf,svg,jpg}
+
+--- Figure 53g: Coverage and context quality ---

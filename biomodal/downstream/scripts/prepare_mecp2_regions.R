@@ -9,8 +9,8 @@
 #   Rscript scripts/prepare_mecp2_regions.R
 #
 # Then scp the output to HPC:
-#   scp modality/mecp2_regions/mecp2_peaks.annotation.bed.gz \
-#       expanse:/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_regions/
+#   git push → HPC git pull
+#   (previously: scp to expanse modality/mecp2_regions/)
 
 REPO_ROOT <- normalizePath(file.path(getwd(), "../.."))
 
@@ -46,7 +46,7 @@ cat(sprintf("  MeCP2 Down: %d peaks\n", nrow(down)))
 cat(sprintf("  Total: %d peaks\n", nrow(out_df)))
 
 # Write to regions directory
-out_dir <- file.path(getwd(), "modality/mecp2_regions")
+out_dir <- file.path(getwd(), "modality/mecp2")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 out_path <- file.path(out_dir, "mecp2_peaks.annotation.bed.gz")
@@ -56,7 +56,7 @@ close(gz)
 
 cat(sprintf("\nWrote: %s\n", out_path))
 cat("\nNext steps:\n")
-cat("  1. scp modality/mecp2_regions/mecp2_peaks.annotation.bed.gz \\\n")
-cat("       expanse:/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/mecp2_regions/\n")
+cat("  1. git add modality/mecp2/mecp2_peaks.annotation.bed.gz\n")
+cat("     git push → HPC git pull\n")
 cat("  2. sbatch scripts/run_modality_mecp2.sb CHG\n")
 cat("  3. sbatch scripts/run_modality_mecp2.sb CHH\n")

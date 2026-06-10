@@ -22,7 +22,7 @@ REPO_ROOT <- normalizePath(file.path(getwd(), "../.."))
 # ---------------------------------------------------------------------------
 # Input paths
 # ---------------------------------------------------------------------------
-MECP2_BED <- file.path(getwd(), "modality/mecp2_regions/mecp2_peaks.annotation.bed.gz")
+MECP2_BED <- file.path(getwd(), "modality/mecp2/mecp2_peaks.annotation.bed.gz")
 CHROM_SIZES <- file.path(REPO_ROOT, "peaks/mm10.chrom.sizes")
 BLACKLIST <- file.path(REPO_ROOT, "tads/mm10-blacklist.v2.bed")
 
@@ -31,7 +31,7 @@ stopifnot(file.exists(CHROM_SIZES))
 stopifnot(file.exists(BLACKLIST))
 
 # Output
-OUT_DIR <- file.path(getwd(), "modality/control_regions")
+OUT_DIR <- file.path(getwd(), "modality/mecp2")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PATH <- file.path(OUT_DIR, "control_peaks.annotation.bed.gz")
 
@@ -129,7 +129,7 @@ close(gz)
 
 cat(sprintf("\nWrote: %s (%d regions)\n", OUT_PATH, nrow(out_df)))
 cat("\nNext steps:\n")
-cat("  1. git add modality/control_regions/control_peaks.annotation.bed.gz\n")
+cat("  1. git add modality/mecp2/control_peaks.annotation.bed.gz\n")
 cat("  2. git commit -m 'add shuffled control regions for section 53'\n")
 cat("  3. git push → HPC git pull\n")
 cat("  4. sbatch run_modality_control.sb CHG\n")

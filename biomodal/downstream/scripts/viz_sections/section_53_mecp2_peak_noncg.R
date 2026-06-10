@@ -37,16 +37,16 @@ dir.create(SEC53_DIR, recursive = TRUE, showWarnings = FALSE)
 # ---- Configuration ---------------------------------------------------------
 
 MECP2_PEAK_PATHS <- list(
-  chg_frac  = file.path(BASE_DIR, "modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162529/Extract_mc_regional-frac_20260609_162529.tsv.gz"),
-  chh_frac  = file.path(BASE_DIR, "modality/outputs_CHH_mecp2/Results/mecp2_peaks.annotation/Extract_20260610_015808/Extract_mc_regional-frac_20260610_015808.tsv.gz"),
-  chg_count = file.path(BASE_DIR, "modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_161937/Extract_total_c_count_20260609_161937.tsv.gz"),
-  chh_count = file.path(BASE_DIR, "modality/outputs_CHH_mecp2/Results/mecp2_peaks.annotation/Extract_20260609_162203/Extract_total_c_count_20260609_162203.tsv.gz"),
-  chg_dmr   = file.path(BASE_DIR, "modality/outputs_CHG_mecp2/Results/mecp2_peaks.annotation/DMR_20260609_191055/DMR_mc_control__mutant_20260609_191055.bed"),
-  chh_dmr   = file.path(BASE_DIR, "modality/outputs_CHH_mecp2/Results/mecp2_peaks.annotation/DMR_20260609_192623/DMR_mc_control__mutant_20260609_192623.bed")
+  chg_frac  = file.path(BASE_DIR, "modality/mecp2/outputs_CHG/Results/mecp2_peaks.annotation/Extract_20260609_162529/Extract_mc_regional-frac_20260609_162529.tsv.gz"),
+  chh_frac  = file.path(BASE_DIR, "modality/mecp2/outputs_CHH/Results/mecp2_peaks.annotation/Extract_20260610_015808/Extract_mc_regional-frac_20260610_015808.tsv.gz"),
+  chg_count = file.path(BASE_DIR, "modality/mecp2/outputs_CHG/Results/mecp2_peaks.annotation/Extract_20260609_161937/Extract_total_c_count_20260609_161937.tsv.gz"),
+  chh_count = file.path(BASE_DIR, "modality/mecp2/outputs_CHH/Results/mecp2_peaks.annotation/Extract_20260609_162203/Extract_total_c_count_20260609_162203.tsv.gz"),
+  chg_dmr   = file.path(BASE_DIR, "modality/mecp2/outputs_CHG/Results/mecp2_peaks.annotation/DMR_20260609_191055/DMR_mc_control__mutant_20260609_191055.bed"),
+  chh_dmr   = file.path(BASE_DIR, "modality/mecp2/outputs_CHH/Results/mecp2_peaks.annotation/DMR_20260609_192623/DMR_mc_control__mutant_20260609_192623.bed")
 )
 
-CTRL_CHG_RESULTS <- file.path(BASE_DIR, "modality/outputs_CHG_control/Results/control_peaks.annotation")
-CTRL_CHH_RESULTS <- file.path(BASE_DIR, "modality/outputs_CHH_control/Results/control_peaks.annotation")
+CTRL_CHG_RESULTS <- file.path(BASE_DIR, "modality/mecp2/outputs_CHG_control/Results/control_peaks.annotation")
+CTRL_CHH_RESULTS <- file.path(BASE_DIR, "modality/mecp2/outputs_CHH_control/Results/control_peaks.annotation")
 
 SEC51_SUMMARY <- file.path(TABLES_DIR, "mecp2_noncg_summary.tsv")
 
@@ -422,8 +422,8 @@ chh_chr8$mut_mean  <- rowMeans(chh_chr8[, MUT_COLS, drop = FALSE], na.rm = TRUE)
 chh_chr8$midpoint  <- (chh_chr8$Start + chh_chr8$End) / 2
 
 chr8_dmr_sub <- chh_dmr %>%
-  filter(chr == "chr8", start >= 35000000, start <= 50000000) %>%
-  select(peak_id, dmr_qvalue, mod_difference)
+  dplyr::filter(chr == "chr8", start >= 35000000, start <= 50000000) %>%
+  dplyr::select(peak_id, dmr_qvalue, mod_difference)
 
 chh_chr8 <- chh_chr8 %>%
   left_join(chr8_dmr_sub, by = c("Name" = "peak_id")) %>%
@@ -437,7 +437,7 @@ chh_chr8 <- chh_chr8 %>%
   )
 
 chr8_long <- chh_chr8 %>%
-  select(Name, midpoint, ctrl_mean, mut_mean, q_tier, dmr_qvalue) %>%
+  dplyr::select(Name, midpoint, ctrl_mean, mut_mean, q_tier, dmr_qvalue) %>%
   pivot_longer(cols = c(ctrl_mean, mut_mean),
                names_to = "condition", values_to = "mean_meth") %>%
   mutate(condition = recode(condition,
@@ -578,14 +578,15 @@ save_multiformat_ggplot(p_53f, file.path(SEC53_DIR, "53f_resolution_comparison")
 
 cat("\n--- Figure 53g: Coverage and context quality ---\n")
 
-first_col <- CTRL_COLS[1]
-chg_ctx_vals <- as.numeric(chg_count[[first_col]])
-chh_ctx_vals <- as.numeric(chh_count[[first_col]])
+chg_count_col <- grep("ctrl", colnames(chg_count), value = TRUE)[1]
+chh_count_col <- grep("ctrl", colnames(chh_count), value = TRUE)[1]
+chg_ctx_vals <- as.numeric(chg_count[[chg_count_col]])
+chh_ctx_vals <- as.numeric(chh_count[[chh_count_col]])
 
-cat(sprintf("  CHG contexts/peak: mean=%.0f, range=%d-%d\n",
+cat(sprintf("  CHG contexts/peak: mean=%.0f, range=%.0f-%.0f\n",
             mean(chg_ctx_vals, na.rm = TRUE),
             min(chg_ctx_vals, na.rm = TRUE), max(chg_ctx_vals, na.rm = TRUE)))
-cat(sprintf("  CHH contexts/peak: mean=%.0f, range=%d-%d\n",
+cat(sprintf("  CHH contexts/peak: mean=%.0f, range=%.0f-%.0f\n",
             mean(chh_ctx_vals, na.rm = TRUE),
             min(chh_ctx_vals, na.rm = TRUE), max(chh_ctx_vals, na.rm = TRUE)))
 
