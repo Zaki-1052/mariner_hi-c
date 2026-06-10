@@ -1,0 +1,76 @@
+#!/bin/bash
+#SBATCH --job-name=chh_ctrl_regfrac
+#SBATCH --output=logs/chh_ctrl_regfrac_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=240G
+#SBATCH --time=02:00:00
+#SBATCH --account=csd940
+
+# Retry CHH regional-frac for control regions at 240GB
+# (128GB OOM-killed during zarr loading, same as MeCP2 CHH run)
+
+start_time=$(date +%s)
+
+log_info()  { echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') - $1"; }
+log_error() { echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') - $1" >&2; }
+
+echo "========================================="
+echo "CHH Control Regional-Frac Retry (240GB)"
+echo "========================================="
+echo "Job ID:   $SLURM_JOB_ID"
+echo "Node:     $HOSTNAME"
+echo "CPUs:     $SLURM_CPUS_PER_TASK"
+echo "Memory:   240GB"
+echo "Start:    $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate modality
+
+WORK_DIR="/expanse/lustre/projects/csd940/zalibhai/biomodal/modality"
+ZARR="/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHH/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHH.zarrz"
+METADATA="${WORK_DIR}/metadata.tsv"
+PROCESSED_BED="${WORK_DIR}/control_peaks.annotation.bed"
+REGION_RESULTS_DIR="${WORK_DIR}/outputs_CHH_control/Results/control_peaks.annotation"
+REGION_REPORTS_DIR="${WORK_DIR}/outputs_CHH_control/Reports/control_peaks.annotation"
+
+cd "${WORK_DIR}"
+
+log_info "Validating inputs..."
+test -f "${ZARR}" || { log_error "Zarr not found: ${ZARR}"; exit 1; }
+test -f "${METADATA}" || { log_error "Metadata not found: ${METADATA}"; exit 1; }
+test -f "${PROCESSED_BED}" || { log_error "BED not found: ${PROCESSED_BED}"; exit 1; }
+mkdir -p "${REGION_RESULTS_DIR}" "${REGION_REPORTS_DIR}"
+log_info "All inputs validated."
+
+echo ""
+echo "====================================="
+echo "REGIONAL-FRAC (mc + hmc, min-cov 10)"
+echo "====================================="
+log_info "Running: modality get regional-frac..."
+
+modality -v get regional-frac \
+    --zarr-path "${ZARR}" \
+    --sample-sheet "${METADATA}" \
+    --bedfile "${PROCESSED_BED}" \
+    --fields mc hmc \
+    --min-coverage 10 \
+    --order-by-group condition \
+    --output-dir "${REGION_RESULTS_DIR}"
+
+find "${REGION_RESULTS_DIR}" -type f -name "*regional-frac_extract_report*.html" \
+    -exec cp {} "${REGION_REPORTS_DIR}/" \; 2>/dev/null || true
+
+echo ""
+echo "========================================="
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+log_info "Regional-frac complete."
+log_info "Results: ${REGION_RESULTS_DIR}"
+log_info "Total runtime: ${duration} seconds"
+echo "End: $(date)"
+echo "========================================="
