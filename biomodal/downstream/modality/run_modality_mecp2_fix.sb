@@ -1,0 +1,109 @@
+#!/bin/bash
+#SBATCH --job-name=mecp2_fix
+#SBATCH --output=logs/mecp2_fix_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=03:00:00
+#SBATCH --account=csd940
+
+# Patch job: re-run failed steps from run_modality_mecp2.sb
+#   CHG: step 4 only (DMR calling — wrong flag in prior run)
+#   CHH: step 3 (OOM killed) + step 4
+#
+# Usage: sbatch run_modality_mecp2_fix.sb
+
+start_time=$(date +%s)
+
+log_info()  { echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') - $1"; }
+log_error() { echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') - $1" >&2; }
+
+echo "========================================="
+echo "MeCP2 Fix - CHG step 4 + CHH steps 3-4"
+echo "========================================="
+echo "Job ID:   $SLURM_JOB_ID"
+echo "Node:     $HOSTNAME"
+echo "Start:    $(date)"
+echo "========================================="
+
+source ~/.bashrc
+conda activate modality
+
+WORK_DIR="/expanse/lustre/projects/csd940/zalibhai/biomodal/modality"
+ZARR_BASE="/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store"
+METADATA="${WORK_DIR}/metadata.tsv"
+PROCESSED_BED="${WORK_DIR}/mecp2_peaks.annotation.bed"
+
+cd "${WORK_DIR}"
+
+# =========================================================================
+# CHG: DMR calling only (steps 1-3 completed)
+# =========================================================================
+echo ""
+echo "====================================="
+echo "CHG: STEP 4 - DMR CALLING"
+echo "====================================="
+
+CHG_ZARR="${ZARR_BASE}/CHG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHG.zarrz"
+CHG_RESULTS="${WORK_DIR}/outputs_CHG_mecp2/Results/mecp2_peaks.annotation"
+
+log_info "Running CHG DMR calling..."
+modality dmr call \
+    --zarr-path "${CHG_ZARR}" \
+    --sample-sheet "${METADATA}" \
+    --bedfile "${PROCESSED_BED}" \
+    --condition-array-name condition \
+    --condition-order control mutant \
+    --covariates sex \
+    --methylation-contexts mc \
+    --min-coverage 10 \
+    --output-dir "${CHG_RESULTS}"
+log_info "CHG DMR calling complete."
+
+# =========================================================================
+# CHH: Regional-frac (OOM killed) + DMR calling
+# =========================================================================
+CHH_ZARR="${ZARR_BASE}/CHH/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHH.zarrz"
+CHH_RESULTS="${WORK_DIR}/outputs_CHH_mecp2/Results/mecp2_peaks.annotation"
+
+echo ""
+echo "====================================="
+echo "CHH: STEP 3 - REGIONAL-FRAC (re-run)"
+echo "====================================="
+log_info "Running CHH regional-frac..."
+modality -v get regional-frac \
+    --zarr-path "${CHH_ZARR}" \
+    --sample-sheet "${METADATA}" \
+    --bedfile "${PROCESSED_BED}" \
+    --fields mc hmc \
+    --min-coverage 10 \
+    --order-by-group condition \
+    --output-dir "${CHH_RESULTS}"
+log_info "CHH regional-frac complete."
+
+echo ""
+echo "====================================="
+echo "CHH: STEP 4 - DMR CALLING"
+echo "====================================="
+log_info "Running CHH DMR calling..."
+modality dmr call \
+    --zarr-path "${CHH_ZARR}" \
+    --sample-sheet "${METADATA}" \
+    --bedfile "${PROCESSED_BED}" \
+    --condition-array-name condition \
+    --condition-order control mutant \
+    --covariates sex \
+    --methylation-contexts mc \
+    --min-coverage 10 \
+    --output-dir "${CHH_RESULTS}"
+log_info "CHH DMR calling complete."
+
+# =========================================================================
+echo ""
+echo "========================================="
+end_time=$(date +%s)
+log_info "All fixes completed in $((end_time - start_time)) seconds."
+echo "End: $(date)"
+echo "========================================="
