@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-06-10 04:02:37 
+Date: 2026-06-10 04:29:48 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -69,9 +69,119 @@ Computing per-feature methylation deltas...
   Saved: 52b_delta_mc_by_feature/{pdf,svg,jpg}
   Kruskal-Wallis (delta_mc ~ feature): chi-sq=23.10, p=0.000322
 
+  Dunn's post-hoc pairwise tests (delta_mC, BH-adjusted):
+
+                    Dunn's Pairwise Comparison of x by group                    
+                              (Benjamini-Hochberg)                              
+
+List of pairwise comparisons: Z statistic (adjusted p-value)
+───────────────────────────────────────┬────────────────────
+5UTR - Exon                            │  0.131786 (0.4795)
+5UTR - SpliceSite_Donor                │  0.199940 (0.5738)
+Exon - SpliceSite_Donor                │  0.198935 (0.5264)
+5UTR - SpliceSite_Acceptor             │  0.036830 (0.4853)
+Exon - SpliceSite_Acceptor             │ -0.273326 (0.5885)
+SpliceSite_Donor - SpliceSite_Acceptor │ -0.454403 (0.5413)
+5UTR - Intron                          │ -1.125514 (0.2790)
+Exon - Intron                          │ -3.864186 (0.0004)*
+SpliceSite_Donor - Intron              │ -3.898455 (0.0007)*
+SpliceSite_Acceptor - Intron           │ -3.423505 (0.0015)*
+5UTR - 3UTR                            │ -0.767733 (0.4150)
+Exon - 3UTR                            │ -1.283958 (0.2987)
+SpliceSite_Donor - 3UTR                │ -1.354642 (0.3291)
+SpliceSite_Acceptor - 3UTR             │ -1.167770 (0.3036)
+Intron - 3UTR                          │  0.158815 (0.5041)
+
+FDR = 0.05
+Reject Ho if adjusted p ≤ FDR/2 with stopping rule, where (unadjusted) p = Pr(Z ≥ |z|)
+  3 / 15 pairs significant at q < 0.05:
+    Exon - Intron                            Z= -3.864  q=4.18e-04
+    SpliceSite_Donor - Intron                Z= -3.898  q=7.26e-04
+    SpliceSite_Acceptor - Intron             Z= -3.424  q=1.55e-03
+  Non-significant pairs:
+    5UTR - Intron                            Z= -1.126  q=0.279
+    Exon - 3UTR                              Z= -1.284  q=0.299
+    SpliceSite_Acceptor - 3UTR               Z= -1.168  q=0.304
+    SpliceSite_Donor - 3UTR                  Z= -1.355  q=0.329
+    5UTR - 3UTR                              Z= -0.768  q=0.415
+    5UTR - Exon                              Z=  0.132  q=0.480
+    5UTR - SpliceSite_Acceptor               Z=  0.037  q=0.485
+    Intron - 3UTR                            Z=  0.159  q=0.504
+    Exon - SpliceSite_Donor                  Z=  0.199  q=0.526
+    SpliceSite_Donor - SpliceSite_Acceptor   Z= -0.454  q=0.541
+    5UTR - SpliceSite_Donor                  Z=  0.200  q=0.574
+    Exon - SpliceSite_Acceptor               Z= -0.273  q=0.588
+
 --- Figure 52c: Delta hmC by feature type ---
   Saved: 52c_delta_hmc_by_feature/{pdf,svg,jpg}
   Kruskal-Wallis (delta_hmc ~ feature): chi-sq=32.36, p=5.04e-06
+
+  Dunn's post-hoc pairwise tests (delta_hmC, BH-adjusted):
+
+                    Dunn's Pairwise Comparison of x by group                    
+                              (Benjamini-Hochberg)                              
+
+List of pairwise comparisons: Z statistic (adjusted p-value)
+───────────────────────────────────────┬────────────────────
+5UTR - Exon                            │  2.643505 (0.0103)*
+5UTR - SpliceSite_Donor                │  2.598013 (0.0100)*
+Exon - SpliceSite_Donor                │ -0.094050 (0.4625)
+5UTR - SpliceSite_Acceptor             │  2.549081 (0.0101)*
+Exon - SpliceSite_Acceptor             │ -0.238020 (0.4684)
+SpliceSite_Donor - SpliceSite_Acceptor │ -0.138195 (0.4768)
+5UTR - Intron                          │  3.844599 (0.0009)*
+Exon - Intron                          │  3.667640 (0.0006)*
+SpliceSite_Donor - Intron              │  3.603136 (0.0006)*
+SpliceSite_Acceptor - Intron           │  3.758756 (0.0006)*
+5UTR - 3UTR                            │  3.151069 (0.0024)*
+Exon - 3UTR                            │  1.608041 (0.0735)
+SpliceSite_Donor - 3UTR                │  1.634981 (0.0765)
+SpliceSite_Acceptor - 3UTR             │  1.692530 (0.0755)
+Intron - 3UTR                          │  0.240096 (0.5064)
+
+FDR = 0.05
+Reject Ho if adjusted p ≤ FDR/2 with stopping rule, where (unadjusted) p = Pr(Z ≥ |z|)
+  8 / 15 pairs significant at q < 0.05:
+    SpliceSite_Donor - Intron                Z=  3.603  q=5.90e-04
+    Exon - Intron                            Z=  3.668  q=6.12e-04
+    SpliceSite_Acceptor - Intron             Z=  3.759  q=6.40e-04
+    5UTR - Intron                            Z=  3.845  q=9.06e-04
+    5UTR - 3UTR                              Z=  3.151  q=2.44e-03
+    5UTR - SpliceSite_Donor                  Z=  2.598  q=1.00e-02
+    5UTR - SpliceSite_Acceptor               Z=  2.549  q=1.01e-02
+    5UTR - Exon                              Z=  2.644  q=1.03e-02
+  Non-significant pairs:
+    Exon - 3UTR                              Z=  1.608  q=0.073
+    SpliceSite_Acceptor - 3UTR               Z=  1.693  q=0.075
+    SpliceSite_Donor - 3UTR                  Z=  1.635  q=0.076
+    Exon - SpliceSite_Donor                  Z= -0.094  q=0.463
+    Exon - SpliceSite_Acceptor               Z= -0.238  q=0.468
+    SpliceSite_Donor - SpliceSite_Acceptor   Z= -0.138  q=0.477
+    Intron - 3UTR                            Z=  0.240  q=0.506
+
+--- Figure 52f: Dunn's post-hoc significance heatmaps ---
+  Saved: 52f_dunn_posthoc/{pdf,svg,jpg}
+  Saved: 52f_dunn_mc/{pdf,svg,jpg}
+  Saved: 52f_dunn_hmc/{pdf,svg,jpg}
+
+--- Figure 52g: Chromatin mark overlay ---
+  Loaded: H3K27ac=15105, H3K4me1=113781, H3K27me3=15809 peaks
+
+  ChIP-seq peak overlap by feature type (%):
+         feature_type    n H3K27ac H3K4me1 H3K27me3
+1                5UTR   92    45.7    21.7      7.6
+2                Exon 1567     7.8    18.1      2.7
+3    SpliceSite_Donor 1330     8.1    17.4      3.0
+4 SpliceSite_Acceptor 1341     7.8    17.4      3.1
+5              Intron 1742    24.5    55.1      4.6
+6                3UTR  124    12.9    31.5      2.4
+  Saved: 52g_overlap_by_feature/{pdf,svg,jpg}
+
+  Introns: 426 H3K27ac+ (enhancer), 1316 unmarked
+  Saved: 52g_intron_enhancer_split/{pdf,svg,jpg}
+  Wilcoxon (intron delta_mc): H3K27ac+ median=8.49% vs unmarked median=2.53%, p=<2e-16
+  Wilcoxon (intron delta_hmc): H3K27ac+ median=-4.26% vs unmarked median=-2.94%, p=1.74e-13
+  Saved: 52g_all_features_enhancer_split/{pdf,svg,jpg}
 
 --- Figure 52d: KEY_GENES locus panels ---
   533 features across 10 KEY_GENES found.
@@ -84,6 +194,7 @@ Computing per-feature methylation deltas...
 
 --- Writing summary table ---
   Wrote: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/section52_feature_methylation.tsv (6196 rows)
+  Wrote: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/section52_dunn_posthoc.tsv (30 rows)
 
 ========================================================================
 SECTION 52 COMPLETE

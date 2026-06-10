@@ -339,6 +339,254 @@ for (i in seq_len(nrow(hmc_ns))) {
 }
 
 # =============================================================================
+# FIGURE 52f: Dunn's Post-Hoc Significance Heatmaps
+# =============================================================================
+
+cat("\n--- Figure 52f: Dunn's post-hoc significance heatmaps ---\n")
+
+fig_52f_dir <- file.path(SEC52_DIR, "52f_dunn_posthoc")
+dir.create(fig_52f_dir, recursive = TRUE, showWarnings = FALSE)
+
+build_pairwise_matrix <- function(posthoc_df, feature_levels) {
+  n <- length(feature_levels)
+  mat <- matrix(NA, nrow = n, ncol = n,
+                dimnames = list(feature_levels, feature_levels))
+  for (i in seq_len(nrow(posthoc_df))) {
+    parts <- trimws(strsplit(posthoc_df$comparison[i], " - ")[[1]])
+    if (length(parts) == 2 && all(parts %in% feature_levels)) {
+      mat[parts[1], parts[2]] <- posthoc_df$p_adj[i]
+      mat[parts[2], parts[1]] <- posthoc_df$p_adj[i]
+    }
+  }
+  diag(mat) <- 1
+  mat
+}
+
+mc_mat <- build_pairwise_matrix(mc_posthoc, levels(feat_data$feature_type))
+hmc_mat <- build_pairwise_matrix(hmc_posthoc, levels(feat_data$feature_type))
+
+tile_from_matrix <- function(mat, title_text, subtitle_text) {
+  df <- expand.grid(
+    Feature1 = rownames(mat), Feature2 = colnames(mat),
+    stringsAsFactors = FALSE
+  )
+  df$q_value <- mapply(function(r, c) mat[r, c], df$Feature1, df$Feature2)
+  # Lower triangle only (including diagonal)
+  idx <- match(df$Feature1, rownames(mat))
+  idy <- match(df$Feature2, colnames(mat))
+  df <- df[idx >= idy, ]
+  df$neg_log10_q <- -log10(pmax(df$q_value, 1e-10))
+  df$label <- ifelse(
+    is.na(df$q_value), "",
+    ifelse(df$Feature1 == df$Feature2, "",
+           ifelse(df$q_value < 0.001, sprintf("%.1e", df$q_value),
+                  sprintf("%.3f", df$q_value))))
+  df$sig <- ifelse(is.na(df$q_value) | df$Feature1 == df$Feature2, "",
+                   ifelse(df$q_value < 0.001, "***",
+                          ifelse(df$q_value < 0.01, "**",
+                                 ifelse(df$q_value < 0.05, "*", ""))))
+  df$display <- paste0(df$label, ifelse(df$sig == "", "", paste0("\n", df$sig)))
+  df$Feature1 <- factor(df$Feature1, levels = rev(rownames(mat)))
+  df$Feature2 <- factor(df$Feature2, levels = colnames(mat))
+
+  ggplot(df[df$Feature1 != df$Feature2, ],
+         aes(x = Feature2, y = Feature1, fill = neg_log10_q)) +
+    geom_tile(color = "white", linewidth = 1) +
+    geom_text(aes(label = display), size = 3, lineheight = 0.85) +
+    scale_fill_gradient2(
+      low = "grey90", mid = "#FDB863", high = "#B2182B",
+      midpoint = -log10(0.05), limits = c(0, NA),
+      name = expression(-log[10] * "(q)")) +
+    labs(title = title_text, subtitle = subtitle_text,
+         x = NULL, y = NULL) +
+    theme_biomodal() +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1),
+          panel.grid = element_blank())
+}
+
+p_52f_mc <- tile_from_matrix(
+  mc_mat,
+  expression("Dunn's Post-Hoc: " * Delta * "5mC"),
+  "BH-adjusted q-values; * < 0.05, ** < 0.01, *** < 0.001"
+)
+
+p_52f_hmc <- tile_from_matrix(
+  hmc_mat,
+  expression("Dunn's Post-Hoc: " * Delta * "5hmC"),
+  "BH-adjusted q-values; * < 0.05, ** < 0.01, *** < 0.001"
+)
+
+p_52f_combined <- p_52f_mc + p_52f_hmc +
+  patchwork::plot_layout(ncol = 2, guides = "collect")
+
+save_multiformat_ggplot(
+  p_52f_combined, file.path(fig_52f_dir, "52f_dunn_posthoc"),
+  width = 16, height = 7
+)
+
+# Also save individual panels
+save_multiformat_ggplot(
+  p_52f_mc, file.path(fig_52f_dir, "52f_dunn_mc"),
+  width = 8, height = 7
+)
+save_multiformat_ggplot(
+  p_52f_hmc, file.path(fig_52f_dir, "52f_dunn_hmc"),
+  width = 8, height = 7
+)
+
+# =============================================================================
+# FIGURE 52g: Chromatin Mark Overlay on Sub-Gene Features
+# =============================================================================
+
+cat("\n--- Figure 52g: Chromatin mark overlay ---\n")
+
+fig_52g_dir <- file.path(SEC52_DIR, "52g_chromatin_overlay")
+dir.create(fig_52g_dir, recursive = TRUE, showWarnings = FALSE)
+
+load_peaks_gr <- function(bed_path) {
+  stopifnot(file.exists(bed_path))
+  df <- read.table(bed_path, header = FALSE, sep = "\t",
+                   stringsAsFactors = FALSE)[, 1:3]
+  colnames(df) <- c("chr", "start", "end")
+  GRanges(seqnames = df$chr, ranges = IRanges(df$start, df$end))
+}
+
+k27ac_peaks  <- load_peaks_gr(CHIP_PEAK_FILES$h3k27ac)
+k4me1_peaks  <- load_peaks_gr(CHIP_PEAK_FILES$h3k4me1)
+k27me3_peaks <- load_peaks_gr(CHIP_PEAK_FILES$h3k27me3)
+cat(sprintf("  Loaded: H3K27ac=%d, H3K4me1=%d, H3K27me3=%d peaks\n",
+            length(k27ac_peaks), length(k4me1_peaks), length(k27me3_peaks)))
+
+feat_gr <- GRanges(
+  seqnames = paste0("chr", feat_data$Chromosome),
+  ranges = IRanges(feat_data$Start, feat_data$End)
+)
+
+feat_data$h3k27ac  <- overlapsAny(feat_gr, k27ac_peaks)
+feat_data$h3k4me1  <- overlapsAny(feat_gr, k4me1_peaks)
+feat_data$h3k27me3 <- overlapsAny(feat_gr, k27me3_peaks)
+
+cat("\n  ChIP-seq peak overlap by feature type (%):\n")
+overlap_summary <- feat_data %>%
+  dplyr::group_by(feature_type) %>%
+  dplyr::summarise(
+    n = dplyr::n(),
+    H3K27ac = round(100 * mean(h3k27ac), 1),
+    H3K4me1 = round(100 * mean(h3k4me1), 1),
+    H3K27me3 = round(100 * mean(h3k27me3), 1),
+    .groups = "drop"
+  )
+print(as.data.frame(overlap_summary))
+
+# --- 52g panel A: Overlap fraction per feature type (stacked bar) ---
+overlap_long <- feat_data %>%
+  dplyr::select(feature_type, h3k27ac, h3k4me1, h3k27me3) %>%
+  tidyr::pivot_longer(cols = c(h3k27ac, h3k4me1, h3k27me3),
+                      names_to = "mark", values_to = "overlaps") %>%
+  dplyr::group_by(feature_type, mark) %>%
+  dplyr::summarise(pct = 100 * mean(overlaps), .groups = "drop") %>%
+  dplyr::mutate(mark = dplyr::recode(mark,
+    h3k27ac = "H3K27ac", h3k4me1 = "H3K4me1", h3k27me3 = "H3K27me3"))
+
+MARK_COLORS <- c("H3K27ac" = "#FF7F00", "H3K4me1" = "#33A02C", "H3K27me3" = "#6A3D9A")
+
+p_52g_bar <- ggplot(overlap_long,
+                    aes(x = feature_type, y = pct, fill = mark)) +
+  geom_col(position = position_dodge(width = 0.75), width = 0.7) +
+  scale_fill_manual(values = MARK_COLORS, name = "ChIP Mark") +
+  labs(title = "Chromatin Mark Overlap by Gene Feature",
+       subtitle = "% of sub-gene intervals overlapping ChIP-seq peaks",
+       x = "Gene Feature", y = "% Overlapping") +
+  theme_biomodal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+save_multiformat_ggplot(
+  p_52g_bar, file.path(fig_52g_dir, "52g_overlap_by_feature"),
+  width = 10, height = 6
+)
+
+# --- 52g panel B: Introns split by H3K27ac — delta mC and hmC ---
+intron_data <- feat_data[feat_data$feature_type == "Intron", ]
+intron_data$enhancer <- ifelse(intron_data$h3k27ac, "H3K27ac+", "Unmarked")
+
+n_enh <- sum(intron_data$enhancer == "H3K27ac+")
+n_unm <- sum(intron_data$enhancer == "Unmarked")
+cat(sprintf("\n  Introns: %d H3K27ac+ (enhancer), %d unmarked\n", n_enh, n_unm))
+
+intron_long <- rbind(
+  data.frame(enhancer = intron_data$enhancer,
+             delta = intron_data$delta_mc * 100,
+             modification = "5mC", stringsAsFactors = FALSE),
+  data.frame(enhancer = intron_data$enhancer,
+             delta = intron_data$delta_hmc * 100,
+             modification = "5hmC", stringsAsFactors = FALSE)
+)
+intron_long$modification <- factor(intron_long$modification,
+                                   levels = c("5mC", "5hmC"))
+
+ENH_COLORS <- c("H3K27ac+" = "#FF7F00", "Unmarked" = "grey70")
+
+p_52g_intron <- ggplot(intron_long,
+                       aes(x = enhancer, y = delta, fill = enhancer)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_boxplot(outlier.size = 0.6, alpha = 0.85) +
+  facet_wrap(~ modification, scales = "free_y") +
+  scale_fill_manual(values = ENH_COLORS, guide = "none") +
+  labs(title = "Intronic Methylation Change by Enhancer Status",
+       subtitle = sprintf("H3K27ac+ (n=%d) vs unmarked (n=%d) introns",
+                          n_enh, n_unm),
+       x = NULL, y = expression(Delta * " Methylation (%)")) +
+  theme_biomodal()
+
+save_multiformat_ggplot(
+  p_52g_intron, file.path(fig_52g_dir, "52g_intron_enhancer_split"),
+  width = 9, height = 6
+)
+
+# Wilcoxon rank-sum tests: H3K27ac+ vs unmarked introns
+for (mod_name in c("delta_mc", "delta_hmc")) {
+  marked <- intron_data[[mod_name]][intron_data$h3k27ac]
+  unmarked <- intron_data[[mod_name]][!intron_data$h3k27ac]
+  wt <- wilcox.test(marked, unmarked)
+  cat(sprintf("  Wilcoxon (intron %s): H3K27ac+ median=%.2f%% vs unmarked median=%.2f%%, p=%s\n",
+              mod_name,
+              median(marked, na.rm = TRUE) * 100,
+              median(unmarked, na.rm = TRUE) * 100,
+              format.pval(wt$p.value, digits = 3)))
+}
+
+# --- 52g panel C: All features split by H3K27ac ---
+feat_data$enhancer <- ifelse(feat_data$h3k27ac, "H3K27ac+", "Unmarked")
+
+all_long <- rbind(
+  data.frame(feature_type = feat_data$feature_type,
+             enhancer = feat_data$enhancer,
+             delta = feat_data$delta_hmc * 100,
+             modification = "5hmC", stringsAsFactors = FALSE),
+  data.frame(feature_type = feat_data$feature_type,
+             enhancer = feat_data$enhancer,
+             delta = feat_data$delta_mc * 100,
+             modification = "5mC", stringsAsFactors = FALSE)
+)
+
+p_52g_all <- ggplot(all_long[all_long$modification == "5hmC", ],
+                    aes(x = feature_type, y = delta, fill = enhancer)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_boxplot(outlier.size = 0.5, alpha = 0.85,
+               position = position_dodge(width = 0.8)) +
+  scale_fill_manual(values = ENH_COLORS, name = "H3K27ac") +
+  labs(title = expression("All Features: " * Delta * "5hmC by Enhancer Status"),
+       subtitle = "Does H3K27ac overlap explain the feature-type differences?",
+       x = "Gene Feature", y = expression(Delta * "5hmC (%)")) +
+  theme_biomodal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+save_multiformat_ggplot(
+  p_52g_all, file.path(fig_52g_dir, "52g_all_features_enhancer_split"),
+  width = 11, height = 6
+)
+
+# =============================================================================
 # FIGURE 52d: KEY_GENES Individual Locus Panels
 # =============================================================================
 
