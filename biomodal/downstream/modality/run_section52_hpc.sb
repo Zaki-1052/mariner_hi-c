@@ -1,0 +1,191 @@
+#!/bin/bash
+#SBATCH --job-name=section52_regfrac
+#SBATCH --output=logs/section52_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=06:00:00
+#SBATCH --account=csd940
+
+# Section 52: Sub-gene-feature and metagene-bin regional-frac extraction
+# Runs modality get regional-frac twice with custom BED files (CG context only).
+#
+# Usage: sbatch run_section52_hpc.sb
+
+start_time=$(date +%s)
+
+log_info()  { echo "[INFO] $(date '+%Y-%m-%d %H:%M:%S') - $1"; }
+log_error() { echo "[ERROR] $(date '+%Y-%m-%d %H:%M:%S') - $1" >&2; }
+
+echo "========================================="
+echo "Section 52: Sub-Gene Feature Extraction"
+echo "========================================="
+echo "Job ID:   $SLURM_JOB_ID"
+echo "Node:     $HOSTNAME"
+echo "CPUs:     $SLURM_CPUS_PER_TASK"
+echo "Memory:   128GB"
+echo "Start:    $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate modality
+
+# ---------------------------------------------------------------------------
+# Paths (two-root convention: WORK_DIR = data, REPO_DIR = git repo)
+# ---------------------------------------------------------------------------
+WORK_DIR="/expanse/lustre/projects/csd940/zalibhai/biomodal/modality"
+REPO_DIR="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/modality"
+
+ZARR="/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CG/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CG.zarrz"
+METADATA="${WORK_DIR}/metadata.tsv"
+
+# BED files from git repo
+RAW_FEATURES_BED="${REPO_DIR}/section52_beds/sub_gene_features.annotation.bed.gz"
+RAW_METAGENE_BED="${REPO_DIR}/section52_beds/metagene_bins.annotation.bed.gz"
+
+# Decompressed working copies
+FEATURES_BED="${WORK_DIR}/sub_gene_features.annotation.bed"
+METAGENE_BED="${WORK_DIR}/metagene_bins.annotation.bed"
+
+# Output directories
+OUTPUT_BASE="${WORK_DIR}/outputs_CG_section52"
+FEATURES_RESULTS="${OUTPUT_BASE}/Results/sub_gene_features.annotation"
+METAGENE_RESULTS="${OUTPUT_BASE}/Results/metagene_bins.annotation"
+
+cd "${WORK_DIR}"
+
+# ---------------------------------------------------------------------------
+# Input validation
+# ---------------------------------------------------------------------------
+log_info "Validating inputs..."
+
+if [[ ! -f "${RAW_FEATURES_BED}" ]]; then
+    log_error "Sub-gene features BED not found: ${RAW_FEATURES_BED}"
+    log_error "Run prepare_section52_beds.R locally, commit, push, and pull on HPC."
+    exit 1
+fi
+if [[ ! -f "${RAW_METAGENE_BED}" ]]; then
+    log_error "Metagene bins BED not found: ${RAW_METAGENE_BED}"
+    log_error "Run prepare_section52_beds.R locally, commit, push, and pull on HPC."
+    exit 1
+fi
+if [[ ! -f "${ZARR}" ]]; then
+    log_error "Zarr store not found: ${ZARR}"
+    exit 1
+fi
+if [[ ! -f "${METADATA}" ]]; then
+    log_error "Metadata not found: ${METADATA}"
+    exit 1
+fi
+
+log_info "All inputs validated."
+
+# ---------------------------------------------------------------------------
+# Output directories
+# ---------------------------------------------------------------------------
+mkdir -p "${FEATURES_RESULTS}" "${METAGENE_RESULTS}" logs
+
+# ---------------------------------------------------------------------------
+# STEP 0: Decompress BED files
+# ---------------------------------------------------------------------------
+echo ""
+echo "====================================="
+echo "STEP 0: PREPARING BED FILES"
+echo "====================================="
+
+if [[ -f "${FEATURES_BED}" ]]; then
+    log_info "Features BED already exists, skipping: ${FEATURES_BED}"
+else
+    log_info "Decompressing sub-gene features BED..."
+    gunzip -c "${RAW_FEATURES_BED}" > "${FEATURES_BED}"
+    NLINES=$(wc -l < "${FEATURES_BED}")
+    log_info "Features BED written: ${FEATURES_BED} (${NLINES} lines including header)"
+fi
+
+if [[ -f "${METAGENE_BED}" ]]; then
+    log_info "Metagene BED already exists, skipping: ${METAGENE_BED}"
+else
+    log_info "Decompressing metagene bins BED..."
+    gunzip -c "${RAW_METAGENE_BED}" > "${METAGENE_BED}"
+    NLINES=$(wc -l < "${METAGENE_BED}")
+    log_info "Metagene BED written: ${METAGENE_BED} (${NLINES} lines including header)"
+fi
+
+# Validate chr prefix is stripped
+FIRST_CHROM=$(awk 'NR==2{print $1}' "${FEATURES_BED}")
+if [[ "${FIRST_CHROM}" == chr* ]]; then
+    log_error "chr prefix still present in features BED. Aborting."
+    exit 1
+fi
+log_info "Chromosome format OK (first chrom: ${FIRST_CHROM})"
+
+# ---------------------------------------------------------------------------
+# RUN A: Sub-gene features regional-frac
+# ---------------------------------------------------------------------------
+echo ""
+echo "====================================="
+echo "RUN A: SUB-GENE FEATURES REGIONAL-FRAC"
+echo "====================================="
+log_info "Running: modality get regional-frac on sub-gene features..."
+
+modality -v get regional-frac \
+    --zarr-path "${ZARR}" \
+    --sample-sheet "${METADATA}" \
+    --bedfile "${FEATURES_BED}" \
+    --fields mc hmc \
+    --min-coverage 10 \
+    --order-by-group condition \
+    --output-dir "${FEATURES_RESULTS}"
+
+RUN_A_STATUS=$?
+if [[ ${RUN_A_STATUS} -ne 0 ]]; then
+    log_error "Run A (sub-gene features) failed with exit code ${RUN_A_STATUS}"
+else
+    log_info "Run A complete."
+fi
+
+# ---------------------------------------------------------------------------
+# RUN B: Metagene bins regional-frac
+# ---------------------------------------------------------------------------
+echo ""
+echo "====================================="
+echo "RUN B: METAGENE BINS REGIONAL-FRAC"
+echo "====================================="
+log_info "Running: modality get regional-frac on metagene bins..."
+
+modality -v get regional-frac \
+    --zarr-path "${ZARR}" \
+    --sample-sheet "${METADATA}" \
+    --bedfile "${METAGENE_BED}" \
+    --fields mc hmc \
+    --min-coverage 10 \
+    --order-by-group condition \
+    --output-dir "${METAGENE_RESULTS}"
+
+RUN_B_STATUS=$?
+if [[ ${RUN_B_STATUS} -ne 0 ]]; then
+    log_error "Run B (metagene bins) failed with exit code ${RUN_B_STATUS}"
+else
+    log_info "Run B complete."
+fi
+
+# ---------------------------------------------------------------------------
+# Done
+# ---------------------------------------------------------------------------
+echo ""
+echo "========================================="
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+log_info "All steps completed."
+log_info "Features results: ${FEATURES_RESULTS}"
+log_info "Metagene results: ${METAGENE_RESULTS}"
+log_info "Total runtime: ${duration} seconds"
+echo ""
+echo "To rsync outputs back to local:"
+echo "  rsync -avz expanse:${OUTPUT_BASE}/ modality/outputs/outputs_CG_section52/"
+echo ""
+echo "End: $(date)"
+echo "========================================="
