@@ -1,0 +1,172 @@
+=========================================
+Biomodal Permutation Test: Section 36
+=========================================
+Job ID: 47851859
+Node: exp-5-10
+CPUs: 64
+Permutations: 100000
+Start time: Sat Apr  4 22:29:01 PDT 2026
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/Rscript
+Rscript (R) version 4.4.2 (2024-10-31)
+
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream
+
+Running: Rscript scripts/viz_sections/section_36_permutation_domains.R 100000
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-04-04 22:29:29 
+Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream 
+Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 genes
+Loading gene body hmC DMRs...
+  Loaded 20991 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10789 significant / 20991 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘jsonlite’ was built under R version 4.4.3 
+4: package ‘rtracklayer’ was built under R version 4.4.3 
+  Patched regioneReloaded::chooseHclustMet for small-matrix safety.
+
+===========================================================================
+  SECTION 36: DOMAIN-LEVEL PERMUTATION (COMPARTMENTS + POLYCOMB)
+===========================================================================
+
+Constructing mm10 genome object (standard chromosomes only)...
+The masked version of 'mm10' is not installed. Using the unmasked version. This means that no automatic masking will be available.
+  Genome: 20 chromosomes, 2,633,776,672 total bp
+
+--- Loading region sets ---
+
+Constructing DMR GRanges (4 direction sets)...
+  mC Hyper DMRs:  7522 regions
+  mC Hypo DMRs:   3267 regions
+  hmC Hypo DMRs:  9532 regions
+  hmC Hyper DMRs: 1967 regions
+
+Loading HOMER compartment data...
+  Loaded 104071 compartment bins
+  PC1 columns: 3 ctrl
+  Difference column: ctrl vs. mut Difference
+  Adj. p-value column: ctrl vs. mut adj. p-value
+  After filtering to standard chromosomes: 101721 bins
+  A Compartment:  47241 bins
+  B Compartment:  54480 bins
+  B->A Shift:     5430 bins
+  A->B Shift:     2641 bins
+
+Loading Polycomb peak sets...
+  H3K27me3: 15809 peaks
+  Bivalent: 318 peaks
+
+--- Assembling region set lists ---
+
+36A: 4 x 4 = 16 pairwise tests
+36B: 4 x 2 = 8 pairwise tests
+
+Total pairwise permutation tests: 24
+
+--- Running permutation tests ---
+  Parameters: ntimes=100000, cores=64, ranFUN=randomizeRegions, per.chromosome=TRUE
+
+[36A] DMR direction x A/B compartments (4x4)...
+[1] "Performing permutation tests for mC Hyper DMRs (1 of 4)"
+[1] "Performing permutation tests for mC Hypo DMRs (2 of 4)"
+[1] "Performing permutation tests for hmC Hypo DMRs (3 of 4)"
+[1] "Performing permutation tests for hmC Hyper DMRs (4 of 4)"
+[1] "method selected for hclustering: average"
+  average 
+0.6584595 
+[1] "method selected for hclustering: average"
+  average 
+0.9434204 
+  36A complete.
+
+[36B] DMR direction x Polycomb domains (4x2)...
+[1] "Performing permutation tests for mC Hyper DMRs (1 of 4)"
+[1] "Performing permutation tests for mC Hypo DMRs (2 of 4)"
+[1] "Performing permutation tests for hmC Hypo DMRs (3 of 4)"
+[1] "Performing permutation tests for hmC Hyper DMRs (4 of 4)"
+[1] "method for hclustering (<=2 elements, skipping cophenetic): average"
+[1] "method selected for hclustering: average"
+  average 
+0.9840309 
+  36B complete.
+
+Saving permutation results to cache...
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/permutation_36_domains.rds
+
+--- Generating Figure 36a: DMR x compartment heatmap ---
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the regioneReloaded package.
+  Please report the issue to the authors. 
+  Saved: 36a_crosswise_dmr_x_compartment/{pdf,svg,jpg}
+--- Generating Figure 36b: DMR x Polycomb heatmap ---
+  Saved: 36b_crosswise_dmr_x_polycomb/{pdf,svg,jpg}
+--- Generating Figure 36c: Local z-score (mC Hyper x A Compartment) ---
+  Running multiLocalZscore (window=50kb, step=1kb)...
+[1] "method selected for hclustering: average"
+ complete   average    single   ward.D2    median  centroid  mcquitty 
+0.7932864 0.8142835 0.7837110 0.8134060 0.8139869 0.8056598 0.8107429 
+[1] "method selected for hclustering: average"
+ complete   average    single   ward.D2    median  centroid  mcquitty 
+0.9997273 0.9997278 0.9997277 0.9997265 0.9997275 0.9997273 0.9997278 
+Warning messages:
+1: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the regioneReloaded package.
+  Please report the issue to the authors. 
+2: The `size` argument of `element_rect()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.
+ℹ The deprecated feature was likely used in the regioneReloaded package.
+  Please report the issue to the authors. 
+3: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.
+ℹ The deprecated feature was likely used in the regioneReloaded package.
+  Please report the issue to the authors. 
+  Saved: 36c_local_zscore_compartment/{pdf,svg,jpg}
+--- Generating Figure 36d: Fisher vs permutation comparison ---
+Error in h(simpleError(msg, call)) : 
+  error in evaluating the argument 'args' in selecting a method for function 'do.call': arguments imply differing number of rows: 1, 4, 0
+Calls: extract_perm_results -> do.call -> lapply -> lapply -> FUN -> data.frame
+Execution halted
+--------------------------------------------------------------------------------
+Exit code: 1
+End time: Sun Apr  5 22:38:08 PDT 2026
+=========================================

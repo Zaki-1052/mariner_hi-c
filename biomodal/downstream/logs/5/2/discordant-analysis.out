@@ -1,0 +1,270 @@
+zakiralibhai@Zakirs-MacBook-Air downstream % Rscript /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/scripts/viz_sections/section_21_discordant_mc_hmc_analysis.R
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-02-24 16:11:27 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20979 genes
+Loading gene body hmC DMRs...
+  Loaded 20979 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 4 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 8836 significant / 20979 total (42.1%)
+  CpG islands: 291 significant / 8842 total (3.3%)
+  CpG shores: 6037 significant / 32542 total (18.6%)
+  CpG shelves: 4045 significant / 29087 total (13.9%)
+  Promoters: 641 significant / 20372 total (3.1%)
+  TSS regions: 58 significant / 13952 total (0.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 21: DISCORDANT mC dn/hmC up GENE CHARACTERIZATION
+================================================================================
+
+  Input files validated.
+
+Recomputing coordinated mC/hmC changes and defining quadrants...
+Warning message:
+In inner_join(mc_sig, hmc_sig, by = "gene") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 135 of `x` matches multiple rows in `y`.
+ℹ Row 160 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+  Q1 (mC dn/hmC dn): 225 genes
+  Q2 (mC dn/hmC up, DISCORDANT): 755 genes
+  Q3 (mC up/hmC up): 62 genes
+  Q4 (mC up/hmC dn, COORDINATED): 5708 genes
+
+Loading data sources...
+  Loading RNA-seq...
+    16572 genes
+  Loading K119ub gene signal...
+    23150 genes
+  Loading ATAC-seq differential peaks...
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+  Loading H3K27ac condition-specific peaks...
+  H3K27ac Ctrl: 13635 peaks
+  H3K27ac Mut: 15663 peaks
+  Loading K119ub condition-specific peaks...
+  K119ub Ctrl: 20592 peaks
+  K119ub Mut: 20399 peaks
+  Loading MeCP2 differential peaks...
+  MeCP2 Up: 7686 peaks
+  MeCP2 Down: 1200 peaks
+  Loading ChIP-seq peaks for chromatin state...
+  ctcf: 32487 peaks
+  h3k27ac: 15105 peaks
+  h3k27me3: 15809 peaks
+  h3k4me1: 113781 peaks
+  h3k4me3: 6581 peaks
+  bivalent: 318 peaks
+  Loading Hi-C loops...
+    2910 loops
+  All data sources loaded.
+
+Annotating peaks to genes via ChIPseeker...
+  ATAC Up peaks...
+>> preparing features information...             2026-02-24 16:11:34 
+>> identifying nearest features...               2026-02-24 16:11:34 
+>> calculating distance from peak to TSS...      2026-02-24 16:11:34 
+>> assigning genomic annotation...               2026-02-24 16:11:34 
+>> adding gene annotation...                     2026-02-24 16:11:41 
+>> assigning chromosome lengths                  2026-02-24 16:11:41 
+>> done...                                       2026-02-24 16:11:41 
+  ATAC Down peaks...
+>> preparing features information...             2026-02-24 16:11:41 
+>> identifying nearest features...               2026-02-24 16:11:41 
+>> calculating distance from peak to TSS...      2026-02-24 16:11:41 
+>> assigning genomic annotation...               2026-02-24 16:11:41 
+>> adding gene annotation...                     2026-02-24 16:11:42 
+>> assigning chromosome lengths                  2026-02-24 16:11:42 
+>> done...                                       2026-02-24 16:11:42 
+    5913 genes with ATAC data
+  MeCP2 Up peaks...
+>> preparing features information...             2026-02-24 16:11:42 
+>> identifying nearest features...               2026-02-24 16:11:42 
+>> calculating distance from peak to TSS...      2026-02-24 16:11:42 
+>> assigning genomic annotation...               2026-02-24 16:11:42 
+>> adding gene annotation...                     2026-02-24 16:11:43 
+>> assigning chromosome lengths                  2026-02-24 16:11:43 
+>> done...                                       2026-02-24 16:11:43 
+  MeCP2 Down peaks...
+>> preparing features information...             2026-02-24 16:11:43 
+>> identifying nearest features...               2026-02-24 16:11:43 
+>> calculating distance from peak to TSS...      2026-02-24 16:11:43 
+>> assigning genomic annotation...               2026-02-24 16:11:43 
+>> adding gene annotation...                     2026-02-24 16:11:44 
+>> assigning chromosome lengths                  2026-02-24 16:11:44 
+>> done...                                       2026-02-24 16:11:44 
+    2663 genes with MeCP2 data
+
+Deriving H3K27ac gained/lost status...
+  H3K27ac gained: 4541 peaks
+  H3K27ac lost: 2525 peaks
+>> preparing features information...             2026-02-24 16:11:44 
+>> identifying nearest features...               2026-02-24 16:11:44 
+>> calculating distance from peak to TSS...      2026-02-24 16:11:44 
+>> assigning genomic annotation...               2026-02-24 16:11:44 
+>> adding gene annotation...                     2026-02-24 16:11:44 
+>> assigning chromosome lengths                  2026-02-24 16:11:44 
+>> done...                                       2026-02-24 16:11:44 
+>> preparing features information...             2026-02-24 16:11:45 
+>> identifying nearest features...               2026-02-24 16:11:45 
+>> calculating distance from peak to TSS...      2026-02-24 16:11:45 
+>> assigning genomic annotation...               2026-02-24 16:11:45 
+>> adding gene annotation...                     2026-02-24 16:11:45 
+>> assigning chromosome lengths                  2026-02-24 16:11:45 
+>> done...                                       2026-02-24 16:11:45 
+  4196 genes with H3K27ac differential data
+
+Classifying chromatin state at gene bodies...
+  Chromatin state distribution:
+
+   Active_Promoter Repressed_Promoter  Bivalent_Promoter           Polycomb 
+              3950                618                 68                  0 
+   Active_Enhancer    Poised_Enhancer              Other 
+                 0                  0               2114 
+
+Determining Hi-C loop involvement...
+  Genes at loop anchors: 432 / 6750 (6.4%)
+
+Building master gene characteristics table...
+  Discordant (Q2): 755 genes
+  Coordinated (Q4): 5708 genes
+
+--- Analysis 1: Methylation effect size ---
+  |mc_diff|  - Disc median: 0.0171, Coord median: 0.0323, p < 2.2e-16
+  |hmc_diff| - Disc median: 0.0119, Coord median: 0.0282, p < 2.2e-16
+
+--- Analysis 2: RNA-seq expression ---
+  log2FC - Disc median: 0.1905, Coord median: -0.0095, p < 2.2e-16
+  Fisher's (Up/Down): OR = 103.14, p < 2.2e-16
+
+--- Analysis 3: ATAC-seq accessibility ---
+  net_atac - Disc median: 1.0, Coord median: 0.0, p < 2.2e-16
+  Fisher's (ATAC Up/Down): OR = 14.55, p < 2.2e-16
+
+--- Analysis 4: H2AK119ub signal ---
+  K119ub gb_log2fc - Disc median: -0.0308 (n=728), Coord median: 0.0327 (n=5473), p = 2.00e-06
+
+--- Analysis 5: H3K27ac status ---
+  Disc: 101 gained, 17 lost | Coord: 1177 gained, 823 lost
+  Fisher's (Gained/Lost): p = 1.42e-09
+
+--- Analysis 6: Chromatin state ---
+  Fisher's (chromatin state overall): p = 1.00e-04
+
+--- Analysis 7: MeCP2 binding ---
+  Disc: 130 MeCP2 Up, 82 MeCP2 Down | Coord: 719 MeCP2 Up, 123 MeCP2 Down
+  Fisher's (MeCP2 Up/Down): p = 1.26e-13
+
+--- Analysis 8: Hi-C loop involvement ---
+  Disc: 117 (15.5%) at loop anchors | Coord: 289 (5.1%) at loop anchors
+  Fisher's (Loop/No Loop): p < 2.2e-16
+
+--- Analysis 9: GO enrichment ---
+'select()' returned 1:1 mapping between keys and columns
+Warning message:
+In bitr(disc$gene, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  2.94% of input gene IDs are fail to map...
+'select()' returned 1:1 mapping between keys and columns
+Warning message:
+In bitr(coord$gene, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  3.36% of input gene IDs are fail to map...
+  Discordant genes mapped to Entrez: 727 / 755
+  Coordinated genes mapped to Entrez: 5495 / 5708
+  No significant GO enrichment found.
+
+--- Assembling Figure 21a: Composite panel ---
+  Saved: 21a_discordant_composite/{pdf,svg,jpg}
+  Saved: 21a_panel_mc_diff/{pdf,svg,jpg}
+  Saved: 21a_panel_hmc_diff/{pdf,svg,jpg}
+  Saved: 21a_panel_log2fc/{pdf,svg,jpg}
+  Saved: 21a_panel_atac/{pdf,svg,jpg}
+  Saved: 21a_panel_k119ub/{pdf,svg,jpg}
+  Saved: 21a_panel_k27ac/{pdf,svg,jpg}
+  Saved: 21a_panel_chromatin/{pdf,svg,jpg}
+  Saved: 21a_panel_mecp2/{pdf,svg,jpg}
+  Saved: 21a_panel_loop/{pdf,svg,jpg}
+
+--- Creating Figure 21b: mC vs hmC scatter ---
+Warning message:
+In inner_join(mc_dmr %>% dplyr::select(gene, mc_diff = mod_difference),  :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 291 of `x` matches multiple rows in `y`.
+ℹ Row 291 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship = "many-to-many"` to silence this warning.
+  Saved: 21b_mc_hmc_concordance_scatter/{pdf,svg,jpg}
+
+--- Creating Figure 21c: mC vs expression per group ---
+Warning message:
+In cor.test.default(scatter_21c_data$mc_diff[scatter_21c_data$group ==  :
+  Cannot compute exact p-value with ties
+Warning message:
+In cor.test.default(scatter_21c_data$mc_diff[scatter_21c_data$group ==  :
+  Cannot compute exact p-value with ties
+  Spearman (Discordant): rho = -0.151, p = 1.77e-04
+  Spearman (Coordinated): rho = -0.247, p = 6.36e-73
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 21c_mc_vs_expression_per_group/{pdf,svg,jpg}
+
+--- Creating Figure 21d: GO enrichment ---
+  No GO enrichment to plot.
+
+--- Creating Figure 21e: All 4 quadrants ---
+  Saved: 21e_all_quadrants_comprehensive/{pdf,svg,jpg}
+
+Saving output tables...
+  Saved: discordant_gene_characteristics.tsv (6750 rows)
+
+================================================================================
+SECTION 21 COMPLETE -- DISCORDANT GENE CHARACTERIZATION SUMMARY
+================================================================================
+
+Genes significant in both mC and hmC: 6750
+  Q1 (mC dn/hmC dn): 225
+  Q2 (mC dn/hmC up, DISCORDANT): 755
+  Q3 (mC up/hmC up): 62
+  Q4 (mC up/hmC dn, COORDINATED): 5708
+
+Key comparisons (Discordant Q2 vs Coordinated Q4):
+  |mC diff|:       Wilcoxon p < 2.2e-16
+  |hmC diff|:      Wilcoxon p < 2.2e-16
+  log2FC:          Wilcoxon p < 2.2e-16
+  Expression Up/Dn: Fisher's p < 2.2e-16
+  net ATAC:        Wilcoxon p < 2.2e-16
+  ATAC Up/Down:    Fisher's p < 2.2e-16
+  K119ub gb sig:   Wilcoxon p = 2.00e-06
+  H3K27ac G/L:     Fisher's p = 1.42e-09
+  Chromatin state: Fisher's p = 1.00e-04
+  MeCP2 Up/Down:   Fisher's p = 1.26e-13
+  Loop involved:   Fisher's p < 2.2e-16
+
+Outputs:
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/21*
+  Table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/discordant_gene_characteristics.tsv
+================================================================================
+zakiralibhai@Zakirs-MacBook-Air downstream % 

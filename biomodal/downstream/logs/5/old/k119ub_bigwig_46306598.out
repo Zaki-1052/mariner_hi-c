@@ -1,0 +1,63 @@
+=========================================
+K119ub Bigwig Signal Preprocessing
+=========================================
+Job ID: 46306598
+Node: exp-1-07
+Start time: Mon Feb  9 10:31:47 PST 2026
+=========================================
+
+Configuration:
+  Script: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/scripts/preprocess_k119ub_bigwig.R
+  Ctrl bigwig: /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_ctrl_merged.bw
+  Mut bigwig:  /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_mut_merged.bw
+  Output:      data/k119ub_gene_signal.tsv
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/Rscript
+Rscript (R) version 4.4.2 (2024-10-31)
+
+================================================================================
+K119UB BIGWIG SIGNAL PREPROCESSING
+================================================================================
+Date: 2026-02-09 10:31:50 
+Ctrl bigwig: /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_ctrl_merged.bw 
+Mut bigwig:  /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_mut_merged.bw 
+Output:      data/k119ub_gene_signal.tsv 
+
+Loading packages...
+Warning message:
+package ‘rtracklayer’ was built under R version 4.4.3 
+Packages loaded.
+
+Extracting gene body coordinates from TxDb...
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Gene bodies: 23169 genes (standard chroms, >= 500bp)
+Extracting promoter coordinates (TSS +/- 2kb)...
+Warning message:
+In valid.GenomicRanges.seqinfo(x, suggest.trim = TRUE) :
+  GRanges object contains 5 out-of-bound ranges located on sequences
+  chr4_GL456350_random, chr4_JH584293_random, chr4_JH584295_random,
+  chr5_JH584296_random, and chrUn_GL456239. Note that ranges located on a
+  sequence whose length is unknown (NA) or on a circular sequence are not
+  considered out-of-bound (use seqlengths() and isCircular() to get the
+  lengths and circularity flags of the underlying sequences). You can use
+  trim() to trim these ranges. See ?`trim,GenomicRanges-method` for more
+  information.
+'select()' returned 1:1 mapping between keys and columns
+  Promoters: 23169 (one per gene, matched to gene bodies)
+Mapping ENTREZ IDs to gene symbols...
+'select()' returned 1:1 mapping between keys and columns
+  Mapped: 23150 / 23169 genes have symbols
+
+--- Gene body signal extraction ---
+  Computing mean signal from ctrl gene bodies (23169 regions)...
+Error in as(regions, "RangesList") : 
+  no method or default for coercing “GRanges” to “RangesList”
+Calls: compute_mean_signal -> Views -> Views -> RleViewsList -> is -> as
+Execution halted
+
+Preprocessing failed with exit code 1

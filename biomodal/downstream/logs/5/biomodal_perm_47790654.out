@@ -1,0 +1,504 @@
+=========================================
+Biomodal Permutation Test: Section 37
+=========================================
+Job ID: 47790654
+Node: exp-8-29
+CPUs: 64
+Permutations: 100000
+Start time: Thu Apr  2 19:47:49 PDT 2026
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/Rscript
+Rscript (R) version 4.4.2 (2024-10-31)
+
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream
+
+Running: Rscript scripts/viz_sections/section_37_permutation_gene_level.R 100000
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-04-02 19:47:52 
+Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream 
+Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 genes
+Loading gene body hmC DMRs...
+  Loaded 20991 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10779 significant / 20991 total (51.4%)
+  CpG islands: 446 significant / 8910 total (5.0%)
+  CpG shores: 9837 significant / 32581 total (30.2%)
+  CpG shelves: 6914 significant / 29094 total (23.8%)
+  Promoters: 1700 significant / 20417 total (8.3%)
+  TSS regions: 195 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘jsonlite’ was built under R version 4.4.3 
+4: package ‘rtracklayer’ was built under R version 4.4.3 
+
+===========================================================================
+  SECTION 37: GENE-LEVEL LABEL-SHUFFLE PERMUTATION TESTS
+===========================================================================
+
+--- Input Validation ---
+
+  All core input files validated.
+  [OK] Anchor gene table: anchor_gene_associations_great.tsv
+
+================================================================================
+PRE-COMPUTING GENE-LEVEL DIRECTION ASSIGNMENTS
+================================================================================
+
+--- DMR row labels ---
+  mC row: 10765 genes (7503 Up, 3262 Down)
+  hmC row: 11465 genes (1959 Up, 9506 Down)
+
+--- Mark column labels ---
+  ATAC binary BED:
+  ATAC Up: 7620 peaks
+>> preparing features information...		 2026-04-02 07:48:06 PM 
+>> identifying nearest features...		 2026-04-02 07:48:08 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:09 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:09 PM 
+>> adding gene annotation...			 2026-04-02 07:48:24 PM 
+>> assigning chromosome lengths			 2026-04-02 07:48:24 PM 
+>> done...					 2026-04-02 07:48:24 PM 
+  ATAC Down: 3744 peaks
+>> preparing features information...		 2026-04-02 07:48:24 PM 
+>> identifying nearest features...		 2026-04-02 07:48:24 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:24 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:24 PM 
+>> adding gene annotation...			 2026-04-02 07:48:26 PM 
+>> assigning chromosome lengths			 2026-04-02 07:48:26 PM 
+>> done...					 2026-04-02 07:48:26 PM 
+    ATAC Up: 3913 up-genes, 1774 down-genes
+  MeCP2:
+    MeCP2: 7136 up-genes, 14059 down-genes
+  K119ub condition-specific:
+  ctrl: 20592 peaks
+>> preparing features information...		 2026-04-02 07:48:35 PM 
+>> identifying nearest features...		 2026-04-02 07:48:35 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:35 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:35 PM 
+>> adding gene annotation...			 2026-04-02 07:48:38 PM 
+>> assigning chromosome lengths			 2026-04-02 07:48:38 PM 
+>> done...					 2026-04-02 07:48:38 PM 
+  mut: 20399 peaks
+>> preparing features information...		 2026-04-02 07:48:38 PM 
+>> identifying nearest features...		 2026-04-02 07:48:38 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:38 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:38 PM 
+>> adding gene annotation...			 2026-04-02 07:48:42 PM 
+>> assigning chromosome lengths			 2026-04-02 07:48:42 PM 
+>> done...					 2026-04-02 07:48:42 PM 
+    K119ub Gained: 2985 gained-genes, 3009 lost-genes
+  H3K27ac condition-specific:
+  ctrl: 13635 peaks
+>> preparing features information...		 2026-04-02 07:48:42 PM 
+>> identifying nearest features...		 2026-04-02 07:48:42 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:42 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:42 PM 
+>> adding gene annotation...			 2026-04-02 07:48:44 PM 
+>> assigning chromosome lengths			 2026-04-02 07:48:44 PM 
+>> done...					 2026-04-02 07:48:44 PM 
+  mut: 15663 peaks
+>> preparing features information...		 2026-04-02 07:48:44 PM 
+>> identifying nearest features...		 2026-04-02 07:48:44 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:45 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:45 PM 
+>> adding gene annotation...			 2026-04-02 07:48:47 PM 
+>> assigning chromosome lengths			 2026-04-02 07:48:47 PM 
+>> done...					 2026-04-02 07:48:47 PM 
+    H3K27ac Gained: 2738 gained-genes, 1440 lost-genes
+  DiffBind ATAC:
+>> preparing features information...		 2026-04-02 07:48:48 PM 
+>> identifying nearest features...		 2026-04-02 07:48:48 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:49 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:49 PM 
+>> adding gene annotation...			 2026-04-02 07:48:52 PM 
+>> assigning chromosome lengths			 2026-04-02 07:48:52 PM 
+>> done...					 2026-04-02 07:48:52 PM 
+    ATAC DiffBind Up: 1964 up-genes, 405 down-genes
+  DiffBind K27ac:
+>> preparing features information...		 2026-04-02 07:48:54 PM 
+>> identifying nearest features...		 2026-04-02 07:48:54 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:54 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:54 PM 
+>> adding gene annotation...			 2026-04-02 07:48:56 PM 
+>> assigning chromosome lengths			 2026-04-02 07:48:56 PM 
+>> done...					 2026-04-02 07:48:56 PM 
+    K27ac DiffBind Up: 1197 up-genes, 1743 down-genes
+  DiffBind K27me3:
+>> preparing features information...		 2026-04-02 07:48:57 PM 
+>> identifying nearest features...		 2026-04-02 07:48:57 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:48:57 PM 
+>> assigning genomic annotation...		 2026-04-02 07:48:57 PM 
+>> adding gene annotation...			 2026-04-02 07:49:00 PM 
+>> assigning chromosome lengths			 2026-04-02 07:49:00 PM 
+>> done...					 2026-04-02 07:49:00 PM 
+    K27me3 DiffBind Up: 908 up-genes, 953 down-genes
+  DiffBind K119ub:
+>> preparing features information...		 2026-04-02 07:49:00 PM 
+>> identifying nearest features...		 2026-04-02 07:49:00 PM 
+>> calculating distance from peak to TSS...	 2026-04-02 07:49:01 PM 
+>> assigning genomic annotation...		 2026-04-02 07:49:01 PM 
+>> adding gene annotation...			 2026-04-02 07:49:03 PM 
+>> assigning chromosome lengths			 2026-04-02 07:49:03 PM 
+>> done...					 2026-04-02 07:49:03 PM 
+    K119ub DiffBind Up: 3889 up-genes, 1543 down-genes
+  RNA-seq expression:
+    Expression: 590 up-genes, 1147 down-genes
+
+--- Assembling test gene_dfs ---
+
+--- Preparing special tests (37-09, 37-10, 37-11) ---
+  Building GREAT-style anchor-gene associations...
+    Loaded 2910 loops
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+    Anchor-gene associations: 6795
+  K119ub ctrl (37-09): 20592 peaks
+  K119ub mut (37-09): 20399 peaks
+Warning message:
+In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chr1_GL456211_random, chr4_GL456216_random, chr4_GL456350_random, chr4_JH584292_random, chr7_GL456219_random, chrX_GL456233_random
+  - in 'y': chrM
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+Warning message:
+In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chr1_GL456211_random, chr1_GL456221_random, chr4_GL456216_random, chr4_GL456350_random, chr4_JH584292_random, chr4_JH584294_random, chr7_GL456219_random, chrX_GL456233_random, chrY
+  - in 'y': chrM
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+  Test 37-09: 867 genes
+  Loading HOMER compartment data for test 37-10...
+    Compartment genes: 22143 (B->A: 680, A->B: 309, Stable: 21154)
+  Test 37-10a (B->A vs Stable): 8960 genes
+  Test 37-10b (A->B vs Stable): 8838 genes
+  Test 37-11: 3497 genes
+
+--- Test summary ---
+  37-01 (12e): 2964 genes [2x2]
+  37-02 (15a): 10405 genes [2x2]
+  37-03 (15b): 2967 genes [2x2]
+  37-04 (15c): 3083 genes [2x2]
+  37-05 (19g): 2578 genes [2x2]
+  37-06 (19g): 2661 genes [2x2]
+  37-07a (33c): 1004 genes [2x2]
+  37-07b (33c): 1635 genes [2x2]
+  37-07c (33c): 915 genes [2x2]
+  37-07d (33c): 2865 genes [2x2]
+  37-08 (20d): 1178 genes [2x2]
+  37-09 (27c): 867 genes [2x2]
+  37-10a (29): 8960 genes [2x2]
+  37-10b (29): 8838 genes [2x2]
+  37-11 (31b): 3497 genes [2x2]
+
+================================================================================
+RUNNING PERMUTATION TESTS
+================================================================================
+
+
+--- Test 37-01: mC direction x ATAC direction (validates section 12e) ---
+  Total genes: 2964
+  Chromosomes: 20
+  Contingency table:
+         
+          ATAC Down ATAC Up
+  mC Down       129    1119
+  mC Up         941     775
+  Fisher OR = 0.10, p = 1.50e-150
+  Permutation z = -30.36, empirical p = 0.0000
+
+--- Test 37-02: hmC direction x MeCP2 direction (validates section 15a) ---
+  Total genes: 10405
+  Chromosomes: 20
+  Contingency table:
+          
+           MeCP2 Down MeCP2 Up
+  hmC Down       6078     2505
+  hmC Up         1196      626
+  Fisher OR = 1.27, p = 1.48e-05
+  Permutation z = 4.25, empirical p = 0.0001
+
+--- Test 37-03: hmC direction x ATAC direction (validates section 15b) ---
+  Total genes: 2967
+  Chromosomes: 20
+  Contingency table:
+          
+           ATAC Down ATAC Up
+  hmC Down       959    1043
+  hmC Up          78     887
+  Fisher OR = 10.45, p = 3.54e-116
+  Permutation z = 28.50, empirical p = 0.0000
+
+--- Test 37-04: hmC direction x K119ub direction (validates section 15c) ---
+  Total genes: 3083
+  Chromosomes: 20
+  Contingency table:
+          
+           K119ub Gained K119ub Lost
+  hmC Down          1403         853
+  hmC Up             305         522
+  Fisher OR = 2.81, p = 7.10e-36
+  Permutation z = 12.58, empirical p = 0.0000
+
+--- Test 37-05: mC direction x H3K27ac direction (validates section 19g) ---
+  Total genes: 2578
+  Chromosomes: 20
+  Contingency table:
+         
+          H3K27ac Gained H3K27ac Lost
+  mC Down            336           57
+  mC Up             1318          867
+  Fisher OR = 3.88, p = 4.41e-24
+  Permutation z = 11.88, empirical p = 0.0000
+
+--- Test 37-06: hmC direction x H3K27ac direction (validates section 19g) ---
+  Total genes: 2661
+  Chromosomes: 20
+  Contingency table:
+          
+           H3K27ac Gained H3K27ac Lost
+  hmC Down           1578          833
+  hmC Up              197           53
+  Fisher OR = 0.51, p = 1.53e-05
+  Permutation z = -4.69, empirical p = 0.0000
+
+--- Test 37-07a: mC direction x ATAC DiffBind (validates section 33c) ---
+  Total genes: 1004
+  Chromosomes: 20
+  Contingency table:
+         
+          ATAC DiffBind Down ATAC DiffBind Up
+  mC Down                 37              694
+  mC Up                  131              142
+  Fisher OR = 0.06, p = 5.83e-53
+  Permutation z = -14.89, empirical p = 0.0000
+
+--- Test 37-07b: mC direction x K27ac DiffBind (validates section 33c) ---
+  Total genes: 1635
+  Chromosomes: 20
+  Contingency table:
+         
+          K27ac DiffBind Down K27ac DiffBind Up
+  mC Down                  85               361
+  mC Up                   940               249
+  Fisher OR = 0.06, p = 1.92e-111
+  Permutation z = -23.95, empirical p = 0.0000
+
+--- Test 37-07c: mC direction x K27me3 DiffBind (validates section 33c) ---
+  Total genes: 915
+  Chromosomes: 20
+  Contingency table:
+         
+          K27me3 DiffBind Down K27me3 DiffBind Up
+  mC Down                  384                144
+  mC Up                     61                326
+  Fisher OR = 14.20, p = 3.50e-69
+  Permutation z = 19.31, empirical p = 0.0000
+
+--- Test 37-07d: mC direction x K119ub DiffBind (validates section 33c) ---
+  Total genes: 2865
+  Chromosomes: 20
+  Contingency table:
+         
+          K119ub DiffBind Down K119ub DiffBind Up
+  mC Down                  534                378
+  mC Up                    169               1784
+  Fisher OR = 14.89, p = 7.73e-177
+  Permutation z = 29.22, empirical p = 0.0000
+
+--- Test 37-08: mC direction x expression direction (validates section 20d) ---
+  Total genes: 1178
+  Chromosomes: 20
+  Contingency table:
+         
+          Expr Down Expr Up
+  mC Down        61     300
+  mC Up         770      47
+  Fisher OR = 0.01, p = 2.07e-162
+  Permutation z = -31.88, empirical p = 0.0000
+
+--- Test 37-09: K119ub direction x Hyper at loop anchors (validates section 27c) ---
+  Total genes: 867
+  Chromosomes: 20
+  Contingency table:
+               
+                Hyper Not Hyper
+  K119ub Gained   286       100
+  K119ub Lost     157       324
+  Fisher OR = 5.89, p = 1.08e-34
+  Permutation z = 12.46, empirical p = 0.0000
+
+--- Test 37-10a: B->A shift vs Stable x mC direction (validates section 29) ---
+  Total genes: 8960
+  Chromosomes: 20
+  Contingency table:
+        
+         mC Hyper mC Hypo
+  B to A       18     239
+  Stable     6124    2579
+  Fisher OR = 0.03, p = 2.46e-99
+  Permutation z = -25.27, empirical p = 0.0000
+
+--- Test 37-10b: A->B shift vs Stable x mC direction (validates section 29) ---
+  Total genes: 8838
+  Chromosomes: 20
+  Contingency table:
+        
+         mC Hyper mC Hypo
+  A to B      117      18
+  Stable     6124    2579
+  Fisher OR = 2.74, p = 1.45e-05
+  Permutation z = 5.01, empirical p = 0.0000
+
+--- Test 37-11: Loop direction x MeCP2 Sig Up at anchors (validates section 31b) ---
+  Total genes: 3497
+  Chromosomes: 20
+  Contingency table:
+             
+              MeCP2 Sig Up Other
+  Loop Gained           19  2103
+  Loop Lost             36  1339
+  Fisher OR = 0.34, p = 1.23e-04
+  Permutation z = -4.29, empirical p = 0.0005
+
+Saved permutation cache: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/permutation_37_gene_level.rds
+
+================================================================================
+POST-PROCESSING: CONCORDANCE CLASSIFICATION
+================================================================================
+
+Concordance classification:
+
+Confirmed 
+       15 
+
+Full results:
+ test_id source_section n_genes fisher_or  fisher_p perm_z perm_empirical_p
+   37-01            12e    2964      0.10 1.50e-150 -30.36            0e+00
+   37-02            15a   10405      1.27  1.48e-05   4.25            1e-04
+   37-03            15b    2967     10.45 3.54e-116  28.50            0e+00
+   37-04            15c    3083      2.81  7.10e-36  12.58            0e+00
+   37-05            19g    2578      3.88  4.41e-24  11.88            0e+00
+   37-06            19g    2661      0.51  1.53e-05  -4.69            0e+00
+  37-07a            33c    1004      0.06  5.83e-53 -14.89            0e+00
+  37-07b            33c    1635      0.06 1.92e-111 -23.95            0e+00
+  37-07c            33c     915     14.20  3.50e-69  19.31            0e+00
+  37-07d            33c    2865     14.89 7.73e-177  29.22            0e+00
+   37-08            20d    1178      0.01 2.07e-162 -31.88            0e+00
+   37-09            27c     867      5.89  1.08e-34  12.46            0e+00
+  37-10a             29    8960      0.03  2.46e-99 -25.27            0e+00
+  37-10b             29    8838      2.74  1.45e-05   5.01            0e+00
+   37-11            31b    3497      0.34  1.23e-04  -4.29            5e-04
+ concordance
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+   Confirmed
+
+================================================================================
+GENERATING FIGURES
+================================================================================
+
+Creating Figure 37a: Forest plot of permutation z-scores...
+  Saved: 37a_zscore_forest_plot/{pdf,svg,jpg}
+Warning messages:
+1: In RColorBrewer::brewer.pal(n, pal) :
+  n too large, allowed maximum for palette Set2 is 8
+Returning the palette you asked for with that many colors
+
+2: Removed 5 rows containing missing values or values outside the scale range
+(`geom_point()`). 
+3: In RColorBrewer::brewer.pal(n, pal) :
+  n too large, allowed maximum for palette Set2 is 8
+Returning the palette you asked for with that many colors
+
+4: Removed 5 rows containing missing values or values outside the scale range
+(`geom_point()`). 
+5: In RColorBrewer::brewer.pal(n, pal) :
+  n too large, allowed maximum for palette Set2 is 8
+Returning the palette you asked for with that many colors
+
+6: Removed 5 rows containing missing values or values outside the scale range
+(`geom_point()`). 
+Creating Figure 37b: Null distribution histograms...
+  Saved: 37b_null_distribution_top4/{pdf,svg,jpg}
+Creating Figure 37c: Fisher vs permutation comparison table...
+  Saved: 37c_fisher_vs_permutation_table/{pdf,svg,jpg}
+Creating Figure 37d: log2(OR) vs z-score scatter...
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 37d_log2or_vs_zscore_scatter/{pdf,svg,jpg}
+
+================================================================================
+EXPORTING RESULTS
+================================================================================
+
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/permutation_37_summary.tsv
+
+===========================================================================
+  SECTION 37 COMPLETE
+===========================================================================
+
+Total tests: 15
+  Confirmed:     15
+  Weakened:      0
+  Strengthened:  0
+  Concordant NS: 0
+  Skipped:       0
+  Indeterminate: 0
+
+Outputs:
+  Cache: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/permutation_37_gene_level.rds
+  Table: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/permutation_37_summary.tsv
+  Plots: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/37_permutation_gene_level/
+
+Done.
+--------------------------------------------------------------------------------
+Exit code: 0
+End time: Thu Apr  2 20:47:43 PDT 2026
+=========================================

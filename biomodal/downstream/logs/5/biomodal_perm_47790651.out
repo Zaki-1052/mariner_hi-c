@@ -1,0 +1,140 @@
+=========================================
+Biomodal Permutation Test: Section 34
+=========================================
+Job ID: 47790651
+Node: exp-4-01
+CPUs: 64
+Permutations: 100000
+Start time: Thu Apr  2 19:43:10 PDT 2026
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/Rscript
+Rscript (R) version 4.4.2 (2024-10-31)
+
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream
+
+Running: Rscript scripts/viz_sections/section_34_permutation_dmr_chromatin_marks.R 100000
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-04-02 19:43:14 
+Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream 
+Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 genes
+Loading gene body hmC DMRs...
+  Loaded 20991 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10779 significant / 20991 total (51.4%)
+  CpG islands: 446 significant / 8910 total (5.0%)
+  CpG shores: 9837 significant / 32581 total (30.2%)
+  CpG shelves: 6914 significant / 29094 total (23.8%)
+  Promoters: 1700 significant / 20417 total (8.3%)
+  TSS regions: 195 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘jsonlite’ was built under R version 4.4.3 
+4: package ‘rtracklayer’ was built under R version 4.4.3 
+
+================================================================================
+SECTION 34: DMR x CHROMATIN MARK INTERVAL PERMUTATION TESTING
+================================================================================
+
+  Patched regioneReloaded::chooseHclustMet for small-matrix safety.
+regioneR version: 1.38.0
+regioneReloaded version: 1.8.0
+
+Permutation parameters: ntimes=100000, cores=64, ranFUN=randomizeRegions, per.chr=TRUE
+
+Constructing mm10 genome object (standard chromosomes)...
+The masked version of 'mm10' is not installed. Using the unmasked version. This means that no automatic masking will be available.
+  Genome: 20 chromosomes, total length 2.6 Gb
+
+Constructing Alist (DMR direction sets)...
+  mC Hyper DMRs: 7512 regions
+  mC Hypo DMRs:  3267 regions
+
+Constructing Blist (chromatin mark peak sets)...
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+  K119ub Ctrl: 20592 peaks
+  K119ub Mut: 20399 peaks
+  K119ub Gained (mut-only): 6172 peaks
+  K119ub Lost (ctrl-only):  6103 peaks
+  H3K27ac Ctrl: 13635 peaks
+  H3K27ac Mut: 15663 peaks
+  ATAC Up: 7618 regions (after chr filter)
+  ATAC Down: 3744 regions (after chr filter)
+  K119ub Ctrl: 20582 regions (after chr filter)
+  K119ub Mut: 20396 regions (after chr filter)
+  K119ub Gained: 6172 regions (after chr filter)
+  K119ub Lost: 6096 regions (after chr filter)
+  H3K27ac Ctrl: 13629 regions (after chr filter)
+  H3K27ac Mut: 15657 regions (after chr filter)
+
+Running crosswisePermTest (ntimes=100000, cores=64)...
+  Estimated runtime: 20-30 minutes
+[1] "Performing permutation tests for mC Hyper DMRs (1 of 2)"
+[1] "Performing permutation tests for mC Hypo DMRs (2 of 2)"
+  crosswisePermTest complete. Making crosswise matrix...
+[1] "method selected for hclustering: average"
+  average 
+0.8915904 
+[1] "method for hclustering (<=2 elements, skipping cophenetic): average"
+  Saved cache: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/permutation_34_dmr_marks.rds 
+
+Extracting per-cell permutation results...
+  Extracted 16 pairwise test results
+  Z-score range: [-8.77, 64.36]
+
+--- FIGURE 34a: Crosswise Z-Score Heatmap ---
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the regioneReloaded package.
+  Please report the issue to the authors. 
+  Saved: 34a_crosswise_dmr_x_marks/{pdf,svg,jpg}
+Warning message:
+`is.ggplot()` was deprecated in ggplot2 3.5.2.
+ℹ Please use `is_ggplot()` instead. 
+  Saved: 34a_crosswise_dmr_x_marks
+
+--- Recomputing original Fisher tests for comparison ---
+  12a (ATAC):    OR = 0.07, p = 1.82e-178
+  14a (K119ub):  OR = 0.70, p = 3.42e-16
+  14b (K119ub diff): OR = 4.47, p = 1.33e-97
+  19f (H3K27ac): OR = 1.36, p = 1.09e-05
+
+--- Building Fisher vs Permutation comparison table ---
+Error in cell_mapping$perm_n_hits[i] <- perm_results$n_hits[match_idx] : 
+  replacement has length zero
+Execution halted
+--------------------------------------------------------------------------------
+Exit code: 1
+End time: Fri Apr  3 03:22:22 PDT 2026
+=========================================

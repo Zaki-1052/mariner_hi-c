@@ -1,0 +1,66 @@
+=================================================================
+HOMER BED Preparation — DMRs + H2AK119ub + H3K27ac
+=================================================================
+Job ID: 49936828
+Node: exp-1-07
+Start time: Sun May 31 23:04:53 PDT 2026
+=================================================================
+
+Configuration:
+  DMR BED dir:     /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/modality/DMR_processed/CG/genes/bed
+  K119ub dir:      /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/new
+  DiffBind K119ub: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/diffbind/K119ub_diffbind_results_summit_appended_ap.txt
+  DiffBind K27ac:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/diffbind/K27ac_diffbind_results_summit_appended_ap.txt
+  Coordinated:     /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/coordinated_gene_characteristics.tsv
+  Output BED dir:  /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/results/homer_motif_enrichment/beds
+
+Input validation:
+  OK: mc_significant_hyper.bed (7523 lines)
+  OK: mc_significant_hypo.bed (3268 lines)
+  OK: hmc_significant_hyper.bed (1968 lines)
+  OK: hmc_significant_hypo.bed (9533 lines)
+  OK: H2AK119ub_up.bed (6164 lines)
+  OK: H2AK119ub_down.bed (1250 lines)
+  OK: K119ub_diffbind_results_summit_appended_ap.txt (41393 lines)
+  OK: K27ac_diffbind_results_summit_appended_ap.txt (25670 lines)
+  OK: coordinated_gene_characteristics.tsv (8372 lines)
+
+Converting DMR BEDs (adding chr prefix)...
+  mc_hyper_homer.bed:  7522 regions
+  mc_hypo_homer.bed:   3267 regions
+  hmc_hyper_homer.bed: 1967 regions
+  hmc_hypo_homer.bed:  9532 regions
+
+Extracting coordinated (Q4: mC up/hmC dn) and discordant (Q2: mC dn/hmC up) BEDs...
+  coordinated_q4.bed:  6598 regions
+  discordant_q2.bed:   1259 regions
+
+Copying K119ub differential peak BEDs...
+  k119ub_gained.bed:   6164 regions
+  k119ub_lost.bed:     1250 regions
+
+Extracting DiffBind K119ub significant summit windows (FDR < 0.05)...
+  diffbind_gained_fdr05.bed: 16710 regions
+  diffbind_lost_fdr05.bed:   5086 regions
+
+Extracting DiffBind K27ac significant summit windows (FDR < 0.05, |Fold| > 0.5)...
+  k27ac_gained_fdr05.bed: 3440 regions
+  k27ac_lost_fdr05.bed:   5457 regions
+
+Final BED validation:
+  OK: mc_hyper_homer.bed (7522 regions)
+  OK: mc_hypo_homer.bed (3267 regions)
+  OK: hmc_hyper_homer.bed (1967 regions)
+  OK: hmc_hypo_homer.bed (9532 regions)
+  OK: coordinated_q4.bed (6598 regions)
+  OK: discordant_q2.bed (1259 regions)
+  OK: k119ub_gained.bed (6164 regions)
+  OK: k119ub_lost.bed (1250 regions)
+  OK: diffbind_gained_fdr05.bed (16710 regions)
+  OK: diffbind_lost_fdr05.bed (5086 regions)
+  OK: k27ac_gained_fdr05.bed (3440 regions)
+  OK: k27ac_lost_fdr05.bed (5457 regions)
+
+All 12 BED files validated successfully.
+End time: Sun May 31 23:04:54 PDT 2026
+=================================================================

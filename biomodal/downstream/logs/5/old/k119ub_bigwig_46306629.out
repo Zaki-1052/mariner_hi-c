@@ -1,0 +1,128 @@
+=========================================
+K119ub Bigwig Signal Preprocessing
+=========================================
+Job ID: 46306629
+Node: exp-1-07
+Start time: Mon Feb  9 10:39:09 PST 2026
+=========================================
+
+Configuration:
+  Script: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/scripts/preprocess_k119ub_bigwig.R
+  Ctrl bigwig: /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_ctrl_merged.bw
+  Mut bigwig:  /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_mut_merged.bw
+  Output:      data/k119ub_gene_signal.tsv
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/Rscript
+Rscript (R) version 4.4.2 (2024-10-31)
+
+================================================================================
+K119UB BIGWIG SIGNAL PREPROCESSING
+================================================================================
+Date: 2026-02-09 10:39:12 
+Ctrl bigwig: /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_ctrl_merged.bw 
+Mut bigwig:  /expanse/lustre/projects/csd940/zalibhai/loop-class/H2AK119ub_mut_merged.bw 
+Output:      data/k119ub_gene_signal.tsv 
+
+Loading packages...
+Warning message:
+package ‘rtracklayer’ was built under R version 4.4.3 
+Packages loaded.
+
+Extracting gene body coordinates from TxDb...
+  66 genes were dropped because they have exons located on both strands
+  of the same reference sequence or on more than one reference sequence,
+  so cannot be represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a
+  GRangesList object, or use suppressMessages() to suppress this message.
+  Gene bodies: 23169 genes (standard chroms, >= 500bp)
+Extracting promoter coordinates (TSS +/- 2kb)...
+Warning message:
+In valid.GenomicRanges.seqinfo(x, suggest.trim = TRUE) :
+  GRanges object contains 5 out-of-bound ranges located on sequences
+  chr4_GL456350_random, chr4_JH584293_random, chr4_JH584295_random,
+  chr5_JH584296_random, and chrUn_GL456239. Note that ranges located on a
+  sequence whose length is unknown (NA) or on a circular sequence are not
+  considered out-of-bound (use seqlengths() and isCircular() to get the
+  lengths and circularity flags of the underlying sequences). You can use
+  trim() to trim these ranges. See ?`trim,GenomicRanges-method` for more
+  information.
+'select()' returned 1:1 mapping between keys and columns
+  Promoters: 23169 (one per gene, matched to gene bodies)
+Mapping ENTREZ IDs to gene symbols...
+'select()' returned 1:1 mapping between keys and columns
+  Mapped: 23150 / 23169 genes have symbols
+
+--- Gene body signal extraction ---
+  Computing mean signal from ctrl gene bodies (23169 regions)...
+    Range: [0.0184, 44.9985], Median: 0.9185, Non-zero: 23169 / 23169
+  Computing mean signal from mut gene bodies (23169 regions)...
+    Range: [0.0000, 31.6245], Median: 0.6796, Non-zero: 23168 / 23169
+
+--- Promoter signal extraction ---
+  Computing mean signal from ctrl promoters (23169 regions)...
+    Range: [0.0000, 32.3215], Median: 1.3360, Non-zero: 23153 / 23169
+  Computing mean signal from mut promoters (23169 regions)...
+    Range: [0.0000, 15.9643], Median: 1.3030, Non-zero: 23153 / 23169
+
+--- Between-condition normalization ---
+  Ctrl median (non-zero gene bodies): 0.918539
+  Mut median (non-zero gene bodies):  0.679751
+  Scale factor (ctrl/mut): 1.351287
+  Interpretation: mut signals multiplied by 1.3513 to match ctrl scale
+
+--- Computing log2 fold changes ---
+  Adaptive pseudocount: 0.220238 (5th pctl of non-zero signals)
+  Gene body signal classes:
+    quantifiable   : 21620 (93.3%)
+    one_condition  : 780 (3.4%)
+    no_signal      : 769 (3.3%)
+  Promoter signal classes:
+    quantifiable   : 21550 (93.0%)
+    one_condition  : 856 (3.7%)
+    no_signal      : 763 (3.3%)
+
+--- Building output table ---
+  Removed 19 genes without symbols (23150 remaining)
+
+Writing output to: data/k119ub_gene_signal.tsv
+  23150 genes written
+
+================================================================================
+PREPROCESSING SUMMARY
+================================================================================
+  Total genes:           23150
+  Pseudocount:           0.220238
+  Normalization factor:  1.351287 (applied to mut)
+  Raw median ctrl:       0.918539
+  Raw median mut:        0.679751
+
+  Gene body log2FC (quantifiable, n=21604):
+    Median: -0.0192
+    Mean:   +0.0102
+    SD:     0.3503
+    Range:  [-1.3620, +1.9203]
+    Positive (mut > ctrl): 10309 (47.7%)
+
+  Promoter log2FC (quantifiable, n=21534):
+    Median: +0.2199
+    Mean:   +0.2285
+    SD:     0.4752
+    Range:  [-0.9883, +2.2044]
+
+Preprocessing complete.
+
+=========================================
+Preprocessing complete!
+=========================================
+
+Output: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/data/k119ub_gene_signal.tsv
+Lines:  23151
+
+Next steps:
+  scp expanse:/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/data/k119ub_gene_signal.tsv biomodal/downstream/data/
+  cd biomodal/downstream/
+  Rscript scripts/viz_sections/section_18_k119ub_bigwig_signal.R
+
+End time: Mon Feb  9 10:40:04 PST 2026
+=========================================

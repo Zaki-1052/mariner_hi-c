@@ -1,0 +1,245 @@
+=========================================
+Biomodal Permutation Test: Section 35
+=========================================
+Job ID: 47790652
+Node: exp-5-03
+CPUs: 64
+Permutations: 100000
+Start time: Thu Apr  2 19:44:22 PDT 2026
+=========================================
+
+Environment check:
+/home/zalibhai/.conda/envs/mariner_env/bin/Rscript
+Rscript (R) version 4.4.2 (2024-10-31)
+
+Working directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream
+
+Running: Rscript scripts/viz_sections/section_35_permutation_atac_loops.R 100000
+--------------------------------------------------------------------------------
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-04-02 19:44:25 
+Base directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream 
+Output directory: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 genes
+Loading gene body hmC DMRs...
+  Loaded 20991 genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10779 significant / 20991 total (51.4%)
+  CpG islands: 446 significant / 8910 total (5.0%)
+  CpG shores: 9837 significant / 32581 total (30.2%)
+  CpG shelves: 6914 significant / 29094 total (23.8%)
+  Promoters: 1700 significant / 20417 total (8.3%)
+  TSS regions: 195 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Warning messages:
+1: package ‘tibble’ was built under R version 4.4.3 
+2: package ‘dplyr’ was built under R version 4.4.3 
+3: package ‘jsonlite’ was built under R version 4.4.3 
+4: package ‘rtracklayer’ was built under R version 4.4.3 
+  Patched regioneReloaded::chooseHclustMet for small-matrix safety.
+
+===========================================================================
+  SECTION 35: ATAC x CHROMATIN FEATURES + LOOP ANCHOR PERMUTATION
+===========================================================================
+
+Constructing mm10 genome object (standard chromosomes only)...
+The masked version of 'mm10' is not installed. Using the unmasked version. This means that no automatic masking will be available.
+  Genome: 20 chromosomes, 2,633,776,672 total bp
+
+--- Loading region sets ---
+
+Loading ATAC differential peaks...
+  ATAC Up: 7620 peaks
+  ATAC Down: 3744 peaks
+
+Loading ChIP-seq peak sets...
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+
+Loading MeCP2 differential peaks...
+  MeCP2 Up: 7686 peaks
+  MeCP2 Down: 1200 peaks
+
+Constructing DMR GRanges...
+  mC Hyper DMRs: 7512 regions
+  mC Hypo DMRs:  3267 regions
+
+Loading Hi-C loop data...
+  Loaded 2910 loops
+  Gained loop anchors: 2327 unique regions (from 1723 loops)
+  Lost loop anchors:   1520 unique regions (from 1187 loops)
+
+Constructing chromatin state regions...
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+'select()' returned 1:many mapping between keys and columns
+  Chromatin state region counts:
+    Active_Promoter: 6399 regions
+    Repressed_Promoter: 3246 regions
+    Bivalent_Promoter: 152 regions
+    Polycomb: 57 regions
+    Active_Enhancer: 50 regions
+    Poised_Enhancer: 93 regions
+    Other: 10994 regions
+
+--- Assembling region set lists ---
+
+35A: 2 x 6 = 12 pairwise tests
+35B: 2 x 7 = 14 pairwise tests
+35C: 2 x 6 = 12 pairwise tests
+
+Total pairwise permutation tests: 38
+
+--- Running permutation tests ---
+  Parameters: ntimes=100000, cores=64, ranFUN=randomizeRegions, per.chromosome=TRUE
+
+[35A] ATAC peaks x 6 ChIP marks (2x6)...
+[1] "Performing permutation tests for ATAC Up (1 of 2)"
+[1] "Performing permutation tests for ATAC Down (2 of 2)"
+[1] "method selected for hclustering: average"
+  average 
+0.9297738 
+[1] "method for hclustering (<=2 elements, skipping cophenetic): average"
+  35A complete.
+
+[35B] ATAC peaks x 7 chromatin states (2x7)...
+[1] "Performing permutation tests for ATAC Up (1 of 2)"
+[1] "Performing permutation tests for ATAC Down (2 of 2)"
+[1] "method selected for hclustering: average"
+  average 
+0.9398647 
+[1] "method for hclustering (<=2 elements, skipping cophenetic): average"
+  35B complete.
+
+[35C] Loop anchors x chromatin features (2x6)...
+[1] "Performing permutation tests for Gained Loop Anchors (1 of 2)"
+[1] "Performing permutation tests for Lost Loop Anchors (2 of 2)"
+[1] "method selected for hclustering: average"
+  average 
+0.8645882 
+[1] "method for hclustering (<=2 elements, skipping cophenetic): average"
+  35C complete.
+
+Saving permutation results to cache...
+  Saved: /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/permutation_35_atac_loops.rds
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chr1_GL456221_random, chrM, chrUn_JH584304, chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+3: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+4: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+5: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+6: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+7: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+8: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+9: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+10: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrX_GL456233_random
+  - in 'y': chrY
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+
+--- Generating Figure 35a: ATAC x ChIP marks heatmap ---
+Warning message:
+`aes_string()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`.
+ℹ See also `vignette("ggplot2-in-packages")` for more information.
+ℹ The deprecated feature was likely used in the regioneReloaded package.
+  Please report the issue to the authors. 
+  Saved: 35a_crosswise_atac_x_chip/{pdf,svg,jpg}
+--- Generating Figure 35b: ATAC x chromatin states heatmap ---
+  Saved: 35b_crosswise_atac_x_chromatin_state/{pdf,svg,jpg}
+--- Generating Figure 35c: Loop anchors x chromatin features heatmap ---
+  Saved: 35c_crosswise_loops_x_features/{pdf,svg,jpg}
+--- Generating Figure 35d: Fisher vs permutation comparison ---
+Error in h(simpleError(msg, call)) : 
+  error in evaluating the argument 'args' in selecting a method for function 'do.call': arguments imply differing number of rows: 1, 6, 0
+Calls: extract_perm_results -> do.call -> lapply -> lapply -> FUN -> data.frame
+Execution halted
+--------------------------------------------------------------------------------
+Exit code: 1
+End time: Fri Apr  3 14:52:22 PDT 2026
+=========================================
