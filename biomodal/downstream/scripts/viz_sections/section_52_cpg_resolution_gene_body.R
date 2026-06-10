@@ -12,6 +12,8 @@
 
 source("scripts/viz_sections/_shared_config.R")
 
+library(dunn.test)
+
 # =============================================================================
 # SECTION 52 CONFIGURATION
 # =============================================================================
@@ -215,7 +217,7 @@ p_52a <- ggplot(feat_summary, aes(x = feature_type, y = n_regions,
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 save_multiformat_ggplot(
-  p_52a, fig_52a_dir, "52a_feature_distribution",
+  p_52a, file.path(fig_52a_dir, "52a_feature_distribution"),
   width = 8, height = 6
 )
 
@@ -240,7 +242,7 @@ p_52b <- ggplot(feat_data, aes(x = feature_type, y = delta_mc * 100,
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 save_multiformat_ggplot(
-  p_52b, fig_52b_dir, "52b_delta_mc_by_feature",
+  p_52b, file.path(fig_52b_dir, "52b_delta_mc_by_feature"),
   width = 9, height = 6
 )
 
@@ -248,6 +250,35 @@ save_multiformat_ggplot(
 kw_mc <- kruskal.test(delta_mc ~ feature_type, data = feat_data)
 cat(sprintf("  Kruskal-Wallis (delta_mc ~ feature): chi-sq=%.2f, p=%s\n",
             kw_mc$statistic, format.pval(kw_mc$p.value, digits = 3)))
+
+cat("\n  Dunn's post-hoc pairwise tests (delta_mC, BH-adjusted):\n")
+mc_dunn <- dunn.test(feat_data$delta_mc, feat_data$feature_type,
+                     method = "bh", kw = FALSE, table = FALSE, list = TRUE)
+mc_posthoc <- data.frame(
+  comparison = mc_dunn$comparisons,
+  Z = round(mc_dunn$Z, 3),
+  p_raw = signif(mc_dunn$P, 3),
+  p_adj = signif(mc_dunn$P.adjusted, 3),
+  stringsAsFactors = FALSE
+)
+mc_posthoc <- mc_posthoc[order(mc_posthoc$p_adj), ]
+mc_sig <- mc_posthoc[mc_posthoc$p_adj < 0.05, ]
+cat(sprintf("  %d / %d pairs significant at q < 0.05:\n",
+            nrow(mc_sig), nrow(mc_posthoc)))
+if (nrow(mc_sig) > 0) {
+  for (i in seq_len(nrow(mc_sig))) {
+    cat(sprintf("    %-40s Z=%7.3f  q=%.2e\n",
+                mc_sig$comparison[i], mc_sig$Z[i], mc_sig$p_adj[i]))
+  }
+} else {
+  cat("    (none)\n")
+}
+cat("  Non-significant pairs:\n")
+mc_ns <- mc_posthoc[mc_posthoc$p_adj >= 0.05, ]
+for (i in seq_len(nrow(mc_ns))) {
+  cat(sprintf("    %-40s Z=%7.3f  q=%.3f\n",
+              mc_ns$comparison[i], mc_ns$Z[i], mc_ns$p_adj[i]))
+}
 
 # =============================================================================
 # FIGURE 52c: Delta hmC by Feature Type
@@ -270,13 +301,42 @@ p_52c <- ggplot(feat_data, aes(x = feature_type, y = delta_hmc * 100,
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 save_multiformat_ggplot(
-  p_52c, fig_52c_dir, "52c_delta_hmc_by_feature",
+  p_52c, file.path(fig_52c_dir, "52c_delta_hmc_by_feature"),
   width = 9, height = 6
 )
 
 kw_hmc <- kruskal.test(delta_hmc ~ feature_type, data = feat_data)
 cat(sprintf("  Kruskal-Wallis (delta_hmc ~ feature): chi-sq=%.2f, p=%s\n",
             kw_hmc$statistic, format.pval(kw_hmc$p.value, digits = 3)))
+
+cat("\n  Dunn's post-hoc pairwise tests (delta_hmC, BH-adjusted):\n")
+hmc_dunn <- dunn.test(feat_data$delta_hmc, feat_data$feature_type,
+                      method = "bh", kw = FALSE, table = FALSE, list = TRUE)
+hmc_posthoc <- data.frame(
+  comparison = hmc_dunn$comparisons,
+  Z = round(hmc_dunn$Z, 3),
+  p_raw = signif(hmc_dunn$P, 3),
+  p_adj = signif(hmc_dunn$P.adjusted, 3),
+  stringsAsFactors = FALSE
+)
+hmc_posthoc <- hmc_posthoc[order(hmc_posthoc$p_adj), ]
+hmc_sig <- hmc_posthoc[hmc_posthoc$p_adj < 0.05, ]
+cat(sprintf("  %d / %d pairs significant at q < 0.05:\n",
+            nrow(hmc_sig), nrow(hmc_posthoc)))
+if (nrow(hmc_sig) > 0) {
+  for (i in seq_len(nrow(hmc_sig))) {
+    cat(sprintf("    %-40s Z=%7.3f  q=%.2e\n",
+                hmc_sig$comparison[i], hmc_sig$Z[i], hmc_sig$p_adj[i]))
+  }
+} else {
+  cat("    (none)\n")
+}
+cat("  Non-significant pairs:\n")
+hmc_ns <- hmc_posthoc[hmc_posthoc$p_adj >= 0.05, ]
+for (i in seq_len(nrow(hmc_ns))) {
+  cat(sprintf("    %-40s Z=%7.3f  q=%.3f\n",
+              hmc_ns$comparison[i], hmc_ns$Z[i], hmc_ns$p_adj[i]))
+}
 
 # =============================================================================
 # FIGURE 52d: KEY_GENES Individual Locus Panels
@@ -346,7 +406,7 @@ if (nrow(key_data) > 0) {
     )
 
     save_multiformat_ggplot(
-      combined, fig_52d_dir, "52d_key_gene_loci",
+      combined, file.path(fig_52d_dir, "52d_key_gene_loci"),
       width = 14, height = ceiling(length(gene_panels) / 2) * 3.5
     )
   }
@@ -442,7 +502,7 @@ p_52e <- ggplot(profile_data, aes(x = bin_oriented, y = mean_delta * 100,
   theme(legend.position = c(0.85, 0.85))
 
 save_multiformat_ggplot(
-  p_52e, fig_52e_dir, "52e_metagene_profile",
+  p_52e, file.path(fig_52e_dir, "52e_metagene_profile"),
   width = 10, height = 6
 )
 
@@ -470,6 +530,14 @@ summary_table <- feat_data %>%
 table_path <- file.path(TABLES_DIR, "section52_feature_methylation.tsv")
 write.table(summary_table, table_path, sep = "\t", row.names = FALSE, quote = FALSE)
 cat(sprintf("  Wrote: %s (%d rows)\n", table_path, nrow(summary_table)))
+
+# Dunn's post-hoc results table
+mc_posthoc$modification <- "mC"
+hmc_posthoc$modification <- "hmC"
+posthoc_combined <- rbind(mc_posthoc, hmc_posthoc)
+posthoc_path <- file.path(TABLES_DIR, "section52_dunn_posthoc.tsv")
+write.table(posthoc_combined, posthoc_path, sep = "\t", row.names = FALSE, quote = FALSE)
+cat(sprintf("  Wrote: %s (%d rows)\n", posthoc_path, nrow(posthoc_combined)))
 
 # =============================================================================
 # DONE

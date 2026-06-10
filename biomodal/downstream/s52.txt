@@ -1,0 +1,93 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-10 04:02:37 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 52: SINGLE-CpG RESOLUTION GENE BODY ANALYSIS
+========================================================================
+
+  Feature mC:  Extract_mc_regional-frac_20260610_034039.tsv.gz
+  Feature hmC: Extract_hmc_regional-frac_20260610_034039.tsv.gz
+  Metagene mC:  Extract_mc_regional-frac_20260610_034137.tsv.gz
+  Metagene hmC: Extract_hmc_regional-frac_20260610_034137.tsv.gz
+
+Loading extract TSV files...
+  Extract_mc_regional-frac_20260610_034039.tsv.gz: 7480 rows x 13 cols
+  Extract_hmc_regional-frac_20260610_034039.tsv.gz: 7480 rows x 13 cols
+  Extract_mc_regional-frac_20260610_034137.tsv.gz: 12300 rows x 13 cols
+  Extract_hmc_regional-frac_20260610_034137.tsv.gz: 12300 rows x 13 cols
+  4 ctrl columns, 4 mut columns
+
+Computing per-feature methylation deltas...
+  6196 feature intervals with complete data across 123 genes.
+  Feature-type counts:
+
+               5UTR                Exon    SpliceSite_Donor SpliceSite_Acceptor 
+                 92                1567                1330                1341 
+             Intron                3UTR 
+               1742                 124 
+
+--- Figure 52a: Feature distribution overview ---
+  Saved: 52a_feature_distribution/{pdf,svg,jpg}
+
+--- Figure 52b: Delta mC by feature type ---
+  Saved: 52b_delta_mc_by_feature/{pdf,svg,jpg}
+  Kruskal-Wallis (delta_mc ~ feature): chi-sq=23.10, p=0.000322
+
+--- Figure 52c: Delta hmC by feature type ---
+  Saved: 52c_delta_hmc_by_feature/{pdf,svg,jpg}
+  Kruskal-Wallis (delta_hmc ~ feature): chi-sq=32.36, p=5.04e-06
+
+--- Figure 52d: KEY_GENES locus panels ---
+  533 features across 10 KEY_GENES found.
+  Saved: 52d_key_gene_loci/{pdf,svg,jpg}
+
+--- Figure 52e: Metagene profile ---
+  Saved: 52e_metagene_profile/{pdf,svg,jpg}
+  mC profile: 100 bins with data (mean n=122 genes/bin)
+  hmC profile: 100 bins with data (mean n=122 genes/bin)
+
+--- Writing summary table ---
+  Wrote: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/section52_feature_methylation.tsv (6196 rows)
+
+========================================================================
+SECTION 52 COMPLETE
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/52_cpg_resolution_gene_body
+  Table:   /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/section52_feature_methylation.tsv
+========================================================================
+
