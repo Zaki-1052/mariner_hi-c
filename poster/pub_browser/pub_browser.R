@@ -963,32 +963,30 @@ build_gene_model <- function(view_start, view_end, chr, region_gr,
     }
   }
 
-  p <- p +
-    # Intron backbone (thin black line; PI prefers ~0.1pt -- we use 0.15mm for JPEG legibility)
-    geom_segment(data = backbone_df,
-                 aes(x = x, xend = xend, y = y, yend = y),
-                 color = "black", linewidth = 0.15) +
-    # Exon blocks (filled black)
-    geom_rect(data = exon_df,
-              aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-              fill = "black", color = NA)
+  if (!is.null(backbone_df) && nrow(backbone_df) > 0L) {
+    p <- p +
+      geom_segment(data = backbone_df,
+                   aes(x = x, xend = xend, y = y, yend = y),
+                   color = "black", linewidth = 0.15) +
+      geom_rect(data = exon_df,
+                aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+                fill = "black", color = NA)
 
-  # Strand arrows (only if any present)
-  if (!is.null(arrow_df) && nrow(arrow_df) > 0L) {
-    p <- p + geom_segment(
-      data = arrow_df,
-      aes(x = x, xend = xend, y = y, yend = yend),
-      arrow = arrow(length = unit(2.0, "pt"), type = "open", ends = "last"),
-      color = "black", linewidth = 0.15
+    if (!is.null(arrow_df) && nrow(arrow_df) > 0L) {
+      p <- p + geom_segment(
+        data = arrow_df,
+        aes(x = x, xend = xend, y = y, yend = yend),
+        arrow = arrow(length = unit(2.0, "pt"), type = "open", ends = "last"),
+        color = "black", linewidth = 0.15
+      )
+    }
+
+    p <- p + geom_text(
+      data = symbol_df,
+      aes(x = x, y = y, label = label),
+      fontface = "italic", size = 2.7, color = "black"
     )
   }
-
-  # Italic gene symbols
-  p <- p + geom_text(
-    data = symbol_df,
-    aes(x = x, y = y, label = label),
-    fontface = "italic", size = 2.7, color = "black"
-  )
 
   p <- p +
     scale_x_continuous(limits = c(view_start, view_end), expand = c(0, 0)) +
@@ -1399,11 +1397,12 @@ main <- function() {
                                sparse = mk$sparse)
     raw_max <- max(c(ctrl_gr$score, mut_gr$score), na.rm = TRUE)
     if (raw_max <= 0 || !is.finite(raw_max)) raw_max <- 1
+    auto_ylim <- nice_ceiling(raw_max)
     mark_data[[mk$name]] <- list(
       ctrl   = ctrl_gr,
       mut    = mut_gr,
       color  = mk$color,
-      ylim   = nice_ceiling(raw_max),
+      ylim   = if (!is.null(mk$ylim)) mk$ylim else auto_ylim,
       diff   = mk$diff,
       sparse = mk$sparse
     )

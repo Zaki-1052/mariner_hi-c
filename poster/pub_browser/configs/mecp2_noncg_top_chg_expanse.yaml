@@ -1,0 +1,36 @@
+# poster/pub_browser/configs/mecp2_noncg_top_chg_expanse.yaml
+# Top CHG methylation peak at MeCP2 binding site (Expanse paths)
+# chr8:34684401-34684801 — MeCP2_Up, ctrl=0.58%, mut=4.13%
+
+genome: mm10
+region: 'chr8:34674000-34695000'
+extend_bp: 0
+labels: ['control', '*Bap1*^f/f^,Math1-cre']
+output: poster/pub_browser/output/mecp2_noncg/top_chg_chr8_34684401
+
+marks:
+  - name: MeCP2
+    color: '#D95F02'
+    ctrl: /expanse/lustre/projects/csd940/zalibhai/bigwigs/MeCP2Ctrl.bw
+    mut:  /expanse/lustre/projects/csd940/zalibhai/bigwigs/MeCP2Mut.bw
+
+  - name: 'mCHG'
+    color: '#7570B3'
+    ylim: 0.05
+    sparse: true
+    diff: true
+    ctrl:
+      - /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/CHG_mc/evoC-Bap1-ctrl-F.genome.mc_bedgraph.bw
+      - /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/CHG_mc/evoC-Bap1-ctrl-M.genome.mc_bedgraph.bw
+      - /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/CHG_mc/evoC-Bap1-ctrl-F-B2.genome.mc_bedgraph.bw
+      - /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/CHG_mc/evoC-Bap1-ctrl-M-B2.genome.mc_bedgraph.bw
+    mut:
+      - /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/CHG_mc/evoC-Bap1-mut-F.genome.mc_bedgraph.bw
+      - /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/CHG_mc/evoC-Bap1-mut-M.genome.mc_bedgraph.bw
+      - /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/CHG_mc/evoC-Bap1-mut-F-B2.genome.mc_bedgraph.bw
+      - /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/CHG_mc/evoC-Bap1-mut-M-B2.genome.mc_bedgraph.bw
+    average: true
+
+highlights:
+  - region: 'chr8:34684401-34684801'
+    label: 'MeCP2 peak (CHG 2.35%)'
