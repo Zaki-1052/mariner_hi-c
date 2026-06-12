@@ -1,0 +1,54 @@
+#!/bin/bash
+#SBATCH --job-name=export_chh_bdg
+#SBATCH --output=logs/export_bedgraph_chh_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=64G
+#SBATCH --time=18:00:00
+#SBATCH --account=csd940
+
+# Export per-sample CHH mC bedGraphs from Zarr store
+# CHG completed in ~4.5hr; CHH needs ~12hr (hit 12hr wall on combined job)
+#
+# Usage: sbatch export_bedgraph_chh.sb
+
+mkdir -p logs
+
+echo "========================================="
+echo "Zarr to bedGraph Export (CHH mC only)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate modality
+
+ZARR="/expanse/lustre/projects/csd940/zalibhai/biomodal/evoC-run/output/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/CHH/evoC_Bap1_run.genome.GRCm38_primary_assembly.dedup.CHH.zarrz"
+OUTDIR="/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bedgraph/CHH_mc"
+
+mkdir -p "${OUTDIR}"
+
+echo "Zarr: ${ZARR}"
+echo "Output: ${OUTDIR}"
+echo ""
+
+modality export bedgraph \
+  --zarr-path "${ZARR}" \
+  --modification-count-column mc \
+  --denominator-column total_c \
+  --tag genome \
+  --skip-rows-zero-counts \
+  --tabix \
+  --output-dir "${OUTDIR}"
+
+echo ""
+echo "CHH mC export complete: $(ls -1 ${OUTDIR}/*.gz 2>/dev/null | wc -l) files"
+echo ""
+echo "========================================="
+echo "End time: $(date)"
+echo "========================================="
