@@ -1,0 +1,116 @@
+#!/bin/bash
+#SBATCH --job-name=merge_meth_bw
+#SBATCH --output=logs/merge_methylation_bigwigs_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+
+# Merge per-sample methylation BigWigs into ctrl/mut group means
+# using deepTools bigwigAverage. Produces 8 merged BigWigs
+# (4 contexts x 2 conditions) for downstream computeMatrix.
+#
+# Usage: sbatch merge_noncg_bigwigs.sb
+# Requires: deepTools (available in mariner_env)
+
+mkdir -p logs
+
+echo "========================================="
+echo "Merge Methylation BigWigs (ctrl/mut)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+BWDIR="/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig"
+OUTDIR="${BWDIR}/merged"
+mkdir -p "${OUTDIR}"
+
+CTRL_SAMPLES=("evoC-Bap1-ctrl-F" "evoC-Bap1-ctrl-M" "evoC-Bap1-ctrl-F-B2" "evoC-Bap1-ctrl-M-B2")
+MUT_SAMPLES=("evoC-Bap1-mut-F" "evoC-Bap1-mut-M" "evoC-Bap1-mut-F-B2" "evoC-Bap1-mut-M-B2")
+
+TOTAL=0
+SUCCESS=0
+
+declare -A CONTEXT_DIRS
+CONTEXT_DIRS=(
+    ["CG_mc"]="mc"
+    ["CG_hmc"]="hmc"
+    ["CHG_mc"]="CHG_mc"
+    ["CHH_mc"]="CHH_mc"
+)
+
+declare -A CONTEXT_SUFFIX
+CONTEXT_SUFFIX=(
+    ["CG_mc"]=".genome.mc_bedgraph.bw"
+    ["CG_hmc"]=".genome.hmc_bedgraph.bw"
+    ["CHG_mc"]=".genome.mc_bedgraph.bw"
+    ["CHH_mc"]=".genome.mc_bedgraph.bw"
+)
+
+for CONTEXT in CG_mc CG_hmc CHG_mc CHH_mc; do
+    SUBDIR="${CONTEXT_DIRS[$CONTEXT]}"
+    SUFFIX="${CONTEXT_SUFFIX[$CONTEXT]}"
+    echo ""
+    echo "--- ${CONTEXT} ---"
+
+    for CONDITION in ctrl mut; do
+        TOTAL=$((TOTAL + 1))
+
+        if [[ "$CONDITION" == "ctrl" ]]; then
+            SAMPLES=("${CTRL_SAMPLES[@]}")
+        else
+            SAMPLES=("${MUT_SAMPLES[@]}")
+        fi
+
+        BW_LIST=()
+        MISSING=0
+        for S in "${SAMPLES[@]}"; do
+            BW="${BWDIR}/${SUBDIR}/${S}${SUFFIX}"
+            if [[ -f "$BW" ]]; then
+                BW_LIST+=("$BW")
+            else
+                echo "  WARNING: missing ${BW}"
+                MISSING=$((MISSING + 1))
+            fi
+        done
+
+        if [[ ${#BW_LIST[@]} -lt 2 ]]; then
+            echo "  SKIP ${CONTEXT} ${CONDITION}: fewer than 2 input files"
+            continue
+        fi
+
+        OUTFILE="${OUTDIR}/${CONTEXT}_${CONDITION}.bw"
+        echo "  Merging ${#BW_LIST[@]} files -> ${OUTFILE}"
+
+        bigwigAverage \
+            --bigwigs "${BW_LIST[@]}" \
+            --binSize 10 \
+            --numberOfProcessors 4 \
+            --outFileName "${OUTFILE}" 2>&1
+
+        if [[ -f "$OUTFILE" ]]; then
+            echo "    Done: $(du -h "$OUTFILE" | cut -f1)"
+            SUCCESS=$((SUCCESS + 1))
+        else
+            echo "    ERROR: bigwigAverage failed for ${CONTEXT} ${CONDITION}"
+        fi
+    done
+done
+
+echo ""
+echo "========================================="
+echo "Merge complete"
+echo "Merged: ${SUCCESS}/${TOTAL} files"
+echo "Output: ${OUTDIR}/"
+ls -lh "${OUTDIR}/"
+echo "End time: $(date)"
+echo "========================================="

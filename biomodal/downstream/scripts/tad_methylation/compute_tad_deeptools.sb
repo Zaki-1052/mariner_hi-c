@@ -1,0 +1,190 @@
+#!/bin/bash
+#SBATCH --job-name=tad_dt
+#SBATCH --output=logs/compute_tad_deeptools_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+
+# deepTools computeMatrix for meta-TAD profiles and boundary insulation plots.
+# Uses merged BigWigs from merge_noncg_bigwigs.sb.
+#
+# Usage:
+#   cd /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/biomodal/downstream
+#   sbatch scripts/tad_methylation/compute_tad_deeptools.sb [late|early]
+#
+# Prerequisite: merge_noncg_bigwigs.sb must have completed.
+
+mkdir -p logs data
+
+TIMEPOINT="${1:-late}"
+TAD_FILE="../../tads/results/${TIMEPOINT}/final/tadcompare_final_filtered.tsv"
+MERGED_DIR="/expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig/merged"
+OUTDIR="data/deeptools_tad_${TIMEPOINT}"
+
+echo "========================================="
+echo "deepTools TAD Methylation Profiles"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Timepoint: ${TIMEPOINT}"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+if [[ ! -f "$TAD_FILE" ]]; then
+    echo "ERROR: TAD file not found: ${TAD_FILE}"
+    exit 1
+fi
+
+source ~/.bashrc
+conda activate mariner_env
+
+mkdir -p "${OUTDIR}"
+
+# =========================================================================
+# Step 1: Reconstruct TAD domain BED and boundary BED from boundary TSV
+# =========================================================================
+
+echo "Reconstructing TAD domain BED from boundaries..."
+
+TAD_DOMAIN_BED="${OUTDIR}/tad_domains.bed"
+TAD_BOUNDARY_BED="${OUTDIR}/tad_boundaries.bed"
+
+python3 -c "
+import sys
+
+min_kb = 100
+autosomes = set('chr' + str(i) for i in range(1, 20))
+
+boundaries_by_chr = {}
+with open('${TAD_FILE}') as f:
+    header = f.readline()
+    for line in f:
+        fields = line.strip().split('\t')
+        chrom = fields[0]
+        if chrom not in autosomes:
+            continue
+        pos = int(fields[1])
+        boundaries_by_chr.setdefault(chrom, []).append(pos)
+
+# TAD domains: consecutive boundary pairs >= min_kb
+n_domains = 0
+with open('${TAD_DOMAIN_BED}', 'w') as out:
+    for chrom in sorted(boundaries_by_chr.keys()):
+        positions = sorted(boundaries_by_chr[chrom])
+        for i in range(len(positions) - 1):
+            start = positions[i]
+            end = positions[i + 1]
+            width_kb = (end - start) / 1000
+            if width_kb >= min_kb:
+                out.write(f'{chrom}\t{start}\t{end}\tTAD_{n_domains}\t{width_kb:.0f}\t.\n')
+                n_domains += 1
+print(f'  TAD domains: {n_domains}')
+
+# TAD boundaries: 10kb bins centered on each boundary
+n_bounds = 0
+with open('${TAD_BOUNDARY_BED}', 'w') as out:
+    for chrom in sorted(boundaries_by_chr.keys()):
+        for pos in sorted(boundaries_by_chr[chrom]):
+            out.write(f'{chrom}\t{max(0, pos-5000)}\t{pos+5000}\tBound_{n_bounds}\t0\t.\n')
+            n_bounds += 1
+print(f'  TAD boundaries: {n_bounds}')
+"
+
+echo ""
+
+# =========================================================================
+# Step 2: Verify merged BigWigs exist
+# =========================================================================
+
+echo "Checking merged BigWigs..."
+BIGWIGS=""
+LABELS=""
+MISSING=0
+
+for CTX in CG_mc CG_hmc CHG_mc CHH_mc; do
+    for COND in ctrl mut; do
+        BW="${MERGED_DIR}/${CTX}_${COND}.bw"
+        if [[ -f "$BW" ]]; then
+            BIGWIGS="${BIGWIGS} ${BW}"
+            LABELS="${LABELS} ${CTX}_${COND}"
+            echo "  Found: ${CTX}_${COND} ($(du -h "$BW" | cut -f1))"
+        else
+            echo "  MISSING: ${BW}"
+            MISSING=$((MISSING + 1))
+        fi
+    done
+done
+
+if [[ $MISSING -gt 0 ]]; then
+    echo ""
+    echo "WARNING: ${MISSING} merged BigWigs missing. Run merge_noncg_bigwigs.sb first."
+    echo "Continuing with available files..."
+fi
+
+if [[ -z "$BIGWIGS" ]]; then
+    echo "ERROR: No merged BigWigs found. Exiting."
+    exit 1
+fi
+
+# =========================================================================
+# Step 3: computeMatrix scale-regions (meta-TAD profile)
+# =========================================================================
+
+echo ""
+echo "--- computeMatrix scale-regions (meta-TAD) ---"
+
+PYTHONUNBUFFERED=1 computeMatrix scale-regions \
+    -R "${TAD_DOMAIN_BED}" \
+    -S ${BIGWIGS} \
+    --samplesLabel ${LABELS} \
+    --regionBodyLength 5000 \
+    --upstream 2500 \
+    --downstream 2500 \
+    --binSize 100 \
+    --missingDataAsZero \
+    --numberOfProcessors 8 \
+    -o "${OUTDIR}/tad_metatad_matrix.gz" \
+    --outFileNameMatrix "${OUTDIR}/tad_metatad_matrix_values.tab" \
+    2>&1
+
+echo "  scale-regions exit code: $?"
+
+# =========================================================================
+# Step 4: computeMatrix reference-point (boundary insulation)
+# =========================================================================
+
+echo ""
+echo "--- computeMatrix reference-point (boundary) ---"
+
+PYTHONUNBUFFERED=1 computeMatrix reference-point \
+    --referencePoint center \
+    -R "${TAD_BOUNDARY_BED}" \
+    -S ${BIGWIGS} \
+    --samplesLabel ${LABELS} \
+    --upstream 50000 \
+    --downstream 50000 \
+    --binSize 5000 \
+    --missingDataAsZero \
+    --numberOfProcessors 8 \
+    -o "${OUTDIR}/tad_boundary_matrix.gz" \
+    --outFileNameMatrix "${OUTDIR}/tad_boundary_matrix_values.tab" \
+    2>&1
+
+echo "  reference-point exit code: $?"
+
+# =========================================================================
+# Summary
+# =========================================================================
+
+echo ""
+echo "========================================="
+echo "deepTools complete"
+echo "Output directory: ${OUTDIR}/"
+ls -lh "${OUTDIR}/"
+echo "End time: $(date)"
+echo "========================================="
