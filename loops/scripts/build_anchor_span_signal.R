@@ -39,7 +39,7 @@ suppressPackageStartupMessages({
 
 CONFIG <- list(
   spine_tsv   = "loops/outputs/250402-late_outputs/merged_loops/merged_all_results.tsv",
-  bigwig_dir  = "/Users/zakiralibhai/sdsc/bigwigs",
+  bigwig_dir  = "/expanse/lustre/projects/csd940/zalibhai/bigwigs",   # HPC; override locally with --bigwig-dir
   out_dir     = "loops/output/master_loop_table/late",
   out_file    = "anchor_span_signal.tsv",
 
