@@ -1,0 +1,61 @@
+================================================================================
+BUILD MASTER ANNOTATED LOOP LIST
+================================================================================
+
+[1] Significant spine
+  Spine: 39344 total -> 7981 significant (FDR < 0.05)
+    up_in_mutant=4253  down_in_mutant=3728
+
+[2] Geometry
+  span_length (start2-end1): median=300000  min=30000  max=98675000 bp
+
+[3] Chromatin-state annotation (per-anchor ChIP + 8-state types)
+  Loading ChIP peak beds...
+  h3k27ac:                 15105 regions  (H3K27acCerebellumLate2.bed)
+  h3k27me3:                15809 regions  (H3K27me3CerebellumLate1.bed)
+  h3k4me1:                113781 regions  (H3K4me1CerebellumLate1.bed)
+  h3k4me3:                  6581 regions  (H3K4me3CerebellumLate2.bed)
+  bivalent:                  318 regions  (Bivalent_Cerebellum_Late.bed)
+  ctcf:                    32487 regions  (CTCF.bed)
+  ctcf_motif:             114081 regions  (ctcf_motifs_mm10.bed)
+  Computing TSS distances (TxDb mm10 knownGene)...
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+
+[4] Loop class (structural / CRE / mixed / unclassified)
+  promoter(pp):            24515 regions  (mm10_knownGene_pp.bed)
+
+         CRE        mixed   structural unclassified 
+        1294          599         3537         2551 
+
+[5] SE_anchor
+  super-enhancers:          1046 regions  (Superenhancers_P60.bed)
+  SE_anchor TRUE: 688 (8.6%)
+
+[6] shared_anchor (loop-switching loci, re-derived on this set)
+  Shared (loop-switching) loci: 671 (from 7456 lost + 8506 gained anchors)
+  shared_anchor TRUE: 2250 (28.2%)
+
+[7] DEG_status + nearest gene (gencode vM25)
+  DEGs: 2127 (padj < 0.05, |log2FC| > 0)
+  DEG symbol -> gencode coordinate match: 1896 / 2127 (89.1%)
+  DEG_status TRUE: 2297 (28.8%)
+
+[8] k-means cluster + clust6 short/long
+  Cluster join: 7935 matched, 46 NA
+
+[9] Assembling master table
+
+--------------------------------------------------------------------------------
+  Wrote loops/output/master_loop_table/late/significant_loops.tsv  (7981 rows)
+  Wrote loops/output/master_loop_table/late/master_annotated_loops.tsv  (7981 rows x 63 cols)
+  cluster_label:
+
+      clust2       clust3       clust4       clust5  clust6_long clust6_short 
+         851         1852         2732          649          743         1108 
+        <NA> 
+          46 
+Done.
