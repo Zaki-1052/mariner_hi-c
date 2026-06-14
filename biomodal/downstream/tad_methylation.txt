@@ -1,0 +1,119 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-13 17:41:12 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+================================================================================
+SECTION 54: TAD METHYLATION ORGANIZATION
+================================================================================
+
+Loaded 12141 TAD domains from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/data/tad_methylation_signal_late.tsv
+  Differential: NA (NA%)
+  Width range: 100 - 3440 kb (median: 150 kb)
+
+--- 54a: Meta-TAD profile ---
+  Saved: 54a_metatad_signal/{pdf,svg,jpg}
+  54a saved.
+--- 54b: Boundary insulation ---
+  CG 5mC vs CHG 5mC insulation: W=147264692, p=0.00e+00
+  CG 5mC vs CHH 5mC insulation: W=147220854, p=0.00e+00
+  Saved: 54b_boundary_insulation/{pdf,svg,jpg}
+  54b saved.
+--- 54c: Intra-TAD CV ---
+  CG 5mC vs CHG 5mC CV: W=773, p=0.00e+00
+  CG 5mC vs CHH 5mC CV: W=3995, p=0.00e+00
+  Saved: 54c_intratad_cv/{pdf,svg,jpg}
+  54c saved.
+--- 54d: Inter/Intra variance ratio ---
+  Saved: 54d_variance_ratio/{pdf,svg,jpg}
+  Variance ratios:
+    CG 5mC (Control): 1.0178 [NA, NA]
+    CG 5mC (Mutant): 1.0338 [NA, NA]
+    CG 5hmC (Control): 2.0780 [NA, NA]
+    CG 5hmC (Mutant): 2.0703 [NA, NA]
+    CHG 5mC (Control): 0.0250 [NA, NA]
+    CHG 5mC (Mutant): 0.0528 [NA, NA]
+    CHH 5mC (Control): 0.0248 [NA, NA]
+    CHH 5mC (Mutant): 0.0582 [NA, NA]
+  54d saved.
+--- 54e: Boundary score correlation ---
+  Saved: 54e_boundary_correlation/{pdf,svg,jpg}
+  54e saved.
+--- 54f: Differential TAD overlay ---
+  CG 5mC diff vs non-diff log2FC: W=14420585, p=2.98e-08
+  CG 5hmC diff vs non-diff log2FC: W=16459660, p=1.83e-09
+  CHG 5mC diff vs non-diff log2FC: W=14017756, p=5.15e-01
+  CHH 5mC diff vs non-diff log2FC: W=12922190, p=2.05e-01
+  Saved: 54f_differential_overlay/{pdf,svg,jpg}
+  54f saved.
+--- 54g: Boundary type stratification ---
+  Saved: 54g_boundary_type/{pdf,svg,jpg}
+  54g saved.
+--- 54h: Cross-context FC correlation ---
+  CG vs CHG 5mC log2FC: rho=-0.014, p=1.44e-01
+  CG vs CHH 5mC log2FC: rho=-0.025, p=8.80e-03
+  Saved: 54h_cross_context_fc/{pdf,svg,jpg}
+  54h saved.
+--- 54i: Summary table ---
+  Summary table written: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/54_tad_methylation_organization_summary.tsv
+        context condition median_signal median_cv median_insulation
+cg_mc    CG 5mC   Control    0.00519405 0.2818020        0.00089785
+cg_mc1   CG 5mC    Mutant    0.00525467 0.2767290        0.00087143
+cg_hmc  CG 5hmC   Control    0.00066270 0.4811745        0.00025388
+cg_hmc1 CG 5hmC    Mutant    0.00065823 0.4969020        0.00024288
+chg_mc  CHG 5mC   Control    0.00000000 4.0000000        0.00000000
+chg_mc1 CHG 5mC    Mutant    0.00000000 4.0000000        0.00000000
+chh_mc  CHH 5mC   Control    0.00000000 4.0000000        0.00000077
+chh_mc1 CHH 5mC    Mutant   -0.00000001 4.0000000        0.00000077
+        variance_ratio
+cg_mc       1.01775616
+cg_mc1      1.03378436
+cg_hmc      2.07797046
+cg_hmc1     2.07025199
+chg_mc      0.02503140
+chg_mc1     0.05283052
+chh_mc      0.02481225
+chh_mc1     0.05817884
+--- 54j: Composite panel ---
+  Saved: 54j_composite/{pdf,svg,jpg}
+  54j saved.
+
+================================================================================
+SECTION 54 COMPLETE
+Output: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/54_tad_methylation_organization
+Figures: 0 panels generated
+================================================================================

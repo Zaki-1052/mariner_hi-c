@@ -1,0 +1,141 @@
+=========================================
+TAD Methylation Signal Extraction
+=========================================
+Job ID: 50755006
+Node: exp-2-42
+Timepoint: late
+TAD file: ../../tads/results/late/final/tadcompare_final_filtered.tsv
+BigWig dir: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig
+Output: data/tad_methylation_signal_late.tsv
+Start time: Fri Jun 12 10:15:13 PDT 2026
+=========================================
+
+================================================================================
+TAD METHYLATION SIGNAL PREPROCESSING
+================================================================================
+Date: 2026-06-12 10:15:16 
+TAD file:   ../../tads/results/late/final/tadcompare_final_filtered.tsv 
+Timepoint:  late 
+BigWig dir: /expanse/lustre/projects/csd940/zalibhai/biomodal/modality/exports/bigwig 
+Output:     data/tad_methylation_signal_late.tsv 
+Min domain: 100 kb
+
+Loading packages...
+Warning message:
+package ‘rtracklayer’ was built under R version 4.4.3 
+Packages loaded.
+
+Checking BigWig availability:
+  cg_mc: 8 / 8 samples found
+  cg_hmc: 8 / 8 samples found
+  chg_mc: 8 / 8 samples found
+  chh_mc: 8 / 8 samples found
+
+Reconstructing TAD domains from boundaries...
+  Raw boundaries: 21755 (autosomes)
+  Reconstructed domains (>= 100 kb): 12141
+  Differential: NA (NA%)
+  Width range: 100 - 3440 kb (median: 150 kb)
+
+================================================================================
+SIGNAL EXTRACTION
+================================================================================
+
+
+--- Context: cg_mc ---
+  Per-sample domain means:
+    ctrl:evoC-Bap1-ctrl-F (12141 regions)... median=0.005189, non-zero=12112/12141
+    ctrl:evoC-Bap1-ctrl-M (12141 regions)... median=0.005193, non-zero=12113/12141
+    ctrl:evoC-Bap1-ctrl-F-B2 (12141 regions)... median=0.005198, non-zero=12105/12141
+    ctrl:evoC-Bap1-ctrl-M-B2 (12141 regions)... median=0.005201, non-zero=12108/12141
+    mut:evoC-Bap1-mut-F (12141 regions)... median=0.005261, non-zero=12118/12141
+    mut:evoC-Bap1-mut-M (12141 regions)... median=0.005255, non-zero=12113/12141
+    mut:evoC-Bap1-mut-F-B2 (12141 regions)... median=0.005245, non-zero=12107/12141
+    mut:evoC-Bap1-mut-M-B2 (12141 regions)... median=0.005254, non-zero=12112/12141
+  cg_mc: ctrl_median=0.005194, mut_median=0.005255, pseudocount=3.20e-03
+  Intra-TAD CV:
+    Computing ctrl CV from evoC-Bap1-ctrl-F
+    ctrl CV: median=0.2818, non-NA=12112/12141
+    Computing mut CV from evoC-Bap1-mut-F
+    mut CV: median=0.2767, non-NA=12118/12141
+  Within-domain variance:
+    ctrl within-var: median=2.27e-06
+    mut within-var: median=2.22e-06
+  Boundary insulation (50kb flanks):
+    left_inside (12141 regions)... median=0.005161, non-zero=12084/12141
+    left_outside (12141 regions)... median=0.005165, non-zero=12081/12141
+    right_inside (12141 regions)... median=0.005146, non-zero=12074/12141
+    right_outside (12141 regions)... median=0.005171, non-zero=12089/12141
+    left_inside (12141 regions)... median=0.005228, non-zero=12091/12141
+    left_outside (12141 regions)... median=0.005235, non-zero=12082/12141
+    right_inside (12141 regions)... median=0.005217, non-zero=12078/12141
+    right_outside (12141 regions)... median=0.005247, non-zero=12090/12141
+
+--- Context: cg_hmc ---
+  Per-sample domain means:
+    ctrl:evoC-Bap1-ctrl-F (12141 regions)... median=0.000670, non-zero=12096/12141
+    ctrl:evoC-Bap1-ctrl-M (12141 regions)... median=0.000669, non-zero=12093/12141
+    ctrl:evoC-Bap1-ctrl-F-B2 (12141 regions)... median=0.000660, non-zero=12097/12141
+    ctrl:evoC-Bap1-ctrl-M-B2 (12141 regions)... median=0.000652, non-zero=12097/12141
+    mut:evoC-Bap1-mut-F (12141 regions)... median=0.000655, non-zero=12099/12141
+    mut:evoC-Bap1-mut-M (12141 regions)... median=0.000664, non-zero=12097/12141
+    mut:evoC-Bap1-mut-F-B2 (12141 regions)... median=0.000654, non-zero=12094/12141
+    mut:evoC-Bap1-mut-M-B2 (12141 regions)... median=0.000664, non-zero=12101/12141
+  cg_hmc: ctrl_median=0.000663, mut_median=0.000658, pseudocount=1.02e-04
+  Intra-TAD CV:
+    Computing ctrl CV from evoC-Bap1-ctrl-F
+    ctrl CV: median=0.4812, non-NA=12096/12141
+    Computing mut CV from evoC-Bap1-mut-F
+    mut CV: median=0.4969, non-NA=12099/12141
+  Within-domain variance:
+    ctrl within-var: median=1.04e-07
+    mut within-var: median=1.03e-07
+  Boundary insulation (50kb flanks):
+    left_inside (12141 regions)... median=0.000644, non-zero=12066/12141
+    left_outside (12141 regions)... median=0.000642, non-zero=12071/12141
+    right_inside (12141 regions)... median=0.000633, non-zero=12069/12141
+    right_outside (12141 regions)... median=0.000660, non-zero=12069/12141
+    left_inside (12141 regions)... median=0.000627, non-zero=12069/12141
+    left_outside (12141 regions)... median=0.000624, non-zero=12071/12141
+    right_inside (12141 regions)... median=0.000616, non-zero=12069/12141
+    right_outside (12141 regions)... median=0.000643, non-zero=12068/12141
+
+--- Context: chg_mc ---
+  Per-sample domain means:
+    ctrl:evoC-Bap1-ctrl-F (12141 regions)... median=0.000000, non-zero=1462/12141
+    ctrl:evoC-Bap1-ctrl-M (12141 regions)... median=0.000000, non-zero=1326/12141
+    ctrl:evoC-Bap1-ctrl-F-B2 (12141 regions)... median=0.000000, non-zero=1462/12141
+    ctrl:evoC-Bap1-ctrl-M-B2 (12141 regions)... median=0.000000, non-zero=1695/12141
+    mut:evoC-Bap1-mut-F (12141 regions)... median=0.000000, non-zero=1635/12141
+    mut:evoC-Bap1-mut-M (12141 regions)... median=0.000000, non-zero=1637/12141
+    mut:evoC-Bap1-mut-F-B2 (12141 regions)... median=0.000000, non-zero=1462/12141
+    mut:evoC-Bap1-mut-M-B2 (12141 regions)... median=0.000000, non-zero=1731/12141
+  chg_mc: ctrl_median=0.000000, mut_median=0.000000, pseudocount=1.00e-06
+  Intra-TAD CV:
+    Computing ctrl CV from evoC-Bap1-ctrl-F
+    ctrl CV: median=4.0000, non-NA=1462/12141
+    Computing mut CV from evoC-Bap1-mut-F
+    mut CV: median=4.0000, non-NA=1635/12141
+  Within-domain variance:
+    ctrl within-var: median=0.00e+00
+    mut within-var: median=0.00e+00
+  Boundary insulation (50kb flanks):
+    left_inside (12141 regions)... median=0.000000, non-zero=581/12141
+    left_outside (12141 regions)... median=0.000000, non-zero=533/12141
+    right_inside (12141 regions)... median=0.000000, non-zero=574/12141
+    right_outside (12141 regions)... median=0.000000, non-zero=565/12141
+    left_inside (12141 regions)... median=0.000000, non-zero=638/12141
+    left_outside (12141 regions)... median=0.000000, non-zero=644/12141
+    right_inside (12141 regions)... median=0.000000, non-zero=650/12141
+    right_outside (12141 regions)... median=0.000000, non-zero=654/12141
+
+--- Context: chh_mc ---
+  Per-sample domain means:
+    ctrl:evoC-Bap1-ctrl-F (12141 regions)... median=0.000000, non-zero=3020/12141
+    ctrl:evoC-Bap1-ctrl-M (12141 regions).../cm/local/apps/slurm/var/spool/job50755006/slurm_script: line 54: 2884133 Killed                  Rscript scripts/tad_methylation/compute_tad_methylation.R --tad-file "${TAD_FILE}" --timepoint "${TIMEPOINT}" --bw-dir "${BW_DIR}" --output "${OUTPUT}" --min-domain-kb 100
+
+=========================================
+Exit code: 137
+End time: Fri Jun 12 10:51:35 PDT 2026
+=========================================
+slurmstepd: error: Detected 1 oom_kill event in StepId=50755006.batch. Some of the step tasks have been OOM Killed.

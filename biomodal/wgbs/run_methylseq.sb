@@ -1,0 +1,97 @@
+#!/bin/bash
+# biomodal/wgbs/run_methylseq.sb
+# SLURM submission script for nf-core/methylseq with Bismark on Expanse
+# WGBS non-CG methylation analysis, BAP1-KO mouse cerebellum (mm10)
+#
+# Usage: sbatch run_methylseq.sb
+
+#SBATCH --job-name="methylseq"
+#SBATCH --output="logs/methylseq_%j.out"
+#SBATCH --error="logs/methylseq_%j.err"
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
+#SBATCH --account=csd940
+#SBATCH --export=ALL
+#SBATCH --time=48:00:00
+
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
+
+log "Starting nf-core/methylseq pipeline"
+log "SLURM Job ID: $SLURM_JOBID"
+
+module reset
+module load singularitypro/4.1.2
+
+eval "$(conda shell.bash hook)" 2>/dev/null || true
+conda activate env_nf
+
+if ! command -v nextflow &> /dev/null; then
+    log "ERROR: Nextflow not found in PATH"
+    exit 1
+fi
+
+log "Nextflow version: $(nextflow -version 2>&1 | head -3)"
+
+export NXF_SINGULARITY_CACHEDIR="/expanse/lustre/scratch/$USER/temp_project/.singularity"
+export NXF_WORK="/expanse/lustre/scratch/$USER/temp_project/work_methylseq"
+export NXF_SINGULARITY_RUNOPTIONS="--bind /scratch,/expanse"
+export NXF_ANSI_LOG=false
+
+mkdir -p "$NXF_SINGULARITY_CACHEDIR"
+mkdir -p "$NXF_WORK"
+mkdir -p logs
+
+BASE_DIR="/expanse/lustre/projects/csd940/zalibhai/methylseq"
+INPUT_CSV="${BASE_DIR}/samplesheet.csv"
+OUTPUT_DIR="${BASE_DIR}/results"
+
+if [ ! -f "$INPUT_CSV" ]; then
+    log "ERROR: Sample sheet not found: $INPUT_CSV"
+    exit 1
+fi
+
+log "Sample sheet: $INPUT_CSV"
+log "Output directory: $OUTPUT_DIR"
+
+START_TIME=$(date +%s)
+
+nextflow run nf-core/methylseq \
+    -r 4.2.0 \
+    -c "${BASE_DIR}/nextflow.config" \
+    -profile singularity \
+    -resume \
+    --input "$INPUT_CSV" \
+    --outdir "$OUTPUT_DIR" \
+    --genome GRCm38 \
+    --aligner bismark \
+    --cytosine_report \
+    --comprehensive \
+    --save_reference \
+    --save_align_intermeds \
+    --save_trimmed \
+    --unmapped \
+    --run_qualimap \
+    --run_preseq \
+    --no_overlap \
+    -work-dir "$NXF_WORK"
+
+EXIT_CODE=$?
+
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+HOURS=$((DURATION / 3600))
+MINUTES=$(((DURATION % 3600) / 60))
+
+log "Pipeline completed in ${HOURS}h ${MINUTES}m with exit code: $EXIT_CODE"
+
+if [ $EXIT_CODE -eq 0 ]; then
+    log "SUCCESS: Results at $OUTPUT_DIR"
+else
+    log "FAILURE: Check logs at ${PWD}/logs/methylseq_${SLURM_JOBID}.out"
+    log "Work directory: $NXF_WORK"
+fi
+
+exit $EXIT_CODE
