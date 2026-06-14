@@ -1,0 +1,114 @@
+#!/bin/bash
+# biomodal/wgbs/download_fastqs.sb
+# Download WGBS FASTQs from sequencing facility FTP to Expanse
+#
+# Usage: sbatch download_fastqs.sb
+#
+# BEFORE RUNNING: Update FTP_BASE with the URL from the sequencing facility,
+# and update the file list in the download section below.
+
+#SBATCH --job-name="dl_wgbs"
+#SBATCH --output="logs/download_fastqs_%j.out"
+#SBATCH --error="logs/download_fastqs_%j.err"
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+#SBATCH --time=24:00:00
+#SBATCH --account=csd940
+
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
+
+log "Starting WGBS FASTQ download"
+log "SLURM Job ID: $SLURM_JOBID"
+
+# ============================================================
+# CONFIGURATION — UPDATE THESE BEFORE RUNNING
+# ============================================================
+
+# FTP URL from sequencing facility (IGM pattern shown as example)
+# Format: ftp://user:password@igm-storage.ucsd.edu/RUN_ID
+FTP_BASE="ftp://UPDATE_USER:UPDATE_PASS@igm-storage.ucsd.edu/UPDATE_RUN_ID"
+
+TARGET_DIR="/expanse/lustre/projects/csd940/zalibhai/methylseq/fastqs"
+
+# ============================================================
+
+mkdir -p "$TARGET_DIR"
+mkdir -p logs
+
+cd "$TARGET_DIR"
+
+download_file() {
+    local remote_name="$1"
+    local local_name="$2"
+
+    log "Downloading: $remote_name -> $local_name"
+
+    if [ -f "$local_name" ]; then
+        local existing_size=$(stat -c%s "$local_name" 2>/dev/null || stat -f%z "$local_name" 2>/dev/null)
+        if [ "$existing_size" -gt 0 ]; then
+            log "SKIP: $local_name already exists (${existing_size} bytes)"
+            return 0
+        fi
+    fi
+
+    if wget -q --tries=3 --timeout=300 "${FTP_BASE}/${remote_name}" -O "${local_name}"; then
+        local size=$(stat -c%s "$local_name" 2>/dev/null || stat -f%z "$local_name" 2>/dev/null)
+        log "SUCCESS: $local_name (${size} bytes)"
+        return 0
+    else
+        log "FAILED: $remote_name"
+        rm -f "$local_name"
+        return 1
+    fi
+}
+
+DOWNLOADED=0
+FAILED=0
+
+# ============================================================
+# FILE LIST — UPDATE WITH ACTUAL FILENAMES FROM FACILITY
+# ============================================================
+# Pattern from previous runs (adapt sample names + lane IDs):
+#
+# download_file "ORIGINAL_FILENAME_R1_001.fastq.gz" "SAMPLE_L00N_R1_001.fastq.gz"
+# download_file "ORIGINAL_FILENAME_R2_001.fastq.gz" "SAMPLE_L00N_R2_001.fastq.gz"
+#
+# Example for 4 WGBS samples (ctrl_F, ctrl_M, mut_F, mut_M):
+
+# --- ctrl_F ---
+# download_file "WGBS_ctrl_F_S1_L001_R1_001.fastq.gz" "ctrl_F_L001_R1_001.fastq.gz" && ((DOWNLOADED++)) || ((FAILED++))
+# download_file "WGBS_ctrl_F_S1_L001_R2_001.fastq.gz" "ctrl_F_L001_R2_001.fastq.gz" && ((DOWNLOADED++)) || ((FAILED++))
+
+# --- ctrl_M ---
+# download_file "WGBS_ctrl_M_S2_L001_R1_001.fastq.gz" "ctrl_M_L001_R1_001.fastq.gz" && ((DOWNLOADED++)) || ((FAILED++))
+# download_file "WGBS_ctrl_M_S2_L001_R2_001.fastq.gz" "ctrl_M_L001_R2_001.fastq.gz" && ((DOWNLOADED++)) || ((FAILED++))
+
+# --- mut_F ---
+# download_file "WGBS_mut_F_S3_L001_R1_001.fastq.gz" "mut_F_L001_R1_001.fastq.gz" && ((DOWNLOADED++)) || ((FAILED++))
+# download_file "WGBS_mut_F_S3_L001_R2_001.fastq.gz" "mut_F_L001_R2_001.fastq.gz" && ((DOWNLOADED++)) || ((FAILED++))
+
+# --- mut_M ---
+# download_file "WGBS_mut_M_S4_L001_R1_001.fastq.gz" "mut_M_L001_R1_001.fastq.gz" && ((DOWNLOADED++)) || ((FAILED++))
+# download_file "WGBS_mut_M_S4_L001_R2_001.fastq.gz" "mut_M_L001_R2_001.fastq.gz" && ((DOWNLOADED++)) || ((FAILED++))
+
+# ============================================================
+
+log "=== Download Summary ==="
+log "Downloaded: $DOWNLOADED"
+log "Failed: $FAILED"
+log "Directory: $TARGET_DIR"
+
+ls -lhS "$TARGET_DIR"/*.fastq.gz 2>/dev/null || log "No fastq.gz files found"
+
+TOTAL_SIZE=$(du -sh "$TARGET_DIR" | cut -f1)
+log "Total size: $TOTAL_SIZE"
+
+if [ $FAILED -gt 0 ]; then
+    log "WARNING: $FAILED downloads failed — check log and re-run"
+    exit 1
+fi
+
+log "All downloads complete"
