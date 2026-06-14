@@ -7,12 +7,11 @@
 
 #SBATCH --job-name="methylseq"
 #SBATCH --output="logs/methylseq_%j.out"
-#SBATCH --error="logs/methylseq_%j.err"
 #SBATCH --partition=shared
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=64G
+#SBATCH --cpus-per-task=48
+#SBATCH --mem=200G
 #SBATCH --account=csd940
 #SBATCH --export=ALL
 #SBATCH --time=48:00:00
@@ -21,17 +20,13 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
 log "Starting nf-core/methylseq pipeline"
 log "SLURM Job ID: $SLURM_JOBID"
+echo "Started: $(date)"
 
 module reset
 module load singularitypro/4.1.2
 
-eval "$(conda shell.bash hook)" 2>/dev/null || true
+#eval "$(conda shell.bash hook)" 2>/dev/null || true
 conda activate env_nf
-
-if ! command -v nextflow &> /dev/null; then
-    log "ERROR: Nextflow not found in PATH"
-    exit 1
-fi
 
 log "Nextflow version: $(nextflow -version 2>&1 | head -3)"
 
@@ -62,17 +57,13 @@ nextflow run nf-core/methylseq \
     -r 4.2.0 \
     -c "${BASE_DIR}/nextflow.config" \
     -profile singularity \
-    -resume \
     --input "$INPUT_CSV" \
     --outdir "$OUTPUT_DIR" \
-    --genome GRCm38 \
+    --genome mm10 \
     --aligner bismark \
     --cytosine_report \
     --comprehensive \
     --save_reference \
-    --save_align_intermeds \
-    --save_trimmed \
-    --unmapped \
     --run_qualimap \
     --run_preseq \
     --no_overlap \
@@ -94,4 +85,5 @@ else
     log "Work directory: $NXF_WORK"
 fi
 
+echo "Finished: $(date)"
 exit $EXIT_CODE
