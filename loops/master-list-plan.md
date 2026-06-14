@@ -150,3 +150,30 @@ you the exact `Rscript` commands; I won't run them.
    `SE_anchor`/`shared_anchor`/`DEG_status`; per-mark non-zero signal fractions; DEG symbol→coord
    match rate. Eyeball before committing thresholds.
 5. Confirm both TSVs are <100 MB and join cleanly on `loop_id`.
+
+---
+
+## Status (session handoff)
+
+Purpose of this work: produce the two TSVs above (`master_annotated_loops.tsv` and
+`anchor_span_signal.tsv`) for the late/250402 timepoint, in `loops/output/master_loop_table/late/`.
+
+Both scripts are written:
+- `loops/scripts/build_master_loop_table.R` (Sheet 1) — **has been run.**
+- `loops/scripts/build_anchor_span_signal.R` (Sheet 2) — **not yet completed.**
+
+Sheet 2 is being moved to HPC (Expanse). State of that:
+- `build_anchor_span_signal.R` `CONFIG$bigwig_dir` is now set to the HPC path
+  `/expanse/lustre/projects/csd940/zalibhai/bigwigs` (override locally with `--bigwig-dir`).
+- That HPC bigwig dir contains the 5 marks (K119ub, K27ac, K27me3, K4me3, ATAC) ctrl+mut, but
+  **not `CTCF.bw`** — CTCF.bw lives only on the Mac at `/Users/zakiralibhai/sdsc/bigwigs/CTCF.bw`
+  and must be copied into the HPC bigwig dir before the run.
+- Run from the HPC repo mirror `/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/`, in the
+  `mariner_env` R (has `rtracklayer`):
+  `Rscript loops/scripts/build_anchor_span_signal.R 2>&1 | tee loops/output/master_loop_table/late/build_signal.log`
+- Dependency to confirm present on the HPC mirror: the spine file
+  `loops/outputs/250402-late_outputs/merged_loops/merged_all_results.tsv`.
+
+Open thread: a local Sheet 2 run errored during `rtracklayer::import.bw()` on the Mac copy of
+`H2AK119ubMut.bw` (`zlib data error`); moving the run to HPC against the Expanse bigwig copies is
+the current approach.
