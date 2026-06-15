@@ -19,19 +19,21 @@ dir.create(SEC54_DIR, recursive = TRUE, showWarnings = FALSE)
 
 TAD_SIGNAL_FILE <- file.path(BASE_DIR, "data/tad_methylation_signal_late.tsv")
 
-CONTEXTS <- c("cg_mc", "cg_hmc", "chg_mc", "chh_mc")
+CONTEXTS <- c("cg_mc", "cg_hmc", "chg_mc", "chh_mc", "mecp2")
 CONTEXT_LABELS <- c(
   cg_mc  = "CG 5mC",
   cg_hmc = "CG 5hmC",
   chg_mc = "CHG 5mC",
-  chh_mc = "CHH 5mC"
+  chh_mc = "CHH 5mC",
+  mecp2  = "MeCP2"
 )
 
 CONTEXT_COLORS <- c(
   "CG 5mC"  = "#E41A1C",
   "CG 5hmC" = "#377EB8",
   "CHG 5mC" = "#FF7F00",
-  "CHH 5mC" = "#4DAF4A"
+  "CHH 5mC" = "#4DAF4A",
+  "MeCP2"   = "#984EA3"
 )
 
 # =============================================================================
@@ -447,7 +449,7 @@ if (!is.null(btype_data) && nrow(btype_data) > 0) {
 cat("--- 54h: Cross-context FC correlation ---\n")
 
 cross_plots <- list()
-for (alt_ctx in c("chg_mc", "chh_mc")) {
+for (alt_ctx in c("chg_mc", "chh_mc", "mecp2")) {
   cg_col  <- "cg_mc_log2fc"
   alt_col <- paste0(alt_ctx, "_log2fc")
   if (!(cg_col %in% names(tad) && alt_col %in% names(tad))) next

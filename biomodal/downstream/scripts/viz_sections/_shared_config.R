@@ -72,8 +72,18 @@ CHIP_PEAK_FILES <- list(
 # MeCP2 differential binding files (from peaks/mecp2/)
 MECP2_FILES <- list(
   annotated = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_annotated.txt"),
-  up   = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_up.bed"),
-  down = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_down.bed")
+  up      = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_up.bed"),
+  down    = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_down.bed"),
+  ctrl_bw = "/Users/zakiralibhai/sdsc/bigwigs/MeCP2Ctrl.bw",
+  mut_bw  = "/Users/zakiralibhai/sdsc/bigwigs/MeCP2Mut.bw"
+)
+
+# Merged methylation BigWigs (group-averaged, from sdsc/bigwigs/methylation/merged/)
+METHYLATION_BIGWIGS <- list(
+  cg_mc_ctrl  = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_mc_ctrl.bw",
+  cg_mc_mut   = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_mc_mut.bw",
+  cg_hmc_ctrl = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_hmc_ctrl.bw",
+  cg_hmc_mut  = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_hmc_mut.bw"
 )
 
 # ATAC-seq differential and consensus peak files (from peaks/atac_seq/)
