@@ -9,9 +9,9 @@
 # Model A: MeCP2 ~ CG 5mC         (primary)
 # Model B: MeCP2 ~ CG 5mC + CG 5hmC  (sensitivity)
 #
-# Requires: add_mecp2_tad_signal.sb to have been run on HPC first
-# Input:  data/tad_methylation_signal_late.tsv (augmented with MeCP2 columns)
-#         data/tad_mecp2_binlevel_variance.tsv (pre-computed on HPC)
+# Requires: add_mecp2_tad_signal.R to have been run first (mecp2_* columns in TSV)
+# Input:  data/tad_methylation_signal_late.tsv (augmented with MeCP2)
+#         + BigWigs for bin-level variance computation
 # Usage:  cd downstream && Rscript scripts/viz_sections/section_55_mecp2_cg_corrected_proxy.R
 
 source("scripts/viz_sections/_shared_config.R")
@@ -24,6 +24,8 @@ SEC55_DIR <- file.path(OUTPUT_DIR, "55_mecp2_cg_corrected_proxy")
 dir.create(SEC55_DIR, recursive = TRUE, showWarnings = FALSE)
 
 TAD_SIGNAL_FILE <- file.path(BASE_DIR, "data/tad_methylation_signal_late.tsv")
+
+BIN_SIZE <- 10000
 
 # =============================================================================
 # LOAD DATA
@@ -51,19 +53,64 @@ if (length(missing) > 0) {
        "\nRun add_mecp2_tad_signal.R to add MeCP2 columns.")
 }
 
-# Load pre-computed bin-level variance data (from HPC add_mecp2_tad_signal.R)
-BINVAR_FILE <- file.path(BASE_DIR, "data/tad_mecp2_binlevel_variance.tsv")
-if (!file.exists(BINVAR_FILE)) {
-  stop("Bin-level variance file not found: ", BINVAR_FILE,
-       "\nRun add_mecp2_tad_signal.sb on Expanse first, then rsync both TSVs.")
+domain_gr <- GRanges(
+  seqnames = tad$chr,
+  ranges = IRanges(start = tad$start, end = tad$end)
+)
+
+# Validate BigWig availability for bin-level computation
+bw_paths <- list(
+  mecp2_ctrl = MECP2_FILES$ctrl_bw,
+  mecp2_mut  = MECP2_FILES$mut_bw,
+  cg_mc_ctrl = METHYLATION_BIGWIGS$cg_mc_ctrl,
+  cg_mc_mut  = METHYLATION_BIGWIGS$cg_mc_mut,
+  cg_hmc_ctrl = METHYLATION_BIGWIGS$cg_hmc_ctrl,
+  cg_hmc_mut  = METHYLATION_BIGWIGS$cg_hmc_mut
+)
+for (nm in names(bw_paths)) {
+  if (!file.exists(bw_paths[[nm]])) {
+    stop("BigWig not found: ", bw_paths[[nm]], " (", nm, ")")
+  }
 }
-binvar <- read.table(BINVAR_FILE, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-cat(sprintf("Loaded bin-level variance data: %d rows x %d cols\n\n",
-            nrow(binvar), ncol(binvar)))
+cat("All BigWig files validated.\n\n")
 
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
+compute_bin_means <- function(bw_path, domain_gr, bin_size = BIN_SIZE) {
+  bw <- rtracklayer::import.bw(bw_path, which = domain_gr)
+  cov <- coverage(bw, weight = "score")
+  chr_names <- as.character(seqnames(domain_gr))
+
+  result <- vector("list", length(domain_gr))
+  for (i in seq_along(domain_gr)) {
+    dom <- domain_gr[i]
+    chr <- chr_names[i]
+    dom_start <- start(dom)
+    dom_end <- end(dom)
+
+    tile_starts <- seq(dom_start, dom_end - 1, by = bin_size)
+    tile_ends <- pmin(tile_starts + bin_size - 1, dom_end)
+    tiles_ir <- IRanges(start = tile_starts, end = tile_ends)
+
+    if (!(chr %in% names(cov))) {
+      result[[i]] <- rep(NA_real_, length(tiles_ir))
+      next
+    }
+
+    cov_chr <- cov[[chr]]
+    max_pos <- length(cov_chr)
+    valid_mask <- end(tiles_ir) <= max_pos
+    bin_means <- rep(NA_real_, length(tiles_ir))
+    if (any(valid_mask)) {
+      v <- Views(cov_chr, tiles_ir[valid_mask])
+      bin_means[valid_mask] <- as.numeric(viewMeans(v))
+    }
+    result[[i]] <- bin_means
+  }
+  result
+}
 
 bootstrap_variance_ratio <- function(domain_means, within_vars, B = 1000, seed = 42) {
   valid <- !is.na(domain_means) & !is.na(within_vars) & within_vars > 0
@@ -207,24 +254,113 @@ cat(sprintf("  Coefficients: %s\n", coef_path))
 cat(sprintf("  Model summary: %s\n\n", model_summary_path))
 
 # =============================================================================
-# LOAD PRE-COMPUTED BIN-LEVEL VARIANCE DATA
+# BIN-LEVEL RESIDUAL VARIANCE COMPUTATION
 # =============================================================================
 
-cat("--- Loading pre-computed bin-level variance data ---\n")
+cat("--- Bin-level residual variance (10kb bins, reads BigWigs) ---\n")
+cat("  This may take several minutes...\n\n")
 
-within_var_raw_ctrl     <- binvar$within_var_raw_ctrl
-within_var_raw_mut      <- binvar$within_var_raw_mut
-within_var_resid_a_ctrl <- binvar$within_var_resid_a_ctrl
-within_var_resid_a_mut  <- binvar$within_var_resid_a_mut
-within_var_resid_b_ctrl <- binvar$within_var_resid_b_ctrl
-within_var_resid_b_mut  <- binvar$within_var_resid_b_mut
+cat("  Extracting MeCP2 ctrl bin means...\n")
+mecp2_ctrl_bins <- compute_bin_means(bw_paths$mecp2_ctrl, domain_gr)
+cat("  Extracting CG mC ctrl bin means...\n")
+cgmc_ctrl_bins <- compute_bin_means(bw_paths$cg_mc_ctrl, domain_gr)
+cat("  Extracting CG hmC ctrl bin means...\n")
+cghmc_ctrl_bins <- compute_bin_means(bw_paths$cg_hmc_ctrl, domain_gr)
 
-cat(sprintf("  HPC model A R²: %.4f\n", binvar$model_a_r_squared[1]))
-cat(sprintf("  HPC model B R²: %.4f\n", binvar$model_b_r_squared[1]))
-cat(sprintf("  Non-NA raw ctrl variances: %d / %d\n",
-            sum(!is.na(within_var_raw_ctrl)), length(within_var_raw_ctrl)))
-cat(sprintf("  Non-NA resid A ctrl variances: %d / %d\n\n",
-            sum(!is.na(within_var_resid_a_ctrl)), length(within_var_resid_a_ctrl)))
+cat("  Extracting MeCP2 mut bin means...\n")
+mecp2_mut_bins <- compute_bin_means(bw_paths$mecp2_mut, domain_gr)
+cat("  Extracting CG mC mut bin means...\n")
+cgmc_mut_bins <- compute_bin_means(bw_paths$cg_mc_mut, domain_gr)
+cat("  Extracting CG hmC mut bin means...\n")
+cghmc_mut_bins <- compute_bin_means(bw_paths$cg_hmc_mut, domain_gr)
+
+coefs_a <- coef(model_a)
+coefs_b <- coef(model_b)
+
+within_var_resid_a_ctrl <- numeric(nrow(tad))
+within_var_resid_b_ctrl <- numeric(nrow(tad))
+within_var_resid_a_mut  <- numeric(nrow(tad))
+within_var_resid_b_mut  <- numeric(nrow(tad))
+within_var_raw_ctrl     <- numeric(nrow(tad))
+within_var_raw_mut      <- numeric(nrow(tad))
+
+for (i in seq_len(nrow(tad))) {
+  m_ctrl <- mecp2_ctrl_bins[[i]]
+  c_ctrl <- cgmc_ctrl_bins[[i]]
+  h_ctrl <- cghmc_ctrl_bins[[i]]
+  m_mut  <- mecp2_mut_bins[[i]]
+  c_mut  <- cgmc_mut_bins[[i]]
+  h_mut  <- cghmc_mut_bins[[i]]
+
+  # Raw MeCP2 within-domain variance
+  valid_ctrl <- !is.na(m_ctrl)
+  valid_mut  <- !is.na(m_mut)
+
+  within_var_raw_ctrl[i] <- if (sum(valid_ctrl) >= 2) {
+    var(m_ctrl[valid_ctrl], na.rm = TRUE)
+  } else NA_real_
+
+  within_var_raw_mut[i] <- if (sum(valid_mut) >= 2) {
+    var(m_mut[valid_mut], na.rm = TRUE)
+  } else NA_real_
+
+  # Model A residuals (bin-level): MeCP2 - (intercept + slope * CG_mC)
+  valid_a_ctrl <- !is.na(m_ctrl) & !is.na(c_ctrl)
+  if (sum(valid_a_ctrl) >= 2) {
+    pred <- coefs_a[1] + coefs_a[2] * c_ctrl[valid_a_ctrl]
+    resid <- m_ctrl[valid_a_ctrl] - pred
+    within_var_resid_a_ctrl[i] <- var(resid)
+  } else {
+    within_var_resid_a_ctrl[i] <- NA_real_
+  }
+
+  valid_a_mut <- !is.na(m_mut) & !is.na(c_mut)
+  if (sum(valid_a_mut) >= 2) {
+    pred <- coefs_a[1] + coefs_a[2] * c_mut[valid_a_mut]
+    resid <- m_mut[valid_a_mut] - pred
+    within_var_resid_a_mut[i] <- var(resid)
+  } else {
+    within_var_resid_a_mut[i] <- NA_real_
+  }
+
+  # Model B residuals (bin-level): MeCP2 - (intercept + b1*CG_mC + b2*CG_hmC)
+  valid_b_ctrl <- !is.na(m_ctrl) & !is.na(c_ctrl) & !is.na(h_ctrl)
+  if (sum(valid_b_ctrl) >= 2) {
+    pred <- coefs_b[1] + coefs_b[2] * c_ctrl[valid_b_ctrl] +
+            coefs_b[3] * h_ctrl[valid_b_ctrl]
+    resid <- m_ctrl[valid_b_ctrl] - pred
+    within_var_resid_b_ctrl[i] <- var(resid)
+  } else {
+    within_var_resid_b_ctrl[i] <- NA_real_
+  }
+
+  valid_b_mut <- !is.na(m_mut) & !is.na(c_mut) & !is.na(h_mut)
+  if (sum(valid_b_mut) >= 2) {
+    pred <- coefs_b[1] + coefs_b[2] * c_mut[valid_b_mut] +
+            coefs_b[3] * h_mut[valid_b_mut]
+    resid <- m_mut[valid_b_mut] - pred
+    within_var_resid_b_mut[i] <- var(resid)
+  } else {
+    within_var_resid_b_mut[i] <- NA_real_
+  }
+}
+
+cat("  Bin-level variance computation complete.\n\n")
+
+# Save bin-level variance TSV
+binvar_df <- data.frame(
+  chr = tad$chr, start = tad$start, end = tad$end,
+  within_var_raw_ctrl     = within_var_raw_ctrl,
+  within_var_raw_mut      = within_var_raw_mut,
+  within_var_resid_a_ctrl = within_var_resid_a_ctrl,
+  within_var_resid_a_mut  = within_var_resid_a_mut,
+  within_var_resid_b_ctrl = within_var_resid_b_ctrl,
+  within_var_resid_b_mut  = within_var_resid_b_mut,
+  stringsAsFactors = FALSE
+)
+binvar_path <- file.path(TABLES_DIR, "55_mecp2_binlevel_variance.tsv")
+write.table(binvar_df, binvar_path, sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("  Bin-level variance table: %s\n\n", binvar_path))
 
 # =============================================================================
 # VARIANCE RATIO COMPUTATION
@@ -323,11 +459,6 @@ cat(sprintf("  CG-stratified table: %s\n\n", strat_path))
 # =============================================================================
 
 cat("--- DMR-stratified residual analysis ---\n")
-
-domain_gr <- GRanges(
-  seqnames = tad$chr,
-  ranges = IRanges(start = tad$start, end = tad$end)
-)
 
 tad$dmr_class <- "No DMR"
 
