@@ -86,6 +86,12 @@ METHYLATION_BIGWIGS <- list(
   cg_hmc_mut  = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_hmc_mut.bw"
 )
 
+# Ecker adult mouse cerebellum WGBS BigWigs (wildtype reference for non-CG validation)
+ECKER_BIGWIGS <- list(
+  cg = "/Users/zakiralibhai/sdsc/bigwigs/noncg/250314_ecker_CG.bw",
+  ch = "/Users/zakiralibhai/sdsc/bigwigs/noncg/250314_ecker_CH.bw"
+)
+
 # ATAC-seq differential and consensus peak files (from peaks/atac_seq/)
 ATAC_FILES <- list(
   up   = file.path(REPO_ROOT, "peaks/atac_seq/ATAC_up.bed"),

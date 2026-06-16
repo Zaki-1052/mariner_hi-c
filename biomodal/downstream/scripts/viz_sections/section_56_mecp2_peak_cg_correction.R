@@ -277,7 +277,7 @@ peak_out$cg_class <- peaks$cg_class
 peak_out$dmr_overlap <- peaks$dmr_overlap
 
 peak_path <- file.path(TABLES_DIR, "56_mecp2_peak_annotated.tsv")
-write.table(peak_out, peak_path, sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(peak_out, peak_path, sep = "\t", quote = TRUE, row.names = FALSE)
 cat(sprintf("  Per-peak data: %s (%d rows x %d cols)\n\n",
             peak_path, nrow(peak_out), ncol(peak_out)))
 
@@ -286,7 +286,7 @@ noncg <- peak_out[peak_out$mecp2_class == "MeCP2 Up" &
                    peak_out$cg_mc_log2fc <= 0, ]
 noncg <- noncg[order(noncg$FDR), ]
 noncg_path <- file.path(TABLES_DIR, "56_mecp2_peak_noncg_candidates.tsv")
-write.table(noncg, noncg_path, sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(noncg, noncg_path, sep = "\t", quote = TRUE, row.names = FALSE)
 cat(sprintf("  Non-CG candidates: %s (%d peaks)\n\n", noncg_path, nrow(noncg)))
 
 # =============================================================================

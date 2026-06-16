@@ -1,0 +1,118 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-15 19:15:35 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+================================================================================
+SECTION 57: ECKER WGBS NON-CG VALIDATION
+================================================================================
+
+Loaded 103082 peaks from section 56
+  MeCP2 Up:  3819
+  MeCP2 Down: 621
+  Not Significant: 98641
+  CG-Concordant:   2463
+  Non-CG Candidate: 1356
+
+Ecker BigWig files validated.
+
+--- Extracting Ecker signals ---
+  Ecker CH (non-CG) (103082 peaks)... median=0.005375, non-zero=103037/103082
+  Ecker CG (103082 peaks)... median=0.015154, non-zero=99631/103082
+
+--- Group comparisons ---
+
+  CG-Concordant (n=2463): CH median=0.012916, CH detected=100.0%, CG median=0.0136
+  Non-CG Candidate (n=1356): CH median=0.016108, CH detected=100.0%, CG median=0.0095
+  MeCP2 Down (n=621): CH median=0.021105, CH detected=100.0%, CG median=0.0194
+  Not Significant (n=98641): CH median=0.005227, CH detected=100.0%, CG median=0.0154
+
+  KEY TEST: Non-CG Candidate vs CG-Concordant (Ecker CH):
+    median 0.016108 vs 0.012916, W=2032528, p=9.92e-29
+
+  CONTROL: Non-CG Candidate vs CG-Concordant (Ecker CG):
+    median 0.0095 vs 0.0136, W=1306869, p=8.25e-29
+
+  Summary table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/57_ecker_noncg_validation_summary.tsv
+
+  Fisher's (CH detection): OR=0.00, p=1.00e+00
+
+--- Correlation: MeCP2 residual vs Ecker CH ---
+  Spearman rho = -0.1398, p = 8.13e-21, n = 4440
+
+--- Saving per-peak signal data ---
+  Per-peak signal: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/57_ecker_peak_signal.tsv (103082 rows)
+
+--- 57a: Ecker CH at Non-CG Candidate vs CG-Concordant ---
+  Saved: 57a_ecker_ch_noncg_vs_concordant/{pdf,svg,jpg}
+  57a saved.
+--- 57b: Residual vs Ecker CH ---
+  Saved: 57b_residual_vs_ecker_ch/{pdf,svg,jpg}
+  57b saved.
+--- 57c: Detection rate comparison ---
+  Saved: 57c_detection_rate/{pdf,svg,jpg}
+  57c saved.
+--- 57d: Control — Ecker CG comparison ---
+  Saved: 57d_ecker_cg_control/{pdf,svg,jpg}
+  57d saved.
+--- 57e: Three-way Ecker CH comparison ---
+  Saved: 57e_three_way_ecker_ch/{pdf,svg,jpg}
+  57e saved.
+--- 57f: Composite panel ---
+  Saved: 57f_composite/{pdf,svg,jpg}
+  57f saved.
+
+================================================================================
+SECTION 57 COMPLETE
+================================================================================
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/57_ecker_noncg_validation
+
+TSV outputs in /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables:
+  57_ecker_correlation.tsv
+  57_ecker_noncg_validation_summary.tsv
+  57_ecker_peak_signal.tsv
+
+=== KEY RESULTS ===
+  Non-CG Candidate vs CG-Concordant (Ecker CH):
+    Median: 0.016108 vs 0.012916
+    Wilcoxon p = 9.92e-29
+  Control (Ecker CG):
+    Median: 0.0095 vs 0.0136
+    Wilcoxon p = 8.25e-29
+  Residual-CH correlation: rho=-0.1398, p=8.13e-21
+  CH detection: Non-CG=100.0%, Concordant=100.0% (Fisher p=1.00e+00)
+================================================================================
