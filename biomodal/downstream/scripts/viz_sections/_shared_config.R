@@ -83,7 +83,11 @@ METHYLATION_BIGWIGS <- list(
   cg_mc_ctrl  = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_mc_ctrl.bw",
   cg_mc_mut   = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_mc_mut.bw",
   cg_hmc_ctrl = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_hmc_ctrl.bw",
-  cg_hmc_mut  = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_hmc_mut.bw"
+  cg_hmc_mut  = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CG_hmc_mut.bw",
+  chg_mc_ctrl = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CHG_mc_ctrl.bw",
+  chg_mc_mut  = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CHG_mc_mut.bw",
+  chh_mc_ctrl = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CHH_mc_ctrl.bw",
+  chh_mc_mut  = "/Users/zakiralibhai/sdsc/bigwigs/methylation/merged/CHH_mc_mut.bw"
 )
 
 # Ecker adult mouse cerebellum WGBS BigWigs (wildtype reference for non-CG validation)

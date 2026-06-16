@@ -35,7 +35,7 @@ if (!file.exists(PEAK_FILE)) {
 }
 
 peaks <- read.table(PEAK_FILE, header = TRUE, sep = "\t", stringsAsFactors = FALSE,
-                    quote = "", fill = TRUE, comment.char = "")
+                    fill = TRUE, comment.char = "")
 cat(sprintf("Loaded %d peaks from section 56\n", nrow(peaks)))
 cat(sprintf("  MeCP2 Up:  %d\n", sum(peaks$mecp2_class == "MeCP2 Up")))
 cat(sprintf("  MeCP2 Down: %d\n", sum(peaks$mecp2_class == "MeCP2 Down")))
@@ -89,6 +89,15 @@ extract_signal <- function(bw_path, peak_gr, label) {
 cat("--- Extracting Ecker signals ---\n")
 peaks$ecker_ch <- extract_signal(ECKER_BIGWIGS$ch, peak_gr, "Ecker CH (non-CG)")
 peaks$ecker_cg <- extract_signal(ECKER_BIGWIGS$cg, peak_gr, "Ecker CG")
+
+cat("\n--- Extracting evoC non-CG signals ---\n")
+peaks$evoc_chg_ctrl <- extract_signal(METHYLATION_BIGWIGS$chg_mc_ctrl, peak_gr, "evoC CHG ctrl")
+peaks$evoc_chg_mut  <- extract_signal(METHYLATION_BIGWIGS$chg_mc_mut, peak_gr, "evoC CHG mut")
+peaks$evoc_chh_ctrl <- extract_signal(METHYLATION_BIGWIGS$chh_mc_ctrl, peak_gr, "evoC CHH ctrl")
+peaks$evoc_chh_mut  <- extract_signal(METHYLATION_BIGWIGS$chh_mc_mut, peak_gr, "evoC CHH mut")
+
+peaks$evoc_chg_mean <- (peaks$evoc_chg_ctrl + peaks$evoc_chg_mut) / 2
+peaks$evoc_chh_mean <- (peaks$evoc_chh_ctrl + peaks$evoc_chh_mut) / 2
 cat("\n")
 
 # =============================================================================
@@ -162,6 +171,43 @@ for (grp in c("Non-CG Candidate", "MeCP2 Down")) {
   }
 }
 
+# evoC non-CG comparisons
+cat("\n--- evoC non-CG comparisons ---\n")
+noncg_chg <- peaks$evoc_chg_mean[peaks$peak_group == "Non-CG Candidate"]
+conc_chg  <- peaks$evoc_chg_mean[peaks$peak_group == "CG-Concordant"]
+noncg_chh <- peaks$evoc_chh_mean[peaks$peak_group == "Non-CG Candidate"]
+conc_chh  <- peaks$evoc_chh_mean[peaks$peak_group == "CG-Concordant"]
+
+wt_evoc_chg <- wilcox.test(noncg_chg, conc_chg)
+wt_evoc_chh <- wilcox.test(noncg_chh, conc_chh)
+
+cat(sprintf("  evoC CHG: Non-CG Candidate median=%.6f vs CG-Concordant median=%.6f, p=%.2e\n",
+            median(noncg_chg, na.rm = TRUE), median(conc_chg, na.rm = TRUE), wt_evoc_chg$p.value))
+cat(sprintf("    Non-zero: %d/%d (%.1f%%) vs %d/%d (%.1f%%)\n",
+            sum(noncg_chg > 0, na.rm = TRUE), sum(!is.na(noncg_chg)),
+            100 * sum(noncg_chg > 0, na.rm = TRUE) / sum(!is.na(noncg_chg)),
+            sum(conc_chg > 0, na.rm = TRUE), sum(!is.na(conc_chg)),
+            100 * sum(conc_chg > 0, na.rm = TRUE) / sum(!is.na(conc_chg))))
+
+cat(sprintf("  evoC CHH: Non-CG Candidate median=%.6f vs CG-Concordant median=%.6f, p=%.2e\n",
+            median(noncg_chh, na.rm = TRUE), median(conc_chh, na.rm = TRUE), wt_evoc_chh$p.value))
+cat(sprintf("    Non-zero: %d/%d (%.1f%%) vs %d/%d (%.1f%%)\n",
+            sum(noncg_chh > 0, na.rm = TRUE), sum(!is.na(noncg_chh)),
+            100 * sum(noncg_chh > 0, na.rm = TRUE) / sum(!is.na(noncg_chh)),
+            sum(conc_chh > 0, na.rm = TRUE), sum(!is.na(conc_chh)),
+            100 * sum(conc_chh > 0, na.rm = TRUE) / sum(!is.na(conc_chh))))
+
+for (grp in groups) {
+  idx <- peaks$peak_group == grp
+  if (sum(idx) < 5) next
+  summary_df$median_evoc_chg[summary_df$group == grp] <- median(peaks$evoc_chg_mean[idx], na.rm = TRUE)
+  summary_df$median_evoc_chh[summary_df$group == grp] <- median(peaks$evoc_chh_mean[idx], na.rm = TRUE)
+  summary_df$pct_evoc_chg_detected[summary_df$group == grp] <-
+    100 * sum(peaks$evoc_chg_mean[idx] > 0, na.rm = TRUE) / sum(idx)
+  summary_df$pct_evoc_chh_detected[summary_df$group == grp] <-
+    100 * sum(peaks$evoc_chh_mean[idx] > 0, na.rm = TRUE) / sum(idx)
+}
+
 summary_path <- file.path(TABLES_DIR, "57_ecker_noncg_validation_summary.tsv")
 write.table(summary_df, summary_path, sep = "\t", quote = FALSE, row.names = FALSE)
 cat(sprintf("\n  Summary table: %s\n\n", summary_path))
@@ -221,6 +267,8 @@ out_df <- data.frame(
   residual = peaks$residual,
   ecker_ch = peaks$ecker_ch,
   ecker_cg = peaks$ecker_cg,
+  evoc_chg_mean = peaks$evoc_chg_mean,
+  evoc_chh_mean = peaks$evoc_chh_mean,
   stringsAsFactors = FALSE
 )
 if ("SYMBOL" %in% names(peaks)) out_df$SYMBOL <- peaks$SYMBOL
@@ -396,10 +444,64 @@ save_multiformat_ggplot(p57e, file.path(SEC57_DIR, "57e_three_way_ecker_ch"),
 cat("  57e saved.\n")
 
 # =============================================================================
-# FIGURE 57f: COMPOSITE
+# FIGURE 57f: SIDE-BY-SIDE — ECKER CH vs evoC CHG vs evoC CHH
 # =============================================================================
 
-cat("--- 57f: Composite panel ---\n")
+cat("--- 57f: Side-by-side Ecker vs evoC non-CG ---\n")
+
+sbs_data <- rbind(
+  data.frame(
+    dataset = "Ecker CH\n(WGBS)",
+    peak_group = up_plot$peak_group,
+    signal = up_plot$ecker_ch,
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    dataset = "evoC CHG\n(DUET)",
+    peak_group = up_plot$peak_group,
+    signal = up_plot$evoc_chg_mean,
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    dataset = "evoC CHH\n(DUET)",
+    peak_group = up_plot$peak_group,
+    signal = up_plot$evoc_chh_mean,
+    stringsAsFactors = FALSE
+  )
+)
+sbs_data$dataset <- factor(sbs_data$dataset,
+  levels = c("Ecker CH\n(WGBS)", "evoC CHG\n(DUET)", "evoC CHH\n(DUET)"))
+
+sbs_stats <- data.frame(
+  dataset = c("Ecker CH\n(WGBS)", "evoC CHG\n(DUET)", "evoC CHH\n(DUET)"),
+  p_label = sprintf("p = %.2e", c(wt_main$p.value, wt_evoc_chg$p.value, wt_evoc_chh$p.value)),
+  stringsAsFactors = FALSE
+)
+sbs_stats$dataset <- factor(sbs_stats$dataset, levels = levels(sbs_data$dataset))
+
+p57f <- ggplot(sbs_data, aes(x = peak_group, y = signal, fill = peak_group)) +
+  geom_violin(alpha = 0.6, scale = "width") +
+  geom_boxplot(width = 0.15, outlier.size = 0.2, alpha = 0.9) +
+  facet_wrap(~ dataset, scales = "free_y") +
+  scale_fill_manual(values = c("Non-CG Candidate" = "#984EA3",
+                                "CG-Concordant" = "#E41A1C")) +
+  geom_text(data = sbs_stats, aes(x = 1.5, y = Inf, label = p_label),
+            vjust = 1.5, size = 3, inherit.aes = FALSE) +
+  labs(title = "Non-CG Methylation: Ecker WGBS vs evoC DUET",
+       subtitle = "Same MeCP2-Up peaks compared across three non-CG datasets",
+       x = NULL, y = "Non-CG methylation (fractional)") +
+  theme_biomodal() +
+  theme(legend.position = "none")
+
+save_multiformat_ggplot(p57f, file.path(SEC57_DIR, "57f_ecker_vs_evoc_sidebyside"),
+                        width = 14, height = 7)
+cat("  57f saved.\n")
+
+# =============================================================================
+# FIGURE 57g: COMPOSITE
+# =============================================================================
+
+cat("--- 57g: Composite panel ---\n")
 
 composite_parts <- list()
 if (exists("p57a")) composite_parts$a <- p57a + labs(title = NULL, subtitle = "A. Ecker CH: Non-CG vs Concordant")
@@ -407,14 +509,14 @@ if (exists("p57b")) composite_parts$b <- p57b + labs(title = NULL, subtitle = "B
 if (exists("p57d")) composite_parts$d <- p57d + labs(title = NULL, subtitle = "C. Control: Ecker CG")
 
 if (length(composite_parts) >= 2) {
-  p57f <- wrap_plots(composite_parts, nrow = 1) +
+  p57g <- wrap_plots(composite_parts, nrow = 1) +
     plot_annotation(
       title = "Ecker WGBS Validation: Non-CG Methylation at MeCP2 Candidate Peaks",
       theme = theme(plot.title = element_text(face = "bold", size = 14, hjust = 0.5))
     )
-  save_multiformat_ggplot(p57f, file.path(SEC57_DIR, "57f_composite"),
+  save_multiformat_ggplot(p57g, file.path(SEC57_DIR, "57g_composite"),
                           width = 22, height = 7)
-  cat("  57f saved.\n")
+  cat("  57g saved.\n")
 }
 
 # =============================================================================

@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-06-15 19:15:35 
+Date: 2026-06-15 19:32:40 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -41,41 +41,53 @@ Data loading complete.
 SECTION 57: ECKER WGBS NON-CG VALIDATION
 ================================================================================
 
-Loaded 103082 peaks from section 56
-  MeCP2 Up:  3819
-  MeCP2 Down: 621
-  Not Significant: 98641
-  CG-Concordant:   2463
-  Non-CG Candidate: 1356
+Loaded 202650 peaks from section 56
+  MeCP2 Up:  7686
+  MeCP2 Down: 1200
+  Not Significant: 193764
+  CG-Concordant:   4960
+  Non-CG Candidate: 2726
 
 Ecker BigWig files validated.
 
 --- Extracting Ecker signals ---
-  Ecker CH (non-CG) (103082 peaks)... median=0.005375, non-zero=103037/103082
-  Ecker CG (103082 peaks)... median=0.015154, non-zero=99631/103082
+  Ecker CH (non-CG) (202650 peaks)... median=0.005385, non-zero=202559/202650
+  Ecker CG (202650 peaks)... median=0.015189, non-zero=195885/202650
+
+--- Extracting evoC non-CG signals ---
+  evoC CHG ctrl (202650 peaks)... median=0.000000, non-zero=494/202650
+  evoC CHG mut (202650 peaks)... median=0.000000, non-zero=526/202650
+  evoC CHH ctrl (202650 peaks)... median=0.000000, non-zero=1164/202650
+  evoC CHH mut (202650 peaks)... median=0.000000, non-zero=1187/202650
 
 --- Group comparisons ---
 
-  CG-Concordant (n=2463): CH median=0.012916, CH detected=100.0%, CG median=0.0136
-  Non-CG Candidate (n=1356): CH median=0.016108, CH detected=100.0%, CG median=0.0095
-  MeCP2 Down (n=621): CH median=0.021105, CH detected=100.0%, CG median=0.0194
-  Not Significant (n=98641): CH median=0.005227, CH detected=100.0%, CG median=0.0154
+  CG-Concordant (n=4960): CH median=0.012864, CH detected=100.0%, CG median=0.0136
+  Non-CG Candidate (n=2726): CH median=0.015931, CH detected=100.0%, CG median=0.0096
+  MeCP2 Down (n=1200): CH median=0.021947, CH detected=100.0%, CG median=0.0194
+  Not Significant (n=193764): CH median=0.005233, CH detected=100.0%, CG median=0.0155
 
   KEY TEST: Non-CG Candidate vs CG-Concordant (Ecker CH):
-    median 0.016108 vs 0.012916, W=2032528, p=9.92e-29
+    median 0.015931 vs 0.012864, W=8284962, p=2.63e-60
 
   CONTROL: Non-CG Candidate vs CG-Concordant (Ecker CG):
-    median 0.0095 vs 0.0136, W=1306869, p=8.25e-29
+    median 0.0096 vs 0.0136, W=5299325, p=1.39e-55
+
+--- evoC non-CG comparisons ---
+  evoC CHG: Non-CG Candidate median=0.000000 vs CG-Concordant median=0.000000, p=4.87e-01
+    Non-zero: 8/2726 (0.3%) vs 20/4960 (0.4%)
+  evoC CHH: Non-CG Candidate median=0.000000 vs CG-Concordant median=0.000000, p=6.12e-01
+    Non-zero: 26/2726 (1.0%) vs 56/4960 (1.1%)
 
   Summary table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/57_ecker_noncg_validation_summary.tsv
 
   Fisher's (CH detection): OR=0.00, p=1.00e+00
 
 --- Correlation: MeCP2 residual vs Ecker CH ---
-  Spearman rho = -0.1398, p = 8.13e-21, n = 4440
+  Spearman rho = -0.1756, p = 1.81e-62, n = 8886
 
 --- Saving per-peak signal data ---
-  Per-peak signal: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/57_ecker_peak_signal.tsv (103082 rows)
+  Per-peak signal: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/57_ecker_peak_signal.tsv (202650 rows)
 
 --- 57a: Ecker CH at Non-CG Candidate vs CG-Concordant ---
   Saved: 57a_ecker_ch_noncg_vs_concordant/{pdf,svg,jpg}
@@ -92,9 +104,12 @@ Ecker BigWig files validated.
 --- 57e: Three-way Ecker CH comparison ---
   Saved: 57e_three_way_ecker_ch/{pdf,svg,jpg}
   57e saved.
---- 57f: Composite panel ---
-  Saved: 57f_composite/{pdf,svg,jpg}
+--- 57f: Side-by-side Ecker vs evoC non-CG ---
+  Saved: 57f_ecker_vs_evoc_sidebyside/{pdf,svg,jpg}
   57f saved.
+--- 57g: Composite panel ---
+  Saved: 57g_composite/{pdf,svg,jpg}
+  57g saved.
 
 ================================================================================
 SECTION 57 COMPLETE
@@ -108,11 +123,11 @@ TSV outputs in /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downst
 
 === KEY RESULTS ===
   Non-CG Candidate vs CG-Concordant (Ecker CH):
-    Median: 0.016108 vs 0.012916
-    Wilcoxon p = 9.92e-29
+    Median: 0.015931 vs 0.012864
+    Wilcoxon p = 2.63e-60
   Control (Ecker CG):
-    Median: 0.0095 vs 0.0136
-    Wilcoxon p = 8.25e-29
-  Residual-CH correlation: rho=-0.1398, p=8.13e-21
+    Median: 0.0096 vs 0.0136
+    Wilcoxon p = 1.39e-55
+  Residual-CH correlation: rho=-0.1756, p=1.81e-62
   CH detection: Non-CG=100.0%, Concordant=100.0% (Fisher p=1.00e+00)
 ================================================================================
