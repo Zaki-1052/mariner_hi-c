@@ -1,0 +1,160 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-15 17:16:07 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+================================================================================
+SECTION 55: MeCP2 CG-CORRECTED PROXY FOR NON-CG METHYLATION
+================================================================================
+
+Loaded 12141 TAD domains from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/data/tad_methylation_signal_late.tsv
+All BigWig files validated.
+
+--- Fitting regression models ---
+
+  Complete cases for modelling: 12141 / 12141
+
+  Model A: MeCP2 ~ CG_mC
+    R² = 0.0211, adj-R² = 0.0210
+    Slope = 149.6499, Intercept = 0.3038
+    F = 261.31, p = 3.59e-58
+
+  Model B: MeCP2 ~ CG_mC + CG_hmC
+    R² = 0.0359, adj-R² = 0.0357
+    Slope(mC) = 74.7033, Slope(hmC) = 359.8805, Intercept = 0.4039
+    F = 225.80, p = 5.20e-97
+
+--- Saving regression coefficient tables ---
+  Coefficients: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/55_mecp2_regression_coefficients.tsv
+  Model summary: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/55_mecp2_regression_model_summary.tsv
+
+--- Bin-level residual variance (10kb bins, reads BigWigs) ---
+  This may take several minutes...
+
+  Extracting MeCP2 ctrl bin means...
+  Extracting CG mC ctrl bin means...
+  Extracting CG hmC ctrl bin means...
+  Extracting MeCP2 mut bin means...
+  Extracting CG mC mut bin means...
+  Extracting CG hmC mut bin means...
+  Bin-level variance computation complete.
+
+  Bin-level variance table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/55_mecp2_binlevel_variance.tsv
+
+--- Variance ratios (bootstrap, B=1000) ---
+  CG_5mC_ctrl: 1.0178 [0.9897, 1.0442]
+  CG_5mC_mut: 1.0338 [1.0072, 1.0630]
+  MeCP2_raw_ctrl: 0.0680 [0.0636, 0.1036]
+  MeCP2_raw_mut: 0.0700 [0.0658, 0.1199]
+  MeCP2_resid_A_ctrl: 0.0665 [0.0622, 0.0904]
+  MeCP2_resid_A_mut: 0.0690 [0.0649, 0.1070]
+  MeCP2_resid_B_ctrl: 0.0656 [0.0610, 0.0827]
+  MeCP2_resid_B_mut: 0.0679 [0.0637, 0.0976]
+
+  Variance ratio table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/55_mecp2_variance_ratio_summary.tsv
+
+--- CG-stratified residual analysis ---
+  Q1: n=3036, median_resid=-0.0833, p=1.20e-04
+  Q2: n=3035, median_resid=-0.2683, p=6.58e-232
+  Q3: n=3035, median_resid=-0.2451, p=1.84e-183
+  Q4: n=3035, median_resid=-0.0215, p=1.94e-02
+  CG-stratified table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/55_mecp2_cg_stratified_summary.tsv
+
+--- DMR-stratified residual analysis ---
+  DMR classes: Hyper-DMR=6939, No DMR=5202
+  Hyper-DMR vs No DMR: W=23804650, p=2.65e-199
+  DMR-stratified table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/55_mecp2_dmr_stratified_summary.tsv
+
+--- Saving per-TAD residual data ---
+  Per-TAD residuals: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/55_mecp2_tad_residuals.tsv (12141 rows x 27 cols)
+
+--- 55a: MeCP2 vs CG 5mC scatter ---
+  Saved: 55a_mecp2_vs_cg_scatter/{pdf,svg,jpg}
+  55a saved.
+--- 55b: Model diagnostics ---
+  Saved: 55b_model_diagnostics/{pdf,svg,jpg}
+  55b saved.
+--- 55c: Residual distributions ---
+  Saved: 55c_residual_distributions/{pdf,svg,jpg}
+  55c saved.
+--- 55d: Variance ratio comparison ---
+  Saved: 55d_variance_ratio_comparison/{pdf,svg,jpg}
+  55d saved.
+--- 55e: Boundary strength correlation ---
+  Saved: 55e_boundary_correlation/{pdf,svg,jpg}
+  rho=0.118, p=4.11e-39
+  55e saved.
+--- 55f: CG-stratified residuals ---
+  Saved: 55f_cg_stratified_residuals/{pdf,svg,jpg}
+  55f saved.
+--- 55g: DMR-stratified residuals ---
+  Saved: 55g_dmr_stratified_residuals/{pdf,svg,jpg}
+  55g saved.
+--- 55h: Model A vs B comparison ---
+  Saved: 55h_model_comparison/{pdf,svg,jpg}
+  55h saved.
+--- 55i: Composite panel ---
+  Saved: 55i_composite/{pdf,svg,jpg}
+  55i saved.
+
+================================================================================
+SECTION 55 COMPLETE
+================================================================================
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/55_mecp2_cg_corrected_proxy
+Figures: 0 panels generated
+
+TSV outputs in /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables:
+  55_mecp2_binlevel_variance.tsv
+  55_mecp2_cg_stratified_summary.tsv
+  55_mecp2_dmr_stratified_summary.tsv
+  55_mecp2_regression_coefficients.tsv
+  55_mecp2_regression_model_summary.tsv
+  55_mecp2_tad_residuals.tsv
+  55_mecp2_variance_ratio_summary.tsv
+
+Key results:
+  Model A R²: 0.0211
+  Model B R²: 0.0359
+  Variance ratio CG_5mC_ctrl: 1.0178 [0.9897, 1.0442]
+  Variance ratio CG_5mC_mut: 1.0338 [1.0072, 1.0630]
+  Variance ratio MeCP2_raw_ctrl: 0.0680 [0.0636, 0.1036]
+  Variance ratio MeCP2_raw_mut: 0.0700 [0.0658, 0.1199]
+  Variance ratio MeCP2_resid_A_ctrl: 0.0665 [0.0622, 0.0904]
+  Variance ratio MeCP2_resid_A_mut: 0.0690 [0.0649, 0.1070]
+  Variance ratio MeCP2_resid_B_ctrl: 0.0656 [0.0610, 0.0827]
+  Variance ratio MeCP2_resid_B_mut: 0.0679 [0.0637, 0.0976]
+================================================================================

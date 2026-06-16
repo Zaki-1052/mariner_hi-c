@@ -126,8 +126,8 @@ bootstrap_variance_ratio <- function(domain_means, within_vars, B = 1000, seed =
   })
 
   c(estimate = var(means_v) / mean(vars_v),
-    ci_lo = quantile(boot_ratios, 0.025),
-    ci_hi = quantile(boot_ratios, 0.975))
+    ci_lo = unname(quantile(boot_ratios, 0.025)),
+    ci_hi = unname(quantile(boot_ratios, 0.975)))
 }
 
 # =============================================================================

@@ -1,0 +1,76 @@
+================================================================================
+ADD MeCP2 SIGNAL TO TAD METHYLATION TSV
+================================================================================
+Date: 2026-06-15 16:35:04 
+Input:      data/tad_methylation_signal_late.tsv 
+Output:     data/tad_methylation_signal_late.tsv 
+Ctrl BW:    /Users/zakiralibhai/sdsc/bigwigs/MeCP2Ctrl.bw 
+Mut BW:     /Users/zakiralibhai/sdsc/bigwigs/MeCP2Mut.bw 
+Peaks Up:   ../../peaks/mecp2/MeCP2_up.bed 
+Peaks Down: ../../peaks/mecp2/MeCP2_down.bed 
+
+Loading packages...
+Packages loaded.
+
+Loading existing TAD signal TSV...
+  12141 domains x 61 columns
+  Reconstructed 12141 domain GRanges
+
+================================================================================
+MeCP2 SIGNAL EXTRACTION
+================================================================================
+
+--- Mean signal per domain ---
+  Ctrl:
+    MeCP2 ctrl (12141 regions)... median=0.975893, non-zero=12141/12141
+  Mut:
+    MeCP2 mut (12141 regions)... median=0.814583, non-zero=12141/12141
+  Pseudocount: 3.42e-01
+
+--- Intra-TAD CV (10kb bins) ---
+  Ctrl:
+    median CV=0.4486, non-NA=12141/12141
+  Mut:
+    median CV=0.4867, non-NA=12141/12141
+
+--- Within-domain variance (10kb bins) ---
+  Ctrl:
+    median within-var=1.52e-01
+  Mut:
+    median within-var=1.19e-01
+
+--- Boundary insulation (50kb flanks) ---
+  Ctrl:
+    left_inside (12141 regions)... median=0.942118, non-zero=12141/12141
+    left_outside (12141 regions)... median=0.950025, non-zero=12139/12141
+    right_inside (12141 regions)... median=0.935456, non-zero=12138/12141
+    right_outside (12141 regions)... median=0.955880, non-zero=12141/12141
+  Mut:
+    left_inside (12141 regions)... median=0.777158, non-zero=12141/12141
+    left_outside (12141 regions)... median=0.790205, non-zero=12139/12141
+    right_inside (12141 regions)... median=0.774045, non-zero=12138/12141
+    right_outside (12141 regions)... median=0.790266, non-zero=12141/12141
+
+--- Peak overlap counts ---
+  MeCP2-Up peaks loaded: 7686
+  MeCP2-Down peaks loaded: 1200
+  TADs with any MeCP2 peak: 2756 / 12141 (22.7%)
+  Total Up overlaps: 6645, Down overlaps: 1070
+
+Writing output to: data/tad_methylation_signal_late.tsv
+  12141 domains x 74 columns written
+
+================================================================================
+MeCP2 AUGMENTATION SUMMARY
+================================================================================
+  Domains:           12141
+  New columns:       13 (10 signal + 3 peak counts)
+  Total columns:     74
+  Ctrl mean median:  0.975893
+  Mut mean median:   0.814583
+  Ctrl CV median:    0.4486
+  Mut CV median:     0.4867
+  Ctrl variance ratio: 0.0680 (n=12141)
+  Peak overlaps:     6645 Up, 1070 Down across 2756 TADs
+
+Done.
