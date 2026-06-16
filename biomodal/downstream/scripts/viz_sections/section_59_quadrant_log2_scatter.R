@@ -288,75 +288,46 @@ cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", res_59a$rho, res_59a$rho_p))
 # PLOT 59b: MeCP2 vs H3K27ac (EUCHROMATIN)
 # =============================================================================
 
-cat("\n--- Plot 59b: MeCP2 vs H3K27ac (euchromatin) ---\n")
-
-EUCHROMATIN_STATES  <- c("Active_Promoter", "Active_Enhancer")
-HETEROCHROMATIN_STATES <- c("Repressed_Promoter", "Polycomb", "Bivalent_Promoter")
+cat("\n--- Plot 59b: MeCP2 vs H3K27ac ---\n")
 
 df_59b <- master %>%
-  dplyr::filter(
-    !is.na(mecp2_mean_fold),
-    !is.na(k27ac_fold),
-    chromatin_state %in% EUCHROMATIN_STATES
-  ) %>%
-  dplyr::mutate(
-    chromatin_state = factor(chromatin_state, levels = EUCHROMATIN_STATES)
-  )
+  dplyr::filter(!is.na(mecp2_mean_fold),
+                !is.na(k27ac_fold))
 
-cat(sprintf("  Euchromatin genes: %d\n", nrow(df_59b)))
-cat(sprintf("    Active_Promoter:  %d\n",
-            sum(df_59b$chromatin_state == "Active_Promoter")))
-cat(sprintf("    Active_Enhancer:  %d\n",
-            sum(df_59b$chromatin_state == "Active_Enhancer")))
+cat(sprintf("  Genes with MeCP2 + H3K27ac fold: %d\n", nrow(df_59b)))
 
 res_59b <- scatter_quadrant_plot(
   df_59b,
   x_col = "mecp2_mean_fold", y_col = "k27ac_fold",
-  color_col = "chromatin_state",
-  color_values = CHROMATIN_STATE_COLORS[EUCHROMATIN_STATES],
   x_lab = "MeCP2 DiffBind fold change",
   y_lab = "H3K27ac DiffBind fold change",
-  title = "MeCP2 vs H3K27ac at Euchromatin Genes"
+  title = "MeCP2 vs H3K27ac (Euchromatin Mark)"
 )
 
-save_section_plot(res_59b$plot, "59b_mecp2_euchromatin_k27ac", w = 9, h = 8)
+save_section_plot(res_59b$plot, "59b_mecp2_vs_k27ac", w = 9, h = 8)
 cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", res_59b$rho, res_59b$rho_p))
 
 # =============================================================================
 # PLOT 59c: MeCP2 vs H3K27me3 (HETEROCHROMATIN)
 # =============================================================================
 
-cat("\n--- Plot 59c: MeCP2 vs H3K27me3 (heterochromatin) ---\n")
+cat("\n--- Plot 59c: MeCP2 vs H3K27me3 ---\n")
 
 df_59c <- master %>%
-  dplyr::filter(
-    !is.na(mecp2_mean_fold),
-    !is.na(k27me3_fold),
-    chromatin_state %in% HETEROCHROMATIN_STATES
-  ) %>%
-  dplyr::mutate(
-    chromatin_state = factor(chromatin_state, levels = HETEROCHROMATIN_STATES)
-  )
+  dplyr::filter(!is.na(mecp2_mean_fold),
+                !is.na(k27me3_fold))
 
-cat(sprintf("  Heterochromatin genes: %d\n", nrow(df_59c)))
-cat(sprintf("    Repressed_Promoter: %d\n",
-            sum(df_59c$chromatin_state == "Repressed_Promoter")))
-cat(sprintf("    Polycomb:           %d\n",
-            sum(df_59c$chromatin_state == "Polycomb")))
-cat(sprintf("    Bivalent_Promoter:  %d\n",
-            sum(df_59c$chromatin_state == "Bivalent_Promoter")))
+cat(sprintf("  Genes with MeCP2 + H3K27me3 fold: %d\n", nrow(df_59c)))
 
 res_59c <- scatter_quadrant_plot(
   df_59c,
   x_col = "mecp2_mean_fold", y_col = "k27me3_fold",
-  color_col = "chromatin_state",
-  color_values = CHROMATIN_STATE_COLORS[HETEROCHROMATIN_STATES],
   x_lab = "MeCP2 DiffBind fold change",
   y_lab = "H3K27me3 DiffBind fold change",
-  title = "MeCP2 vs H3K27me3 at Heterochromatin Genes"
+  title = "MeCP2 vs H3K27me3 (Heterochromatin Mark)"
 )
 
-save_section_plot(res_59c$plot, "59c_mecp2_heterochromatin_k27me3", w = 9, h = 8)
+save_section_plot(res_59c$plot, "59c_mecp2_vs_k27me3", w = 9, h = 8)
 cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", res_59c$rho, res_59c$rho_p))
 
 # =============================================================================
@@ -368,7 +339,7 @@ cat("\n--- Composite 59bc ---\n")
 p_59bc <- res_59b$plot + res_59c$plot +
   plot_layout(ncol = 2) +
   plot_annotation(
-    title = "MeCP2 vs Histone Marks: Euchromatin vs Heterochromatin",
+    title = "MeCP2 vs Euchromatin and Heterochromatin Marks",
     tag_levels = "A"
   )
 
@@ -447,20 +418,91 @@ save_section_plot(res_59e$plot, "59e_k119ub_vs_5hmc")
 cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", res_59e$rho, res_59e$rho_p))
 
 # =============================================================================
-# COMPOSITE 59f: ALL 5 PLOTS
+# PLOT 59f: MeCP2 DiffBind FOLD vs 5mC mod_difference
 # =============================================================================
 
-cat("\n--- Composite 59f ---\n")
+cat("\n--- Plot 59f: MeCP2 vs 5mC ---\n")
 
-p_59f <- (res_59a$plot + plot_spacer()) /
+df_59f <- master %>%
+  dplyr::filter(!is.na(mecp2_mean_fold),
+                !is.na(mc_diff)) %>%
+  dplyr::mutate(
+    mc_status = ifelse(mc_sig, "5mC DMR", "Not DMR"),
+    mc_status = factor(mc_status, levels = c("5mC DMR", "Not DMR"))
+  )
+
+df_59f <- df_59f %>% dplyr::arrange(mc_status)
+
+cat(sprintf("  Genes with MeCP2 + 5mC: %d\n", nrow(df_59f)))
+cat(sprintf("  5mC DMR: %d | Not DMR: %d\n",
+            sum(df_59f$mc_status == "5mC DMR"),
+            sum(df_59f$mc_status == "Not DMR")))
+
+MC_STATUS_COLORS_F <- c("5mC DMR" = "#E41A1C", "Not DMR" = "grey70")
+
+res_59f <- scatter_quadrant_plot(
+  df_59f,
+  x_col = "mecp2_mean_fold", y_col = "mc_diff",
+  color_col = "mc_status", color_values = MC_STATUS_COLORS_F,
+  x_lab = "MeCP2 DiffBind fold change",
+  y_lab = expression(Delta * "5mC (mutant - control)"),
+  title = "MeCP2 vs 5mC Change at Gene Bodies"
+)
+
+save_section_plot(res_59f$plot, "59f_mecp2_vs_5mc")
+cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", res_59f$rho, res_59f$rho_p))
+
+# =============================================================================
+# PLOT 59g: MeCP2 DiffBind FOLD vs 5hmC mod_difference
+# =============================================================================
+
+cat("\n--- Plot 59g: MeCP2 vs 5hmC ---\n")
+
+df_59g <- master %>%
+  dplyr::filter(!is.na(mecp2_mean_fold),
+                !is.na(hmc_diff)) %>%
+  dplyr::mutate(
+    hmc_status = ifelse(hmc_sig, "5hmC DMR", "Not DMR"),
+    hmc_status = factor(hmc_status, levels = c("5hmC DMR", "Not DMR"))
+  )
+
+df_59g <- df_59g %>% dplyr::arrange(hmc_status)
+
+cat(sprintf("  Genes with MeCP2 + 5hmC: %d\n", nrow(df_59g)))
+cat(sprintf("  5hmC DMR: %d | Not DMR: %d\n",
+            sum(df_59g$hmc_status == "5hmC DMR"),
+            sum(df_59g$hmc_status == "Not DMR")))
+
+HMC_STATUS_COLORS_G <- c("5hmC DMR" = "#377EB8", "Not DMR" = "grey70")
+
+res_59g <- scatter_quadrant_plot(
+  df_59g,
+  x_col = "mecp2_mean_fold", y_col = "hmc_diff",
+  color_col = "hmc_status", color_values = HMC_STATUS_COLORS_G,
+  x_lab = "MeCP2 DiffBind fold change",
+  y_lab = expression(Delta * "5hmC (mutant - control)"),
+  title = "MeCP2 vs 5hmC Change at Gene Bodies"
+)
+
+save_section_plot(res_59g$plot, "59g_mecp2_vs_5hmc")
+cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", res_59g$rho, res_59g$rho_p))
+
+# =============================================================================
+# COMPOSITE 59h: ALL 7 PLOTS
+# =============================================================================
+
+cat("\n--- Composite 59h ---\n")
+
+p_59h <- (res_59a$plot + plot_spacer()) /
          (res_59b$plot + res_59c$plot) /
-         (res_59d$plot + res_59e$plot) +
+         (res_59d$plot + res_59e$plot) /
+         (res_59f$plot + res_59g$plot) +
   plot_annotation(
     title = "Ubiquitin-MeCP2-Methylation Quadrant Analysis",
     tag_levels = "A"
   )
 
-save_section_plot(p_59f, "59f_composite", w = 20, h = 24)
+save_section_plot(p_59h, "59h_composite", w = 20, h = 32)
 
 # =============================================================================
 # EXPORT MASTER TABLE
@@ -500,7 +542,9 @@ results <- list(
   "59b MeCP2 vs K27ac (euchromatin)"   = res_59b,
   "59c MeCP2 vs K27me3 (heterochrom.)" = res_59c,
   "59d K119ub vs 5mC"                  = res_59d,
-  "59e K119ub vs 5hmC"                 = res_59e
+  "59e K119ub vs 5hmC"                 = res_59e,
+  "59f MeCP2 vs 5mC"                   = res_59f,
+  "59g MeCP2 vs 5hmC"                  = res_59g
 )
 
 for (name in names(results)) {
@@ -509,6 +553,6 @@ for (name in names(results)) {
               name, format(r$n, big.mark = ","), r$rho))
 }
 
-cat("\nAll plots saved to:", OUTPUT_DIR, "\n")
+cat("\nAll plots saved to:", SEC59_DIR, "\n")
 cat("Master table saved to:", export_path, "\n")
 cat("Section 59 complete.\n")
