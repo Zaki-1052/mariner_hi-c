@@ -50,3 +50,116 @@ Merged: 202574 peaks with cg_mc_log2fc
 
 --- Quantile regression: MeCP2 Fold ~ CG mC log2FC (tau=0.5) ---
 
+  OLS:  intercept=0.0451, slope=0.1909, R²=0.0128
+  QR:   intercept=-0.0074, slope=0.0145
+  OLS vs QR residual Spearman correlation: 0.9059
+
+  Regression comparison: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/58_noncg_regression_comparison.tsv
+
+--- Corrected 57b: Ecker CH vs residual (MeCP2-Up only) ---
+
+  MeCP2-Up peaks with valid residual + Ecker CH: 7686
+  Spearman rho = -0.0680, p = 2.45e-09 (MeCP2-Up only)
+  Spearman rho = -0.1756, p = 1.81e-62 (pooled Up+Down, for reference)
+
+--- Ecker CH quartile analysis: MeCP2-Up peaks ---
+  Up_OLS Q1: n=1922, median_CH=0.007691, median_resid=1.4560, p=1.67e-315
+  Up_OLS Q2: n=1921, median_CH=0.011780, median_resid=1.5103, p=2.43e-315
+  Up_OLS Q3: n=1921, median_CH=0.016187, median_resid=1.5022, p=2.43e-315
+  Up_OLS Q4: n=1922, median_CH=0.024699, median_resid=1.3379, p=1.67e-315
+  Up_OLS Jonckheere (increasing): stat=10436724.0, p=1.00e+00
+  Up_OLS Kruskal-Wallis: chi²=71.58, p=1.96e-15
+
+  Up_QR Q1: n=1922, median_CH=0.007691, median_resid=1.5391, p=1.67e-315
+  Up_QR Q2: n=1921, median_CH=0.011780, median_resid=1.5790, p=2.43e-315
+  Up_QR Q3: n=1921, median_CH=0.016187, median_resid=1.5795, p=2.43e-315
+  Up_QR Q4: n=1922, median_CH=0.024699, median_resid=1.3983, p=1.67e-315
+  Up_QR Jonckheere (increasing): stat=10254439.0, p=1.00e+00
+  Up_QR Kruskal-Wallis: chi²=92.37, p=6.79e-20
+
+  MeCP2-Up quartile table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/58_noncg_dose_response_up.tsv
+
+--- Ecker CH quartile analysis: MeCP2-Down peaks (negative control) ---
+  MeCP2-Down peaks: 1200
+  Down_OLS Q1: n=300, median_CH=0.006065, median_resid=-0.9848, p=6.11e-51
+  Down_OLS Q2: n=300, median_CH=0.017471, median_resid=-0.9973, p=6.11e-51
+  Down_OLS Q3: n=300, median_CH=0.026286, median_resid=-1.0588, p=6.11e-51
+  Down_OLS Q4: n=300, median_CH=0.038563, median_resid=-1.0688, p=6.11e-51
+  Down_OLS Jonckheere (increasing): stat=242397.0, p=1.00e+00
+  Down_OLS Kruskal-Wallis: chi²=18.75, p=3.08e-04
+
+  MeCP2-Down quartile table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/58_noncg_dose_response_down.tsv
+
+--- Trend test summary ---
+  Trend tests: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/58_noncg_trend_tests.tsv
+
+--- Joint CG × CH stratification (MeCP2-Up) ---
+  Ecker CG median: 0.012307, Ecker CH median: 0.013856
+  CG Low / CH Low: n=1970, median_resid=1.6019, p=2.96e-323
+  CG Low / CH High: n=1873, median_resid=1.5159, p=1.62e-307
+  CG High / CH Low: n=1873, median_resid=1.3780, p=1.62e-307
+  CG High / CH High: n=1970, median_resid=1.3159, p=2.96e-323
+  Joint stratification: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/58_noncg_joint_stratification.tsv
+
+--- 58a: Corrected 57b correlation (MeCP2-Up only) ---
+  Saved: 58a_corrected_residual_vs_ecker_ch/{pdf,svg,jpg}
+  58a saved.
+--- 58b: Dose-response — MeCP2-Up ---
+  Saved: 58b_dose_response_up/{pdf,svg,jpg}
+  58b saved.
+--- 58c: Dose-response — MeCP2-Down (negative control) ---
+  Saved: 58c_dose_response_down/{pdf,svg,jpg}
+  58c saved.
+--- 58d: Scatter colored by CH quartile ---
+  Saved: 58d_scatter_by_quartile/{pdf,svg,jpg}
+  58d saved.
+--- 58e: Joint CG × CH heatmap ---
+  Saved: 58e_joint_cg_ch_heatmap/{pdf,svg,jpg}
+  58e saved.
+--- 58f: OLS vs QR residual comparison ---
+  Saved: 58f_ols_vs_qr_comparison/{pdf,svg,jpg}
+  58f saved.
+--- 58g: Composite panel ---
+  Saved: 58g_composite/{pdf,svg,jpg}
+  58g saved.
+
+================================================================================
+SECTION 58 COMPLETE
+================================================================================
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/58_noncg_dose_response
+Figures: 0 panels generated
+
+TSV outputs in /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables:
+  58_noncg_dose_response_down.tsv
+  58_noncg_dose_response_up.tsv
+  58_noncg_joint_stratification.tsv
+  58_noncg_regression_comparison.tsv
+  58_noncg_trend_tests.tsv
+
+=== KEY RESULTS ===
+  Corrected correlation (MeCP2-Up only):
+    Spearman rho = -0.0680, p = 2.45e-09
+  (Compare to pooled Up+Down: rho = -0.1756, p = 1.81e-62)
+
+  MeCP2-Up dose-response (OLS residual by Ecker CH quartile):
+    Q1 (low CH): median_resid = 1.4560 [1.4221, 1.4951]
+    Q2: median_resid = 1.5103 [1.4738, 1.5513]
+    Q3: median_resid = 1.5022 [1.4591, 1.5525]
+    Q4 (high CH): median_resid = 1.3379 [1.3072, 1.3711]
+    Jonckheere (increasing) p = 1.00e+00
+
+  MeCP2-Down negative control:
+    Q1 (low CH): median_resid = -0.9848
+    Q2: median_resid = -0.9973
+    Q3: median_resid = -1.0588
+    Q4 (high CH): median_resid = -1.0688
+    Jonckheere (increasing) p = 1.00e+00
+
+  Joint CG × CH stratification:
+    CG Low / CH Low: median_resid = 1.6019, n = 1970
+    CG Low / CH High: median_resid = 1.5159, n = 1873
+    CG High / CH Low: median_resid = 1.3780, n = 1873
+    CG High / CH High: median_resid = 1.3159, n = 1970
+
+  Quantile regression vs OLS: residual Spearman r = 0.9059
+================================================================================
