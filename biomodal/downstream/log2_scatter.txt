@@ -1,0 +1,116 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 16:24:42 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 59: LOG2 QUADRANT SCATTER PLOTS
+  K119ub x MeCP2 x 5mC x 5hmC gene-body integration
+================================================================================
+
+Validating input files...
+  [OK] K119ub signal: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/data/k119ub_gene_signal.tsv
+  [OK] MeCP2 gene table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/mecp2_gene_level_correlation.tsv
+  [OK] DiffBind gene table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/diffbind_gene_level_all_marks.tsv
+
+Loading data...
+  K119ub signal: 23150 genes (21604 quantifiable)
+  MeCP2 gene table: 9824 genes
+  DiffBind gene table: 20915 genes
+
+Building master gene-level data frame...
+  Master table: 23150 genes
+  With MeCP2 fold:   9822 (42.4%)
+  With methylation:  18377 (79.4%)
+  K119ub quantifiable: 21604
+
+--- Plot 59a: K119ub vs MeCP2 ---
+  Subset: 9591 genes
+  MeCP2 Up:   78
+  MeCP2 Down: 35
+  NS:         9478
+  Saved: 59a_k119ub_vs_mecp2/{pdf,svg,jpg}
+  Spearman rho = 0.240 (p = 3.86e-126)
+
+--- Plot 59b: MeCP2 vs H3K27ac (euchromatin) ---
+  Euchromatin genes: 3859
+    Active_Promoter:  3840
+    Active_Enhancer:  19
+  Saved: 59b_mecp2_euchromatin_k27ac/{pdf,svg,jpg}
+  Spearman rho = -0.210 (p = 1.28e-39)
+
+--- Plot 59c: MeCP2 vs H3K27me3 (heterochromatin) ---
+  Heterochromatin genes: 1464
+    Repressed_Promoter: 1381
+    Polycomb:           3
+    Bivalent_Promoter:  80
+  Saved: 59c_mecp2_heterochromatin_k27me3/{pdf,svg,jpg}
+  Spearman rho = 0.069 (p = 8.35e-03)
+
+--- Composite 59bc ---
+  Saved: 59bc_chromatin_composite/{pdf,svg,jpg}
+
+--- Plot 59d: K119ub vs 5mC ---
+  Subset: 17340 genes
+  5mC DMR: 9967 | Not DMR: 7373
+  Saved: 59d_k119ub_vs_5mc/{pdf,svg,jpg}
+  Spearman rho = 0.243 (p = 4.56e-232)
+
+--- Plot 59e: K119ub vs 5hmC ---
+  Subset: 17340 genes
+  5hmC DMR: 10599 | Not DMR: 6741
+  Saved: 59e_k119ub_vs_5hmc/{pdf,svg,jpg}
+  Spearman rho = -0.092 (p = 5.80e-34)
+
+--- Composite 59f ---
+  Saved: 59f_composite/{pdf,svg,jpg}
+
+--- Exporting master table ---
+  Saved: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/59_quadrant_master.tsv (23150 genes, 28 columns)
+
+================================================================================
+SECTION 59 SUMMARY
+================================================================================
+
+  59a K119ub vs MeCP2                       n= 9,591  rho=+0.240
+  59b MeCP2 vs K27ac (euchromatin)          n= 3,859  rho=-0.210
+  59c MeCP2 vs K27me3 (heterochrom.)        n= 1,464  rho=+0.069
+  59d K119ub vs 5mC                         n=17,339  rho=+0.243
+  59e K119ub vs 5hmC                        n=17,334  rho=-0.092
+
+All plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+Master table saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/59_quadrant_master.tsv 
+Section 59 complete.
