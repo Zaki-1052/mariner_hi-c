@@ -1,0 +1,138 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-15 17:44:45 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+================================================================================
+SECTION 56: PEAK-LEVEL MeCP2 vs CG METHYLATION
+================================================================================
+
+--- Loading MeCP2 DiffBind results ---
+  MeCP2: 202650 peaks (7686 sig up, 1200 sig down at FDR<0.05)
+  Created GRanges for 202650 peaks
+
+--- Extracting CG 5mC signal at MeCP2 peak coordinates ---
+  CG mC ctrl:
+  CG_mC_ctrl (202650 peaks)... median=0.006236, non-zero=186660/202650
+  CG mC mut:
+  CG_mC_mut (202650 peaks)... median=0.006282, non-zero=187260/202650
+
+  CG mC pseudocount: 5.61e-04
+  CG mC log2FC: median=0.0000, mean=0.0142
+  Peaks with CG mC increase: 96705 (47.7%)
+
+--- Peak-level regression: MeCP2 Fold ~ CG mC log2FC ---
+  Valid peaks for regression: 202574 / 202650
+  R² = 0.0128, adj-R² = 0.0128
+  Slope = 0.1909, Intercept = 0.0451
+  F = 2618.52, p = 0.00e+00
+  Regression table: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/56_mecp2_peak_regression.tsv
+
+--- Peak classification ---
+  MeCP2-Up peaks (FDR<0.05, Fold>0): 7686
+    CG-Concordant (CG also increases):     4960 (64.5%)
+    Non-CG Candidate (CG unchanged/down):  2726 (35.5%)
+
+  MeCP2-Down peaks: 1200
+    CG decreases:  726 (60.5%)
+    CG increases:  415 (34.6%)
+
+  MeCP2-Up residual: mean=1.596, median=1.445, Wilcoxon p=0.00e+00
+
+  Classification summary: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/56_mecp2_peak_classification_summary.tsv
+
+--- CG DMR overlap cross-tabulation ---
+  Cross-tabulation:
+                 
+                  Hyper-DMR No CG DMR
+  MeCP2 Down            755       445
+  MeCP2 Up             2687      4999
+  Not Significant     88844    104920
+
+  MeCP2-Up peak DMR overlap:
+    Hyper-DMR: 2687 (35.0%)
+    No CG DMR: 4999 (65.0%)
+
+--- Saving per-peak annotated data ---
+  Per-peak data: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/56_mecp2_peak_annotated.tsv (202650 rows x 17 cols)
+
+  Non-CG candidates: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/56_mecp2_peak_noncg_candidates.tsv (2726 peaks)
+
+--- 56a: MeCP2 Fold vs CG mC change ---
+  Saved: 56a_mecp2_vs_cg_scatter/{pdf,svg,jpg}
+  56a saved.
+--- 56b: MeCP2-Up peak classification ---
+  Saved: 56b_peak_classification/{pdf,svg,jpg}
+  56b saved.
+--- 56c: CG mC levels by MeCP2 status ---
+  MeCP2-Up vs Down CG mC ctrl: median 0.0041 vs 0.0075, p=7.89e-82
+  Saved: 56c_cg_levels_by_mecp2/{pdf,svg,jpg}
+  56c saved.
+--- 56d: Residual distributions ---
+  Saved: 56d_residual_distributions/{pdf,svg,jpg}
+  56d saved.
+--- 56e: CG DMR overlap ---
+  Fisher's test (MeCP2 direction x DMR overlap): p=3.58e-74
+  Saved: 56e_dmr_crosstab/{pdf,svg,jpg}
+  56e saved.
+--- 56f: Non-CG candidate chromatin context ---
+  Saved: 56f_chromatin_context/{pdf,svg,jpg}
+  56f saved.
+--- 56g: Composite panel ---
+  Saved: 56g_composite/{pdf,svg,jpg}
+  56g saved.
+
+================================================================================
+SECTION 56 COMPLETE
+================================================================================
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/56_mecp2_peak_cg_correction
+Figures: 0 panels generated
+
+TSV outputs in /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables:
+  56_mecp2_peak_annotated.tsv
+  56_mecp2_peak_chromatin_summary.tsv
+  56_mecp2_peak_classification_summary.tsv
+  56_mecp2_peak_dmr_crosstab.tsv
+  56_mecp2_peak_noncg_candidates.tsv
+  56_mecp2_peak_regression.tsv
+
+=== KEY RESULTS ===
+  Regression R²: 0.0128 (slope=0.19)
+  MeCP2-Up peaks: 7686 total
+    CG-Concordant:    4960 (64.5%) — CG increase may explain MeCP2 gain
+    Non-CG Candidate: 2726 (35.5%) — MeCP2 gain WITHOUT CG increase
+================================================================================
