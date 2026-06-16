@@ -366,35 +366,60 @@ cat("  56b saved.\n")
 cat("--- 56c: CG mC levels by MeCP2 status ---\n")
 
 level_df <- peaks[peaks$mecp2_class %in% c("MeCP2 Up", "MeCP2 Down"), ]
-level_df$mecp2_class <- factor(level_df$mecp2_class,
-                                levels = c("MeCP2 Up", "MeCP2 Down"))
 
-up_cg <- peaks$cg_mc_ctrl[peaks$mecp2_class == "MeCP2 Up"]
-down_cg <- peaks$cg_mc_ctrl[peaks$mecp2_class == "MeCP2 Down"]
-wt_label <- ""
-if (length(up_cg) > 5 && length(down_cg) > 5) {
-  wt <- wilcox.test(up_cg, down_cg)
-  wt_label <- sprintf("Wilcoxon p = %.2e", wt$p.value)
-  cat(sprintf("  MeCP2-Up vs Down CG mC ctrl: median %.4f vs %.4f, p=%.2e\n",
-              median(up_cg, na.rm = TRUE), median(down_cg, na.rm = TRUE), wt$p.value))
+level_long <- rbind(
+  data.frame(mecp2_class = level_df$mecp2_class,
+             condition = "Control",
+             cg_mc = level_df$cg_mc_ctrl,
+             stringsAsFactors = FALSE),
+  data.frame(mecp2_class = level_df$mecp2_class,
+             condition = "Mutant",
+             cg_mc = level_df$cg_mc_mut,
+             stringsAsFactors = FALSE)
+)
+level_long$mecp2_class <- factor(level_long$mecp2_class,
+                                  levels = c("MeCP2 Up", "MeCP2 Down"))
+level_long$condition <- factor(level_long$condition, levels = c("Control", "Mutant"))
+
+p_labels <- list()
+for (cond in c("Control", "Mutant")) {
+  up_cg <- level_long$cg_mc[level_long$mecp2_class == "MeCP2 Up" &
+                             level_long$condition == cond]
+  down_cg <- level_long$cg_mc[level_long$mecp2_class == "MeCP2 Down" &
+                               level_long$condition == cond]
+  if (length(up_cg) > 5 && length(down_cg) > 5) {
+    wt <- wilcox.test(up_cg, down_cg)
+    p_labels[[cond]] <- data.frame(
+      condition = factor(cond, levels = c("Control", "Mutant")),
+      label = sprintf("p = %.1e\nmedian: %.4f vs %.4f",
+                       wt$p.value,
+                       median(up_cg, na.rm = TRUE),
+                       median(down_cg, na.rm = TRUE)),
+      stringsAsFactors = FALSE
+    )
+    cat(sprintf("  %s — MeCP2-Up vs Down: median %.4f vs %.4f, p=%.2e\n",
+                cond, median(up_cg, na.rm = TRUE),
+                median(down_cg, na.rm = TRUE), wt$p.value))
+  }
 }
+p_label_df <- do.call(rbind, p_labels)
 
-p56c <- ggplot(level_df, aes(x = mecp2_class, y = cg_mc_ctrl, fill = mecp2_class)) +
+p56c <- ggplot(level_long, aes(x = mecp2_class, y = cg_mc, fill = mecp2_class)) +
   geom_violin(alpha = 0.6, scale = "width") +
   geom_boxplot(width = 0.15, outlier.size = 0.2, alpha = 0.9) +
+  facet_wrap(~ condition) +
   scale_fill_manual(values = c("MeCP2 Up" = "#D95F02", "MeCP2 Down" = "#7570B3")) +
-  annotate("text", x = 1.5, y = Inf, label = wt_label,
-           vjust = 1.5, size = 3.5) +
-  labs(title = "CG 5mC Level at Significant MeCP2 Peaks",
-       subtitle = sprintf("MeCP2-Up peaks (n=%d) sit at LOWER CG regions than MeCP2-Down (n=%d)",
-                           sum(level_df$mecp2_class == "MeCP2 Up"),
-                           sum(level_df$mecp2_class == "MeCP2 Down")),
-       x = NULL, y = "CG 5mC mean signal (ctrl)") +
+  geom_text(data = p_label_df,
+            aes(x = 1.5, y = Inf, label = label),
+            vjust = 1.3, size = 3.2, inherit.aes = FALSE) +
+  labs(title = "CG 5mC at Significant MeCP2 Peaks: Control vs Mutant",
+       subtitle = "MeCP2-Up peaks sit at lower-CG regions in both conditions",
+       x = NULL, y = "CG 5mC mean signal") +
   theme_biomodal() +
   theme(legend.position = "none")
 
 save_multiformat_ggplot(p56c, file.path(SEC56_DIR, "56c_cg_levels_by_mecp2"),
-                        width = 8, height = 7)
+                        width = 10, height = 7)
 cat("  56c saved.\n")
 
 # =============================================================================
