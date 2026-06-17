@@ -1,0 +1,156 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 22:45:49 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 60: MeCP2 STATUS EPIGENETIC PROFILES
+  Mirror-image epigenetic patterns at MeCP2-Up vs MeCP2-Down loci
+================================================================================
+
+Validating input...
+  [OK] /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/59_quadrant_master.tsv
+  Loaded 23150 genes, 28 columns
+
+Classifying MeCP2 status...
+  MeCP2 Up:   78
+  MeCP2 Down: 35
+  NS:         23037
+
+Building long-format data frame...
+  Long df: 79740 rows
+  k119ub_bw   : 21604 values (Up=78, Down=35, NS=21491)
+  k119ub_db   : 8712 values (Up=66, Down=32, NS=8614)
+  mc          : 18377 values (Up=78, Down=35, NS=18264)
+  hmc         : 18377 values (Up=78, Down=35, NS=18264)
+  k27ac       : 8492 values (Up=61, Down=19, NS=8412)
+  k27me3      : 4178 values (Up=17, Down=25, NS=4136)
+
+--- Statistical tests ---
+
+One-sample Wilcoxon vs zero (BH-corrected):
+
+  MeCP2 Up:
+    k119ub_bw     n=  78  mean=+0.6298  wilcox_q=4.70e-13  ***
+    k119ub_db     n=  66  mean=+0.7393  wilcox_q=1.60e-11  ***
+    mc            n=  78  mean=+0.0491  wilcox_q=9.22e-13  ***
+    hmc           n=  78  mean=-0.0175  wilcox_q=2.98e-08  ***
+    k27ac         n=  61  mean=-0.7181  wilcox_q=1.23e-09  ***
+    k27me3        n=  17  mean=+1.1101  wilcox_q=1.79e-02  *
+
+  MeCP2 Down:
+    k119ub_bw     n=  35  mean=-0.0391  wilcox_q=1.82e-01  ns
+    k119ub_db     n=  32  mean=-0.0645  wilcox_q=8.71e-02  ns
+    mc            n=  35  mean=-0.0278  wilcox_q=7.19e-04  ***
+    hmc           n=  35  mean=-0.0034  wilcox_q=8.38e-01  ns
+    k27ac         n=  19  mean=+0.4814  wilcox_q=1.58e-03  **
+    k27me3        n=  25  mean=-0.3366  wilcox_q=1.79e-02  *
+
+Two-sample Mann-Whitney (BH-corrected):
+
+  Up_vs_Down:
+    k119ub_bw     mw_q=5.42e-12  ***
+    k119ub_db     mw_q=2.74e-10  ***
+    mc            mw_q=5.42e-12  ***
+    hmc           mw_q=3.14e-03  **
+    k27ac         mw_q=1.49e-08  ***
+    k27me3        mw_q=1.05e-03  **
+
+  Down_vs_NS:
+    k119ub_bw     mw_q=4.95e-01  ns
+    k119ub_db     mw_q=4.35e-03  **
+    mc            mw_q=2.64e-09  ***
+    hmc           mw_q=3.14e-03  **
+    k27ac         mw_q=1.06e-04  ***
+    k27me3        mw_q=1.66e-02  *
+
+  Saved: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/60_mecp2_status_stats.tsv (18 rows)
+
+--- Plot 60a: Multi-panel violin+box ---
+  Violin data: 71028 rows across 5 marks
+  Saved: 60a_violin_marks_by_mecp2/{pdf,svg,jpg}
+
+--- Plot 60b: Summary heatmap ---
+  Mean change matrix:
+                MeCP2 Up MeCP2 Down
+K119ub [BigWig]   0.6298    -0.0391
+5mC (CpG)         0.0491    -0.0278
+5hmC (CpG)       -0.0175    -0.0034
+H3K27ac          -0.7181     0.4814
+H3K27me3          1.1101    -0.3366
+  Significance:
+                MeCP2 Up MeCP2 Down
+K119ub [BigWig] "***"    "ns"      
+5mC (CpG)       "***"    "***"     
+5hmC (CpG)      "***"    "ns"      
+H3K27ac         "***"    "**"      
+H3K27me3        "*"      "*"       
+  Saved: 60b_summary_heatmap/{pdf,svg,jpg}
+
+--- Plot 60c: Effect-size lollipop ---
+  Saved: 60c_effect_size_lollipop/{pdf,svg,jpg}
+
+--- Plot 60d: Per-gene strip (MeCP2-Down) ---
+  MeCP2-Down genes: 35
+  Strip data: 181 points
+  Saved: 60d_down_genes_strip/{pdf,svg,jpg}
+
+--- Plot 60e: Composite ---
+  Saved: 60e_composite/{pdf,svg,jpg}
+
+--- Exporting MeCP2-Down gene table ---
+  Saved: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/60_mecp2_down_gene_table.tsv (35 genes, 19 cols)
+
+================================================================================
+SECTION 60 SUMMARY
+================================================================================
+
+  MeCP2-Up   ( 78 genes): K119ub UP, 5mC UP, 5hmC DOWN, K27ac DOWN, K27me3 UP
+  MeCP2-Down ( 35 genes): K119ub FLAT (ns), 5mC down, K27ac UP, K27me3 DOWN
+  NS         (23,037 genes): all marks near zero
+
+Plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/60_mecp2_status_epigenetic_profiles 
+  60a: 5-facet violin+box with ggsignif brackets
+  60b: Summary heatmap (pheatmap)
+  60c: Effect-size lollipop with 95% CI
+  60d: MeCP2-Down per-gene strip chart
+  60e: Patchwork composite (60a + 60c + 60d)
+
+Tables saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables 
+  60_mecp2_status_stats.tsv     (18 rows)
+  60_mecp2_down_gene_table.tsv  (35 genes)
+
+Section 60 complete.
