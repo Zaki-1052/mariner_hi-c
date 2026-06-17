@@ -1,0 +1,99 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 23:31:20 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 63: MASTER MULTI-MARK HEATMAP AT MeCP2 BINDING SITES
+================================================================================
+
+--- Loading data ---
+  Signal table: 202650 peaks × 56 columns
+  Significant MeCP2 peaks: 8886 (Up=7686, Down=1200)
+
+--- Classifying chromatin state ---
+  ChIP: 15105 peaks
+  ChIP: 15809 peaks
+  ChIP: 113781 peaks
+  ChIP: 6581 peaks
+  ChIP: 318 peaks
+  Chromatin states:
+    Unmarked             5916
+    Poised_Enhancer      1558
+    Active_Enhancer      911
+    Polycomb             322
+    Repressed_Promoter   99
+    Active_Promoter      69
+    Bivalent_Promoter    11
+
+--- 63a: Multi-mark heatmap (ctrl signal) ---
+  Subsampled 8886 → 5000 peaks for heatmap
+  Rendering heatmap...
+  Saved: 63a_multimark_heatmap/{pdf,svg,jpg}
+
+--- 63b: Per-cluster mark profiles ---
+  Saved: 63b_cluster_profiles/{pdf,svg,jpg}
+
+--- 63c: Cluster composition ---
+  Saved: 63c_cluster_composition/{pdf,svg,jpg}
+  Cluster summary:
+    Cluster 1: n=1874  Up=1759  Down=115  top_state=Unmarked
+    Cluster 2: n=1692  Up=1621  Down=71  top_state=Unmarked
+    Cluster 3: n=1064  Up=590  Down=474  top_state=Unmarked
+    Cluster 4: n=370  Up=336  Down=34  top_state=Unmarked
+
+--- 63d: Log2FC heatmap ---
+  Saved: 63d_log2fc_heatmap/{pdf,svg,jpg}
+
+--- Saving tables ---
+  Saved: 63_peak_signal_matrix.tsv
+  Saved: 63_cluster_assignments.tsv
+
+================================================================================
+SECTION 63 SUMMARY
+================================================================================
+
+  Significant MeCP2 peaks: 8886
+  Heatmap peaks: 5000 (subsampled if >5000)
+  Clusters: 4
+
+  Plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/63_mecp2_master_heatmap 
+    63a: Multi-mark ctrl signal heatmap (pheatmap)
+    63b: Per-cluster mark profile bars
+    63c: Cluster composition (chromatin state + MeCP2 direction)
+    63d: Log2FC heatmap
+
+Section 63 complete.

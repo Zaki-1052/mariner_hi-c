@@ -96,6 +96,24 @@ ECKER_BIGWIGS <- list(
   ch = "/Users/zakiralibhai/sdsc/bigwigs/noncg/250314_ecker_CH.bw"
 )
 
+# Histone/chromatin mark BigWigs (merged, from sdsc/bigwigs/)
+HISTONE_BIGWIGS <- list(
+  k27me3_ctrl = "/Users/zakiralibhai/sdsc/bigwigs/H3K27me3Ctrl.bw",
+  k27me3_mut  = "/Users/zakiralibhai/sdsc/bigwigs/H3K27me3Mut.bw",
+  k27ac_ctrl  = "/Users/zakiralibhai/sdsc/bigwigs/H3K27acCtrl.bw",
+  k27ac_mut   = "/Users/zakiralibhai/sdsc/bigwigs/H3K27acMut.bw",
+  k119ub_ctrl = "/Users/zakiralibhai/sdsc/bigwigs/H2AK119ubCtrl.bw",
+  k119ub_mut  = "/Users/zakiralibhai/sdsc/bigwigs/H2AK119ubMut.bw",
+  atac_ctrl   = "/Users/zakiralibhai/sdsc/bigwigs/ATACctrl.bw",
+  atac_mut    = "/Users/zakiralibhai/sdsc/bigwigs/ATACmut.bw",
+  k4me3_ctrl  = "/Users/zakiralibhai/sdsc/bigwigs/H3K4me3Ctrl.bw",
+  k4me3_mut   = "/Users/zakiralibhai/sdsc/bigwigs/H3K4me3Mut.bw",
+  k36me3_ctrl = "/Users/zakiralibhai/sdsc/bigwigs/H3K36me3Ctrl.bw",
+  k36me3_mut  = "/Users/zakiralibhai/sdsc/bigwigs/H3K36me3Mut.bw",
+  k27me1_ctrl = "/Users/zakiralibhai/sdsc/bigwigs/H3K27me1Ctrl.bw",
+  k27me1_mut  = "/Users/zakiralibhai/sdsc/bigwigs/H3K27me1Mut.bw"
+)
+
 # ATAC-seq differential and consensus peak files (from peaks/atac_seq/)
 ATAC_FILES <- list(
   up   = file.path(REPO_ROOT, "peaks/atac_seq/ATAC_up.bed"),

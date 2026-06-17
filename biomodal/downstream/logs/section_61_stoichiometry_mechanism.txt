@@ -1,0 +1,279 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 23:30:14 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 61: STOICHIOMETRY TEST & MECHANISM DIFFERENTIATION
+  DNMT3A dehydroxymethylase vs TET inhibition
+================================================================================
+
+--- Loading data ---
+
+  [OK] /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/diffbind_gene_level_all_marks.tsv
+  [OK] /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/59_quadrant_master.tsv
+  [OK] /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/mecp2_coordinated_genes.tsv
+  [OK] /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/enrichment_go_bp.tsv
+  [OK] data/tet_ko_gene_signal.tsv
+  DiffBind all-marks: 20915 genes
+  Quadrant master:    23150 genes
+  Coordinated genes:  6069 genes
+  GO BP terms:        6455 terms
+  TET-KO signal:      21403 genes
+
+  Merged table: 20915 genes
+  MeCP2 Up: 78 | Down: 35 | NS: 20802
+  Coordinated: 6069 genes
+
+--- Extracting neuronal gene set from GO BP enrichment ---
+  Found 276 neuronal GO terms (matching 'synap|neuron|axon')
+  Union: 1149 unique neuronal genes
+  Top terms: vesicle-mediated transport in synapse; synaptic vesicle cycle; positive regulation of neuron projection development; synaptic vesicle recycling; presynaptic endocytosis
+  Neuronal genes in master table: 1149 / 20915
+
+--- 61a: Total methylation conservation test ---
+
+  Total methylation conservation (Wilcoxon vs 0, BH-corrected):
+    All genes            n=20915  mean_Δ=-0.00139  DECREASES  q=2.48e-112 ***
+    MeCP2 Up             n=   78  mean_Δ=+0.03160  INCREASES  q=3.19e-11 ***
+    MeCP2 Down           n=   35  mean_Δ=-0.03118  DECREASES  q=1.17e-03 **
+    Coordinated          n= 6069  mean_Δ=+0.00697  INCREASES  q=2.12e-178 ***
+    Neuronal             n= 1149  mean_Δ=+0.01200  INCREASES  q=2.07e-56 ***
+    Neuronal + Coord     n=  999  mean_Δ=+0.00781  INCREASES  q=3.77e-30 ***
+  Saved: 61a_total_methylation_conservation/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Δ Total methylation (mut − ctrl)' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Δ Total methylation (mut − ctrl)' in 'mbcsToSbcs': - substituted for − (U+2212)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Δ(total) = total_mut - total_ctrl | dashed line = conservation (dehydroxymethylase)' in 'mbcsToSbcs': for Δ (U+0394)
+
+--- 61b: Stoichiometry scatter ---
+  Global slope: -0.9589 [-0.9778, -0.9401]
+  R² = 0.3218, p < 2.2e-16
+  Reference slope for dehydroxymethylase: -1.0
+  Observed slope is significantly different from -1: → NOT stoichiometric
+  MeCP2 Up:          slope=-0.8939 [-1.2913, -0.4964]  R²=0.2089  n=78
+  Coordinated:       slope=-1.2878 [-1.3232, -1.2524]  R²=0.4559  n=6069
+  Neuronal:          slope=-0.7208 [-0.8051, -0.6366]  R²=0.1974  n=1149
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 61b_stoichiometry_scatter/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Δ5hmC (mod_difference)' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Δ5mC (mod_difference)' in 'mbcsToSbcs': for Δ (U+0394)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Black = OLS (slope=-0.959, R²=0.3218) | Orange dashed = reference slope −1 (dehydroxymethylase)' in 'mbcsToSbcs': - substituted for − (U+2212)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Stoichiometry test: Δ5mC vs Δ5hmC' in 'mbcsToSbcs': for Δ (U+0394)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Stoichiometry test: Δ5mC vs Δ5hmC' in 'mbcsToSbcs': for Δ (U+0394)
+
+--- 61c: Delta-ratio chromatin accessibility models ---
+  Complete cases for chromatin models: 3434 genes
+
+  Chromatin accessibility models for delta_ratio:
+    ATAC only                           R²=0.0949  adj_R²=0.0946  AIC=-15160  p < 2.2e-16
+    ATAC + K27me3                       R²=0.1887  adj_R²=0.1883  AIC=-15535  p < 2.2e-16
+    ATAC + K27me3 + K119ub              R²=0.2290  adj_R²=0.2283  AIC=-15707  p < 2.2e-16
+    ATAC + K27me3 + K119ub + K27ac      R²=0.3033  adj_R²=0.3013  AIC=-6029  p < 2.2e-16
+
+  Coefficients (ATAC + K27me3 + K119ub):
+    (Intercept)        beta=-0.00441  SE=0.00053  t=-8.38  p < 2.2e-16
+    atac_fold          beta=+0.01289  SE=0.00110  t=11.72  p < 2.2e-16
+    k27me3_fold        beta=-0.00935  SE=0.00070  t=-13.36  p < 2.2e-16
+    k119ub_fold        beta=-0.01426  SE=0.00107  t=-13.39  p < 2.2e-16
+  Saved: 61c_chromatin_model_r2/{pdf,svg,jpg}
+
+--- 61d: Mediation analysis ---
+  Mediation sample: 3780 genes
+  Path a (K27me3 → ATAC):        beta = -0.22836, p < 2.2e-16
+  Path b (ATAC → delta_ratio|K27me3): beta = +0.01221, p < 2.2e-16
+  Path c  (total: K27me3 → delta_ratio):   beta = -0.01547
+  Path c' (direct: K27me3 → delta_ratio|ATAC): beta = -0.01268
+  Indirect effect (a × b): -0.002789
+  Proportion mediated:     18.0%
+  Bootstrap 95% CI: [-0.003371, -0.002265]
+  Bootstrap p ≈ 0.0000
+  Mediation SIGNIFICANT (CI excludes zero)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 61d_mediation_panels/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'β = -0.2284, p < 2.2e-16' in 'mbcsToSbcs': for β (U+03B2)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Path a: K27me3 → ATAC' in 'mbcsToSbcs': -> substituted for → (U+2192)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'β = 0.0122, p < 2.2e-16' in 'mbcsToSbcs': for β (U+03B2)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Path b: ATAC → TET efficiency' in 'mbcsToSbcs': -> substituted for → (U+2192)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Proportion mediated: 18.0% | If significant → TET inhibition via chromatin closure' in 'mbcsToSbcs': -> substituted for → (U+2192)
+6: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Mediation: K27me3 → ATAC accessibility → TET efficiency' in 'mbcsToSbcs': -> substituted for → (U+2192)
+7: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Mediation: K27me3 → ATAC accessibility → TET efficiency' in 'mbcsToSbcs': -> substituted for → (U+2192)
+
+--- 61e: Neuronal gene subset definition ---
+  MeCP2-Up:     78 genes
+  Coordinated:  6069 genes
+  Neuronal GO:  1149 genes
+  Neuronal ∩ Coordinated: 999
+  Neuronal ∩ MeCP2-Up:    16
+  Coordinated ∩ MeCP2-Up: 51
+  All three:              12
+  Saved: 61e_neuronal_venn/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↓ (U+2193)
+  Saved: 61_neuronal_gene_set.tsv (1149 genes)
+
+  Stoichiometry on neuronal subset:
+    Neuronal slope: -0.7208 [-0.8051, -0.6366]  R²=0.1974  n=1149
+  Mediation on neuronal subset:
+    indirect = -0.003760 [-0.006976, -0.001589]  p≈0.0000  n=180
+
+--- 61f: TET-KO comparison ---
+  Genes with both BAP1-KO and TET-KO data: 20851
+  Of which neuronal: 1149
+
+  BAP1-KO vs TET-KO delta_ratio Spearman correlations:
+    All genes       rho=0.2199  p < 2.2e-16  n=20851
+    Neuronal        rho=0.0982  p = 8.58e-04  n=1149
+    Coordinated     rho=0.1761  p < 2.2e-16  n=6069
+Warning messages:
+1: In cor.test.default(tetko_merged$delta_ratio[mask], tetko_merged$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+2: In cor.test.default(tetko_merged$delta_ratio[mask], tetko_merged$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+3: In cor.test.default(tetko_merged$delta_ratio[mask], tetko_merged$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+Warning message:
+In cor.test.default(plot_tetko$delta_ratio, plot_tetko$delta_ratio_tet,  :
+  Cannot compute exact p-value with ties
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 61f_bap1_vs_tetko_scatter/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'TET-KO Δ ratio (hmC/(mC+hmC))' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'BAP1-KO Δ ratio (hmC/(mC+hmC))' in 'mbcsToSbcs': for Δ (U+0394)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Spearman ρ = 0.220, p < 2.2e-16, n = 20851 | If correlated → shared TET pathway' in 'mbcsToSbcs': for ρ (U+03C1)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Spearman ρ = 0.220, p < 2.2e-16, n = 20851 | If correlated → shared TET pathway' in 'mbcsToSbcs': -> substituted for → (U+2192)
+
+--- Saving tables ---
+  Saved: 61_stoichiometry_summary.tsv
+  Saved: 61_stoichiometry_slopes.tsv
+  Saved: 61_delta_ratio_chromatin_models.tsv
+  Saved: 61_mediation_results.tsv
+  Saved: 61_tetko_comparison.tsv
+
+--- 61g: Composite ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 61g_composite/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Δ Total methylation (mut − ctrl)' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Δ Total methylation (mut − ctrl)' in 'mbcsToSbcs': - substituted for − (U+2212)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Δ(total) = total_mut - total_ctrl | dashed line = conservation (dehydroxymethylase)' in 'mbcsToSbcs': for Δ (U+0394)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Δ5mC (mod_difference)' in 'mbcsToSbcs': for Δ (U+0394)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Δ5hmC (mod_difference)' in 'mbcsToSbcs': for Δ (U+0394)
+6: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Black = OLS (slope=-0.959, R²=0.3218) | Orange dashed = reference slope −1 (dehydroxymethylase)' in 'mbcsToSbcs': - substituted for − (U+2212)
+7: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Stoichiometry test: Δ5mC vs Δ5hmC' in 'mbcsToSbcs': for Δ (U+0394)
+8: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Stoichiometry test: Δ5mC vs Δ5hmC' in 'mbcsToSbcs': for Δ (U+0394)
+9: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↑ (U+2191)
+10: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↓ (U+2193)
+
+================================================================================
+SECTION 61 SUMMARY
+================================================================================
+
+  KEY RESULTS:
+    Total methylation (mC+hmC): CONSERVED in BAP1-KO (→ favors dehydroxymethylase conversion)
+    Δ5mC~Δ5hmC slope: -0.959 (reference: -1.0)
+    Slope ≠ -1 → NOT stoichiometric → independent processes
+    Mediation (K27me3→ATAC→delta_ratio): SIGNIFICANT (proportion=18.0%)
+    TET-KO phenocopy: rho=0.220 (SIGNIFICANT)
+
+  Neuronal gene set: 1149 genes (saved to 61_neuronal_gene_set.tsv)
+    Overlap with coordinated: 999
+    Overlap with MeCP2-Up:    16
+    Triple overlap:           12
+
+  Plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/61_stoichiometry_mechanism 
+    61a: Total methylation conservation violin
+    61b: Stoichiometry scatter (Δ5mC vs Δ5hmC)
+    61c: Chromatin accessibility model R² comparison
+    61d: Mediation panels (K27me3→ATAC→delta_ratio)
+    61e: Neuronal gene Venn diagram
+    61f: BAP1-KO vs TET-KO delta_ratio scatter
+    61g: Composite
+
+  Tables saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables 
+    61_stoichiometry_summary.tsv
+    61_stoichiometry_slopes.tsv
+    61_delta_ratio_chromatin_models.tsv
+    61_mediation_results.tsv
+    61_neuronal_gene_set.tsv
+    61_tetko_comparison.tsv
+
+Section 61 complete.
