@@ -1,0 +1,138 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-17 00:30:41 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 61h: MeCP2-Up + K119ub-Up QUADRANT GO ENRICHMENT
+================================================================================
+
+  Loaded 23150 genes from quadrant master
+
+  MeCP2-Up total:               78 genes
+  K119ub quantifiable:          21604 genes
+  Top-right quadrant (Up+Up):   72 genes
+  Top-left quadrant (Up+Down):  6 genes
+
+  Quadrant genes: A330070K13Rik, Ap3b1, Aqp6, Asap1, Astn2, Bcl2l15, Bhmt, Ccdc192, Cd83, Cep128, Cep170, Cerkl, Clnk, Cnr1, Cntn6, Cog5, Col9a1, Dcx, Emcn, Epyc, Ercc8, F830045P16Rik, Fam184a, Fam81b, Fgf1, Fstl5, Fut9, Glce, Gm973, Gpm6a, Gpr22, Gprin3, Hcn1, Hgd, Hif1a, Il16, Il1rapl1, Kbtbd12, Kera, Kif18a, Krt24, Lamb3, Lgi1, Lipc, Micu3, Nek10, Nhlh2, Npvf, Ntn4, Patj, Pcdh9, Phldb2, Plcb1, Plxnd1, Ppp1r14a, Prom1, Ptchd4, Rbm24, Scg2, Slc13a1, Snca, Sox6, Spam1, Sppl2c, St18, Svep1, Syne1, Tbc1d31, Tdo2, Thbs2, Ttr, Vwa8
+  Saved gene table: 61h_mecp2_up_k119ub_up_genes.tsv (72 genes)
+
+--- Running GO BP enrichment ---
+'select()' returned 1:1 mapping between keys and columns
+  Mapped 72 / 72 symbols to Entrez IDs
+'select()' returned 1:1 mapping between keys and columns
+Warning message:
+In bitr(background, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  0.11% of input gene IDs are fail to map...
+  Background: 21581 Entrez IDs
+  Significant GO BP terms (q < 0.05): 1
+
+  Top GO BP terms:
+    basement membrane assembly                              q=2.09e-02  3/72
+
+  Of top 20 terms: 0 are neuronal/synaptic (0%)
+  Saved: 61h_quadrant_go_bp.tsv (1754 terms)
+
+--- Running KEGG enrichment ---
+Reading KEGG annotation online: "https://rest.kegg.jp/link/mmu/pathway"...
+Reading KEGG annotation online: "https://rest.kegg.jp/list/pathway/mmu"...
+  Significant KEGG pathways (q < 0.05): 0
+  Saved: 61h_quadrant_kegg.tsv
+
+================================================================================
+RELAXED ANALYSIS: MeCP2 fold > 0 + K119ub log2fc > 0 (no FDR filter)
+================================================================================
+
+  Relaxed top-right quadrant: 2058 genes (vs 72 strict)
+  Syt1: fold=0.103  FDR=0.851  K119ub=0.704  in_relaxed=YES
+  Zbtb20: fold=0.853  FDR=0.384  K119ub=0.919  in_relaxed=YES
+  Trpm3: fold=0.626  FDR=0.954  K119ub=0.877  in_relaxed=YES
+  Ampd3: fold=-0.052  FDR=0.505  K119ub=0.088  in_relaxed=no
+  Saved: 61h_relaxed_quadrant_genes.tsv (2058 genes)
+
+--- Relaxed GO BP enrichment ---
+'select()' returned 1:1 mapping between keys and columns
+Warning message:
+In bitr(relaxed_genes, fromType = "SYMBOL", toType = "ENTREZID",  :
+  0.05% of input gene IDs are fail to map...
+  Mapped 2057 / 2058 symbols to Entrez IDs
+  Significant GO BP terms (q < 0.05): 50
+
+  Top GO BP terms (relaxed):
+    synapse assembly                                        q=6.01e-06  64/1994
+    regulation of synapse organization                      q=6.01e-06  76/1994
+    regulation of synapse structure or activity             q=6.01e-06  77/1994
+    axon guidance                                           q=6.52e-06  56/1994
+    neuron projection guidance                              q=6.52e-06  56/1994
+    neuron recognition                                      q=5.32e-05  20/1994
+    positive regulation of synapse assembly                 q=2.33e-04  25/1994
+    positive regulation of cell junction assembly           q=1.20e-03  32/1994
+    cell-cell adhesion via plasma-membrane adhesion molecul q=1.33e-03  46/1994
+    neuron migration                                        q=1.35e-03  44/1994
+    regulation of cell junction assembly                    q=2.39e-03  56/1994
+    positive regulation of cell projection organization     q=3.64e-03  74/1994
+    regulation of postsynaptic membrane potential           q=7.31e-03  34/1994
+    establishment of organelle localization                 q=8.20e-03  76/1994
+    negative regulation of cell projection organization     q=8.20e-03  41/1994
+    positive regulation of nervous system development       q=1.20e-02  62/1994
+    protein-containing complex localization                 q=1.20e-02  48/1994
+    synaptic membrane adhesion                              q=1.25e-02  14/1994
+    vesicle localization                                    q=1.27e-02  41/1994
+    establishment of vesicle localization                   q=1.30e-02  38/1994
+    positive regulation of neuron projection development    q=1.30e-02  43/1994
+    actin filament organization                             q=1.30e-02  72/1994
+    regulation of synapse assembly                          q=1.38e-02  39/1994
+    maintenance of synapse structure                        q=2.41e-02  13/1994
+    mitotic cell cycle phase transition                     q=2.41e-02  67/1994
+
+  Of top 25 terms: 14 are neuronal/synaptic (56%)
+  Saved: 61h_relaxed_go_bp.tsv (5989 terms)
+  Saved: 61h_relaxed_go_dotplot/{pdf,svg,jpg}
+
+--- Relaxed KEGG enrichment ---
+  Significant KEGG pathways (q < 0.05): 1
+
+  Top KEGG pathways (relaxed):
+    Axon guidance                                      q=3.54e-02  35/891
+  Saved: 61h_relaxed_kegg.tsv
+
+================================================================================
+SECTION 61h COMPLETE
+================================================================================
+
+  STRICT (MeCP2 FDR<0.05 + K119ub>0):  72 genes, 1 GO terms
+  RELAXED (MeCP2 fold>0 + K119ub>0):   2058 genes, 50 GO terms
+================================================================================

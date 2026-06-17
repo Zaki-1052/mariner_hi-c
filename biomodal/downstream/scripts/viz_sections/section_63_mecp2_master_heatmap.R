@@ -192,7 +192,9 @@ if (length(available_cols) < 5) {
   heatmap_colors <- colorRampPalette(c("#4575B4", "white", "#D73027"))(100)
 
   cat("  Rendering heatmap...\n")
-  pheatmap_call <- pheatmap(
+
+  # Run once silently to get the tree for cluster extraction
+  ph_obj <- pheatmap(
     mat_plot,
     color = heatmap_colors,
     cluster_rows = TRUE, cluster_cols = FALSE,
@@ -206,15 +208,29 @@ if (length(available_cols) < 5) {
     silent = TRUE
   )
 
+  # save_multiformat_pheatmap expects a quote()'d expression
+  pheatmap_call <- quote(pheatmap(
+    mat_plot,
+    color = heatmap_colors,
+    cluster_rows = TRUE, cluster_cols = FALSE,
+    clustering_method = "ward.D2",
+    cutree_rows = N_CLUSTERS,
+    show_rownames = FALSE,
+    annotation_row = ann_row,
+    annotation_colors = ann_colors,
+    fontsize = 10, fontsize_col = 11,
+    main = sprintf("Multi-mark signal at MeCP2 binding sites (n=%d, Z-scored)", nrow(mat_plot))
+  ))
+
   save_multiformat_pheatmap(
     pheatmap_call,
     base_path = file.path(SEC63_DIR, "63a_multimark_heatmap"),
     width = 14, height = 12, dpi = 300, verbose = TRUE
   )
 
-  # Extract cluster assignments
-  row_order <- pheatmap_call$tree_row$order
-  clusters <- cutree(pheatmap_call$tree_row, k = N_CLUSTERS)
+  # Extract cluster assignments from the silent run
+  row_order <- ph_obj$tree_row$order
+  clusters <- cutree(ph_obj$tree_row, k = N_CLUSTERS)
 
   # =============================================================================
   # 63b: PER-CLUSTER MEAN MARK PROFILE
@@ -347,7 +363,7 @@ if (length(available_cols) < 5) {
     colnames(mat_fc) <- fc_display[fc_idx]
     rownames(mat_fc) <- rownames(mat_plot)
 
-    pheatmap_fc <- pheatmap(
+    pheatmap_fc_call <- quote(pheatmap(
       mat_fc,
       color = heatmap_colors,
       cluster_rows = TRUE, cluster_cols = FALSE,
@@ -357,12 +373,11 @@ if (length(available_cols) < 5) {
       annotation_row = ann_row,
       annotation_colors = ann_colors,
       fontsize = 10, fontsize_col = 11,
-      main = sprintf("Log2FC (mut/ctrl) at MeCP2 binding sites (n=%d)", nrow(mat_fc)),
-      silent = TRUE
-    )
+      main = sprintf("Log2FC (mut/ctrl) at MeCP2 binding sites (n=%d)", nrow(mat_fc))
+    ))
 
     save_multiformat_pheatmap(
-      pheatmap_fc,
+      pheatmap_fc_call,
       base_path = file.path(SEC63_DIR, "63d_log2fc_heatmap"),
       width = 14, height = 12, dpi = 300, verbose = TRUE
     )
