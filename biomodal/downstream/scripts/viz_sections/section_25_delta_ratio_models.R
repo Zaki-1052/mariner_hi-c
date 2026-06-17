@@ -574,12 +574,12 @@ p_25d <- ggplot(s24_comparison, aes(x = model, y = metric, fill = framework)) +
             position = position_dodge(width = 0.7), vjust = -0.5, size = 3.0) +
   geom_text(data = delta_r2 %>% dplyr::filter(model != "K119ub only"),
             aes(x = model, y = -0.02,
-                label = sprintf("\u0394R\u00B2=%+.3f", delta)),
+                label = sprintf("dR2=%+.3f", delta)),
             size = 2.6, inherit.aes = FALSE, color = "grey40") +
   scale_fill_manual(values = s24_colors, name = "Framework") +
   labs(
     title = "Section 24 Refit: Binary vs Continuous Response",
-    subtitle = "Logistic (AUC) vs Linear (R\u00B2); \u0394R\u00B2 relative to K119ub-only baseline",
+    subtitle = "Logistic (AUC) vs Linear (R\u00B2); dR2 relative to K119ub-only baseline",
     x = NULL,
     y = "Model Performance (AUC or R\u00B2)",
     caption = paste0("Full: K119ub + ATAC + CpG + 5mC + 5hmC + length + expr | ",
@@ -845,6 +845,37 @@ p_25i <- (p_25i_left | p_25i_right) +
 save_multiformat_ggplot(p_25i, file.path(OUTPUT_DIR, "25i_qr_residual_diagnostics"), 14, 7)
 
 # =============================================================================
+# FIGURE 25j: COMPOSITE — QR VALIDATION (25g + 25h)
+# =============================================================================
+
+cat("--- Figure 25j: QR validation composite ---\n")
+
+p_25j <- wrap_plots(
+  p_25g + labs(title = NULL, subtitle = "A. OLS vs QR(0.5) Coefficients") +
+    theme(plot.margin = margin(5, 15, 5, 5)),
+  p_25h + labs(title = NULL,
+               subtitle = "B. Coefficient Variation Across Quantiles (tau = 0.25, 0.50, 0.75)"),
+  nrow = 1, widths = c(1, 1.6)
+) +
+  plot_annotation(
+    title = "Quantile Regression Validation: OLS Robustness Check",
+    subtitle = sprintf(
+      "N=%s genes | OLS vs QR(0.5) residual Spearman rho = %.4f | OLS R² = %.4f",
+      format(nrow(dnmt3a_merged), big.mark = ","),
+      ols_qr_cor, lm_full_summary$r.squared),
+    caption = paste0(
+      "A: If points fall on diagonal, OLS and QR agree (robust despite non-normal residuals)\n",
+      "B: Red dotted = OLS estimate; divergence across tau = heterogeneous feature effects"),
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 11),
+      plot.caption = element_text(hjust = 0.5, size = 9, color = "grey40")
+    )
+  )
+
+save_multiformat_ggplot(p_25j, file.path(OUTPUT_DIR, "25j_qr_validation_composite"), 22, 10)
+
+# =============================================================================
 # EXPORT TABLES
 # =============================================================================
 
@@ -942,14 +973,20 @@ binary_vs_continuous <- rbind(
     linear_adj_r2 = c(lm_a_summary$adj.r.squared, lm_b_summary$adj.r.squared, lm_c_summary$adj.r.squared),
     stringsAsFactors = FALSE
   ),
-  # Section 24 models
+  # Section 24 models (original 4 that have logistic AUC from section 24 exports)
   data.frame(
     section = "S24",
-    model = s24_model_names,
-    logistic_auc = dnmt3a_models_orig$auc[match(s24_model_names, dnmt3a_models_orig$model)],
-    logistic_mcfadden_r2 = dnmt3a_models_orig$mcfadden_r2[match(s24_model_names, dnmt3a_models_orig$model)],
-    linear_r2 = sapply(s24_lm_summaries[s24_model_names], function(s) s$r.squared),
-    linear_adj_r2 = sapply(s24_lm_summaries[s24_model_names], function(s) s$adj.r.squared),
+    model = c("Full", "DNMT3A recruitment", "TET impediment", "K119ub only"),
+    logistic_auc = dnmt3a_models_orig$auc[match(
+      c("Full", "DNMT3A recruitment", "TET impediment", "K119ub only"),
+      dnmt3a_models_orig$model)],
+    logistic_mcfadden_r2 = dnmt3a_models_orig$mcfadden_r2[match(
+      c("Full", "DNMT3A recruitment", "TET impediment", "K119ub only"),
+      dnmt3a_models_orig$model)],
+    linear_r2 = sapply(s24_lm_summaries[c("Full", "DNMT3A recruitment", "TET impediment", "K119ub only")],
+                       function(s) s$r.squared),
+    linear_adj_r2 = sapply(s24_lm_summaries[c("Full", "DNMT3A recruitment", "TET impediment", "K119ub only")],
+                           function(s) s$adj.r.squared),
     stringsAsFactors = FALSE, row.names = NULL
   )
 )
@@ -1020,11 +1057,13 @@ cat(sprintf("  Model C (Combined):      R\u00B2=%.4f (logistic AUC=%.3f)\n",
             lm_c_summary$r.squared, hmc_models_orig$auc[3]))
 
 cat(sprintf("\nSection 24 Refits (delta_ratio ~ DNMT3A features):\n"))
-for (nm in s24_model_names) {
+for (nm in names(s24_lm_summaries)) {
   s <- s24_lm_summaries[[nm]]
   orig_auc <- dnmt3a_models_orig$auc[match(nm, dnmt3a_models_orig$model)]
-  cat(sprintf("  %-22s R\u00B2=%.4f (logistic AUC=%.3f)\n",
-              paste0(nm, ":"), s$r.squared, orig_auc))
+  if (is.na(orig_auc)) orig_auc <- NA
+  auc_str <- ifelse(is.na(orig_auc), "N/A", sprintf("%.3f", orig_auc))
+  cat(sprintf("  %-22s R\u00B2=%.4f (logistic AUC=%s)\n",
+              paste0(nm, ":"), s$r.squared, auc_str))
 }
 
 cat(sprintf("\nFeature importance rank correlation (logistic vs linear): rho=%.3f\n",

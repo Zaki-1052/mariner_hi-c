@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-06-16 17:12:17 
+Date: 2026-06-16 17:43:09 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -146,19 +146,6 @@ Warning messages:
   Saved: 25c_feature_importance_comparison/{pdf,svg,jpg}
 --- Figure 25d: Binary vs continuous model comparison (Section 24) ---
   Saved: 25d_binary_vs_continuous_s24/{pdf,svg,jpg}
-Warning messages:
-1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'ΔR²=+0.359' in 'mbcsToSbcs': for Δ (U+0394)
-2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'ΔR²=+0.013' in 'mbcsToSbcs': for Δ (U+0394)
-3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'ΔR²=+0.228' in 'mbcsToSbcs': for Δ (U+0394)
-4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'ΔR²=+0.003' in 'mbcsToSbcs': for Δ (U+0394)
-5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'ΔR²=+0.214' in 'mbcsToSbcs': for Δ (U+0394)
-6: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
-  conversion failure on 'Logistic (AUC) vs Linear (R²); ΔR² relative to K119ub-only baseline' in 'mbcsToSbcs': for Δ (U+0394)
 --- Figure 25e: Residual diagnostics ---
 `geom_smooth()` using formula = 'y ~ x'
 `geom_smooth()` using formula = 'y ~ x'
@@ -182,9 +169,52 @@ Warning messages:
   Saved: 25h_quantile_process/{pdf,svg,jpg}
 --- Figure 25i: QR residual diagnostics ---
   Saved: 25i_qr_residual_diagnostics/{pdf,svg,jpg}
+--- Figure 25j: QR validation composite ---
+  Saved: 25j_qr_validation_composite/{pdf,svg,jpg}
 
 --- Exporting tables ---
   Saved delta_ratio_linear_model_comparison.tsv (7 rows)
   Saved delta_ratio_linear_coefficients.tsv (24 rows)
-Error: object 's24_model_names' not found
-Execution halted
+  Saved delta_ratio_binary_vs_continuous.tsv (7 rows)
+  Saved delta_ratio_feature_importance.tsv (7 rows)
+  Saved delta_ratio_qr_coefficients.tsv (21 rows)
+  Saved delta_ratio_ols_vs_qr_comparison.tsv (7 rows)
+
+========================================================================
+SECTION 25 SUMMARY: DELTA-RATIO LINEAR MODEL REFITS
+========================================================================
+
+Section 23 Refits (delta_ratio ~ baseline 5hmC / K119ub):
+  Model A (Baseline 5hmC): R²=0.2666 (logistic AUC=0.762)
+  Model B (K119ub):        R²=0.0231 (logistic AUC=0.573)
+  Model C (Combined):      R²=0.2956 (logistic AUC=0.790)
+
+Section 24 Refits (delta_ratio ~ DNMT3A features):
+  Full:                  R²=0.3902 (logistic AUC=0.861)
+  DNMT3A recruitment:    R²=0.0440 (logistic AUC=0.696)
+  TET impediment:        R²=0.2589 (logistic AUC=0.793)
+  K119ub only:           R²=0.0311 (logistic AUC=0.658)
+  DNMT3A exclusive:      R²=0.0340 (logistic AUC=N/A)
+  TET exclusive:         R²=0.2447 (logistic AUC=N/A)
+
+Feature importance rank correlation (logistic vs linear): rho=0.893
+
+Sign convention check (Full model, standardized betas):
+  H2AK119ub            logistic=-1.049  linear=+0.007  CONSISTENT (flipped)
+  ATAC peaks           logistic=-0.105  linear=+0.001  CONSISTENT (flipped)
+  CpG density          logistic=+0.082  linear=-0.000  CONSISTENT (flipped)
+  Baseline 5mC         logistic=+0.107  linear=+0.007  SAME SIGN
+  Baseline 5hmC        logistic=+1.251  linear=-0.008  CONSISTENT (flipped)
+  Gene length (log10)  logistic=-0.242  linear=+0.005  CONSISTENT (flipped)
+  Expression (log10)   logistic=+0.749  linear=-0.005  CONSISTENT (flipped)
+
+Note: R² values are much lower than AUC values by design.
+  AUC measures classification ability (0-1 scale, 0.5 = chance)
+  R² measures variance explained (0-1 scale, 0 = no variance explained)
+  These are NOT directly comparable. Both can be informative.
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/25{a-f}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/delta_ratio_*.tsv (4 files)
+
+=== Section 25 complete ===

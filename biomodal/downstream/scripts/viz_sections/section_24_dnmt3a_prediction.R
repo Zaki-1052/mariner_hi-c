@@ -1606,6 +1606,44 @@ p_24j <- (p_24j_left | p_24j_right) +
 
 save_multiformat_ggplot(p_24j, file.path(OUTPUT_DIR, "24j_exclusive_model_comparison"), 16, 9)
 
+# =============================================================================
+# FIGURE 24k: COMPOSITE — DNMT3A vs TET STORY (24b + 24e + 24j_left)
+# =============================================================================
+
+cat("--- Figure 24k: DNMT3A vs TET composite ---\n")
+
+p_24k <- wrap_plots(
+  p_24b + labs(title = NULL, subtitle = "A. ROC: 5 Model Comparison") +
+    theme(legend.position = "bottom", legend.text = element_text(size = 7),
+          plot.caption = element_text(size = 6.5)) +
+    coord_cartesian(),
+  p_24e + labs(title = NULL,
+               subtitle = "B. K119ub Predicted P(hyper-DMR)") +
+    theme(legend.position = "bottom", legend.text = element_text(size = 7)),
+  p_24j_left + labs(title = NULL, subtitle = "C. Exclusive Model ROC") +
+    theme(legend.position = "bottom", legend.text = element_text(size = 7)) +
+    coord_cartesian(),
+  nrow = 1, widths = c(1, 1, 1)
+) +
+  plot_annotation(
+    title = "DNMT3A Recruitment vs TET Impediment: Model Comparison",
+    subtitle = sprintf(
+      "N=%s genes | TET outperforms DNMT3A (DeLong %s shared, %s exclusive)",
+      format(nrow(model_data), big.mark = ","),
+      fmt_p(delong_result$p.value), fmt_p(delong_excl$p.value)),
+    caption = paste0(
+      "Full: K119ub + ATAC + CpG + 5mC + 5hmC + length + expr | ",
+      "DNMT3A: K119ub + ATAC + CpG | TET: 5hmC + ATAC | ",
+      "DNMT3A excl: K119ub + CpG | TET excl: 5hmC only"),
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 11),
+      plot.caption = element_text(hjust = 0.5, size = 8.5, color = "grey40")
+    )
+  )
+
+save_multiformat_ggplot(p_24k, file.path(OUTPUT_DIR, "24k_dnmt3a_vs_tet_composite"), 24, 10)
+
 # Export exclusive model comparison table
 excl_export <- data.frame(
   model = c("DNMT3A (shared)", "TET (shared)", "DNMT3A (exclusive)", "TET (exclusive)"),

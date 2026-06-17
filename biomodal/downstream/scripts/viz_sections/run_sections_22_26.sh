@@ -31,7 +31,7 @@ for i in "${!SECTIONS[@]}"; do
   echo "[$((i+1))/$TOTAL] Running $script"
   echo "  Log: $logfile"
   echo "========================================================================"
-
+  echo $(date)
   Rscript "${SCRIPT_DIR}/${script}" 2>&1 | tee "$logfile"
   status=${PIPESTATUS[0]}
 
@@ -42,7 +42,7 @@ for i in "${!SECTIONS[@]}"; do
     echo "  Done."
   fi
 done
-
+echo $(date)
 echo ""
 echo "========================================================================"
 echo "COMPLETE: $((TOTAL - FAILED))/$TOTAL sections succeeded"
