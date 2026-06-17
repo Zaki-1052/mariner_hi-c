@@ -275,14 +275,122 @@ write.table(ekegg_relax@result, file.path(TABLES_DIR, "61h_relaxed_kegg.tsv"),
 cat(sprintf("  Saved: 61h_relaxed_kegg.tsv\n"))
 
 # =============================================================================
+# GENOME-WIDE BACKGROUND: same gene lists, no custom universe
+# =============================================================================
+
+cat("\n================================================================================\n")
+cat("GENOME-WIDE BACKGROUND: no custom universe (matches online tools)\n")
+cat("================================================================================\n\n")
+
+# --- Strict (72 genes) with genome-wide background ---
+
+cat(sprintf("--- Strict genes (n=%d), genome-wide background ---\n", length(quadrant_genes)))
+
+ego_strict_gw <- enrichGO(
+  gene         = entrez_map$ENTREZID,
+  OrgDb        = org.Mm.eg.db,
+  ont          = "BP",
+  pAdjustMethod = "BH",
+  pvalueCutoff  = 0.05,
+  qvalueCutoff  = 0.2,
+  readable      = TRUE
+)
+
+n_sig_strict_gw <- sum(ego_strict_gw@result$p.adjust < 0.05)
+cat(sprintf("  Significant GO BP terms (q < 0.05): %d\n", n_sig_strict_gw))
+
+if (n_sig_strict_gw > 0) {
+  top_sgw <- head(ego_strict_gw@result[ego_strict_gw@result$p.adjust < 0.05, ], 25)
+  cat("\n  Top GO BP terms (strict, genome-wide bg):\n")
+  for (i in seq_len(nrow(top_sgw))) {
+    r <- top_sgw[i, ]
+    cat(sprintf("    %-55s q=%.2e  %s\n",
+                substr(r$Description, 1, 55), r$p.adjust, r$GeneRatio))
+  }
+
+  neuronal_mask_sgw <- grepl("synap|neuron|axon|dendrit|nervous|brain|cerebel",
+                             top_sgw$Description, ignore.case = TRUE)
+  cat(sprintf("\n  Of top 25 terms: %d are neuronal/synaptic (%.0f%%)\n",
+              sum(neuronal_mask_sgw), 100 * sum(neuronal_mask_sgw) / nrow(top_sgw)))
+}
+
+write.table(ego_strict_gw@result, file.path(TABLES_DIR, "61h_strict_genomewide_go_bp.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+cat(sprintf("  Saved: 61h_strict_genomewide_go_bp.tsv\n"))
+
+if (n_sig_strict_gw >= 3) {
+  p_dot_sgw <- dotplot(ego_strict_gw, showCategory = min(25, n_sig_strict_gw)) +
+    labs(title = "GO BP: Strict quadrant (n=72), genome-wide background",
+         subtitle = "Same genes as before, but no custom universe") +
+    theme_biomodal()
+
+  save_multiformat_ggplot(p_dot_sgw,
+    base_path = file.path(SEC61H_DIR, "61h_strict_genomewide_dotplot"),
+    width = 12, height = 10, dpi = 300, verbose = TRUE, use_subfolders = TRUE)
+}
+
+# --- Relaxed genes with genome-wide background ---
+
+cat(sprintf("\n--- Relaxed genes (n=%d), genome-wide background ---\n",
+            length(relaxed_genes)))
+
+ego_relax_gw <- enrichGO(
+  gene         = relax_entrez$ENTREZID,
+  OrgDb        = org.Mm.eg.db,
+  ont          = "BP",
+  pAdjustMethod = "BH",
+  pvalueCutoff  = 0.05,
+  qvalueCutoff  = 0.2,
+  readable      = TRUE
+)
+
+n_sig_relax_gw <- sum(ego_relax_gw@result$p.adjust < 0.05)
+cat(sprintf("  Significant GO BP terms (q < 0.05): %d\n", n_sig_relax_gw))
+
+if (n_sig_relax_gw > 0) {
+  top_rgw <- head(ego_relax_gw@result[ego_relax_gw@result$p.adjust < 0.05, ], 25)
+  cat("\n  Top GO BP terms (relaxed, genome-wide bg):\n")
+  for (i in seq_len(nrow(top_rgw))) {
+    r <- top_rgw[i, ]
+    cat(sprintf("    %-55s q=%.2e  %s\n",
+                substr(r$Description, 1, 55), r$p.adjust, r$GeneRatio))
+  }
+
+  neuronal_mask_rgw <- grepl("synap|neuron|axon|dendrit|nervous|brain|cerebel",
+                             top_rgw$Description, ignore.case = TRUE)
+  cat(sprintf("\n  Of top 25 terms: %d are neuronal/synaptic (%.0f%%)\n",
+              sum(neuronal_mask_rgw), 100 * sum(neuronal_mask_rgw) / nrow(top_rgw)))
+}
+
+write.table(ego_relax_gw@result, file.path(TABLES_DIR, "61h_relaxed_genomewide_go_bp.tsv"),
+            sep = "\t", row.names = FALSE, quote = FALSE)
+cat(sprintf("  Saved: 61h_relaxed_genomewide_go_bp.tsv\n"))
+
+if (n_sig_relax_gw >= 3) {
+  p_dot_rgw <- dotplot(ego_relax_gw, showCategory = min(25, n_sig_relax_gw)) +
+    labs(title = "GO BP: Relaxed quadrant, genome-wide background",
+         subtitle = sprintf("n = %d genes | MeCP2 fold>0 + K119ub>0, no custom universe",
+                            length(relaxed_genes))) +
+    theme_biomodal()
+
+  save_multiformat_ggplot(p_dot_rgw,
+    base_path = file.path(SEC61H_DIR, "61h_relaxed_genomewide_dotplot"),
+    width = 12, height = 10, dpi = 300, verbose = TRUE, use_subfolders = TRUE)
+}
+
+# =============================================================================
 # SUMMARY
 # =============================================================================
 
 cat("\n================================================================================\n")
 cat("SECTION 61h COMPLETE\n")
 cat("================================================================================\n")
-cat(sprintf("\n  STRICT (MeCP2 FDR<0.05 + K119ub>0):  %d genes, %d GO terms\n",
+cat(sprintf("\n  STRICT (FDR<0.05 + K119ub>0), custom bg:      %3d genes, %d GO terms\n",
             length(quadrant_genes), n_sig))
-cat(sprintf("  RELAXED (MeCP2 fold>0 + K119ub>0):   %d genes, %d GO terms\n",
+cat(sprintf("  STRICT (FDR<0.05 + K119ub>0), genome-wide bg: %3d genes, %d GO terms\n",
+            length(quadrant_genes), n_sig_strict_gw))
+cat(sprintf("  RELAXED (fold>0 + K119ub>0), custom bg:       %3d genes, %d GO terms\n",
             length(relaxed_genes), n_sig_relax))
+cat(sprintf("  RELAXED (fold>0 + K119ub>0), genome-wide bg:  %3d genes, %d GO terms\n",
+            length(relaxed_genes), n_sig_relax_gw))
 cat("================================================================================\n")
