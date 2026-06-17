@@ -325,7 +325,7 @@ p_26b <- ggplot(delta_density_df, aes(x = delta, fill = study, color = study)) +
            100 * attenuation)) +
   labs(
     title = "Delta-Ratio Distributions: BAP1-KO vs TET Triple-KO",
-    subtitle = "TET-KO should show much stronger negative shift (near-complete TET loss)",
+    subtitle = "TET-KO (GSE166423, Lopez-Moyado et al., different tissue/protocol) shows stronger shift",
     x = "Delta-ratio (KO \u2212 WT)",
     y = "Density"
   ) +
@@ -396,7 +396,7 @@ p_26d <- ggplot(effect_df, aes(x = study, y = value, fill = study)) +
   scale_fill_manual(values = delta_colors) +
   labs(
     title = "Effect Size Comparison: BAP1-KO vs TET Triple-KO",
-    subtitle = sprintf("Absolute attenuation: %.1f%% | Relative attenuation: %.1f%%",
+    subtitle = sprintf("Absolute attenuation: %.1f%% | Relative attenuation: %.1f%% | TET-KO: GSE166423 (Lopez-Moyado et al.)",
                        100 * attenuation, 100 * relative_attenuation),
     x = NULL, y = "Effect Size"
   ) +

@@ -1,0 +1,213 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:11:30 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 23: BASELINE 5hmC AS PREDICTOR OF DMR SUSCEPTIBILITY
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Step 1: Loading baseline WT 5hmC from feature extraction ---
+  hmC extract: 21673 genes x 13 columns
+  Baseline WT 5hmC computed for 20958 genes
+  Median WT 5hmC: 0.1025, Mean: 0.1154, Range: [0.0000, 0.5370]
+
+--- Step 2: Merging with hmC DMR status ---
+  Merged: 20958 genes with both WT 5hmC and DMR status
+  DMR+ (q<0.05): 11484 genes (54.8%)
+  DMR-: 9474 genes
+
+--- Step 3: Loading K119ub gene signal ---
+  K119ub signal: 23150 genes
+  After filtering: 23150 genes with finite WT K119ub signal
+  Combined (5hmC + K119ub + DMR): 18402 genes
+  DMR+ in combined set: 10909 genes (59.3%)
+
+--- Step 4: Fitting logistic regression models ---
+  Model A: significant ~ wt_hmc
+  Model B: significant ~ gb_ctrl_signal
+  Model C: significant ~ wt_hmc + gb_ctrl_signal
+
+  Model A (Baseline 5hmC):
+    OR = 1107061.55 [647729.15, 1892126.15], p < 2.2e-16
+    AIC = 21378.6, McFadden R² = 0.1406
+    AUC = 0.762 [0.755, 0.769]
+
+  Model B (K119ub signal):
+    OR = 0.79 [0.77, 0.81], p < 2.2e-16
+    AIC = 24471.6, McFadden R² = 0.0163
+    AUC = 0.573 [0.564, 0.581]
+
+  Model C (Combined):
+    wt_hmc:        OR = 3959189.50 [2231179.06, 7025514.81], p < 2.2e-16
+    gb_ctrl_signal: OR = 0.66 [0.64, 0.68], p < 2.2e-16
+    AIC = 20667.5, McFadden R² = 0.1693
+    AUC = 0.790 [0.783, 0.797]
+
+  Standardized coefficients (Model C, z-scored predictors):
+    wt_hmc_z:        beta=1.168, OR=3.22
+    gb_ctrl_signal_z: beta=-0.597, OR=0.55
+
+--- Step 5: Annotating chromatin states ---
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+  Chromatin state breakdown:
+    Active_Promoter: 6388 genes
+    Repressed_Promoter: 3242 genes
+    Bivalent_Promoter: 152 genes
+    Polycomb: 57 genes
+    Active_Enhancer: 50 genes
+    Poised_Enhancer: 92 genes
+    Unmarked: 10977 genes
+
+--- Figure 23a: ROC curves ---
+  Saved: 23a_roc_curves/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '1 − Specificity (False Positive Rate)' in 'mbcsToSbcs': - substituted for − (U+2212)
+--- Figure 23b: Predicted probability curve ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 23b_predicted_probability/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Logistic regression: higher baseline 5hmC → higher DMR probability' in 'mbcsToSbcs': -> substituted for → (U+2192)
+--- Figure 23c: Model comparison ---
+  Saved: 23c_model_comparison/{pdf,svg,jpg}
+--- Figure 23d: Dose-response scatter ---
+Warning message:
+In cor.test.default(merged$wt_hmc, merged$mod_difference, method = "spearman") :
+  Cannot compute exact p-value with ties
+  Spearman rho (wt_hmc vs mod_difference): -0.581 (p < 2.2e-16)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 23d_dose_response_scatter/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'hmC mod_difference (KO − WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Higher baseline 5hmC → more hmC loss (negative mod_difference)' in 'mbcsToSbcs': -> substituted for → (U+2192)
+--- Figure 23e: Dose-response by chromatin state ---
+Warning message:
+There were 14 warnings in `dplyr::summarise()`.
+The first warning was:
+ℹ In argument: `rho = tryCatch(...)`.
+ℹ In group 1: `chromatin_state = Active_Promoter`.
+Caused by warning in `cor.test.default()`:
+! Cannot compute exact p-value with ties
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 13 remaining warnings. 
+  Per-chromatin-state Spearman rho:
+    Active_Promoter: rho=-0.455 (n=6388, p < 2.2e-16)
+    Repressed_Promoter: rho=0.113 (n=3242, p = 1.27e-10)
+    Bivalent_Promoter: rho=-0.360 (n=152, p = 5.22e-06)
+    Polycomb: rho=0.145 (n=57, p = 2.82e-01)
+    Active_Enhancer: rho=-0.556 (n=50, p = 2.78e-05)
+    Poised_Enhancer: rho=-0.514 (n=92, p = 1.65e-07)
+    Unmarked: rho=-0.521 (n=10977, p < 2.2e-16)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 23e_dose_response_by_chromatin/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'hmC mod_difference (KO − WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+
+--- Exporting tables ---
+  Saved baseline_hmc_predictor_all_genes.tsv (20958 rows)
+  Saved baseline_hmc_model_comparison.tsv (3 rows)
+  Saved baseline_hmc_model_coefficients.tsv (7 rows)
+
+========================================================================
+SECTION 23 SUMMARY: BASELINE 5hmC AS PREDICTOR OF DMR SUSCEPTIBILITY
+========================================================================
+
+Total genes with baseline WT 5hmC: 20958
+Merged with hmC DMR status: 20958 genes
+Combined with K119ub signal: 18402 genes
+DMR+ (q<0.05): 11484 genes (54.8%)
+
+Logistic Regression Model Comparison:
+  Model A (Baseline 5hmC):  AIC=21379     AUC=0.762 [0.755, 0.769] R²=0.1406
+  Model B (K119ub):         AIC=24472     AUC=0.573 [0.564, 0.581] R²=0.0163
+  Model C (Combined):       AIC=20667     AUC=0.790 [0.783, 0.797] R²=0.1693
+
+Standardized coefficients (Model C):
+  wt_hmc_z:         beta=1.168 (OR=3.22 per SD)
+  gb_ctrl_signal_z: beta=-0.597 (OR=0.55 per SD)
+
+Dose-response (all genes):
+  Spearman rho (wt_hmc vs mod_difference): -0.581 (p < 2.2e-16)
+
+Interpretation:
+  Baseline 5hmC is a STRONGER predictor of DMR status than K119ub signal.
+  This supports the substrate availability hypothesis: genes with more 5hmC
+  have more substrate for TET impairment to affect in BAP1-KO.
+  Negative dose-response (rho=-0.581) confirms: higher baseline 5hmC
+  leads to more 5hmC loss in BAP1-KO, consistent with TET impairment.
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/23{a-e}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/baseline_hmc_*.tsv (3 files)
+
+=== Section 23 complete ===

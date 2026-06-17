@@ -1,0 +1,190 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:12:17 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 25: DELTA-RATIO LINEAR MODEL REFITS (TODO 14d)
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Step 1: Loading data ---
+  Demethylation ratio: 20915 genes
+  Baseline hmC predictor: 20958 genes
+  DNMT3A feature matrix: 11937 genes
+
+--- Step 2: Building Section 23 refit data ---
+  Merged genes (ratio + 5hmC + K119ub): 18372
+  Delta-ratio range: [-0.5429, 0.4232], median: -0.0106
+
+--- Step 3: Fitting Section 23 linear models ---
+  Model A: delta_ratio ~ wt_hmc
+  Model B: delta_ratio ~ gb_ctrl_signal
+  Model C: delta_ratio ~ wt_hmc + gb_ctrl_signal
+
+  Model A (Baseline 5hmC):
+    R² = 0.2666, adj R² = 0.2666
+    F(1,18370) = 6678.7, p < 2.2e-16
+    wt_hmc: coef = -0.185442, p < 2.2e-16
+
+  Model B (K119ub signal):
+    R² = 0.0231, adj R² = 0.0230
+    F(1,18370) = 434.4, p < 2.2e-16
+    gb_ctrl_signal: coef = 0.002914, p < 2.2e-16
+
+  Model C (Combined):
+    R² = 0.2956, adj R² = 0.2956
+    F(2,18369) = 3854.8, p < 2.2e-16
+
+  Standardized coefficients (Model C):
+    wt_hmc_z:         beta = -0.0144
+    gb_ctrl_signal_z: beta = 0.0047
+
+--- Step 4: Building Section 24 refit data ---
+  Merged genes (ratio + DNMT3A features): 11913
+
+--- Step 5: Fitting Section 24 linear models ---
+  Full: delta_ratio ~ all 7 features
+  DNMT3A recruitment: delta_ratio ~ k119ub + atac_count + cpg_density
+  TET impediment: delta_ratio ~ baseline_hmc + atac_count
+  K119ub only: delta_ratio ~ k119ub
+
+  Section 24 Linear Model Comparison:
+    Full:                  R²=0.3902  adj_R²=0.3898  F=1088.3  p < 2.2e-16
+    DNMT3A recruitment:    R²=0.0440  adj_R²=0.0438  F=182.8  p < 2.2e-16
+    TET impediment:        R²=0.2589  adj_R²=0.2587  F=2080.0  p < 2.2e-16
+    K119ub only:           R²=0.0311  adj_R²=0.0310  F=382.6  p < 2.2e-16
+
+  Standardized coefficients (Full linear model):
+    k119ub                    beta= 0.0069  p < 2.2e-16
+    atac_count                beta= 0.0013  p = 1.12e-08
+    cpg_density               beta=-0.0001  p = 6.27e-01
+    baseline_mc               beta= 0.0068  p < 2.2e-16
+    baseline_hmc              beta=-0.0084  p < 2.2e-16
+    log_gene_length           beta= 0.0051  p < 2.2e-16
+    log_expression            beta=-0.0052  p < 2.2e-16
+
+--- Step 5b: Exclusive models (no shared features) ---
+  DNMT3A excl (k119+cpg): R²=0.0340, adj_R²=0.0338
+  TET excl (baseline_hmc): R²=0.2447, adj_R²=0.2446
+
+--- Step 6: Quantile regression (tau = 0.25, 0.5, 0.75) ---
+
+  OLS vs QR(0.5) coefficient comparison (full model):
+    k119ub               OLS=+0.00577  QR(0.5)=+0.00721
+    atac_count           OLS=+0.00031  QR(0.5)=+0.00026
+    cpg_density          OLS=-0.03196  QR(0.5)=+0.18881
+    baseline_mc          OLS=+0.04315  QR(0.5)=+0.02415
+    baseline_hmc         OLS=-0.11774  QR(0.5)=-0.13388
+    log_gene_length      OLS=+0.00907  QR(0.5)=+0.01117
+    log_expression       OLS=-0.00659  QR(0.5)=-0.00641
+
+  OLS vs QR(0.5) residual Spearman rho: 0.9810
+
+  QR(0.5) model summaries (bootstrap SEs, R=1000):
+    Full:                  7/7 terms significant (p<0.05)
+    DNMT3A recruitment:    3/3 terms significant (p<0.05)
+    TET impediment:        2/2 terms significant (p<0.05)
+    K119ub only:           1/1 terms significant (p<0.05)
+    DNMT3A exclusive:      2/2 terms significant (p<0.05)
+    TET exclusive:         1/1 terms significant (p<0.05)
+
+--- Figure 25a: Dose-response scatter ---
+Warning message:
+In cor.test.default(hmc_merged$wt_hmc, hmc_merged$delta_ratio, method = "spearman") :
+  Cannot compute exact p-value with ties
+  Spearman rho (wt_hmc vs delta_ratio): -0.599 (p < 2.2e-16)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 25a_dose_response_delta_ratio/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Delta-ratio (KO − WT demethylation efficiency)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Higher baseline 5hmC → more negative delta_ratio (greater TET impairment)' in 'mbcsToSbcs': -> substituted for → (U+2192)
+--- Figure 25b: Binary vs continuous model comparison (Section 23) ---
+  Saved: 25b_binary_vs_continuous_s23/{pdf,svg,jpg}
+--- Figure 25c: Feature importance comparison (Section 24) ---
+  Logistic vs Linear rank correlation (Spearman): 0.893
+  Saved: 25c_feature_importance_comparison/{pdf,svg,jpg}
+--- Figure 25d: Binary vs continuous model comparison (Section 24) ---
+  Saved: 25d_binary_vs_continuous_s24/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.359' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.013' in 'mbcsToSbcs': for Δ (U+0394)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.228' in 'mbcsToSbcs': for Δ (U+0394)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.003' in 'mbcsToSbcs': for Δ (U+0394)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.214' in 'mbcsToSbcs': for Δ (U+0394)
+6: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Logistic (AUC) vs Linear (R²); ΔR² relative to K119ub-only baseline' in 'mbcsToSbcs': for Δ (U+0394)
+--- Figure 25e: Residual diagnostics ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 25e_residual_diagnostics/{pdf,svg,jpg}
+--- Figure 25f: Predicted vs observed ---
+  Pearson r (predicted vs observed): 0.6247 (p < 2.2e-16)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 25f_predicted_vs_observed/{pdf,svg,jpg}
+--- Figure 25g: OLS vs QR coefficient comparison ---
+  Saved: 25g_ols_vs_qr_coefficients/{pdf,svg,jpg}
+--- Figure 25h: Quantile process plot ---
+  Saved: 25h_quantile_process/{pdf,svg,jpg}
+--- Figure 25i: QR residual diagnostics ---
+  Saved: 25i_qr_residual_diagnostics/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved delta_ratio_linear_model_comparison.tsv (7 rows)
+  Saved delta_ratio_linear_coefficients.tsv (24 rows)
+Error: object 's24_model_names' not found
+Execution halted

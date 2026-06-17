@@ -1,0 +1,221 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:11:14 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 22: 5hmC/(5mC+5hmC) DEMETHYLATION EFFICIENCY RATIO
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Loading per-sample feature extraction data ---
+  mC extract: 21673 genes x 13 columns
+  hmC extract: 21673 genes x 13 columns
+  Joined: 21650 genes with both mC and hmC data
+  Excluded 692 genes with NA values (20958 retained)
+
+--- Computing group-level demethylation ratios ---
+  Inner-joined mc_dmr (20969) + hmc_dmr (20969) = 20969 genes
+  Filtered 54 genes (near-zero denominators or non-finite ratios)
+  Valid ratio data: 20915 genes
+  DMR status breakdown:
+    Both mC+hmC DMR: 8371 genes
+    mC DMR only: 2404 genes
+    hmC DMR only: 3113 genes
+    Not DMR: 7027 genes
+
+--- Computing per-sample demethylation ratios ---
+  Valid per-sample ratios: 20862 genes
+  Per-sample median ratios:
+    ctrl-M: 0.1292
+    ctrl-F: 0.1278
+    mut-M: 0.1202
+    mut-F: 0.1168
+
+--- Annotating chromatin states ---
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+  TSS distance: 20131 genes with distance=0 (contain TSS)
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+  Chromatin state breakdown:
+    Active_Promoter: 6356 genes
+    Repressed_Promoter: 3241 genes
+    Bivalent_Promoter: 150 genes
+    Polycomb: 56 genes
+    Active_Enhancer: 49 genes
+    Poised_Enhancer: 92 genes
+    Unmarked: 10971 genes
+
+--- Core statistical tests ---
+  Wilcoxon signed-rank (paired): p < 2.2e-16
+  Wilcoxon (delta vs 0): p < 2.2e-16
+  Cliff's delta: 0.4291 (medium)
+  Genes with decreased ratio (impaired TET): 71.4%
+  Genes with increased ratio: 28.4%
+Warning message:
+In cor.test.default(ratio_data$delta_ratio, ratio_data$mc_diff,  :
+  Cannot compute exact p-value with ties
+Warning message:
+In cor.test.default(ratio_data$delta_ratio, ratio_data$hmc_diff,  :
+  Cannot compute exact p-value with ties
+  Spearman rho (delta-ratio vs mc_diff): -0.810 (p < 2.2e-16)
+  Spearman rho (delta-ratio vs hmc_diff): 0.917 (p < 2.2e-16)
+
+--- Figure 22a: WT demethylation ratio density ---
+  Saved: 22a_wt_ratio_density/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'IQR = 0.1424 [0.0695–0.2119]' in 'mbcsToSbcs': - substituted for – (U+2013)
+--- Figure 22b: WT vs KO ratio comparison ---
+  Saved: 22b_wt_vs_ko_ratio/{pdf,svg,jpg}
+--- Figure 22c: Delta-ratio distribution ---
+  Saved: 22c_delta_ratio_histogram/{pdf,svg,jpg}
+--- Figure 22d: Delta-ratio vs methylation changes ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 22d_delta_ratio_vs_diff/{pdf,svg,jpg}
+--- Figure 22e: Delta-ratio by DMR status ---
+  Kruskal-Wallis: p < 2.2e-16
+  Saved: 22e_delta_ratio_by_dmr_status/{pdf,svg,jpg}
+--- Figure 22f: Delta-ratio by chromatin state ---
+  Per-state Wilcoxon vs 0 (BH-corrected):
+    Active_Promoter: median=-0.0281, n=6356, padj=p < 2.2e-16
+    Repressed_Promoter: median=0.0051, n=3241, padj=p < 2.2e-16
+    Bivalent_Promoter: median=-0.0046, n=150, padj=p = 2.22e-04
+    Polycomb: median=0.0022, n=56, padj=p = 1.26e-01
+    Active_Enhancer: median=-0.0248, n=49, padj=p = 8.94e-09
+    Poised_Enhancer: median=-0.0073, n=92, padj=p = 7.36e-05
+    Unmarked: median=-0.0051, n=10971, padj=p < 2.2e-16
+  Saved: 22f_delta_ratio_by_chromatin_state/{pdf,svg,jpg}
+--- Figure 22g: Top 30 genes by most negative delta-ratio ---
+Warning message:
+Vectorized input to `element_text()` is not officially supported.
+ℹ Results may be unexpected or may change in future versions of ggplot2. 
+  Saved: 22g_top30_decreased_ratio/{pdf,svg,jpg}
+--- Figure 22h: Per-sample ratio distributions ---
+  Saved: 22h_per_sample_ratio/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved demethylation_ratio_all_genes.tsv (20915 rows)
+  Saved demethylation_ratio_per_sample.tsv (20862 rows)
+  Saved demethylation_ratio_top_genes.tsv (50 rows)
+  Saved demethylation_ratio_by_chromatin_state.tsv (7 rows)
+
+========================================================================
+SECTION 22 SUMMARY: DEMETHYLATION EFFICIENCY RATIO
+========================================================================
+
+Total genes in mc_dmr: 20969
+Total genes in hmc_dmr: 20969
+Valid ratio data: 20915 genes
+
+Group-level ratio statistics:
+  WT median ratio:  0.1275
+  KO median ratio:  0.1193
+  Delta median:     -0.0085
+  Paired Wilcoxon:  p < 2.2e-16
+  Cliff's delta:    0.4291 (medium)
+  % decreased:      71.4%
+
+Correlations:
+  delta-ratio vs mc_diff:  rho=-0.810 (p < 2.2e-16)
+  delta-ratio vs hmc_diff: rho=0.917 (p < 2.2e-16)
+
+Top 5 genes (most decreased ratio):
+  1. Fndc10: delta=-0.5429 (WT=1.0000, KO=0.4571) [Active_Promoter]
+  2. H2ac4: delta=-0.5000 (WT=1.0000, KO=0.5000) [Unmarked]
+  3. Fam89b: delta=-0.3999 (WT=0.8854, KO=0.4854) [Active_Promoter]
+  4. H1f0: delta=-0.3627 (WT=0.8644, KO=0.5017) [Active_Promoter]
+  5. Naa38: delta=-0.3534 (WT=0.7404, KO=0.3870) [Active_Promoter]
+
+Per-chromatin-state median delta-ratios:
+  Active_Promoter: -0.0281 (n=6356, ***)
+  Repressed_Promoter: 0.0051 (n=3241, ***)
+  Bivalent_Promoter: -0.0046 (n=150, ***)
+  Polycomb: 0.0022 (n=56, ns)
+  Active_Enhancer: -0.0248 (n=49, ***)
+  Poised_Enhancer: -0.0073 (n=92, ***)
+  Unmarked: -0.0051 (n=10971, ***)
+
+Literature comparison (TET triple-KO):
+  Published TET1/2/3 triple-KO: near-complete 5hmC loss (ratio -> 0)
+  BAP1-KO effect is indirect (via PRC1/H2AK119ub -> TET recruitment)
+  Observed WT median ratio: 0.1275
+  Observed KO median ratio: 0.1193
+  Partial reduction consistent with indirect TET impairment, not ablation
+
+Per-sample analysis (20862 genes):
+  ctrl-M: median ratio = 0.1292
+  ctrl-F: median ratio = 0.1278
+  mut-M: median ratio = 0.1202
+  mut-F: median ratio = 0.1168
+
+Delta-ratio column exported in demethylation_ratio_all_genes.tsv
+for reuse as response variable by other sections (Sections 1, 3, 8, 11).
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/22{a-h}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/demethylation_ratio_*.tsv (4 files)
+
+=== Section 22 complete ===

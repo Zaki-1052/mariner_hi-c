@@ -3,12 +3,17 @@
 # Standalone script - sources shared config for all dependencies and data
 #
 # Tests whether gene body hypermethylation (mC-up DMRs) in BAP1-KO can be
-# computationally predicted from features related to the DNMT3A-UDR recruitment
-# model (Chen et al. 2024). The UDR domain makes a bidentate interaction with
-# H2AK119ub and the nucleosome acidic patch, providing a structural basis for
-# PRC1-dependent de novo methylation.
+# computationally predicted from features related to two competing mechanisms:
+# (1) DNMT3A-UDR recruitment (Chen et al. 2024) and (2) TET impediment.
 #
-# Dual-mechanism hypothesis:
+# Result: TET impediment significantly outperforms DNMT3A recruitment
+# (DeLong p < 2.2e-16). K119ub is a NEGATIVE predictor of hyper-DMR (OR < 1),
+# opposite to the DNMT3A-UDR prediction. Baseline 5hmC (TET substrate) is the
+# strongest predictor. An exclusive model comparison (removing shared atac_count)
+# confirms this: TET-exclusive (baseline_hmc only) > DNMT3A-exclusive (k119ub +
+# cpg_density).
+#
+# Dual-mechanism hypothesis tested:
 #   1. DNMT3A recruitment — UDR-K119ub interaction recruits DNMT3A to gene bodies
 #   2. TET impediment    — K119ub blocks TET access, reducing 5hmC turnover
 #
@@ -414,6 +419,62 @@ for (term in names(full_z_coefs)[-1]) {
 }
 
 # =============================================================================
+# STEP 2b: EXCLUSIVE MECHANISTIC MODEL COMPARISON (no shared atac_count)
+# =============================================================================
+
+cat("\n--- Step 2b: Exclusive models (no shared features) ---\n\n")
+
+# DNMT3A-exclusive: only K119ub-pathway features (no atac_count)
+cat("  DNMT3A exclusive: hyper_dmr ~ k119ub + cpg_density\n")
+model_dnmt3a_excl <- glm(
+  hyper_dmr ~ k119ub + cpg_density,
+  data = model_data, family = binomial
+)
+
+# TET-exclusive: only 5hmC substrate (no atac_count)
+cat("  TET exclusive: hyper_dmr ~ baseline_hmc\n")
+model_tet_excl <- glm(
+  hyper_dmr ~ baseline_hmc,
+  data = model_data, family = binomial
+)
+
+# Z-scored exclusive models
+model_dnmt3a_excl_z <- glm(
+  hyper_dmr ~ k119ub_z + cpg_density_z,
+  data = model_data_z, family = binomial
+)
+model_tet_excl_z <- glm(
+  hyper_dmr ~ baseline_hmc_z,
+  data = model_data_z, family = binomial
+)
+
+# ROC/AUC
+roc_dnmt3a_excl <- roc(model_data$hyper_dmr,
+                        predict(model_dnmt3a_excl, type = "response"), quiet = TRUE)
+roc_tet_excl    <- roc(model_data$hyper_dmr,
+                        predict(model_tet_excl, type = "response"), quiet = TRUE)
+ci_dnmt3a_excl  <- ci.auc(roc_dnmt3a_excl, quiet = TRUE)
+ci_tet_excl     <- ci.auc(roc_tet_excl, quiet = TRUE)
+
+# DeLong test: exclusive models
+delong_excl <- roc.test(roc_dnmt3a_excl, roc_tet_excl, method = "delong")
+
+cat(sprintf("\n  Exclusive model comparison:\n"))
+cat(sprintf("    %-25s AIC=%8.1f  AUC=%.3f [%.3f, %.3f]  R²=%.4f\n",
+            "DNMT3A excl (k119+cpg):", AIC(model_dnmt3a_excl),
+            auc(roc_dnmt3a_excl), ci_dnmt3a_excl[1], ci_dnmt3a_excl[3],
+            mcfadden(model_dnmt3a_excl)))
+cat(sprintf("    %-25s AIC=%8.1f  AUC=%.3f [%.3f, %.3f]  R²=%.4f\n",
+            "TET excl (baseline_hmc):", AIC(model_tet_excl),
+            auc(roc_tet_excl), ci_tet_excl[1], ci_tet_excl[3],
+            mcfadden(model_tet_excl)))
+cat(sprintf("    DeLong (exclusive): AUC diff = %.4f, %s\n",
+            as.numeric(auc(roc_dnmt3a_excl)) - as.numeric(auc(roc_tet_excl)),
+            fmt_p(delong_excl$p.value)))
+cat(sprintf("    (Shared models: DNMT3A=%.3f vs TET=%.3f, %s)\n",
+            auc(roc_dnmt3a), auc(roc_tet), fmt_p(delong_result$p.value)))
+
+# =============================================================================
 # STEP 3: RANDOM FOREST FEATURE IMPORTANCE
 # =============================================================================
 
@@ -571,13 +632,16 @@ p_24b <- ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity, color = model)
   geom_line(linewidth = 1.0) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
   scale_color_manual(values = MODEL_COLORS, labels = legend_labels, name = NULL) +
-  annotate("text", x = 0.95, y = 0.15, hjust = 1, vjust = 0, size = 3.2,
+  annotate("text", x = 0.05, y = 0.45, hjust = 0, vjust = 1, size = 3.2,
            label = annot_text) +
   labs(
     title = "ROC Curves: Predicting mC Hypermethylation (hyper-DMR)",
     subtitle = "DNMT3A recruitment vs TET impediment vs full model",
     x = "1 \u2212 Specificity (False Positive Rate)",
-    y = "Sensitivity (True Positive Rate)"
+    y = "Sensitivity (True Positive Rate)",
+    caption = paste0("Full: K119ub + ATAC + CpG dens. + 5mC + 5hmC + length + expr | ",
+                     "DNMT3A: K119ub + ATAC + CpG dens. | TET: 5hmC + ATAC | ",
+                     "K119ub: K119ub only | Step: AIC-selected")
   ) +
   theme_biomodal() +
   theme(legend.position = c(0.65, 0.25),
@@ -679,7 +743,7 @@ p_24d_left <- ggplot(comparison_df, aes(x = model, y = aic, fill = model)) +
         axis.text.x = element_text(angle = 30, hjust = 1, size = 9))
 
 # Right panel: AUC points + CI
-delong_label <- sprintf("DeLong p=%s\n(DNMT3A vs TET)", fmt_p(delong_result$p.value))
+delong_label <- sprintf("DeLong %s\n(DNMT3A vs TET)", fmt_p(delong_result$p.value))
 
 p_24d_right <- ggplot(comparison_df, aes(x = model, y = auc, color = model)) +
   geom_point(size = 4) +
@@ -700,13 +764,16 @@ p_24d <- (p_24d_left | p_24d_right) +
     subtitle = sprintf("5 logistic regression models (N=%s genes, %d hyper-DMR)",
                        format(nrow(model_data), big.mark = ","),
                        sum(model_data$hyper_dmr)),
+    caption = paste0("Full: K119ub + ATAC + CpG dens. + 5mC + 5hmC + length + expr | ",
+                     "DNMT3A: K119ub + ATAC + CpG dens. | TET: 5hmC + ATAC | K119ub: K119ub only | Step: AIC-selected"),
     theme = theme(
       plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-      plot.subtitle = element_text(hjust = 0.5, size = 12)
+      plot.subtitle = element_text(hjust = 0.5, size = 12),
+      plot.caption = element_text(hjust = 0.5, size = 8.5, color = "grey40")
     )
   )
 
-save_multiformat_ggplot(p_24d, file.path(OUTPUT_DIR, "24d_model_comparison"), 14, 7)
+save_multiformat_ggplot(p_24d, file.path(OUTPUT_DIR, "24d_model_comparison"), 14, 8)
 
 # =============================================================================
 # FIGURE 24e: PREDICTED PROBABILITY BY K119ub SIGNAL
@@ -735,7 +802,9 @@ p_24e <- ggplot(model_data, aes(x = k119ub, y = as.numeric(hyper_dmr))) +
            label = or_label) +
   labs(
     title = "Predicted Probability of mC Hypermethylation by K119ub Signal",
-    subtitle = "Logistic regression: higher K119ub \u2192 higher hypermethylation probability (DNMT3A-UDR model)",
+    subtitle = ifelse(or_k119ub_info$or[2] > 1,
+      "Logistic regression: higher K119ub \u2192 higher hypermethylation probability (DNMT3A-UDR model)",
+      "Logistic regression: higher K119ub \u2192 lower hypermethylation probability (inverse of DNMT3A-UDR prediction)"),
     x = "WT H2AK119ub Gene Body Signal",
     y = "P(mC Hyper-DMR)"
   ) +
@@ -1028,7 +1097,9 @@ p_24g <- ggplot(cv_long, aes(x = model, y = auc, fill = model)) +
       sprintf("N=%s genes, 10 stratified folds",
               format(nrow(model_data), big.mark = ","))
     ),
-    x = NULL, y = "AUC"
+    x = NULL, y = "AUC",
+    caption = paste0("Full: K119ub + ATAC + CpG dens. + 5mC + 5hmC + length + expr | ",
+                     "DNMT3A: K119ub + ATAC + CpG dens. | TET: 5hmC + ATAC | K119ub: K119ub only | Step: AIC-selected")
   ) +
   theme_biomodal() +
   theme(legend.position = "none",
@@ -1417,8 +1488,8 @@ p_24i_right <- ggplot(tertile_df,
   geom_errorbar(aes(xmin = k119ub_or_lower, xmax = k119ub_or_upper),
                 width = 0.2, linewidth = 0.8, orientation = "y") +
   geom_point(size = 4, aes(color = tertile)) +
-  geom_text(aes(label = or_label),
-            hjust = -0.15, vjust = 0.5, size = 3) +
+  geom_text(aes(label = or_label, x = k119ub_or_upper),
+            hjust = -0.15, vjust = 0.5, size = 2.8) +
   scale_color_manual(values = tertile_colors) +
   scale_x_log10() +
   labs(
@@ -1445,6 +1516,116 @@ p_24i <- (p_24i_left | p_24i_right) +
 save_multiformat_ggplot(
   p_24i, file.path(OUTPUT_DIR, "24i_interaction_k119ub_hmc"), 15, 8
 )
+
+# =============================================================================
+# FIGURE 24j: EXCLUSIVE MODEL COMPARISON (no shared atac_count)
+# =============================================================================
+
+cat("\n--- Figure 24j: Exclusive mechanistic model comparison ---\n")
+
+# Build ROC data for exclusive + shared pairs
+excl_roc_df <- rbind(
+  roc_to_df(roc_dnmt3a, "DNMT3A (shared)"),
+  roc_to_df(roc_tet, "TET (shared)"),
+  roc_to_df(roc_dnmt3a_excl, "DNMT3A (exclusive)"),
+  roc_to_df(roc_tet_excl, "TET (exclusive)")
+)
+
+EXCL_COLORS <- c(
+  "DNMT3A (shared)"    = "#756BB1",
+  "TET (shared)"       = "#377EB8",
+  "DNMT3A (exclusive)" = "#BCBDDC",
+  "TET (exclusive)"    = "#9ECAE1"
+)
+excl_roc_df$model <- factor(excl_roc_df$model, levels = names(EXCL_COLORS))
+
+excl_legend <- sprintf(
+  "%s (AUC=%.3f)",
+  names(EXCL_COLORS),
+  c(auc(roc_dnmt3a), auc(roc_tet), auc(roc_dnmt3a_excl), auc(roc_tet_excl))
+)
+
+# Left panel: ROC overlay
+p_24j_left <- ggplot(excl_roc_df, aes(x = 1 - specificity, y = sensitivity, color = model)) +
+  geom_line(aes(linetype = ifelse(grepl("exclusive", model), "dashed", "solid")),
+            linewidth = 1.0) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
+  scale_color_manual(values = EXCL_COLORS, labels = excl_legend, name = NULL) +
+  scale_linetype_identity() +
+  annotate("text", x = 0.05, y = 0.45, hjust = 0, vjust = 1, size = 3.2,
+           label = sprintf("Shared DeLong: %s\nExclusive DeLong: %s\nN=%s genes",
+                           fmt_p(delong_result$p.value),
+                           fmt_p(delong_excl$p.value),
+                           format(nrow(model_data), big.mark = ","))) +
+  labs(
+    title = "ROC: Shared vs Exclusive Features",
+    x = "1 − Specificity", y = "Sensitivity"
+  ) +
+  theme_biomodal() +
+  theme(legend.position = c(0.65, 0.25),
+        legend.background = element_rect(fill = "white", color = "grey80"),
+        legend.text = element_text(size = 8)) +
+  coord_equal()
+
+# Right panel: AUC point + CI comparison
+excl_comparison <- data.frame(
+  model = factor(names(EXCL_COLORS), levels = names(EXCL_COLORS)),
+  auc = c(as.numeric(auc(roc_dnmt3a)), as.numeric(auc(roc_tet)),
+          as.numeric(auc(roc_dnmt3a_excl)), as.numeric(auc(roc_tet_excl))),
+  auc_lower = c(ci_dnmt3a[1], ci_tet[1], ci_dnmt3a_excl[1], ci_tet_excl[1]),
+  auc_upper = c(ci_dnmt3a[3], ci_tet[3], ci_dnmt3a_excl[3], ci_tet_excl[3]),
+  type = c("Shared", "Shared", "Exclusive", "Exclusive"),
+  stringsAsFactors = FALSE
+)
+
+p_24j_right <- ggplot(excl_comparison, aes(x = model, y = auc, color = model)) +
+  geom_point(size = 4) +
+  geom_errorbar(aes(ymin = auc_lower, ymax = auc_upper), width = 0.2, linewidth = 0.8) +
+  geom_text(aes(label = sprintf("%.3f", auc)), vjust = -1.5, size = 3.2) +
+  scale_color_manual(values = EXCL_COLORS) +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey50") +
+  labs(title = "AUC Comparison", x = NULL, y = "AUC (95% CI)") +
+  theme_biomodal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 30, hjust = 1, size = 9))
+
+p_24j <- (p_24j_left | p_24j_right) +
+  plot_annotation(
+    title = "Exclusive Mechanistic Comparison (No Shared Features)",
+    subtitle = sprintf(
+      "Removing shared atac_count: DNMT3A (k119ub+cpg) vs TET (baseline_hmc); DeLong %s",
+      fmt_p(delong_excl$p.value)),
+    caption = paste0("Shared: DNMT3A = K119ub + ATAC + CpG dens. | TET = 5hmC + ATAC\n",
+                     "Exclusive: DNMT3A = K119ub + CpG dens. (no ATAC) | TET = Baseline 5hmC only (no ATAC)"),
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 11),
+      plot.caption = element_text(hjust = 0.5, size = 9, color = "grey40")
+    )
+  )
+
+save_multiformat_ggplot(p_24j, file.path(OUTPUT_DIR, "24j_exclusive_model_comparison"), 16, 9)
+
+# Export exclusive model comparison table
+excl_export <- data.frame(
+  model = c("DNMT3A (shared)", "TET (shared)", "DNMT3A (exclusive)", "TET (exclusive)"),
+  features = c("k119ub + atac_count + cpg_density", "baseline_hmc + atac_count",
+               "k119ub + cpg_density", "baseline_hmc"),
+  auc = excl_comparison$auc,
+  auc_ci_lower = excl_comparison$auc_lower,
+  auc_ci_upper = excl_comparison$auc_upper,
+  aic = c(AIC(model_dnmt3a), AIC(model_tet), AIC(model_dnmt3a_excl), AIC(model_tet_excl)),
+  mcfadden_r2 = c(mcfadden(model_dnmt3a), mcfadden(model_tet),
+                  mcfadden(model_dnmt3a_excl), mcfadden(model_tet_excl)),
+  delong_p = c(delong_result$p.value, delong_result$p.value,
+               delong_excl$p.value, delong_excl$p.value),
+  stringsAsFactors = FALSE
+)
+
+write.table(excl_export,
+            file.path(TABLES_DIR, "dnmt3a_exclusive_model_comparison.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("  Saved dnmt3a_exclusive_model_comparison.tsv (%d rows)\n", nrow(excl_export)))
 
 # Export interaction results table
 interact_export <- rbind(

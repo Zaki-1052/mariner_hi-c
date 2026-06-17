@@ -1,0 +1,325 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:11:43 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 24: DNMT3A BINDING PREDICTION — DUAL-MECHANISM HYPOTHESIS
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Step 1: Building feature matrix ---
+
+  1a: Extracting mC DMR features...
+    20969 genes from mC DMR data
+    Hyper-DMR (mC-up, q<0.05): 7513 genes (35.8%)
+  1b: Loading K119ub gene signal...
+    23150 genes with finite WT K119ub signal
+  1c: Annotating ATAC consensus ctrl peaks to genes...
+  ATAC consensus ctrl: 65799 peaks
+>> preparing features information...		 2026-06-16 17:11:51 
+>> identifying nearest features...		 2026-06-16 17:11:52 
+>> calculating distance from peak to TSS...	 2026-06-16 17:11:53 
+>> assigning genomic annotation...		 2026-06-16 17:11:53 
+>> adding gene annotation...			 2026-06-16 17:12:00 
+>> assigning chromosome lengths			 2026-06-16 17:12:00 
+>> done...					 2026-06-16 17:12:00 
+    17583 genes with at least one ATAC peak
+  1d: Loading baseline WT 5hmC from feature extraction...
+    20958 genes with baseline WT 5hmC
+  1e: Loading RNA-seq expression levels...
+    16572 genes with RNA-seq baseMean
+
+  1f: Merging all features...
+    Final feature matrix: 11937 genes with all 7 features
+    Hyper-DMR (outcome): 6192 genes (51.9%)
+    Complete cases for modeling: 11937 genes
+    Hyper-DMR rate: 6192 / 11937 (51.9%)
+
+--- Step 2: Fitting logistic regression models ---
+
+  Model 1: Full (all 7 features)
+  Model 2: DNMT3A recruitment (k119ub + atac_count + cpg_density)
+  Model 3: TET impediment (baseline_hmc + atac_count)
+  Model 4: K119ub only
+  Model 5: Stepwise (AIC-based bidirectional selection)
+Warning message:
+glm.fit: fitted probabilities numerically 0 or 1 occurred 
+    Selected terms: k119ub + atac_count + cpg_density + baseline_mc + baseline_hmc + log_gene_length + log_expression
+
+  Model comparison:
+    Full:                  AIC= 11373.0  AUC=0.861 [0.854, 0.868]  R²=0.3130
+    DNMT3A recruitment:    AIC= 15217.8  AUC=0.696 [0.687, 0.706]  R²=0.0799
+    TET impediment:        AIC= 13406.2  AUC=0.793 [0.785, 0.801]  R²=0.1894
+    K119ub only:           AIC= 15601.5  AUC=0.658 [0.648, 0.668]  R²=0.0565
+    Stepwise:              AIC= 11373.0  AUC=0.861 [0.854, 0.868]  R²=0.3130
+
+  VIF check (full model):
+    k119ub               VIF = 1.35
+    atac_count           VIF = 1.45
+    cpg_density          VIF = 1.22
+    baseline_mc          VIF = 2.16
+    baseline_hmc         VIF = 1.80
+    log_gene_length      VIF = 2.58
+    log_expression       VIF = 2.27
+
+  DeLong test (DNMT3A recruitment vs TET impediment):
+    AUC difference: -0.0966 (DNMT3A=0.696 vs TET=0.793)
+    p < 2.2e-16
+
+  Likelihood ratio test (DNMT3A recruitment vs K119ub only):
+    LR statistic = 387.71, df = 2, p < 2.2e-16
+
+  Standardized coefficients (Full model, z-scored):
+    k119ub                    beta= -1.049  OR= 0.35  p < 2.2e-16
+    atac_count                beta= -0.105  OR= 0.90  p = 7.73e-04
+    cpg_density               beta=  0.082  OR= 1.09  p = 1.76e-03
+    baseline_mc               beta=  0.107  OR= 1.11  p = 4.52e-03
+    baseline_hmc              beta=  1.251  OR= 3.49  p < 2.2e-16
+    log_gene_length           beta= -0.242  OR= 0.79  p = 5.39e-10
+    log_expression            beta=  0.749  OR= 2.12  p < 2.2e-16
+
+--- Step 2b: Exclusive models (no shared features) ---
+
+  DNMT3A exclusive: hyper_dmr ~ k119ub + cpg_density
+  TET exclusive: hyper_dmr ~ baseline_hmc
+
+  Exclusive model comparison:
+    DNMT3A excl (k119+cpg):   AIC= 15603.4  AUC=0.658 [0.648, 0.668]  R²=0.0565
+    TET excl (baseline_hmc):  AIC= 13471.3  AUC=0.790 [0.782, 0.799]  R²=0.1854
+    DeLong (exclusive): AUC diff = -0.1324, p < 2.2e-16
+    (Shared models: DNMT3A=0.696 vs TET=0.793, p < 2.2e-16)
+
+--- Step 3: Random forest feature importance ---
+  Random forest variable importance (sorted by MeanDecreaseAccuracy):
+    baseline_hmc         Accuracy=158.16  Gini=1534.52
+    k119ub               Accuracy=134.88  Gini=1005.42
+    log_gene_length      Accuracy=79.39  Gini=677.77
+    log_expression       Accuracy=75.36  Gini=1193.58
+    baseline_mc          Accuracy=62.25  Gini=732.27
+    cpg_density          Accuracy=35.73  Gini=561.17
+    atac_count           Accuracy=19.32  Gini=254.75
+  RF OOB error rate: 20.1%
+
+--- Step 4: Annotating chromatin states ---
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+  Chromatin state breakdown:
+    Active_Promoter       5340 genes (3909 hyper-DMR, 73.2%)
+    Repressed_Promoter    1773 genes (59 hyper-DMR, 3.3%)
+    Bivalent_Promoter      130 genes (50 hyper-DMR, 38.5%)
+    Polycomb                 4 genes (0 hyper-DMR, 0.0%)
+    Active_Enhancer         20 genes (16 hyper-DMR, 80.0%)
+    Poised_Enhancer         18 genes (4 hyper-DMR, 22.2%)
+    Unmarked              4652 genes (2154 hyper-DMR, 46.3%)
+
+--- Figure 24a: Feature correlation heatmap ---
+  Saved: 24a_feature_correlation/{pdf,svg,jpg}
+
+--- Figure 24b: ROC curves ---
+  Saved: 24b_roc_curves/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '1 − Specificity (False Positive Rate)' in 'mbcsToSbcs': - substituted for − (U+2212)
+--- Figure 24c: Feature importance ---
+  Saved: 24c_feature_importance/{pdf,svg,jpg}
+--- Figure 24d: Model comparison ---
+  Saved: 24d_model_comparison/{pdf,svg,jpg}
+--- Figure 24e: Predicted probability by K119ub signal ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 24e_k119ub_predicted_probability/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Logistic regression: higher K119ub → lower hypermethylation probability (inverse of DNMT3A-UDR prediction)' in 'mbcsToSbcs': -> substituted for → (U+2192)
+--- Figure 24f: Predicted probability by chromatin state ---
+  Per-chromatin-state AUC (full model):
+    Active_Promoter      AUC=0.768  (n=5340, 3909 hyper)
+    Repressed_Promoter   AUC=0.690  (n=1773, 59 hyper)
+    Bivalent_Promoter    AUC=0.643  (n=130, 50 hyper)
+    Polycomb             AUC=N/A (too few)  (n=4, 0 hyper)
+    Active_Enhancer      AUC=N/A (too few)  (n=20, 16 hyper)
+    Poised_Enhancer      AUC=N/A (too few)  (n=18, 4 hyper)
+    Unmarked             AUC=0.824  (n=4652, 2154 hyper)
+  Saved: 24f_chromatin_state_predictions/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved dnmt3a_feature_matrix.tsv (11937 rows)
+  Saved dnmt3a_model_comparison.tsv (5 rows)
+  Saved dnmt3a_model_coefficients.tsv (25 rows)
+  LR vs RF rank correlation (Spearman): 0.929
+  Saved dnmt3a_feature_importance.tsv (7 rows)
+
+--- Step 6: 10-fold cross-validation ---
+  10-fold CV results:
+    Full:                  CV AUC=0.860 +/- 0.019  (in-sample=0.861, optimism=0.000)
+    DNMT3A recruitment:    CV AUC=0.696 +/- 0.010  (in-sample=0.696, optimism=0.000)
+    TET impediment:        CV AUC=0.793 +/- 0.025  (in-sample=0.793, optimism=0.000)
+    K119ub only:           CV AUC=0.658 +/- 0.016  (in-sample=0.658, optimism=-0.000)
+    Stepwise:              CV AUC=0.860 +/- 0.019  (in-sample=0.861, optimism=0.000)
+
+--- Figure 24g: Cross-validated AUC comparison ---
+  Saved: 24g_cv_auc_comparison/{pdf,svg,jpg}
+  Saved dnmt3a_cv_results.tsv (5 rows)
+
+--- Step 7: Stratified analysis (non-promoter subset) ---
+  Non-promoter subset: 6597 genes (2283 hyper-DMR, 34.6%)
+  Non-promoter model comparison:
+    Full:                  AUC=0.871 [0.862, 0.880]  AIC=5819.7  R2=0.3180
+    DNMT3A recruitment:    AUC=0.717 [0.704, 0.730]  AIC=7807.9  R2=0.0834
+    TET impediment:        AUC=0.790 [0.779, 0.801]  AIC=7039.4  R2=0.1735
+    K119ub only:           AUC=0.687 [0.673, 0.700]  AIC=7965.1  R2=0.0645
+    Stepwise:              AUC=0.871 [0.862, 0.880]  AIC=5819.7  R2=0.3180
+  DeLong (non-promoter, DNMT3A vs TET): p = 7.27e-15
+  Non-promoter K119ub standardized beta: -1.496 (vs All: -1.049)
+
+--- Figure 24h: Stratified model comparison ---
+  Saved: 24h_stratified_comparison/{pdf,svg,jpg}
+  Saved dnmt3a_stratified_comparison.tsv (10 rows)
+
+--- Step 8: K119ub x baseline 5hmC interaction ---
+  Interaction term (k119ub:baseline_hmc):
+    Raw OR = 0.172 [0.071, 0.414], p = 8.65e-05
+    Standardized beta = -0.151, p = 8.65e-05
+    AUC = 0.861 [0.854, 0.867]  AIC = 11359.6
+    LR test vs Full model: chi2=15.36, df=1, p = 8.89e-05
+Warning message:
+glm.fit: fitted probabilities numerically 0 or 1 occurred 
+
+  Per-tertile K119ub effect:
+    Low 5hmC:    OR=0.458 [0.397, 0.527] p < 2.2e-16 (n=3999, AUC=0.708)
+    Mid 5hmC:    OR=0.237 [0.212, 0.266] p < 2.2e-16 (n=3976, AUC=0.782)
+    High 5hmC:   OR=0.436 [0.400, 0.475] p < 2.2e-16 (n=3962, AUC=0.723)
+
+--- Figure 24i: K119ub x baseline 5hmC interaction ---
+  Saved: 24i_interaction_k119ub_hmc/{pdf,svg,jpg}
+
+--- Figure 24j: Exclusive mechanistic model comparison ---
+  Saved: 24j_exclusive_model_comparison/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '1 − Specificity' in 'mbcsToSbcs': - substituted for − (U+2212)
+  Saved dnmt3a_exclusive_model_comparison.tsv (4 rows)
+  Saved dnmt3a_interaction_results.tsv (6 rows)
+
+========================================================================
+SECTION 24 SUMMARY: DNMT3A BINDING PREDICTION
+========================================================================
+
+Feature matrix: 11937 genes with all 7 features
+Outcome: 6192 hyper-DMR (51.9%), 5745 non-hyper
+
+Logistic Regression Model Comparison:
+  Full:                  AIC= 11373.0  AUC=0.861 [0.854, 0.868]  R²=0.3130
+  DNMT3A recruitment:    AIC= 15217.8  AUC=0.696 [0.687, 0.706]  R²=0.0799
+  TET impediment:        AIC= 13406.2  AUC=0.793 [0.785, 0.801]  R²=0.1894
+  K119ub only:           AIC= 15601.5  AUC=0.658 [0.648, 0.668]  R²=0.0565
+  Stepwise:              AIC= 11373.0  AUC=0.861 [0.854, 0.868]  R²=0.3130
+
+DeLong test (DNMT3A recruitment vs TET impediment): p < 2.2e-16
+
+Top 3 LR standardized predictors (full model):
+  1. Baseline 5hmC        |beta|=1.251 (beta=1.251)
+  2. H2AK119ub            |beta|=1.049 (beta=-1.049)
+  3. Expression (log10)   |beta|=0.749 (beta=0.749)
+
+Top 3 RF predictors (MeanDecreaseAccuracy):
+  1. Baseline 5hmC        Accuracy=158.16
+  2. H2AK119ub            Accuracy=134.88
+  3. Gene length (log10)  Accuracy=79.39
+
+LR vs RF rank correlation: 0.929
+
+Interpretation:
+  TET impediment model SIGNIFICANTLY outperforms DNMT3A recruitment.
+  Supports TET blockade as primary mechanism for hypermethylation.
+  K119ub is a NEGATIVE predictor (beta=-1.049): unexpected direction.
+  May reflect indirect effects or confounding with gene expression.
+
+--- Enhancement results ---
+
+10-Fold Cross-Validation:
+  Full:                  CV=0.860 +/- 0.019 (optimism=0.000)
+  DNMT3A recruitment:    CV=0.696 +/- 0.010 (optimism=0.000)
+  TET impediment:        CV=0.793 +/- 0.025 (optimism=0.000)
+  K119ub only:           CV=0.658 +/- 0.016 (optimism=-0.000)
+  Stepwise:              CV=0.860 +/- 0.019 (optimism=0.000)
+
+Non-Promoter Stratification:
+  N=6597 genes (excl. 5340 Active_Promoter)
+  K119ub beta: All=-1.049, Non-promoter=-1.496
+  DeLong (non-prom, DNMT3A vs TET): p = 7.27e-15
+
+K119ub x 5hmC Interaction:
+  Interaction OR=0.172, p = 8.65e-05
+  Interaction beta(z)=-0.151, p = 8.65e-05
+  Low 5hmC: K119ub OR=0.458
+  Mid 5hmC: K119ub OR=0.237
+  High 5hmC: K119ub OR=0.436
+  SIGNIFICANT NEGATIVE interaction: K119ub effect is even more
+  negative at high-5hmC genes. Argues against dual mechanism.
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/24{a-i}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/dnmt3a_*.tsv (7 files)
+
+=== Section 24 complete ===

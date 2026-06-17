@@ -323,13 +323,14 @@ p_23a <- ggplot(roc_df, aes(x = 1 - specificity, y = sensitivity, color = model)
   geom_line(linewidth = 1.0) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
   scale_color_manual(values = MODEL_COLORS, labels = legend_labels, name = NULL) +
-  annotate("text", x = 0.95, y = 0.15, hjust = 1, vjust = 0, size = 3.2,
+  annotate("text", x = 0.05, y = 0.45, hjust = 0, vjust = 1, size = 3.2,
            label = annot_text) +
   labs(
     title = "ROC Curves: Predicting hmC DMR Status",
     subtitle = "Logistic regression models comparing baseline 5hmC vs K119ub as predictors",
     x = "1 \u2212 Specificity (False Positive Rate)",
-    y = "Sensitivity (True Positive Rate)"
+    y = "Sensitivity (True Positive Rate)",
+    caption = "A: sig ~ Baseline WT 5hmC | B: sig ~ WT K119ub gene body signal | C: sig ~ 5hmC + K119ub"
   ) +
   theme_biomodal() +
   theme(legend.position = c(0.65, 0.25),
@@ -423,9 +424,11 @@ p_23c <- (p_23c_left | p_23c_right) +
     subtitle = sprintf("Predicting hmC DMR status (N=%s genes, %d DMR+)",
                        format(nrow(model_data), big.mark = ","),
                        sum(model_data$significant)),
+    caption = "A: sig ~ Baseline WT 5hmC | B: sig ~ WT K119ub signal | C: sig ~ 5hmC + K119ub",
     theme = theme(
       plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-      plot.subtitle = element_text(hjust = 0.5, size = 12)
+      plot.subtitle = element_text(hjust = 0.5, size = 12),
+      plot.caption = element_text(hjust = 0.5, size = 9, color = "grey40")
     )
   )
 

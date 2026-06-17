@@ -1,0 +1,204 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:18:40 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 26: TET TRIPLE-KO COMPARISON (TODO 14c)
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Step 1: Loading data ---
+  BAP1-KO ratios: 20915 genes
+  TET-KO signal: 21403 genes
+
+--- Step 2: Merging by gene name ---
+  Matched genes: 20851
+  BAP1-KO delta median: -0.0085, TET-KO delta median: -0.2597
+  BAP1-KO relative delta median: -0.0872, TET-KO relative delta median: -1.0000
+
+--- Step 3: Computing comparison statistics ---
+  BAP1-KO Cliff's delta (vs 0): -0.430 (medium)
+  TET-KO Cliff's delta (vs 0): -0.680 (large)
+  BAP1-KO % decreased: 71.4%
+  TET-KO % decreased: 70.5%
+  BAP1-KO Cohen's d: -0.712 (medium)
+  TET-KO Cohen's d: -1.824 (large)
+Warning message:
+In ks.test.default(merged$delta_ratio_bap1, merged$delta_ratio_tet) :
+  p-value will be approximate in the presence of ties
+  KS test (BAP1 vs TET deltas): D=0.6741, p < 2.2e-16
+  Attenuation factor (BAP1/TET median deltas): 0.033
+  Interpretation: BAP1-KO reproduces 3.3% of TET-KO delta effect
+  Relative attenuation (BAP1/TET median relative deltas): 0.087
+  Interpretation: BAP1-KO reproduces 8.7% of TET-KO relative effect
+  BAP1-KO relative % decreased: 71.4%
+  TET-KO relative % decreased: 70.5%
+Warning message:
+In cor.test.default(merged$relative_delta_bap1, merged$relative_delta_tet,  :
+  Cannot compute exact p-value with ties
+  Per-gene Spearman rho (relative): -0.012 (p = 8.40e-02)
+  Correlation decomposition (relative deltas):
+    TET-KO relative delta = -1.0 (complete loss): 14292 genes (68.5%)
+    TET-KO relative delta ~  0.0 (no WT signal):  5630 genes (27.0%)
+    TET-KO relative delta other (partial loss):   929 genes (4.5%)
+    TET-KO relative delta variance: 0.7324 (vs BAP1: 0.1265)
+    -> 95.5% of TET-KO genes have constant relative delta, destroying correlation
+    -> Absolute rho was driven by shared baseline variation, not gene specificity
+    Spearman rho (partial-loss genes only, n=929): 0.126 (p = 1.20e-04)
+Warning message:
+In cor.test.default(merged$delta_ratio_bap1, merged$delta_ratio_tet,  :
+  Cannot compute exact p-value with ties
+  Per-gene Spearman rho: 0.220 (p < 2.2e-16)
+  BAP1-KO response categories:
+    Strong loss (>50%):       164 genes (0.8%)
+    Moderate loss (10-50%):   9409 genes (45.1%)
+    Weak/no change (<10%):    11278 genes (54.1%)
+
+  Variance-explained analysis (baseline vs gene-specific):
+    Residualized rho (WT baselines removed): 0.0975 (p < 2.2e-16)
+    R2 baseline only: 0.8328 | R2 full: 0.8337 | Delta-R2 gene-specific: 0.0008
+    Baseline accounts for 99.9% of explained variance
+    -> 56% of original rho=0.220 was driven by shared baseline variation
+
+--- Figure 26a: WT ratio density comparison ---
+  Saved: 26a_wt_ratio_comparison/{pdf,svg,jpg}
+--- Figure 26b: Delta-ratio density comparison ---
+  Saved: 26b_delta_ratio_density/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Delta-ratio (KO − WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+--- Figure 26c: QQ plot ---
+  Saved: 26c_qq_plot/{pdf,svg,jpg}
+--- Figure 26d: Effect size comparison ---
+  Saved: 26d_effect_size_comparison/{pdf,svg,jpg}
+--- Figure 26e: Per-gene scatter ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 26e_per_gene_scatter/{pdf,svg,jpg}
+--- Figure 26f: Chromatin-stratified comparison ---
+  Per-state comparison (BAP1 vs TET-KO delta):
+    Active_Enhancer      BAP1=-0.0248 TET=-0.3096 p_adj=p = 2.11e-08 (n=49)
+    Active_Promoter      BAP1=-0.0281 TET=-0.3098 p_adj=p < 2.2e-16 (n=6355)
+    Bivalent_Promoter    BAP1=-0.0046 TET=-0.2867 p_adj=p < 2.2e-16 (n=150)
+    Poised_Enhancer      BAP1=-0.0073 TET=-0.2534 p_adj=p = 3.62e-11 (n=92)
+    Polycomb             BAP1=0.0022 TET=-0.2070 p_adj=p = 9.64e-09 (n=56)
+    Repressed_Promoter   BAP1=0.0051 TET=-0.2770 p_adj=p < 2.2e-16 (n=3240)
+    Unmarked             BAP1=-0.0051 TET=-0.2223 p_adj=p < 2.2e-16 (n=10909)
+  Saved: 26f_chromatin_stratified/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Delta-ratio (KO − WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+--- Figure 26g: Relative delta density comparison ---
+  Saved: 26g_relative_delta_density/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Relative delta ((KO − WT) / WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Baseline-normalized (delta/WT ratio) — controls for 2× WT baseline difference' in 'mbcsToSbcs': - substituted for — (U+2014)
+--- Figure 26h: Relative delta QQ plot ---
+  Relative QQ slope: 0.3479 (vs absolute QQ slope: 0.0933)
+  Saved: 26h_relative_qq_plot/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'TET-KO relative delta quantiles ((KO − WT) / WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'BAP1-KO relative delta quantiles ((KO − WT) / WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Baseline-normalized deltas — step pattern shows TET-KO binary loss vs BAP1-KO graded response' in 'mbcsToSbcs': - substituted for — (U+2014)
+--- Figure 26i: Response decomposition ---
+  Saved: 26i_response_decomposition/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved tet_ko_comparison_matched_genes.tsv (20851 rows)
+  Saved tet_ko_comparison_summary.tsv (37 rows)
+
+========================================================================
+SECTION 26 SUMMARY: TET TRIPLE-KO COMPARISON
+========================================================================
+
+Matched genes: 20851
+
+WT baseline ratios:
+  BAP1 WT median: 0.1277
+  TET-KO WT median: 0.2690
+
+Absolute delta-ratio comparison:
+  BAP1-KO median delta: -0.0085 (71.4% decreased)
+  TET-KO median delta:  -0.2597 (70.5% decreased)
+  Absolute attenuation: BAP1 = 3.3% of TET-KO effect
+
+Relative (baseline-normalized) delta comparison:
+  BAP1-KO median relative delta: -0.0872 (71.4% decreased)
+  TET-KO median relative delta:  -1.0000 (70.5% decreased)
+  Relative attenuation: BAP1 = 8.7% of TET-KO effect
+
+Effect sizes:
+  BAP1-KO: Cliff's delta=-0.430 (medium), Cohen's d=-0.712 (medium)
+  TET-KO:  Cliff's delta=-0.680 (large), Cohen's d=-1.824 (large)
+
+Statistical tests:
+  KS test: D=0.6741, p < 2.2e-16
+  Per-gene Spearman (absolute): rho=0.220, p < 2.2e-16
+  Per-gene Spearman (relative): rho=-0.012, p = 8.40e-02
+  QQ slope: 0.093 (9.3% attenuation)
+
+Interpretation:
+  BAP1-KO shows ATTENUATED TET impairment (3% of TET-KO effect).
+  Consistent with INDIRECT TET blockade (PRC1-mediated), not direct TET loss.
+  The partial nature confirms BAP1 impairs TET access rather than TET expression.
+  Positive per-gene correlation (rho=0.220) confirms CONVERGENT targets:
+  The same genes are preferentially affected in both conditions.
+
+  Relative correlation note:
+    Relative Spearman rho ~ 0 because 68.5% of TET-KO genes have
+    relative delta = -1.0 (complete loss), leaving no per-gene variance.
+    The absolute rho=0.220 reflects shared baseline variation, not gene-specific
+    sensitivity. This confirms TET-KO = uniform total loss while BAP1-KO = graded.
+
+  Variance decomposition:
+    Baseline R2: 0.8328 | Full R2: 0.8337 | Gene-specific Delta-R2: 0.0008
+    Residualized rho: 0.0975 (56% of original driven by baseline)
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/26{a-i}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/tet_ko_comparison_*.tsv (2 files)
+
+=== Section 26 complete ===

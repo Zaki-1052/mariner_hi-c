@@ -29,6 +29,10 @@
 
 source("scripts/viz_sections/_shared_config.R")
 
+suppressPackageStartupMessages({
+  library(quantreg)
+})
+
 # =============================================================================
 # SECTION 25 CONFIGURATION
 # =============================================================================
@@ -262,6 +266,104 @@ for (term in names(full_z_coefs)[-1]) {
 }
 
 # =============================================================================
+# STEP 5b: EXCLUSIVE MODELS (no shared atac_count)
+# =============================================================================
+
+cat("\n--- Step 5b: Exclusive models (no shared features) ---\n")
+
+lm_dnmt3a_excl <- lm(delta_ratio ~ k119ub + cpg_density, data = dnmt3a_merged)
+lm_tet_excl    <- lm(delta_ratio ~ baseline_hmc, data = dnmt3a_merged)
+
+lm_dnmt3a_excl_z <- lm(delta_ratio ~ k119ub_z + cpg_density_z, data = dnmt3a_merged_z)
+lm_tet_excl_z    <- lm(delta_ratio ~ baseline_hmc_z, data = dnmt3a_merged_z)
+
+cat(sprintf("  DNMT3A excl (k119+cpg): R²=%.4f, adj_R²=%.4f\n",
+            summary(lm_dnmt3a_excl)$r.squared, summary(lm_dnmt3a_excl)$adj.r.squared))
+cat(sprintf("  TET excl (baseline_hmc): R²=%.4f, adj_R²=%.4f\n",
+            summary(lm_tet_excl)$r.squared, summary(lm_tet_excl)$adj.r.squared))
+
+# Add to section 24 model lists for comparison plots
+s24_lm_list[["DNMT3A exclusive"]] <- lm_dnmt3a_excl
+s24_lm_list[["TET exclusive"]]    <- lm_tet_excl
+s24_lm_z_list[["DNMT3A exclusive"]] <- lm_dnmt3a_excl_z
+s24_lm_z_list[["TET exclusive"]]    <- lm_tet_excl_z
+s24_lm_summaries[["DNMT3A exclusive"]] <- summary(lm_dnmt3a_excl)
+s24_lm_summaries[["TET exclusive"]]    <- summary(lm_tet_excl)
+
+# =============================================================================
+# STEP 6: QUANTILE REGRESSION (tau = 0.25, 0.5, 0.75)
+# =============================================================================
+
+cat("\n--- Step 6: Quantile regression (tau = 0.25, 0.5, 0.75) ---\n")
+
+taus <- c(0.25, 0.5, 0.75)
+
+# Helper: fit QR at multiple quantiles, return list
+fit_qr_multi <- function(formula, data, taus) {
+  lapply(setNames(taus, paste0("tau_", taus)), function(tau) {
+    rq(formula, data = data, tau = tau)
+  })
+}
+
+# Fit QR for all model specifications
+qr_full    <- fit_qr_multi(delta_ratio ~ k119ub + atac_count + cpg_density +
+                             baseline_mc + baseline_hmc + log_gene_length + log_expression,
+                           dnmt3a_merged, taus)
+qr_dnmt3a  <- fit_qr_multi(delta_ratio ~ k119ub + atac_count + cpg_density,
+                            dnmt3a_merged, taus)
+qr_tet     <- fit_qr_multi(delta_ratio ~ baseline_hmc + atac_count,
+                            dnmt3a_merged, taus)
+qr_k119ub  <- fit_qr_multi(delta_ratio ~ k119ub, dnmt3a_merged, taus)
+qr_dnmt3a_excl <- fit_qr_multi(delta_ratio ~ k119ub + cpg_density,
+                                dnmt3a_merged, taus)
+qr_tet_excl    <- fit_qr_multi(delta_ratio ~ baseline_hmc, dnmt3a_merged, taus)
+
+# Z-scored QR for full model (for coefficient comparison)
+qr_full_z <- fit_qr_multi(
+  delta_ratio ~ k119ub_z + atac_count_z + cpg_density_z + baseline_mc_z +
+    baseline_hmc_z + log_gene_length_z + log_expression_z,
+  dnmt3a_merged_z, taus
+)
+
+# Print QR(0.5) vs OLS comparison
+cat("\n  OLS vs QR(0.5) coefficient comparison (full model):\n")
+qr_50_coefs <- coef(qr_full$tau_0.5)
+ols_coefs <- coef(lm_full)
+for (term in names(ols_coefs)[-1]) {
+  cat(sprintf("    %-20s OLS=%+.5f  QR(0.5)=%+.5f\n",
+              term, ols_coefs[term], qr_50_coefs[term]))
+}
+
+# OLS vs QR(0.5) residual correlation
+ols_resids <- residuals(lm_full)
+qr50_resids <- residuals(qr_full$tau_0.5)
+ols_qr_cor <- cor(ols_resids, qr50_resids, method = "spearman")
+cat(sprintf("\n  OLS vs QR(0.5) residual Spearman rho: %.4f\n", ols_qr_cor))
+
+# QR(0.5) summaries with bootstrap SEs
+cat("\n  QR(0.5) model summaries (bootstrap SEs, R=1000):\n")
+set.seed(42)
+qr_models_50 <- list(
+  Full = qr_full$tau_0.5, `DNMT3A recruitment` = qr_dnmt3a$tau_0.5,
+  `TET impediment` = qr_tet$tau_0.5, `K119ub only` = qr_k119ub$tau_0.5,
+  `DNMT3A exclusive` = qr_dnmt3a_excl$tau_0.5, `TET exclusive` = qr_tet_excl$tau_0.5
+)
+
+for (nm in names(qr_models_50)) {
+  qr_s <- tryCatch(
+    summary(qr_models_50[[nm]], se = "boot", R = 1000),
+    error = function(e) NULL
+  )
+  if (!is.null(qr_s)) {
+    cat(sprintf("    %-22s ", paste0(nm, ":")))
+    qr_coef_tab <- qr_s$coefficients
+    n_terms <- nrow(qr_coef_tab) - 1
+    sig_terms <- sum(qr_coef_tab[-1, 4] < 0.05)
+    cat(sprintf("%d/%d terms significant (p<0.05)\n", sig_terms, n_terms))
+  }
+}
+
+# =============================================================================
 # FIGURE 25a: DOSE-RESPONSE SCATTER (wt_hmc vs delta_ratio)
 # =============================================================================
 
@@ -353,13 +455,15 @@ p_25b <- ggplot(s23_comparison, aes(x = model, y = metric, fill = framework)) +
     title = "Section 23 Refit: Binary vs Continuous Response",
     subtitle = "Logistic (AUC for DMR status) vs Linear (R\u00B2 for delta_ratio)",
     x = NULL,
-    y = "Model Performance (AUC or R\u00B2)"
+    y = "Model Performance (AUC or R\u00B2)",
+    caption = "A: Baseline WT 5hmC | B: WT K119ub gene body signal | C: Baseline 5hmC + K119ub"
   ) +
   theme_biomodal() +
   theme(axis.text.x = element_text(angle = 25, hjust = 1),
-        legend.position = "bottom")
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0.5, size = 9, color = "grey40"))
 
-save_multiformat_ggplot(p_25b, file.path(OUTPUT_DIR, "25b_binary_vs_continuous_s23"), 10, 7)
+save_multiformat_ggplot(p_25b, file.path(OUTPUT_DIR, "25b_binary_vs_continuous_s23"), 10, 8)
 
 # =============================================================================
 # FIGURE 25c: FEATURE IMPORTANCE COMPARISON (SECTION 24)
@@ -425,38 +529,69 @@ save_multiformat_ggplot(p_25c, file.path(OUTPUT_DIR, "25c_feature_importance_com
 
 cat("--- Figure 25d: Binary vs continuous model comparison (Section 24) ---\n")
 
-# Match model names between original and current
-s24_model_names <- c("Full", "DNMT3A recruitment", "TET impediment", "K119ub only")
+# Include exclusive models alongside originals
+s24_model_names_ext <- c("Full", "DNMT3A recruitment", "TET impediment",
+                          "K119ub only", "DNMT3A exclusive", "TET exclusive")
+
+# Get logistic AUC from original table + compute for exclusive models
+logistic_aucs <- dnmt3a_models_orig$auc[match(
+  c("Full", "DNMT3A recruitment", "TET impediment", "K119ub only"),
+  dnmt3a_models_orig$model)]
+# Read exclusive AUC from section 24 export if available, else NA
+excl_auc_file <- file.path(TABLES_DIR, "dnmt3a_exclusive_model_comparison.tsv")
+if (file.exists(excl_auc_file)) {
+  excl_tab <- read.table(excl_auc_file, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+  logistic_aucs <- c(logistic_aucs,
+                     excl_tab$auc[excl_tab$model == "DNMT3A (exclusive)"],
+                     excl_tab$auc[excl_tab$model == "TET (exclusive)"])
+} else {
+  logistic_aucs <- c(logistic_aucs, NA, NA)
+}
+
+linear_r2s <- sapply(s24_lm_summaries[s24_model_names_ext], function(s) s$r.squared)
 
 s24_comparison <- data.frame(
-  model = rep(s24_model_names, 2),
-  framework = rep(c("Logistic (AUC)", "Linear (R\u00B2)"), each = 4),
-  metric = c(
-    dnmt3a_models_orig$auc[match(s24_model_names, dnmt3a_models_orig$model)],
-    sapply(s24_lm_summaries[s24_model_names], function(s) s$r.squared)
-  ),
+  model = rep(s24_model_names_ext, 2),
+  framework = rep(c("Logistic (AUC)", "Linear (R\u00B2)"), each = 6),
+  metric = c(logistic_aucs, linear_r2s),
   stringsAsFactors = FALSE
 )
-s24_comparison$model <- factor(s24_comparison$model, levels = s24_model_names)
+s24_comparison$model <- factor(s24_comparison$model, levels = s24_model_names_ext)
+
+# Compute delta-R\u00B2 (each model vs K119ub-only baseline)
+r2_baseline <- linear_r2s["K119ub only"]
+delta_r2 <- data.frame(
+  model = factor(s24_model_names_ext, levels = s24_model_names_ext),
+  delta = linear_r2s - r2_baseline,
+  stringsAsFactors = FALSE
+)
 
 s24_colors <- c("Logistic (AUC)" = "#377EB8", "Linear (R\u00B2)" = "#E41A1C")
 
 p_25d <- ggplot(s24_comparison, aes(x = model, y = metric, fill = framework)) +
   geom_col(position = position_dodge(width = 0.7), alpha = 0.85, width = 0.6) +
-  geom_text(aes(label = sprintf("%.3f", metric)),
-            position = position_dodge(width = 0.7), vjust = -0.5, size = 3.2) +
+  geom_text(aes(label = ifelse(is.na(metric), "", sprintf("%.3f", metric))),
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 3.0) +
+  geom_text(data = delta_r2 %>% dplyr::filter(model != "K119ub only"),
+            aes(x = model, y = -0.02,
+                label = sprintf("\u0394R\u00B2=%+.3f", delta)),
+            size = 2.6, inherit.aes = FALSE, color = "grey40") +
   scale_fill_manual(values = s24_colors, name = "Framework") +
   labs(
     title = "Section 24 Refit: Binary vs Continuous Response",
-    subtitle = "Logistic (AUC for hyper-DMR) vs Linear (R\u00B2 for delta_ratio)",
+    subtitle = "Logistic (AUC) vs Linear (R\u00B2); \u0394R\u00B2 relative to K119ub-only baseline",
     x = NULL,
-    y = "Model Performance (AUC or R\u00B2)"
+    y = "Model Performance (AUC or R\u00B2)",
+    caption = paste0("Full: K119ub + ATAC + CpG + 5mC + 5hmC + length + expr | ",
+                     "DNMT3A: K119ub + ATAC + CpG | TET: 5hmC + ATAC\n",
+                     "K119ub: K119ub only | DNMT3A excl: K119ub + CpG | TET excl: Baseline 5hmC only")
   ) +
   theme_biomodal() +
-  theme(axis.text.x = element_text(angle = 25, hjust = 1),
-        legend.position = "bottom")
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 9),
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0.5, size = 8, color = "grey40"))
 
-save_multiformat_ggplot(p_25d, file.path(OUTPUT_DIR, "25d_binary_vs_continuous_s24"), 11, 7)
+save_multiformat_ggplot(p_25d, file.path(OUTPUT_DIR, "25d_binary_vs_continuous_s24"), 13, 8)
 
 # =============================================================================
 # FIGURE 25e: RESIDUAL DIAGNOSTICS (FULL LINEAR MODEL)
@@ -552,6 +687,162 @@ p_25f <- ggplot(dnmt3a_merged, aes(x = predicted_delta_ratio, y = delta_ratio)) 
   guides(color = guide_legend(override.aes = list(alpha = 1, size = 3)))
 
 save_multiformat_ggplot(p_25f, file.path(OUTPUT_DIR, "25f_predicted_vs_observed"), 10, 9)
+
+# =============================================================================
+# FIGURE 25g: OLS vs QR(0.5) COEFFICIENT COMPARISON (FULL MODEL)
+# =============================================================================
+
+cat("--- Figure 25g: OLS vs QR coefficient comparison ---\n")
+
+display_names <- c(
+  k119ub = "H2AK119ub", atac_count = "ATAC peaks",
+  cpg_density = "CpG density", baseline_mc = "Baseline 5mC",
+  baseline_hmc = "Baseline 5hmC", log_gene_length = "Gene length (log10)",
+  log_expression = "Expression (log10)"
+)
+
+qr50_z_coefs <- coef(qr_full_z$tau_0.5)
+ols_z_coefs <- coef(lm_full_z)
+
+coef_cmp <- data.frame(
+  feature = gsub("_z$", "", names(ols_z_coefs)[-1]),
+  stringsAsFactors = FALSE
+) %>%
+  dplyr::mutate(
+    display_name = display_names[feature],
+    ols_beta = as.numeric(ols_z_coefs[-1]),
+    qr_beta = as.numeric(qr50_z_coefs[paste0(feature, "_z")])
+  )
+
+coef_rank_rho <- cor(rank(abs(coef_cmp$ols_beta)), rank(abs(coef_cmp$qr_beta)),
+                     method = "spearman")
+
+p_25g <- ggplot(coef_cmp, aes(x = ols_beta, y = qr_beta)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
+  geom_point(size = 4, color = "#333333") +
+  geom_text_repel(aes(label = display_name), size = 3.5, max.overlaps = 10) +
+  annotate("text", x = -Inf, y = Inf, hjust = -0.05, vjust = 1.5, size = 3.8,
+           label = sprintf("Rank rho (|beta|) = %.3f\nResidual rho = %.4f",
+                           coef_rank_rho, ols_qr_cor)) +
+  labs(
+    title = "OLS vs Quantile Regression Coefficients (Full Model)",
+    subtitle = "Standardized betas; diagonal = perfect agreement. Divergence = OLS sensitivity to outliers",
+    x = "OLS standardized beta",
+    y = "QR(tau=0.5) standardized beta"
+  ) +
+  theme_biomodal()
+
+save_multiformat_ggplot(p_25g, file.path(OUTPUT_DIR, "25g_ols_vs_qr_coefficients"), 9, 9)
+
+# =============================================================================
+# FIGURE 25h: QUANTILE PROCESS PLOT (tau = 0.25, 0.5, 0.75)
+# =============================================================================
+
+cat("--- Figure 25h: Quantile process plot ---\n")
+
+# Extract z-scored coefficients at each tau with bootstrap CIs
+qp_rows <- list()
+set.seed(42)
+for (tau in taus) {
+  tau_label <- paste0("tau_", tau)
+  qr_mod <- qr_full_z[[tau_label]]
+  qr_s <- tryCatch(
+    summary(qr_mod, se = "boot", R = 1000),
+    error = function(e) NULL
+  )
+  if (is.null(qr_s)) next
+  ct <- qr_s$coefficients
+  for (term in rownames(ct)[-1]) {
+    qp_rows[[length(qp_rows) + 1]] <- data.frame(
+      feature = gsub("_z$", "", term),
+      tau = tau,
+      beta = ct[term, 1],
+      se = ct[term, 2],
+      ci_lo = ct[term, 1] - 1.96 * ct[term, 2],
+      ci_hi = ct[term, 1] + 1.96 * ct[term, 2],
+      stringsAsFactors = FALSE
+    )
+  }
+}
+qp_df <- do.call(rbind, qp_rows)
+qp_df$display_name <- display_names[qp_df$feature]
+
+# Add OLS reference line data
+ols_ref <- data.frame(
+  feature = gsub("_z$", "", names(full_z_coefs)[-1]),
+  stringsAsFactors = FALSE
+) %>%
+  dplyr::mutate(
+    display_name = display_names[feature],
+    ols_beta = as.numeric(full_z_coefs[-1])
+  )
+
+p_25h <- ggplot(qp_df, aes(x = tau, y = beta)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey70", linewidth = 0.3) +
+  geom_hline(data = ols_ref, aes(yintercept = ols_beta),
+             linetype = "dotted", color = "#E41A1C", linewidth = 0.6) +
+  geom_pointrange(aes(ymin = ci_lo, ymax = ci_hi), size = 0.5, linewidth = 0.7) +
+  facet_wrap(~display_name, scales = "free_y", ncol = 4) +
+  scale_x_continuous(breaks = taus, labels = c("0.25", "0.50", "0.75")) +
+  labs(
+    title = "Quantile Process: Feature Effects Across Delta-Ratio Distribution",
+    subtitle = "Points = QR beta at tau (95% bootstrap CI); red dotted = OLS estimate",
+    x = expression(tau ~ "(quantile level)"),
+    y = "Standardized beta"
+  ) +
+  theme_biomodal() +
+  theme(strip.text = element_text(size = 9))
+
+save_multiformat_ggplot(p_25h, file.path(OUTPUT_DIR, "25h_quantile_process"), 14, 10)
+
+# =============================================================================
+# FIGURE 25i: QR RESIDUAL DIAGNOSTICS (OLS vs QR COMPARISON)
+# =============================================================================
+
+cat("--- Figure 25i: QR residual diagnostics ---\n")
+
+resid_compare <- data.frame(
+  ols = ols_resids,
+  qr50 = qr50_resids,
+  std_ols = rstandard(lm_full)
+)
+
+# Left: OLS QQ (showing heavy tails)
+p_25i_left <- ggplot(resid_compare, aes(sample = std_ols)) +
+  geom_qq(alpha = 0.1, size = 0.5, color = "grey40") +
+  geom_qq_line(color = "#E41A1C", linewidth = 0.8) +
+  labs(title = "OLS: Normal Q-Q Plot",
+       subtitle = "Heavy tails indicate non-normality",
+       x = "Theoretical quantiles", y = "Standardized residuals") +
+  theme_biomodal()
+
+# Right: QR(0.5) residual histogram
+p_25i_right <- ggplot(resid_compare, aes(x = qr50)) +
+  geom_histogram(bins = 80, fill = "#377EB8", color = "black",
+                 linewidth = 0.2, alpha = 0.7) +
+  geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.5) +
+  geom_vline(xintercept = median(resid_compare$qr50),
+             linetype = "dotted", color = "#E41A1C", linewidth = 0.6) +
+  annotate("text", x = Inf, y = Inf, hjust = 1.1, vjust = 1.5, size = 3.5,
+           label = sprintf("OLS vs QR(0.5) residual\nSpearman rho = %.4f\nMedian QR resid = %.5f",
+                           ols_qr_cor, median(resid_compare$qr50))) +
+  labs(title = "QR(tau=0.5): Residual Distribution",
+       subtitle = "Median regression residuals (robust to outliers)",
+       x = "QR(0.5) residual", y = "Count") +
+  theme_biomodal()
+
+p_25i <- (p_25i_left | p_25i_right) +
+  plot_annotation(
+    title = "Residual Comparison: OLS vs Quantile Regression",
+    subtitle = sprintf("N=%s genes; QR is robust to the heavy-tailed residuals seen in OLS Q-Q",
+                       format(nrow(dnmt3a_merged), big.mark = ",")),
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+      plot.subtitle = element_text(hjust = 0.5, size = 12)
+    )
+  )
+
+save_multiformat_ggplot(p_25i, file.path(OUTPUT_DIR, "25i_qr_residual_diagnostics"), 14, 7)
 
 # =============================================================================
 # EXPORT TABLES
@@ -679,6 +970,37 @@ write.table(importance_export,
             file.path(TABLES_DIR, "delta_ratio_feature_importance.tsv"),
             sep = "\t", quote = FALSE, row.names = FALSE)
 cat(sprintf("  Saved delta_ratio_feature_importance.tsv (%d rows)\n", nrow(importance_export)))
+
+# Table 5: Quantile regression coefficients (tau = 0.25, 0.5, 0.75)
+if (exists("qp_df") && nrow(qp_df) > 0) {
+  qr_coef_export <- qp_df %>%
+    dplyr::select(feature, display_name, tau, beta, se, ci_lo, ci_hi) %>%
+    dplyr::left_join(
+      ols_ref %>% dplyr::select(feature, ols_beta),
+      by = "feature"
+    ) %>%
+    dplyr::arrange(feature, tau)
+
+  write.table(qr_coef_export,
+              file.path(TABLES_DIR, "delta_ratio_qr_coefficients.tsv"),
+              sep = "\t", quote = FALSE, row.names = FALSE)
+  cat(sprintf("  Saved delta_ratio_qr_coefficients.tsv (%d rows)\n", nrow(qr_coef_export)))
+}
+
+# Table 6: OLS vs QR(0.5) coefficient comparison
+coef_cmp_export <- coef_cmp %>%
+  dplyr::mutate(
+    abs_ols = abs(ols_beta),
+    abs_qr = abs(qr_beta),
+    ols_rank = rank(-abs_ols),
+    qr_rank = rank(-abs_qr)
+  ) %>%
+  dplyr::arrange(ols_rank)
+
+write.table(coef_cmp_export,
+            file.path(TABLES_DIR, "delta_ratio_ols_vs_qr_comparison.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+cat(sprintf("  Saved delta_ratio_ols_vs_qr_comparison.tsv (%d rows)\n", nrow(coef_cmp_export)))
 
 # =============================================================================
 # SUMMARY

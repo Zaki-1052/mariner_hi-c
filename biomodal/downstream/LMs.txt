@@ -1,0 +1,1188 @@
+
+========================================================================
+[1/5] Running section_22_demethylation_ratio.R
+  Log: logs/section_22_demethylation_ratio.txt
+========================================================================
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:11:14 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 22: 5hmC/(5mC+5hmC) DEMETHYLATION EFFICIENCY RATIO
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Loading per-sample feature extraction data ---
+  mC extract: 21673 genes x 13 columns
+  hmC extract: 21673 genes x 13 columns
+  Joined: 21650 genes with both mC and hmC data
+  Excluded 692 genes with NA values (20958 retained)
+
+--- Computing group-level demethylation ratios ---
+  Inner-joined mc_dmr (20969) + hmc_dmr (20969) = 20969 genes
+  Filtered 54 genes (near-zero denominators or non-finite ratios)
+  Valid ratio data: 20915 genes
+  DMR status breakdown:
+    Both mC+hmC DMR: 8371 genes
+    mC DMR only: 2404 genes
+    hmC DMR only: 3113 genes
+    Not DMR: 7027 genes
+
+--- Computing per-sample demethylation ratios ---
+  Valid per-sample ratios: 20862 genes
+  Per-sample median ratios:
+    ctrl-M: 0.1292
+    ctrl-F: 0.1278
+    mut-M: 0.1202
+    mut-F: 0.1168
+
+--- Annotating chromatin states ---
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+  TSS distance: 20131 genes with distance=0 (contain TSS)
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+  Chromatin state breakdown:
+    Active_Promoter: 6356 genes
+    Repressed_Promoter: 3241 genes
+    Bivalent_Promoter: 150 genes
+    Polycomb: 56 genes
+    Active_Enhancer: 49 genes
+    Poised_Enhancer: 92 genes
+    Unmarked: 10971 genes
+
+--- Core statistical tests ---
+  Wilcoxon signed-rank (paired): p < 2.2e-16
+  Wilcoxon (delta vs 0): p < 2.2e-16
+  Cliff's delta: 0.4291 (medium)
+  Genes with decreased ratio (impaired TET): 71.4%
+  Genes with increased ratio: 28.4%
+Warning message:
+In cor.test.default(ratio_data$delta_ratio, ratio_data$mc_diff,  :
+  Cannot compute exact p-value with ties
+Warning message:
+In cor.test.default(ratio_data$delta_ratio, ratio_data$hmc_diff,  :
+  Cannot compute exact p-value with ties
+  Spearman rho (delta-ratio vs mc_diff): -0.810 (p < 2.2e-16)
+  Spearman rho (delta-ratio vs hmc_diff): 0.917 (p < 2.2e-16)
+
+--- Figure 22a: WT demethylation ratio density ---
+  Saved: 22a_wt_ratio_density/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'IQR = 0.1424 [0.0695–0.2119]' in 'mbcsToSbcs': - substituted for – (U+2013)
+--- Figure 22b: WT vs KO ratio comparison ---
+  Saved: 22b_wt_vs_ko_ratio/{pdf,svg,jpg}
+--- Figure 22c: Delta-ratio distribution ---
+  Saved: 22c_delta_ratio_histogram/{pdf,svg,jpg}
+--- Figure 22d: Delta-ratio vs methylation changes ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 22d_delta_ratio_vs_diff/{pdf,svg,jpg}
+--- Figure 22e: Delta-ratio by DMR status ---
+  Kruskal-Wallis: p < 2.2e-16
+  Saved: 22e_delta_ratio_by_dmr_status/{pdf,svg,jpg}
+--- Figure 22f: Delta-ratio by chromatin state ---
+  Per-state Wilcoxon vs 0 (BH-corrected):
+    Active_Promoter: median=-0.0281, n=6356, padj=p < 2.2e-16
+    Repressed_Promoter: median=0.0051, n=3241, padj=p < 2.2e-16
+    Bivalent_Promoter: median=-0.0046, n=150, padj=p = 2.22e-04
+    Polycomb: median=0.0022, n=56, padj=p = 1.26e-01
+    Active_Enhancer: median=-0.0248, n=49, padj=p = 8.94e-09
+    Poised_Enhancer: median=-0.0073, n=92, padj=p = 7.36e-05
+    Unmarked: median=-0.0051, n=10971, padj=p < 2.2e-16
+  Saved: 22f_delta_ratio_by_chromatin_state/{pdf,svg,jpg}
+--- Figure 22g: Top 30 genes by most negative delta-ratio ---
+Warning message:
+Vectorized input to `element_text()` is not officially supported.
+ℹ Results may be unexpected or may change in future versions of ggplot2. 
+  Saved: 22g_top30_decreased_ratio/{pdf,svg,jpg}
+--- Figure 22h: Per-sample ratio distributions ---
+  Saved: 22h_per_sample_ratio/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved demethylation_ratio_all_genes.tsv (20915 rows)
+  Saved demethylation_ratio_per_sample.tsv (20862 rows)
+  Saved demethylation_ratio_top_genes.tsv (50 rows)
+  Saved demethylation_ratio_by_chromatin_state.tsv (7 rows)
+
+========================================================================
+SECTION 22 SUMMARY: DEMETHYLATION EFFICIENCY RATIO
+========================================================================
+
+Total genes in mc_dmr: 20969
+Total genes in hmc_dmr: 20969
+Valid ratio data: 20915 genes
+
+Group-level ratio statistics:
+  WT median ratio:  0.1275
+  KO median ratio:  0.1193
+  Delta median:     -0.0085
+  Paired Wilcoxon:  p < 2.2e-16
+  Cliff's delta:    0.4291 (medium)
+  % decreased:      71.4%
+
+Correlations:
+  delta-ratio vs mc_diff:  rho=-0.810 (p < 2.2e-16)
+  delta-ratio vs hmc_diff: rho=0.917 (p < 2.2e-16)
+
+Top 5 genes (most decreased ratio):
+  1. Fndc10: delta=-0.5429 (WT=1.0000, KO=0.4571) [Active_Promoter]
+  2. H2ac4: delta=-0.5000 (WT=1.0000, KO=0.5000) [Unmarked]
+  3. Fam89b: delta=-0.3999 (WT=0.8854, KO=0.4854) [Active_Promoter]
+  4. H1f0: delta=-0.3627 (WT=0.8644, KO=0.5017) [Active_Promoter]
+  5. Naa38: delta=-0.3534 (WT=0.7404, KO=0.3870) [Active_Promoter]
+
+Per-chromatin-state median delta-ratios:
+  Active_Promoter: -0.0281 (n=6356, ***)
+  Repressed_Promoter: 0.0051 (n=3241, ***)
+  Bivalent_Promoter: -0.0046 (n=150, ***)
+  Polycomb: 0.0022 (n=56, ns)
+  Active_Enhancer: -0.0248 (n=49, ***)
+  Poised_Enhancer: -0.0073 (n=92, ***)
+  Unmarked: -0.0051 (n=10971, ***)
+
+Literature comparison (TET triple-KO):
+  Published TET1/2/3 triple-KO: near-complete 5hmC loss (ratio -> 0)
+  BAP1-KO effect is indirect (via PRC1/H2AK119ub -> TET recruitment)
+  Observed WT median ratio: 0.1275
+  Observed KO median ratio: 0.1193
+  Partial reduction consistent with indirect TET impairment, not ablation
+
+Per-sample analysis (20862 genes):
+  ctrl-M: median ratio = 0.1292
+  ctrl-F: median ratio = 0.1278
+  mut-M: median ratio = 0.1202
+  mut-F: median ratio = 0.1168
+
+Delta-ratio column exported in demethylation_ratio_all_genes.tsv
+for reuse as response variable by other sections (Sections 1, 3, 8, 11).
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/22{a-h}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/demethylation_ratio_*.tsv (4 files)
+
+=== Section 22 complete ===
+  Done.
+
+========================================================================
+[2/5] Running section_23_baseline_hmc_predictor.R
+  Log: logs/section_23_baseline_hmc_predictor.txt
+========================================================================
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:11:30 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 23: BASELINE 5hmC AS PREDICTOR OF DMR SUSCEPTIBILITY
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Step 1: Loading baseline WT 5hmC from feature extraction ---
+  hmC extract: 21673 genes x 13 columns
+  Baseline WT 5hmC computed for 20958 genes
+  Median WT 5hmC: 0.1025, Mean: 0.1154, Range: [0.0000, 0.5370]
+
+--- Step 2: Merging with hmC DMR status ---
+  Merged: 20958 genes with both WT 5hmC and DMR status
+  DMR+ (q<0.05): 11484 genes (54.8%)
+  DMR-: 9474 genes
+
+--- Step 3: Loading K119ub gene signal ---
+  K119ub signal: 23150 genes
+  After filtering: 23150 genes with finite WT K119ub signal
+  Combined (5hmC + K119ub + DMR): 18402 genes
+  DMR+ in combined set: 10909 genes (59.3%)
+
+--- Step 4: Fitting logistic regression models ---
+  Model A: significant ~ wt_hmc
+  Model B: significant ~ gb_ctrl_signal
+  Model C: significant ~ wt_hmc + gb_ctrl_signal
+
+  Model A (Baseline 5hmC):
+    OR = 1107061.55 [647729.15, 1892126.15], p < 2.2e-16
+    AIC = 21378.6, McFadden R² = 0.1406
+    AUC = 0.762 [0.755, 0.769]
+
+  Model B (K119ub signal):
+    OR = 0.79 [0.77, 0.81], p < 2.2e-16
+    AIC = 24471.6, McFadden R² = 0.0163
+    AUC = 0.573 [0.564, 0.581]
+
+  Model C (Combined):
+    wt_hmc:        OR = 3959189.50 [2231179.06, 7025514.81], p < 2.2e-16
+    gb_ctrl_signal: OR = 0.66 [0.64, 0.68], p < 2.2e-16
+    AIC = 20667.5, McFadden R² = 0.1693
+    AUC = 0.790 [0.783, 0.797]
+
+  Standardized coefficients (Model C, z-scored predictors):
+    wt_hmc_z:        beta=1.168, OR=3.22
+    gb_ctrl_signal_z: beta=-0.597, OR=0.55
+
+--- Step 5: Annotating chromatin states ---
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+  Chromatin state breakdown:
+    Active_Promoter: 6388 genes
+    Repressed_Promoter: 3242 genes
+    Bivalent_Promoter: 152 genes
+    Polycomb: 57 genes
+    Active_Enhancer: 50 genes
+    Poised_Enhancer: 92 genes
+    Unmarked: 10977 genes
+
+--- Figure 23a: ROC curves ---
+  Saved: 23a_roc_curves/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '1 − Specificity (False Positive Rate)' in 'mbcsToSbcs': - substituted for − (U+2212)
+--- Figure 23b: Predicted probability curve ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 23b_predicted_probability/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Logistic regression: higher baseline 5hmC → higher DMR probability' in 'mbcsToSbcs': -> substituted for → (U+2192)
+--- Figure 23c: Model comparison ---
+  Saved: 23c_model_comparison/{pdf,svg,jpg}
+--- Figure 23d: Dose-response scatter ---
+Warning message:
+In cor.test.default(merged$wt_hmc, merged$mod_difference, method = "spearman") :
+  Cannot compute exact p-value with ties
+  Spearman rho (wt_hmc vs mod_difference): -0.581 (p < 2.2e-16)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 23d_dose_response_scatter/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'hmC mod_difference (KO − WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Higher baseline 5hmC → more hmC loss (negative mod_difference)' in 'mbcsToSbcs': -> substituted for → (U+2192)
+--- Figure 23e: Dose-response by chromatin state ---
+Warning message:
+There were 14 warnings in `dplyr::summarise()`.
+The first warning was:
+ℹ In argument: `rho = tryCatch(...)`.
+ℹ In group 1: `chromatin_state = Active_Promoter`.
+Caused by warning in `cor.test.default()`:
+! Cannot compute exact p-value with ties
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 13 remaining warnings. 
+  Per-chromatin-state Spearman rho:
+    Active_Promoter: rho=-0.455 (n=6388, p < 2.2e-16)
+    Repressed_Promoter: rho=0.113 (n=3242, p = 1.27e-10)
+    Bivalent_Promoter: rho=-0.360 (n=152, p = 5.22e-06)
+    Polycomb: rho=0.145 (n=57, p = 2.82e-01)
+    Active_Enhancer: rho=-0.556 (n=50, p = 2.78e-05)
+    Poised_Enhancer: rho=-0.514 (n=92, p = 1.65e-07)
+    Unmarked: rho=-0.521 (n=10977, p < 2.2e-16)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 23e_dose_response_by_chromatin/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'hmC mod_difference (KO − WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+
+--- Exporting tables ---
+  Saved baseline_hmc_predictor_all_genes.tsv (20958 rows)
+  Saved baseline_hmc_model_comparison.tsv (3 rows)
+  Saved baseline_hmc_model_coefficients.tsv (7 rows)
+
+========================================================================
+SECTION 23 SUMMARY: BASELINE 5hmC AS PREDICTOR OF DMR SUSCEPTIBILITY
+========================================================================
+
+Total genes with baseline WT 5hmC: 20958
+Merged with hmC DMR status: 20958 genes
+Combined with K119ub signal: 18402 genes
+DMR+ (q<0.05): 11484 genes (54.8%)
+
+Logistic Regression Model Comparison:
+  Model A (Baseline 5hmC):  AIC=21379     AUC=0.762 [0.755, 0.769] R²=0.1406
+  Model B (K119ub):         AIC=24472     AUC=0.573 [0.564, 0.581] R²=0.0163
+  Model C (Combined):       AIC=20667     AUC=0.790 [0.783, 0.797] R²=0.1693
+
+Standardized coefficients (Model C):
+  wt_hmc_z:         beta=1.168 (OR=3.22 per SD)
+  gb_ctrl_signal_z: beta=-0.597 (OR=0.55 per SD)
+
+Dose-response (all genes):
+  Spearman rho (wt_hmc vs mod_difference): -0.581 (p < 2.2e-16)
+
+Interpretation:
+  Baseline 5hmC is a STRONGER predictor of DMR status than K119ub signal.
+  This supports the substrate availability hypothesis: genes with more 5hmC
+  have more substrate for TET impairment to affect in BAP1-KO.
+  Negative dose-response (rho=-0.581) confirms: higher baseline 5hmC
+  leads to more 5hmC loss in BAP1-KO, consistent with TET impairment.
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/23{a-e}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/baseline_hmc_*.tsv (3 files)
+
+=== Section 23 complete ===
+  Done.
+
+========================================================================
+[3/5] Running section_24_dnmt3a_prediction.R
+  Log: logs/section_24_dnmt3a_prediction.txt
+========================================================================
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:11:43 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 24: DNMT3A BINDING PREDICTION — DUAL-MECHANISM HYPOTHESIS
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Step 1: Building feature matrix ---
+
+  1a: Extracting mC DMR features...
+    20969 genes from mC DMR data
+    Hyper-DMR (mC-up, q<0.05): 7513 genes (35.8%)
+  1b: Loading K119ub gene signal...
+    23150 genes with finite WT K119ub signal
+  1c: Annotating ATAC consensus ctrl peaks to genes...
+  ATAC consensus ctrl: 65799 peaks
+>> preparing features information...		 2026-06-16 17:11:51 
+>> identifying nearest features...		 2026-06-16 17:11:52 
+>> calculating distance from peak to TSS...	 2026-06-16 17:11:53 
+>> assigning genomic annotation...		 2026-06-16 17:11:53 
+>> adding gene annotation...			 2026-06-16 17:12:00 
+>> assigning chromosome lengths			 2026-06-16 17:12:00 
+>> done...					 2026-06-16 17:12:00 
+    17583 genes with at least one ATAC peak
+  1d: Loading baseline WT 5hmC from feature extraction...
+    20958 genes with baseline WT 5hmC
+  1e: Loading RNA-seq expression levels...
+    16572 genes with RNA-seq baseMean
+
+  1f: Merging all features...
+    Final feature matrix: 11937 genes with all 7 features
+    Hyper-DMR (outcome): 6192 genes (51.9%)
+    Complete cases for modeling: 11937 genes
+    Hyper-DMR rate: 6192 / 11937 (51.9%)
+
+--- Step 2: Fitting logistic regression models ---
+
+  Model 1: Full (all 7 features)
+  Model 2: DNMT3A recruitment (k119ub + atac_count + cpg_density)
+  Model 3: TET impediment (baseline_hmc + atac_count)
+  Model 4: K119ub only
+  Model 5: Stepwise (AIC-based bidirectional selection)
+Warning message:
+glm.fit: fitted probabilities numerically 0 or 1 occurred 
+    Selected terms: k119ub + atac_count + cpg_density + baseline_mc + baseline_hmc + log_gene_length + log_expression
+
+  Model comparison:
+    Full:                  AIC= 11373.0  AUC=0.861 [0.854, 0.868]  R²=0.3130
+    DNMT3A recruitment:    AIC= 15217.8  AUC=0.696 [0.687, 0.706]  R²=0.0799
+    TET impediment:        AIC= 13406.2  AUC=0.793 [0.785, 0.801]  R²=0.1894
+    K119ub only:           AIC= 15601.5  AUC=0.658 [0.648, 0.668]  R²=0.0565
+    Stepwise:              AIC= 11373.0  AUC=0.861 [0.854, 0.868]  R²=0.3130
+
+  VIF check (full model):
+    k119ub               VIF = 1.35
+    atac_count           VIF = 1.45
+    cpg_density          VIF = 1.22
+    baseline_mc          VIF = 2.16
+    baseline_hmc         VIF = 1.80
+    log_gene_length      VIF = 2.58
+    log_expression       VIF = 2.27
+
+  DeLong test (DNMT3A recruitment vs TET impediment):
+    AUC difference: -0.0966 (DNMT3A=0.696 vs TET=0.793)
+    p < 2.2e-16
+
+  Likelihood ratio test (DNMT3A recruitment vs K119ub only):
+    LR statistic = 387.71, df = 2, p < 2.2e-16
+
+  Standardized coefficients (Full model, z-scored):
+    k119ub                    beta= -1.049  OR= 0.35  p < 2.2e-16
+    atac_count                beta= -0.105  OR= 0.90  p = 7.73e-04
+    cpg_density               beta=  0.082  OR= 1.09  p = 1.76e-03
+    baseline_mc               beta=  0.107  OR= 1.11  p = 4.52e-03
+    baseline_hmc              beta=  1.251  OR= 3.49  p < 2.2e-16
+    log_gene_length           beta= -0.242  OR= 0.79  p = 5.39e-10
+    log_expression            beta=  0.749  OR= 2.12  p < 2.2e-16
+
+--- Step 2b: Exclusive models (no shared features) ---
+
+  DNMT3A exclusive: hyper_dmr ~ k119ub + cpg_density
+  TET exclusive: hyper_dmr ~ baseline_hmc
+
+  Exclusive model comparison:
+    DNMT3A excl (k119+cpg):   AIC= 15603.4  AUC=0.658 [0.648, 0.668]  R²=0.0565
+    TET excl (baseline_hmc):  AIC= 13471.3  AUC=0.790 [0.782, 0.799]  R²=0.1854
+    DeLong (exclusive): AUC diff = -0.1324, p < 2.2e-16
+    (Shared models: DNMT3A=0.696 vs TET=0.793, p < 2.2e-16)
+
+--- Step 3: Random forest feature importance ---
+  Random forest variable importance (sorted by MeanDecreaseAccuracy):
+    baseline_hmc         Accuracy=158.16  Gini=1534.52
+    k119ub               Accuracy=134.88  Gini=1005.42
+    log_gene_length      Accuracy=79.39  Gini=677.77
+    log_expression       Accuracy=75.36  Gini=1193.58
+    baseline_mc          Accuracy=62.25  Gini=732.27
+    cpg_density          Accuracy=35.73  Gini=561.17
+    atac_count           Accuracy=19.32  Gini=254.75
+  RF OOB error rate: 20.1%
+
+--- Step 4: Annotating chromatin states ---
+  CTCF: 32487 peaks
+  H3K27ac: 15105 peaks
+  H3K27me3: 15809 peaks
+  H3K4me1: 113781 peaks
+  H3K4me3: 6581 peaks
+  Bivalent: 318 peaks
+  66 genes were dropped because they have exons located on both strands of the
+  same reference sequence or on more than one reference sequence, so cannot be
+  represented by a single genomic range.
+  Use 'single.strand.genes.only=FALSE' to get all the genes in a GRangesList
+  object, or use suppressMessages() to suppress this message.
+Warning messages:
+1: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chrUn_GL456392, chrUn_GL456393, chrUn_JH584304, chrUn_GL456239, chrUn_GL456366, chrUn_GL456359
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+2: In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
+  Chromatin state breakdown:
+    Active_Promoter       5340 genes (3909 hyper-DMR, 73.2%)
+    Repressed_Promoter    1773 genes (59 hyper-DMR, 3.3%)
+    Bivalent_Promoter      130 genes (50 hyper-DMR, 38.5%)
+    Polycomb                 4 genes (0 hyper-DMR, 0.0%)
+    Active_Enhancer         20 genes (16 hyper-DMR, 80.0%)
+    Poised_Enhancer         18 genes (4 hyper-DMR, 22.2%)
+    Unmarked              4652 genes (2154 hyper-DMR, 46.3%)
+
+--- Figure 24a: Feature correlation heatmap ---
+  Saved: 24a_feature_correlation/{pdf,svg,jpg}
+
+--- Figure 24b: ROC curves ---
+  Saved: 24b_roc_curves/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '1 − Specificity (False Positive Rate)' in 'mbcsToSbcs': - substituted for − (U+2212)
+--- Figure 24c: Feature importance ---
+  Saved: 24c_feature_importance/{pdf,svg,jpg}
+--- Figure 24d: Model comparison ---
+  Saved: 24d_model_comparison/{pdf,svg,jpg}
+--- Figure 24e: Predicted probability by K119ub signal ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 24e_k119ub_predicted_probability/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Logistic regression: higher K119ub → lower hypermethylation probability (inverse of DNMT3A-UDR prediction)' in 'mbcsToSbcs': -> substituted for → (U+2192)
+--- Figure 24f: Predicted probability by chromatin state ---
+  Per-chromatin-state AUC (full model):
+    Active_Promoter      AUC=0.768  (n=5340, 3909 hyper)
+    Repressed_Promoter   AUC=0.690  (n=1773, 59 hyper)
+    Bivalent_Promoter    AUC=0.643  (n=130, 50 hyper)
+    Polycomb             AUC=N/A (too few)  (n=4, 0 hyper)
+    Active_Enhancer      AUC=N/A (too few)  (n=20, 16 hyper)
+    Poised_Enhancer      AUC=N/A (too few)  (n=18, 4 hyper)
+    Unmarked             AUC=0.824  (n=4652, 2154 hyper)
+  Saved: 24f_chromatin_state_predictions/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved dnmt3a_feature_matrix.tsv (11937 rows)
+  Saved dnmt3a_model_comparison.tsv (5 rows)
+  Saved dnmt3a_model_coefficients.tsv (25 rows)
+  LR vs RF rank correlation (Spearman): 0.929
+  Saved dnmt3a_feature_importance.tsv (7 rows)
+
+--- Step 6: 10-fold cross-validation ---
+  10-fold CV results:
+    Full:                  CV AUC=0.860 +/- 0.019  (in-sample=0.861, optimism=0.000)
+    DNMT3A recruitment:    CV AUC=0.696 +/- 0.010  (in-sample=0.696, optimism=0.000)
+    TET impediment:        CV AUC=0.793 +/- 0.025  (in-sample=0.793, optimism=0.000)
+    K119ub only:           CV AUC=0.658 +/- 0.016  (in-sample=0.658, optimism=-0.000)
+    Stepwise:              CV AUC=0.860 +/- 0.019  (in-sample=0.861, optimism=0.000)
+
+--- Figure 24g: Cross-validated AUC comparison ---
+  Saved: 24g_cv_auc_comparison/{pdf,svg,jpg}
+  Saved dnmt3a_cv_results.tsv (5 rows)
+
+--- Step 7: Stratified analysis (non-promoter subset) ---
+  Non-promoter subset: 6597 genes (2283 hyper-DMR, 34.6%)
+  Non-promoter model comparison:
+    Full:                  AUC=0.871 [0.862, 0.880]  AIC=5819.7  R2=0.3180
+    DNMT3A recruitment:    AUC=0.717 [0.704, 0.730]  AIC=7807.9  R2=0.0834
+    TET impediment:        AUC=0.790 [0.779, 0.801]  AIC=7039.4  R2=0.1735
+    K119ub only:           AUC=0.687 [0.673, 0.700]  AIC=7965.1  R2=0.0645
+    Stepwise:              AUC=0.871 [0.862, 0.880]  AIC=5819.7  R2=0.3180
+  DeLong (non-promoter, DNMT3A vs TET): p = 7.27e-15
+  Non-promoter K119ub standardized beta: -1.496 (vs All: -1.049)
+
+--- Figure 24h: Stratified model comparison ---
+  Saved: 24h_stratified_comparison/{pdf,svg,jpg}
+  Saved dnmt3a_stratified_comparison.tsv (10 rows)
+
+--- Step 8: K119ub x baseline 5hmC interaction ---
+  Interaction term (k119ub:baseline_hmc):
+    Raw OR = 0.172 [0.071, 0.414], p = 8.65e-05
+    Standardized beta = -0.151, p = 8.65e-05
+    AUC = 0.861 [0.854, 0.867]  AIC = 11359.6
+    LR test vs Full model: chi2=15.36, df=1, p = 8.89e-05
+Warning message:
+glm.fit: fitted probabilities numerically 0 or 1 occurred 
+
+  Per-tertile K119ub effect:
+    Low 5hmC:    OR=0.458 [0.397, 0.527] p < 2.2e-16 (n=3999, AUC=0.708)
+    Mid 5hmC:    OR=0.237 [0.212, 0.266] p < 2.2e-16 (n=3976, AUC=0.782)
+    High 5hmC:   OR=0.436 [0.400, 0.475] p < 2.2e-16 (n=3962, AUC=0.723)
+
+--- Figure 24i: K119ub x baseline 5hmC interaction ---
+  Saved: 24i_interaction_k119ub_hmc/{pdf,svg,jpg}
+
+--- Figure 24j: Exclusive mechanistic model comparison ---
+  Saved: 24j_exclusive_model_comparison/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '1 − Specificity' in 'mbcsToSbcs': - substituted for − (U+2212)
+  Saved dnmt3a_exclusive_model_comparison.tsv (4 rows)
+  Saved dnmt3a_interaction_results.tsv (6 rows)
+
+========================================================================
+SECTION 24 SUMMARY: DNMT3A BINDING PREDICTION
+========================================================================
+
+Feature matrix: 11937 genes with all 7 features
+Outcome: 6192 hyper-DMR (51.9%), 5745 non-hyper
+
+Logistic Regression Model Comparison:
+  Full:                  AIC= 11373.0  AUC=0.861 [0.854, 0.868]  R²=0.3130
+  DNMT3A recruitment:    AIC= 15217.8  AUC=0.696 [0.687, 0.706]  R²=0.0799
+  TET impediment:        AIC= 13406.2  AUC=0.793 [0.785, 0.801]  R²=0.1894
+  K119ub only:           AIC= 15601.5  AUC=0.658 [0.648, 0.668]  R²=0.0565
+  Stepwise:              AIC= 11373.0  AUC=0.861 [0.854, 0.868]  R²=0.3130
+
+DeLong test (DNMT3A recruitment vs TET impediment): p < 2.2e-16
+
+Top 3 LR standardized predictors (full model):
+  1. Baseline 5hmC        |beta|=1.251 (beta=1.251)
+  2. H2AK119ub            |beta|=1.049 (beta=-1.049)
+  3. Expression (log10)   |beta|=0.749 (beta=0.749)
+
+Top 3 RF predictors (MeanDecreaseAccuracy):
+  1. Baseline 5hmC        Accuracy=158.16
+  2. H2AK119ub            Accuracy=134.88
+  3. Gene length (log10)  Accuracy=79.39
+
+LR vs RF rank correlation: 0.929
+
+Interpretation:
+  TET impediment model SIGNIFICANTLY outperforms DNMT3A recruitment.
+  Supports TET blockade as primary mechanism for hypermethylation.
+  K119ub is a NEGATIVE predictor (beta=-1.049): unexpected direction.
+  May reflect indirect effects or confounding with gene expression.
+
+--- Enhancement results ---
+
+10-Fold Cross-Validation:
+  Full:                  CV=0.860 +/- 0.019 (optimism=0.000)
+  DNMT3A recruitment:    CV=0.696 +/- 0.010 (optimism=0.000)
+  TET impediment:        CV=0.793 +/- 0.025 (optimism=0.000)
+  K119ub only:           CV=0.658 +/- 0.016 (optimism=-0.000)
+  Stepwise:              CV=0.860 +/- 0.019 (optimism=0.000)
+
+Non-Promoter Stratification:
+  N=6597 genes (excl. 5340 Active_Promoter)
+  K119ub beta: All=-1.049, Non-promoter=-1.496
+  DeLong (non-prom, DNMT3A vs TET): p = 7.27e-15
+
+K119ub x 5hmC Interaction:
+  Interaction OR=0.172, p = 8.65e-05
+  Interaction beta(z)=-0.151, p = 8.65e-05
+  Low 5hmC: K119ub OR=0.458
+  Mid 5hmC: K119ub OR=0.237
+  High 5hmC: K119ub OR=0.436
+  SIGNIFICANT NEGATIVE interaction: K119ub effect is even more
+  negative at high-5hmC genes. Argues against dual mechanism.
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/24{a-i}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/dnmt3a_*.tsv (7 files)
+
+=== Section 24 complete ===
+  Done.
+
+========================================================================
+[4/5] Running section_25_delta_ratio_models.R
+  Log: logs/section_25_delta_ratio_models.txt
+========================================================================
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:12:17 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 25: DELTA-RATIO LINEAR MODEL REFITS (TODO 14d)
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Step 1: Loading data ---
+  Demethylation ratio: 20915 genes
+  Baseline hmC predictor: 20958 genes
+  DNMT3A feature matrix: 11937 genes
+
+--- Step 2: Building Section 23 refit data ---
+  Merged genes (ratio + 5hmC + K119ub): 18372
+  Delta-ratio range: [-0.5429, 0.4232], median: -0.0106
+
+--- Step 3: Fitting Section 23 linear models ---
+  Model A: delta_ratio ~ wt_hmc
+  Model B: delta_ratio ~ gb_ctrl_signal
+  Model C: delta_ratio ~ wt_hmc + gb_ctrl_signal
+
+  Model A (Baseline 5hmC):
+    R² = 0.2666, adj R² = 0.2666
+    F(1,18370) = 6678.7, p < 2.2e-16
+    wt_hmc: coef = -0.185442, p < 2.2e-16
+
+  Model B (K119ub signal):
+    R² = 0.0231, adj R² = 0.0230
+    F(1,18370) = 434.4, p < 2.2e-16
+    gb_ctrl_signal: coef = 0.002914, p < 2.2e-16
+
+  Model C (Combined):
+    R² = 0.2956, adj R² = 0.2956
+    F(2,18369) = 3854.8, p < 2.2e-16
+
+  Standardized coefficients (Model C):
+    wt_hmc_z:         beta = -0.0144
+    gb_ctrl_signal_z: beta = 0.0047
+
+--- Step 4: Building Section 24 refit data ---
+  Merged genes (ratio + DNMT3A features): 11913
+
+--- Step 5: Fitting Section 24 linear models ---
+  Full: delta_ratio ~ all 7 features
+  DNMT3A recruitment: delta_ratio ~ k119ub + atac_count + cpg_density
+  TET impediment: delta_ratio ~ baseline_hmc + atac_count
+  K119ub only: delta_ratio ~ k119ub
+
+  Section 24 Linear Model Comparison:
+    Full:                  R²=0.3902  adj_R²=0.3898  F=1088.3  p < 2.2e-16
+    DNMT3A recruitment:    R²=0.0440  adj_R²=0.0438  F=182.8  p < 2.2e-16
+    TET impediment:        R²=0.2589  adj_R²=0.2587  F=2080.0  p < 2.2e-16
+    K119ub only:           R²=0.0311  adj_R²=0.0310  F=382.6  p < 2.2e-16
+
+  Standardized coefficients (Full linear model):
+    k119ub                    beta= 0.0069  p < 2.2e-16
+    atac_count                beta= 0.0013  p = 1.12e-08
+    cpg_density               beta=-0.0001  p = 6.27e-01
+    baseline_mc               beta= 0.0068  p < 2.2e-16
+    baseline_hmc              beta=-0.0084  p < 2.2e-16
+    log_gene_length           beta= 0.0051  p < 2.2e-16
+    log_expression            beta=-0.0052  p < 2.2e-16
+
+--- Step 5b: Exclusive models (no shared features) ---
+  DNMT3A excl (k119+cpg): R²=0.0340, adj_R²=0.0338
+  TET excl (baseline_hmc): R²=0.2447, adj_R²=0.2446
+
+--- Step 6: Quantile regression (tau = 0.25, 0.5, 0.75) ---
+
+  OLS vs QR(0.5) coefficient comparison (full model):
+    k119ub               OLS=+0.00577  QR(0.5)=+0.00721
+    atac_count           OLS=+0.00031  QR(0.5)=+0.00026
+    cpg_density          OLS=-0.03196  QR(0.5)=+0.18881
+    baseline_mc          OLS=+0.04315  QR(0.5)=+0.02415
+    baseline_hmc         OLS=-0.11774  QR(0.5)=-0.13388
+    log_gene_length      OLS=+0.00907  QR(0.5)=+0.01117
+    log_expression       OLS=-0.00659  QR(0.5)=-0.00641
+
+  OLS vs QR(0.5) residual Spearman rho: 0.9810
+
+  QR(0.5) model summaries (bootstrap SEs, R=1000):
+    Full:                  7/7 terms significant (p<0.05)
+    DNMT3A recruitment:    3/3 terms significant (p<0.05)
+    TET impediment:        2/2 terms significant (p<0.05)
+    K119ub only:           1/1 terms significant (p<0.05)
+    DNMT3A exclusive:      2/2 terms significant (p<0.05)
+    TET exclusive:         1/1 terms significant (p<0.05)
+
+--- Figure 25a: Dose-response scatter ---
+Warning message:
+In cor.test.default(hmc_merged$wt_hmc, hmc_merged$delta_ratio, method = "spearman") :
+  Cannot compute exact p-value with ties
+  Spearman rho (wt_hmc vs delta_ratio): -0.599 (p < 2.2e-16)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 25a_dose_response_delta_ratio/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Delta-ratio (KO − WT demethylation efficiency)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Higher baseline 5hmC → more negative delta_ratio (greater TET impairment)' in 'mbcsToSbcs': -> substituted for → (U+2192)
+--- Figure 25b: Binary vs continuous model comparison (Section 23) ---
+  Saved: 25b_binary_vs_continuous_s23/{pdf,svg,jpg}
+--- Figure 25c: Feature importance comparison (Section 24) ---
+  Logistic vs Linear rank correlation (Spearman): 0.893
+  Saved: 25c_feature_importance_comparison/{pdf,svg,jpg}
+--- Figure 25d: Binary vs continuous model comparison (Section 24) ---
+  Saved: 25d_binary_vs_continuous_s24/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.359' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.013' in 'mbcsToSbcs': for Δ (U+0394)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.228' in 'mbcsToSbcs': for Δ (U+0394)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.003' in 'mbcsToSbcs': for Δ (U+0394)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'ΔR²=+0.214' in 'mbcsToSbcs': for Δ (U+0394)
+6: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Logistic (AUC) vs Linear (R²); ΔR² relative to K119ub-only baseline' in 'mbcsToSbcs': for Δ (U+0394)
+--- Figure 25e: Residual diagnostics ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 25e_residual_diagnostics/{pdf,svg,jpg}
+--- Figure 25f: Predicted vs observed ---
+  Pearson r (predicted vs observed): 0.6247 (p < 2.2e-16)
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 25f_predicted_vs_observed/{pdf,svg,jpg}
+--- Figure 25g: OLS vs QR coefficient comparison ---
+  Saved: 25g_ols_vs_qr_coefficients/{pdf,svg,jpg}
+--- Figure 25h: Quantile process plot ---
+  Saved: 25h_quantile_process/{pdf,svg,jpg}
+--- Figure 25i: QR residual diagnostics ---
+  Saved: 25i_qr_residual_diagnostics/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved delta_ratio_linear_model_comparison.tsv (7 rows)
+  Saved delta_ratio_linear_coefficients.tsv (24 rows)
+Error: object 's24_model_names' not found
+Execution halted
+  *** FAILED (exit 1) ***
+
+========================================================================
+[5/5] Running section_26_tet_ko_comparison.R
+  Log: logs/section_26_tet_ko_comparison.txt
+========================================================================
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-16 17:18:40 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+========================================================================
+SECTION 26: TET TRIPLE-KO COMPARISON (TODO 14c)
+========================================================================
+
+Validating inputs...
+  All inputs validated.
+
+--- Step 1: Loading data ---
+  BAP1-KO ratios: 20915 genes
+  TET-KO signal: 21403 genes
+
+--- Step 2: Merging by gene name ---
+  Matched genes: 20851
+  BAP1-KO delta median: -0.0085, TET-KO delta median: -0.2597
+  BAP1-KO relative delta median: -0.0872, TET-KO relative delta median: -1.0000
+
+--- Step 3: Computing comparison statistics ---
+  BAP1-KO Cliff's delta (vs 0): -0.430 (medium)
+  TET-KO Cliff's delta (vs 0): -0.680 (large)
+  BAP1-KO % decreased: 71.4%
+  TET-KO % decreased: 70.5%
+  BAP1-KO Cohen's d: -0.712 (medium)
+  TET-KO Cohen's d: -1.824 (large)
+Warning message:
+In ks.test.default(merged$delta_ratio_bap1, merged$delta_ratio_tet) :
+  p-value will be approximate in the presence of ties
+  KS test (BAP1 vs TET deltas): D=0.6741, p < 2.2e-16
+  Attenuation factor (BAP1/TET median deltas): 0.033
+  Interpretation: BAP1-KO reproduces 3.3% of TET-KO delta effect
+  Relative attenuation (BAP1/TET median relative deltas): 0.087
+  Interpretation: BAP1-KO reproduces 8.7% of TET-KO relative effect
+  BAP1-KO relative % decreased: 71.4%
+  TET-KO relative % decreased: 70.5%
+Warning message:
+In cor.test.default(merged$relative_delta_bap1, merged$relative_delta_tet,  :
+  Cannot compute exact p-value with ties
+  Per-gene Spearman rho (relative): -0.012 (p = 8.40e-02)
+  Correlation decomposition (relative deltas):
+    TET-KO relative delta = -1.0 (complete loss): 14292 genes (68.5%)
+    TET-KO relative delta ~  0.0 (no WT signal):  5630 genes (27.0%)
+    TET-KO relative delta other (partial loss):   929 genes (4.5%)
+    TET-KO relative delta variance: 0.7324 (vs BAP1: 0.1265)
+    -> 95.5% of TET-KO genes have constant relative delta, destroying correlation
+    -> Absolute rho was driven by shared baseline variation, not gene specificity
+    Spearman rho (partial-loss genes only, n=929): 0.126 (p = 1.20e-04)
+Warning message:
+In cor.test.default(merged$delta_ratio_bap1, merged$delta_ratio_tet,  :
+  Cannot compute exact p-value with ties
+  Per-gene Spearman rho: 0.220 (p < 2.2e-16)
+  BAP1-KO response categories:
+    Strong loss (>50%):       164 genes (0.8%)
+    Moderate loss (10-50%):   9409 genes (45.1%)
+    Weak/no change (<10%):    11278 genes (54.1%)
+
+  Variance-explained analysis (baseline vs gene-specific):
+    Residualized rho (WT baselines removed): 0.0975 (p < 2.2e-16)
+    R2 baseline only: 0.8328 | R2 full: 0.8337 | Delta-R2 gene-specific: 0.0008
+    Baseline accounts for 99.9% of explained variance
+    -> 56% of original rho=0.220 was driven by shared baseline variation
+
+--- Figure 26a: WT ratio density comparison ---
+  Saved: 26a_wt_ratio_comparison/{pdf,svg,jpg}
+--- Figure 26b: Delta-ratio density comparison ---
+  Saved: 26b_delta_ratio_density/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Delta-ratio (KO − WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+--- Figure 26c: QQ plot ---
+  Saved: 26c_qq_plot/{pdf,svg,jpg}
+--- Figure 26d: Effect size comparison ---
+  Saved: 26d_effect_size_comparison/{pdf,svg,jpg}
+--- Figure 26e: Per-gene scatter ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 26e_per_gene_scatter/{pdf,svg,jpg}
+--- Figure 26f: Chromatin-stratified comparison ---
+  Per-state comparison (BAP1 vs TET-KO delta):
+    Active_Enhancer      BAP1=-0.0248 TET=-0.3096 p_adj=p = 2.11e-08 (n=49)
+    Active_Promoter      BAP1=-0.0281 TET=-0.3098 p_adj=p < 2.2e-16 (n=6355)
+    Bivalent_Promoter    BAP1=-0.0046 TET=-0.2867 p_adj=p < 2.2e-16 (n=150)
+    Poised_Enhancer      BAP1=-0.0073 TET=-0.2534 p_adj=p = 3.62e-11 (n=92)
+    Polycomb             BAP1=0.0022 TET=-0.2070 p_adj=p = 9.64e-09 (n=56)
+    Repressed_Promoter   BAP1=0.0051 TET=-0.2770 p_adj=p < 2.2e-16 (n=3240)
+    Unmarked             BAP1=-0.0051 TET=-0.2223 p_adj=p < 2.2e-16 (n=10909)
+  Saved: 26f_chromatin_stratified/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Delta-ratio (KO − WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+--- Figure 26g: Relative delta density comparison ---
+  Saved: 26g_relative_delta_density/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Relative delta ((KO − WT) / WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Baseline-normalized (delta/WT ratio) — controls for 2× WT baseline difference' in 'mbcsToSbcs': - substituted for — (U+2014)
+--- Figure 26h: Relative delta QQ plot ---
+  Relative QQ slope: 0.3479 (vs absolute QQ slope: 0.0933)
+  Saved: 26h_relative_qq_plot/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'TET-KO relative delta quantiles ((KO − WT) / WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'BAP1-KO relative delta quantiles ((KO − WT) / WT)' in 'mbcsToSbcs': - substituted for − (U+2212)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Baseline-normalized deltas — step pattern shows TET-KO binary loss vs BAP1-KO graded response' in 'mbcsToSbcs': - substituted for — (U+2014)
+--- Figure 26i: Response decomposition ---
+  Saved: 26i_response_decomposition/{pdf,svg,jpg}
+
+--- Exporting tables ---
+  Saved tet_ko_comparison_matched_genes.tsv (20851 rows)
+  Saved tet_ko_comparison_summary.tsv (37 rows)
+
+========================================================================
+SECTION 26 SUMMARY: TET TRIPLE-KO COMPARISON
+========================================================================
+
+Matched genes: 20851
+
+WT baseline ratios:
+  BAP1 WT median: 0.1277
+  TET-KO WT median: 0.2690
+
+Absolute delta-ratio comparison:
+  BAP1-KO median delta: -0.0085 (71.4% decreased)
+  TET-KO median delta:  -0.2597 (70.5% decreased)
+  Absolute attenuation: BAP1 = 3.3% of TET-KO effect
+
+Relative (baseline-normalized) delta comparison:
+  BAP1-KO median relative delta: -0.0872 (71.4% decreased)
+  TET-KO median relative delta:  -1.0000 (70.5% decreased)
+  Relative attenuation: BAP1 = 8.7% of TET-KO effect
+
+Effect sizes:
+  BAP1-KO: Cliff's delta=-0.430 (medium), Cohen's d=-0.712 (medium)
+  TET-KO:  Cliff's delta=-0.680 (large), Cohen's d=-1.824 (large)
+
+Statistical tests:
+  KS test: D=0.6741, p < 2.2e-16
+  Per-gene Spearman (absolute): rho=0.220, p < 2.2e-16
+  Per-gene Spearman (relative): rho=-0.012, p = 8.40e-02
+  QQ slope: 0.093 (9.3% attenuation)
+
+Interpretation:
+  BAP1-KO shows ATTENUATED TET impairment (3% of TET-KO effect).
+  Consistent with INDIRECT TET blockade (PRC1-mediated), not direct TET loss.
+  The partial nature confirms BAP1 impairs TET access rather than TET expression.
+  Positive per-gene correlation (rho=0.220) confirms CONVERGENT targets:
+  The same genes are preferentially affected in both conditions.
+
+  Relative correlation note:
+    Relative Spearman rho ~ 0 because 68.5% of TET-KO genes have
+    relative delta = -1.0 (complete loss), leaving no per-gene variance.
+    The absolute rho=0.220 reflects shared baseline variation, not gene-specific
+    sensitivity. This confirms TET-KO = uniform total loss while BAP1-KO = graded.
+
+  Variance decomposition:
+    Baseline R2: 0.8328 | Full R2: 0.8337 | Gene-specific Delta-R2: 0.0008
+    Residualized rho: 0.0975 (56% of original driven by baseline)
+
+--- Output files ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/26{a-i}_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/tet_ko_comparison_*.tsv (2 files)
+
+=== Section 26 complete ===
+  Done.
+
+========================================================================
+COMPLETE: 4/5 sections succeeded
+  1 section(s) failed — check logs in logs/
+========================================================================
