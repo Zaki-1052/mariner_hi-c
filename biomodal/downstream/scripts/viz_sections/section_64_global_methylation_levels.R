@@ -147,9 +147,9 @@ zoom_ranges <- list(
 p_annot <- stats_results %>%
   dplyr::mutate(
     modality = factor(modality, levels = c("5mC", "5hmC", "modC")),
-    label = ifelse(wilcox_p < 0.001,
-                   sprintf("p = %.2e", wilcox_p),
-                   sprintf("p = %.3f", wilcox_p)),
+    label = ifelse(ttest_p < 0.001,
+                   sprintf("p = %.2e", ttest_p),
+                   sprintf("p = %.3f", ttest_p)),
     y_pos = sapply(as.character(modality), function(m) zoom_ranges[[m]][2] * 0.995)
   )
 
@@ -167,7 +167,7 @@ p_64a <- ggplot(meth_long, aes(x = condition, y = value)) +
   facet_wrap(~ modality, scales = "free_y") +
   labs(
     title = "Genome-Wide CpG Methylation: BAP1-KO vs Wildtype",
-    subtitle = "DUET evoC autosomal CpG (8 samples, paired Wilcoxon test)",
+    subtitle = "DUET evoC autosomal CpG (8 samples, paired t-test)",
     x = "", y = "Methylation (%)"
   ) +
   theme_biomodal() +
@@ -182,9 +182,9 @@ for (mod in c("5mC", "5hmC", "modC")) {
   mod_summary <- condition_summary %>% dplyr::filter(modality == mod)
   mod_stats <- stats_results %>% dplyr::filter(modality == mod)
 
-  p_label <- ifelse(mod_stats$wilcox_p < 0.001,
-                    sprintf("p = %.2e", mod_stats$wilcox_p),
-                    sprintf("p = %.3f", mod_stats$wilcox_p))
+  p_label <- ifelse(mod_stats$ttest_p < 0.001,
+                    sprintf("p = %.2e", mod_stats$ttest_p),
+                    sprintf("p = %.3f", mod_stats$ttest_p))
 
   p_facet <- ggplot(mod_data, aes(x = condition, y = value)) +
     geom_bar(data = mod_summary,
@@ -222,7 +222,7 @@ legend_plot <- ggplot(meth_long, aes(x = condition, y = value, fill = condition,
 p_64a_combined <- (p_64a_list[["5mC"]] | p_64a_list[["5hmC"]] | p_64a_list[["modC"]]) +
   plot_annotation(
     title = "Genome-Wide CpG Methylation: BAP1-KO vs Wildtype",
-    subtitle = "DUET evoC autosomal CpG | Bars = condition mean +/- SE | Dots = individual samples",
+    subtitle = "DUET evoC autosomal CpG | Bars = condition mean ± SE | Dots = individual samples | Paired t-test",
     theme = theme(
       plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
       plot.subtitle = element_text(hjust = 0.5, size = 10)

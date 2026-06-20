@@ -9,6 +9,8 @@
 #   Panel 65b: Gene-level Venn (mC hyper, MeCP2 sig up, coordinated)
 #   Panel 65c: Quadrant scatter (all tested genes: mC change vs MeCP2 fold)
 #   Panel 65d: Proportional summary bar (methylated vs MeCP2-bound)
+#   Panel 65e: MeCP2 ChIP signal at gene bodies by methylation status (violin)
+#              — flipped analogue of 56c: shows MeCP2 occupancy at CpG sites
 #
 # Run from downstream/ directory:
 #   Rscript scripts/viz_sections/section_65_mecp2_methylation_scale.R
@@ -348,11 +350,120 @@ save_multiformat_ggplot(p_65d,
                         file.path(OUTPUT_DIR, "65d_proportional_funnel"),
                         width = 10, height = 8)
 
+# ---- Panel 65e: MeCP2 signal at gene bodies by methylation status (violin) --
+
+cat("Creating Figure 65e: MeCP2 ChIP signal by methylation status...\n")
+
+# Extract MeCP2 BigWig signal at gene body coordinates
+extract_signal_at_regions <- function(bw_path, region_gr, label) {
+  cat(sprintf("  %s (%d regions)...", label, length(region_gr)))
+  bw <- rtracklayer::import.bw(bw_path, which = region_gr)
+  cov <- coverage(bw, weight = "score")
+
+  ranges_by_chr <- split(ranges(region_gr), seqnames(region_gr))
+  shared_chrs <- intersect(names(cov), names(ranges_by_chr))
+  v <- Views(cov[shared_chrs], ranges_by_chr[shared_chrs])
+  means <- viewMeans(v)
+
+  result <- rep(NA_real_, length(region_gr))
+  chr_names <- as.character(seqnames(region_gr))
+  for (chr in names(means)) {
+    idx <- which(chr_names == chr)
+    result[idx] <- as.numeric(means[[chr]])
+  }
+  nonzero <- sum(result > 0, na.rm = TRUE)
+  cat(sprintf(" median=%.4f, non-zero=%d/%d\n",
+              median(result, na.rm = TRUE), nonzero, length(result)))
+  result
+}
+
+# Build GRanges for gene body DMR coordinates
+dmr_gr <- GRanges(
+  seqnames = mc_dmr$chr,
+  ranges = IRanges(start = mc_dmr$start, end = mc_dmr$end)
+)
+
+cat("  Extracting MeCP2 ctrl signal at gene bodies:\n")
+mc_dmr$mecp2_ctrl <- extract_signal_at_regions(
+  MECP2_FILES$ctrl_bw, dmr_gr, "MeCP2_ctrl")
+
+cat("  Extracting MeCP2 mut signal at gene bodies:\n")
+mc_dmr$mecp2_mut <- extract_signal_at_regions(
+  MECP2_FILES$mut_bw, dmr_gr, "MeCP2_mut")
+
+# Classify gene bodies by methylation status
+mc_dmr$meth_status <- "Not Significant"
+mc_dmr$meth_status[mc_dmr$significant & mc_dmr$mod_difference > 0] <- "mC Hyper"
+mc_dmr$meth_status[mc_dmr$significant & mc_dmr$mod_difference < 0] <- "mC Hypo"
+
+# Build long-format for violin: MeCP2 signal in ctrl vs mut, faceted by meth status
+violin_df <- rbind(
+  data.frame(
+    gene = mc_dmr$gene,
+    meth_status = mc_dmr$meth_status,
+    condition = "Control",
+    mecp2_signal = mc_dmr$mecp2_ctrl,
+    stringsAsFactors = FALSE
+  ),
+  data.frame(
+    gene = mc_dmr$gene,
+    meth_status = mc_dmr$meth_status,
+    condition = "Mutant",
+    mecp2_signal = mc_dmr$mecp2_mut,
+    stringsAsFactors = FALSE
+  )
+) %>%
+  dplyr::filter(!is.na(mecp2_signal)) %>%
+  dplyr::mutate(
+    meth_status = factor(meth_status, levels = c("mC Hyper", "mC Hypo", "Not Significant")),
+    condition = factor(condition, levels = c("Control", "Mutant"))
+  )
+
+# Wilcoxon tests per methylation status (ctrl vs mut MeCP2 signal)
+cat("\n  MeCP2 signal by methylation status (Wilcoxon ctrl vs mut):\n")
+for (status in levels(violin_df$meth_status)) {
+  ctrl_sig <- violin_df$mecp2_signal[violin_df$meth_status == status &
+                                      violin_df$condition == "Control"]
+  mut_sig <- violin_df$mecp2_signal[violin_df$meth_status == status &
+                                     violin_df$condition == "Mutant"]
+  wt <- wilcox.test(ctrl_sig, mut_sig)
+  cat(sprintf("    %s: ctrl median=%.4f, mut median=%.4f, p=%.2e (n=%d)\n",
+              status, median(ctrl_sig, na.rm = TRUE), median(mut_sig, na.rm = TRUE),
+              wt$p.value, length(ctrl_sig)))
+}
+
+# Count annotations per facet
+count_annot <- violin_df %>%
+  group_by(meth_status) %>%
+  summarise(n_genes = n() / 2, .groups = "drop") %>%
+  dplyr::mutate(label = sprintf("n = %s", format(as.integer(n_genes), big.mark = ",")))
+
+p_65e <- ggplot(violin_df, aes(x = condition, y = mecp2_signal, fill = condition)) +
+  geom_violin(alpha = 0.7, scale = "width", trim = TRUE) +
+  geom_boxplot(width = 0.15, outlier.size = 0.3, alpha = 0.8) +
+  geom_text(data = count_annot,
+            aes(x = 1.5, y = Inf, label = label),
+            inherit.aes = FALSE, vjust = 1.5, size = 3.5) +
+  facet_wrap(~ meth_status) +
+  scale_fill_manual(values = COLORS$condition, guide = "none") +
+  coord_cartesian(ylim = c(0, quantile(violin_df$mecp2_signal, 0.99, na.rm = TRUE))) +
+  labs(
+    title = "MeCP2 ChIP Signal at Gene Bodies by Methylation Status",
+    subtitle = "Flipped perspective: how much MeCP2 binds at methylated vs unmethylated CpGs",
+    x = "", y = "MeCP2 ChIP Mean Signal"
+  ) +
+  theme_biomodal() +
+  theme(strip.text = element_text(size = 11, face = "bold"))
+
+save_multiformat_ggplot(p_65e,
+                        file.path(OUTPUT_DIR, "65e_mecp2_signal_by_meth_status"),
+                        width = 12, height = 7)
+
 # ---- Combined figure ---------------------------------------------------------
 
 cat("Creating combined Figure 65...\n")
 
-p_65_combined <- ((p_65a_left | p_65a_right) / (p_65b | p_65d)) +
+p_65_combined <- ((p_65a_left | p_65a_right) / (p_65b | p_65d) / p_65e) +
   plot_annotation(
     title = "MeCP2 is a Context-Dependent Methylation Reader",
     subtitle = "Far more genes show methylation changes than MeCP2 binding changes — methylation is necessary but not sufficient",
@@ -364,7 +475,7 @@ p_65_combined <- ((p_65a_left | p_65a_right) / (p_65b | p_65d)) +
 
 save_multiformat_ggplot(p_65_combined,
                         file.path(OUTPUT_DIR, "65_mecp2_methylation_scale"),
-                        width = 16, height = 14)
+                        width = 16, height = 18)
 
 # ---- Statistics & tables -----------------------------------------------------
 
