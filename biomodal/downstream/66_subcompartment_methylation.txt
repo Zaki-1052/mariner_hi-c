@@ -1,0 +1,99 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-20 16:29:15 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 66: METHYLATION STRATIFIED BY CHROMATIN COMPARTMENT
+================================================================================
+
+Loading CALDER2 subcompartment labels (late/adult timepoint)...
+  23874 bins with labels (A.1=7297, A.2=3359, B.1=3285, B.2=9933)
+
+Assigning subcompartment to gene bodies by midpoint overlap...
+  5mC: 19898 / 20969 genes assigned (94.9%)
+
+  Per-subcompartment gene counts (5mC):
+    A.1: 10783 total, 6932 sig (64.3%), 5716 hyper, 1216 hypo
+    A.2: 3046 total, 1727 sig (56.7%), 1025 hyper, 702 hypo
+    B.1: 1897 total, 839 sig (44.2%), 311 hyper, 528 hypo
+    B.2: 4172 total, 910 sig (21.8%), 249 hyper, 661 hypo
+
+Creating Figure 66a: % significant DMRs by subcompartment...
+  Chi-squared test (subcompartment x significance): X²=2248.7, df=3, p=0.00e+00
+  Saved: 66a_subcompartment_dmr_fraction/{pdf,svg,jpg}
+Creating Figure 66b: direction split by subcompartment...
+  Saved: 66b_direction_by_subcompartment/{pdf,svg,jpg}
+Creating Figure 66c: methylation levels by subcompartment...
+  5mC Wilcoxon tests per subcompartment:
+    A.1: ctrl median=0.6625, mut median=0.6795, p=0.00e+00 (n=10783)
+    A.2: ctrl median=0.7335, mut median=0.7342, p=1.35e-17 (n=3046)
+    B.1: ctrl median=0.7632, mut median=0.7595, p=3.43e-14 (n=1897)
+    B.2: ctrl median=0.7791, mut median=0.7763, p=2.14e-62 (n=4172)
+  5hmC Wilcoxon tests per subcompartment:
+    A.1: ctrl median=0.1414, mut median=0.1252, p=0.00e+00 (n=10783)
+    A.2: ctrl median=0.0996, mut median=0.0935, p=1.75e-139 (n=3046)
+    B.1: ctrl median=0.0733, mut median=0.0740, p=6.24e-05 (n=1897)
+    B.2: ctrl median=0.0282, mut median=0.0266, p=1.21e-06 (n=4172)
+  Saved: 66c_methylation_levels_by_subcompartment/{pdf,svg,jpg}
+
+Creating Figure 66d: histone mark overlay...
+  H3K27me3: 15809 peaks
+  H3K27ac: 15105 peaks
+  Gene body mark classification:
+    K27ac only (Active): 6199
+    K27me3 + K27ac (Bivalent): 483
+    K27me3 only (Fac. Het): 3170
+    Neither: 10046
+
+  DMR significance by histone mark:
+    K27ac only (Active): 6199 total, 4830 sig (77.9%), 4505 hyper, 325 hypo
+    K27me3 + K27ac (Bivalent): 483 total, 329 sig (68.1%), 163 hyper, 166 hypo
+    K27me3 only (Fac. Het): 3170 total, 1673 sig (52.8%), 92 hyper, 1581 hypo
+    Neither: 10046 total, 3576 sig (35.6%), 2541 hyper, 1035 hypo
+  Saved: 66d_histone_mark_dmr_fraction/{pdf,svg,jpg}
+Creating combined Figure 66...
+  Saved: 66_subcompartment_methylation/{pdf,svg,jpg}
+
+Saving tables...
+  Saved: 66_subcompartment_dmr_summary.tsv
+  Saved: 66_histone_mark_dmr_summary.tsv
+  Saved: 66_per_gene_compartment_assignment.tsv
+  Saved: 66_subcompartment_wilcoxon.tsv
+
+================================================================================
+SECTION 66 COMPLETE
+================================================================================

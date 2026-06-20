@@ -9,7 +9,7 @@
 #   Panel 65b: Gene-level Venn (mC hyper, MeCP2 sig up, coordinated)
 #   Panel 65c: Quadrant scatter (all tested genes: mC change vs MeCP2 fold)
 #   Panel 65d: Proportional summary bar (methylated vs MeCP2-bound)
-#   Panel 65e: MeCP2 ChIP signal at gene bodies by methylation status (violin)
+#   Panel 65e: MeCP2 signal at gene bodies by methylation status (violin)
 #              — flipped analogue of 56c: shows MeCP2 occupancy at CpG sites
 #
 # Run from downstream/ directory:
@@ -352,7 +352,7 @@ save_multiformat_ggplot(p_65d,
 
 # ---- Panel 65e: MeCP2 signal at gene bodies by methylation status (violin) --
 
-cat("Creating Figure 65e: MeCP2 ChIP signal by methylation status...\n")
+cat("Creating Figure 65e: MeCP2 signal by methylation status...\n")
 
 # Extract MeCP2 BigWig signal at gene body coordinates
 extract_signal_at_regions <- function(bw_path, region_gr, label) {
@@ -448,9 +448,9 @@ p_65e <- ggplot(violin_df, aes(x = condition, y = mecp2_signal, fill = condition
   scale_fill_manual(values = COLORS$condition, guide = "none") +
   coord_cartesian(ylim = c(0, quantile(violin_df$mecp2_signal, 0.99, na.rm = TRUE))) +
   labs(
-    title = "MeCP2 ChIP Signal at Gene Bodies by Methylation Status",
+    title = "MeCP2 Signal at Gene Bodies by Methylation Status",
     subtitle = "Flipped perspective: how much MeCP2 binds at methylated vs unmethylated CpGs",
-    x = "", y = "MeCP2 ChIP Mean Signal"
+    x = "", y = "MeCP2 Mean Signal"
   ) +
   theme_biomodal() +
   theme(strip.text = element_text(size = 11, face = "bold"))
