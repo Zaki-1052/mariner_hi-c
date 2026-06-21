@@ -1,0 +1,78 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-20 17:24:48 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 68: modC vs MeCP2 SCATTER BY HISTONE MARK CATEGORY
+================================================================================
+
+Loading gene-level data...
+  DiffBind gene table: 20915 genes
+  MeCP2 gene table: 9824 genes
+
+Building master gene-level table...
+  Master table: 9824 genes with both modC and MeCP2 data
+
+Classifying genes by H3K27me3 / H3K27ac overlap...
+  H3K27me3: 15809 peaks
+  H3K27ac: 15105 peaks
+  Gene counts per category:
+    K27ac only (Active): 4637
+    K27me3 + K27ac (Bivalent): 324
+    K27me3 only (Fac. Het): 1663
+    Neither: 3200
+
+Creating scatter plots...
+  68a: K27ac only (Active) (4637 genes)...
+  Saved: 68a_modc_mecp2_k__ac_only/{pdf,svg,jpg}
+  68b: K27me3 + K27ac (Bivalent) (324 genes)...
+  Saved: 68b_modc_mecp2_k__me____k__ac/{pdf,svg,jpg}
+  68c: K27me3 only (Fac. Het) (1663 genes)...
+  Saved: 68c_modc_mecp2_k__me__only/{pdf,svg,jpg}
+  68d: Neither (3200 genes)...
+  Saved: 68d_modc_mecp2_neither/{pdf,svg,jpg}
+
+Creating combined Figure 68...
+  Saved: 68_modc_mecp2_by_mark/{pdf,svg,jpg}
+
+Saving tables...
+  Saved: 68_modc_mecp2_by_mark_stats.tsv
+  Saved: 68_per_gene_modc_mecp2_mark.tsv
+
+================================================================================
+SECTION 68 COMPLETE
+================================================================================
