@@ -1,0 +1,176 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-21 15:58:45 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 72g: NEURONAL K119ub-HIGH GENES — CHROMATIN REMODELING
+  Does BAP1-KO drive heterochromatin shift at neuronal K119ub loci?
+================================================================================
+
+--- Loading data ---
+
+  K119ub quantifiable genes: 21604
+  DiffBind all-marks genes:  20915
+  Neuronal gene set:         5614 genes
+
+  Merged universe: 17340 genes
+  Neuronal: 4030 (23.2%)
+  K119ub High (ctrl Q3 >= 1.628): 4335 genes
+  Non-NA counts: ATAC=14192, K27ac=8338, K27me3=4169
+  K119ub High + Neuronal: 1418 genes
+  K119ub High + Non-neuronal: 2917 genes
+  K119ub Low + Neuronal: 2612 genes
+  K119ub Low + Non-neuronal: 10393 genes
+
+--- 72g-a: Multi-mark chromatin change ---
+  ATAC: neuronal median=+0.1074 (n=3586), other=+0.0874 (n=10606), p = 1.10e-14
+  K27ac: neuronal median=+0.0450 (n=2183), other=+0.0387 (n=6155), p = 1.64e-02
+  K27me3: neuronal median=-0.1026 (n=1388), other=-0.0603 (n=2781), p = 6.22e-04
+  Saved: 72ga_multimark_neuronal_vs_other/{pdf,svg,jpg}
+
+--- 72g-b: 4-group comparison ---
+  ATAC at K119ub High: neuronal=+0.1667 (n=1314) vs other=+0.1088 (n=2570) p = 2.90e-11
+  ATAC at K119ub Low: neuronal=+0.0890 (n=2272) vs other=+0.0832 (n=8036) p = 5.12e-03
+  K27ac at K119ub High: neuronal=+0.0469 (n=668) vs other=-0.0155 (n=1370) p = 2.15e-05
+  K27ac at K119ub Low: neuronal=+0.0445 (n=1515) vs other=+0.0481 (n=4785) p = 8.13e-01
+  K27me3 at K119ub High: neuronal=-0.0876 (n=809) vs other=-0.0747 (n=1201) p = 2.19e-01
+  K27me3 at K119ub Low: neuronal=-0.1414 (n=579) vs other=-0.0484 (n=1580) p = 2.80e-04
+  Saved: 72gb_4group_k119ub_x_neuronal/{pdf,svg,jpg}
+
+--- 72g-c: Chromatin state distribution ---
+  Chromatin state distribution of K119ub-high genes:
+    Neuronal (n=1418):
+      Repressed_Promoter      679 (47.9%)
+      Active_Promoter         388 (27.4%)
+      Other                   290 (20.5%)
+      Bivalent_Promoter        57 (4.0%)
+      Polycomb                  4 (0.3%)
+    Non-neuronal (n=2917):
+      Other                  1129 (38.7%)
+      Repressed_Promoter     1009 (34.6%)
+      Active_Promoter         725 (24.9%)
+      Bivalent_Promoter        42 (1.4%)
+      Active_Enhancer           6 (0.2%)
+      Polycomb                  5 (0.2%)
+      Poised_Enhancer           1 (0.0%)
+
+  Fisher tests (neuronal vs non-neuronal among K119ub-high):
+    Active_Promoter        neuronal=388/1418 (27.4%) vs other=725/2917 (24.9%)  OR=1.14  p = 8.16e-02
+    Active_Enhancer        neuronal=0/1418 (0.0%) vs other=6/2917 (0.2%)  OR=0.00  p = 1.87e-01
+    Bivalent_Promoter      neuronal=57/1418 (4.0%) vs other=42/2917 (1.4%)  OR=2.87  p = 3.38e-07
+    Repressed_Promoter     neuronal=679/1418 (47.9%) vs other=1009/2917 (34.6%)  OR=1.74  p < 2.2e-16
+    Polycomb               neuronal=4/1418 (0.3%) vs other=5/2917 (0.2%)  OR=1.65  p = 4.86e-01
+    Other                  neuronal=290/1418 (20.5%) vs other=1129/2917 (38.7%)  OR=0.41  p < 2.2e-16
+  Saved: 72gc_chromatin_state_k119ub_high/{pdf,svg,jpg}
+
+--- 72g-d: Dose-response by K119ub decile ---
+  Saved: 72gd_dose_response_decile_marks/{pdf,svg,jpg}
+
+  Neuronal gene mark changes: D10 (highest K119ub) vs D1 (lowest):
+    ATAC: D1=+0.0897 (n=242) -> D10=+0.2172 (n=623)
+    K27ac: D1=+0.0980 (n=159) -> D10=+0.0767 (n=264)
+    K27me3: D1=-0.4331 (n=20) -> D10=-0.0940 (n=482)
+
+--- 72g-e: Interaction models ---
+
+  ATAC ~ k119ub_ctrl_signal * is_neuronal (n=14192):
+    Additive R2 = 0.0190
+    Interaction R2 = 0.0194 (ANOVA p = 1.72e-02)
+    (Intercept)                         beta=+0.10148  SE=0.00422  p < 2.2e-16
+    gb_ctrl_signal                      beta=+0.02183  SE=0.00236  p < 2.2e-16
+    is_neuronalTRUE                     beta=+0.01712  SE=0.00799  p = 3.21e-02
+    gb_ctrl_signal:is_neuronalTRUE      beta=+0.00832  SE=0.00349  p = 1.72e-02
+
+  K27ac ~ k119ub_ctrl_signal * is_neuronal (n=8338):
+    Additive R2 = 0.0012
+    Interaction R2 = 0.0043 (ANOVA p = 4.55e-07)
+    (Intercept)                         beta=-0.00244  SE=0.00937  p = 7.94e-01
+    gb_ctrl_signal                      beta=-0.02416  SE=0.00580  p = 3.13e-05
+    is_neuronalTRUE                     beta=-0.02866  SE=0.01755  p = 1.03e-01
+    gb_ctrl_signal:is_neuronalTRUE      beta=+0.04623  SE=0.00916  p = 4.55e-07
+
+  K27me3 ~ k119ub_ctrl_signal * is_neuronal (n=4169):
+    Additive R2 = 0.0019
+    Interaction R2 = 0.0019 (ANOVA p = 7.60e-01)
+    (Intercept)                         beta=+0.07335  SE=0.01910  p = 1.25e-04
+    gb_ctrl_signal                      beta=-0.01073  SE=0.00710  p = 1.31e-01
+    is_neuronalTRUE                     beta=-0.04703  SE=0.03287  p = 1.53e-01
+    gb_ctrl_signal:is_neuronalTRUE      beta=+0.00304  SE=0.00996  p = 7.60e-01
+
+  Saved: 72g_interaction_models.tsv
+  Saved: 72ge_interaction_coefficients/{pdf,svg,jpg}
+
+--- Saving tables ---
+  Saved: 72g_mark_stats_neuronal_vs_other.tsv
+  Saved: 72g_4group_stats.tsv
+  Saved: 72g_decile_mark_summary.tsv
+  Saved: 72g_chromatin_state_fisher.tsv
+
+--- Composite ---
+  Saved: 72g_composite/{pdf,svg,jpg}
+
+================================================================================
+SECTION 72g COMPLETE: Neuronal Chromatin Remodeling
+================================================================================
+
+  Universe: 17340 genes (K119ub quantifiable + DiffBind overlap)
+  Neuronal: 4030 (23.2%)
+
+  72g-a: Mark changes, neuronal vs non-neuronal (all genes):
+    ATAC: delta_median=+0.0199 (neuronal MORE positive)  p = 1.10e-14
+    K27ac: delta_median=+0.0063 (neuronal MORE positive)  p = 1.64e-02
+    K27me3: delta_median=-0.0423 (neuronal MORE negative)  p = 6.22e-04
+
+  72g-b: K119ub-High neuronal genes (key test):
+    ATAC at K119ub-High: neuronal=+0.1667 vs other=+0.1088  p = 2.90e-11
+    K27ac at K119ub-High: neuronal=+0.0469 vs other=-0.0155  p = 2.15e-05
+    K27me3 at K119ub-High: neuronal=-0.0876 vs other=-0.0747  p = 2.19e-01
+
+  72g-e: Interaction tests (K119ub x neuronal -> mark change):
+    ATAC: interaction beta=+0.00832  p = 1.72e-02  SIGNIFICANT
+    K27ac: interaction beta=+0.04623  p = 4.55e-07  SIGNIFICANT
+    K27me3: interaction beta=+0.00304  p = 7.60e-01  ns
+
+  THEORY TEST:
+    If neuronal K119ub-high genes show K27ac down + K27me3 up + ATAC down
+    more than other genes, it confirms: BAP1 loss -> K119ub at neuronal loci
+    -> heterochromatin shift -> MeCP2 responds to chromatin, not methylation.
+
+  Plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/72g_neuronal_chromatin_remodeling 
+  Tables saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables 
+
+Section 72g complete.
