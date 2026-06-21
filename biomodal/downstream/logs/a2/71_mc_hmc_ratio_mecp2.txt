@@ -1,0 +1,140 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-20 19:42:04 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 71: 5mC/5hmC RATIO vs MeCP2 BINDING AT H2AK119ub LOCI
+================================================================================
+
+Loading gene-level data...
+  DiffBind gene table: 20915 genes
+Loading K119ub gene body signal...
+  K119ub gene signal: 23150 genes
+Loading and aggregating MeCP2 from full annotated file...
+  MeCP2: 21195 unique genes with peaks
+
+Building master gene-level table...
+  Master table: 16557 genes with mc_diff, hmc_diff, MeCP2, and K119ub data
+
+Computing 5mC/5hmC change ratio...
+Warning message:
+There was 1 warning in `dplyr::mutate()`.
+ℹ In argument: `log2_ratio = log2(meth_ratio)`.
+Caused by warning:
+! NaNs produced 
+  After filtering (|hmc_diff| > 0.001, finite ratio): 12149 genes
+  Positive ratio (canonical mC up/hmC down): 12149 (100.0%)
+    Ratio > 1 (mC gain > hmC loss): 7150
+    Ratio < 1 (hmC loss > mC gain): 4999
+  Negative ratio (non-canonical): 0 (0.0%)
+  Log2(ratio) range: [-11.99, 6.18], median = 0.168
+
+Correlation tests...
+  Spearman (log2_ratio vs MeCP2 fold): rho = 0.014, p = 1.13e-01
+Warning message:
+In cor.test.default(master$gb_log2fc, master$mecp2_mean_fold, method = "spearman") :
+  Cannot compute exact p-value with ties
+  Spearman (K119ub vs MeCP2 fold):     rho = 0.187, p = 3.53e-96
+Warning message:
+In cor.test.default(master$gb_log2fc, master$log2_ratio, method = "spearman") :
+  Cannot compute exact p-value with ties
+  Spearman (K119ub vs log2_ratio):     rho = 0.080, p = 1.07e-18
+
+Creating Figure 71a: K119ub vs MeCP2 colored by 5mC/5hmC ratio...
+  Saved: 71a_k119ub_mecp2_ratio_scatter/{pdf,svg,jpg}
+Creating Figure 71b: MeCP2 fold by ratio quintile...
+  Kruskal-Wallis across quintiles: H = 14.8, df = 4, p = 5.23e-03
+  Q1 vs Q2: Wilcoxon p = 3.78e-01
+  Q2 vs Q3: Wilcoxon p = 4.15e-01
+  Q3 vs Q4: Wilcoxon p = 1.17e-03
+  Q4 vs Q5: Wilcoxon p = 9.06e-03
+  Saved: 71b_mecp2_by_ratio_quintile/{pdf,svg,jpg}
+Creating Figure 71c: direct ratio vs MeCP2 scatter...
+  OLS: MeCP2 ~ log2_ratio
+    slope = 0.0032 [0.0014, 0.0051], R2 = 0.0010
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 71c_ratio_vs_mecp2_direct/{pdf,svg,jpg}
+
+Creating Figure 71d: nested model comparison...
+  Complete cases for models: 12149 genes
+
+  Model comparison:
+    K119ub only          R2=0.0738  adj_R2=0.0738  AIC=-12777  p=1.34e-204
+    Ratio only           R2=0.0010  adj_R2=0.0009  AIC=-11856  p=6.19e-04
+    K119ub + Ratio       R2=0.0740  adj_R2=0.0738  AIC=-12777  p=1.68e-203
+    K119ub * Ratio       R2=0.0783  adj_R2=0.0781  AIC=-12832  p=1.77e-214
+
+  Variance partition:
+    K119ub unique      0.0730 (7.3%)
+    Shared             0.0008 (0.1%)
+    Ratio unique       0.0002 (0.0%)
+    Unexplained        0.9260 (92.6%)
+
+  Interaction test (K119ub x ratio):
+    estimate = +0.0204, p = 4.30e-14
+    => K119ub and ratio interact (synergy)
+
+  Standardized betas (additive model):
+    K119ub log2FC             beta=+0.0402 [+0.0377, +0.0428]  p=1.57e-202
+    log2(mC/hmC ratio)        beta=+0.0020 [-0.0006, +0.0045]  p=1.31e-01
+  Saved: 71d_nested_model_comparison/{pdf,svg,jpg}
+
+Creating combined Figure 71...
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 71_mc_hmc_ratio_mecp2_k119ub/{pdf,svg,jpg}
+
+Saving tables...
+  Saved: 71_ratio_mecp2_summary.tsv
+  Saved: 71_quintile_dose_response.tsv
+  Saved: 71_model_comparison.tsv
+  Saved: 71_variance_partition.tsv
+  Saved: 71_statistics.tsv
+  Saved: 71_standardized_betas.tsv
+
+================================================================================
+SECTION 71 COMPLETE
+================================================================================
