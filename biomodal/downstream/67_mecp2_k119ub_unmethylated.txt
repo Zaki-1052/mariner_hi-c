@@ -1,0 +1,96 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-20 16:42:21 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 67: MeCP2 BINDING AT UNMETHYLATED GENES TRACKS H2AK119ub
+================================================================================
+
+Loading MeCP2-bound-no-methylation genes...
+  359 genes
+Loading K119ub gene body signal...
+  23150 genes with K119ub signal
+
+Joining datasets...
+  Matched: 356 / 359 MeCP2-no-meth genes to K119ub data
+  Background: 22794 genes
+
+Statistical tests:
+  After NA/Inf filtering: 356 our genes, 22027 rest
+  Mann-Whitney U (K119ub log2FC, our > rest):
+    Our median:  +0.2019
+    Rest median: -0.0362
+    p = 5.50e-32
+
+  Fisher exact (K119ub gained in our group vs rest):
+    Our group:  259/356 gained (72.8%)
+    Rest:       10107/22027 gained (45.9%)
+    OR = 3.15, p = 1.82e-24
+
+Creating Figure 67a: K119ub log2FC distribution...
+  Saved: 67a_k119ub_at_mecp2_no_meth/{pdf,svg,jpg}
+Creating Figure 67b: % K119ub gained comparison...
+  Saved: 67b_k119ub_gained_fraction/{pdf,svg,jpg}
+Creating Figure 67c: MeCP2 fold vs K119ub scatter...
+  356 genes in scatter
+  Spearman rho = 0.241, p = 4.38e-06
+  Saved: 67c_mecp2_vs_k119ub_scatter/{pdf,svg,jpg}
+Creating Figure 67d: multi-mark comparison...
+  K27me3_ctrl... done (median=0.9057)
+  K27me3_mut... done (median=1.0373)
+  K27ac_ctrl... done (median=0.7650)
+  K27ac_mut... done (median=0.6060)
+  ATAC_ctrl... done (median=0.3922)
+  ATAC_mut... done (median=0.4214)
+
+  Per-mark one-sample Wilcoxon (vs 0):
+    K119ub: median=+0.2019, p=2.53e-24
+    K27me3: median=+0.1617, p=2.25e-05
+    K27ac: median=-0.2422, p=1.65e-12
+    ATAC: median=+0.0744, p=1.58e-08
+  Saved: 67d_multimark_at_mecp2_no_meth/{pdf,svg,jpg}
+Creating combined Figure 67...
+  Saved: 67_mecp2_k119ub_unmethylated/{pdf,svg,jpg}
+
+Saving tables...
+  Saved: 67_mecp2_no_meth_multimark.tsv
+  Saved: 67_statistics.tsv
+  Saved: 67_per_mark_summary.tsv
+
+================================================================================
+SECTION 67 COMPLETE
+================================================================================
