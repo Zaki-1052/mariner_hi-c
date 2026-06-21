@@ -70,6 +70,38 @@ mecp2 <- read.table(MECP2_GENE_PATH, header = TRUE, sep = "\t",
                     stringsAsFactors = FALSE, quote = "")
 cat(sprintf("  MeCP2 gene table: %d genes\n", nrow(mecp2)))
 
+cat("  Computing concentration-weighted MeCP2 fold...\n")
+mecp2_raw <- read.table(MECP2_FILES$annotated,
+                        header = TRUE, sep = "\t",
+                        stringsAsFactors = FALSE,
+                        fill = TRUE, quote = "")
+mecp2_raw$Fold <- as.numeric(mecp2_raw$Fold)
+mecp2_raw$Conc <- as.numeric(mecp2_raw$Conc)
+
+mecp2_weighted <- mecp2_raw %>%
+  dplyr::filter(!is.na(SYMBOL) & SYMBOL != "" &
+                is.finite(Fold) & is.finite(Conc) &
+                Conc > 0) %>%
+  group_by(SYMBOL) %>%
+  summarise(
+    mecp2_weighted_fold = sum(Fold * Conc) / sum(Conc),
+    .groups = "drop"
+  )
+cat(sprintf("  Weighted fold: %d genes\n",
+            nrow(mecp2_weighted)))
+
+mecp2 <- mecp2 %>%
+  left_join(mecp2_weighted,
+            by = c("gene" = "SYMBOL")) %>%
+  dplyr::mutate(
+    mecp2_mean_fold = ifelse(
+      !is.na(mecp2_weighted_fold),
+      mecp2_weighted_fold,
+      mecp2_mean_fold
+    )
+  )
+rm(mecp2_raw, mecp2_weighted)
+
 diffbind <- read.table(DIFFBIND_GENE_PATH, header = TRUE, sep = "\t",
                        stringsAsFactors = FALSE, quote = "")
 cat(sprintf("  DiffBind gene table: %d genes\n", nrow(diffbind)))
@@ -309,7 +341,7 @@ p_59a <- ggplot() +
   coord_cartesian(xlim = x_lim_59a, ylim = y_lim_59a) +
   labs(
     title = "H2AK119ub vs MeCP2 at Gene Bodies",
-    subtitle = sprintf("Spearman %s | n = %s genes",
+    subtitle = sprintf("Concentration-weighted fold | Spearman %s | n = %s genes",
                        rho_59a_label, format(sum(valid_59a), big.mark = ",")),
     x = expression("H2AK119ub " * log[2] * "(mut/ctrl)"),
     y = "MeCP2 DiffBind fold change"

@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-06-20 20:30:21 
+Date: 2026-06-20 21:03:18 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -49,6 +49,8 @@ Validating input files...
 Loading data...
   K119ub signal: 23150 genes (21604 quantifiable)
   MeCP2 gene table: 9824 genes
+  Computing concentration-weighted MeCP2 fold...
+  Weighted fold: 21186 genes
   DiffBind gene table: 20915 genes
 
 Building master gene-level data frame...
@@ -59,14 +61,14 @@ Building master gene-level data frame...
 
 --- Plot 59a: K119ub vs MeCP2 ---
   Subset: 9591 genes
-  MeCP2 Up:   78
-  MeCP2 Down: 35
+  MeCP2 Up:   79
+  MeCP2 Down: 34
   NS:         9478
 Warning message:
 In cor.test.default(x_vals, y_vals, method = "spearman") :
   Cannot compute exact p-value with ties
   Saved: 59a_k119ub_vs_mecp2/{pdf,svg,jpg}
-  Spearman rho = 0.240 (p = 3.86e-126)
+  Spearman rho = 0.242 (p = 7.00e-128)
 
 --- Plot 59a2: K119ub vs MeCP2 (peak-level, both axes at peak resolution) ---
   Peaks with both K119ub and MeCP2 signal: 202650
@@ -86,12 +88,12 @@ Warning messages:
 --- Plot 59b: MeCP2 vs H3K27ac ---
   Genes with MeCP2 + H3K27ac fold: 6065
   Saved: 59b_mecp2_vs_k27ac/{pdf,svg,jpg}
-  Spearman rho = -0.211 (p = 5.31e-62)
+  Spearman rho = -0.212 (p = 8.18e-63)
 
 --- Plot 59c: MeCP2 vs H3K27me3 ---
   Genes with MeCP2 + H3K27me3 fold: 2438
   Saved: 59c_mecp2_vs_k27me3/{pdf,svg,jpg}
-  Spearman rho = 0.203 (p = 5.26e-24)
+  Spearman rho = 0.203 (p = 4.41e-24)
 
 --- Composite 59bc ---
   Saved: 59bc_chromatin_composite/{pdf,svg,jpg}
@@ -118,13 +120,13 @@ In cor.test.default(x_vals, y_vals, method = "spearman") :
   Genes with MeCP2 + 5mC: 9822
   5mC DMR: 9822 | Not DMR: 0
   Saved: 59f_mecp2_vs_5mc/{pdf,svg,jpg}
-  Spearman rho = 0.133 (p = 3.30e-40)
+  Spearman rho = 0.135 (p = 5.22e-41)
 
 --- Plot 59g: MeCP2 vs 5hmC ---
   Genes with MeCP2 + 5hmC: 9822
   5hmC DMR: 7764 | Not DMR: 2058
   Saved: 59g_mecp2_vs_5hmc/{pdf,svg,jpg}
-  Spearman rho = -0.040 (p = 8.79e-05)
+  Spearman rho = -0.040 (p = 7.13e-05)
 
 --- Composite 59h ---
   Saved: 59h_composite/{pdf,svg,jpg}
@@ -136,12 +138,12 @@ In cor.test.default(x_vals, y_vals, method = "spearman") :
 SECTION 59 SUMMARY
 ================================================================================
 
-  59a K119ub vs MeCP2                       n= 9,591  rho=+0.240
-  59b MeCP2 vs K27ac (euchromatin)          n= 6,065  rho=-0.211
+  59a K119ub vs MeCP2                       n= 9,591  rho=+0.242
+  59b MeCP2 vs K27ac (euchromatin)          n= 6,065  rho=-0.212
   59c MeCP2 vs K27me3 (heterochrom.)        n= 2,438  rho=+0.203
   59d K119ub vs 5mC                         n=17,339  rho=+0.243
   59e K119ub vs 5hmC                        n=17,334  rho=-0.092
-  59f MeCP2 vs 5mC                          n= 9,822  rho=+0.133
+  59f MeCP2 vs 5mC                          n= 9,822  rho=+0.135
   59g MeCP2 vs 5hmC                         n= 9,822  rho=-0.040
 
 All plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/59_quadrant_log2_scatter 
