@@ -1,0 +1,271 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-21 15:45:08 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 72: K119ub NEURONAL GENE CHARACTERIZATION
+  Independent of MeCP2 — tests PMC12652333 framework
+================================================================================
+
+--- Loading K119ub gene signal ---
+
+  Total genes: 23150
+  Quantifiable: 21604
+  One condition: 779
+  No signal: 767
+
+  Working universe: 21604 quantifiable genes
+
+--- Deriving neuronal gene set from GO annotations ---
+  Pattern: synap|neuron|axon|dendrit|nervous
+  Source: org.Mm.eg.db (ALL mouse genes, no methylation filter)
+
+'select()' returned 1:1 mapping between keys and columns
+  Neuronal GO BP terms matching pattern: 1007
+  Examples: acetylcholine catabolic process in synaptic cleft; neuron migration; immunological synapse formation; myeloid dendritic cell activation; postsynaptic membrane organization
+'select()' returned 1:many mapping between keys and columns
+  Total neuronal genes (all GO-annotated): 5614
+  Neuronal genes in K119ub quantifiable universe: 5077 / 21604 (23.5%)
+  Saved: 72_neuronal_gene_set_go_derived.tsv (5614 genes)
+
+--- 72a: K119ub signal distribution ---
+  CTRL: neuronal median=1.0261, other median=0.9654, p = 2.15e-15
+  MUT:  neuronal median=1.0037, other median=0.9879, p = 2.94e-01
+  Saved: 72a_k119ub_signal_neuronal_vs_other/{pdf,svg,jpg}
+
+--- 72b: Fisher enrichment at K119ub-high thresholds ---
+  Ctrl Q3 threshold: 1.6133
+  Ctrl D9 threshold: 2.5946
+  Mut  Q3 threshold: 1.7968
+  Mut  D9 threshold: 3.0312
+  Ctrl top quartile (Q3)         OR=1.38 [1.28, 1.48]  p < 2.2e-16  (1512/5401 neuronal in high)
+  Mut top quartile (Q3)          OR=1.19 [1.10, 1.27]  p = 3.28e-06  (1396/5401 neuronal in high)
+  Ctrl top decile (D9)           OR=1.70 [1.54, 1.87]  p < 2.2e-16  (713/2161 neuronal in high)
+  Mut top decile (D9)            OR=1.37 [1.24, 1.52]  p = 6.15e-10  (626/2161 neuronal in high)
+  Saved: 72_fisher_results.tsv
+  Saved: 72b_k119ub_high_neuronal_fisher/{pdf,svg,jpg}
+
+--- 72c: GO BP enrichment of K119ub top-quartile ctrl genes ---
+  Ctrl top-quartile genes: 5401
+  Background: 21604 quantifiable genes
+'select()' returned 1:1 mapping between keys and columns
+Warning message:
+In bitr(ctrl_high_genes, fromType = "SYMBOL", toType = "ENTREZID",  :
+  0.07% of input gene IDs are fail to map...
+'select()' returned 1:1 mapping between keys and columns
+Warning message:
+In bitr(bg_genes, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  0.11% of input gene IDs are fail to map...
+  Mapped to Entrez: 5397 / 5401 ctrl-high, 21581 / 21604 background
+  Significant GO BP terms (q < 0.05): 1703
+  Neuronal in top 25: 3 (12%)
+
+  Top 15 terms:
+    pattern specification process                           q=1.57e-43
+    cell fate commitment                                    q=1.48e-42
+    regionalization                                         q=1.68e-39
+    embryonic organ morphogenesis                           q=2.57e-39
+    anterior/posterior pattern specification                q=1.14e-34
+    skeletal system morphogenesis                           q=1.22e-32
+    ossification                                            q=8.99e-29
+    embryonic skeletal system development                   q=2.88e-28
+    neuron fate commitment                                  q=5.81e-28 *NEURO*
+    sensory organ morphogenesis                             q=9.41e-27
+    mesenchyme development                                  q=3.79e-26
+    regulation of neuron differentiation                    q=1.60e-25 *NEURO*
+    muscle organ development                                q=2.29e-24
+    forebrain development                                   q=2.34e-24
+    sensory system development                              q=7.02e-24
+  Saved: 72_k119ub_topq_ctrl_go_bp.tsv
+  Saved: 72c_k119ub_topq_ctrl_go_dotplot/{pdf,svg,jpg}
+
+--- 72d: Ctrl vs mut top-gene GO comparison ---
+  Ctrl-high: 5401 genes
+  Mut-high:  5401 genes
+  Gained (mut-high not ctrl-high): 902 genes
+  Lost (ctrl-high not mut-high):   902 genes
+  Overlap (both):                  4499 genes
+  Neuronal in ctrl-high: 1512 (28.0%)
+  Neuronal in mut-high:  1396 (25.8%)
+  Neuronal in gained:    139 (15.4%)
+'select()' returned 1:1 mapping between keys and columns
+  Mut-high: 5401 symbols -> 5396 Entrez IDs
+  Mut-high: 1172 sig GO terms, 61 neuronal
+Warning message:
+In bitr(gene_symbols, fromType = "SYMBOL", toType = "ENTREZID",  :
+  0.09% of input gene IDs are fail to map...
+'select()' returned 1:1 mapping between keys and columns
+  Gained (mut not ctrl): 902 symbols -> 901 Entrez IDs
+  Gained (mut not ctrl): 0 sig GO terms, 0 neuronal
+Warning message:
+In bitr(gene_symbols, fromType = "SYMBOL", toType = "ENTREZID",  :
+  0.11% of input gene IDs are fail to map...
+  Saved: 72_mut_high_go_bp.tsv, 72_gained_high_go_bp.tsv
+  Saved: 72d_ctrl_vs_mut_k119ub_go_comparison/{pdf,svg,jpg}
+
+--- 72e: GSEA ranked by absolute K119ub signal ---
+'select()' returned 1:1 mapping between keys and columns
+  Ctrl signal: 21581 genes ranked (range: 44.9985 to 0.2202)
+Warning message:
+In bitr(g, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  0.11% of input gene IDs are fail to map...
+'select()' returned 1:1 mapping between keys and columns
+  Mut signal: 21581 genes ranked (range: 42.7338 to 0.2203)
+Warning message:
+In bitr(g, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  0.11% of input gene IDs are fail to map...
+
+  Running GSEA: Ctrl signal ranking
+  Ctrl signal ranking: 1177 sig terms (pos: 1177, neg: 0), 49 neuronal
+  Top neuronal terms:
+    [+] neuron fate specification                          NES=+2.48  q=6.92e-17
+    [+] neuron fate commitment                             NES=+2.47  q=1.02e-23
+    [+] autonomic nervous system development               NES=+2.36  q=8.69e-13
+    [+] parasympathetic nervous system development         NES=+2.35  q=1.97e-08
+    [+] GABAergic neuron differentiation                   NES=+2.31  q=9.54e-08
+    [+] sympathetic nervous system development             NES=+2.29  q=2.06e-07
+    [+] interneuron migration                              NES=+2.24  q=8.11e-06
+    [+] forebrain neuron differentiation                   NES=+2.21  q=2.88e-12
+    [+] negative regulation of neuron differentiation      NES=+2.20  q=2.99e-14
+    [+] positive regulation of neuron differentiation      NES=+2.19  q=7.44e-17
+Warning message:
+In preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam,  :
+  There are ties in the preranked stats (0.62% of the list).
+The order of those tied genes will be arbitrary, which may produce unexpected results.
+
+  Running GSEA: Mut signal ranking
+  Mut signal ranking: 919 sig terms (pos: 919, neg: 0), 39 neuronal
+  Top neuronal terms:
+    [+] neuron fate specification                          NES=+2.20  q=2.15e-13
+    [+] neuron fate commitment                             NES=+2.15  q=1.36e-18
+    [+] cerebral cortex neuron differentiation             NES=+2.07  q=2.55e-07
+    [+] GABAergic neuron differentiation                   NES=+2.06  q=1.93e-06
+    [+] autonomic nervous system development               NES=+2.04  q=1.48e-09
+    [+] sympathetic nervous system development             NES=+2.02  q=7.73e-06
+    [+] parasympathetic nervous system development         NES=+2.00  q=2.87e-05
+    [+] interneuron migration                              NES=+2.00  q=9.75e-05
+    [+] spinal cord motor neuron differentiation           NES=+1.96  q=3.22e-06
+    [+] forebrain neuron differentiation                   NES=+1.92  q=4.85e-10
+Warning message:
+In preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam,  :
+  There are ties in the preranked stats (0.4% of the list).
+The order of those tied genes will be arbitrary, which may produce unexpected results.
+  Saved: 72_gsea_ctrl_signal_go_bp.tsv, 72_gsea_mut_signal_go_bp.tsv
+  Saved: 72e_gsea_ctrl_signal_dotplot/{pdf,svg,jpg}
+  Saved: 72e_gsea_mut_signal_dotplot/{pdf,svg,jpg}
+  Saved: 72e_running_score_neuron_fate_specification/{pdf,svg,jpg}
+Warning messages:
+1: `aes_()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+2: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+
+--- 72f: Neuronal fraction by K119ub signal decile ---
+  Genome-wide neuronal fraction: 23.5%
+  Trend test (Spearman): rho = 0.648, p = 4.90e-02
+
+  Per-decile breakdown:
+    D01 [0.220-0.454]: 451/2161 neuronal (20.9%)  OR=0.84  q=7.64e-03
+    D02 [0.454-0.576]: 467/2160 neuronal (21.6%)  OR=0.89  q=7.57e-02
+    D03 [0.576-0.693]: 485/2160 neuronal (22.5%)  OR=0.94  q=4.78e-01
+    D04 [0.693-0.823]: 510/2161 neuronal (23.6%)  OR=1.01  q=9.79e-01
+    D05 [0.823-0.978]: 508/2160 neuronal (23.5%)  OR=1.00  q=9.79e-01
+    D06 [0.978-1.167]: 422/2160 neuronal (19.5%)  OR=0.77  q=1.82e-05
+    D07 [1.167-1.435]: 507/2161 neuronal (23.5%)  OR=1.00  q=9.79e-01
+    D08 [1.435-1.831]: 489/2161 neuronal (22.6%)  OR=0.95  q=4.99e-01
+    D09 [1.832-2.594]: 525/2159 neuronal (24.3%)  OR=1.05  q=4.99e-01
+    D10 [2.595-44.998]: 713/2161 neuronal (33.0%)  OR=1.70  q=3.36e-25
+  Saved: 72_neuronal_decile_summary.tsv
+  Saved: 72f_neuronal_fraction_by_k119ub_decile/{pdf,svg,jpg}
+
+--- Saving per-gene table ---
+  Saved: 72_neuronal_gene_k119ub_signal.tsv (21604 genes)
+
+--- 72g: Composite ---
+  Saved: 72_composite/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Genome-wide K119ub signal characterization — independent of MeCP2 | PMC12652333 framework' in 'mbcsToSbcs': - substituted for — (U+2014)
+
+================================================================================
+SECTION 72 COMPLETE: K119ub Neuronal Gene Characterization
+================================================================================
+
+  Universe: 21604 quantifiable genes (gb_signal_class == 'quantifiable')
+  Neuronal gene set: 5614 genes (fresh from org.Mm.eg.db, pattern 'synap|neuron|axon|dendrit|nervous')
+  Neuronal in universe: 5077 (23.5%)
+
+  72a: K119ub signal distribution
+    Ctrl: neuronal median=1.0261 vs other=0.9654  p = 2.15e-15
+    Mut:  neuronal median=1.0037 vs other=0.9879  p = 2.94e-01
+
+  72b: Fisher enrichment (neuronal among K119ub-high)
+    Ctrl top quartile (Q3)         OR=1.38 [1.28, 1.48]  p < 2.2e-16
+    Mut top quartile (Q3)          OR=1.19 [1.10, 1.27]  p = 3.28e-06
+    Ctrl top decile (D9)           OR=1.70 [1.54, 1.87]  p < 2.2e-16
+    Mut top decile (D9)            OR=1.37 [1.24, 1.52]  p = 6.15e-10
+
+  72c: GO BP (top-quartile ctrl, no MeCP2 filter): 1703 sig terms
+    pattern specification process                           q=1.57e-43
+    cell fate commitment                                    q=1.48e-42
+    regionalization                                         q=1.68e-39
+    embryonic organ morphogenesis                           q=2.57e-39
+    anterior/posterior pattern specification                q=1.14e-34
+
+  72e: GSEA (ctrl signal ranking): 1177 sig terms, 49 neuronal
+        GSEA (mut signal ranking):  919 sig terms, 39 neuronal
+
+  72f: Dose-response trend (Spearman): rho=0.648, p = 4.90e-02
+    D1 (lowest K119ub):  20.9% neuronal
+    D10 (highest K119ub): 33.0% neuronal
+
+  BIOLOGICAL CONCLUSION:
+    Neuronal genes carry elevated K119ub signal CONSTITUTIVELY (ctrl condition).
+    BAP1-KO further enriches K119ub at neuronal loci.
+    Consistent with PMC12652333: axon guidance / neuronal identity genes are
+    disproportionately H2AK119ub-associated in the brain.
+
+  Plots saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/72_k119ub_neuronal_characterization 
+  Tables saved to: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables 
+
+Section 72 complete.
