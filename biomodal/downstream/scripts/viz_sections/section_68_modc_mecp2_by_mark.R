@@ -148,13 +148,12 @@ cat("===========================================================================
 # ---- Load data ---------------------------------------------------------------
 
 DIFFBIND_GENE_PATH <- file.path(TABLES_DIR, "diffbind_gene_level_all_marks.tsv")
-MECP2_GENE_PATH    <- file.path(TABLES_DIR, "mecp2_gene_level_correlation.tsv")
 
 stopifnot(
   "diffbind_gene_level_all_marks.tsv not found (run section_33 first)" =
     file.exists(DIFFBIND_GENE_PATH),
-  "mecp2_gene_level_correlation.tsv not found (run section_11 first)" =
-    file.exists(MECP2_GENE_PATH)
+  "MeCP2 annotated file not found" =
+    file.exists(MECP2_FILES$annotated)
 )
 
 cat("Loading gene-level data...\n")
@@ -163,9 +162,20 @@ diffbind_genes <- read.table(DIFFBIND_GENE_PATH, header = TRUE, sep = "\t",
                              stringsAsFactors = FALSE, quote = "")
 cat(sprintf("  DiffBind gene table: %d genes\n", nrow(diffbind_genes)))
 
-mecp2_genes <- read.table(MECP2_GENE_PATH, header = TRUE, sep = "\t",
-                          stringsAsFactors = FALSE, quote = "")
-cat(sprintf("  MeCP2 gene table: %d genes\n", nrow(mecp2_genes)))
+# Aggregate MeCP2 from full annotated file (21k+ genes, unfiltered)
+cat("Loading and aggregating MeCP2 from full annotated file...\n")
+mecp2_raw <- read.table(MECP2_FILES$annotated, header = TRUE, sep = "\t",
+                        stringsAsFactors = FALSE, fill = TRUE, quote = "")
+mecp2_raw$Fold <- as.numeric(mecp2_raw$Fold)
+
+mecp2_gene <- mecp2_raw %>%
+  dplyr::filter(!is.na(SYMBOL) & SYMBOL != "") %>%
+  group_by(SYMBOL) %>%
+  summarise(
+    mecp2_mean_fold = mean(Fold, na.rm = TRUE),
+    .groups = "drop"
+  )
+cat(sprintf("  MeCP2: %d unique genes with peaks\n", nrow(mecp2_gene)))
 
 # ---- Build master table ------------------------------------------------------
 
@@ -176,10 +186,7 @@ master <- diffbind_genes %>%
                 mc_ctrl, mc_mut, mc_diff, mc_sig,
                 hmc_ctrl, hmc_mut, hmc_diff, hmc_sig,
                 total_ctrl, total_mut) %>%
-  inner_join(
-    mecp2_genes %>% dplyr::select(gene, mecp2_mean_fold, mecp2_nearest_fdr),
-    by = "gene"
-  ) %>%
+  left_join(mecp2_gene, by = c("gene" = "SYMBOL")) %>%
   dplyr::mutate(
     modc_diff = total_mut - total_ctrl,
     modc_direction = ifelse(modc_diff > 0, "Hypermethylated", "Hypomethylated")

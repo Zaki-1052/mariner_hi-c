@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-06-20 17:24:48 
+Date: 2026-06-20 18:47:13 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -42,28 +42,36 @@ SECTION 68: modC vs MeCP2 SCATTER BY HISTONE MARK CATEGORY
 
 Loading gene-level data...
   DiffBind gene table: 20915 genes
-  MeCP2 gene table: 9824 genes
+Loading and aggregating MeCP2 from full annotated file...
+  MeCP2: 21195 unique genes with peaks
 
 Building master gene-level table...
-  Master table: 9824 genes with both modC and MeCP2 data
+  Master table: 16909 genes with both modC and MeCP2 data
 
 Classifying genes by H3K27me3 / H3K27ac overlap...
   H3K27me3: 15809 peaks
   H3K27ac: 15105 peaks
+Warning message:
+In .merge_two_Seqinfo_objects(x, y) :
+  Each of the 2 combined objects has sequence levels not in the other:
+  - in 'x': chrY
+  - in 'y': chr4_GL456216_random, chrUn_JH584304, chrX_GL456233_random
+  Make sure to always combine/compare objects based on the same reference
+  genome (use suppressWarnings() to suppress this warning).
   Gene counts per category:
-    K27ac only (Active): 4637
-    K27me3 + K27ac (Bivalent): 324
-    K27me3 only (Fac. Het): 1663
-    Neither: 3200
+    K27ac only (Active): 5929
+    K27me3 + K27ac (Bivalent): 477
+    K27me3 only (Fac. Het): 3073
+    Neither: 7430
 
 Creating scatter plots...
-  68a: K27ac only (Active) (4637 genes)...
+  68a: K27ac only (Active) (5929 genes)...
   Saved: 68a_modc_mecp2_k__ac_only/{pdf,svg,jpg}
-  68b: K27me3 + K27ac (Bivalent) (324 genes)...
+  68b: K27me3 + K27ac (Bivalent) (477 genes)...
   Saved: 68b_modc_mecp2_k__me____k__ac/{pdf,svg,jpg}
-  68c: K27me3 only (Fac. Het) (1663 genes)...
+  68c: K27me3 only (Fac. Het) (3073 genes)...
   Saved: 68c_modc_mecp2_k__me__only/{pdf,svg,jpg}
-  68d: Neither (3200 genes)...
+  68d: Neither (7430 genes)...
   Saved: 68d_modc_mecp2_neither/{pdf,svg,jpg}
 
 Creating combined Figure 68...
