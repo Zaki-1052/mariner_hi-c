@@ -1,0 +1,149 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-20 20:36:53 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 61k: GSEA — MeCP2 AND K119ub RANKED GENE LISTS
+  No thresholds. All genes ranked. Proper weighting.
+================================================================================
+
+Loading MeCP2 from full annotated file...
+  MeCP2: 21195 unique genes (full universe)
+Loading K119ub gene body signal...
+  K119ub: 21604 quantifiable genes
+
+--- Building ranked gene lists ---
+'select()' returned 1:1 mapping between keys and columns
+  MeCP2 fold (full 21k universe): 21168 genes ranked (range: 3.311 to -1.237)
+Warning message:
+In bitr(g, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  0.13% of input gene IDs are fail to map...
+'select()' returned 1:1 mapping between keys and columns
+  K119ub log2fc (full universe): 21581 genes ranked (range: 1.920 to -1.362)
+Warning message:
+In bitr(g, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db) :
+  0.11% of input gene IDs are fail to map...
+
+--- GSEA: MeCP2 fold change ---
+  Significant terms (q < 0.05): 1 (positive NES: 1, negative: 0)
+
+  Top terms by |NES|:
+    [+] synapse assembly                                   NES=+1.68  q=2.45e-02  size=299
+
+  Total neuronal terms (q<0.05): 1 / 1 significant
+  Neuronal terms:
+    [+] synapse assembly                                   NES=+1.68  q=2.45e-02
+Warning message:
+In fgseaMultilevel(pathways = pathways, stats = stats, minSize = minSize,  :
+  For some of the pathways the P-values were likely overestimated. For such pathways log2err is set to NA.
+
+--- GSEA: K119ub log2FC ---
+  Significant terms (q < 0.05): 115 (positive NES: 61, negative: 54)
+
+  Top terms by |NES|:
+    [-] detection of chemical stimulus involved in sensory NES=-3.51  q=1.04e-07  size=280
+    [-] detection of chemical stimulus involved in sensory NES=-3.44  q=1.04e-07  size=331
+    [-] detection of chemical stimulus                     NES=-3.28  q=1.04e-07  size=365
+    [-] detection of stimulus involved in sensory percepti NES=-3.13  q=1.04e-07  size=427
+    [-] response to pheromone                              NES=-3.06  q=1.04e-07  size=77
+    [-] antigen processing and presentation of endogenous  NES=-2.35  q=8.94e-04  size=35
+    [-] antigen processing and presentation of endogenous  NES=-2.35  q=8.94e-04  size=35
+    [-] antigen processing and presentation of endogenous  NES=-2.34  q=7.10e-04  size=34
+    [-] antigen processing and presentation of peptide ant NES=-2.28  q=1.66e-03  size=36
+    [-] antigen processing and presentation via MHC class  NES=-2.21  q=2.22e-03  size=40
+    [-] antigen processing and presentation of endogenous  NES=-2.19  q=2.00e-03  size=41
+    [-] innate immune response in mucosa                   NES=-2.18  q=4.99e-03  size=35
+    [+] tRNA processing                                    NES=+2.17  q=9.21e-06  size=126
+    [-] antigen processing and presentation of endogenous  NES=-2.16  q=3.92e-03  size=40
+    [-] peptide cross-linking                              NES=-2.15  q=8.86e-03  size=25
+    [+] tRNA modification                                  NES=+2.15  q=8.44e-05  size=89
+    [+] RNA modification                                   NES=+2.15  q=6.14e-06  size=149
+    [-] positive regulation of lactation                   NES=-2.14  q=9.77e-03  size=24
+    [-] antigen processing and presentation of endogenous  NES=-2.13  q=4.39e-03  size=44
+    [-] sensory perception of bitter taste                 NES=-2.12  q=3.43e-03  size=43
+    [-] regulation of lactation                            NES=-2.10  q=1.37e-02  size=25
+    [+] RNA methylation                                    NES=+2.07  q=1.03e-03  size=68
+    [+] tRNA threonylcarbamoyladenosine metabolic process  NES=+2.06  q=1.40e-02  size=19
+    [-] detection of chemical stimulus involved in sensory NES=-2.05  q=6.49e-03  size=43
+    [-] mucosal immune response                            NES=-2.05  q=9.68e-03  size=49
+
+  Total neuronal terms (q<0.05): 3 / 115 significant
+  Neuronal terms:
+    [+] translation at presynapse                          NES=+1.94  q=1.63e-02
+    [+] translation at synapse                             NES=+1.89  q=2.57e-02
+    [+] translation at postsynapse                         NES=+1.89  q=2.57e-02
+Warning messages:
+1: In preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam,  :
+  There are ties in the preranked stats (0.83% of the list).
+The order of those tied genes will be arbitrary, which may produce unexpected results.
+2: In fgseaMultilevel(pathways = pathways, stats = stats, minSize = minSize,  :
+  For some of the pathways the P-values were likely overestimated. For such pathways log2err is set to NA.
+3: In fgseaMultilevel(pathways = pathways, stats = stats, minSize = minSize,  :
+  For some pathways, in reality P-values are less than 1e-10. You can set the `eps` argument to zero for better estimation.
+
+--- Saving plots ---
+  Saved: 61k_gsea_k119ub_dotplot/{pdf,svg,jpg}
+  Saved: 61k_mecp2_running_synapse_assembly/{pdf,svg,jpg}
+  Saved: 61k_k119ub_running_translation_at_presynapse/{pdf,svg,jpg}
+Warning messages:
+1: `aes_()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+2: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the enrichplot package.
+  Please report the issue at
+  <https://github.com/GuangchuangYu/enrichplot/issues>. 
+
+--- Saving tables ---
+  Saved: 61k_gsea_mecp2_go_bp.tsv
+  Saved: 61k_gsea_k119ub_go_bp.tsv
+
+================================================================================
+SECTION 61k SUMMARY: GSEA
+================================================================================
+
+  MeCP2 ranking:  21168 genes, 1 significant GO terms
+  K119ub ranking: 21581 genes, 115 significant GO terms
+
+  Key question: are neuronal gene sets enriched among genes with
+  the HIGHEST MeCP2 and K119ub increases? GSEA answers this with
+  proper weighting — no arbitrary thresholds.
+
+Section 61k complete.

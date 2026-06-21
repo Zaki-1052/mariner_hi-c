@@ -272,17 +272,117 @@ cat(sprintf("  MeCP2 Up:   %d\n", sum(df_59a$mecp2_status == "MeCP2 Up")))
 cat(sprintf("  MeCP2 Down: %d\n", sum(df_59a$mecp2_status == "MeCP2 Down")))
 cat(sprintf("  NS:         %d\n", sum(df_59a$mecp2_status == "Not Significant")))
 
-res_59a <- scatter_quadrant_plot(
-  df_59a,
-  x_col = "gb_log2fc", y_col = "mecp2_mean_fold",
-  color_col = "mecp2_status", color_values = COLORS$mecp2,
-  x_lab = expression("H2AK119ub " * log[2] * "(mut/ctrl)"),
-  y_lab = "MeCP2 DiffBind fold change",
-  title = "H2AK119ub vs MeCP2 at Gene Bodies"
-)
+MECP2_DARK <- c("MeCP2 Up" = "#B03000", "MeCP2 Down" = "#3B0F70",
+                "Not Significant" = "grey82")
+
+# Build 59a manually with two layers: NS faint, sig bold
+x_vals <- df_59a$gb_log2fc
+y_vals <- df_59a$mecp2_mean_fold
+rho_59a <- cor(x_vals, y_vals, method = "spearman", use = "complete.obs")
+rho_59a_p <- cor.test(x_vals, y_vals, method = "spearman")$p.value
+rho_59a_label <- if (rho_59a_p < 2.2e-16) {
+  sprintf("rho = %.3f, p < 2.2e-16", rho_59a)
+} else { sprintf("rho = %.3f, p = %.2e", rho_59a, rho_59a_p) }
+
+x_lim_59a <- clip_symmetric(x_vals)
+y_lim_59a <- clip_symmetric(y_vals)
+valid_59a <- !is.na(x_vals) & !is.na(y_vals) & x_vals != 0 & y_vals != 0
+q_labels_59a <- make_quadrant_labels(x_vals[valid_59a], y_vals[valid_59a],
+                                     x_lim_59a, y_lim_59a)
+
+df_59a_ns  <- df_59a %>% dplyr::filter(mecp2_status == "Not Significant")
+df_59a_sig <- df_59a %>% dplyr::filter(mecp2_status != "Not Significant")
+
+p_59a <- ggplot() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.3) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.3) +
+  geom_point(data = df_59a_ns,
+             aes(x = gb_log2fc, y = mecp2_mean_fold),
+             color = "grey82", alpha = 0.15, size = 0.5) +
+  geom_point(data = df_59a_sig,
+             aes(x = gb_log2fc, y = mecp2_mean_fold, color = mecp2_status),
+             alpha = 0.85, size = 1.5) +
+  scale_color_manual(values = MECP2_DARK, name = NULL,
+                     guide = guide_legend(override.aes = list(alpha = 1, size = 3))) +
+  geom_text(data = q_labels_59a, aes(x = x, y = y, label = label,
+            hjust = hjust, vjust = vjust), size = 2.8, color = "grey30") +
+  coord_cartesian(xlim = x_lim_59a, ylim = y_lim_59a) +
+  labs(
+    title = "H2AK119ub vs MeCP2 at Gene Bodies",
+    subtitle = sprintf("Spearman %s | n = %s genes",
+                       rho_59a_label, format(sum(valid_59a), big.mark = ",")),
+    x = expression("H2AK119ub " * log[2] * "(mut/ctrl)"),
+    y = "MeCP2 DiffBind fold change"
+  ) +
+  theme_biomodal()
+
+label_59a <- df_59a %>%
+  dplyr::filter(gene %in% KEY_GENES, !is.na(gb_log2fc), !is.na(mecp2_mean_fold))
+if (nrow(label_59a) > 0) {
+  p_59a <- p_59a + geom_text_repel(
+    data = label_59a,
+    aes(x = gb_log2fc, y = mecp2_mean_fold, label = gene),
+    size = 2.5, max.overlaps = 15,
+    segment.color = "grey50", segment.size = 0.3,
+    fontface = "italic", color = "black"
+  )
+}
+
+res_59a <- list(plot = p_59a, rho = rho_59a, rho_p = rho_59a_p,
+                n = sum(valid_59a), x_lim = x_lim_59a, y_lim = y_lim_59a)
 
 save_section_plot(res_59a$plot, "59a_k119ub_vs_mecp2")
 cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", res_59a$rho, res_59a$rho_p))
+
+# =============================================================================
+# PLOT 59a2: K119UB vs MeCP2 — PEAK-LEVEL (every MeCP2 peak as its own dot)
+# =============================================================================
+
+cat("\n--- Plot 59a2: K119ub vs MeCP2 (peak-level, both axes at peak resolution) ---\n")
+
+PEAK_SIGNAL_PATH <- file.path(TABLES_DIR, "62_mecp2_peak_chromatin_signal.tsv")
+stopifnot(
+  "62_mecp2_peak_chromatin_signal.tsv not found (run section_62 first)" =
+    file.exists(PEAK_SIGNAL_PATH)
+)
+
+peak_signal <- read.table(PEAK_SIGNAL_PATH, header = TRUE, sep = "\t",
+                          stringsAsFactors = FALSE, fill = TRUE, quote = "")
+peak_signal$Fold <- as.numeric(peak_signal$Fold)
+peak_signal$FDR <- as.numeric(peak_signal$FDR)
+peak_signal$k119ub_log2fc <- as.numeric(peak_signal$k119ub_log2fc)
+
+df_59a2 <- peak_signal %>%
+  dplyr::filter(is.finite(Fold) & is.finite(k119ub_log2fc)) %>%
+  dplyr::mutate(
+    gene = SYMBOL,
+    mecp2_status = dplyr::case_when(
+      FDR < Q_THRESHOLD & Fold > 0 ~ "MeCP2 Up",
+      FDR < Q_THRESHOLD & Fold < 0 ~ "MeCP2 Down",
+      TRUE ~ "Not Significant"
+    ),
+    mecp2_status = factor(mecp2_status,
+                          levels = c("MeCP2 Up", "MeCP2 Down", "Not Significant"))
+  ) %>%
+  dplyr::arrange(desc(mecp2_status))
+
+cat(sprintf("  Peaks with both K119ub and MeCP2 signal: %d\n", nrow(df_59a2)))
+cat(sprintf("  MeCP2 Up:   %d peaks\n", sum(df_59a2$mecp2_status == "MeCP2 Up")))
+cat(sprintf("  MeCP2 Down: %d peaks\n", sum(df_59a2$mecp2_status == "MeCP2 Down")))
+cat(sprintf("  NS:         %d peaks\n", sum(df_59a2$mecp2_status == "Not Significant")))
+
+res_59a2 <- scatter_quadrant_plot(
+  df_59a2,
+  x_col = "k119ub_log2fc", y_col = "Fold",
+  color_col = "mecp2_status", color_values = MECP2_DARK,
+  x_lab = "H2AK119ub log2FC at MeCP2 peak (Mut/Ctrl)",
+  y_lab = "MeCP2 DiffBind fold (per peak)",
+  title = "H2AK119ub vs MeCP2 (Peak-Level, Both Axes at Peak Resolution)",
+  point_alpha = 0.1, point_size = 0.3
+)
+
+save_section_plot(res_59a2$plot, "59a2_k119ub_vs_mecp2_peaklevel")
+cat(sprintf("  Spearman rho = %.3f (p = %.2e)\n", res_59a2$rho, res_59a2$rho_p))
 
 # =============================================================================
 # PLOT 59b: MeCP2 vs H3K27ac (EUCHROMATIN)

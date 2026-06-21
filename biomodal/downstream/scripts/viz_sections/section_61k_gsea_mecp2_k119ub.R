@@ -39,11 +39,26 @@ save_plot <- function(p, name, w = 12, h = 10) {
   )
 }
 
-# --- Load data ---
+# --- Load data (full universe: MeCP2 annotated + K119ub gene signal) ---
 
-qm <- read.table(file.path(TABLES_DIR, "59_quadrant_master.tsv"),
-                  header = TRUE, sep = "\t", stringsAsFactors = FALSE, quote = "")
-cat(sprintf("  Loaded %d genes from quadrant master\n", nrow(qm)))
+cat("Loading MeCP2 from full annotated file...\n")
+mecp2_raw <- read.table(MECP2_FILES$annotated, header = TRUE, sep = "\t",
+                        stringsAsFactors = FALSE, fill = TRUE, quote = "")
+mecp2_raw$Fold <- as.numeric(mecp2_raw$Fold)
+
+mecp2_gene <- mecp2_raw %>%
+  dplyr::filter(!is.na(SYMBOL) & SYMBOL != "" & is.finite(Fold)) %>%
+  group_by(SYMBOL) %>%
+  summarise(mecp2_mean_fold = mean(Fold, na.rm = TRUE), .groups = "drop")
+cat(sprintf("  MeCP2: %d unique genes (full universe)\n", nrow(mecp2_gene)))
+
+cat("Loading K119ub gene body signal...\n")
+K119UB_SIGNAL_PATH <- file.path(BASE_DIR, "data/k119ub_gene_signal.tsv")
+k119ub_signal <- read.table(K119UB_SIGNAL_PATH, header = TRUE, sep = "\t",
+                            stringsAsFactors = FALSE, quote = "")
+k119ub_valid <- k119ub_signal %>%
+  dplyr::filter(gb_signal_class == "quantifiable" & is.finite(gb_log2fc))
+cat(sprintf("  K119ub: %d quantifiable genes\n", nrow(k119ub_valid)))
 
 # --- Build ranked lists ---
 
@@ -54,12 +69,13 @@ build_ranked_list <- function(genes, values, label) {
   g <- genes[valid]
   v <- values[valid]
 
-  entrez <- bitr(g, fromType = "SYMBOL", toType = "ENTREZID", OrgDb = org.Mm.eg.db)
+  entrez <- bitr(g, fromType = "SYMBOL", toType = "ENTREZID",
+                 OrgDb = org.Mm.eg.db)
 
-  merged <- data.frame(SYMBOL = g, value = v, stringsAsFactors = FALSE)
+  merged <- data.frame(SYMBOL = g, value = v,
+                       stringsAsFactors = FALSE)
   merged <- merge(merged, entrez, by = "SYMBOL")
 
-  # Deduplicate: keep max absolute value per Entrez ID
   merged <- merged[order(-abs(merged$value)), ]
   merged <- merged[!duplicated(merged$ENTREZID), ]
 
@@ -67,14 +83,20 @@ build_ranked_list <- function(genes, values, label) {
   ranked <- sort(ranked, decreasing = TRUE)
 
   cat(sprintf("  %s: %d genes ranked (range: %.3f to %.3f)\n",
-              label, length(ranked), max(ranked), min(ranked)))
+              label, length(ranked),
+              max(ranked), min(ranked)))
   ranked
 }
 
-rank_mecp2 <- build_ranked_list(qm$gene, qm$mecp2_mean_fold, "MeCP2 fold")
+rank_mecp2 <- build_ranked_list(
+  mecp2_gene$SYMBOL, mecp2_gene$mecp2_mean_fold,
+  "MeCP2 fold (full 21k universe)"
+)
 
-k119_mask <- qm$gb_signal_class == "quantifiable"
-rank_k119ub <- build_ranked_list(qm$gene[k119_mask], qm$gb_log2fc[k119_mask], "K119ub log2fc")
+rank_k119ub <- build_ranked_list(
+  k119ub_valid$symbol, k119ub_valid$gb_log2fc,
+  "K119ub log2fc (full universe)"
+)
 
 # --- Run GSEA ---
 
