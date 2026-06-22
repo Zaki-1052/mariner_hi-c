@@ -1,12 +1,10 @@
-#!/usr/bin/env Rscript
-# scripts/pub_browser.R
-# Publication-quality genome browser locus views (lab-style aesthetic)
+# poster/pub_browser/pub_browser.R
+# Publication-quality genome browser locus views using karyoploteR
 #
-# Renders multi-track locus figures directly to SVG/PDF/JPEG in the style of
-# manually-polished Illustrator figures: filled area curves with same color
-# per mark, rotated colored mark labels, slim black gene models with arrowed
-# strand direction, italic gene symbols, scale-bar coordinate marker, and
-# optional gray highlight rectangles. No post-processing required.
+# Renders multi-track locus figures directly to SVG/PDF/PNG/JPEG in the style of
+# manually-polished Illustrator figures: filled area curves with same color per
+# mark, rotated colored mark labels, gene models with strand arrows, italic gene
+# symbols, scale-bar coordinate marker, and optional gray highlight rectangles.
 #
 # Usage (CLI):
 #   Rscript pub_browser.R \
@@ -35,10 +33,7 @@
 # =============================================================================
 
 suppressPackageStartupMessages({
-  library(ggplot2)
-  library(patchwork)
-  library(cowplot)
-  library(grid)
+  library(karyoploteR)
   library(rtracklayer)
   library(GenomicRanges)
   library(GenomicFeatures)
@@ -46,7 +41,6 @@ suppressPackageStartupMessages({
   library(svglite)
 })
 
-# Optional packages loaded on demand
 load_optional <- function(pkg) {
   suppressPackageStartupMessages(suppressWarnings(
     requireNamespace(pkg, quietly = TRUE)
@@ -57,7 +51,6 @@ load_optional <- function(pkg) {
 # CLI PARSING
 # =============================================================================
 
-# Safe numeric parsing: stop with a useful message instead of returning NA
 parse_int <- function(val, flag) {
   out <- suppressWarnings(as.integer(val))
   if (is.na(out)) stop(sprintf("%s requires an integer, got '%s'", flag, val))
@@ -69,7 +62,6 @@ parse_num <- function(val, flag) {
   out
 }
 
-# Manual parser since we need repeatable --mark / --highlight / --label flags
 parse_cli_args <- function(args = commandArgs(trailingOnly = TRUE)) {
   cfg <- list(
     gene             = NULL,
@@ -77,8 +69,8 @@ parse_cli_args <- function(args = commandArgs(trailingOnly = TRUE)) {
     genome           = "mm10",
     marks            = list(),
     config_file      = NULL,
-    labels           = NULL,        # legacy 'ctrl,mut' shortcut
-    label_list       = list(),      # preferred: repeatable --label flag
+    labels           = NULL,
+    label_list       = list(),
     output           = "out/locus",
     highlights       = list(),
     highlight_labels = list(),
@@ -137,7 +129,7 @@ parse_cli_args <- function(args = commandArgs(trailingOnly = TRUE)) {
 
 print_help <- function() {
   cat("
-pub_browser.R -- Publication-quality genome browser locus tool
+pub_browser.R -- Publication-quality genome browser locus tool (karyoploteR)
 
 REQUIRED (one of):
   --gene <SYMBOL>            Gene symbol (resolved via TxDb)
@@ -153,8 +145,6 @@ MARKS (at least one required):
 CORE OPTIONS:
   --genome <build>           Genome assembly (default: mm10)
   --label <text>             Condition label (repeatable; pass exactly twice).
-                             Supports markdown for italic/superscript via
-                             ggtext, e.g. '*Bap1*^f/f^,Math1-cre'.
   --labels 'ctrl,mut'        Legacy shortcut: comma-sep condition labels.
                              Cannot contain commas in either label -- use
                              repeatable --label for genotypes with commas.
@@ -178,7 +168,6 @@ VISUAL OPTIONS:
   --gene-symbol <SYMBOL>           Override displayed gene symbol
                                    (useful with --region)
   --genotype-italic                Render second condition label as italic
-                                   (e.g., 'Bap1^f/f,Math1-cre')
 
 LAYOUT OPTIONS:
   --width <inches>           Figure width (default: 7.0)
@@ -200,65 +189,28 @@ EXAMPLES:
     --labels 'control,Bap1-KO' \\
     --output out/syt1_pub
 
-  # With highlight and richtext genotype label (italic + superscript)
+  # With highlight and italic genotype label
   Rscript pub_browser.R \\
     --gene Anxa2r1 \\
     --mark 'H2AK119ub:#2171B5:ctrl.bw:mut.bw' \\
     --label 'control' \\
-    --label '*Bap1*^f/f^,Math1-cre' \\
+    --label 'Bap1-KO' \\
     --highlight 'chr3:9505000-9510000' \\
     --highlight-label 'differential region' \\
     --output out/anxa2r1_pub
 
   # Region-based view with a focal gene resolved from symbol
-  # (PI workflow: render with --gene first, then extend the view with --region)
   Rscript pub_browser.R \\
     --region 'chr3:9450000-9520000' \\
     --gene-symbol Anxa2r1 \\
     --mark 'H3K27me3:#CB181D:ctrl.bw:mut.bw' \\
     --output out/anxa2r1_extended
 
-  # Region-based with all overlapping genes
-  Rscript pub_browser.R \\
-    --region 'chr11:108400000-109100000' \\
-    --gene-symbol Syt1 \\
-    --show-all-genes \\
-    --mark 'H3K27me1:#2171B5:rep1.bw:rep2.bw' \\
-    --labels 'replicate 1,replicate 2' \\
-    --output out/syt1_region
-
   # YAML config (recommended for complex setups)
   Rscript pub_browser.R --config configs/syt1_locus.yaml
-
-YAML CONFIG FORMAT:
-
-  genome: mm10
-  gene: Syt1
-  extend_bp: 50000
-  labels: ['control', 'Bap1-KO']
-  output: out/syt1_browser
-  scale_bar_kb: 50
-
-  marks:
-    - name: H2AK119ub
-      color: '#2171B5'
-      ctrl: /path/to/H2AK119ubCtrl.bw
-      mut:  /path/to/H2AK119ubMut.bw
-    - name: '5mC'
-      color: '#2166AC'
-      ctrl: [rep1_ctrl.bw, rep2_ctrl.bw, rep3_ctrl.bw, rep4_ctrl.bw]
-      mut:  [rep1_mut.bw,  rep2_mut.bw,  rep3_mut.bw,  rep4_mut.bw]
-      average: true
-
-  highlights:
-    - region: 'chr11:108700000-108800000'
-      label:  'differential region'
-
-  hic_loops: /path/to/loops.tsv
 ")
 }
 
-# Parse 'name:color:ctrl:mut' mark spec into structured list
 parse_mark_spec <- function(spec) {
   parts <- strsplit(spec, ":", fixed = TRUE)[[1]]
   if (length(parts) != 4L) {
@@ -276,7 +228,6 @@ parse_mark_spec <- function(spec) {
   )
 }
 
-# Parse 'chr:start-end' string into list(chr, start, end)
 parse_region_string <- function(s) {
   m <- regmatches(s, regexec("^([^:]+):([0-9,]+)-([0-9,]+)$", s))[[1]]
   if (length(m) != 4L) {
@@ -294,17 +245,14 @@ parse_region_string <- function(s) {
 # =============================================================================
 
 resolve_config <- function(cli) {
-  # Start with CLI values
   cfg <- cli
 
-  # Merge YAML if provided (CLI overrides YAML for scalars; lists are replaced)
   if (!is.null(cli$config_file)) {
     if (!load_optional("yaml")) {
       stop("Package 'yaml' required for --config. Install with install.packages('yaml').")
     }
     yml <- yaml::read_yaml(cli$config_file)
 
-    # Scalars: CLI > YAML > default
     cfg$genome          <- if (cli$genome != "mm10") cli$genome else (yml$genome %||% cfg$genome)
     cfg$gene            <- cli$gene %||% yml$gene
     cfg$region          <- cli$region %||% yml$region
@@ -321,17 +269,14 @@ resolve_config <- function(cli) {
     cfg$genotype_italic <- cli$genotype_italic || isTRUE(yml$genotype_italic)
     cfg$bin_size        <- cli$bin_size %||% yml$bin_size
 
-    # Focal genes: CLI --focal-gene list, then YAML focal_genes array
     if (length(cli$focal_genes) == 0L && !is.null(yml$focal_genes)) {
       cfg$focal_genes <- as.list(as.character(yml$focal_genes))
     }
 
-    # Labels: prefer CLI --label list, then YAML labels array, then CLI --labels (legacy)
     if (length(cli$label_list) == 0L && !is.null(yml$labels)) {
       cfg$label_list <- as.list(as.character(yml$labels))
     }
 
-    # Marks: YAML overrides CLI marks if YAML has them
     if (length(cli$marks) == 0L && !is.null(yml$marks)) {
       cfg$marks <- lapply(yml$marks, function(m) {
         list(
@@ -348,7 +293,6 @@ resolve_config <- function(cli) {
       cfg$marks <- lapply(cli$marks, parse_mark_spec)
     }
 
-    # Highlights from YAML
     if (length(cli$highlights) == 0L && !is.null(yml$highlights)) {
       cfg$highlights <- lapply(yml$highlights, function(h) {
         if (is.list(h)) parse_region_string(h$region) else parse_region_string(h)
@@ -358,13 +302,11 @@ resolve_config <- function(cli) {
       })
     } else if (length(cli$highlights) > 0L) {
       cfg$highlights <- lapply(cli$highlights, parse_region_string)
-      # Pad highlight_labels to match length
       while (length(cfg$highlight_labels) < length(cfg$highlights)) {
         cfg$highlight_labels[[length(cfg$highlight_labels) + 1L]] <- ""
       }
     }
   } else {
-    # No YAML — parse mark specs from CLI
     cfg$marks <- lapply(cli$marks, parse_mark_spec)
     cfg$highlights <- lapply(cli$highlights, parse_region_string)
     while (length(cfg$highlight_labels) < length(cfg$highlights)) {
@@ -372,7 +314,6 @@ resolve_config <- function(cli) {
     }
   }
 
-  # Resolve final label vector: prefer --label list, then --labels comma-split, else default
   if (length(cfg$label_list) >= 1L) {
     cfg$label_vec <- unlist(cfg$label_list, use.names = FALSE)
   } else if (!is.null(cfg$labels)) {
@@ -382,7 +323,7 @@ resolve_config <- function(cli) {
   }
   if (length(cfg$label_vec) != 2L) {
     stop(sprintf(
-      "Need exactly two condition labels. Got %d: %s\nUse repeatable --label flags for labels containing commas:\n  --label 'control' --label '*Bap1*^f/f^,Math1-cre'",
+      "Need exactly two condition labels. Got %d: %s\nUse repeatable --label flags for labels containing commas:\n  --label 'control' --label 'Bap1-KO'",
       length(cfg$label_vec),
       paste(shQuote(cfg$label_vec), collapse = ", ")
     ))
@@ -393,9 +334,6 @@ resolve_config <- function(cli) {
 
 `%||%` <- function(a, b) if (is.null(a) || (length(a) == 1L && is.na(a))) b else a
 
-# Round y-axis max up to a "nice" number (e.g., 18.4 -> 50, 113.3 -> 200, 52.6 -> 100).
-# Choices restricted to {1, 2, 5, 10} * 10^n to match PI's typical track scales
-# (which use 0-10, 0-50, 0-100, 0-200, etc.). ~30% headroom for label space.
 nice_ceiling <- function(x) {
   if (x <= 0) return(1)
   x_padded <- x * 1.30
@@ -439,8 +377,6 @@ validate_config <- function(cfg) {
 # DATA LAYER -- region resolution + BigWig binning
 # =============================================================================
 
-# Resolve a gene symbol to its (entrez, start, end, strand) tuple. Stops with
-# an actionable message if the TxDb/OrgDb packages are missing.
 resolve_gene_symbol <- function(symbol, cfg) {
   if (!load_optional(cfg$txdb_pkg)) {
     stop(sprintf(
@@ -477,9 +413,6 @@ resolve_gene_symbol <- function(symbol, cfg) {
   )
 }
 
-# Resolve gene symbol to extended GRanges, or build a GRanges from --region.
-# When --region is paired with --gene-symbol, also resolve the symbol so the
-# gene model panel knows the focal gene (correct strand/exons).
 resolve_region <- function(cfg) {
   if (!is.null(cfg$region)) {
     r <- parse_region_string(cfg$region)
@@ -487,7 +420,6 @@ resolve_region <- function(cfg) {
     focal_symbol <- cfg$gene_symbol %||% cfg$gene
     mcols(gr)$gene_symbol <- focal_symbol %||% ""
 
-    # Resolve focal gene info when a symbol is provided alongside --region
     if (!is.null(focal_symbol) && nzchar(focal_symbol)) {
       info <- tryCatch(resolve_gene_symbol(focal_symbol, cfg),
                        error = function(e) {
@@ -531,8 +463,6 @@ resolve_region <- function(cfg) {
   ext
 }
 
-# Bin a single BigWig over the view region using viewMeans (correct for
-# continuous coverage tracks like RNA-seq, ChIP-seq, ATAC-seq, etc.)
 import_bigwig_binned <- function(bw_path, region_gr, bin_size = NULL,
                                  sparse = FALSE) {
   chr   <- as.character(seqnames(region_gr)[1])
@@ -564,7 +494,6 @@ import_bigwig_binned <- function(bw_path, region_gr, bin_size = NULL,
   bins_gr
 }
 
-# Average multiple BigWig files (replicates) into a single binned GRanges
 average_bigwigs <- function(bw_paths, region_gr, bin_size = NULL,
                             sparse = FALSE) {
   if (length(bw_paths) == 1L) {
@@ -583,7 +512,6 @@ average_bigwigs <- function(bw_paths, region_gr, bin_size = NULL,
   result
 }
 
-# Convert binned GRanges to data.frame for ggplot (use bin midpoints)
 bigwig_to_df <- function(gr) {
   data.frame(
     pos   = (start(gr) + end(gr)) / 2,
@@ -592,218 +520,118 @@ bigwig_to_df <- function(gr) {
 }
 
 # =============================================================================
-# TRACK BUILDERS -- each returns one ggplot object
+# LAYOUT COMPUTATION -- proportional r0/r1 positions for karyoploteR tracks
 # =============================================================================
 
-# Detect if a label string contains richtext markers (*italic*, ^super^, _sub_, HTML tags).
-# Returns TRUE only if ggtext is also available; warns once when fallback used.
-.RICHTEXT_WARNED <- new.env(parent = emptyenv())
-.RICHTEXT_WARNED$shown <- FALSE
-is_richtext_label <- function(s) {
-  if (is.null(s) || !nzchar(s)) return(FALSE)
-  has_markup <- grepl("\\*.+?\\*|\\^.+?\\^|<[a-z/]", s)
-  if (!has_markup) return(FALSE)
-  if (!load_optional("ggtext")) {
-    if (!.RICHTEXT_WARNED$shown) {
-      warning(
-        "Label contains markdown markers (*, ^, <tags>) but 'ggtext' is not installed. ",
-        "Falling back to plain text. Install with install.packages('ggtext') for italic/superscript support.",
-        call. = FALSE
-      )
-      .RICHTEXT_WARNED$shown <- TRUE
+compute_track_layout <- function(mark_data_list, has_hic, has_highlight_labels) {
+  signal_w    <- 1.0
+  pair_gap_w  <- 0.10
+  mark_gap_w  <- 0.30
+  gene_w      <- 0.80
+  gene_gap_w  <- 0.25
+  scalebar_w  <- 0.30
+  hic_w       <- 0.80
+  hic_gap_w   <- 0.10
+  header_w    <- if (has_highlight_labels) 0.14 else 0
+
+  n_marks <- length(mark_data_list)
+  n_diff <- sum(sapply(mark_data_list, function(m) isTRUE(m$diff)))
+
+  total <- scalebar_w + header_w +
+           n_marks * (2 * signal_w + pair_gap_w) +
+           n_diff * (signal_w + pair_gap_w) +
+           max(0, n_marks - 1) * mark_gap_w +
+           gene_gap_w + gene_w +
+           if (has_hic) (hic_gap_w + hic_w) else 0
+
+  positions <- list()
+  cursor <- total
+
+  # Scale bar (topmost)
+  r1_sb <- cursor / total
+  cursor <- cursor - scalebar_w
+  r0_sb <- cursor / total
+  scalebar_pos <- c(r0_sb, r1_sb)
+
+  # Highlight header labels
+  header_pos <- NULL
+  if (has_highlight_labels) {
+    r1_hdr <- cursor / total
+    cursor <- cursor - header_w
+    r0_hdr <- cursor / total
+    header_pos <- c(r0_hdr, r1_hdr)
+  }
+
+  # Signal tracks (ctrl + mut + optional diff per mark)
+  for (i in seq_along(mark_data_list)) {
+    md <- mark_data_list[[i]]
+
+    r1_ctrl <- cursor / total
+    cursor <- cursor - signal_w
+    r0_ctrl <- cursor / total
+
+    cursor <- cursor - pair_gap_w
+
+    r1_mut <- cursor / total
+    cursor <- cursor - signal_w
+    r0_mut <- cursor / total
+
+    diff_pos <- NULL
+    if (isTRUE(md$diff)) {
+      cursor <- cursor - pair_gap_w
+      r1_diff <- cursor / total
+      cursor <- cursor - signal_w
+      r0_diff <- cursor / total
+      diff_pos <- c(r0_diff, r1_diff)
     }
-    return(FALSE)
-  }
-  TRUE
-}
 
-# Convert ergonomic markdown markers to the HTML that ggtext/gridtext understand.
-# - *text* stays as-is (markdown italic, handled natively)
-# - ^text^ -> <sup>text</sup>  (caret superscript, not native markdown)
-# - ~text~ -> <sub>text</sub>  (tilde subscript, not native markdown)
-preprocess_richtext <- function(s) {
-  if (is.null(s) || !nzchar(s)) return(s)
-  # Superscript: ^...^  (lazy match so '^f/f^,Math1-cre' captures just 'f/f')
-  s <- gsub("\\^([^\\^]+?)\\^", "<sup>\\1</sup>", s, perl = TRUE)
-  # Subscript: ~...~ (avoid matching markdown strikethrough ~~text~~)
-  s <- gsub("(?<!~)~([^~]+?)~(?!~)", "<sub>\\1</sub>", s, perl = TRUE)
-  s
-}
-
-# Add a condition/scale label as plain text or richtext depending on label content
-add_label_layer <- function(p, label, x, y, color = "black",
-                            size = 2.2, hjust = 0, vjust = 1,
-                            italic = FALSE) {
-  if (is.null(label) || !nzchar(label)) return(p)
-  if (is_richtext_label(label)) {
-    df <- data.frame(x = x, y = y, label = preprocess_richtext(label))
-    p + ggtext::geom_richtext(
-      data = df, inherit.aes = FALSE,
-      aes(x = x, y = y, label = label),
-      hjust = hjust, vjust = vjust,
-      size = size, color = color,
-      fill = NA, label.color = NA,
-      label.padding = unit(0, "pt"),
-      label.margin = unit(0, "pt")
-    )
-  } else {
-    p + annotate("text",
-                 x = x, y = y, label = label,
-                 hjust = hjust, vjust = vjust,
-                 size = size, color = color,
-                 fontface = if (italic) "italic" else "plain")
-  }
-}
-
-# Single condition signal panel: filled area curve over the view region
-build_signal_panel <- function(signal_df, color, ylim,
-                               view_start, view_end,
-                               condition_label = NULL,
-                               scale_label = NULL,
-                               highlights = list(),
-                               italic_label = FALSE) {
-  # Cap signal at ylim for visual clarity (rare overshoots stay at ceiling)
-  signal_df$score <- pmin(signal_df$score, ylim)
-
-  p <- ggplot(signal_df, aes(x = pos, y = score))
-
-  # Highlight rectangles first (render behind signal)
-  if (length(highlights) > 0L) {
-    for (h in highlights) {
-      p <- p + annotate("rect",
-                        xmin = h$start, xmax = h$end,
-                        ymin = -Inf, ymax = Inf,
-                        fill = "grey85", alpha = 0.55, color = NA)
-    }
-  }
-
-  # Filled area curve with thin matching outline -- the PI aesthetic
-  p <- p +
-    geom_area(fill = color, color = color,
-              alpha = 0.90, linewidth = 0.15) +
-    # Thin baseline at y=0 in mark color (subtle)
-    geom_hline(yintercept = 0, color = color, linewidth = 0.3) +
-    scale_y_continuous(limits = c(0, ylim),
-                       expand = expansion(mult = c(0, 0.02))) +
-    scale_x_continuous(limits = c(view_start, view_end),
-                       expand = c(0, 0)) +
-    theme_void() +
-    theme(
-      plot.background  = element_rect(fill = "white", color = NA),
-      panel.background = element_rect(fill = "white", color = NA),
-      plot.margin      = margin(0, 2, 0, 0, "pt")
+    positions[[i]] <- list(
+      ctrl    = c(r0_ctrl, r1_ctrl),
+      mut     = c(r0_mut, r1_mut),
+      diff    = diff_pos,
+      mark_r0 = if (!is.null(diff_pos)) diff_pos[1] else r0_mut,
+      mark_r1 = r1_ctrl
     )
 
-  # Scale annotation in mark color (ctrl track only).
-  # Positioned at the very top of the panel; nice_ceiling rounding provides
-  # ~25%+ headroom above data so this overlays empty space, not peaks.
-  if (!is.null(scale_label) && nzchar(scale_label)) {
-    p <- add_label_layer(
-      p, scale_label,
-      x = view_start + (view_end - view_start) * 0.05,
-      y = ylim * 0.94,
-      color = color, size = 2.2,
-      hjust = 0, vjust = 1
-    )
+    if (i < n_marks) cursor <- cursor - mark_gap_w
   }
 
-  # Condition label: small black text just below the scale annotation
-  if (!is.null(condition_label) && nzchar(condition_label)) {
-    text_x <- view_start + (view_end - view_start) * 0.015
-    # Place lower on mut track (no scale label above) to mirror PI style
-    y_pos <- if (!is.null(scale_label)) ylim * 0.72 else ylim * 0.85
-    p <- add_label_layer(
-      p, condition_label,
-      x = text_x, y = y_pos,
-      color = "black", size = 2.2,
-      hjust = 0, vjust = 1,
-      italic = italic_label
-    )
+  # Gene model
+  cursor <- cursor - gene_gap_w
+  r1_gene <- cursor / total
+  cursor <- cursor - gene_w
+  r0_gene <- max(0, cursor / total)
+
+  # Hi-C arcs
+  hic_pos <- NULL
+  if (has_hic) {
+    cursor <- cursor - hic_gap_w
+    r1_hic <- cursor / total
+    cursor <- cursor - hic_w
+    r0_hic <- max(0, cursor / total)
+    hic_pos <- c(r0_hic, r1_hic)
   }
 
-  p
-}
-
-# Percent difference panel: (mut - ctrl) as diverging area chart.
-# Positive values (gain in mut) filled in mark color above zero line;
-# negative values (loss in mut) filled in a desaturated shade below.
-build_diff_panel <- function(ctrl_df, mut_df, color,
-                             view_start, view_end,
-                             highlights = list(),
-                             is_fraction = FALSE) {
-  diff_df <- data.frame(
-    pos  = ctrl_df$pos,
-    diff = mut_df$score - ctrl_df$score
+  list(
+    tracks   = positions,
+    gene     = c(r0_gene, r1_gene),
+    scalebar = scalebar_pos,
+    header   = header_pos,
+    hic      = hic_pos
   )
-  if (is_fraction) diff_df$diff <- diff_df$diff * 100
-
-  diff_df$gain <- pmax(diff_df$diff, 0)
-  diff_df$loss <- pmin(diff_df$diff, 0)
-
-  abs_max <- max(abs(diff_df$diff), na.rm = TRUE)
-  if (abs_max <= 0 || !is.finite(abs_max)) abs_max <- 1
-  ylim <- nice_ceiling(abs_max)
-
-  loss_color <- colorspace::desaturate(colorspace::lighten(color, 0.3), 0.4)
-
-  p <- ggplot(diff_df, aes(x = pos))
-
-  if (length(highlights) > 0L) {
-    for (h in highlights) {
-      p <- p + annotate("rect",
-                        xmin = h$start, xmax = h$end,
-                        ymin = -Inf, ymax = Inf,
-                        fill = "grey85", alpha = 0.55, color = NA)
-    }
-  }
-
-  p <- p +
-    geom_area(aes(y = gain), fill = color, alpha = 0.90, linewidth = 0.15) +
-    geom_area(aes(y = loss), fill = loss_color, alpha = 0.90, linewidth = 0.15) +
-    geom_hline(yintercept = 0, color = "black", linewidth = 0.25) +
-    scale_y_continuous(limits = c(-ylim, ylim),
-                       expand = expansion(mult = c(0.02, 0.02))) +
-    scale_x_continuous(limits = c(view_start, view_end),
-                       expand = c(0, 0)) +
-    theme_void() +
-    theme(
-      plot.background  = element_rect(fill = "white", color = NA),
-      panel.background = element_rect(fill = "white", color = NA),
-      plot.margin      = margin(0, 2, 0, 0, "pt")
-    )
-
-  unit_label <- if (is_fraction) "%" else "Δ"
-  scale_text <- sprintf("±%g%s", ylim, unit_label)
-  p <- p + annotate("text",
-                     x = view_start + (view_end - view_start) * 0.05,
-                     y = ylim * 0.85,
-                     label = scale_text,
-                     hjust = 0, vjust = 1,
-                     size = 2.0, color = color)
-
-  p <- p + annotate("text",
-                     x = view_start + (view_end - view_start) * 0.015,
-                     y = ylim * 0.55,
-                     label = "mut-ctrl",
-                     hjust = 0, vjust = 1,
-                     size = 1.8, color = "grey40")
-
-  p
 }
 
-# Gene model: thin black backbone, filled exon rectangles, strand arrowheads,
-# italic gene symbol(s). Supports single-gene or multi-gene display.
-build_gene_model <- function(view_start, view_end, chr, region_gr,
-                             cfg, highlights = list()) {
+# =============================================================================
+# GENE MODEL DATA -- resolve target genes and their exons for rendering
+# =============================================================================
+
+resolve_gene_model_data <- function(view_start, view_end, chr, region_gr, cfg) {
   txdb <- get(cfg$txdb_pkg, envir = asNamespace(cfg$txdb_pkg))
 
-  # Query genes overlapping the view region
   view_gr <- GRanges(seqnames = chr, ranges = IRanges(view_start, view_end))
   all_genes <- suppressMessages(GenomicFeatures::genes(txdb))
   overlap_genes <- subsetByOverlaps(all_genes, view_gr)
 
-  # Pull a resolved focal entrez from the region's mcols if available (set by
-  # resolve_region when --gene or --region + --gene-symbol was used).
   focal_entrez <- if ("entrez" %in% names(mcols(region_gr))) {
     e <- mcols(region_gr)$entrez[1]
     if (is.na(e) || !nzchar(as.character(e))) NULL else as.character(e)
@@ -835,48 +663,45 @@ build_gene_model <- function(view_start, view_end, chr, region_gr,
     target_genes <- overlap_genes
   }
 
-  # Build per-gene rows
   orgdb <- if (load_optional(cfg$orgdb_pkg)) {
     get(cfg$orgdb_pkg, envir = asNamespace(cfg$orgdb_pkg))
   } else NULL
 
   gene_rows <- lapply(seq_along(target_genes), function(i) {
     g <- target_genes[i]
-    entrez <- names(g)
+    entrez_id <- names(g)
     symbol <- if (!is.null(orgdb)) {
       tryCatch(
-        AnnotationDbi::mapIds(orgdb, keys = entrez,
+        AnnotationDbi::mapIds(orgdb, keys = entrez_id,
                               column = "SYMBOL", keytype = "ENTREZID"),
-        error = function(e) entrez
+        error = function(e) entrez_id
       )
-    } else entrez
-    if (is.na(symbol)) symbol <- entrez
+    } else entrez_id
+    if (is.na(symbol)) symbol <- entrez_id
 
-    # Get exons for this gene, reduced (union of isoforms)
     exons_by_gene <- suppressMessages(
       GenomicFeatures::exonsBy(txdb, by = "gene")
     )
-    if (entrez %in% names(exons_by_gene)) {
-      ex <- GenomicRanges::reduce(exons_by_gene[[entrez]])
+    if (entrez_id %in% names(exons_by_gene)) {
+      ex <- GenomicRanges::reduce(exons_by_gene[[entrez_id]])
     } else {
       ex <- GRanges()
     }
 
     list(
-      symbol = as.character(symbol),
+      symbol     = as.character(symbol),
       gene_start = start(g),
-      gene_end = end(g),
-      strand = as.character(strand(g)),
-      exons = ex
+      gene_end   = end(g),
+      strand     = as.character(strand(g)),
+      exons      = ex
     )
   })
 
-  # Assign each gene to a y-row to avoid overlap (simple layered layout)
+  # Assign y-rows (greedy packing to avoid gene overlaps)
   if (length(gene_rows) <= 1L || !cfg$show_all_genes) {
     for (i in seq_along(gene_rows)) gene_rows[[i]]$y <- 0
     n_rows <- 1L
   } else {
-    # Greedy assignment: each gene goes on the lowest available row
     sorted_idx <- order(sapply(gene_rows, function(g) g$gene_start))
     row_ends <- integer(0)
     y_assignments <- integer(length(gene_rows))
@@ -896,397 +721,355 @@ build_gene_model <- function(view_start, view_end, chr, region_gr,
     n_rows <- max(y_assignments) + 1L
   }
 
-  # Build data frames for ggplot layers
-  backbone_df <- do.call(rbind, lapply(gene_rows, function(g) {
-    data.frame(x = g$gene_start, xend = g$gene_end, y = g$y)
-  }))
-
-  exon_df_list <- lapply(gene_rows, function(g) {
-    if (length(g$exons) == 0L) return(NULL)
-    data.frame(
-      xmin = start(g$exons),
-      xmax = end(g$exons),
-      ymin = g$y - 0.22,
-      ymax = g$y + 0.22
-    )
-  })
-  exon_df <- do.call(rbind, Filter(Negate(is.null), exon_df_list))
-
-  # Symbol label positions (italic, near gene center, slightly above gene line)
-  symbol_df <- do.call(rbind, lapply(gene_rows, function(g) {
-    data.frame(
-      x = (max(g$gene_start, view_start) + min(g$gene_end, view_end)) / 2,
-      y = g$y + 0.85,
-      label = g$symbol
-    )
-  }))
-
-  # Strand arrowheads on introns (between exons), direction depends on strand
-  # Only add for focal genes (when not show_all_genes), or for genes wider than threshold
-  arrow_df_list <- lapply(gene_rows, function(g) {
-    if (length(g$exons) < 2L) return(NULL)
-    intron_starts <- end(g$exons)[-length(g$exons)]
-    intron_ends   <- start(g$exons)[-1L]
-    # Place 1-2 arrows per intron (at intron midpoint)
-    midpoints <- (intron_starts + intron_ends) / 2
-    intron_widths <- intron_ends - intron_starts
-    # Skip introns too narrow to host an arrow
-    keep <- intron_widths > (view_end - view_start) * 0.005
-    if (!any(keep)) return(NULL)
-    arrow_len <- (view_end - view_start) * 0.003
-    if (g$strand == "+") {
-      data.frame(
-        x = midpoints[keep] - arrow_len,
-        xend = midpoints[keep] + arrow_len,
-        y = g$y, yend = g$y
-      )
-    } else {
-      data.frame(
-        x = midpoints[keep] + arrow_len,
-        xend = midpoints[keep] - arrow_len,
-        y = g$y, yend = g$y
-      )
-    }
-  })
-  arrow_df <- do.call(rbind, Filter(Negate(is.null), arrow_df_list))
-
-  # Compose plot
-  p <- ggplot()
-
-  # Highlights first (behind everything)
-  if (length(highlights) > 0L) {
-    for (h in highlights) {
-      p <- p + annotate("rect",
-                        xmin = h$start, xmax = h$end,
-                        ymin = -Inf, ymax = Inf,
-                        fill = "grey85", alpha = 0.55, color = NA)
-    }
-  }
-
-  if (!is.null(backbone_df) && nrow(backbone_df) > 0L) {
-    p <- p +
-      geom_segment(data = backbone_df,
-                   aes(x = x, xend = xend, y = y, yend = y),
-                   color = "black", linewidth = 0.15) +
-      geom_rect(data = exon_df,
-                aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
-                fill = "black", color = NA)
-
-    if (!is.null(arrow_df) && nrow(arrow_df) > 0L) {
-      p <- p + geom_segment(
-        data = arrow_df,
-        aes(x = x, xend = xend, y = y, yend = yend),
-        arrow = arrow(length = unit(2.0, "pt"), type = "open", ends = "last"),
-        color = "black", linewidth = 0.15
-      )
-    }
-
-    p <- p + geom_text(
-      data = symbol_df,
-      aes(x = x, y = y, label = label),
-      fontface = "italic", size = 2.7, color = "black"
-    )
-  }
-
-  p <- p +
-    scale_x_continuous(limits = c(view_start, view_end), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(-0.7, n_rows + 0.3),
-                       expand = expansion(mult = c(0.05, 0.05))) +
-    theme_void() +
-    theme(
-      plot.background  = element_rect(fill = "white", color = NA),
-      panel.background = element_rect(fill = "white", color = NA),
-      plot.margin      = margin(2, 2, 0, 0, "pt")
-    )
-
-  list(plot = p, n_rows = n_rows)
+  list(genes = gene_rows, n_rows = n_rows)
 }
 
-# Scale bar at top-right: short black segment with "X kb" label below
-build_scale_bar <- function(view_start, view_end, scale_kb = NULL) {
-  region_kb <- (view_end - view_start) / 1000
+# =============================================================================
+# RENDERING -- karyoploteR-based figure construction
+# =============================================================================
 
-  # Auto-choose a nice scale bar length if not specified
+render_locus <- function(region_gr, mark_data_list, layout, gene_data,
+                         loops_df, cfg) {
+  chr        <- as.character(seqnames(region_gr)[1])
+  view_start <- start(region_gr)
+  view_end   <- end(region_gr)
+
+  ctrl_label <- cfg$label_vec[1]
+  mut_label  <- cfg$label_vec[2]
+
+  # Margins: left=label space, top=room for scale bar, right+bottom=small
+  old_par <- par(mar = c(1.5, 5.5, 1.5, 1.0))
+  on.exit(par(old_par))
+
+  kp <- plotKaryotype(
+    genome      = cfg$genome,
+    chromosomes = chr,
+    zoom        = region_gr,
+    plot.type   = 4,
+    labels.plotter   = NULL,
+    ideogram.plotter = NULL,
+    main        = ""
+  )
+
+  # -- Highlight rectangles (full-height, behind everything) --
+  if (length(cfg$highlights) > 0L) {
+    for (h in cfg$highlights) {
+      if (h$chr != chr) next
+      kpRect(kp,
+             chr = chr, x0 = h$start, x1 = h$end,
+             y0 = 0, y1 = 1, r0 = 0, r1 = 1,
+             col = adjustcolor("grey85", alpha.f = 0.55),
+             border = NA)
+    }
+  }
+
+  label_x <- view_start + (view_end - view_start) * 0.015
+
+  # -- Highlight header labels --
+  if (!is.null(layout$header)) {
+    for (i in seq_along(cfg$highlights)) {
+      if (i > length(cfg$highlight_labels)) next
+      lbl <- cfg$highlight_labels[[i]]
+      if (!nzchar(lbl)) next
+      h <- cfg$highlights[[i]]
+      mid_x <- (h$start + h$end) / 2
+      kpText(kp,
+             chr = chr, x = mid_x, y = 0.5,
+             r0 = layout$header[1], r1 = layout$header[2],
+             labels = lbl, cex = 0.7, col = "black")
+    }
+  }
+
+  # -- Scale bar (top-right) --
+  region_kb <- (view_end - view_start) / 1000
+  scale_kb <- cfg$scale_bar_kb
   if (is.null(scale_kb)) {
     candidates <- c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000)
     target <- region_kb * 0.08
     scale_kb <- candidates[which.min(abs(candidates - target))]
   }
-
-  scale_bp <- scale_kb * 1000
-  # Place bar near right edge with small margin
-  bar_end <- view_end - (view_end - view_start) * 0.02
+  scale_bp  <- scale_kb * 1000
+  bar_end   <- view_end - (view_end - view_start) * 0.02
   bar_start <- bar_end - scale_bp
+  bar_label <- if (scale_kb >= 1) sprintf("%g kb", scale_kb) else sprintf("%g bp", scale_bp)
 
-  label <- if (scale_kb >= 1) {
-    sprintf("%g kb", scale_kb)
-  } else {
-    sprintf("%g bp", scale_bp)
-  }
+  sb <- layout$scalebar
+  kpSegments(kp,
+             chr = chr, x0 = bar_start, x1 = bar_end,
+             y0 = 0.35, y1 = 0.35,
+             r0 = sb[1], r1 = sb[2],
+             lwd = 3.0, col = "black")
+  kpText(kp,
+         chr = chr, x = (bar_start + bar_end) / 2, y = 0.78,
+         r0 = sb[1], r1 = sb[2],
+         labels = bar_label, cex = 0.7, col = "black")
 
-  ggplot() +
-    geom_segment(
-      aes(x = bar_start, xend = bar_end, y = 0.35, yend = 0.35),
-      linewidth = 1.2, color = "black"
-    ) +
-    annotate("text",
-             x = (bar_start + bar_end) / 2, y = 0.78,
-             label = label, size = 2.6, color = "black",
-             hjust = 0.5, vjust = 0.5) +
-    scale_x_continuous(limits = c(view_start, view_end), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-    theme_void() +
-    theme(
-      plot.background  = element_rect(fill = "white", color = NA),
-      panel.background = element_rect(fill = "white", color = NA),
-      plot.margin      = margin(0, 2, 0, 0, "pt")
-    )
-}
+  # -- Signal tracks (per mark: ctrl + mut + optional diff) --
+  for (i in seq_along(mark_data_list)) {
+    md  <- mark_data_list[[i]]
+    pos <- layout$tracks[[i]]
 
-# Highlight header labels: optional text above highlight regions (e.g.,
-# "differential region", "active enhancer"). Placed in a thin spacer panel
-# above the first signal track.
-build_highlight_headers <- function(view_start, view_end, highlights, labels) {
-  if (length(highlights) == 0L) return(NULL)
-  has_labels <- any(nzchar(unlist(labels)))
-  if (!has_labels) return(NULL)
+    ctrl_df <- bigwig_to_df(md$ctrl)
+    mut_df  <- bigwig_to_df(md$mut)
+    ylim    <- md$ylim
+    color   <- md$color
 
-  label_df <- do.call(rbind, lapply(seq_along(highlights), function(i) {
-    if (i > length(labels) || !nzchar(labels[[i]])) return(NULL)
-    data.frame(
-      x = (highlights[[i]]$start + highlights[[i]]$end) / 2,
-      y = 0.5,
-      label = labels[[i]]
-    )
-  }))
+    chr_vec <- rep(chr, nrow(ctrl_df))
 
-  if (is.null(label_df) || nrow(label_df) == 0L) return(NULL)
+    # Cap scores at ylim
+    ctrl_df$score <- pmin(ctrl_df$score, ylim)
+    mut_df$score  <- pmin(mut_df$score, ylim)
 
-  ggplot(label_df, aes(x = x, y = y, label = label)) +
-    geom_text(size = 2.6, color = "black", fontface = "plain",
-              hjust = 0.5, vjust = 0.5) +
-    scale_x_continuous(limits = c(view_start, view_end), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-    theme_void() +
-    theme(plot.background = element_rect(fill = "white", color = NA),
-          plot.margin = margin(0, 2, 0, 0, "pt"))
-}
+    # Ctrl track
+    kpArea(kp,
+           chr = chr_vec, x = ctrl_df$pos, y = ctrl_df$score,
+           ymin = 0, ymax = ylim, base.y = 0,
+           r0 = pos$ctrl[1], r1 = pos$ctrl[2],
+           col = adjustcolor(color, alpha.f = 0.90),
+           border = color, lwd = 0.3)
+    # Baseline
+    kpAbline(kp, h = 0,
+             r0 = pos$ctrl[1], r1 = pos$ctrl[2],
+             ymin = 0, ymax = ylim,
+             col = color, lwd = 0.6)
 
-# Hi-C arc panel: quadratic Bezier paths colored by direction
-build_hic_arcs <- function(loops_df, view_start, view_end, chr,
-                           lost_color = "#CB181D", gained_color = "#2171B5") {
-  # Filter loops with at least one anchor in view
-  in_view <- loops_df %>%
-    dplyr::filter(
-      (chr1 == chr & ((start1 >= view_start & start1 <= view_end) |
-                      (end1 >= view_start & end1 <= view_end))) |
-      (chr2 == chr & ((start2 >= view_start & start2 <= view_end) |
-                      (end2 >= view_start & end2 <= view_end)))
-    )
+    # Scale annotation on ctrl track
+    scale_text <- sprintf("0-%g", ylim)
+    kpText(kp,
+           chr = chr, x = label_x, y = ylim * 0.94,
+           r0 = pos$ctrl[1], r1 = pos$ctrl[2],
+           ymin = 0, ymax = ylim,
+           labels = scale_text, cex = 0.55, col = color,
+           pos = 4, offset = 0)
 
-  if (nrow(in_view) == 0L) return(NULL)
+    # Condition label on ctrl track
+    kpText(kp,
+           chr = chr, x = label_x, y = ylim * 0.72,
+           r0 = pos$ctrl[1], r1 = pos$ctrl[2],
+           ymin = 0, ymax = ylim,
+           labels = ctrl_label, cex = 0.55, col = "black",
+           pos = 4, offset = 0)
 
-  # Build Bezier arcs
-  span_max <- max(in_view$start2 - in_view$start1)
-  arc_df <- do.call(rbind, lapply(seq_len(nrow(in_view)), function(i) {
-    x0 <- (in_view$start1[i] + in_view$end1[i]) / 2
-    x1 <- (in_view$start2[i] + in_view$end2[i]) / 2
-    # Height proportional to span
-    h <- (abs(x1 - x0) / span_max)
-    t_seq <- seq(0, 1, length.out = 60)
-    x_arc <- (1 - t_seq)^2 * x0 + 2 * (1 - t_seq) * t_seq * ((x0 + x1) / 2) + t_seq^2 * x1
-    y_arc <- 2 * (1 - t_seq) * t_seq * h
-    data.frame(
-      x = x_arc, y = y_arc,
-      loop_id = i,
-      direction = in_view$direction[i]
-    )
-  }))
+    # Mut track
+    kpArea(kp,
+           chr = chr_vec, x = mut_df$pos, y = mut_df$score,
+           ymin = 0, ymax = ylim, base.y = 0,
+           r0 = pos$mut[1], r1 = pos$mut[2],
+           col = adjustcolor(color, alpha.f = 0.90),
+           border = color, lwd = 0.3)
+    kpAbline(kp, h = 0,
+             r0 = pos$mut[1], r1 = pos$mut[2],
+             ymin = 0, ymax = ylim,
+             col = color, lwd = 0.6)
 
-  ggplot(arc_df, aes(x = x, y = y, group = loop_id, color = direction)) +
-    geom_path(linewidth = 0.4, alpha = 0.75) +
-    scale_color_manual(values = c(
-      "down_in_mutant" = lost_color,
-      "up_in_mutant"   = gained_color
-    )) +
-    scale_x_continuous(limits = c(view_start, view_end), expand = c(0, 0)) +
-    scale_y_continuous(limits = c(0, 1.1), expand = c(0, 0)) +
-    theme_void() +
-    theme(
-      legend.position = "none",
-      plot.background  = element_rect(fill = "white", color = NA),
-      panel.background = element_rect(fill = "white", color = NA),
-      plot.margin      = margin(0, 2, 0, 0, "pt")
-    )
-}
+    # Condition label on mut track
+    kpText(kp,
+           chr = chr, x = label_x, y = ylim * 0.85,
+           r0 = pos$mut[1], r1 = pos$mut[2],
+           ymin = 0, ymax = ylim,
+           labels = mut_label, cex = 0.55, col = "black",
+           pos = 4, offset = 0,
+           font = if (cfg$genotype_italic) 3 else 1)
 
-# =============================================================================
-# LEFT-COLUMN LABELS -- rotated colored mark name + scale annotation
-# =============================================================================
+    # Optional diff track
+    if (isTRUE(md$diff) && !is.null(pos$diff)) {
+      diff_vec <- mut_df$score - ctrl_df$score
+      if (isTRUE(md$sparse)) diff_vec <- diff_vec * 100
 
-# Single rotated mark name panel, height-matched to its ctrl+mut pair
-build_mark_label_panel <- function(mark_name, color) {
-  cowplot::ggdraw() +
-    cowplot::draw_label(
-      mark_name,
-      x = 0.6, y = 0.5,
-      angle = 90,
-      color = color,
-      fontface = "bold",
-      size = 10
-    )
-}
+      abs_max <- max(abs(diff_vec), na.rm = TRUE)
+      if (abs_max <= 0 || !is.finite(abs_max)) abs_max <- 1
+      diff_ylim <- nice_ceiling(abs_max)
 
-# Empty spacer panel for left column (matches non-track rows)
-build_empty_label_panel <- function() {
-  cowplot::ggdraw() +
-    theme(plot.background = element_rect(fill = "white", color = NA))
-}
+      loss_color <- if (load_optional("colorspace")) {
+        colorspace::desaturate(colorspace::lighten(color, 0.3), 0.4)
+      } else {
+        adjustcolor(color, alpha.f = 0.4)
+      }
 
-# =============================================================================
-# FIGURE ASSEMBLY
-# =============================================================================
+      # Gains (mut > ctrl): positive, above zero line
+      gain_y <- pmax(diff_vec, 0)
+      kpArea(kp,
+             chr = chr_vec, x = ctrl_df$pos, y = gain_y,
+             ymin = -diff_ylim, ymax = diff_ylim, base.y = 0,
+             r0 = pos$diff[1], r1 = pos$diff[2],
+             col = adjustcolor(color, alpha.f = 0.90),
+             border = color, lwd = 0.3)
 
-# Layout constants (overridable via cfg)
-make_layout <- function(cfg) {
-  list(
-    track_h    = cfg$track_height,
-    pair_gap   = 0.02,
-    mark_gap   = 0.08,
-    gene_h     = 0.22,  # thinner gene panel (~half a track) to match PI's style
-    scalebar_h = 0.22,
-    hic_h      = 1.00,
-    header_h   = 0.18,
-    fig_width  = cfg$fig_width,
-    label_frac = 0.10
-  )
-}
+      # Losses (mut < ctrl): negative, below zero line
+      loss_y <- pmin(diff_vec, 0)
+      kpArea(kp,
+             chr = chr_vec, x = ctrl_df$pos, y = loss_y,
+             ymin = -diff_ylim, ymax = diff_ylim, base.y = 0,
+             r0 = pos$diff[1], r1 = pos$diff[2],
+             col = adjustcolor(loss_color, alpha.f = 0.90),
+             border = loss_color, lwd = 0.3)
 
-# Assemble all panels into final figure
-assemble_figure <- function(track_panels, mark_configs,
-                            gene_result, scalebar_panel,
-                            highlight_header_panel = NULL,
-                            hic_panel = NULL,
-                            cfg) {
-  L <- make_layout(cfg)
+      # Zero line
+      kpAbline(kp, h = 0,
+               r0 = pos$diff[1], r1 = pos$diff[2],
+               ymin = -diff_ylim, ymax = diff_ylim,
+               col = "black", lwd = 0.5)
 
-  # ---- Right column: vertical stack of all data panels ----
-  right_panels  <- list()
-  right_heights <- numeric(0)
+      # Diff scale label
+      unit_label <- if (isTRUE(md$sparse)) "%" else "Δ"
+      diff_scale_text <- sprintf("±%g%s", diff_ylim, unit_label)
+      kpText(kp,
+             chr = chr, x = label_x, y = diff_ylim * 0.85,
+             r0 = pos$diff[1], r1 = pos$diff[2],
+             ymin = -diff_ylim, ymax = diff_ylim,
+             labels = diff_scale_text, cex = 0.50, col = color,
+             pos = 4, offset = 0)
 
-  # Top: scale bar
-  right_panels[[length(right_panels) + 1L]] <- scalebar_panel
-  right_heights <- c(right_heights, L$scalebar_h)
-
-  # Optional highlight header row
-  if (!is.null(highlight_header_panel)) {
-    right_panels[[length(right_panels) + 1L]] <- highlight_header_panel
-    right_heights <- c(right_heights, L$header_h)
-  }
-
-  # Mark groups: ctrl, mut, [optional diff], then mark_gap spacer
-  mark_names <- names(track_panels)
-  for (i in seq_along(mark_names)) {
-    mn <- mark_names[i]
-    right_panels[[length(right_panels) + 1L]] <- track_panels[[mn]]$ctrl
-    right_heights <- c(right_heights, L$track_h)
-    right_panels[[length(right_panels) + 1L]] <- track_panels[[mn]]$mut
-    right_heights <- c(right_heights, L$track_h)
-    if (!is.null(track_panels[[mn]]$diff)) {
-      right_panels[[length(right_panels) + 1L]] <- track_panels[[mn]]$diff
-      right_heights <- c(right_heights, L$track_h)
+      kpText(kp,
+             chr = chr, x = label_x, y = diff_ylim * 0.55,
+             r0 = pos$diff[1], r1 = pos$diff[2],
+             ymin = -diff_ylim, ymax = diff_ylim,
+             labels = "mut-ctrl", cex = 0.45, col = "grey40",
+             pos = 4, offset = 0)
     }
-    if (i < length(mark_names)) {
-      right_panels[[length(right_panels) + 1L]] <- patchwork::plot_spacer()
-      right_heights <- c(right_heights, L$mark_gap)
+
+    # Rotated mark label (left side)
+    kpAddLabels(kp,
+                labels       = md$name,
+                r0           = pos$mark_r0,
+                r1           = pos$mark_r1,
+                col          = color,
+                cex          = 0.85,
+                srt          = 90,
+                pos          = 2,
+                label.margin = 0.04,
+                font         = 2)
+  }
+
+  # -- Gene model --
+  gene_r0 <- layout$gene[1]
+  gene_r1 <- layout$gene[2]
+  n_gene_rows <- gene_data$n_rows
+
+  for (g in gene_data$genes) {
+    # Compute per-row y positioning within the gene panel
+    row_height <- 1 / max(1, n_gene_rows)
+    y_center   <- 1 - (g$y + 0.5) * row_height
+
+    # Intron backbone
+    kpSegments(kp,
+               chr = chr,
+               x0 = max(g$gene_start, view_start),
+               x1 = min(g$gene_end, view_end),
+               y0 = y_center, y1 = y_center,
+               r0 = gene_r0, r1 = gene_r1,
+               lwd = 0.3, col = "black")
+
+    # Filled exon rectangles
+    if (length(g$exons) > 0L) {
+      exon_height <- row_height * 0.35
+      kpRect(kp,
+             chr  = as.character(seqnames(g$exons)),
+             x0   = start(g$exons),
+             x1   = end(g$exons),
+             y0   = y_center - exon_height,
+             y1   = y_center + exon_height,
+             r0   = gene_r0, r1 = gene_r1,
+             col  = "black", border = NA)
+
+      # Strand arrowheads on introns
+      if (length(g$exons) >= 2L) {
+        intron_starts <- end(g$exons)[-length(g$exons)]
+        intron_ends   <- start(g$exons)[-1L]
+        midpoints <- (intron_starts + intron_ends) / 2
+        intron_widths <- intron_ends - intron_starts
+        min_arrow_span <- (view_end - view_start) * 0.005
+        keep <- intron_widths > min_arrow_span
+        if (any(keep)) {
+          arrow_len <- (view_end - view_start) * 0.003
+          mids <- midpoints[keep]
+          if (g$strand == "+") {
+            kpSegments(kp,
+                       chr = rep(chr, length(mids)),
+                       x0 = mids - arrow_len, x1 = mids + arrow_len,
+                       y0 = y_center, y1 = y_center,
+                       r0 = gene_r0, r1 = gene_r1,
+                       lwd = 0.3, col = "black")
+            kpArrows(kp,
+                     chr = rep(chr, length(mids)),
+                     x0 = mids - arrow_len, x1 = mids + arrow_len,
+                     y0 = y_center, y1 = y_center,
+                     r0 = gene_r0, r1 = gene_r1,
+                     length = 0.03, col = "black", lwd = 0.3)
+          } else {
+            kpSegments(kp,
+                       chr = rep(chr, length(mids)),
+                       x0 = mids + arrow_len, x1 = mids - arrow_len,
+                       y0 = y_center, y1 = y_center,
+                       r0 = gene_r0, r1 = gene_r1,
+                       lwd = 0.3, col = "black")
+            kpArrows(kp,
+                     chr = rep(chr, length(mids)),
+                     x0 = mids + arrow_len, x1 = mids - arrow_len,
+                     y0 = y_center, y1 = y_center,
+                     r0 = gene_r0, r1 = gene_r1,
+                     length = 0.03, col = "black", lwd = 0.3)
+          }
+        }
+      }
+    }
+
+    # Italic gene symbol above gene body (keep within gene panel bounds)
+    sym_x <- (max(g$gene_start, view_start) + min(g$gene_end, view_end)) / 2
+    sym_y <- y_center + row_height * 0.28
+    kpText(kp,
+           chr = chr, x = sym_x, y = min(sym_y, 0.85),
+           r0 = gene_r0, r1 = gene_r1,
+           labels = g$symbol, cex = 0.7, col = "black",
+           font = 3)
+  }
+
+  # -- Hi-C loop arcs --
+  if (!is.null(loops_df) && !is.null(layout$hic)) {
+    in_view <- loops_df %>%
+      dplyr::filter(
+        (chr1 == chr & ((start1 >= view_start & start1 <= view_end) |
+                        (end1 >= view_start & end1 <= view_end))) |
+        (chr2 == chr & ((start2 >= view_start & start2 <= view_end) |
+                        (end2 >= view_start & end2 <= view_end)))
+      )
+
+    if (nrow(in_view) > 0L) {
+      lost_color   <- "#CB181D"
+      gained_color <- "#2171B5"
+
+      anchor1 <- GRanges(seqnames = in_view$chr1,
+                         ranges = IRanges(start = in_view$start1,
+                                          end = in_view$end1))
+      anchor2 <- GRanges(seqnames = in_view$chr2,
+                         ranges = IRanges(start = in_view$start2,
+                                          end = in_view$end2))
+      loop_colors <- ifelse(in_view$direction == "up_in_mutant",
+                            gained_color, lost_color)
+
+      # Scale arc heights by span relative to max span
+      span_max <- max(in_view$start2 - in_view$start1)
+      arc_heights <- (abs(in_view$start2 - in_view$start1) / span_max) * 0.9
+
+      kpPlotLinks(kp,
+                  data = anchor1, data2 = anchor2,
+                  r0 = layout$hic[1], r1 = layout$hic[2],
+                  col = adjustcolor(loop_colors, alpha.f = 0.60),
+                  border = loop_colors,
+                  arch.height = arc_heights,
+                  lwd = 0.8)
     }
   }
 
-  # Gene model (height scales with number of gene rows)
-  gene_h_eff <- L$gene_h * max(1, gene_result$n_rows)
-  right_panels[[length(right_panels) + 1L]] <- gene_result$plot
-  right_heights <- c(right_heights, gene_h_eff)
-
-  # Optional Hi-C arcs at the bottom
-  if (!is.null(hic_panel)) {
-    right_panels[[length(right_panels) + 1L]] <- hic_panel
-    right_heights <- c(right_heights, L$hic_h)
-  }
-
-  right_col <- patchwork::wrap_plots(
-    right_panels, ncol = 1, heights = right_heights
-  )
-
-  # ---- Left column: rotated mark labels + scale annotations ----
-  left_panels  <- list()
-  left_heights <- numeric(0)
-
-  # Spacer for scale bar row
-  left_panels[[length(left_panels) + 1L]] <- build_empty_label_panel()
-  left_heights <- c(left_heights, L$scalebar_h)
-
-  # Spacer for highlight header row (if present)
-  if (!is.null(highlight_header_panel)) {
-    left_panels[[length(left_panels) + 1L]] <- build_empty_label_panel()
-    left_heights <- c(left_heights, L$header_h)
-  }
-
-  # One rotated label panel per mark group (spans ctrl+mut+diff)
-  for (i in seq_along(mark_names)) {
-    mn <- mark_names[i]
-    cfg_mark <- mark_configs[[mn]]
-    n_rows <- if (cfg_mark$has_diff) 3L else 2L
-    label_panel <- build_mark_label_panel(
-      mark_name = cfg_mark$display_name,
-      color     = cfg_mark$color
-    )
-    left_panels[[length(left_panels) + 1L]] <- label_panel
-    left_heights <- c(left_heights, L$track_h * n_rows)
-
-    if (i < length(mark_names)) {
-      left_panels[[length(left_panels) + 1L]] <- build_empty_label_panel()
-      left_heights <- c(left_heights, L$mark_gap)
-    }
-  }
-
-  # Spacer for gene model
-  left_panels[[length(left_panels) + 1L]] <- build_empty_label_panel()
-  left_heights <- c(left_heights, gene_h_eff)
-
-  # Spacer for Hi-C
-  if (!is.null(hic_panel)) {
-    left_panels[[length(left_panels) + 1L]] <- build_empty_label_panel()
-    left_heights <- c(left_heights, L$hic_h)
-  }
-
-  left_col <- patchwork::wrap_plots(
-    left_panels, ncol = 1, heights = left_heights
-  )
-
-  # ---- Combine left + right ----
-  # Wrap each multi-panel column so patchwork treats them as single units
-  final <- cowplot::plot_grid(
-    left_col, right_col,
-    ncol = 2,
-    rel_widths = c(L$label_frac, 1 - L$label_frac),
-    align = "h", axis = "tb"
-  )
-
-  # Total figure height (sum of all row heights + small margin)
-  total_height <- sum(right_heights) + 0.3
-
-  list(
-    figure       = final,
-    width        = L$fig_width,
-    height       = total_height
-  )
+  invisible(kp)
 }
 
 # =============================================================================
-# OUTPUT -- save in PDF, SVG, JPEG formats
+# OUTPUT -- save in PDF, SVG, PNG, JPEG formats
 # =============================================================================
 
-save_multiformat <- function(plot_obj, base_path, width, height, dpi = 300) {
+save_multiformat_kp <- function(render_fn, base_path, width, height,
+                                dpi = 300) {
   out_dir <- dirname(base_path)
   if (!dir.exists(out_dir) && nzchar(out_dir)) {
     tryCatch(
@@ -1309,13 +1092,24 @@ save_multiformat <- function(plot_obj, base_path, width, height, dpi = 300) {
   }
   prefix <- file.path(fig_dir, stem)
 
-  ggplot2::ggsave(paste0(prefix, ".pdf"), plot_obj, width = width, height = height)
-  ggplot2::ggsave(paste0(prefix, ".svg"), plot_obj, width = width, height = height,
-                  device = svglite::svglite)
-  ggplot2::ggsave(paste0(prefix, ".png"), plot_obj, width = width, height = height,
-                  dpi = dpi, device = "png")
-  ggplot2::ggsave(paste0(prefix, ".jpg"), plot_obj, width = width, height = height,
-                  dpi = dpi, device = "jpeg")
+  # PDF
+  pdf(paste0(prefix, ".pdf"), width = width, height = height)
+  tryCatch(render_fn(), finally = dev.off())
+
+  # SVG (via svglite for Illustrator-friendly output)
+  svglite::svglite(paste0(prefix, ".svg"), width = width, height = height)
+  tryCatch(render_fn(), finally = dev.off())
+
+  # PNG
+  png(paste0(prefix, ".png"),
+      width = width * dpi, height = height * dpi, res = dpi)
+  tryCatch(render_fn(), finally = dev.off())
+
+  # JPEG
+  jpeg(paste0(prefix, ".jpg"),
+       width = width * dpi, height = height * dpi,
+       res = dpi, quality = 95)
+  tryCatch(render_fn(), finally = dev.off())
 
   cat(sprintf("  Saved: %s/{pdf,svg,png,jpg}\n", fig_dir))
 }
@@ -1338,7 +1132,7 @@ main <- function() {
   }
 
   cat("================================================================\n")
-  cat("pub_browser.R -- publication-quality genome browser\n")
+  cat("pub_browser.R -- publication-quality genome browser (karyoploteR)\n")
   cat("================================================================\n\n")
 
   cfg <- resolve_config(cli)
@@ -1357,7 +1151,6 @@ main <- function() {
               format(view_end, big.mark = ","),
               (view_end - view_start) / 1000))
 
-  # Echo gene model mode so the user can see what will be shown
   focal_symbols <- unlist(cfg$focal_genes, use.names = FALSE)
   if (length(focal_symbols) > 0L) {
     cat(sprintf("  gene model: focal genes %s\n",
@@ -1377,7 +1170,6 @@ main <- function() {
     cat("  gene model: all overlapping genes\n")
   }
 
-  # Parse highlight regions (validate they fall within view)
   for (h in cfg$highlights) {
     if (h$chr != chr) {
       warning(sprintf("Highlight chr '%s' != view chr '%s' -- ignoring",
@@ -1398,7 +1190,8 @@ main <- function() {
     raw_max <- max(c(ctrl_gr$score, mut_gr$score), na.rm = TRUE)
     if (raw_max <= 0 || !is.finite(raw_max)) raw_max <- 1
     auto_ylim <- nice_ceiling(raw_max)
-    mark_data[[mk$name]] <- list(
+    mark_data[[length(mark_data) + 1L]] <- list(
+      name   = mk$name,
       ctrl   = ctrl_gr,
       mut    = mut_gr,
       color  = mk$color,
@@ -1408,99 +1201,53 @@ main <- function() {
     )
   }
 
-  # ---- 3. Build track panels ----
-  cat("Building track panels...\n")
-  ctrl_label <- cfg$label_vec[1]
-  mut_label  <- cfg$label_vec[2]
+  # ---- 3. Resolve gene model data ----
+  cat("Resolving gene model...\n")
+  gene_data <- resolve_gene_model_data(view_start, view_end, chr,
+                                       region_gr, cfg)
 
-  track_panels <- list()
-  mark_configs <- list()
-
-  for (mn in names(mark_data)) {
-    md <- mark_data[[mn]]
-    ctrl_df <- bigwig_to_df(md$ctrl)
-    mut_df  <- bigwig_to_df(md$mut)
-
-    # Scale annotation shown above the ctrl track in mark color (PI style)
-    scale_label_text <- sprintf("0-%g", md$ylim)
-
-    ctrl_panel <- build_signal_panel(
-      ctrl_df, md$color, md$ylim, view_start, view_end,
-      condition_label = ctrl_label,
-      scale_label     = scale_label_text,
-      highlights      = cfg$highlights,
-      italic_label    = FALSE
-    )
-
-    mut_panel <- build_signal_panel(
-      mut_df, md$color, md$ylim, view_start, view_end,
-      condition_label = mut_label,
-      scale_label     = NULL,
-      highlights      = cfg$highlights,
-      italic_label    = cfg$genotype_italic
-    )
-
-    diff_panel <- NULL
-    if (isTRUE(md$diff)) {
-      diff_panel <- build_diff_panel(
-        ctrl_df, mut_df, md$color,
-        view_start, view_end,
-        highlights    = cfg$highlights,
-        is_fraction   = isTRUE(md$sparse)
-      )
-    }
-
-    track_panels[[mn]] <- list(ctrl = ctrl_panel, mut = mut_panel,
-                               diff = diff_panel)
-    mark_configs[[mn]] <- list(
-      display_name = mn,
-      color        = md$color,
-      ylim         = md$ylim,
-      has_diff     = !is.null(diff_panel)
-    )
-  }
-
-  # ---- 4. Build gene model ----
-  cat("Building gene model...\n")
-  gene_result <- build_gene_model(view_start, view_end, chr, region_gr,
-                                  cfg, cfg$highlights)
-
-  # ---- 5. Build scale bar ----
-  scalebar_panel <- build_scale_bar(view_start, view_end, cfg$scale_bar_kb)
-
-  # ---- 6. Optional highlight header labels ----
-  highlight_header_panel <- build_highlight_headers(
-    view_start, view_end, cfg$highlights, cfg$highlight_labels
-  )
-
-  # ---- 7. Optional Hi-C arcs ----
-  hic_panel <- NULL
+  # ---- 4. Load optional Hi-C loops ----
+  loops_df <- NULL
   if (!is.null(cfg$hic_loops)) {
     cat("Loading Hi-C loops...\n")
     loops_df <- read.table(cfg$hic_loops, header = TRUE, sep = "\t",
                            stringsAsFactors = FALSE)
-    hic_panel <- build_hic_arcs(loops_df, view_start, view_end, chr)
   }
 
-  # ---- 8. Assemble ----
-  cat("Assembling figure...\n")
-  result <- assemble_figure(
-    track_panels, mark_configs,
-    gene_result, scalebar_panel,
-    highlight_header_panel = highlight_header_panel,
-    hic_panel = hic_panel,
-    cfg = cfg
-  )
+  # ---- 5. Compute layout ----
+  has_hic <- !is.null(loops_df)
+  has_highlight_labels <- any(nzchar(unlist(cfg$highlight_labels)))
+  layout <- compute_track_layout(mark_data, has_hic, has_highlight_labels)
 
-  # ---- 9. Save ----
+  # ---- 6. Compute figure dimensions ----
+  n_signal_tracks <- sum(sapply(mark_data, function(m) {
+    if (isTRUE(m$diff)) 3L else 2L
+  }))
+  n_marks <- length(mark_data)
+
+  total_height <- n_signal_tracks * cfg$track_height +
+                  0.40 +                                  # gene model
+                  0.35 +                                  # scale bar
+                  max(0, n_marks - 1) * 0.18 +            # inter-mark gaps
+                  n_marks * 0.06 +                        # intra-mark gaps
+                  0.15 +                                  # gene-track gap
+                  (if (has_hic) 1.0 else 0) +             # Hi-C panel
+                  (if (has_highlight_labels) 0.18 else 0) +
+                  0.4                                     # margins
+
+  # ---- 7. Render and save ----
+  cat("Rendering figure...\n")
+  do_render <- function() {
+    render_locus(region_gr, mark_data, layout, gene_data, loops_df, cfg)
+  }
+
   cat("Saving outputs...\n")
-  save_multiformat(result$figure, cfg$output, result$width, result$height)
+  save_multiformat_kp(do_render, cfg$output, cfg$fig_width, total_height)
 
   cat(sprintf("\nDone. Figure dimensions: %.1f x %.1f inches\n",
-              result$width, result$height))
+              cfg$fig_width, total_height))
 }
 
-# Run if invoked as script
 if (sys.nframe() == 0L) {
   main()
 }

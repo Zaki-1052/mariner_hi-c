@@ -49,18 +49,25 @@ These files informed the design of the script and should be examined by anyone i
 
 ## Architecture decisions
 
-### Why ggplot2 + patchwork + cowplot (not Gviz)
+### Why karyoploteR (previously ggplot2 + patchwork + cowplot)
 
-Gviz is the standard R package for genome browser views, and the existing `section_46_genome_browser_loci.R` uses it. But Gviz's rendering pipeline produces output that requires extensive manual cleanup:
+The original implementation used ggplot2 + patchwork + cowplot to assemble panels manually. This worked but required complex multi-panel layout logic (cowplot::plot_grid to combine two patchwork columns, manual height arithmetic, separate left-label and right-data columns).
 
-- **Colored title panels**: Gviz draws colored rectangles on the left with white text for each track name. The PI's style has no panels — just rotated colored text on a white background.
-- **Histogram tracks**: Gviz's `DataTrack` with `type = "histogram"` draws bar charts. The PI's style uses smooth filled area curves.
-- **Per-condition coloring**: Gviz assigns different colors to ctrl vs mut. The PI uses the same color for both, differentiated by position.
-- **Chrome**: Gviz adds borders, axis ticks, double genome-axis rulers, and other elements that all need manual deletion.
+The current implementation uses **karyoploteR**, a Bioconductor package designed specifically for genomic locus visualizations. Key advantages:
 
-Gviz display parameters can be customized, but the aesthetic gap is too large to bridge with parameter tweaks. The cleanest path was to rebuild from the ground up using ggplot2, which gives full control over every visual element.
+- **Native genomic coordinates**: `plotKaryotype(zoom=...)` handles coordinate axes, clipping, and chromosome-aware layout automatically.
+- **Built-in track stacking**: `r0/r1` parameters divide the vertical data area into tracks without manual panel arithmetic.
+- **`kpArea` / `kpRect` / `kpArrows` / `kpPlotLinks`**: purpose-built primitives for signal curves, highlights, strand arrows, and Hi-C arcs.
+- **`kpAddLabels`**: rotated left-margin labels are a one-liner instead of a custom cowplot panel.
+- **Base R graphics**: output uses standard R devices (pdf/png/svg/jpeg) directly instead of ggsave, and SVGs are Illustrator-friendly via svglite.
+- **Simpler code**: the rendering layer is ~200 lines instead of ~500, with no multi-column patchwork assembly.
 
-**plotgardener** was considered but rejected because it uses absolute inch-based page coordinates (incompatible with the existing `theme_biomodal()` and `save_multiformat_ggplot()` infrastructure) and has a steep learning curve.
+**Previous alternatives considered (still rejected):**
+- **Gviz**: colored title panels, histogram-style tracks, and excessive chrome don't match the PI's publication aesthetic.
+- **plotgardener**: absolute inch-based page coordinates are inflexible for parameterized layouts.
+
+**Trade-off vs the old ggplot2 version:**
+- `ggtext` richtext labels (`*italic*^super^`) are not supported by karyoploteR (base R graphics). Use `--genotype-italic` for italic condition labels, or the font parameter in base R. For full richtext control, Illustrator touch-up on the exported SVG remains an option.
 
 ### Why standalone CLI (not a biomodal/downstream section script)
 
@@ -77,11 +84,13 @@ The existing section_46 script is tightly coupled to the BAP1 project:
 
 ### Key rendering decisions
 
-**geom_area, not geom_bar/geom_histogram**: The PI's figures show smooth filled curves, not discrete bars. `geom_area(fill = color, color = color, alpha = 0.90, linewidth = 0.15)` produces this.
+**kpArea for signal tracks**: karyoploteR's `kpArea()` draws filled area curves from binned BigWig data, matching the PI's aesthetic. The `base.y=0` parameter fills from zero upward, with `ymin/ymax` controlling the data range per track.
 
-**ctrl/mut as separate patchwork panels, not facets**: Using two independent ggplot objects per mark (one ctrl, one mut) and stacking them via patchwork. This avoids faceting complications where per-facet annotations (scale text on ctrl only, different genotype labels) are difficult. The shared ylim is computed before building either panel.
+**r0/r1 proportional layout**: Each track occupies a vertical slice of the karyoploteR data panel. `compute_track_layout()` calculates proportional r0/r1 values for all tracks (signal pairs, diff panels, gene model, scale bar, Hi-C arcs) with appropriate gaps between mark groups.
 
-**cowplot::plot_grid for final assembly**: The left label column and right track column are each multi-panel patchwork objects. Combining two patchwork objects with `+` causes patchwork to flatten them into one grid (broken layout). `cowplot::plot_grid(left_col, right_col, rel_widths = ...)` treats each as an atomic unit.
+**kpAddLabels for mark names**: Rotated colored labels on the left margin use karyoploteR's built-in `kpAddLabels(srt=90)`, replacing the custom cowplot panel approach.
+
+**Manual gene model rendering**: Rather than using `kpPlotGenes()` (which renders all TxDb transcripts with default styling), the script draws gene models manually with `kpSegments` (backbone), `kpRect` (exons), `kpArrows` (strand direction), and `kpText` (italic symbol). This preserves the PI's thin-line aesthetic and focal-gene filtering.
 
 **nice_ceiling for y-axis**: Track scaling like "0-50" or "0-100" uses round numbers from {1, 2, 5} x 10^n, chosen by rounding the data maximum up by ~30%. This gives headroom for labels above the peaks and matches the PI's manually-chosen scale values.
 
@@ -92,11 +101,9 @@ The existing section_46 script is tightly coupled to the BAP1 project:
 R packages (all available from CRAN/Bioconductor):
 
 ```r
-# Core
-install.packages(c("ggplot2", "patchwork", "cowplot", "svglite", "dplyr"))
-
-# Richtext labels (italic + superscript for genotypes like '*Bap1*^f/f^,Math1-cre')
-install.packages("ggtext")
+# Core rendering
+BiocManager::install("karyoploteR")
+install.packages(c("svglite", "dplyr"))
 
 # Genomics
 BiocManager::install(c("rtracklayer", "GenomicRanges", "GenomicFeatures"))
@@ -107,9 +114,10 @@ BiocManager::install("org.Mm.eg.db")
 
 # Optional: YAML config support
 install.packages("yaml")
-```
 
-`ggtext` is technically optional — the script falls back to plain text with a warning if it's missing — but virtually every PI-style figure has a richtext genotype label, so install it.
+# Optional: colorspace (for desaturated diff-track loss color)
+install.packages("colorspace")
+```
 
 ### Basic usage
 
@@ -137,15 +145,9 @@ Rscript scripts/pub_browser.R \
   --output figures/syt1_pub
 ```
 
-Note the **repeatable `--label` flag** (passed exactly twice). The legacy `--labels 'ctrl,mut'` shortcut still works for simple cases but cannot contain commas inside a label — use the repeatable form whenever a genotype contains punctuation. Richtext markdown is parsed when [`ggtext`](https://wilkelab.org/ggtext/) is installed (which it should be — `install.packages('ggtext')`). Supported markers:
+Note the **repeatable `--label` flag** (passed exactly twice). The legacy `--labels 'ctrl,mut'` shortcut still works for simple cases but cannot contain commas inside a label — use the repeatable form whenever a genotype contains punctuation.
 
-| Marker | Renders as | Example |
-|---|---|---|
-| `*text*` | *italic* | `*Bap1*` |
-| `**text**` | **bold** | `**Bap1**` |
-| `^text^` | superscript | `^f/f^`, `^-/-^` |
-| `~text~` | subscript | `H~2~O` |
-| `<sup>text</sup>` / `<sub>text</sub>` | HTML super/subscript | direct HTML when markdown is ambiguous |
+**Note on richtext**: The karyoploteR version uses base R graphics, so ggtext-style markdown (`*italic*`, `^super^`) is not rendered automatically. Use `--genotype-italic` to italicize the second condition label. For complex richtext formatting (italic gene names + superscript alleles), edit the exported SVG in Illustrator.
 
 ### Color reference (PI's semantic palette)
 
@@ -436,20 +438,28 @@ If you are an AI assistant working on this script in a future session, read this
 
 **What to compare against**: Open the script output side-by-side with `FIG.png` and `FIGK.png`. These are the primary targets. The `figs/journal.pgen.*.PNG` files show the full range of published variants. The `figs/ai/` directory contains PNGs of unpublished-manuscript Illustrator files with additional locus views.
 
-### Recent audit (2026-05)
+### karyoploteR migration (2026-06)
 
-This pass closed the largest visible gap between script output and PI's polished figures. The reference renders under `test_pub_browser/syt1_v2/` and `test_pub_browser/anxa2r1_v2_*/` are the current "good" baselines; compare future output against these as well as the PI's figures.
+Replaced the ggplot2 + patchwork + cowplot rendering engine with karyoploteR. The CLI interface, YAML config, BigWig processing, and output format convention are unchanged. Key differences:
 
-Changes made in this pass:
+- **Rendering engine**: all signal tracks, gene models, highlights, and Hi-C arcs now rendered via karyoploteR primitives (`kpArea`, `kpRect`, `kpArrows`, `kpPlotLinks`, etc.) instead of ggplot2 geom layers.
+- **Layout**: proportional `r0/r1` track positions calculated by `compute_track_layout()` instead of patchwork height vectors and cowplot grid assembly.
+- **Left-margin labels**: `kpAddLabels(srt=90)` replaces custom cowplot label panels.
+- **Output**: base R devices (`pdf()`, `png()`, `jpeg()`, `svglite()`) replace `ggsave()`.
+- **Richtext dropped**: ggtext-style markdown labels (`*italic*^super^`) are not supported by base R graphics. Use `--genotype-italic` for italic condition labels, or edit SVG output in Illustrator for complex formatting.
+- **Dependencies removed**: ggplot2, patchwork, cowplot, grid, ggtext no longer required.
+- **Dependencies added**: karyoploteR (Bioconductor).
 
-- **Gene model**: backbone and arrow `linewidth` reduced from 0.25 → 0.15 mm; exon ymin/ymax reduced from ±0.35 → ±0.22; `gene_h` (panel relative height) reduced from 0.35 → 0.22. Result: gene model is visibly thinner, matching the transcript's 0.1 pt / 0.05 in target.
-- **Scale bar**: `linewidth` increased 0.9 → 1.2 for the bolder look in `FIG.png`/`FIGK.png`.
-- **Richtext labels**: added `ggtext::geom_richtext` support. Users pass `--label '*Bap1*^f/f^,Math1-cre'` to get italic+superscript+plain rendering. `^...^` is auto-converted to `<sup>...</sup>` for ergonomics. Detection is automatic — labels without markup still use plain `annotate("text", ...)`.
-- **Labels parser**: replaced comma-split-only with a repeatable `--label` flag (legacy `--labels 'ctrl,mut'` still works for the comma-free case). Fixes the longstanding bug where `'control,Bap1^f/f,Math1-cre'` failed because the comma inside the genotype was eaten by the split.
-- **`--region` + `--gene-symbol`**: now resolves the symbol via OrgDb→TxDb so the gene model panel shows just that focal gene (correct strand + exons). Previously this combination silently fell through to "show all overlapping genes" — broken for the PI's iterate-from-gene-to-region workflow.
-- **Runtime echo**: `main()` now prints the resolved region and the gene-model mode (`focal gene <SYM>` vs `all overlapping genes`).
-- **PNG output**: added alongside PDF/SVG/JPEG. Shared utility `scripts/utils/multi_format_output.R` also got PNG.
-- **Robustness**: numeric CLI args now stop with `"--extend requires an integer, got 'abc'"` instead of returning NA silently. No-args invocation prints help instead of failing in validate_config. `dir.create` calls wrapped in `tryCatch` with actionable error messages. TxDb/OrgDb errors include the install command.
+### Previous audit notes (2026-05)
+
+These changes from the ggplot2 era are preserved in the karyoploteR version:
+
+- **Gene model**: thin backbone/arrows (lwd 0.3), slim exons, gene panel height ~55% of a signal track.
+- **Scale bar**: bold (lwd 3.0), auto-sized to ~8% of view width.
+- **Repeatable `--label` flag**: fixes comma-in-genotype parsing bug.
+- **`--region` + `--gene-symbol`**: resolves focal gene from TxDb for correct strand/exons.
+- **Runtime echo**: prints resolved region and gene-model mode.
+- **Robustness**: numeric arg validation, missing-file checks, TxDb/OrgDb install guidance.
 
 ### Methylation and multi-gene enhancements (2026-06)
 
@@ -477,6 +487,7 @@ Changes made in this pass:
 - The `nice_ceiling` rounding logic (produces y-axis values matching PI's manual choices)
 - The repeatable `--label` flag — comma-split parsing was a bug, do not reintroduce it.
 - The sparse binning algorithm (`viewSums / cpg_counts`) — `viewMeans` produces biologically wrong values for CpG methylation.
+- The karyoploteR rendering engine — don't revert to ggplot2 unless there's a specific feature requirement that karyoploteR cannot support.
 
 ### How to test
 
