@@ -1,5 +1,5 @@
-# biomodal/downstream/scripts/viz_sections/section_72g_neuronal_chromatin_remodeling.R
-# Section 72g: Neuronal K119ub-High Genes Show Disproportionate Chromatin Remodeling
+# biomodal/downstream/scripts/viz_sections/section_73_neuronal_chromatin_remodeling.R
+# Section 73: Neuronal K119ub-High Genes Show Disproportionate Chromatin Remodeling
 #
 # Tests whether neuronal genes with constitutively high K119ub experience
 # stronger chromatin state changes upon BAP1-KO: ATAC down, K27ac down, K27me3 up.
@@ -8,19 +8,19 @@
 #   neuronal genes -> MeCP2 redistribution follows chromatin, not methylation
 #
 # Panels:
-#   72g-a: Multi-mark chromatin change (ATAC, K27ac, K27me3) neuronal vs non-neuronal
-#   72g-b: 4-group comparison: K119ub level x neuronal status per mark
-#   72g-c: Chromatin state distribution of K119ub-high neuronal vs non-neuronal
-#   72g-d: Dose-response: K119ub decile vs mark change, neuronal vs non-neuronal
-#   72g-e: Interaction models: mark_fold ~ k119ub_signal * is_neuronal
-#   72g:   Composite
+#   73a: Multi-mark chromatin change (ATAC, K27ac, K27me3) neuronal vs non-neuronal
+#   73-b: 4-group comparison: K119ub level x neuronal status per mark
+#   73-c: Chromatin state distribution of K119ub-high neuronal vs non-neuronal
+#   73-d: Dose-response: K119ub decile vs mark change, neuronal vs non-neuronal
+#   73-e: Interaction models: mark_fold ~ k119ub_signal * is_neuronal
+#   723:   Composite
 #
 # Input:
 #   data/k119ub_gene_signal.tsv, tables/diffbind_gene_level_all_marks.tsv,
 #   tables/72_neuronal_gene_set_go_derived.tsv (from section 72)
 #
 # Run from downstream/ directory:
-#   Rscript scripts/viz_sections/section_72g_neuronal_chromatin_remodeling.R
+#   Rscript scripts/viz_sections/section_73_neuronal_chromatin_remodeling.R
 
 source("scripts/viz_sections/_shared_config.R")
 
@@ -33,12 +33,12 @@ suppressPackageStartupMessages({
 # =============================================================================
 
 cat("================================================================================\n")
-cat("SECTION 72g: NEURONAL K119ub-HIGH GENES — CHROMATIN REMODELING\n")
+cat("SECTION 73: NEURONAL K119ub-HIGH GENES — CHROMATIN REMODELING\n")
 cat("  Does BAP1-KO drive heterochromatin shift at neuronal K119ub loci?\n")
 cat("================================================================================\n\n")
 
-SEC72G_DIR <- file.path(OUTPUT_DIR, "72g_neuronal_chromatin_remodeling")
-dir.create(SEC72G_DIR, recursive = TRUE, showWarnings = FALSE)
+SEC73_DIR <- file.path(OUTPUT_DIR, "73_neuronal_chromatin_remodeling")
+dir.create(SEC73_DIR, recursive = TRUE, showWarnings = FALSE)
 
 K119UB_SIGNAL_PATH <- file.path(BASE_DIR, "data/k119ub_gene_signal.tsv")
 DIFFBIND_PATH      <- file.path(TABLES_DIR, "diffbind_gene_level_all_marks.tsv")
@@ -58,7 +58,7 @@ fmt_p <- function(p) {
 
 save_plot <- function(p, name, w = 10, h = 7) {
   save_multiformat_ggplot(p,
-    base_path = file.path(SEC72G_DIR, name),
+    base_path = file.path(SEC73_DIR, name),
     width = w, height = h, dpi = 300,
     verbose = TRUE, use_subfolders = TRUE
   )
@@ -120,10 +120,10 @@ for (lev in c("K119ub High", "K119ub Low")) {
 }
 
 # =============================================================================
-# 72g-a: MULTI-MARK CHROMATIN CHANGE — NEURONAL vs NON-NEURONAL
+# 73-a: MULTI-MARK CHROMATIN CHANGE — NEURONAL vs NON-NEURONAL
 # =============================================================================
 
-cat("\n--- 72g-a: Multi-mark chromatin change ---\n")
+cat("\n--- 73-a: Multi-mark chromatin change ---\n")
 
 mark_long <- rbind(
   data.frame(mark = "ATAC", fold = df$atac_fold, group = df$group, stringsAsFactors = FALSE),
@@ -156,7 +156,7 @@ for (m in c("ATAC", "K27ac", "K27me3")) {
               median(other_vals), length(other_vals), fmt_p(wt$p.value)))
 }
 
-p_72ga <- ggplot(mark_long, aes(x = group, y = fold, fill = group)) +
+p_73a <- ggplot(mark_long, aes(x = group, y = fold, fill = group)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_violin(alpha = 0.6, show.legend = FALSE, scale = "width") +
   geom_boxplot(width = 0.15, outlier.size = 0.3, show.legend = FALSE) +
@@ -170,13 +170,13 @@ p_72ga <- ggplot(mark_long, aes(x = group, y = fold, fill = group)) +
   theme_biomodal() +
   theme(strip.text = element_text(size = 12, face = "bold"))
 
-save_plot(p_72ga, "72ga_multimark_neuronal_vs_other", w = 12, h = 7)
+save_plot(p_73a, "73a_multimark_neuronal_vs_other", w = 12, h = 7)
 
 # =============================================================================
-# 72g-b: 4-GROUP COMPARISON — K119ub LEVEL x NEURONAL STATUS
+# 73-b: 4-GROUP COMPARISON — K119ub LEVEL x NEURONAL STATUS
 # =============================================================================
 
-cat("\n--- 72g-b: 4-group comparison ---\n")
+cat("\n--- 73-b: 4-group comparison ---\n")
 
 df$quad_group <- paste0(df$k119ub_level, "\n", df$group)
 df$quad_group <- factor(df$quad_group, levels = c(
@@ -222,7 +222,7 @@ for (m in c("ATAC", "K27ac", "K27me3")) {
 quad_summary <- aggregate(fold ~ mark + quad + k119ub_level + group,
                           data = quad_long, FUN = median)
 
-p_72gb <- ggplot(quad_long, aes(x = quad, y = fold, fill = interaction(k119ub_level, group))) +
+p_73b <- ggplot(quad_long, aes(x = quad, y = fold, fill = interaction(k119ub_level, group))) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_violin(alpha = 0.5, show.legend = FALSE, scale = "width") +
   geom_boxplot(width = 0.15, outlier.size = 0.2, show.legend = FALSE) +
@@ -242,13 +242,13 @@ p_72gb <- ggplot(quad_long, aes(x = quad, y = fold, fill = interaction(k119ub_le
   theme(axis.text.x = element_text(size = 8, angle = 20, hjust = 1),
         strip.text = element_text(size = 12, face = "bold"))
 
-save_plot(p_72gb, "72gb_4group_k119ub_x_neuronal", w = 14, h = 7)
+save_plot(p_73b, "73b_4group_k119ub_x_neuronal", w = 14, h = 7)
 
 # =============================================================================
-# 72g-c: CHROMATIN STATE DISTRIBUTION — K119ub-HIGH BY NEURONAL STATUS
+# 73-c: CHROMATIN STATE DISTRIBUTION — K119ub-HIGH BY NEURONAL STATUS
 # =============================================================================
 
-cat("\n--- 72g-c: Chromatin state distribution ---\n")
+cat("\n--- 73-c: Chromatin state distribution ---\n")
 
 k119_high <- df[df$k119ub_level == "K119ub High", ]
 
@@ -307,7 +307,7 @@ for (s in levels(state_counts$state)) {
 
 state_colors_extended <- c(CHROMATIN_STATE_COLORS, "Other" = "grey70")
 
-p_72gc <- ggplot(state_counts[state_counts$Freq > 0, ],
+p_73c <- ggplot(state_counts[state_counts$Freq > 0, ],
                  aes(x = group, y = fraction, fill = state)) +
   geom_col(alpha = 0.85, color = "white", linewidth = 0.3) +
   scale_fill_manual(values = state_colors_extended, name = "Chromatin State") +
@@ -321,13 +321,13 @@ p_72gc <- ggplot(state_counts[state_counts$Freq > 0, ],
   theme_biomodal() +
   theme(legend.position = "right")
 
-save_plot(p_72gc, "72gc_chromatin_state_k119ub_high", w = 10, h = 7)
+save_plot(p_73c, "73c_chromatin_state_k119ub_high", w = 10, h = 7)
 
 # =============================================================================
-# 72g-d: DOSE-RESPONSE — K119ub DECILE vs MARK CHANGE BY NEURONAL STATUS
+# 73-d: DOSE-RESPONSE — K119ub DECILE vs MARK CHANGE BY NEURONAL STATUS
 # =============================================================================
 
-cat("\n--- 72g-d: Dose-response by K119ub decile ---\n")
+cat("\n--- 73-d: Dose-response by K119ub decile ---\n")
 
 decile_mark_summary <- data.frame()
 for (m in c("ATAC", "K27ac", "K27me3")) {
@@ -354,7 +354,7 @@ for (m in c("ATAC", "K27ac", "K27me3")) {
 
 decile_mark_summary$mark <- factor(decile_mark_summary$mark, levels = c("ATAC", "K27ac", "K27me3"))
 
-p_72gd <- ggplot(decile_mark_summary,
+p_73d <- ggplot(decile_mark_summary,
                  aes(x = decile, y = median_fold, color = group, shape = group)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
   geom_line(linewidth = 0.8) +
@@ -377,7 +377,7 @@ p_72gd <- ggplot(decile_mark_summary,
   theme(strip.text = element_text(size = 12, face = "bold"),
         axis.text.x = element_text(size = 7))
 
-save_plot(p_72gd, "72gd_dose_response_decile_marks", w = 14, h = 6)
+save_plot(p_73d, "73d_dose_response_decile_marks", w = 14, h = 6)
 
 # Print D10 vs D1 for neuronal genes
 cat("\n  Neuronal gene mark changes: D10 (highest K119ub) vs D1 (lowest):\n")
@@ -395,10 +395,10 @@ for (m in c("ATAC", "K27ac", "K27me3")) {
 }
 
 # =============================================================================
-# 72g-e: INTERACTION MODELS — mark_fold ~ k119ub_signal * is_neuronal
+# 73-e: INTERACTION MODELS — mark_fold ~ k119ub_signal * is_neuronal
 # =============================================================================
 
-cat("\n--- 72g-e: Interaction models ---\n")
+cat("\n--- 73-e: Interaction models ---\n")
 
 interaction_results <- data.frame()
 for (m in c("ATAC", "K27ac", "K27me3")) {
@@ -444,9 +444,9 @@ for (m in c("ATAC", "K27ac", "K27me3")) {
   ))
 }
 
-write.table(interaction_results, file.path(TABLES_DIR, "72g_interaction_models.tsv"),
+write.table(interaction_results, file.path(TABLES_DIR, "73_interaction_models.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
-cat("\n  Saved: 72g_interaction_models.tsv\n")
+cat("\n  Saved: 73_interaction_models.tsv\n")
 
 # Interaction coefficient forest plot
 if (nrow(interaction_results) > 0) {
@@ -455,7 +455,7 @@ if (nrow(interaction_results) > 0) {
   int_plot_df$sig <- ifelse(int_plot_df$interaction_p < 0.05, "Significant", "NS")
   int_plot_df$label <- sapply(int_plot_df$interaction_p, fmt_p)
 
-  p_72ge <- ggplot(int_plot_df, aes(x = interaction_beta, y = mark)) +
+  p_73e <- ggplot(int_plot_df, aes(x = interaction_beta, y = mark)) +
     geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
     geom_point(aes(color = sig), size = 5, show.legend = FALSE) +
     scale_color_manual(values = c("Significant" = "#D73027", "NS" = "grey50")) +
@@ -469,7 +469,7 @@ if (nrow(interaction_results) > 0) {
     ) +
     theme_biomodal()
 
-  save_plot(p_72ge, "72ge_interaction_coefficients", w = 10, h = 5)
+  save_plot(p_73e, "73e_interaction_coefficients", w = 10, h = 5)
 }
 
 # =============================================================================
@@ -478,22 +478,22 @@ if (nrow(interaction_results) > 0) {
 
 cat("\n--- Saving tables ---\n")
 
-write.table(mark_stats, file.path(TABLES_DIR, "72g_mark_stats_neuronal_vs_other.tsv"),
+write.table(mark_stats, file.path(TABLES_DIR, "73_mark_stats_neuronal_vs_other.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
-cat("  Saved: 72g_mark_stats_neuronal_vs_other.tsv\n")
+cat("  Saved: 73_mark_stats_neuronal_vs_other.tsv\n")
 
-write.table(quad_stats, file.path(TABLES_DIR, "72g_4group_stats.tsv"),
+write.table(quad_stats, file.path(TABLES_DIR, "73_4group_stats.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
-cat("  Saved: 72g_4group_stats.tsv\n")
+cat("  Saved: 73_4group_stats.tsv\n")
 
-write.table(decile_mark_summary, file.path(TABLES_DIR, "72g_decile_mark_summary.tsv"),
+write.table(decile_mark_summary, file.path(TABLES_DIR, "73_decile_mark_summary.tsv"),
             sep = "\t", row.names = FALSE, quote = FALSE)
-cat("  Saved: 72g_decile_mark_summary.tsv\n")
+cat("  Saved: 73_decile_mark_summary.tsv\n")
 
 if (nrow(chromatin_fisher) > 0) {
-  write.table(chromatin_fisher, file.path(TABLES_DIR, "72g_chromatin_state_fisher.tsv"),
+  write.table(chromatin_fisher, file.path(TABLES_DIR, "73_chromatin_state_fisher.tsv"),
               sep = "\t", row.names = FALSE, quote = FALSE)
-  cat("  Saved: 72g_chromatin_state_fisher.tsv\n")
+  cat("  Saved: 73_chromatin_state_fisher.tsv\n")
 }
 
 # =============================================================================
@@ -502,29 +502,29 @@ if (nrow(chromatin_fisher) > 0) {
 
 cat("\n--- Composite ---\n")
 
-p_composite <- (p_72ga | p_72gc) / (p_72gb) / (p_72gd) +
+p_composite <- (p_73a | p_73c) / (p_73b) / (p_73d) +
   plot_layout(heights = c(1, 1, 0.8)) +
   plot_annotation(
-    title = "Section 72g: Chromatin Remodeling at Neuronal K119ub Loci",
+    title = "Section 73: Chromatin Remodeling at Neuronal K119ub Loci",
     subtitle = "BAP1-KO heterochromatin shift is strongest at neuronal genes with high constitutive K119ub",
     theme = theme(plot.title = element_text(size = 16, face = "bold"))
   )
 
-save_plot(p_composite, "72g_composite", w = 18, h = 16)
+save_plot(p_composite, "73_composite", w = 18, h = 16)
 
 # =============================================================================
 # SUMMARY
 # =============================================================================
 
 cat("\n================================================================================\n")
-cat("SECTION 72g COMPLETE: Neuronal Chromatin Remodeling\n")
+cat("SECTION 73 COMPLETE: Neuronal Chromatin Remodeling\n")
 cat("================================================================================\n\n")
 
 cat(sprintf("  Universe: %d genes (K119ub quantifiable + DiffBind overlap)\n", nrow(df)))
 cat(sprintf("  Neuronal: %d (%.1f%%)\n", sum(df$is_neuronal),
             100 * sum(df$is_neuronal) / nrow(df)))
 
-cat("\n  72g-a: Mark changes, neuronal vs non-neuronal (all genes):\n")
+cat("\n  73-a: Mark changes, neuronal vs non-neuronal (all genes):\n")
 for (i in seq_len(nrow(mark_stats))) {
   r <- mark_stats[i, ]
   direction <- ifelse(r$delta_median > 0, "neuronal MORE positive", "neuronal MORE negative")
@@ -532,7 +532,7 @@ for (i in seq_len(nrow(mark_stats))) {
               r$mark, r$delta_median, direction, fmt_p(r$wilcox_p)))
 }
 
-cat("\n  72g-b: K119ub-High neuronal genes (key test):\n")
+cat("\n  73-b: K119ub-High neuronal genes (key test):\n")
 for (i in seq_len(nrow(quad_stats))) {
   r <- quad_stats[i, ]
   if (r$k119ub_level == "K119ub High") {
@@ -541,7 +541,7 @@ for (i in seq_len(nrow(quad_stats))) {
   }
 }
 
-cat("\n  72g-e: Interaction tests (K119ub x neuronal -> mark change):\n")
+cat("\n  73-e: Interaction tests (K119ub x neuronal -> mark change):\n")
 for (i in seq_len(nrow(interaction_results))) {
   r <- interaction_results[i, ]
   sig <- ifelse(!is.na(r$interaction_p) && r$interaction_p < 0.05, "SIGNIFICANT", "ns")
@@ -557,6 +557,6 @@ cat("    If neuronal K119ub-high genes show K27ac down + K27me3 up + ATAC down\n
 cat("    more than other genes, it confirms: BAP1 loss -> K119ub at neuronal loci\n")
 cat("    -> heterochromatin shift -> MeCP2 responds to chromatin, not methylation.\n")
 
-cat("\n  Plots saved to:", SEC72G_DIR, "\n")
+cat("\n  Plots saved to:", SEC73_DIR, "\n")
 cat("  Tables saved to:", TABLES_DIR, "\n")
-cat("\nSection 72g complete.\n")
+cat("\nSection 73 complete.\n")
