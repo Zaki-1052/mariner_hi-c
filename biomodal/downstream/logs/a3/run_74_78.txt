@@ -1,0 +1,687 @@
+
+========================================================================
+[1/5] Running section_74_geneset_overlap_methylation.R
+  Log: logs/a3/74_geneset_overlap_methylation.txt
+========================================================================
+Tue Jun 23 13:49:41 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-23 13:49:41 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 74: GENE SET OVERLAP & NEURONAL METHYLATION LEVELS
+  Detailed overlap counts + methylation characterization
+================================================================================
+
+--- Loading data ---
+
+  Quadrant master:    23150 genes
+  Coordinated genes:  6069 genes
+  Neuronal genes:     5614 genes (GO-derived, section 72)
+
+  Universe:           23150 genes
+  Neuronal in univ:   5341 (23.1%)
+  Coordinated in univ:6069 (26.2%)
+  MeCP2 Up:           79 (0.3%)
+
+--- Computing exclusive overlap partitions ---
+
+  Neuronal only                3888  (16.79%)
+  Coordinated only             4592  (19.84%)
+  MeCP2-Up only                  17  (0.07%)
+  Neuronal + Coordinated       1426  (6.16%)
+  Neuronal + MeCP2-Up            11  (0.05%)
+  Coordinated + MeCP2-Up         35  (0.15%)
+  All three                      16  (0.07%)
+  None                        13165  (56.87%)
+  TOTAL                       23150
+  Saved: 74_geneset_overlap_counts.tsv
+
+--- Pairwise Fisher tests (enrichment of overlap) ---
+
+  Neuronal × Coordinated: overlap=1442, OR=1.05 [0.98, 1.13], p = 1.41e-01 (adj p = 1.41e-01)
+  Neuronal × MeCP2-Up: overlap=27, OR=1.73 [1.05, 2.82], p = 2.28e-02 (adj p = 3.42e-02)
+  Coordinated × MeCP2-Up: overlap=51, OR=5.16 [3.19, 8.51], p = 9.41e-13 (adj p = 2.82e-12)
+  Saved: 74_pairwise_fisher.tsv
+
+--- 74a: Venn diagram ---
+  Saved: 74a_geneset_venn/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↓ (U+2193)
+
+--- 74b-d: Methylation levels at neuronal genes ---
+  Neuronal genes with methylation data: 4110 / 5341
+  Saved: 74_neuronal_methylation_levels.tsv
+  Total methylation (mC + hmC)
+at neuronal genes: ctrl median=0.82350, mut median=0.82254, delta=-0.00292, p < 2.2e-16
+  Saved: 74b_neuronal_total_methylation/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=-0.00292 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+  5mC levels
+at neuronal genes: ctrl median=0.67822, mut median=0.68577, delta=0.00384, p < 2.2e-16
+  Saved: 74c_neuronal_5mc_levels/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=0.00384 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+  5hmC levels
+at neuronal genes: ctrl median=0.12719, mut median=0.11676, delta=-0.00878, p < 2.2e-16
+  Saved: 74d_neuronal_5hmc_levels/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=-0.00878 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+
+--- 74e: Composite ---
+  Saved: 74_composite/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↓ (U+2193)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=-0.00292 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=0.00384 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=-0.00878 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+
+================================================================================
+SECTION 74 COMPLETE
+================================================================================
+  Done.
+
+========================================================================
+[2/5] Running section_75_mecp2_signal_reconciliation.R
+  Log: logs/a3/75_mecp2_signal_reconciliation.txt
+========================================================================
+Tue Jun 23 13:50:11 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-23 13:50:12 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 75: MeCP2 SIGNAL DIRECTION RECONCILIATION
+  Peak-level UP vs gene-body signal drop
+================================================================================
+
+--- Loading data ---
+
+  MeCP2 peaks:        202650
+NULL
+  Peak-level: UP=7686, DOWN=1200, NS=193764
+  Quadrant master:    23150 genes
+  GSEA terms: MeCP2=1, K119ub=115
+
+--- Aggregating peaks to gene level ---
+
+  Genes with at least 1 MeCP2 peak: 21195
+  Genes with UP peak(s):     2052 (carrying 7683 UP peaks)
+  Genes with DOWN only:      518 (carrying 891 DOWN peaks)
+  Genes with no sig peaks:   18625
+  Saved: 75_mecp2_peak_gene_summary.tsv
+
+--- 75a: Peak distribution across genes ---
+  Saved: 75a_peak_distribution_per_gene/{pdf,svg,jpg}
+
+--- 75b: Gene-body MeCP2 fold by peak status ---
+  Has UP peak(s): n=1204, median fold=0.2243
+  Has DOWN peak(s) only: n=307, median fold=-0.1284
+  No significant peaks: n=8311, median fold=-0.0211
+  UP vs DOWN: p < 2.2e-16
+  UP vs NS: p < 2.2e-16
+  Saved: 75b_genebody_signal_by_peak_status/{pdf,svg,jpg}
+
+--- 75c: GSEA term comparison ---
+  K119ub sig terms:  115 total (3 neuronal)
+  MeCP2 sig terms:   1 total (1 neuronal)
+  MeCP2 neuronal terms:
+    - synapse assembly (NES=1.68, q=2.451e-02)
+  Fisher (neuronal fraction K119ub vs MeCP2): OR=0.00, p = 3.45e-02
+  Saved: 75c_gsea_term_comparison/{pdf,svg,jpg}
+
+--- 75d: Peak annotation distribution ---
+  UP peak annotations:
+    Promoter               172 (2.2%)
+    Exon/UTR               383 (5.0%)
+    Intron                3151 (41.0%)
+    Distal Intergenic     3976 (51.7%)
+    Downstream               4 (0.1%)
+  DOWN peak annotations:
+    Promoter                96 (8.0%)
+    Exon/UTR               125 (10.4%)
+    Intron                 742 (61.8%)
+    Distal Intergenic      234 (19.5%)
+    Downstream               3 (0.2%)
+  Chi-squared (annotation x direction): X2=503.5, p = 1.00e-04 (simulated)
+  Saved: 75d_peak_annotation_distribution/{pdf,svg,jpg}
+
+--- 75e: Composite ---
+  Saved: 75_composite/{pdf,svg,jpg}
+
+================================================================================
+SECTION 75 COMPLETE
+================================================================================
+  Done.
+
+========================================================================
+[3/5] Running section_76_triple_overlap_synapse_chromatin.R
+  Log: logs/a3/76_triple_overlap_synapse_chromatin.txt
+========================================================================
+Tue Jun 23 13:50:45 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-23 13:50:45 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 76: TRIPLE-OVERLAP & SYNAPSE-SPECIFIC CHROMATIN
+  P-values, overlap characterization, synapse/axon specificity
+================================================================================
+
+--- Loading data ---
+
+  DiffBind all-marks: 20915 genes
+  Quadrant master:    23150 genes
+  Neuronal genes:     5614
+  Coordinated genes:  6069
+  K119ub quantifiable:21604 genes
+
+--- Deriving synapse/axon gene set from org.Mm.eg.db ---
+  Pattern: synap|axon
+'select()' returned 1:1 mapping between keys and columns
+  Synapse/axon GO BP terms: 613
+'select()' returned 1:many mapping between keys and columns
+  Synapse/axon genes:  2321
+  Saved: 76_synapse_axon_gene_set.tsv
+
+--- Building merged table ---
+
+  Merged table:       20915 genes
+  Neuronal:           4118 (19.7%)
+  Synapse/axon:       2099 (10.0%)
+  Coordinated:        6069 (29.0%)
+  MeCP2 Up:           79
+  Triple overlap:     16
+  Triple-overlap genes: Ap3b1, Astn2, Cntn6, Epyc, Fgf1, Fut9, Gprin3, Hcn1, Hif1a, Il1rapl1, Lgi1, Micu3, Ntn4, Prom1, Snca, Tspan7
+  Saved: 76_triple_overlap_genes.tsv
+
+--- 76a: Neuronal vs non-neuronal chromatin with p-values ---
+  ATAC: neuronal median=+0.1066 (n=3627), other=+0.0873 (n=10869), p = 6.95e-15
+  K27ac: neuronal median=+0.0460 (n=2210), other=+0.0413 (n=6282), p = 2.71e-02
+  K27me3: neuronal median=-0.1029 (n=1391), other=-0.0612 (n=2789), p = 5.53e-04
+  Saved: 76a_neuronal_chromatin_with_pvalues/{pdf,svg,jpg}
+
+--- 76b: 4-group chromatin comparison ---
+  Triple overlap: n=16
+  Neuronal only: n=4102
+  Coordinated only: n=4627
+  Rest of genome: n=12170
+  ATAC Kruskal-Wallis: p < 2.2e-16
+  K27ac Kruskal-Wallis: p < 2.2e-16
+  K27me3 Kruskal-Wallis: p < 2.2e-16
+  Saved: 76_chromatin_stats.tsv
+  Saved: 76b_four_group_chromatin/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Triple = Neuronal ∩ Coordinated ∩ MeCP2-Up (16 genes)' in 'mbcsToSbcs': for ∩ (U+2229)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Triple = Neuronal ∩ Coordinated ∩ MeCP2-Up (16 genes)' in 'mbcsToSbcs': for ∩ (U+2229)
+
+--- 76c: Synapse/axon vs broader neuronal ---
+  Synapse/axon: n=2099
+  Broader neuronal: n=2019
+  Non-neuronal: n=16797
+  ATAC: Synapse/axon vs Broader neuronal — Δ median=+0.0031, p = 6.54e-01 (adj p = 7.36e-01)
+  ATAC: Synapse/axon vs Non-neuronal — Δ median=+0.0210, p = 1.60e-10 (adj p = 1.44e-09)
+  ATAC: Broader neuronal vs Non-neuronal — Δ median=+0.0178, p = 9.06e-08 (adj p = 4.08e-07)
+  K27ac: Synapse/axon vs Broader neuronal — Δ median=-0.0036, p = 7.57e-01 (adj p = 7.57e-01)
+  K27ac: Synapse/axon vs Non-neuronal — Δ median=+0.0027, p = 1.17e-01 (adj p = 1.75e-01)
+  K27ac: Broader neuronal vs Non-neuronal — Δ median=+0.0062, p = 7.06e-02 (adj p = 1.27e-01)
+  K27me3: Synapse/axon vs Broader neuronal — Δ median=-0.0444, p = 2.95e-03 (adj p = 6.65e-03)
+  K27me3: Synapse/axon vs Non-neuronal — Δ median=-0.0704, p = 1.60e-05 (adj p = 4.80e-05)
+  K27me3: Broader neuronal vs Non-neuronal — Δ median=-0.0260, p = 2.89e-01 (adj p = 3.72e-01)
+  Saved: 76_synapse_vs_neuronal_stats.tsv
+  Saved: 76c_synapse_vs_neuronal_chromatin/{pdf,svg,jpg}
+
+--- 76d: K119ub decile enrichment ---
+  K119ub decile membership:
+    D1: n=1734 | triple=1 (0.1%) | synapse=134 (7.7%) | neuronal=283 (16.3%)
+    D2: n=1734 | triple=1 (0.1%) | synapse=153 (8.8%) | neuronal=287 (16.6%)
+    D3: n=1734 | triple=1 (0.1%) | synapse=154 (8.9%) | neuronal=305 (17.6%)
+    D4: n=1734 | triple=1 (0.1%) | synapse=196 (11.3%) | neuronal=370 (21.3%)
+    D5: n=1734 | triple=3 (0.2%) | synapse=203 (11.7%) | neuronal=378 (21.8%)
+    D6: n=1734 | triple=2 (0.1%) | synapse=190 (11.0%) | neuronal=346 (20.0%)
+    D7: n=1734 | triple=1 (0.1%) | synapse=239 (13.8%) | neuronal=449 (25.9%)
+    D8: n=1734 | triple=3 (0.2%) | synapse=230 (13.3%) | neuronal=443 (25.5%)
+    D9: n=1734 | triple=3 (0.2%) | synapse=264 (15.2%) | neuronal=492 (28.4%)
+    D10: n=1734 | triple=0 (0.0%) | synapse=306 (17.6%) | neuronal=677 (39.0%)
+  Top decile Triple overlap: 0/16, OR=0.00 [0.00, 2.33], p = 3.96e-01
+  Top decile Synapse/axon: 306/2069, OR=1.68 [1.47, 1.92], p = 2.12e-13
+  Top decile Neuronal: 677/4030, OR=2.34 [2.11, 2.60], p < 2.2e-16
+  Saved: 76_top_decile_fisher.tsv
+  Saved: 76d_k119ub_decile_enrichment/{pdf,svg,jpg}
+
+--- 76e: Composite ---
+  Saved: 76_composite/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Triple = Neuronal ∩ Coordinated ∩ MeCP2-Up (16 genes)' in 'mbcsToSbcs': for ∩ (U+2229)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'Triple = Neuronal ∩ Coordinated ∩ MeCP2-Up (16 genes)' in 'mbcsToSbcs': for ∩ (U+2229)
+
+================================================================================
+SECTION 76 COMPLETE
+================================================================================
+  Done.
+
+========================================================================
+[4/5] Running section_77_mecp2_aging_trajectory.R
+  Log: logs/a3/77_mecp2_aging_trajectory.txt
+========================================================================
+Tue Jun 23 13:51:15 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-23 13:51:15 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 77: MeCP2 DEVELOPMENTAL TRAJECTORY (YOUNG vs ADULT)
+  Ctrl vs mut aging — shared vs mut-unique loci
+================================================================================
+
+--- Loading data ---
+
+  Ctrl aging: 397170 peaks (UP=10930, DOWN=2822, NS=383418)
+  Annotating Ctrl aging peaks with nearest gene (TxDb mm10)...
+'select()' returned 1:many mapping between keys and columns
+  Warning: annotatePeak returned 397033 rows for 397170 peaks — matching by coordinates
+  Annotated: 396894 / 397170 peaks mapped to a gene symbol
+  Mut aging: 395715 peaks (UP=23117, DOWN=10646, NS=361952)
+  Annotating Mut aging peaks with nearest gene (TxDb mm10)...
+'select()' returned 1:many mapping between keys and columns
+  Warning: annotatePeak returned 395578 rows for 395715 peaks — matching by coordinates
+  Annotated: 395457 / 395715 peaks mapped to a gene symbol
+
+--- 77a: Aging peak overview ---
+  Saved: 77a_aging_overview/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'MeCP2 binding changes: young → adult' in 'mbcsToSbcs': -> substituted for → (U+2192)
+
+--- 77b: Ctrl vs mut aging-UP overlap ---
+  Ctrl aging-UP peaks: 10930
+  Mut aging-UP peaks:  23117
+  Shared (ctrl peaks with mut overlap): 7305 / 10930 (66.8%)
+  Ctrl-unique: 3625
+  Mut-unique:  15812
+  Ctrl aging-UP genes: 2908
+  Mut aging-UP genes:  4274
+  Gene overlap:        2620
+  Saved: 77b_aging_overlap_venn/{pdf,svg,jpg}
+
+--- 77c: Mut-specific aging GO enrichment ---
+  Mut-unique aging genes: 1654
+  Neuronal among mut-unique: 404 / 1654 (24.4%)
+'select()' returned 1:1 mapping between keys and columns
+  Significant GO BP terms: 435
+  Neuronal GO terms among sig: 49 / 435
+  Saved: 77c_mut_specific_go_enrichment/{pdf,svg,jpg}
+
+--- 77d: Fold comparison at shared loci ---
+  Paired shared peaks: 7305
+  Median ctrl aging fold:  1.8290
+  Median mut aging fold:   2.2412
+  Paired Wilcoxon (mut > ctrl): p < 2.2e-16
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 77d_shared_peak_fold_comparison/{pdf,svg,jpg}
+
+--- 77e: Composite ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 77_composite/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'MeCP2 binding changes: young → adult' in 'mbcsToSbcs': -> substituted for → (U+2192)
+
+================================================================================
+SECTION 77 COMPLETE
+================================================================================
+  Done.
+
+========================================================================
+[5/5] Running section_78_stoichiometry_broad_neuronal.R
+  Log: logs/a3/78_stoichiometry_broad_neuronal.txt
+========================================================================
+Tue Jun 23 13:52:46 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-23 13:52:46 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 78: STOICHIOMETRY & MECHANISM — UNBIASED NEURONAL SET
+  Redoing section 61 with GO-derived neuronal genes (not DMR-enriched)
+================================================================================
+
+--- Loading data ---
+
+  DiffBind all-marks: 20915 genes
+  Quadrant master:    23150 genes
+  Neuronal (broad):   5614 genes
+  Neuronal (narrow):  1149 genes
+  Synapse/axon:       2321 genes
+  Coordinated:        6069 genes
+  TET-KO signal:      21403 genes
+
+  Working table: 20915 genes
+  Neuronal (broad):  4118 (19.7%)
+  Neuronal (narrow): 1149 (5.5%)
+  Synapse/axon:      2099 (10.0%)
+  Coordinated:       6069 (29.0%)
+  MeCP2-Up:          79
+
+--- 78a: Total methylation conservation test ---
+
+  Total methylation change (Wilcoxon vs 0, BH-corrected):
+    All genes            n=20915  mean=-0.00139  median=-0.00261  DOWN  q=p < 2.2e-16 ***
+    Non-neuronal         n=16797  mean=-0.00119  median=-0.00252  DOWN  q=p < 2.2e-16 ***
+    Neuronal (broad)     n= 4118  mean=-0.00222  median=-0.00292  DOWN  q=p < 2.2e-16 ***
+    Synapse/axon         n= 2099  mean=-0.00128  median=-0.00258  DOWN  q=p = 4.23e-09 ***
+    Coordinated          n= 6069  mean=+0.00697  median=+0.00267  UP  q=p < 2.2e-16 ***
+    Neur + Coord         n= 1442  mean=+0.00757  median=+0.00286  UP  q=p < 2.2e-16 ***
+    MeCP2-Up             n=   79  mean=+0.03132  median=+0.02037  UP  q=p = 2.23e-11 ***
+  Saved: 78a_total_methylation_forest/{pdf,svg,jpg}
+
+--- 78b: Stoichiometry scatter ---
+  Global slope: -0.9589 [-0.9778, -0.9401]  R2=0.3218
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 78b_stoichiometry_scatter/{pdf,svg,jpg}
+
+--- 78c: Stoichiometry slopes by gene group ---
+    All genes            slope=-0.9589 [-0.9778, -0.9401]  R2=0.3218  n=20915  != -1
+    Non-neuronal         slope=-0.9491 [-0.9700, -0.9282]  R2=0.3209  n=16797  != -1
+    Neuronal (broad)     slope=-0.9955 [-1.0392, -0.9517]  R2=0.3259  n=4118  ~ -1
+    Synapse/axon         slope=-1.0199 [-1.0778, -0.9620]  R2=0.3628  n=2099  ~ -1
+    Coordinated          slope=-1.2878 [-1.3232, -1.2524]  R2=0.4559  n=6069  != -1
+    Neur + Coord         slope=-1.3025 [-1.3760, -1.2289]  R2=0.4561  n=1442  != -1
+    MeCP2-Up             slope=-0.9248 [-1.3094, -0.5401]  R2=0.2294  n=79  ~ -1
+  Saved: 78c_stoichiometry_slope_forest/{pdf,svg,jpg}
+
+--- 78d: TET-KO phenocopy comparison ---
+  Genes with both BAP1-KO and TET-KO data: 20851
+    All genes            rho=0.2199  p < 2.2e-16  n=20851
+    Non-neuronal         rho=0.2460  p < 2.2e-16  n=16733
+    Neuronal (broad)     rho=0.1371  p < 2.2e-16  n=4118
+    Synapse/axon         rho=0.1206  p = 2.98e-08  n=2099
+    Coordinated          rho=0.1761  p < 2.2e-16  n=6069
+Warning messages:
+1: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+2: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+3: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+4: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+5: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+Warning message:
+In cor.test.default(tetko_valid$delta_ratio, tetko_valid$delta_ratio_tet,  :
+  Cannot compute exact p-value with ties
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 78d_bap1_vs_tetko/{pdf,svg,jpg}
+
+--- 78e: Narrow vs broad neuronal comparison ---
+  Narrow neuronal set (DMR-enriched): n=1149, mean delta=0.01200, median=0.00462
+  Broad neuronal set (GO-derived):    n=4118, mean delta=-0.00222, median=-0.00292
+  Broad-only (in broad, not narrow):  n=2969, mean delta=-0.00772, median=-0.00583
+  Narrow vs 0: p < 2.2e-16 | Broad vs 0: p < 2.2e-16
+  Narrow vs broad-only: p < 2.2e-16
+  Saved: 78e_narrow_vs_broad_bias/{pdf,svg,jpg}
+
+--- 78g: MeCP2-Up + K119ub-Up quadrant characterization ---
+  Quadrant genes (MeCP2-Up + K119ub-Up): 72
+  Neuronal (broad):  25 / 72 (35%)
+  Neuronal (narrow): 15 / 72 (21%)
+  Synapse/axon:      17 / 72 (24%)
+
+  Broad-neuronal quadrant genes: Ap3b1, Asap1, Astn2, Cnr1, Cntn6, Dcx, Epyc, Fgf1, Fut9, Gpm6a, Gprin3, Hcn1, Hif1a, Il1rapl1, Lamb3, Lgi1, Micu3, Nhlh2, Ntn4, Plcb1, Plxnd1, Prom1, Snca, Sox6, Thbs2
+
+  Per-class mark means in quadrant genes:
+    MeCP2 fold         Synapse/axon       n=17  mean=+0.6383
+    MeCP2 fold         Broader neuronal   n= 8  mean=+0.8519
+    MeCP2 fold         Non-neuronal       n=47  mean=+0.7284
+    K119ub log2FC      Synapse/axon       n=17  mean=+0.4408
+    K119ub log2FC      Broader neuronal   n= 8  mean=+0.5937
+    K119ub log2FC      Non-neuronal       n=47  mean=+0.8074
+    5mC diff           Synapse/axon       n=17  mean=+0.0417
+    5mC diff           Broader neuronal   n= 8  mean=+0.0469
+    5mC diff           Non-neuronal       n=47  mean=+0.0558
+    5hmC diff          Synapse/axon       n=17  mean=-0.0201
+    5hmC diff          Broader neuronal   n= 8  mean=-0.0225
+    5hmC diff          Non-neuronal       n=47  mean=-0.0160
+    K27me3 fold        Synapse/axon       n= 8  mean=+0.7048
+    K27me3 fold        Broader neuronal   n= 5  mean=+2.0143
+    K27me3 fold        Non-neuronal       n= 4  mean=+0.7905
+    K27ac fold         Synapse/axon       n=13  mean=-0.4369
+    K27ac fold         Broader neuronal   n= 6  mean=-0.6137
+    K27ac fold         Non-neuronal       n=37  mean=-0.9277
+    K119ub DiffBind    Synapse/axon       n=16  mean=+0.6335
+    K119ub DiffBind    Broader neuronal   n= 7  mean=+0.4058
+    K119ub DiffBind    Non-neuronal       n=40  mean=+0.8680
+    ATAC fold          Synapse/axon       n=17  mean=+0.1174
+    ATAC fold          Broader neuronal   n= 6  mean=-0.0934
+    ATAC fold          Non-neuronal       n=43  mean=-0.0703
+  Saved: 78g_quadrant_characterization/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'MeCP2-Up + K119ub-Up quadrant genes (n=72) — broad neuronal set' in 'mbcsToSbcs': - substituted for — (U+2014)
+
+--- 78h: Composite ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 78_composite/{pdf,svg,jpg}
+
+================================================================================
+SECTION 78 SUMMARY
+================================================================================
+
+  KEY COMPARISONS (narrow DMR-enriched vs broad GO-derived neuronal set):
+
+    Narrow neuronal delta_total mean: +0.01200 (INCREASES)
+    Broad neuronal delta_total mean:  -0.00222 (DECREASES)
+    >>> DIRECTION FLIPS between narrow and broad sets <<<
+    The narrow set's total methylation increase was driven by DMR selection bias.
+
+    Broad neuronal stoichiometry slope: -0.9955 (ref: -1.0)
+
+================================================================================
+SECTION 78 COMPLETE
+================================================================================
+  Done.
+Tue Jun 23 13:53:13 PDT 2026
+
+========================================================================
+COMPLETE: 5/5 sections succeeded
+========================================================================

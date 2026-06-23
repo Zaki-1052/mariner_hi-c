@@ -1,0 +1,103 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-23 13:51:15 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 77: MeCP2 DEVELOPMENTAL TRAJECTORY (YOUNG vs ADULT)
+  Ctrl vs mut aging — shared vs mut-unique loci
+================================================================================
+
+--- Loading data ---
+
+  Ctrl aging: 397170 peaks (UP=10930, DOWN=2822, NS=383418)
+  Annotating Ctrl aging peaks with nearest gene (TxDb mm10)...
+'select()' returned 1:many mapping between keys and columns
+  Warning: annotatePeak returned 397033 rows for 397170 peaks — matching by coordinates
+  Annotated: 396894 / 397170 peaks mapped to a gene symbol
+  Mut aging: 395715 peaks (UP=23117, DOWN=10646, NS=361952)
+  Annotating Mut aging peaks with nearest gene (TxDb mm10)...
+'select()' returned 1:many mapping between keys and columns
+  Warning: annotatePeak returned 395578 rows for 395715 peaks — matching by coordinates
+  Annotated: 395457 / 395715 peaks mapped to a gene symbol
+
+--- 77a: Aging peak overview ---
+  Saved: 77a_aging_overview/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'MeCP2 binding changes: young → adult' in 'mbcsToSbcs': -> substituted for → (U+2192)
+
+--- 77b: Ctrl vs mut aging-UP overlap ---
+  Ctrl aging-UP peaks: 10930
+  Mut aging-UP peaks:  23117
+  Shared (ctrl peaks with mut overlap): 7305 / 10930 (66.8%)
+  Ctrl-unique: 3625
+  Mut-unique:  15812
+  Ctrl aging-UP genes: 2908
+  Mut aging-UP genes:  4274
+  Gene overlap:        2620
+  Saved: 77b_aging_overlap_venn/{pdf,svg,jpg}
+
+--- 77c: Mut-specific aging GO enrichment ---
+  Mut-unique aging genes: 1654
+  Neuronal among mut-unique: 404 / 1654 (24.4%)
+'select()' returned 1:1 mapping between keys and columns
+  Significant GO BP terms: 435
+  Neuronal GO terms among sig: 49 / 435
+  Saved: 77c_mut_specific_go_enrichment/{pdf,svg,jpg}
+
+--- 77d: Fold comparison at shared loci ---
+  Paired shared peaks: 7305
+  Median ctrl aging fold:  1.8290
+  Median mut aging fold:   2.2412
+  Paired Wilcoxon (mut > ctrl): p < 2.2e-16
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 77d_shared_peak_fold_comparison/{pdf,svg,jpg}
+
+--- 77e: Composite ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 77_composite/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'MeCP2 binding changes: young → adult' in 'mbcsToSbcs': -> substituted for → (U+2192)
+
+================================================================================
+SECTION 77 COMPLETE
+================================================================================

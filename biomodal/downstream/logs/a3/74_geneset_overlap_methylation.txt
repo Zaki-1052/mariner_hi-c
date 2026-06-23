@@ -1,0 +1,121 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-23 13:49:41 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 74: GENE SET OVERLAP & NEURONAL METHYLATION LEVELS
+  Detailed overlap counts + methylation characterization
+================================================================================
+
+--- Loading data ---
+
+  Quadrant master:    23150 genes
+  Coordinated genes:  6069 genes
+  Neuronal genes:     5614 genes (GO-derived, section 72)
+
+  Universe:           23150 genes
+  Neuronal in univ:   5341 (23.1%)
+  Coordinated in univ:6069 (26.2%)
+  MeCP2 Up:           79 (0.3%)
+
+--- Computing exclusive overlap partitions ---
+
+  Neuronal only                3888  (16.79%)
+  Coordinated only             4592  (19.84%)
+  MeCP2-Up only                  17  (0.07%)
+  Neuronal + Coordinated       1426  (6.16%)
+  Neuronal + MeCP2-Up            11  (0.05%)
+  Coordinated + MeCP2-Up         35  (0.15%)
+  All three                      16  (0.07%)
+  None                        13165  (56.87%)
+  TOTAL                       23150
+  Saved: 74_geneset_overlap_counts.tsv
+
+--- Pairwise Fisher tests (enrichment of overlap) ---
+
+  Neuronal × Coordinated: overlap=1442, OR=1.05 [0.98, 1.13], p = 1.41e-01 (adj p = 1.41e-01)
+  Neuronal × MeCP2-Up: overlap=27, OR=1.73 [1.05, 2.82], p = 2.28e-02 (adj p = 3.42e-02)
+  Coordinated × MeCP2-Up: overlap=51, OR=5.16 [3.19, 8.51], p = 9.41e-13 (adj p = 2.82e-12)
+  Saved: 74_pairwise_fisher.tsv
+
+--- 74a: Venn diagram ---
+  Saved: 74a_geneset_venn/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↓ (U+2193)
+
+--- 74b-d: Methylation levels at neuronal genes ---
+  Neuronal genes with methylation data: 4110 / 5341
+  Saved: 74_neuronal_methylation_levels.tsv
+  Total methylation (mC + hmC)
+at neuronal genes: ctrl median=0.82350, mut median=0.82254, delta=-0.00292, p < 2.2e-16
+  Saved: 74b_neuronal_total_methylation/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=-0.00292 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+  5mC levels
+at neuronal genes: ctrl median=0.67822, mut median=0.68577, delta=0.00384, p < 2.2e-16
+  Saved: 74c_neuronal_5mc_levels/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=0.00384 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+  5hmC levels
+at neuronal genes: ctrl median=0.12719, mut median=0.11676, delta=-0.00878, p < 2.2e-16
+  Saved: 74d_neuronal_5hmc_levels/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=-0.00878 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+
+--- 74e: Composite ---
+  Saved: 74_composite/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↑ (U+2191)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on '(mC↑/hmC↓)' in 'mbcsToSbcs': for ↓ (U+2193)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=-0.00292 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+4: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=0.00384 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+5: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'n=4,110 | Δ median=-0.00878 | p < 2.2e-16' in 'mbcsToSbcs': for Δ (U+0394)
+
+================================================================================
+SECTION 74 COMPLETE
+================================================================================

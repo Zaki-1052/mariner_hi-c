@@ -75,7 +75,9 @@ MECP2_FILES <- list(
   up      = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_up.bed"),
   down    = file.path(REPO_ROOT, "peaks/mecp2/MeCP2_down.bed"),
   ctrl_bw = "/Users/zakiralibhai/sdsc/bigwigs/MeCP2Ctrl.bw",
-  mut_bw  = "/Users/zakiralibhai/sdsc/bigwigs/MeCP2Mut.bw"
+  mut_bw  = "/Users/zakiralibhai/sdsc/bigwigs/MeCP2Mut.bw",
+  ctrl_aging = file.path(BASE_DIR, "peaks/MeCP2_ctrl_adultvsyoung_diffbind_results.txt"),
+  mut_aging  = file.path(BASE_DIR, "peaks/MeCP2_mut_adultvsyoung_diffbind_results.txt")
 )
 
 # Merged methylation BigWigs (group-averaged, from sdsc/bigwigs/methylation/merged/)

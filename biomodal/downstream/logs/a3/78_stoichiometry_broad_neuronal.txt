@@ -1,0 +1,186 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-23 13:52:46 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 78: STOICHIOMETRY & MECHANISM — UNBIASED NEURONAL SET
+  Redoing section 61 with GO-derived neuronal genes (not DMR-enriched)
+================================================================================
+
+--- Loading data ---
+
+  DiffBind all-marks: 20915 genes
+  Quadrant master:    23150 genes
+  Neuronal (broad):   5614 genes
+  Neuronal (narrow):  1149 genes
+  Synapse/axon:       2321 genes
+  Coordinated:        6069 genes
+  TET-KO signal:      21403 genes
+
+  Working table: 20915 genes
+  Neuronal (broad):  4118 (19.7%)
+  Neuronal (narrow): 1149 (5.5%)
+  Synapse/axon:      2099 (10.0%)
+  Coordinated:       6069 (29.0%)
+  MeCP2-Up:          79
+
+--- 78a: Total methylation conservation test ---
+
+  Total methylation change (Wilcoxon vs 0, BH-corrected):
+    All genes            n=20915  mean=-0.00139  median=-0.00261  DOWN  q=p < 2.2e-16 ***
+    Non-neuronal         n=16797  mean=-0.00119  median=-0.00252  DOWN  q=p < 2.2e-16 ***
+    Neuronal (broad)     n= 4118  mean=-0.00222  median=-0.00292  DOWN  q=p < 2.2e-16 ***
+    Synapse/axon         n= 2099  mean=-0.00128  median=-0.00258  DOWN  q=p = 4.23e-09 ***
+    Coordinated          n= 6069  mean=+0.00697  median=+0.00267  UP  q=p < 2.2e-16 ***
+    Neur + Coord         n= 1442  mean=+0.00757  median=+0.00286  UP  q=p < 2.2e-16 ***
+    MeCP2-Up             n=   79  mean=+0.03132  median=+0.02037  UP  q=p = 2.23e-11 ***
+  Saved: 78a_total_methylation_forest/{pdf,svg,jpg}
+
+--- 78b: Stoichiometry scatter ---
+  Global slope: -0.9589 [-0.9778, -0.9401]  R2=0.3218
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 78b_stoichiometry_scatter/{pdf,svg,jpg}
+
+--- 78c: Stoichiometry slopes by gene group ---
+    All genes            slope=-0.9589 [-0.9778, -0.9401]  R2=0.3218  n=20915  != -1
+    Non-neuronal         slope=-0.9491 [-0.9700, -0.9282]  R2=0.3209  n=16797  != -1
+    Neuronal (broad)     slope=-0.9955 [-1.0392, -0.9517]  R2=0.3259  n=4118  ~ -1
+    Synapse/axon         slope=-1.0199 [-1.0778, -0.9620]  R2=0.3628  n=2099  ~ -1
+    Coordinated          slope=-1.2878 [-1.3232, -1.2524]  R2=0.4559  n=6069  != -1
+    Neur + Coord         slope=-1.3025 [-1.3760, -1.2289]  R2=0.4561  n=1442  != -1
+    MeCP2-Up             slope=-0.9248 [-1.3094, -0.5401]  R2=0.2294  n=79  ~ -1
+  Saved: 78c_stoichiometry_slope_forest/{pdf,svg,jpg}
+
+--- 78d: TET-KO phenocopy comparison ---
+  Genes with both BAP1-KO and TET-KO data: 20851
+    All genes            rho=0.2199  p < 2.2e-16  n=20851
+    Non-neuronal         rho=0.2460  p < 2.2e-16  n=16733
+    Neuronal (broad)     rho=0.1371  p < 2.2e-16  n=4118
+    Synapse/axon         rho=0.1206  p = 2.98e-08  n=2099
+    Coordinated          rho=0.1761  p < 2.2e-16  n=6069
+Warning messages:
+1: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+2: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+3: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+4: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+5: In cor.test.default(tetko_valid$delta_ratio[mask], tetko_valid$delta_ratio_tet[mask],  :
+  Cannot compute exact p-value with ties
+Warning message:
+In cor.test.default(tetko_valid$delta_ratio, tetko_valid$delta_ratio_tet,  :
+  Cannot compute exact p-value with ties
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 78d_bap1_vs_tetko/{pdf,svg,jpg}
+
+--- 78e: Narrow vs broad neuronal comparison ---
+  Narrow neuronal set (DMR-enriched): n=1149, mean delta=0.01200, median=0.00462
+  Broad neuronal set (GO-derived):    n=4118, mean delta=-0.00222, median=-0.00292
+  Broad-only (in broad, not narrow):  n=2969, mean delta=-0.00772, median=-0.00583
+  Narrow vs 0: p < 2.2e-16 | Broad vs 0: p < 2.2e-16
+  Narrow vs broad-only: p < 2.2e-16
+  Saved: 78e_narrow_vs_broad_bias/{pdf,svg,jpg}
+
+--- 78g: MeCP2-Up + K119ub-Up quadrant characterization ---
+  Quadrant genes (MeCP2-Up + K119ub-Up): 72
+  Neuronal (broad):  25 / 72 (35%)
+  Neuronal (narrow): 15 / 72 (21%)
+  Synapse/axon:      17 / 72 (24%)
+
+  Broad-neuronal quadrant genes: Ap3b1, Asap1, Astn2, Cnr1, Cntn6, Dcx, Epyc, Fgf1, Fut9, Gpm6a, Gprin3, Hcn1, Hif1a, Il1rapl1, Lamb3, Lgi1, Micu3, Nhlh2, Ntn4, Plcb1, Plxnd1, Prom1, Snca, Sox6, Thbs2
+
+  Per-class mark means in quadrant genes:
+    MeCP2 fold         Synapse/axon       n=17  mean=+0.6383
+    MeCP2 fold         Broader neuronal   n= 8  mean=+0.8519
+    MeCP2 fold         Non-neuronal       n=47  mean=+0.7284
+    K119ub log2FC      Synapse/axon       n=17  mean=+0.4408
+    K119ub log2FC      Broader neuronal   n= 8  mean=+0.5937
+    K119ub log2FC      Non-neuronal       n=47  mean=+0.8074
+    5mC diff           Synapse/axon       n=17  mean=+0.0417
+    5mC diff           Broader neuronal   n= 8  mean=+0.0469
+    5mC diff           Non-neuronal       n=47  mean=+0.0558
+    5hmC diff          Synapse/axon       n=17  mean=-0.0201
+    5hmC diff          Broader neuronal   n= 8  mean=-0.0225
+    5hmC diff          Non-neuronal       n=47  mean=-0.0160
+    K27me3 fold        Synapse/axon       n= 8  mean=+0.7048
+    K27me3 fold        Broader neuronal   n= 5  mean=+2.0143
+    K27me3 fold        Non-neuronal       n= 4  mean=+0.7905
+    K27ac fold         Synapse/axon       n=13  mean=-0.4369
+    K27ac fold         Broader neuronal   n= 6  mean=-0.6137
+    K27ac fold         Non-neuronal       n=37  mean=-0.9277
+    K119ub DiffBind    Synapse/axon       n=16  mean=+0.6335
+    K119ub DiffBind    Broader neuronal   n= 7  mean=+0.4058
+    K119ub DiffBind    Non-neuronal       n=40  mean=+0.8680
+    ATAC fold          Synapse/axon       n=17  mean=+0.1174
+    ATAC fold          Broader neuronal   n= 6  mean=-0.0934
+    ATAC fold          Non-neuronal       n=43  mean=-0.0703
+  Saved: 78g_quadrant_characterization/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'MeCP2-Up + K119ub-Up quadrant genes (n=72) — broad neuronal set' in 'mbcsToSbcs': - substituted for — (U+2014)
+
+--- 78h: Composite ---
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 78_composite/{pdf,svg,jpg}
+
+================================================================================
+SECTION 78 SUMMARY
+================================================================================
+
+  KEY COMPARISONS (narrow DMR-enriched vs broad GO-derived neuronal set):
+
+    Narrow neuronal delta_total mean: +0.01200 (INCREASES)
+    Broad neuronal delta_total mean:  -0.00222 (DECREASES)
+    >>> DIRECTION FLIPS between narrow and broad sets <<<
+    The narrow set's total methylation increase was driven by DMR selection bias.
+
+    Broad neuronal stoichiometry slope: -0.9955 (ref: -1.0)
+
+================================================================================
+SECTION 78 COMPLETE
+================================================================================
