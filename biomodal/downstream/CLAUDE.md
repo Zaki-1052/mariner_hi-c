@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Downstream analysis and visualization of biomodal DUET evoC differential methylation (5mC and 5hmC) between BAP1-KO mutant and wildtype control mice (mm10/GRCm38). Uses the modality XPLR CLI for GLM-based DMR calling, followed by a modular R visualization pipeline.
+Downstream analysis and visualization of biomodal DUET evoC differential methylation (5mC and 5hmC) between BAP1-KO mutant and wildtype control mice (mm10/GRCm38). Uses the modality XPLR CLI for GLM-based DMR calling, followed by a modular R visualization pipeline (85 section scripts).
 
-**Samples:** 4 total (2 control + 2 mutant, 1 per sex per condition)
-**Primary context:** CG (CpG) — CHG/CHH show minimal signal
+**Samples:** 8 total (4 control + 4 mutant, 2 batches × 1 per sex per condition)
+**Primary context:** CG (CpG) — CHG/CHH show minimal signal (<1% methylation)
+**Current primary run:** run-5 (deep-seq, 8 samples, sex covariate included)
 **Key finding:** 92.3% of co-significant genes exhibit coordinated mC↑/hmC↓, indicating TET-mediated demethylation block
 
 ## Running the Pipeline
@@ -16,9 +17,9 @@ Downstream analysis and visualization of biomodal DUET evoC differential methyla
 
 ```bash
 cd downstream/modality
-sbatch run_modality.sb CG    # Primary CpG analysis
-sbatch run_modality.sb CHG   # Optional
-sbatch run_modality.sb CHH   # Optional
+sbatch scripts/run_modality.sb CG    # Primary CpG analysis
+sbatch scripts/run_modality.sb CHG   # Optional
+sbatch scripts/run_modality.sb CHH   # Optional
 ```
 
 Requires conda environment `modality`. The SLURM script copies `config_${CONTEXT}.txt` → `config.txt` then runs `core-workflow-v1.3.sh`.
@@ -26,23 +27,27 @@ Requires conda environment `modality`. The SLURM script copies `config_${CONTEXT
 ### Visualization Pipeline
 
 ```bash
-# Run all 19 sections sequentially (must run from downstream/ directory)
+# Run all sections sequentially (must run from downstream/ directory)
 cd downstream/
 bash scripts/viz_sections/run_all_sections.sh
 
 # Run individual section
 Rscript scripts/viz_sections/section_04_volcano_plots.R
+
+# Batch runners for grouped sections
+bash scripts/viz_sections/run_sections_22_26.sh   # demethylation ratio + TET
+bash scripts/viz_sections/run_sections_61_63.sh   # stoichiometry + heatmap
+bash scripts/viz_sections/run_sections_74_78.sh   # neuronal + aging
+
+# Permutation tests (HPC, heavy compute)
+sbatch scripts/viz_sections/run_permutation.sb
 ```
 
-All section scripts source `_shared_config.R` which loads data, defines helpers, and sets paths. Working directory must be `downstream/`.
+All section scripts source `_shared_config.R` which loads data, defines helpers, and sets paths. **Working directory must be `downstream/`.**
 
-### Post-Processing (mC/hmC Comparison)
+### Updating for a New Modality Run
 
-```bash
-cd modality/DMR_Genes_CG/
-bash compare_mc_hmc.sh           # Compare mC vs hmC directions
-bash significant_to_bigbed.sh    # Convert BED → BigBed for genome browser
-```
+Follow `docs/UPDATE.md` — covers the 4 files with hardcoded run paths, timestamp discovery, and verification grep.
 
 ## Architecture
 
@@ -58,45 +63,64 @@ Zarr stores (from upstream DUET pipeline)
     ↓
 Post-processing + Visualization (R scripts)
     ├── _shared_config.R (centralized config, data loading, helpers)
-    └── section_01 through section_10 (independent visualization modules)
+    └── section_01 through section_78 (independent visualization modules)
 ```
 
 ### Modular Visualization System (`scripts/viz_sections/`)
 
-Each section script is independent and sources `_shared_config.R` for shared state:
+85 section scripts, each independent and sourcing `_shared_config.R` for shared state. Major groups:
 
-| Section | Purpose |
-|---------|---------|
-| `section_01_qc_overview.R` | Sample quality, coverage, upstream metrics |
-| `section_02_correlation.R` | mC/hmC sample correlation heatmaps |
-| `section_03_dmr_statistics.R` | DMR counts across 6 genomic regions |
-| `section_04_volcano_plots.R` | Significance vs effect size plots |
-| `section_05_coordinated_changes.R` | mC↑/hmC↓ coordinated pattern analysis |
-| `section_06_top_genes.R` | Ranked gene tables (Syt1, Trpm3, etc.) |
-| `section_07_effect_size.R` | Methylation change distributions |
-| `section_08_enrichment.R` | GO/KEGG functional enrichment |
-| `section_09_summary.R` | Key findings and summary tables |
-| `section_10_chromatin_state.R` | ChIP-seq integration, 7-state classification |
-| `section_11` through `section_19` | MeCP2, ATAC-seq, H2AK119ub, H3K27ac integrations |
-| `section_20` through `section_37` | Demethylation ratio, compartments, Polycomb, permutation tests |
-| `section_38_h3k36me3_gene_body_analysis.R` | H3K36me3 (SETD2/DNMT3B axis): volcano, O/E heatmaps, fold correlations, chromatin state |
-| `section_39_h3k36me2_boundary_analysis.R` | H3K36me2 (NSD/DNMT3A axis): PRC2 boundary integrity, K27me3 cross-mark, genic vs intergenic |
-| `section_40_h3k36me2_me3_combined.R` | Combined me2/me3: expanded correlation heatmap, conversion dynamics, Venn, GO comparison |
-| `section_41_dnmt3a_vs_dnmt3b_discrimination.R` | DNMT3A vs DNMT3B discrimination: logistic regression, pathway attribution, decision matrix |
-| `compare_shallow_vs_deep.R` | Standalone: shallow-seq (run-2) vs deep-seq (run-3) comparison |
+| Sections | Theme |
+|----------|-------|
+| 01–09 | Core DMR analysis: QC, correlation, statistics, volcano, coordinated changes, top genes, enrichment |
+| 10–10f | Chromatin state classification (7-category system shared with Hi-C pipeline) |
+| 11–19 | CUT&RUN/ChIP integration: MeCP2, ATAC-seq, H2AK119ub, H3K27ac |
+| 20–21 | Coordinated RNA-seq, discordant mC/hmC |
+| 22–26 | Demethylation ratio, baseline hmC, DNMT3A prediction, TET-KO comparison |
+| 27–31 | Hi-C loop anchor integration, A/B compartment mapping, Polycomb targets, MeCP2 loops |
+| 32–37 | CHG exploratory, multi-mark DiffBind, permutation tests (sections 34–36 use regioneReloaded) |
+| 38–41 | H3K36me2/me3 analysis: gene body, boundary, combined, DNMT3A vs DNMT3B |
+| 42–45 | Max-significance gene lists, CG exploratory, allele-specific, Field BAP1 chr8 |
+| 46–50 | Genome browser loci, CTCF anchor overlay, CpG island ubiquitination, HOMER motif enrichment |
+| 51–60 | Non-CG methylation: MeCP2 CG/non-CG, CpG-resolution gene body, TAD organization, Ecker validation |
+| 61–63 | Stoichiometry mechanism, multifeature regression, MeCP2 master heatmap |
+| 64–72 | Global methylation levels, subcompartment methylation, MeCP2/K119ub unmethylated, neuronal characterization |
+| 73–78 | Neuronal chromatin remodeling, gene-set overlaps, MeCP2 aging trajectory, stoichiometry broad |
+| `compare_shallow_vs_deep.R` | Standalone: shallow-seq vs deep-seq comparison |
 
 ### Shared Config (`_shared_config.R`)
 
-Central configuration loaded by every section script. Contains:
-- `DATA_PATHS` — Hardcoded paths to run-4 (deep-seq, 8 samples) DMR BED files (timestamped filenames)
+Central configuration loaded by every section script (620 lines). Contains:
+
+**Path blocks (change when updating runs — see `docs/UPDATE.md`):**
+- `DATA_PATHS` — Hardcoded paths to run-5 DMR BED files (13 entries: gene body + 5 regions × mC/hmC + BioQC JSON)
+- `EXTRACT_PATHS` — Per-sample regional fractions (gene body mC/hmC)
+- `CHG_DATA_PATHS`, `CHH_DATA_PATHS` — Non-CG context DMR paths
+- `CHG_EXTRACT_PATHS`, `CHH_EXTRACT_PATHS` — Non-CG per-sample extractions
+
+**External data (do NOT change between runs):**
 - `CHIP_PEAK_FILES` — ChIP-seq BED paths for chromatin state classification
-- `H3K36ME2_FILES`, `H3K36ME3_FILES` — H3K36me2/me3 DiffBind results and differential BED files
-- `load_dmr_bed()` — Parses modality DMR BED format (13-14 columns)
+- `MECP2_FILES` — MeCP2 DiffBind results and BigWigs
+- `ATAC_FILES`, `K119UB_FILES`, `H3K27AC_FILES` — Condition-specific peak BEDs
+- `DIFFBIND_FILES` — Quantitative differential binding (ATAC, K27ac, K27me3, K119ub)
+- `H3K36ME2_FILES`, `H3K36ME3_FILES` — H3K36me2/me3 DiffBind results
+- `METHYLATION_BIGWIGS`, `HISTONE_BIGWIGS`, `ECKER_BIGWIGS` — Signal tracks
+- `LOOP_FILES` — Hi-C loop annotations
+
+**Helpers:**
+- `load_dmr_bed()` — Parses modality DMR BED format (13-14 columns), adds significance/direction
 - `load_diffbind_flex()` — Loads DiffBind results with flexible column schema (seqnames or Summit_Chr)
-- `theme_biomodal()` — Consistent ggplot2 theme
+- `dedup_by_gene()` — Keeps lowest q-value row per gene
+- `load_chip_peaks()` — BED → GRanges
+- `dmr_to_granges()` — DMR data frame → GRanges with metadata
+- `compute_chip_overlaps()` — Computes overlap booleans for 6 histone marks
 - `classify_chromatin_state()` — 7-category priority system matching Hi-C pipeline
-- `COLORS` — Standardized color palettes for condition, direction, methylation type, h3k36me2, h3k36me3
-- Pre-loaded data: `mc_dmr`, `hmc_dmr`, `bioqc` (JSON), `region_dmrs` (6 regions)
+- `patch_chooseHclustMet()` — Bug fix for regioneReloaded with ≤2 rows (used by sections 34–36)
+- `theme_biomodal()` — Consistent ggplot2 theme
+- `COLORS` — Standardized color palettes for condition, direction, methylation type, marks
+- `CHROMATIN_STATE_ORDER`, `CHROMATIN_STATE_COLORS` — Consistent state labels and colors
+
+**Pre-loaded data:** `mc_dmr`, `hmc_dmr` (deduplicated by gene), `bioqc` (JSON), `upstream` (CSV), `region_dmrs` (6 regions)
 
 ### DMR BED Format (modality output)
 
@@ -111,7 +135,7 @@ Used in section_10 and shared with the Hi-C loop analysis pipeline:
 4. **Polycomb** — H3K27me3+ AND >2kb from TSS
 5. **Active_Enhancer** — H3K27ac+ AND >2kb from TSS
 6. **Poised_Enhancer** — H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
-7. **Other** — No marks
+7. **Unmarked** — No marks
 
 ## Configuration
 
@@ -121,35 +145,43 @@ Key parameters:
 - `Zarr` — Path to upstream Zarr store
 - `Group_Column=condition` — Metadata column for contrast
 - `Condition_Order=control mutant` — Reference vs test
-- `Covariates=sex` — Optional; removing sex covariate yields significant DMRs (run-2)
+- `Covariates=sex` — Include sex covariate (run-5); removing it yields more DMRs but confounds sex/genotype
 - `Depth_Filter=10` — Minimum coverage threshold
 - `Overdispersion=False` — GLM overdispersion correction toggle
 
-### Three Analysis Runs
+### Analysis Run History
 
-- **run-1** (with sex covariate): No significant DMRs — sex confounded with genotype at n=2/group
-- **run-2** (sex removed, shallow-seq): Significant DMRs but cannot fully separate sex vs genotype effects. Visualization outputs archived at `plots/visualizations_run2_shallow-seq/`
-- **run-3** (sex removed, deep-seq): Current primary results — deeper sequencing for improved statistical power. Visualization pipeline and `_shared_config.R` now point to run-3
+| Run | Samples | Sex Covariate | Notes |
+|-----|---------|---------------|-------|
+| run-1 | 4 (shallow-seq) | Yes | No significant DMRs — sex confounded at n=2/group |
+| run-2 | 4 (shallow-seq) | No | First significant results; archived at `plots/visualizations_run2_shallow-seq/` |
+| run-3 | 4 (deep-seq) | No | Improved power; archived at `plots/visualizations_run_3_deep-4/` |
+| run-4 | 8 (deep-seq) | No | Added batch 2 replicates; archived at `plots/visualizations_run4_deep-8/` |
+| run-5 | 8 (deep-seq) | Yes | **Current primary** — sex covariate properly powered with 8 samples |
 
 ## Output Locations
 
-- **DMR results:** `modality/outputs/run-3/outputs_CG/Results/{region}/DMR_*/`
-- **QC reports:** `modality/outputs/run-3/outputs_CG/Results/BioQC_*/`
-- **Archived run-2 plots:** `plots/visualizations_run2_shallow-seq/`
-- **Visualization plots:** `plots/visualizations/{01-10}_*/`
+- **DMR results:** `modality/outputs/run-5/outputs_CG/Results/{region}/DMR_*/`
+- **QC reports:** `modality/outputs/run-5/outputs_CG/Results/BioQC_*/`
+- **Visualization plots:** `plots/visualizations/{section_num}_{name}/`
 - **Export tables:** `plots/visualizations/tables/`
-- **BigBed files:** `modality/DMR_Genes_CG/bigbed/`
+- **Archived prior runs:** `plots/visualizations_run2_shallow-seq/`, `plots/visualizations_run_3_deep-4/`, `plots/visualizations_run4_deep-8/`
 
 ## Dependencies
 
-**R packages:** tidyverse, ggplot2, patchwork, ggrepel, RColorBrewer, scales, pheatmap, jsonlite, clusterProfiler, enrichplot, org.Mm.eg.db, ggVennDiagram, GenomicRanges, rtracklayer, TxDb.Mmusculus.UCSC.mm10.knownGene
+**R packages (loaded by `_shared_config.R`):** tidyverse, ggplot2, patchwork, ggrepel, RColorBrewer, scales, pheatmap, jsonlite, clusterProfiler, enrichplot, org.Mm.eg.db, ggVennDiagram, GenomicRanges, rtracklayer, TxDb.Mmusculus.UCSC.mm10.knownGene
 
-**External:** modality XPLR CLI (conda env `modality`), bedToBigBed (UCSC utility)
+**Additional R packages (loaded by individual sections as needed):** regioneReloaded (sections 34–36), Gviz (section 46)
+
+**External:** modality XPLR CLI (conda env `modality`), bedToBigBed (UCSC utility at `modality/scripts/bedToBigBed`)
 
 **Shared utility:** Sources `multi_format_output.R` from `../../scripts/utils/` (generates PDF + PNG + SVG)
 
 ## Key Caveats
 
-- DMR BED filenames contain timestamps (e.g., `DMR_mc_control__mutant_20260221_190322.bed`) — paths in `_shared_config.R` are hardcoded to run-3 timestamps; `compare_shallow_vs_deep.R` hardcodes run-2 timestamps for comparison
-- With n=2 per condition, sex and genotype effects are confounded — results from run-2 (no sex covariate) are used but should be interpreted with this caveat
-- Non-CpG contexts (CHG/CHH) show <1% methylation and no significant DMRs
+- DMR BED filenames contain timestamps (e.g., `DMR_mc_control__mutant_20260402_191818.bed`) — paths in `_shared_config.R` are hardcoded to run-5 timestamps. See `docs/UPDATE.md` for the update procedure.
+- `compare_shallow_vs_deep.R` hardcodes both old and new run timestamps for side-by-side comparison — update `SHALLOW_PATHS` when rotating runs.
+- Section scripts must NOT contain hardcoded run paths — all data access goes through `_shared_config.R`. Verify with: `grep -rn 'run-[0-9]' scripts/viz_sections/section_*.R` (should return zero results).
+- Sections 34–36 (permutation tests) require `regioneReloaded` and use `patch_chooseHclustMet()` from `_shared_config.R` to fix a crash with ≤2 rows.
+- Non-CpG contexts (CHG/CHH) show <1% methylation and no significant DMRs.
+- MeCP2 data is CUT&RUN, not ChIP-seq — use "signal" or "mark" in labels, never "ChIP".

@@ -4,212 +4,139 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Biomodal DUET evoC Differential Methylation Analysis Pipeline** - Analyzes differential methylation (5mC and 5hmC) between BAP1-KO mutant and wildtype control mice using biomodal's dual-epigenetic sequencing technology with 6bp resolution on the mm10/GRCm38 mouse genome.
+Biomodal DUET evoC differential methylation analysis (5mC and 5hmC) in BAP1-KO mutant vs wildtype control mouse cerebellum (mm10/GRCm38). Uses biomodal's dual-epigenetic sequencing at 6bp resolution. The downstream analysis has grown into an 85-section R visualization pipeline integrating methylation with Hi-C loops, CUT&RUN marks, ATAC-seq, RNA-seq, and chromatin state annotations.
 
-**Key Technologies:**
-- Upstream: biomodal DUET pipeline v1.5.0 (Nextflow-based)
-- Downstream: modality XPLR CLI v1.0+ (GLM-based DMR calling)
-- Data format: Zarr stores (HDF5-backed methylation data)
-- HPC: SLURM job scheduler on Expanse cluster
+**Samples:** 8 total (4 control + 4 mutant, 2 batches, 1 per sex per condition)
+**Primary run:** run-5 (deep-seq, 8 samples, sex covariate included)
+**Key biological finding:** 92.3% of co-significant genes show coordinated mC↑/hmC↓, indicating a TET-mediated demethylation block upon BAP1 loss
+
+## Module Layout
+
+| Directory | Purpose | Languages |
+|-----------|---------|-----------|
+| `upstream/` | Biomodal DUET v1.5.0 Nextflow pipeline — FASTQ → Zarr stores | Nextflow, Bash |
+| `downstream/` | **Primary working area.** Modality XPLR DMR calling + 85-section R visualization pipeline | R, Bash |
+| `downstream/modality/` | Modality XPLR CLI configs, SLURM scripts, and run outputs (run-1 through run-5) | Bash |
+| `methylseq/` | nf-core/methylseq pipeline (vendored fork for EM-seq/WGBS comparison) | Nextflow |
+| `non_cg_analysis/` | Non-CG methylation comparisons with Luo et al. 2017 neuronal atlas | Python |
+| `wgbs/` | WGBS validation experiment (samplesheet + Nextflow config) | Nextflow, Bash |
+| `docs/` | Literature reviews, QC reports, analysis notes | Markdown |
+
+Each subdirectory with substantial code has its own `CLAUDE.md` — **read `downstream/CLAUDE.md` before working in `downstream/`**, it documents the visualization architecture in detail.
 
 ## Running the Pipeline
 
-### Upstream (DUET Pipeline) - Raw Sequencing Processing
+### Upstream (DUET — HPC only)
 
 ```bash
-# Submit to SLURM
+# conda activate env_nf
 sbatch upstream/evoc_run.sb
-
-# Or run directly (not recommended - requires 48hr runtime)
-biomodal run duet \
-  --input-path /path/to/fastq \
-  --output-path /path/to/output \
-  --meta-file metadata.csv \
-  --run-name evoC_Bap1_run \
-  --mode 6bp \
-  --additional-profile deep_seq \
-  --chg-chh-contexts \
-  --reference-genome-name GRCm38
 ```
 
-**Required conda environment:** `env_nf`
+~48hr runtime. Produces Zarr stores in `upstream/duet-1.5.0_evoC_Bap1_run_6bp/sample_outputs/zarr_store/`.
 
-### Downstream (Modality XPLR) - DMR Analysis
+### Downstream DMR Calling (HPC only)
 
 ```bash
-# Submit to SLURM for specific methylation context
-sbatch downstream/modality/run_modality.sb CG    # CpG context (primary)
-sbatch downstream/modality/run_modality.sb CHG   # CHG context
-sbatch downstream/modality/run_modality.sb CHH   # CHH context
-
-# Or run manually
-cd downstream/modality
-cp config_CG.txt config.txt
-./core-workflow-v1.3.sh
+# conda activate modality
+sbatch downstream/modality/scripts/run_modality.sb CG    # Primary CpG
+sbatch downstream/modality/scripts/run_modality.sb CHG   # Optional
+sbatch downstream/modality/scripts/run_modality.sb CHH   # Optional
 ```
 
-**Required conda environment:** `modality`
+Copies `config_${CONTEXT}.txt` → `config.txt`, then runs `core-workflow-v1.3.sh` (4 steps: BioQC → Feature Extraction → DMR Calling → DMR Visualization).
 
-## Pipeline Architecture
-
-### Data Flow
-
-```
-FASTQ files (4 samples × 2 lanes)
-    ↓ [biomodal DUET v1.5.0]
-Zarr stores (CG/CHG/CHH contexts)
-    ↓ [modality XPLR]
-DMR results (BED files, volcano plots, HTML reports)
-```
-
-### Upstream Outputs (duet-1.5.0_evoC_Bap1_run_6bp/)
-
-| Directory | Contents |
-|-----------|----------|
-| `sample_outputs/bams/` | Deduplicated BAM files |
-| `sample_outputs/zarr_store/` | Methylation data by context (CG, CHG, CHH) |
-| `sample_outputs/variant_call_files/` | Germline VCF files |
-| `reports/` | Summary metrics (CSV, XLSX) |
-| `diagnostics/` | FastQC reports |
-
-### Downstream Outputs (modality/outputs/)
-
-```
-outputs/run-{N}/outputs_{CONTEXT}/
-├── Results/
-│   ├── BioQC_*/                    # QC metrics + JSON
-│   └── {region}/                   # Per-region analysis
-│       ├── Extract_*/              # Feature extraction (count, mean, regional-frac)
-│       ├── DMR_*/                  # DMR calling results (BED files)
-│       └── DMR_Report_*/           # Visualization outputs
-└── Reports/
-    ├── biological_qc_report*.html  # QC visualizations
-    └── {region}/                   # HTML reports per region
-```
-
-## Configuration
-
-### Config File Parameters (config.txt)
-
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `Zarr` | Path to zarr store | `/path/to/CG/sample.zarrz` |
-| `Metadata` | Sample metadata TSV | `metadata.tsv` |
-| `Group_Column` | Condition column name | `condition` |
-| `Condition_Order` | Reference vs test | `control mutant` |
-| `Covariates` | Optional covariates (space-separated) | `sex` or blank |
-| `Regions_Directory` | BED files for regions | `mm10/` |
-| `Depth_Filter` | Minimum coverage threshold | `10` |
-| `Overdispersion` | Apply overdispersion correction | `True` or `False` |
-
-### Metadata Format (metadata.tsv)
-
-```
-sample_id	condition	sex
-evoC-Bap1-ctrl-M	control	male
-evoC-Bap1-mut-M	mutant	male
-evoC-Bap1-ctrl-F	control	female
-evoC-Bap1-mut-F	mutant	female
-```
-
-### Reference Regions (mm10/)
-
-- `gencode.vM25.mouse.genes.annotation.bed.gz` - Gene bodies
-- `gencode.vM25.mouse.promoters.annotation.bed.gz` - Promoter regions
-- `gencode.vM25.mouse.cpg_islands.annotation.bed.gz` - CpG islands
-- `gencode.vM25.mouse.cpg_shores.annotation.bed.gz` - CpG shores
-- `gencode.vM25.mouse.cpg_shelves.annotation.bed.gz` - CpG shelves
-- `gencode.vM25.mouse.tss_region.annotation.bed.gz` - TSS regions
-
-## Key Samples
-
-| Sample ID | Condition | Sex | Genotype |
-|-----------|-----------|-----|----------|
-| evoC-Bap1-ctrl-F | Control | Female | Bap1-ff |
-| evoC-Bap1-ctrl-M | Control | Male | Bap1-ff |
-| evoC-Bap1-mut-F | Mutant | Female | Bap1-ff-cre |
-| evoC-Bap1-mut-M | Mutant | Male | Bap1-ff-cre |
-
-## DMR Calling Workflow (core-workflow-v1.3.sh)
-
-The pipeline executes 4 sequential steps:
-
-1. **Biological QC** - Sample correlations, PCA, coverage statistics
-2. **Feature Extraction** - Per-region methylation statistics (count, mean, regional-frac)
-3. **DMR Calling** - GLM-based differential methylation (Benjamini-Hochberg FDR)
-4. **DMR Visualization** - Volcano plots, p-value histograms, filtered BED files
-
-Each step uses the `modality` CLI:
-```bash
-modality biological-qc ...
-modality get count/mean/regional-frac ...
-modality dmr call ...
-modality dmr plot ...
-```
-
-## Critical Analysis Considerations
-
-### Sex Confounding Issue
-
-With n=2 per condition (4 samples total), sex effects are confounded with BAP1 effects:
-- **Run-1 (with sex covariate)**: No significant DMRs
-- **Run-2 (without sex covariate)**: Significant DMRs but cannot separate sex vs genotype effects
-
-### Methylation Contexts
-
-| Context | Signal Level | DMR Analysis |
-|---------|--------------|--------------|
-| **CG (CpG)** | Primary (~82% methylated) | Main analysis |
-| **CHG** | Low (<1% methylated) | No significant results |
-| **CHH** | Very low (<1% methylated) | Not analyzed |
-
-### Expected Correlation Ranges
-
-| Context | Within-Group | Between-Group |
-|---------|--------------|---------------|
-| CG mC | 0.76-0.79 | 0.76-0.77 |
-| CG hmC | 0.48-0.51 | 0.47-0.49 |
-| CHG | 0.36-0.52 | Highly variable (noise) |
-
-## Documentation Hierarchy
-
-1. `CLAUDE.md` - This file (pipeline overview)
-2. `upstream/biomodal_docs.md` - DUET pipeline v1.5.0 guide
-3. `downstream/biomodal-interpretation-guide.md` - DMR interpretation
-4. `downstream/modality/biomodal-workflow.md` - Modality XPLR v1.3 documentation
-5. `downstream/modality/outputs/analysis_summary.md` - Results summary
-
-## Common Tasks
-
-### Re-run DMR Analysis with Different Covariates
-
-1. Edit `downstream/modality/config_CG.txt`
-2. Modify `Covariates=` line (blank for none, or `sex` to include)
-3. Run: `sbatch downstream/modality/run_modality.sb CG`
-
-### Examine Top DMRs
+### Visualization Pipeline (local R)
 
 ```bash
-# Gene body mC DMRs (sorted by q-value)
-zcat outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_*/num_mc_dmr_results.bed.gz | \
-  sort -k11,11g | head -20
+# Must run from downstream/ directory
+cd downstream/
 
-# Filter to q<0.05
-zcat outputs/run-2/outputs_CG/Results/gencode.vM25.mouse.genes.annotation/DMR_Report_*/num_mc_dmr_results_max_q_0.05.bed.gz
+# All 85 sections sequentially
+bash scripts/viz_sections/run_all_sections.sh
+
+# Individual section
+Rscript scripts/viz_sections/section_04_volcano_plots.R
+
+# Batch runners for grouped sections
+bash scripts/viz_sections/run_sections_22_26.sh   # demethylation ratio + TET
+bash scripts/viz_sections/run_sections_61_63.sh   # stoichiometry + heatmap
+bash scripts/viz_sections/run_sections_74_78.sh   # neuronal + aging
+
+# Permutation tests (HPC — heavy compute)
+sbatch scripts/viz_sections/run_permutation.sb
 ```
 
-### View QC Reports
+### Updating for a New Modality Run
 
-HTML reports are located in:
-- `outputs/run-N/outputs_CG/Reports/biological_qc_report*.html` - Sample correlations, PCA
-- `outputs/run-N/outputs_CG/Reports/{region}/*.html` - Per-region volcano plots
+Follow `downstream/docs/UPDATE.md`. Four files have hardcoded run paths:
+1. `downstream/scripts/viz_sections/_shared_config.R` — `DATA_PATHS`, `EXTRACT_PATHS`, `CHG_DATA_PATHS`
+2. `downstream/modality/scripts/process_all_dmr.sh` — `INPUT_DIR`
+3. `downstream/modality/scripts/visualize_dmr_results.R` — `load_dmr_data()`
+4. `downstream/scripts/viz_sections/compare_shallow_vs_deep.R` — `SHALLOW_PATHS`
 
-## Resource Requirements
+## Architecture
 
-| Pipeline Stage | CPUs | Memory | Runtime |
-|----------------|------|--------|---------|
-| DUET upstream | 16 | 128GB | ~48hr |
-| Modality downstream | 16 | 128GB | ~12hr |
+### Central Config (`downstream/scripts/viz_sections/_shared_config.R`)
+
+~620-line file sourced by every section script. Contains:
+- **Path blocks** — Hardcoded paths to run-5 DMR BED files, per-sample extractions, and non-CG contexts. All paths embed modality timestamps (e.g., `DMR_20260402_191818`).
+- **External data paths** — ChIP peaks, MeCP2 DiffBind, ATAC/K119ub/K27ac BEDs, DiffBind results, BigWigs, Hi-C loops. These do NOT change between runs.
+- **Helper functions** — `load_dmr_bed()`, `load_diffbind_flex()`, `dedup_by_gene()`, `classify_chromatin_state()`, `patch_chooseHclustMet()`, `theme_biomodal()`
+- **Pre-loaded data** — `mc_dmr`, `hmc_dmr` (deduplicated by gene), `bioqc`, `upstream`, `region_dmrs`
+- **Color/label standards** — `COLORS`, `CHROMATIN_STATE_ORDER`, `CHROMATIN_STATE_COLORS`
+
+### Section Script Convention
+
+Each `section_NN_name.R` is self-contained: sources `_shared_config.R`, reads additional data if needed, produces plots in `downstream/plots/visualizations/{section_num}_{name}/` in 4 formats (PNG + PDF + SVG + JPG) via `multi_format_output.R`, and saves tables to `downstream/plots/visualizations/tables/`.
+
+Section scripts must NOT contain hardcoded run paths — verify with:
+```bash
+grep -rn 'run-[0-9]' downstream/scripts/viz_sections/section_*.R  # should return 0 results
+```
+
+### DMR BED Format (modality output)
+
+13-14 tab-delimited columns: `chr`, `start`, `end`, `num_contexts`, `mean_coverage`, `mean_mod_group1`, `mean_mod_group2`, `mod_fold_change`, `mod_difference`, `test_statistic`, `dmr_pvalue`, `dmr_qvalue`, `annotation`, [`gene`]
+
+### Chromatin State Classification (7 categories, shared with Hi-C pipeline)
+
+1. **Active_Promoter** — H3K4me3+ AND NOT H3K27me3 AND ≤2kb from TSS
+2. **Repressed_Promoter** — H3K27me3+ AND NOT H3K27ac AND ≤2kb from TSS
+3. **Bivalent_Promoter** — K4me3+K27me3 overlap (pre-computed BED)
+4. **Polycomb** — H3K27me3+ AND >2kb from TSS
+5. **Active_Enhancer** — H3K27ac+ AND >2kb from TSS
+6. **Poised_Enhancer** — H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3 AND >2kb
+7. **Unmarked** — No marks
+
+## Conda Environments
+
+| Env | Used by | Key detail |
+|-----|---------|------------|
+| `env_nf` | Upstream DUET pipeline | Nextflow + biomodal CLI |
+| `modality` | Downstream DMR calling | modality XPLR CLI |
+
+Visualization R scripts use the system R 4.5.2 (`/usr/local/bin/Rscript`) directly — no conda env needed.
+
+## Analysis Run History
+
+| Run | Samples | Sex Covariate | Notes |
+|-----|---------|---------------|-------|
+| run-1 | 4 (shallow-seq) | Yes | No significant DMRs — sex confounded at n=2/group |
+| run-2 | 4 (shallow-seq) | No | First significant results |
+| run-3 | 4 (deep-seq) | No | Improved power |
+| run-4 | 8 (deep-seq) | No | Added batch 2 replicates |
+| run-5 | 8 (deep-seq) | Yes | **Current primary** — sex covariate properly powered |
+
+## Gotchas
+
+- **DMR paths embed timestamps.** Files like `DMR_mc_control__mutant_20260402_191818.bed` must match both the parent directory name and the filename. See `docs/UPDATE.md` for the update procedure.
+- **Working directory matters.** Visualization scripts assume `getwd()` is `downstream/`. Running from the wrong directory breaks all relative path resolution.
+- **MeCP2 is CUT&RUN, not ChIP.** Use "signal" or "mark" in labels — never "ChIP".
+- **Non-CG contexts are noise.** CHG/CHH show <1% methylation, no significant DMRs. They exist for completeness.
+- **Sections 34-36 (permutation tests)** require `regioneReloaded` and use `patch_chooseHclustMet()` to fix a crash with ≤2 rows.
+- **Section 77 (MeCP2 aging trajectory)** is blocked on external DiffBind data from collaborator Jai — the script includes `stopifnot()` guards.
+- **BigWig canonical source** is `/Users/zakiralibhai/sdsc/bigwigs/` — do NOT use `peaks/bigwigs/macs2.narrow.aug18.dedup/` (has 0-byte mutant files).
 
 ## HPC Paths (Expanse)
 
@@ -217,8 +144,18 @@ HTML reports are located in:
 Base: /expanse/lustre/projects/csd940/zalibhai/biomodal/
 ├── evoC-run/input/          # Raw FASTQ files
 ├── evoC-run/output/         # DUET pipeline outputs
-└── modality/                # Downstream analysis
-    ├── mm10/                # Reference regions
-    ├── outputs/             # DMR results
+└── modality/                # Downstream DMR analysis
+    ├── mm10/                # Reference region BED files
+    ├── outputs/run-{N}/     # Per-run results
     └── config_*.txt         # Context-specific configs
 ```
+
+## Documentation Hierarchy
+
+1. **This file** — Top-level pipeline overview and entry point
+2. `downstream/CLAUDE.md` — Detailed visualization architecture, section groupings, config structure
+3. `downstream/docs/UPDATE.md` — Step-by-step run update procedure with checklist
+4. `downstream/docs/FIGURES.md` — Figure descriptions and presentation mapping
+5. `upstream/biomodal_docs.md` — DUET pipeline v1.5.0 reference
+6. `downstream/modality/biomodal-workflow.md` — Modality XPLR v1.3 documentation
+7. `downstream/docs/biomodal-interpretation-guide.md` — DMR interpretation guide
