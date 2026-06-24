@@ -27,6 +27,8 @@ Jai Ramchandra, Zakir Alibhai, Kelly C Wang, Zhendong Song, Rachael Cui, Cole J 
 
 **RESULTS**
 
+1) Bap1's H2AUb is a key regulator in the overall amount of neuronal methylation and also the 5mC/5hmC balance throughout neurodevelopment. But, it seems to affect methylation levels in a broader context, rather than just loci related to neuronal connectivity and communication. and 2) MeCP2 only responds to chromatin shift change caused by methylation change
+
 1. **Bap1 loss results in increased MeCP2 binding in mature neurons, with no changes in binding in young neurons.**  
 * MeCP2 volcano plots  
   * P12 \- no DMRs, no apparent clustering in PCA  
