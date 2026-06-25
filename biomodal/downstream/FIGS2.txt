@@ -1,0 +1,742 @@
+
+========================================================================
+[1/10] Running section_79_methylation_phenotype.R
+  Log: logs/a4/79_methylation_phenotype.txt
+========================================================================
+Wed Jun 24 19:13:48 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:13:48 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+================================================================================
+FIGURE 1: Coordinated Gene-Body Methylation Phenotype (R2 + R3)
+================================================================================
+
+Panel A: global methylation shift (Section 64)...
+Panel B: %-significant DMRs by region (Section 03 / region_dmrs)...
+Panel C: dual volcano (Section 04)...
+Panel D: coordinated quadrant scatter (Section 05)...
+Panel E: effect-size densities (Section 07)...
+Panel F: Syt1 genome-browser track via pub_browser.R...
+  Calling pub_browser.R with Syt1 YAML config...
+  Saved: 79f_syt1_browser/{pdf,svg,png,jpg}
+Composing Section 79 (5-panel patchwork)...
+  Saved: 79a_global_shift/{pdf,svg,jpg}
+  Saved: 79b_region_breakdown/{pdf,svg,jpg}
+  Saved: 79c_dual_volcano/{pdf,svg,jpg}
+  Saved: 79d_quadrant_scatter/{pdf,svg,jpg}
+  Saved: 79e_effect_size_density/{pdf,svg,jpg}
+  Saved: 79_composite/{pdf,svg,jpg}
+
+Section 79 complete.
+  Panel A: delta 5mC +0.32% / 5hmC -0.39% (Cohen's d 2.79 / -4.54)
+  Panel B: gene bodies 51.4% vs promoters 8.3% significant
+  Panel C: 10,775 5mC / 11,484 5hmC significant
+  Panel D: 6,589 coordinated (78.7%)
+  Panel E: median 5mC +2.03% / 5hmC -1.83%
+  Panel F: Syt1 browser (separate output).
+================================================================================
+  Done.
+
+========================================================================
+[2/10] Running section_80_k119ub_chromatin_geography.R
+  Log: logs/a4/80_k119ub_chromatin_geography.txt
+========================================================================
+Wed Jun 24 19:14:14 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:14:14 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+Building Section 80 panels ...
+  Saved: 80a_chromatin_state_direction/{pdf,svg,jpg}
+  Saved: 80b_logistic_forest_plot/{pdf,svg,jpg}
+  Saved: 80c_compartment_enrichment/{pdf,svg,jpg}
+  Saved: 80d_polycomb_exclusion/{pdf,svg,jpg}
+  Saved: 80e_k119ub_honest_breakdown/{pdf,svg,jpg}
+  Saved: 80_composite/{pdf,svg,jpg}
+Section 80 complete.
+  Done.
+
+========================================================================
+[3/10] Running section_81_tet_mechanism.R
+  Log: logs/a4/81_tet_mechanism.txt
+========================================================================
+Wed Jun 24 19:14:25 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:14:25 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+========================================
+FIGURE 3: TET-Impediment, Not DNMT3A Recruitment
+========================================
+
+Panel A: baseline-5hmC dose-response (decile binning)...
+  Panel A: 20915 genes binned into 10 deciles
+  Decile 1 median hmc_diff = -0.0005; Decile 10 = -0.0261
+  Model A (baseline 5hmC) AUC = 0.762
+Panel B: model comparison (TET vs DNMT3A)...
+  TET impediment AUC = 0.793; DNMT3A recruitment AUC = 0.696
+Panel C: chromatin-state demethylation-ratio lollipop...
+  Active_Promoter median delta_ratio = -0.0281 (strongest impairment)
+Panel D: stoichiometry scatter with regression slopes...
+  Panel D scatter: 20915 genes (4118 neuronal)
+  Slope all genes = -0.959 (differs from -1: TRUE)
+  Slope neuronal  = -0.995 (differs from -1: FALSE)
+Panel E: TET-KO attenuation bar...
+  BAP1-KO median delta = -0.0085; TET-KO median delta = -0.2597
+  Absolute attenuation (BAP1/TET) = 0.0326 (3.3%)
+
+Composing Section 81...
+Saving Section 81 panels + composite...
+  Saved: 81a_dose_response/{pdf,svg,jpg}
+  Saved: 81b_model_comparison/{pdf,svg,jpg}
+  Saved: 81c_chromatin_state_lollipop/{pdf,svg,jpg}
+  Saved: 81d_stoichiometry/{pdf,svg,jpg}
+  Saved: 81e_tet_ko_attenuation/{pdf,svg,jpg}
+  Saved: 81_composite/{pdf,svg,jpg}
+
+Section 81 complete.
+Output:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/81_tet_mechanism 
+  Done.
+
+========================================================================
+[4/10] Running section_82_neuronal_specificity.R
+  Log: logs/a4/82_neuronal_specificity.txt
+========================================================================
+Wed Jun 24 19:14:37 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:14:37 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+=== Section 82: Neuronal Genes Are Preferentially Affected ===
+  Saved: 82a_k119ub_decile/{pdf,svg,jpg}
+  Saved: 82b_fisher_or_comparison/{pdf,svg,jpg}
+  Saved: 82c_synapse_chromatin/{pdf,svg,jpg}
+Error in `scale_x_continuous()`:
+! Discrete value supplied to a continuous scale.
+ℹ Example values: All genes, Non-neuronal, Neuronal (broad), and Synapse/axon.
+Backtrace:
+     ▆
+  1. └─global save_plot(panel_d, "82d_stoichiometry_slopes", w = 8, h = 6)
+  2.   └─global save_multiformat_ggplot(...)
+  3.     └─ggplot2::ggsave(pdf_path, plot, width = width, height = height)
+  4.       └─base::lapply(plot, grid.draw)
+  5.         ├─grid (local) FUN(X[[i]], ...)
+  6.         └─ggplot2 (local) `grid.draw.ggplot2::ggplot`(X[[i]], ...)
+  7.           ├─base::print(x)
+  8.           └─ggplot2 (local) `print.ggplot2::ggplot`(x)
+  9.             ├─ggplot2::ggplot_build(x)
+ 10.             └─ggplot2 (local) `ggplot_build.ggplot2::ggplot`(x)
+ 11.               └─layout$train_position(data, scale_x(), scale_y())
+ 12.                 └─ggplot2 (local) train_position(..., self = self)
+ 13.                   └─self$facet$train_scales(...)
+ 14.                     └─ggplot2 (local) train_scales(...)
+ 15.                       └─ggplot2:::scale_apply(layer_data, x_vars, "train", SCALE_X, x_scales)
+ 16.                         └─base::lapply(...)
+ 17.                           └─ggplot2 (local) FUN(X[[i]], ...)
+ 18.                             └─base::lapply(...)
+ 19.                               └─ggplot2 (local) FUN(X[[i]], ...)
+ 20.                                 └─scales[[i]][[method]](vec_slice(data[[var]], scale_index[[i]]))
+ 21.                                   └─ggplot2 (local) train(..., self = self)
+ 22.                                     └─self$range$train(x, call = self$call)
+ 23.                                       └─scales::train_continuous(x, self$range, call = call)
+ 24.                                         └─cli::cli_abort(...)
+ 25.                                           └─rlang::abort(...)
+Execution halted
+  *** FAILED (exit 1) ***
+
+========================================================================
+[5/10] Running section_83_mecp2_redistribution.R
+  Log: logs/a4/83_mecp2_redistribution.txt
+========================================================================
+Wed Jun 24 19:14:48 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:14:48 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+=============================================================
+FIGURE 4 — MeCP2 Redistribution and Developmental Amplification
+=============================================================
+
+--- Panel A: MeCP2 adult volcano ---
+  MeCP2 adult: 202650 peaks (7686 sig up, 1200 sig down at FDR<0.05)
+  MeCP2 adult peaks: 7686 UP / 1200 DOWN (FDR < 0.05)
+--- Panel B: MeCP2 peak-annotation distribution ---
+  UP distal-intergenic = 51.7%, UP promoter = 2.2%
+--- Panel C: DMR x MeCP2 overlap ---
+  DMR x MeCP2 Fisher OR = 5.13, p = 1.27e-33
+--- Panel D: MeCP2 aging peak counts ---
+  Aging-UP: ctrl = 10930, mut = 23117 (2.12x)
+--- Panel E: shared aging-peak fold scatter ---
+  Shared loci = 7305; median fold ctrl = 1.829, mut = 2.241; neuronal = 2266
+
+--- Composing Section 83 ---
+  Saved: 83a_mecp2_volcano/{pdf,svg,jpg}
+  Saved: 83b_peak_annotation/{pdf,svg,jpg}
+  Saved: 83c_dmr_overlap/{pdf,svg,jpg}
+  Saved: 83d_aging_peak_counts/{pdf,svg,jpg}
+  Saved: 83e_shared_fold/{pdf,svg,jpg}
+  Saved: 83_composite/{pdf,svg,jpg}
+
+Section 83 complete.
+  Done.
+
+========================================================================
+[6/10] Running section_84_mecp2_aging_methylation_overlay.R
+  Log: logs/a4/84_mecp2_aging_methylation_overlay.txt
+========================================================================
+Wed Jun 24 19:15:11 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:15:11 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+=== Section 84: MeCP2 Aging x Methylation Overlap ===
+
+  Control aging: 10930 age-increased peaks (FDR < 0.05, adult > young)
+'select()' returned 1:many mapping between keys and columns
+  Control aging: 2908 unique age-increased genes
+  Mutant aging: 23117 age-increased peaks (FDR < 0.05, adult > young)
+'select()' returned 1:many mapping between keys and columns
+  Mutant aging: 4274 unique age-increased genes
+  Mutant-unique aging-UP genes = 1654
+  Universe = 20915 genes; coordinated = 6069
+  Fisher 2x2: a=543 b=739 c=5526 d=14107; OR=1.876 [1.669, 2.107] p=8.988e-26
+  Observed overlap = 543 vs expected = 372.0
+  Saved: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/84_aging_methylation_overlap.tsv 
+  Saved: 84a_aging_methylation_overlap/{pdf,svg,jpg}
+  Saved: 84_composite/{pdf,svg,jpg}
+
+Section 84 complete.
+  Done.
+
+========================================================================
+[7/10] Running section_85_qc_pca_sex.R
+  Log: logs/a4/85_qc_pca_sex.txt
+========================================================================
+Wed Jun 24 19:15:34 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:15:34 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+=== Section 85: QC PCA with Sex Stratification ===
+
+  5mC PCA: PC1 = 42.6% variance, PC2 = 11.8% variance
+  5hmC PCA: PC1 = 48.8% variance, PC2 = 11.1% variance
+  Saved: 85a_5mc_pca/{pdf,svg,jpg}
+  Saved: 85b_5hmc_pca/{pdf,svg,jpg}
+  Saved: 85_composite/{pdf,svg,jpg}
+
+Section 85 complete.
+  Done.
+
+========================================================================
+[8/10] Running section_86_mecp2_chromatin_reader.R
+  Log: logs/a4/86_mecp2_chromatin_reader.txt
+========================================================================
+Wed Jun 24 19:15:44 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:15:44 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+=== Figure 5: MeCP2 Reads Chromatin State, Not Methylation ===
+Building panel A (Sec 62 model R^2 comparison)...
+Building panel B (Sec 62 variance partition)...
+Building panel C (Sec 67 K119ub by MeCP2 status)...
+  Panel C MeCP2-status partition (K119ub-quantifiable genes): Up=79 Down=34 NS=22270
+Building panel D (Sec 60 mirror-image profiles)...
+  Panel D K119ub at MeCP2-Down: mean=-0.039 (wilcox_q=0.182, ns)
+Building panel E (Sec 71 K119ub vs ratio variance)...
+Composing Section 86 (design AABB / CCDD / EEEE)...
+Saving Section 86 panels + composite...
+  Saved: 86a_model_r2/{pdf,svg,jpg}
+  Saved: 86b_variance/{pdf,svg,jpg}
+  Saved: 86c_k119ub_by_mecp2/{pdf,svg,jpg}
+  Saved: 86d_mirror_profiles/{pdf,svg,jpg}
+  Saved: 86e_ratio_variance/{pdf,svg,jpg}
+  Saved: 86_composite/{pdf,svg,jpg}
+
+=== Section 86 complete ===
+Output: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/86_mecp2_chromatin_reader
+  Done.
+
+========================================================================
+[9/10] Running section_87_mechanism_summary.R
+  Log: logs/a4/87_mechanism_summary.txt
+========================================================================
+Wed Jun 24 19:15:56 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:15:56 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+=== FIGURE 7: Mechanism Summary Data Panel (cascade) ===
+  Saved: 87a_k119ub_effect_size/{pdf,svg,jpg}
+  Saved: 87b_k119ub_or_waterfall/{pdf,svg,jpg}
+  Saved: 87c_tet_dnmt3a_auc/{pdf,svg,jpg}
+  Saved: 87d_mecp2_r2_cascade/{pdf,svg,jpg}
+  Saved: 87e_neuronal_convergence/{pdf,svg,jpg}
+  Saved: 87_composite/{pdf,svg,jpg}
+
+Section 87 complete. Outputs in  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/87_mechanism_summary 
+Key stats (TSV-confirmed):
+  A  background K119ub median log2FC = +0.007 (p = 1.81e-20)
+  B  H2AK119ub OR for hypermethylation = 4.71
+  C  TET AUC = 0.793 vs DNMT3A AUC = 0.696 (DeLong p = 9.43e-49)
+  D  MeCP2 binding R2: chromatin = 0.246 vs CG = 0.017
+  E  Coordinated x MeCP2-Up OR = 5.16; K119ub top-decile OR = 1.70
+  Done.
+
+========================================================================
+[10/10] Running section_88_supplemental_evidence.R
+  Log: logs/a4/88_supplemental_evidence.txt
+========================================================================
+Wed Jun 24 19:16:06 PDT 2026
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:16:06 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+========== Section 88: Supplemental Evidence ==========
+
+--- Panel A: permutation validation (Sec 37) ---
+
+--- Panel B: Field chr8 cross-species concordance (Sec 45) ---
+
+--- Panel C: CTCF anchor methylation (Sec 47) ---
+
+--- Panel D: CpG island K119ub depletion (Sec 48) ---
+
+--- Panel E: ASM doubling (Sec 44) ---
+
+--- Panel F: broad-neuronal total-methylation forest (Sec 78) ---
+
+--- Assembling Figure S1 composite ---
+  Saved: 88a_permutation/{pdf,svg,jpg}
+  Saved: 88b_field_chr8/{pdf,svg,jpg}
+  Saved: 88c_ctcf_anchor/{pdf,svg,jpg}
+  Saved: 88d_cpgi_k119ub/{pdf,svg,jpg}
+  Saved: 88e_asm_doubling/{pdf,svg,jpg}
+  Saved: 88f_total_meth/{pdf,svg,jpg}
+  Saved: 88_composite/{pdf,svg,jpg}
+
+========== Section 88 complete ==========
+  Panel A: 15/15 permutation tests Confirmed
+  Panel B: Field chr8 gene-body Fisher p = 0.0089, hypergeometric p = 4.6e-06
+  Panel C: CTCF lost-vs-gained mC-hyper OR = 3.28 (p = 5.4e-24)
+  Panel D: CpG-island K119ub overlap 17.2% (hyper) vs 30.2% (non-sig)
+  Panel E: ASM mutant/control ratio = 1.95x (1,408 DMR genes carry ASM)
+  Panel F: broad-neuronal total-methylation Delta = -0.0022
+  Done.
+Wed Jun 24 19:16:17 PDT 2026
+
+========================================================================
+COMPLETE: 9/10 sections succeeded
+  1 section(s) failed — check logs in logs/a4/
+========================================================================

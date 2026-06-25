@@ -1,0 +1,64 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 19:15:44 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - consolidated section utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+=== Figure 5: MeCP2 Reads Chromatin State, Not Methylation ===
+Building panel A (Sec 62 model R^2 comparison)...
+Building panel B (Sec 62 variance partition)...
+Building panel C (Sec 67 K119ub by MeCP2 status)...
+  Panel C MeCP2-status partition (K119ub-quantifiable genes): Up=79 Down=34 NS=22270
+Building panel D (Sec 60 mirror-image profiles)...
+  Panel D K119ub at MeCP2-Down: mean=-0.039 (wilcox_q=0.182, ns)
+Building panel E (Sec 71 K119ub vs ratio variance)...
+Composing Section 86 (design AABB / CCDD / EEEE)...
+Saving Section 86 panels + composite...
+  Saved: 86a_model_r2/{pdf,svg,jpg}
+  Saved: 86b_variance/{pdf,svg,jpg}
+  Saved: 86c_k119ub_by_mecp2/{pdf,svg,jpg}
+  Saved: 86d_mirror_profiles/{pdf,svg,jpg}
+  Saved: 86e_ratio_variance/{pdf,svg,jpg}
+  Saved: 86_composite/{pdf,svg,jpg}
+
+=== Section 86 complete ===
+Output: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/86_mecp2_chromatin_reader
