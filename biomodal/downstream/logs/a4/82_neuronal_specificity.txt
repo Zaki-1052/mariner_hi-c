@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-06-24 19:14:37 
+Date: 2026-06-24 20:55:17 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -47,34 +47,11 @@ Loaded _figure_config.R - consolidated section utilities available:
   Saved: 82a_k119ub_decile/{pdf,svg,jpg}
   Saved: 82b_fisher_or_comparison/{pdf,svg,jpg}
   Saved: 82c_synapse_chromatin/{pdf,svg,jpg}
-Error in `scale_x_continuous()`:
-! Discrete value supplied to a continuous scale.
-ℹ Example values: All genes, Non-neuronal, Neuronal (broad), and Synapse/axon.
-Backtrace:
-     ▆
-  1. └─global save_plot(panel_d, "82d_stoichiometry_slopes", w = 8, h = 6)
-  2.   └─global save_multiformat_ggplot(...)
-  3.     └─ggplot2::ggsave(pdf_path, plot, width = width, height = height)
-  4.       └─base::lapply(plot, grid.draw)
-  5.         ├─grid (local) FUN(X[[i]], ...)
-  6.         └─ggplot2 (local) `grid.draw.ggplot2::ggplot`(X[[i]], ...)
-  7.           ├─base::print(x)
-  8.           └─ggplot2 (local) `print.ggplot2::ggplot`(x)
-  9.             ├─ggplot2::ggplot_build(x)
- 10.             └─ggplot2 (local) `ggplot_build.ggplot2::ggplot`(x)
- 11.               └─layout$train_position(data, scale_x(), scale_y())
- 12.                 └─ggplot2 (local) train_position(..., self = self)
- 13.                   └─self$facet$train_scales(...)
- 14.                     └─ggplot2 (local) train_scales(...)
- 15.                       └─ggplot2:::scale_apply(layer_data, x_vars, "train", SCALE_X, x_scales)
- 16.                         └─base::lapply(...)
- 17.                           └─ggplot2 (local) FUN(X[[i]], ...)
- 18.                             └─base::lapply(...)
- 19.                               └─ggplot2 (local) FUN(X[[i]], ...)
- 20.                                 └─scales[[i]][[method]](vec_slice(data[[var]], scale_index[[i]]))
- 21.                                   └─ggplot2 (local) train(..., self = self)
- 22.                                     └─self$range$train(x, call = self$call)
- 23.                                       └─scales::train_continuous(x, self$range, call = call)
- 24.                                         └─cli::cli_abort(...)
- 25.                                           └─rlang::abort(...)
-Execution halted
+  Saved: 82d_stoichiometry_slopes/{pdf,svg,jpg}
+  Saved: 82_composite/{pdf,svg,jpg}
+
+Section 82 written to /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/82_neuronal_specificity (PDF + SVG + JPG)
+  Panel A  D10 neuronal-enrichment OR = 1.70
+  Panel B  Coord x MeCP2-Up OR = 5.16 ; Neuronal x MeCP2-Up OR = 1.73
+  Panel C  synapse-vs-broader-neuronal K27me3 delta = -0.044 (P = 2.95e-03)
+  Panel D  Neuronal(broad) slope = -0.995 (stoichiometric)

@@ -330,7 +330,7 @@ relation_fill <- c(
 panel_d <- ggplot(slopes_df, aes(x = group, y = slope, fill = relation)) +
   geom_hline(yintercept = -1, linetype = "dashed",
              colour = "grey40", linewidth = 0.4) +
-  annotate("text", x = 0.6, y = -1, vjust = -0.6, hjust = 0,
+  annotate("text", x = -Inf, y = -1, vjust = -0.6, hjust = -0.1,
            label = "stoichiometric (-1)", colour = "grey40", size = 2.3) +
   geom_col(width = 0.6, colour = "grey20", linewidth = 0.25) +
   geom_errorbar(aes(ymin = ci_lo, ymax = ci_hi),

@@ -1,0 +1,71 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-24 18:02:21 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+Loaded _figure_config.R - publication figure utilities available:
+  - theme_pub(base_size = 8)
+  - FIGURE_DIR: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/figures 
+  - save_figure(plot, name, width_mm, height_mm)  [PDF + SVG + JPG]
+  - read_table_tsv(filename)  [from /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables ]
+  - add_panel_labels(plot), stat_label(name, value, fmt), PUB_COLORS
+
+================================================================================
+FIGURE 1: Coordinated Gene-Body Methylation Phenotype (R2 + R3)
+================================================================================
+
+Panel A: global methylation shift (Section 64)...
+Panel B: %-significant DMRs by region (Section 03 / region_dmrs)...
+Panel C: dual volcano (Section 04)...
+Panel D: coordinated quadrant scatter (Section 05)...
+Panel E: effect-size densities (Section 07)...
+Panel F: per-sample methylation PCA (Section 42)...
+Panel G: Syt1 genome-browser track (Section 46)...
+  Saved: figure1G_syt1_browser/{pdf,svg,jpg}
+Composing Figure 1 (7-panel patchwork)...
+  Saved: figure1_methylation_phenotype/{pdf,svg,jpg}
+Warning message:
+The `fatten` argument of `geom_crossbar()` is deprecated as of ggplot2 4.0.0.
+ℹ Please use the `middle.linewidth` argument instead. 
+
+Figure 1 complete.
+  Panel A: delta 5mC +0.32% / 5hmC -0.39% (Cohen's d 2.79 / -4.54)
+  Panel B: gene bodies 51.4% vs promoters 8.3% significant
+  Panel C: 10,775 5mC / 11,484 5hmC significant
+  Panel D: 6,589 coordinated (78.7%)
+  Panel E: median 5mC +2.03% / 5hmC -1.83%
+  Panels F/G rendered (PCA + Syt1 browser).
+================================================================================

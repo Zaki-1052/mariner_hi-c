@@ -369,15 +369,108 @@ p_E <- ggplot(shared_fold, aes(x = ctrl_fold, y = mut_fold, colour = neuronal_la
   theme_pub()
 
 # =============================================================================
-# COMPOSE — 5 panels (A-E). Panel F (aging x methylation overlap) is now
-# standalone section 84.
+# PANEL F — Aging x methylation overlap (Fisher test, also section 84)
+# =============================================================================
+cat("--- Panel F: aging x methylation overlap (Fisher test) ---\n")
+
+aging_up_genes <- function(filepath, label) {
+  if (!file.exists(filepath)) stop("aging file not found: ", filepath)
+  df <- read.table(filepath, header = TRUE, sep = "\t",
+                   stringsAsFactors = FALSE, quote = "", fill = TRUE)
+  if (!all(c("Fold", "FDR") %in% colnames(df)))
+    stop("aging file missing Fold/FDR columns: ", filepath)
+  df$Fold <- -df$Fold
+  up <- df[df$FDR < Q_THRESHOLD & df$Fold > 0, , drop = FALSE]
+  cat(sprintf("  %s: %d age-increased peaks (FDR < %.2f, adult > young)\n",
+              label, nrow(up), Q_THRESHOLD))
+  chr_col   <- if ("seqnames" %in% colnames(up)) "seqnames" else "chr"
+  start_col <- if ("start" %in% colnames(up)) "start" else "Start"
+  end_col   <- if ("end" %in% colnames(up)) "end" else "End"
+  gr <- GenomicRanges::GRanges(
+    seqnames = up[[chr_col]],
+    ranges   = IRanges::IRanges(start = up[[start_col]], end = up[[end_col]]))
+  anno <- ChIPseeker::annotatePeak(
+    gr, TxDb = TxDb.Mmusculus.UCSC.mm10.knownGene,
+    annoDb = "org.Mm.eg.db", level = "gene", verbose = FALSE)
+  syms <- as.data.frame(anno)$SYMBOL
+  unique(syms[!is.na(syms) & syms != ""])
+}
+
+p_F <- tryCatch({
+  ctrl_aging_genes <- aging_up_genes(MECP2_FILES$ctrl_aging, "Control aging")
+  mut_aging_genes  <- aging_up_genes(MECP2_FILES$mut_aging,  "Mutant aging")
+  mut_unique_aging <- setdiff(mut_aging_genes, ctrl_aging_genes)
+  cat(sprintf("  Mutant-unique aging-UP genes = %d\n", length(mut_unique_aging)))
+
+  coord_tbl <- read_table_tsv("mecp2_coordinated_genes.tsv")
+  coordinated_genes <- unique(coord_tbl$gene[!is.na(coord_tbl$gene) & coord_tbl$gene != ""])
+  universe_tbl <- read_table_tsv("demethylation_ratio_all_genes.tsv")
+  universe <- unique(universe_tbl$gene[!is.na(universe_tbl$gene) & universe_tbl$gene != ""])
+  cat(sprintf("  Universe = %d genes; coordinated = %d\n",
+              length(universe), length(coordinated_genes)))
+
+  mut_unique_in_univ <- intersect(mut_unique_aging, universe)
+  coord_in_univ      <- intersect(coordinated_genes, universe)
+  is_aging <- universe %in% mut_unique_in_univ
+  is_coord <- universe %in% coord_in_univ
+  a <- sum(is_aging & is_coord); b <- sum(is_aging & !is_coord)
+  c <- sum(!is_aging & is_coord); d <- sum(!is_aging & !is_coord)
+
+  ft <- fisher.test(matrix(c(a, b, c, d), nrow = 2, byrow = TRUE))
+  or_val <- unname(ft$estimate); p_val <- ft$p.value
+  expected <- (sum(is_aging) * sum(is_coord)) / length(universe)
+  cat(sprintf("  Fisher OR=%.3f, p=%.3e; observed=%d vs expected=%.1f\n",
+              or_val, p_val, a, expected))
+
+  overlap_out <- data.frame(
+    test = "mut_unique_aging_UP x coordinated_mCup_hmCdown",
+    universe_n = length(universe), mut_unique_aging_n = sum(is_aging),
+    coordinated_n = sum(is_coord), overlap_observed = a,
+    overlap_expected = round(expected, 2), a = a, b = b, c = c, d = d,
+    odds_ratio = or_val, ci_lower = ft$conf.int[1], ci_upper = ft$conf.int[2],
+    p_value = p_val, stringsAsFactors = FALSE)
+  out_path <- file.path(TABLES_DIR, "84_aging_methylation_overlap.tsv")
+  write.table(overlap_out, out_path, sep = "\t", row.names = FALSE, quote = FALSE)
+  cat("  Saved:", out_path, "\n")
+
+  obs_exp_df <- data.frame(
+    kind  = factor(c("Observed", "Expected"), levels = c("Expected", "Observed")),
+    count = c(a, expected))
+  ggplot(obs_exp_df, aes(x = kind, y = count, fill = kind)) +
+    geom_col(width = 0.6) +
+    geom_text(aes(label = ifelse(kind == "Observed", as.character(round(count)),
+                                 sprintf("%.1f", count))),
+              vjust = -0.3, size = ANNO_SIZE) +
+    scale_fill_manual(values = c("Expected" = "grey70",
+                                 "Observed" = COLORS$condition[["Mutant"]]),
+                      guide = "none") +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.22))) +
+    annotate("text", x = 1.5, y = max(obs_exp_df$count) * 1.12,
+             label = sprintf("Fisher OR = %.2f\np = %.1e", or_val, p_val),
+             size = ANNO_SIZE, lineheight = 0.95) +
+    labs(title = "Mut-unique aging genes are coordinated DMRs",
+         subtitle = sprintf("%s mut-unique aging x %s coordinated",
+                            format(sum(is_aging), big.mark = ","),
+                            format(sum(is_coord), big.mark = ",")),
+         x = NULL, y = "Coordinated-DMR genes") +
+    theme_pub()
+}, error = function(e) {
+  warning("Panel F (aging x methylation overlap) skipped: ", conditionMessage(e))
+  ggplot() + annotate("text", x = 0.5, y = 0.5,
+    label = paste0("Panel F unavailable:\n", conditionMessage(e)),
+    size = ANNO_SIZE, lineheight = 0.95) + theme_void() +
+    labs(title = "Aging x methylation overlap")
+})
+
+# =============================================================================
+# COMPOSE — 6 panels (A-F)
 # =============================================================================
 
 cat("\n--- Composing Section 83 ---\n")
 
-layout_design <- "AABB\nCCDD\n#EE#"
+layout_design <- "AABB\nCCDD\nEEFF"
 
-sec83_composite <- p_A + p_B + p_C + p_D + p_E +
+sec83_composite <- p_A + p_B + p_C + p_D + p_E + p_F +
   patchwork::plot_layout(design = layout_design, heights = c(1.2, 1, 0.8))
 
 sec83_composite <- sec83_composite +
@@ -392,6 +485,7 @@ save_plot(p_B, "83b_peak_annotation",   w = 8, h = 6)
 save_plot(p_C, "83c_dmr_overlap",       w = 8, h = 6)
 save_plot(p_D, "83d_aging_peak_counts", w = 8, h = 6)
 save_plot(p_E, "83e_shared_fold",       w = 8, h = 7)
+save_plot(p_F, "83f_aging_methylation_overlap", w = 7, h = 6)
 save_plot(sec83_composite, "83_composite", w = 14, h = 14)
 
 cat("\nSection 83 complete.\n")
