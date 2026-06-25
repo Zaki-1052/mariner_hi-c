@@ -159,3 +159,8 @@ Base: /expanse/lustre/projects/csd940/zalibhai/biomodal/
 5. `upstream/biomodal_docs.md` — DUET pipeline v1.5.0 reference
 6. `downstream/modality/biomodal-workflow.md` — Modality XPLR v1.3 documentation
 7. `downstream/docs/biomodal-interpretation-guide.md` — DMR interpretation guide
+
+@downstream/CLAUDE.md
+@downstream/Methylation_Paper.md
+@downstream/TODOS.md
+@downstream/PLAN.md
