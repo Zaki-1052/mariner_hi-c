@@ -88,9 +88,16 @@ Nonconverted read counts from spike-in references:
 | phage_T4 | ghmC DNA | 0 | 0 | 0 | 0 |
 | phage_Xp12 | 5mC DNA | 0 | 0 | 0 | 0 |
 
-These are counts of reads flagged as having too many unconverted cytosines per spike-in reference. WGBS pipeline does not include spike-in controls; non-CG methylation rate serves as the conversion proxy.
+These are counts of reads flagged as having too many unconverted cytosines per spike-in reference.
 
 Source: `emseq/stats/nonconverted_counts/260516_*.nonconverted_counts.for_agg.tsv`
+
+### WGBS Conversion Control
+
+The WGBS libraries included a Zymo *E. coli* non-methylated genomic DNA spike-in (D5016, K-12 strain MG1655, Dam⁻/Dcm⁻) as the bisulfite conversion control. However, the Bismark index was built on mm10 only (22 contigs, no *E. coli* reference), so the spike-in reads were not aligned and no *E. coli*-derived conversion stats are available from this pipeline. Non-CG methylation rate (CHH 1.1–1.4%) serves as the conversion efficiency proxy for WGBS.
+
+*E. coli* K-12 MG1655 reference: https://www.ncbi.nlm.nih.gov/genome/167?genome_assembly_id=161521
+Spike-in product: Zymo D5016 (*E. coli* Non-methylated Genomic DNA)
 
 ---
 

@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-06-26 15:24:44 
+Date: 2026-06-26 16:22:48 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -80,25 +80,25 @@ PART 3: Continuous PC1 Regression
 ================================================================================
 
 Loading Homer PC1 eigenvalues for gene-level join...
-  16895 unique genes with PC1 values
-  Matched: 12272 genes (58.5% of DMR genes)
+  22143 unique genes with PC1 values
+  Matched: 16094 genes (76.8% of DMR genes)
 Creating Figure 90e: PC1 regression scatters...
-  5mC ~ PC1: beta=0.00864, R²=0.0823, p < 2.2e-16, Spearman rho=0.3418
-  5hmC ~ PC1: beta=-0.00658, R²=0.1251, p < 2.2e-16, Spearman rho=-0.4091
+  5mC ~ PC1: beta=0.00863, R²=0.0784, p < 2.2e-16, Spearman rho=0.3374
+  5hmC ~ PC1: beta=-0.00658, R²=0.1240, p < 2.2e-16, Spearman rho=-0.4033
   Saved: 90e_pc1_regression_scatter/{pdf,svg,jpg}
 Creating Figure 90f: gradient steepness comparison...
   Standardized betas:
-    5mC:  std_beta = +0.2868
-    5hmC: std_beta = -0.3537
-    |5hmC| - |5mC| = +0.0669
+    5mC:  std_beta = +0.2800
+    5hmC: std_beta = -0.3522
+    |5hmC| - |5mC| = +0.0722
   Bootstrap comparison (|std_beta_hmC| - |std_beta_mC|):
-    Observed: +0.0669
-    95% CI: [+0.0515, +0.0815]
+    Observed: +0.0722
+    95% CI: [+0.0587, +0.0858]
     p = 0.0000
   --> 5hmC has STEEPER compartment gradient → consistent with TET impediment
 
   Interaction test (delta ~ pc1 * modality):
-    pc1:modality5hmC coefficient: -0.01522, p < 2.2e-16
+    pc1:modality5hmC coefficient: -0.01521, p < 2.2e-16
   Saved: 90f_gradient_steepness_comparison/{pdf,svg,jpg}
 
 ================================================================================
@@ -108,43 +108,43 @@ PART 4: Mechanism Differentiation (Mediation + Variance Partition)
 Running mediation analysis (following Section 61 bootstrap pattern)...
 
   Model 1: TET-first (PC1 -> hmC -> mC):
-    Path a (mean_ctrl_pc1 → hmc_diff):       beta = -0.006582, p < 2.2e-16
-    Path b (hmc_diff → mc_diff|mean_ctrl_pc1): beta = -0.928949, p < 2.2e-16
-    Total (c):              beta = +0.008636
-    Direct (c'):            beta = +0.002521
-    Indirect (a × b):       0.006115
-    Proportion mediated:    70.8%
+    Path a (mean_ctrl_pc1 → hmc_diff):       beta = -0.006579, p < 2.2e-16
+    Path b (hmc_diff → mc_diff|mean_ctrl_pc1): beta = -0.937407, p < 2.2e-16
+    Total (c):              beta = +0.008630
+    Direct (c'):            beta = +0.002463
+    Indirect (a × b):       0.006167
+    Proportion mediated:    71.5%
     VIF (mediator~exposure): 1.14
-    Bootstrap 95% CI: [0.005297, 0.006818]
+    Bootstrap 95% CI: [0.005538, 0.006767]
     Bootstrap p = 0.0000
 
   Model 2: DNMT3A-first (PC1 -> mC -> hmC):
-    Path a (mean_ctrl_pc1 → mc_diff):       beta = +0.008636, p < 2.2e-16
-    Path b (mc_diff → hmc_diff|mean_ctrl_pc1): beta = -0.338288, p < 2.2e-16
-    Total (c):              beta = -0.006582
-    Direct (c'):            beta = -0.003661
-    Indirect (a × b):       -0.002921
-    Proportion mediated:    44.4%
+    Path a (mean_ctrl_pc1 → mc_diff):       beta = +0.008630, p < 2.2e-16
+    Path b (mc_diff → hmc_diff|mean_ctrl_pc1): beta = -0.327215, p < 2.2e-16
+    Total (c):              beta = -0.006579
+    Direct (c'):            beta = -0.003755
+    Indirect (a × b):       -0.002824
+    Proportion mediated:    42.9%
     VIF (mediator~exposure): 1.09
-    Bootstrap 95% CI: [-0.003235, -0.002580]
+    Bootstrap 95% CI: [-0.003090, -0.002557]
     Bootstrap p = 0.0000
 
   MEDIATION COMPARISON:
-    TET-first proportion mediated:   70.8%
-    DNMT3A-first proportion mediated: 44.4%
+    TET-first proportion mediated:   71.5%
+    DNMT3A-first proportion mediated: 42.9%
   --> TET-first path shows STRONGER mediation
   Saved: 90g_mediation_comparison/{pdf,svg,jpg}
 
 Computing variance partition...
   Variance partition:
-    [Predicting Δ5mC] PC1 unique             0.0061 (0.6%)
-    [Predicting Δ5mC] Other modality unique  0.2884 (28.8%)
-    [Predicting Δ5mC] Shared                 0.0761 (7.6%)
-    [Predicting Δ5mC] Unexplained            0.6293 (62.9%)
-    [Predicting Δ5hmC] PC1 unique             0.0355 (3.6%)
-    [Predicting Δ5hmC] Other modality unique  0.2749 (27.5%)
-    [Predicting Δ5hmC] Shared                 0.0896 (9.0%)
-    [Predicting Δ5hmC] Unexplained            0.6000 (60.0%)
+    [Predicting Δ5mC] PC1 unique             0.0056 (0.6%)
+    [Predicting Δ5mC] Other modality unique  0.2827 (28.3%)
+    [Predicting Δ5mC] Shared                 0.0728 (7.3%)
+    [Predicting Δ5mC] Unexplained            0.6389 (63.9%)
+    [Predicting Δ5hmC] PC1 unique             0.0372 (3.7%)
+    [Predicting Δ5hmC] Other modality unique  0.2687 (26.9%)
+    [Predicting Δ5hmC] Shared                 0.0868 (8.7%)
+    [Predicting Δ5hmC] Unexplained            0.6073 (60.7%)
   Saved: 90h_variance_partition/{pdf,svg,jpg}
 
 ================================================================================
@@ -152,18 +152,18 @@ PART 5: B-Compartment Behavior
 ================================================================================
 
 Creating Figure 90i: B-compartment behavior...
-  B-compartment genes: 3490
-    mC sig: 1352 (38.7%)
-    hmC sig: 1523 (43.6%)
+  B-compartment genes: 4226
+    mC sig: 1547 (36.6%)
+    hmC sig: 1721 (40.7%)
   B-compartment 2x2 (mC sig x hmC sig):
        hmC_sig
 mC_sig  FALSE TRUE
-  FALSE  1570  568
-  TRUE    397  955
-  Fisher's OR = 6.64, p < 2.2e-16
+  FALSE  2028  651
+  TRUE    477 1070
+  Fisher's OR = 6.98, p < 2.2e-16
   B-compartment Wilcoxon (vs 0):
-    Δ5mC: median=-0.00370, p < 2.2e-16
-    Δ5hmC: median=-0.00020, p = 9.93e-01
+    Δ5mC: median=-0.00366, p < 2.2e-16
+    Δ5hmC: median=-0.00034, p = 7.68e-02
   Saved: 90i_b_compartment_behavior/{pdf,svg,jpg}
 
 Creating combined figures...
@@ -181,21 +181,21 @@ Saving tables...
   Saved: 90_mediation_comparison.tsv
   Saved: 90_variance_partition.tsv
   Saved: 90_b_compartment_contingency.tsv
-  Saved: 90_per_gene_pc1_assignment.tsv (12272 genes)
+  Saved: 90_per_gene_pc1_assignment.tsv (16094 genes)
 
 ================================================================================
 MECHANISM DIFFERENTIATION SUMMARY
 ================================================================================
 
   Saved: 90_mechanism_summary.tsv
-  Gradient steepness (|std_beta|)               mC=0.2868  hmC=0.3537  → TET impediment
+  Gradient steepness (|std_beta|)               mC=0.2800  hmC=0.3522  → TET impediment
   Interaction (PC1 x modality)                  mC=NA  hmC=NA  → Different slopes (sig interaction)
-  Mediation proportion (TET-first)              mC=NA  hmC=70.8084  → TET impediment
-  Mediation proportion (DNMT3A-first)           mC=44.3806  hmC=NA  → TET impediment
-  Variance: PC1 unique for Δ5mC                mC=0.6133  hmC=NA  → See values
-  Variance: PC1 unique for Δ5hmC               mC=NA  hmC=3.5521  → See values
-  B-cmpt median Δ5mC                           mC=-0.3702  hmC=NA  → See values
-  B-cmpt median Δ5hmC                          mC=NA  hmC=-0.0201  → See values
+  Mediation proportion (TET-first)              mC=NA  hmC=71.4613  → TET impediment
+  Mediation proportion (DNMT3A-first)           mC=42.9229  hmC=NA  → TET impediment
+  Variance: PC1 unique for Δ5mC                mC=0.5592  hmC=NA  → See values
+  Variance: PC1 unique for Δ5hmC               mC=NA  hmC=3.7242  → See values
+  B-cmpt median Δ5mC                           mC=-0.3656  hmC=NA  → See values
+  B-cmpt median Δ5hmC                          mC=NA  hmC=-0.0338  → See values
 
 ================================================================================
 SECTION 90 COMPLETE
