@@ -1,0 +1,254 @@
+<!--
+  ~ Copyright 2013-2024, Seqera Labs
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<html>
+<head>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+<pre class="mermaid" style="text-align: center;">
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#B6ECE2',
+      'primaryTextColor': '#160F26',
+      'primaryBorderColor': '#065647',
+      'lineColor': '#545555',
+      'clusterBkg': '#BABCBD22',
+      'clusterBorder': '#DDDEDE',
+      'fontFamily': 'arial'
+    }
+  }
+}%%
+flowchart TB
+    subgraph " "
+    v2["Channel.fromList"]
+    v7["Channel.fromPath"]
+    v9["Channel.fromPath"]
+    v12["Channel.fromPath"]
+    v14["Channel.fromPath"]
+    v118[" "]
+    v119["index_format"]
+    v164["gff"]
+    v173["Channel.of"]
+    v176[" "]
+    v182["Channel.fromPath"]
+    v185["ch_workflow_summary"]
+    v189["ch_methods_description"]
+    v209["replace_names"]
+    v210["sample_names"]
+    end
+    subgraph " "
+    v11["fasta_index"]
+    v16["bwamem_index"]
+    v73[" "]
+    v74["ch_fastqc_html"]
+    v76[" "]
+    v77[" "]
+    v78[" "]
+    v111[" "]
+    v112[" "]
+    v114["ch_alignment_reports"]
+    v121[" "]
+    v122[" "]
+    v123[" "]
+    v124[" "]
+    v125[" "]
+    v126[" "]
+    v128[" "]
+    v129[" "]
+    v130["bai"]
+    v133["methylation_calls"]
+    v134["bedgraph"]
+    v137["coverage2cytosine_summary"]
+    v138["coverage2cytosine_report"]
+    v139["coverage2cytosine_coverage"]
+    v168["preseq"]
+    v181[" "]
+    v212[" "]
+    v213[" "]
+    v214[" "]
+    v217["versions"]
+    v219[" "]
+    end
+    subgraph "NFCORE_METHYLSEQ [NFCORE_METHYLSEQ]"
+    subgraph "NFCORE_METHYLSEQ:FASTA_INDEX_METHYLSEQ [FASTA_INDEX_METHYLSEQ]"
+    v29(["GUNZIP"])
+    v33(["UNTAR_BISMARK"])
+    v28(( ))
+    v31(( ))
+    v32(( ))
+    end
+    subgraph "NFCORE_METHYLSEQ:METHYLSEQ [METHYLSEQ]"
+    v69(["CAT_FASTQ"])
+    v72(["FASTQC"])
+    v75(["TRIMGALORE"])
+    subgraph "NFCORE_METHYLSEQ:METHYLSEQ:FASTQ_ALIGN_DEDUP_BISMARK [FASTQ_ALIGN_DEDUP_BISMARK]"
+    v110(["BISMARK_ALIGN"])
+    v115(["BISMARK_DEDUPLICATE"])
+    v120(["SAMTOOLS_SORT"])
+    v127(["SAMTOOLS_INDEX"])
+    v132(["BISMARK_METHYLATIONEXTRACTOR"])
+    v136(["BISMARK_COVERAGE2CYTOSINE"])
+    v143(["BISMARK_REPORT"])
+    v151(["BISMARK_SUMMARY"])
+    v113(( ))
+    v116(( ))
+    v117(( ))
+    v145(( ))
+    v149(( ))
+    v150(( ))
+    end
+    v165(["QUALIMAP_BAMQC"])
+    v167(["PRESEQ_LCEXTRAP"])
+    v211(["MULTIQC"])
+    v68(( ))
+    v71(( ))
+    v80(( ))
+    v177(( ))
+    v206(( ))
+    v207(( ))
+    v208(( ))
+    v215(( ))
+    end
+    v8(( ))
+    v10(( ))
+    v13(( ))
+    v15(( ))
+    v36(( ))
+    end
+    subgraph "PIPELINE_INITIALISATION [PIPELINE_INITIALISATION]"
+    v3(( ))
+    end
+    subgraph "PIPELINE_COMPLETION [PIPELINE_COMPLETION]"
+    v218(( ))
+    end
+    v2 --> v3
+    v7 --> v8
+    v9 --> v10
+    v10 --> v11
+    v12 --> v13
+    v14 --> v15
+    v15 --> v16
+    v28 --> v29
+    v29 --> v28
+    v29 --> v31
+    v32 --> v33
+    v33 --> v31
+    v33 --> v32
+    v68 --> v69
+    v69 --> v68
+    v69 --> v71
+    v68 --> v72
+    v72 --> v74
+    v72 --> v73
+    v72 --> v71
+    v68 --> v75
+    v75 --> v78
+    v75 --> v77
+    v75 --> v76
+    v75 --> v71
+    v75 --> v80
+    v80 --> v110
+    v110 --> v115
+    v110 --> v112
+    v110 --> v111
+    v110 --> v113
+    v110 --> v116
+    v110 --> v145
+    v113 --> v114
+    v115 --> v120
+    v115 --> v132
+    v115 --> v116
+    v115 --> v117
+    v118 --> v120
+    v119 --> v120
+    v120 --> v127
+    v120 --> v126
+    v120 --> v125
+    v120 --> v124
+    v120 --> v123
+    v120 --> v122
+    v120 --> v121
+    v120 --> v165
+    v120 --> v167
+    v127 --> v130
+    v127 --> v129
+    v127 --> v128
+    v127 --> v117
+    v80 --> v132
+    v132 --> v134
+    v132 --> v133
+    v132 --> v136
+    v132 --> v116
+    v132 --> v117
+    v132 --> v149
+    v132 --> v150
+    v80 --> v136
+    v136 --> v139
+    v136 --> v138
+    v136 --> v137
+    v136 --> v117
+    v116 --> v143
+    v143 --> v116
+    v143 --> v117
+    v116 --> v151
+    v145 --> v151
+    v149 --> v151
+    v150 --> v151
+    v151 --> v116
+    v151 --> v117
+    v164 --> v165
+    v165 --> v71
+    v167 --> v168
+    v167 --> v71
+    v173 --> v71
+    v176 --> v177
+    v177 --> v181
+    v182 --> v206
+    v185 --> v71
+    v189 --> v71
+    v209 --> v211
+    v210 --> v211
+    v71 --> v211
+    v206 --> v211
+    v207 --> v211
+    v208 --> v211
+    v211 --> v214
+    v211 --> v213
+    v211 --> v212
+    v211 --> v215
+    v36 --> v217
+    v218 --> v219
+    v3 --> v68
+    v8 --> v28
+    v13 --> v32
+    v28 --> v80
+    v31 --> v36
+    v32 --> v80
+    v71 --> v36
+    v36 --> v71
+    v116 --> v71
+    v117 --> v71
+    v215 --> v218
+
+</pre>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, maxTextSize: Number.MAX_SAFE_INTEGER, maxEdges: Number.MAX_SAFE_INTEGER });
+</script>
+</body>
+</html>

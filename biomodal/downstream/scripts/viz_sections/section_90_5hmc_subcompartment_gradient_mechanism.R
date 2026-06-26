@@ -338,7 +338,8 @@ if (!file.exists(PC1_PATH)) {
 }
 
 cat("Loading Homer PC1 eigenvalues for gene-level join...\n")
-pc1_raw <- read.table(PC1_PATH, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+pc1_raw <- read.table(PC1_PATH, header = TRUE, sep = "\t", stringsAsFactors = FALSE,
+                      comment.char = "", fill = TRUE, quote = "")
 
 pc1_per_gene <- pc1_raw %>%
   dplyr::filter(!is.na(Gene_Name) & Gene_Name != "") %>%

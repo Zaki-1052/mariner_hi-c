@@ -67,7 +67,8 @@ if (!file.exists(PC1_PATH)) {
 }
 
 cat("\nLoading Homer PC1 eigenvalues (25kb resolution)...\n")
-pc1_raw <- read.table(PC1_PATH, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+pc1_raw <- read.table(PC1_PATH, header = TRUE, sep = "\t", stringsAsFactors = FALSE,
+                      comment.char = "", fill = TRUE, quote = "")
 cat(sprintf("  %d bins loaded (25kb resolution)\n", nrow(pc1_raw)))
 cat(sprintf("  ctrl_avg_PC1 range: [%.3f, %.3f]\n",
             min(pc1_raw$ctrl_avg_PC1, na.rm = TRUE),
