@@ -1,0 +1,2221 @@
+======================================
+EM-seq Pipeline Test Run
+======================================
+Started: Thu Jun 25 19:51:19 PDT 2026
+
+=== Step 1: FASTQ to uBAM conversion ===
+Started: Thu Jun 25 19:51:44 PDT 2026
+[33mNextflow 26.04.4 is available - Please consider updating your version to it[m
+
+ N E X T F L O W   ~  version 25.10.4
+
+Launching `fastq_to_ubam.nf` [chaotic_lovelace] DSL2 - revision: 3e904107dc
+
+[-        ] FastqToBamPaired -
+
+[-        ] FastqToBamPaired -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.21 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_fastq2ubam/conda/env-d3f884b68afb8523613beb791c81270f]
+
+executor >  local (1)
+[8f/fe6975] FastqToBamPaired (1) | 0 of 4
+
+
+executor >  local (1)
+[8f/fe6975] FastqToBamPaired (1) | 0 of 4
+
+
+executor >  local (2)
+[8f/fe6975] FastqToBamPaired (1) | 1 of 4
+
+executor >  local (3)
+[65/243439] FastqToBamPaired (3) | 2 of 4
+
+executor >  local (4)
+[d0/f8c4ce] FastqToBamPaired (4) | 3 of 4
+
+executor >  local (4)
+[d0/f8c4ce] FastqToBamPaired (4) | 3 of 4
+
+executor >  local (4)
+[d0/f8c4ce] FastqToBamPaired (4) | 4 of 4 ✔
+
+executor >  local (4)
+[d0/f8c4ce] FastqToBamPaired (4) | 4 of 4 ✔
+Completed at: 25-Jun-2026 20:19:36
+Duration    : 27m 43s
+CPU hours   : 0.2
+Succeeded   : 4
+
+
+FASTQ to uBAM completed: Thu Jun 25 20:19:37 PDT 2026
+
+=== Step 2: Main EM-seq pipeline ===
+Started: Thu Jun 25 20:19:37 PDT 2026
+[33mNextflow 26.04.4 is available - Please consider updating your version to it[m
+
+ N E X T F L O W   ~  version 25.10.4
+
+Launching `main.nf` [gigantic_perlman] DSL2 - revision: cb88ddbce8
+
+[-        ] fastp                       -
+[-        ] alignReads                  -
+[-        ] mergeAndMarkDuplicates      -
+[-        ] methylDackel_extract        -
+[-        ] methylDackel_mbias          -
+[-        ] gc_bias                     -
+[-        ] idx_stats                   -
+[-        ] flagstats                   -
+[-        ] fastqc                      -
+[-        ] picard_metrics              -
+[-        ] tasmanian                   -
+[-        ] combine_nonconverted_counts -
+[-        ] insert_size_metrics         -
+
+[-        ] fastp                       -
+[-        ] alignReads                  -
+[-        ] mergeAndMarkDuplicates      -
+[-        ] methylDackel_extract        -
+[-        ] methylDackel_mbias          -
+[-        ] gc_bias                     -
+[-        ] idx_stats                   -
+[-        ] flagstats                   -
+[-        ] fastqc                      -
+[-        ] picard_metrics              -
+[-        ] tasmanian                   -
+[-        ] combine_nonconverted_counts -
+[-        ] insert_size_metrics         -
+[-        ] multiqc                     -
+WARN: Access to undefined parameter `fastp_path` -- Initialise it to a default value eg. `params.fastp_path = some_value`
+
+[-        ] fastp                       -
+[-        ] alignReads                  -
+[-        ] mergeAndMarkDuplicates      -
+[-        ] methylDackel_extract        -
+[-        ] methylDackel_mbias          -
+[-        ] gc_bias                     -
+[-        ] idx_stats                   -
+[-        ] flagstats                   -
+[-        ] fastqc                      -
+[-        ] picard_metrics              -
+[-        ] tasmanian                   -
+[-        ] combine_nonconverted_counts -
+[-        ] insert_size_metrics         -
+[-        ] multiqc                     -
+Creating env using conda: bioconda::samtools=1.21 bioconda::fastp=1.0.1 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-cb3606076fdf9cc35904a687e1a3aafe]
+WARN: Access to undefined parameter `fastp_path` -- Initialise it to a default value eg. `params.fastp_path = some_value`
+
+[-        ] fastp                       | 0 of 3
+[-        ] alignReads                  -
+[-        ] mergeAndMarkDuplicates      -
+[-        ] methylDackel_extract        -
+[-        ] methylDackel_mbias          -
+[-        ] gc_bias                     -
+[-        ] idx_stats                   -
+[-        ] flagstats                   -
+[-        ] fastqc                      -
+[-        ] picard_metrics              -
+[-        ] tasmanian                   -
+[-        ] combine_nonconverted_counts -
+[-        ] insert_size_metrics         -
+[-        ] multiqc                     -
+
+
+
+executor >  local (1)
+[80/504c44] fas…p1_P60_ctrl1_5mC_S44_L002) | 0 of 6
+[-        ] alignReads                     -
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+
+executor >  local (2)
+[80/504c44] fas…p1_P60_ctrl1_5mC_S44_L002) | 1 of 6
+[-        ] alignReads                     -
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: conda-forge::python=3.10 bioconda::bwameth=0.2.7 bioconda::mark-nonconverted-reads=1.2 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-486ea7666d213ec94589a1181aa89645]
+
+executor >  local (3)
+[d4/17437f] fas…_adult_ctrl_3139_S63_L001) | 2 of 6
+[-        ] alignReads                     -
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+
+executor >  local (3)
+[d4/17437f] fas…_adult_ctrl_3139_S63_L001) | 2 of 6
+[-        ] alignReads                     -
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+
+executor >  local (4)
+[d2/1bd0bd] fas…1_adult_mut_3391_S64_L001) | 3 of 6
+[-        ] alignReads                     -
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (5)
+[d8/21e344] fas…p1_P60_ctrl2_5mC_S45_L002) | 4 of 6
+[-        ] alignReads                     -
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (5)
+[d8/21e344] fas…p1_P60_ctrl2_5mC_S45_L002) | 4 of 6
+[-        ] alignReads                     -
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (5)
+[d8/21e344] fas…p1_P60_ctrl2_5mC_S45_L002) | 4 of 6
+[-        ] alignReads                     | 0 of 30
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (5)
+[d8/21e344] fas…p1_P60_ctrl2_5mC_S45_L002) | 5 of 6
+[-        ] alignReads                     | 0 of 37
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (6)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 5 of 6
+[-        ] alignReads                     | 0 of 37
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (7)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[5b/4e9be5] ali…p1_P60_ctrl1_5mC_S44_L002) | 0 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (7)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[5b/4e9be5] ali…p1_P60_ctrl1_5mC_S44_L002) | 0 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (8)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[d0/b1a258] ali…_adult_ctrl_3200_S65_L001) | 1 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (8)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[d0/b1a258] ali…_adult_ctrl_3200_S65_L001) | 2 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (9)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[19/b5f1e6] ali…_adult_ctrl_3139_S63_L001) | 2 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (10)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[3f/6c1d5e] ali…_adult_ctrl_3139_S63_L001) | 3 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (11)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[fd/435417] ali…p1_P60_ctrl1_5mC_S44_L002) | 4 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (12)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[84/27a7d9] ali…_adult_ctrl_3139_S63_L001) | 5 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (12)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[84/27a7d9] ali…_adult_ctrl_3139_S63_L001) | 6 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (13)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[4a/2cb3cb] ali…_adult_ctrl_3200_S65_L001) | 6 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (13)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[4a/2cb3cb] ali…_adult_ctrl_3200_S65_L001) | 7 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (14)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[a2/f5256d] ali…_adult_ctrl_3200_S65_L001) | 7 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (15)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[c5/3c5ed1] ali…p1_P60_ctrl1_5mC_S44_L002) | 8 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (15)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[c5/3c5ed1] ali…p1_P60_ctrl1_5mC_S44_L002) | 8 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (16)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e5/c1c6a5] ali…p1_P60_ctrl1_5mC_S44_L002) | 9 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (17)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[a6/443ac0] ali…_adult_ctrl_3139_S63_L001) | 10 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (18)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[0d/57e5b4] ali…1_adult_mut_3391_S64_L001) | 11 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (19)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[0f/82d2d0] ali…p1_P60_ctrl1_5mC_S44_L002) | 12 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (19)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[0f/82d2d0] ali…p1_P60_ctrl1_5mC_S44_L002) | 12 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (20)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[25/008935] ali…_adult_ctrl_3200_S65_L001) | 13 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (20)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[25/008935] ali…_adult_ctrl_3200_S65_L001) | 13 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (21)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[56/e593d7] ali…_adult_ctrl_3139_S63_L001) | 14 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (21)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[56/e593d7] ali…_adult_ctrl_3139_S63_L001) | 14 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (21)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[56/e593d7] ali…_adult_ctrl_3139_S63_L001) | 15 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (22)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[87/d89656] ali…_adult_ctrl_3139_S63_L001) | 15 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (22)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[87/d89656] ali…_adult_ctrl_3139_S63_L001) | 16 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (23)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[7e/411c1f] ali…_adult_ctrl_3200_S65_L001) | 16 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (24)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[f9/dd9c21] ali…_adult_ctrl_3200_S65_L001) | 17 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (25)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[cb/e1ba6b] ali…_adult_ctrl_3200_S65_L001) | 18 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (25)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[cb/e1ba6b] ali…_adult_ctrl_3200_S65_L001) | 19 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (26)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e7/a486a9] ali…_adult_ctrl_3139_S63_L001) | 19 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (27)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[26/6e0a88] ali…_adult_ctrl_3139_S63_L001) | 20 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (27)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[26/6e0a88] ali…_adult_ctrl_3139_S63_L001) | 21 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (28)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[7f/14ac10] ali…p1_P60_ctrl1_5mC_S44_L002) | 21 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (28)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[7f/14ac10] ali…p1_P60_ctrl1_5mC_S44_L002) | 22 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (29)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[35/d5b0fa] ali…p1_P60_ctrl1_5mC_S44_L002) | 22 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (30)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[cb/9653dc] ali…p1_P60_ctrl1_5mC_S44_L002) | 23 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (30)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[cb/9653dc] ali…p1_P60_ctrl1_5mC_S44_L002) | 23 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (31)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[1d/5e386e] ali…_adult_ctrl_3200_S65_L001) | 24 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (31)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[1d/5e386e] ali…_adult_ctrl_3200_S65_L001) | 24 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (32)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[6a/1bb204] ali…1_adult_mut_3391_S64_L001) | 25 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (32)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[6a/1bb204] ali…1_adult_mut_3391_S64_L001) | 25 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (33)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[8c/f7ace6] ali…1_adult_mut_3391_S64_L001) | 26 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (34)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[78/8277c0] ali…1_adult_mut_3391_S64_L001) | 27 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (34)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[78/8277c0] ali…1_adult_mut_3391_S64_L001) | 27 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (35)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[ce/dda043] ali…1_adult_mut_3391_S64_L001) | 28 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (35)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[ce/dda043] ali…1_adult_mut_3391_S64_L001) | 28 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (35)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[ce/dda043] ali…1_adult_mut_3391_S64_L001) | 29 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (36)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[71/d1b1d0] ali…1_adult_mut_3391_S64_L001) | 29 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (37)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[71/c9a1d3] ali…p1_P60_ctrl2_5mC_S45_L002) | 30 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (37)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[71/c9a1d3] ali…p1_P60_ctrl2_5mC_S45_L002) | 30 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (38)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[65/b8c5c4] ali…p1_P60_ctrl2_5mC_S45_L002) | 31 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (39)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[2a/685db1] ali…p1_P60_ctrl2_5mC_S45_L002) | 32 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (40)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[fb/50d20e] ali…p1_P60_ctrl2_5mC_S45_L002) | 33 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (40)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[fb/50d20e] ali…p1_P60_ctrl2_5mC_S45_L002) | 33 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (41)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[20/f613db] ali…p1_P60_ctrl2_5mC_S45_L002) | 34 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (41)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[20/f613db] ali…p1_P60_ctrl2_5mC_S45_L002) | 34 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (42)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e8/de12f0] ali…p1_P60_ctrl2_5mC_S45_L002) | 35 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (42)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e8/de12f0] ali…p1_P60_ctrl2_5mC_S45_L002) | 35 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (43)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[bb/1fea4e] ali…p1_P60_ctrl2_5mC_S45_L002) | 36 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (44)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[7f/08f6a0] ali…1_adult_mut_3201_S66_L001) | 37 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (45)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[8b/2d5ecc] ali…1_adult_mut_3201_S66_L001) | 38 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (45)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[8b/2d5ecc] ali…1_adult_mut_3201_S66_L001) | 38 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (46)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[1c/6c3fe0] ali…1_adult_mut_3201_S66_L001) | 39 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (46)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[1c/6c3fe0] ali…1_adult_mut_3201_S66_L001) | 39 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (47)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[7f/9e5b2e] ali…1_adult_mut_3201_S66_L001) | 40 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (48)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[84/9a09d4] ali…1_adult_mut_3201_S66_L001) | 41 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (48)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[84/9a09d4] ali…1_adult_mut_3201_S66_L001) | 42 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (49)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[7b/70cb0d] ali…1_adult_mut_3201_S66_L001) | 42 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (50)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 43 of 44
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    -
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (50)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    | 0 of 1
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+executor >  local (50)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    | 0 of 4
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (50)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[-        ] combine_nonconverted_counts    | 0 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (51)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[b6/cc2f60] com…ne_nonconverted_counts (6) | 0 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (51)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[b6/cc2f60] com…ne_nonconverted_counts (6) | 0 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (52)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[1c/f44dbf] com…ne_nonconverted_counts (5) | 1 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (53)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[91/6513c3] com…ne_nonconverted_counts (4) | 2 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (53)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[91/6513c3] com…ne_nonconverted_counts (4) | 3 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (54)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[50/8b194e] com…ne_nonconverted_counts (1) | 3 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (55)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[ad/381ddd] com…ne_nonconverted_counts (3) | 4 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (56)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 5 of 6
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (56)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[-        ] mergeAndMarkDuplicates         -
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+Creating env using conda: bioconda::picard=3.3.0 bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-96a38c27e01411229fbf2b93fa688abd]
+
+executor >  local (57)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[e6/af6268] mer…p1_P60_ctrl1_5mC_S44_L002) | 0 of 6
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        -
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 -
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            -
+[-        ] multiqc                        -
+
+
+executor >  local (58)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[e6/af6268] mer…p1_P60_ctrl1_5mC_S44_L002) | 1 of 6
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        | 0 of 1
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 | 0 of 1
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 1
+[-        ] multiqc                        -
+Creating env using conda: bioconda::methyldackel=0.6.1 bioconda::samtools=1.21 conda-forge::pigz=2.8 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-155af8174733e01f4b0182d1c0341db4]
+Creating env using conda: bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-6662c0b3af794818f646ff58b8e62f4d]
+Creating env using conda: bioconda::samtools=1.22 bioconda::tasmanian-mismatch=1.0.9 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-4247555d91b9a90f55c383f15a5231f0]
+
+executor >  local (58)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[e6/af6268] mer…p1_P60_ctrl1_5mC_S44_L002) | 1 of 6
+[-        ] methylDackel_extract           -
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        | 0 of 1
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 | 0 of 1
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 1
+[-        ] multiqc                        -
+Creating env using conda: bioconda::methyldackel=0.6.1 bioconda::samtools=1.21 conda-forge::pigz=2.8 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-155af8174733e01f4b0182d1c0341db4]
+Creating env using conda: bioconda::samtools=1.22 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-6662c0b3af794818f646ff58b8e62f4d]
+Creating env using conda: bioconda::samtools=1.22 bioconda::tasmanian-mismatch=1.0.9 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-4247555d91b9a90f55c383f15a5231f0]
+Creating env using conda: bioconda::methyldackel=0.6.1 bioconda::samtools=1.21 conda-forge::pigz=2.8 conda-forge::sed=4.9 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-cedd1ae31e8d59dde784718323e4e475]
+Creating env using conda: bioconda::fastqc=0.11.8 [cache /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-785b822ceefdce988bfeef1d7eb69ee9]
+
+executor >  local (58)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[e6/af6268] mer…p1_P60_ctrl1_5mC_S44_L002) | 1 of 6
+[-        ] methylDackel_extract           | 0 of 1
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        | 0 of 1
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 | 0 of 1
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 1
+[-        ] multiqc                        -
+
+
+
+
+
+
+executor >  local (58)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[92/339ab3] mer…_adult_ctrl_3139_S63_L001) | 2 of 6
+[-        ] methylDackel_extract           | 0 of 1
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        | 0 of 1
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 | 0 of 1
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 1
+[-        ] multiqc                        -
+
+
+
+
+
+
+executor >  local (59)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[d1/3c6a00] mer…1_adult_mut_3201_S66_L001) | 2 of 6
+[-        ] methylDackel_extract           | 0 of 2
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        | 0 of 2
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         -
+[-        ] picard_metrics                 | 0 of 2
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 2
+[-        ] multiqc                        -
+
+executor >  local (59)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[d1/3c6a00] mer…1_adult_mut_3201_S66_L001) | 2 of 6
+[-        ] methylDackel_extract           | 0 of 2
+[-        ] methylDackel_mbias             -
+[-        ] gc_bias                        | 0 of 2
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 2
+[-        ] picard_metrics                 | 0 of 2
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 2
+[-        ] multiqc                        -
+
+executor >  local (59)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[d1/3c6a00] mer…1_adult_mut_3201_S66_L001) | 2 of 6
+[-        ] methylDackel_extract           | 0 of 2
+[-        ] methylDackel_mbias             | 0 of 2
+[-        ] gc_bias                        | 0 of 2
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 2
+[-        ] picard_metrics                 | 0 of 2
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 2
+[-        ] multiqc                        -
+
+executor >  local (60)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[bd/15a62e] mer…1_adult_mut_3391_S64_L001) | 3 of 6
+[-        ] methylDackel_extract           | 0 of 3
+[-        ] methylDackel_mbias             | 0 of 3
+[-        ] gc_bias                        | 0 of 3
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 3
+[-        ] picard_metrics                 | 0 of 3
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 3
+[-        ] multiqc                        -
+
+executor >  local (61)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[bd/15a62e] mer…1_adult_mut_3391_S64_L001) | 4 of 6
+[-        ] methylDackel_extract           | 0 of 4
+[-        ] methylDackel_mbias             | 0 of 4
+[-        ] gc_bias                        | 0 of 4
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 4
+[-        ] picard_metrics                 | 0 of 4
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 4
+[-        ] multiqc                        -
+
+executor >  local (62)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[c4/ae05c7] mer…_adult_ctrl_3200_S65_L001) | 5 of 6
+[-        ] methylDackel_extract           | 0 of 5
+[-        ] methylDackel_mbias             | 0 of 5
+[-        ] gc_bias                        | 0 of 5
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 5
+[-        ] picard_metrics                 | 0 of 5
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 5
+[-        ] multiqc                        -
+
+executor >  local (62)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[c4/ae05c7] mer…_adult_ctrl_3200_S65_L001) | 5 of 6
+[-        ] methylDackel_extract           | 0 of 5
+[-        ] methylDackel_mbias             | 0 of 5
+[-        ] gc_bias                        | 0 of 5
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 5
+[-        ] picard_metrics                 | 0 of 5
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 5
+[-        ] multiqc                        -
+
+executor >  local (63)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[73/eaef84] mer…p1_P60_ctrl2_5mC_S45_L002) | 6 of 6 ✔
+[-        ] methylDackel_extract           | 0 of 6
+[-        ] methylDackel_mbias             | 0 of 6
+[b6/ebb638] gc_…p1_P60_ctrl1_5mC_S44_L002) | 0 of 6
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 6
+[-        ] picard_metrics                 | 0 of 6
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 6
+[-        ] multiqc                        -
+Exception in thread "Thread-14" groovy.lang.GroovyRuntimeException: exception while reading process stream
+	at org.codehaus.groovy.runtime.ProcessGroovyMethods$TextDumper.run(ProcessGroovyMethods.java:502)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.io.IOException: Stream closed
+	at java.base/java.io.BufferedInputStream.getBufIfOpen(BufferedInputStream.java:168)
+	at java.base/java.io.BufferedInputStream.read1(BufferedInputStream.java:281)
+	at java.base/java.io.BufferedInputStream.read(BufferedInputStream.java:343)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:287)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:330)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:190)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:177)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:162)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:329)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:396)
+	at org.codehaus.groovy.runtime.ProcessGroovyMethods$TextDumper.run(ProcessGroovyMethods.java:495)
+	... 1 more
+
+executor >  local (63)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[73/eaef84] mer…p1_P60_ctrl2_5mC_S45_L002) | 6 of 6 ✔
+[-        ] methylDackel_extract           | 0 of 6
+[-        ] methylDackel_mbias             | 0 of 6
+[b6/ebb638] gc_…p1_P60_ctrl1_5mC_S44_L002) | 0 of 6
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 6
+[-        ] picard_metrics                 | 0 of 6
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 6
+[-        ] multiqc                        -
+ERROR ~ Error executing process > 'tasmanian (6)'
+
+Caused by:
+  Failed to create Conda environment
+    command: conda create --yes --quiet --prefix /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-4247555d91b9a90f55c383f15a5231f0 bioconda::samtools=1.22 bioconda::tasmanian-mismatch=1.0.9
+    status : 120
+    message:
+      Channels:
+       - conda-forge
+       - bioconda
+       - defaults
+      Platform: linux-64
+      Collecting package metadata (repodata.json): ...working... done
+      Solving environment: ...working... done
+      
+      ## Package Plan ##
+      
+        environment location: /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-4247555d91b9a90f55c383f15a5231f0
+      
+        added / updated specs:
+          - bioconda::samtools=1.22
+          - bioconda::tasmanian-mismatch=1.0.9
+      
+      
+      The following packages will be downloaded:
+      
+          package                    |            build
+          ---------------------------|-----------------
+          fonttools-4.63.0           |  py312h8a5da7c_0         2.9 MB  conda-forge
+          kiwisolver-1.5.0           |  py312h0a2e395_0          75 KB  conda-forge
+          libraqm-0.10.5             |       h75b3fb1_0          29 KB  conda-forge
+          matplotlib-base-3.11.0     |  py312h1c5ec97_0         8.6 MB  conda-forge
+          narwhals-2.22.1            |     pyhcf101f3_0         279 KB  conda-forge
+          numpy-2.5.0                |  py312h33ff503_0         8.5 MB  conda-forge
+          plotly-6.8.0               |     pyhd8ed1ab_0         3.9 MB  conda-forge
+          python-3.12.13             |hd63d673_0_cpython        30.1 MB  conda-forge
+          scikit-learn-1.9.0         |np2py312h3226591_0         9.6 MB  conda-forge
+          scipy-1.18.0               |  py312h54fa4ab_0        16.3 MB  conda-forge
+          ------------------------------------------------------------
+                                                 Total:        80.3 MB
+      
+      The following NEW packages will be INSTALLED:
+      
+        _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+        brotli             conda-forge/linux-64::brotli-1.2.0-hed03a55_1 
+        brotli-bin         conda-forge/linux-64::brotli-bin-1.2.0-hb03c661_1 
+        bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+        c-ares             conda-forge/linux-64::c-ares-1.34.6-hb03c661_0 
+        ca-certificates    conda-forge/noarch::ca-certificates-2026.6.17-hbd8a1cb_0 
+        cairo              conda-forge/linux-64::cairo-1.18.4-he90730b_1 
+        contourpy          conda-forge/linux-64::contourpy-1.3.3-py312h0a2e395_4 
+        cycler             conda-forge/noarch::cycler-0.12.1-pyhcf101f3_2 
+        font-ttf-dejavu-s~ conda-forge/noarch::font-ttf-dejavu-sans-mono-2.37-hab24e00_0 
+        font-ttf-inconsol~ conda-forge/noarch::font-ttf-inconsolata-3.000-h77eed37_0 
+        font-ttf-source-c~ conda-forge/noarch::font-ttf-source-code-pro-2.038-h77eed37_0 
+        font-ttf-ubuntu    conda-forge/noarch::font-ttf-ubuntu-0.83-h77eed37_3 
+        fontconfig         conda-forge/linux-64::fontconfig-2.18.1-h27c8c51_0 
+        fonts-conda-ecosy~ conda-forge/noarch::fonts-conda-ecosystem-1-0 
+        fonts-conda-forge  conda-forge/noarch::fonts-conda-forge-1-hc364b38_1 
+        fonttools          conda-forge/linux-64::fonttools-4.63.0-py312h8a5da7c_0 
+        freetype           conda-forge/linux-64::freetype-2.14.3-ha770c72_0 
+        fribidi            conda-forge/linux-64::fribidi-1.0.16-hb03c661_0 
+        graphite2          conda-forge/linux-64::graphite2-1.3.15-hecca717_0 
+        harfbuzz           conda-forge/linux-64::harfbuzz-14.2.1-h6083320_0 
+        htslib             bioconda/linux-64::htslib-1.23.1-h633afcb_0 
+        icu                conda-forge/linux-64::icu-78.3-h33c6efd_0 
+        joblib             conda-forge/noarch::joblib-1.5.3-pyhd8ed1ab_0 
+        keyutils           conda-forge/linux-64::keyutils-1.6.3-hb9d3cd8_0 
+        kiwisolver         conda-forge/linux-64::kiwisolver-1.5.0-py312h0a2e395_0 
+        krb5               conda-forge/linux-64::krb5-1.22.2-hbde042b_1 
+        lcms2              conda-forge/linux-64::lcms2-2.19.1-h0c24ade_1 
+        ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+        lerc               conda-forge/linux-64::lerc-4.1.0-hdb68285_0 
+        libblas            conda-forge/linux-64::libblas-3.11.0-8_h4a7cf45_openblas 
+        libbrotlicommon    conda-forge/linux-64::libbrotlicommon-1.2.0-hb03c661_1 
+        libbrotlidec       conda-forge/linux-64::libbrotlidec-1.2.0-hb03c661_1 
+        libbrotlienc       conda-forge/linux-64::libbrotlienc-1.2.0-hb03c661_1 
+        libcblas           conda-forge/linux-64::libcblas-3.11.0-8_h0358290_openblas 
+        libcurl            conda-forge/linux-64::libcurl-8.21.0-hcf29cc6_0 
+        libdeflate         conda-forge/linux-64::libdeflate-1.25-h17f619e_0 
+        libedit            conda-forge/linux-64::libedit-3.1.20250104-pl5321h7949ede_0 
+        libev              conda-forge/linux-64::libev-4.33-hd590300_2 
+        libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_1 
+        libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+        libfreetype        conda-forge/linux-64::libfreetype-2.14.3-ha770c72_0 
+        libfreetype6       conda-forge/linux-64::libfreetype6-2.14.3-h73754d4_0 
+        libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+        libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+        libgfortran        conda-forge/linux-64::libgfortran-15.2.0-h69a702a_19 
+        libgfortran5       conda-forge/linux-64::libgfortran5-15.2.0-h68bc16d_19 
+        libglib            conda-forge/linux-64::libglib-2.88.1-h0d30a3d_2 
+        libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+        libiconv           conda-forge/linux-64::libiconv-1.18-h3b78370_2 
+        libjpeg-turbo      conda-forge/linux-64::libjpeg-turbo-3.1.4.1-hb03c661_0 
+        liblapack          conda-forge/linux-64::liblapack-3.11.0-8_h47877c9_openblas 
+        liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+        libnghttp2         conda-forge/linux-64::libnghttp2-1.68.1-h877daf1_0 
+        libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+        libopenblas        conda-forge/linux-64::libopenblas-0.3.33-pthreads_h94d23a6_0 
+        libpng             conda-forge/linux-64::libpng-1.6.58-h421ea60_0 
+        libraqm            conda-forge/linux-64::libraqm-0.10.5-h75b3fb1_0 
+        libsqlite          conda-forge/linux-64::libsqlite-3.53.2-hf4e2dac_1 
+        libssh2            conda-forge/linux-64::libssh2-1.11.1-hcf80075_0 
+        libstdcxx          conda-forge/linux-64::libstdcxx-15.2.0-h934c35e_19 
+        libstdcxx-ng       conda-forge/linux-64::libstdcxx-ng-15.2.0-hdf11a46_19 
+        libtiff            conda-forge/linux-64::libtiff-4.7.1-h9d88235_1 
+        libuuid            conda-forge/linux-64::libuuid-2.42.2-h5347b49_0 
+        libwebp-base       conda-forge/linux-64::libwebp-base-1.6.0-hd42ef1d_0 
+        libxcb             conda-forge/linux-64::libxcb-1.17.0-h8a09558_0 
+        libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+        libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+        matplotlib-base    conda-forge/linux-64::matplotlib-base-3.11.0-py312h1c5ec97_0 
+        munkres            conda-forge/noarch::munkres-1.1.4-pyhd8ed1ab_1 
+        narwhals           conda-forge/noarch::narwhals-2.22.1-pyhcf101f3_0 
+        ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+        numpy              conda-forge/linux-64::numpy-2.5.0-py312h33ff503_0 
+        openjpeg           conda-forge/linux-64::openjpeg-2.5.4-h55fea9a_0 
+        openssl            conda-forge/linux-64::openssl-3.6.3-h35e630c_0 
+        packaging          conda-forge/noarch::packaging-26.2-pyhc364b38_0 
+        pandas             conda-forge/linux-64::pandas-3.0.3-py312h8ecdadd_0 
+        patsy              conda-forge/noarch::patsy-1.0.2-pyhcf101f3_0 
+        pcre2              conda-forge/linux-64::pcre2-10.47-haa7fec5_0 
+        pillow             conda-forge/linux-64::pillow-12.2.0-py312h50c33e8_0 
+        pip                conda-forge/noarch::pip-26.1.2-pyh8b19718_0 
+        pixman             conda-forge/linux-64::pixman-0.46.4-h54a6638_1 
+        plotly             conda-forge/noarch::plotly-6.8.0-pyhd8ed1ab_0 
+        pthread-stubs      conda-forge/linux-64::pthread-stubs-0.4-hb9d3cd8_1002 
+        pyparsing          conda-forge/noarch::pyparsing-3.3.2-pyhcf101f3_0 
+        python             conda-forge/linux-64::python-3.12.13-hd63d673_0_cpython 
+        python-dateutil    conda-forge/noarch::python-dateutil-2.9.0.post0-pyhe01879c_2 
+        python_abi         conda-forge/noarch::python_abi-3.12-8_cp312 
+        qhull              conda-forge/linux-64::qhull-2020.2-h434a139_5 
+        readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+        samtools           bioconda/linux-64::samtools-1.22.1-h96c455f_0 
+        scikit-learn       conda-forge/linux-64::scikit-learn-1.9.0-np2py312h3226591_0 
+        scipy              conda-forge/linux-64::scipy-1.18.0-py312h54fa4ab_0 
+        seaborn-base       conda-forge/noarch::seaborn-base-0.13.2-pyhd8ed1ab_3 
+        setuptools         conda-forge/noarch::setuptools-82.0.1-pyh332efcf_0 
+        six                conda-forge/noarch::six-1.17.0-pyhe01879c_1 
+        statsmodels        conda-forge/linux-64::statsmodels-0.14.6-py312h4f23490_0 
+        tasmanian-mismatch bioconda/noarch::tasmanian-mismatch-1.0.9-pyhdfd78af_0 
+        termcolor          conda-forge/noarch::termcolor-3.3.0-pyhd8ed1ab_0 
+        threadpoolctl      conda-forge/noarch::threadpoolctl-3.6.0-pyhecae5ae_0 
+        tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+        tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+        unicodedata2       conda-forge/linux-64::unicodedata2-17.0.1-py312h4c3975b_0 
+        wheel              conda-forge/noarch::wheel-0.47.0-pyhd8ed1ab_0 
+        xorg-libice        conda-forge/linux-64::xorg-libice-1.1.2-hb9d3cd8_0 
+        xorg-libsm         conda-forge/linux-64::xorg-libsm-1.2.6-he73a12e_0 
+        xorg-libx11        conda-forge/linux-64::xorg-libx11-1.8.13-he1eb515_0 
+        xorg-libxau        conda-forge/linux-64::xorg-libxau-1.0.12-hb03c661_1 
+        xorg-libxdmcp      conda-forge/linux-64::xorg-libxdmcp-1.1.5-hb03c661_1 
+        xorg-libxext       conda-forge/linux-64::xorg-libxext-1.3.7-hb03c661_0 
+        xorg-libxrender    conda-forge/linux-64::xorg-libxrender-0.9.12-hb9d3cd8_0 
+        zlib-ng            conda-forge/linux-64::zlib-ng-2.3.3-hceb46e0_1 
+        zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+      
+      
+      Preparing transaction: ...working... done
+      Verifying transaction: ...working... done
+
+
+
+ -- Check '.nextflow.log' file for details
+
+executor >  local (63)
+[19/262903] fas…1_adult_mut_3201_S66_L001) | 6 of 6 ✔
+[e6/189e32] ali…1_adult_mut_3201_S66_L001) | 44 of 44 ✔
+[73/eaef84] mer…p1_P60_ctrl2_5mC_S45_L002) | 6 of 6 ✔
+[-        ] methylDackel_extract           | 0 of 6
+[-        ] methylDackel_mbias             | 0 of 6
+[b6/ebb638] gc_…p1_P60_ctrl1_5mC_S44_L002) | 0 of 6
+[-        ] idx_stats                      -
+[-        ] flagstats                      -
+[-        ] fastqc                         | 0 of 6
+[-        ] picard_metrics                 | 0 of 6
+[-        ] tasmanian                      -
+[c7/259cb5] com…ne_nonconverted_counts (2) | 6 of 6 ✔
+[-        ] insert_size_metrics            | 0 of 6
+[-        ] multiqc                        -
+WARN: Killing running tasks (1)
+ERROR ~ Error executing process > 'tasmanian (6)'
+
+Caused by:
+  Failed to create Conda environment
+    command: conda create --yes --quiet --prefix /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-4247555d91b9a90f55c383f15a5231f0 bioconda::samtools=1.22 bioconda::tasmanian-mismatch=1.0.9
+    status : 120
+    message:
+      Channels:
+       - conda-forge
+       - bioconda
+       - defaults
+      Platform: linux-64
+      Collecting package metadata (repodata.json): ...working... done
+      Solving environment: ...working... done
+      
+      ## Package Plan ##
+      
+        environment location: /expanse/lustre/projects/csd940/zalibhai/emseq/work_main/conda/env-4247555d91b9a90f55c383f15a5231f0
+      
+        added / updated specs:
+          - bioconda::samtools=1.22
+          - bioconda::tasmanian-mismatch=1.0.9
+      
+      
+      The following packages will be downloaded:
+      
+          package                    |            build
+          ---------------------------|-----------------
+          fonttools-4.63.0           |  py312h8a5da7c_0         2.9 MB  conda-forge
+          kiwisolver-1.5.0           |  py312h0a2e395_0          75 KB  conda-forge
+          libraqm-0.10.5             |       h75b3fb1_0          29 KB  conda-forge
+          matplotlib-base-3.11.0     |  py312h1c5ec97_0         8.6 MB  conda-forge
+          narwhals-2.22.1            |     pyhcf101f3_0         279 KB  conda-forge
+          numpy-2.5.0                |  py312h33ff503_0         8.5 MB  conda-forge
+          plotly-6.8.0               |     pyhd8ed1ab_0         3.9 MB  conda-forge
+          python-3.12.13             |hd63d673_0_cpython        30.1 MB  conda-forge
+          scikit-learn-1.9.0         |np2py312h3226591_0         9.6 MB  conda-forge
+          scipy-1.18.0               |  py312h54fa4ab_0        16.3 MB  conda-forge
+          ------------------------------------------------------------
+                                                 Total:        80.3 MB
+      
+      The following NEW packages will be INSTALLED:
+      
+        _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+        brotli             conda-forge/linux-64::brotli-1.2.0-hed03a55_1 
+        brotli-bin         conda-forge/linux-64::brotli-bin-1.2.0-hb03c661_1 
+        bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+        c-ares             conda-forge/linux-64::c-ares-1.34.6-hb03c661_0 
+        ca-certificates    conda-forge/noarch::ca-certificates-2026.6.17-hbd8a1cb_0 
+        cairo              conda-forge/linux-64::cairo-1.18.4-he90730b_1 
+        contourpy          conda-forge/linux-64::contourpy-1.3.3-py312h0a2e395_4 
+        cycler             conda-forge/noarch::cycler-0.12.1-pyhcf101f3_2 
+        font-ttf-dejavu-s~ conda-forge/noarch::font-ttf-dejavu-sans-mono-2.37-hab24e00_0 
+        font-ttf-inconsol~ conda-forge/noarch::font-ttf-inconsolata-3.000-h77eed37_0 
+        font-ttf-source-c~ conda-forge/noarch::font-ttf-source-code-pro-2.038-h77eed37_0 
+        font-ttf-ubuntu    conda-forge/noarch::font-ttf-ubuntu-0.83-h77eed37_3 
+        fontconfig         conda-forge/linux-64::fontconfig-2.18.1-h27c8c51_0 
+        fonts-conda-ecosy~ conda-forge/noarch::fonts-conda-ecosystem-1-0 
+        fonts-conda-forge  conda-forge/noarch::fonts-conda-forge-1-hc364b38_1 
+        fonttools          conda-forge/linux-64::fonttools-4.63.0-py312h8a5da7c_0 
+        freetype           conda-forge/linux-64::freetype-2.14.3-ha770c72_0 
+        fribidi            conda-forge/linux-64::fribidi-1.0.16-hb03c661_0 
+        graphite2          conda-forge/linux-64::graphite2-1.3.15-hecca717_0 
+        harfbuzz           conda-forge/linux-64::harfbuzz-14.2.1-h6083320_0 
+        htslib             bioconda/linux-64::htslib-1.23.1-h633afcb_0 
+        icu                conda-forge/linux-64::icu-78.3-h33c6efd_0 
+        joblib             conda-forge/noarch::joblib-1.5.3-pyhd8ed1ab_0 
+        keyutils           conda-forge/linux-64::keyutils-1.6.3-hb9d3cd8_0 
+        kiwisolver         conda-forge/linux-64::kiwisolver-1.5.0-py312h0a2e395_0 
+        krb5               conda-forge/linux-64::krb5-1.22.2-hbde042b_1 
+        lcms2              conda-forge/linux-64::lcms2-2.19.1-h0c24ade_1 
+        ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+        lerc               conda-forge/linux-64::lerc-4.1.0-hdb68285_0 
+        libblas            conda-forge/linux-64::libblas-3.11.0-8_h4a7cf45_openblas 
+        libbrotlicommon    conda-forge/linux-64::libbrotlicommon-1.2.0-hb03c661_1 
+        libbrotlidec       conda-forge/linux-64::libbrotlidec-1.2.0-hb03c661_1 
+        libbrotlienc       conda-forge/linux-64::libbrotlienc-1.2.0-hb03c661_1 
+        libcblas           conda-forge/linux-64::libcblas-3.11.0-8_h0358290_openblas 
+        libcurl            conda-forge/linux-64::libcurl-8.21.0-hcf29cc6_0 
+        libdeflate         conda-forge/linux-64::libdeflate-1.25-h17f619e_0 
+        libedit            conda-forge/linux-64::libedit-3.1.20250104-pl5321h7949ede_0 
+        libev              conda-forge/linux-64::libev-4.33-hd590300_2 
+        libexpat           conda-forge/linux-64::libexpat-2.8.1-hecca717_1 
+        libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+        libfreetype        conda-forge/linux-64::libfreetype-2.14.3-ha770c72_0 
+        libfreetype6       conda-forge/linux-64::libfreetype6-2.14.3-h73754d4_0 
+        libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+        libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+        libgfortran        conda-forge/linux-64::libgfortran-15.2.0-h69a702a_19 
+        libgfortran5       conda-forge/linux-64::libgfortran5-15.2.0-h68bc16d_19 
+        libglib            conda-forge/linux-64::libglib-2.88.1-h0d30a3d_2 
+        libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+        libiconv           conda-forge/linux-64::libiconv-1.18-h3b78370_2 
+        libjpeg-turbo      conda-forge/linux-64::libjpeg-turbo-3.1.4.1-hb03c661_0 
+        liblapack          conda-forge/linux-64::liblapack-3.11.0-8_h47877c9_openblas 
+        liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+        libnghttp2         conda-forge/linux-64::libnghttp2-1.68.1-h877daf1_0 
+        libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+        libopenblas        conda-forge/linux-64::libopenblas-0.3.33-pthreads_h94d23a6_0 
+        libpng             conda-forge/linux-64::libpng-1.6.58-h421ea60_0 
+        libraqm            conda-forge/linux-64::libraqm-0.10.5-h75b3fb1_0 
+        libsqlite          conda-forge/linux-64::libsqlite-3.53.2-hf4e2dac_1 
+        libssh2            conda-forge/linux-64::libssh2-1.11.1-hcf80075_0 
+        libstdcxx          conda-forge/linux-64::libstdcxx-15.2.0-h934c35e_19 
+        libstdcxx-ng       conda-forge/linux-64::libstdcxx-ng-15.2.0-hdf11a46_19 
+        libtiff            conda-forge/linux-64::libtiff-4.7.1-h9d88235_1 
+        libuuid            conda-forge/linux-64::libuuid-2.42.2-h5347b49_0 
+        libwebp-base       conda-forge/linux-64::libwebp-base-1.6.0-hd42ef1d_0 
+        libxcb             conda-forge/linux-64::libxcb-1.17.0-h8a09558_0 
+        libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+        libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+        matplotlib-base    conda-forge/linux-64::matplotlib-base-3.11.0-py312h1c5ec97_0 
+        munkres            conda-forge/noarch::munkres-1.1.4-pyhd8ed1ab_1 
+        narwhals           conda-forge/noarch::narwhals-2.22.1-pyhcf101f3_0 
+        ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+        numpy              conda-forge/linux-64::numpy-2.5.0-py312h33ff503_0 
+        openjpeg           conda-forge/linux-64::openjpeg-2.5.4-h55fea9a_0 
+        openssl            conda-forge/linux-64::openssl-3.6.3-h35e630c_0 
+        packaging          conda-forge/noarch::packaging-26.2-pyhc364b38_0 
+        pandas             conda-forge/linux-64::pandas-3.0.3-py312h8ecdadd_0 
+        patsy              conda-forge/noarch::patsy-1.0.2-pyhcf101f3_0 
+        pcre2              conda-forge/linux-64::pcre2-10.47-haa7fec5_0 
+        pillow             conda-forge/linux-64::pillow-12.2.0-py312h50c33e8_0 
+        pip                conda-forge/noarch::pip-26.1.2-pyh8b19718_0 
+        pixman             conda-forge/linux-64::pixman-0.46.4-h54a6638_1 
+        plotly             conda-forge/noarch::plotly-6.8.0-pyhd8ed1ab_0 
+        pthread-stubs      conda-forge/linux-64::pthread-stubs-0.4-hb9d3cd8_1002 
+        pyparsing          conda-forge/noarch::pyparsing-3.3.2-pyhcf101f3_0 
+        python             conda-forge/linux-64::python-3.12.13-hd63d673_0_cpython 
+        python-dateutil    conda-forge/noarch::python-dateutil-2.9.0.post0-pyhe01879c_2 
+        python_abi         conda-forge/noarch::python_abi-3.12-8_cp312 
+        qhull              conda-forge/linux-64::qhull-2020.2-h434a139_5 
+        readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+        samtools           bioconda/linux-64::samtools-1.22.1-h96c455f_0 
+        scikit-learn       conda-forge/linux-64::scikit-learn-1.9.0-np2py312h3226591_0 
+        scipy              conda-forge/linux-64::scipy-1.18.0-py312h54fa4ab_0 
+        seaborn-base       conda-forge/noarch::seaborn-base-0.13.2-pyhd8ed1ab_3 
+        setuptools         conda-forge/noarch::setuptools-82.0.1-pyh332efcf_0 
+        six                conda-forge/noarch::six-1.17.0-pyhe01879c_1 
+        statsmodels        conda-forge/linux-64::statsmodels-0.14.6-py312h4f23490_0 
+        tasmanian-mismatch bioconda/noarch::tasmanian-mismatch-1.0.9-pyhdfd78af_0 
+        termcolor          conda-forge/noarch::termcolor-3.3.0-pyhd8ed1ab_0 
+        threadpoolctl      conda-forge/noarch::threadpoolctl-3.6.0-pyhecae5ae_0 
+        tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+        tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+        unicodedata2       conda-forge/linux-64::unicodedata2-17.0.1-py312h4c3975b_0 
+        wheel              conda-forge/noarch::wheel-0.47.0-pyhd8ed1ab_0 
+        xorg-libice        conda-forge/linux-64::xorg-libice-1.1.2-hb9d3cd8_0 
+        xorg-libsm         conda-forge/linux-64::xorg-libsm-1.2.6-he73a12e_0 
+        xorg-libx11        conda-forge/linux-64::xorg-libx11-1.8.13-he1eb515_0 
+        xorg-libxau        conda-forge/linux-64::xorg-libxau-1.0.12-hb03c661_1 
+        xorg-libxdmcp      conda-forge/linux-64::xorg-libxdmcp-1.1.5-hb03c661_1 
+        xorg-libxext       conda-forge/linux-64::xorg-libxext-1.3.7-hb03c661_0 
+        xorg-libxrender    conda-forge/linux-64::xorg-libxrender-0.9.12-hb9d3cd8_0 
+        zlib-ng            conda-forge/linux-64::zlib-ng-2.3.3-hceb46e0_1 
+        zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+      
+      
+      Preparing transaction: ...working... done
+      Verifying transaction: ...working... done
+
+
+
+ -- Check '.nextflow.log' file for details
+WARN: Failed to render execution report -- see the log file for details
+WARN: Failed to render execution timeline -- see the log file for details
+
+
+======================================
+EM-seq Pipeline Complete
+======================================
+Finished: Fri Jun 26 01:52:37 PDT 2026
