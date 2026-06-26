@@ -1,0 +1,102 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-26 15:23:11 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 89: SUBCOMPARTMENT PC1 CROSS-VALIDATION
+================================================================================
+
+Loading CALDER2 subcompartment labels...
+  23874 non-NA bins loaded
+  Subcompartments: A.1=7297, A.2=3359, B.1=3285, B.2=9933
+
+Loading Homer PC1 eigenvalues (25kb resolution)...
+  53390 bins loaded (25kb resolution)
+  ctrl_avg_PC1 range: [-1.594, 2.551]
+
+Averaging Homer 25kb bins to 100kb CALDER2 resolution...
+  Aggregated to 24763 100kb bins
+  Bins with 4 Homer sub-bins: 1718 (6.9%)
+
+Joining CALDER2 labels with Homer PC1 at 100kb...
+  Matched: 22593 / 23874 CALDER2 bins (94.6%)
+
+Creating Figure 89a: PC1 violin by subcompartment...
+  Kruskal-Wallis: chi-sq=17928.2, df=3, p < 2.2e-16
+    A.1 vs A.2: p < 2.2e-16
+    A.2 vs B.1: p < 2.2e-16
+    B.1 vs B.2: p < 2.2e-16
+  Saved: 89a_pc1_violin_by_subcompartment/{pdf,svg,jpg}
+Creating Figure 89b: continous_rank vs PC1 scatter...
+  Spearman rho (overall): 0.9206, p < 2.2e-16
+  Saved: 89b_rank_vs_pc1_scatter/{pdf,svg,jpg}
+Creating Figure 89c: concordance heatmap...
+  Confusion matrix:
+       Homer_PC1
+CALDER2     A     B
+      A  9265   821
+      B  1200 11307
+  Accuracy: 91.1% | Cohen's kappa: 0.820
+  A: precision=88.5%, recall=91.9%
+  B: precision=93.2%, recall=90.4%
+  Saved: 89c_concordance_heatmap/{pdf,svg,jpg}
+Creating Figure 89d: continous_rank density by subcompartment...
+  KS A.1 vs A.2: D=1.000, p < 2.2e-16
+  KS A.2 vs B.1: D=1.000, p < 2.2e-16
+  KS B.1 vs B.2: D=1.000, p < 2.2e-16
+  Saved: 89d_rank_density_by_subcompartment/{pdf,svg,jpg}
+Creating Figure 89e: switching concordance...
+  Switching concordance table:
+                Homer_shifted
+CALDER2_switched FALSE  TRUE
+           FALSE 18173   953
+           TRUE   2209  1258
+  Fisher's OR = 10.86, p < 2.2e-16
+  Saved: 89e_switching_concordance/{pdf,svg,jpg}
+Creating combined Figure 89f...
+  Saved: 89f_combined_crossvalidation/{pdf,svg,jpg}
+
+Saving tables...
+  Saved: 89_pc1_by_subcompartment_summary.tsv
+  Saved: 89_concordance_matrix.tsv
+  Saved: 89_pc1_rank_correlation.tsv
+  Saved: 89_switching_concordance.tsv
+  Saved: 89_per_bin_crossvalidation.tsv (22593 bins)
+
+================================================================================
+SECTION 89 COMPLETE
+================================================================================
