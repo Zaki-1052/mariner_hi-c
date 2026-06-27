@@ -1,0 +1,211 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-27 16:21:48 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 92: NON-CG METHOD COMPARISON
+================================================================================
+
+Validating BigWig files...
+  wgbs_all: OK
+  wgbs_ctrl: OK
+  wgbs_mut: OK
+  emseq_all: OK
+  emseq_ctrl: OK
+  emseq_mut: OK
+  evoc_chg_ctrl: OK
+  evoc_chg_mut: OK
+  evoc_chh_ctrl: OK
+  evoc_chh_mut: OK
+  ecker_ch: OK (6.5 GB)
+
+Creating 10kb genome tiles...
+  263389 tiles across 20 chromosomes
+
+--- Extracting BAP1 method signals at 10kb bins ---
+  WGBS all... median=0.000383, non-zero=235613/263389
+  WGBS ctrl... median=0.000458, non-zero=234291/263389
+  WGBS mut... median=0.000275, non-zero=227002/263389
+  EM-seq all... median=0.001060, non-zero=252629/263389
+  EM-seq ctrl... median=0.001083, non-zero=250936/263389
+  EM-seq mut... median=0.000850, non-zero=248396/263389
+
+--- Extracting evoC CHG/CHH signals ---
+  evoC CHG ctrl... median=0.000000, non-zero=9049/263389
+  evoC CHG mut... median=0.000000, non-zero=9534/263389
+  evoC CHH ctrl... median=0.000000, non-zero=20939/263389
+  evoC CHH mut... median=0.000000, non-zero=22258/263389
+
+--- Extracting Ecker CH signal (6.1 GB — loading per-chromosome) ---
+  Ecker chr1 (19548 bins)... non-zero=19201/19548
+  Ecker chr2 (18212 bins)... non-zero=17799/18212
+  Ecker chr3 (16004 bins)... non-zero=15645/16004
+  Ecker chr4 (15651 bins)... non-zero=15191/15651
+  Ecker chr5 (15184 bins)... non-zero=14798/15184
+  Ecker chr6 (14974 bins)... non-zero=14637/14974
+  Ecker chr7 (14545 bins)... non-zero=14179/14545
+  Ecker chr8 (12941 bins)... non-zero=12570/12941
+  Ecker chr9 (12460 bins)... non-zero=12125/12460
+  Ecker chr10 (13070 bins)... non-zero=12711/13070
+  Ecker chr11 (12209 bins)... non-zero=11874/12209
+  Ecker chr12 (12013 bins)... non-zero=11691/12013
+  Ecker chr13 (12043 bins)... non-zero=11717/12043
+  Ecker chr14 (12491 bins)... non-zero=12133/12491
+  Ecker chr15 (10405 bins)... non-zero=10069/10405
+  Ecker chr16 (9821 bins)... non-zero=9504/9821
+  Ecker chr17 (9499 bins)... non-zero=9176/9499
+  Ecker chr18 (9071 bins)... non-zero=8748/9071
+  Ecker chr19 (6144 bins)... non-zero=5820/6144
+  Ecker chrX (17104 bins)... non-zero=16264/17104
+  Ecker total: median=0.004156, non-zero=255852/263389
+
+--- Signal extraction summary ---
+  wgbs_all      detected: 235613 / 263389 (89.5%),  median(>0): 0.000433
+  emseq_all     detected: 252629 / 263389 (95.9%),  median(>0): 0.001113
+  evoc_all      detected: 41189 / 263389 (15.6%),  median(>0): 0.000001
+  ecker         detected: 255852 / 263389 (97.1%),  median(>0): 0.004218
+
+================================================================================
+Panel 92a: Signal Distribution Comparison
+================================================================================
+
+Zero-signal fractions:
+  WGBS: 10.5% zero (27776 / 263389 bins)
+  EM-seq: 4.1% zero (10760 / 263389 bins)
+  evoC: 66.8% zero (176063 / 263389 bins)
+  Ecker: 2.9% zero (7537 / 263389 bins)
+  Saved: 92a_signal_distribution/{pdf,svg,jpg}
+
+================================================================================
+Panel 92b: Spatial Concordance (Pairwise Hex-Scatter)
+================================================================================
+
+  WGBS vs EM-seq: n=254289, rho=0.586, r=0.690
+  WGBS vs evoC: n=238415, rho=-0.039, r=-0.015
+  EM-seq vs evoC: n=252804, rho=-0.007, r=-0.006
+  WGBS vs Ecker: n=255866, rho=0.671, r=0.726
+  EM-seq vs Ecker: n=255852, rho=0.754, r=0.859
+  evoC vs Ecker: n=255852, rho=-0.012, r=-0.004
+  Saved: 92b_spatial_concordance/{pdf,svg,jpg}
+
+================================================================================
+Panel 92c: Coverage Overlap (Venn Diagram)
+================================================================================
+
+  WGBS: 235613 bins with signal > 0
+  EM-seq: 252629 bins with signal > 0
+  evoC: 41189 bins with signal > 0
+  Saved: 92c_coverage_overlap/{pdf,svg,jpg}
+
+================================================================================
+Panel 92d: Ctrl vs Mut Within Each Method
+================================================================================
+
+  WGBS: ctrl=0.000525, mut=0.000325, delta=-0.000200, p=0.00e+00 (ctrl > mut)
+  EM-seq: ctrl=0.001150, mut=0.000900, delta=-0.000250, p=0.00e+00 (ctrl > mut)
+  evoC: ctrl=0.000001, mut=0.000001, delta=0.000000, p=1.64e-06 (mut > ctrl)
+
+  Direction consensus: Methods disagree on direction
+  Saved: 92d_ctrl_vs_mut/{pdf,svg,jpg}
+
+================================================================================
+Panel 92e: Chromosomal Distribution
+================================================================================
+
+  Chromosome profile Spearman: WGBS vs EM-seq = 0.534, WGBS vs evoC = -0.478
+  Saved: 92e_chromosomal_distribution/{pdf,svg,jpg}
+
+================================================================================
+Panel 92f: Gene Body Signal Comparison
+================================================================================
+
+  24483 genes on autosomes + chrX
+  WGBS gene bodies... median=0.000498, non-zero=21005/24483
+  EM-seq gene bodies... median=0.001064, non-zero=22579/24483
+  evoC CHG ctrl genes... median=0.000000, non-zero=2104/24483
+  evoC CHH ctrl genes... median=0.000000, non-zero=3759/24483
+  evoC CHG mut genes... median=0.000000, non-zero=2227/24483
+  evoC CHH mut genes... median=0.000000, non-zero=3882/24483
+  Ecker gene bodies (per-chromosome to manage memory)...
+  Ecker gene bodies: non-zero=24448/24483
+  WGBS: 24483 genes, 21005 detected (85.8%), median(>0)=0.000595
+  EM-seq: 24483 genes, 22579 detected (92.2%), median(>0)=0.001146
+  evoC: 24483 genes, 5625 detected (23.0%), median(>0)=0.000000
+  Ecker: 24483 genes, 24448 detected (99.9%), median(>0)=0.004259
+  Saved: 92f_gene_body_signal/{pdf,svg,jpg}
+
+================================================================================
+Panel 92g: Neuronal Marker Gene Signal
+================================================================================
+
+  WGBS neuronal... median=0.000956, non-zero=12/14
+  EM-seq neuronal... median=0.002298, non-zero=14/14
+  evoC CHG ctrl neuro... median=-0.000000, non-zero=6/14
+  evoC CHH ctrl neuro... median=-0.000000, non-zero=7/14
+  evoC CHG mut neuro... median=-0.000000, non-zero=6/14
+  evoC CHH mut neuro... median=0.000000, non-zero=8/14
+  Saved: 92g_neuronal_gene_signal/{pdf,svg,jpg}
+
+================================================================================
+Panel 92h: Composite Figure
+================================================================================
+
+  Saved: 92h_composite/{pdf,svg,jpg}
+
+================================================================================
+Saving summary tables
+================================================================================
+
+  Saved 92_method_signal_summary.tsv
+  Saved 92_pairwise_concordance.tsv
+  Saved 92_chromosomal_signal.tsv
+  Saved 92_ctrl_mut_comparison.tsv
+  Saved 92_gene_body_summary.tsv
+  Saved 92_neuronal_gene_signal.tsv
+
+================================================================================
+SECTION 92 COMPLETE
+================================================================================
+
+Key findings:
+  Detection rates: WGBS 89.5%, EM-seq 95.9%, evoC 15.6%
+  WGBS-EM-seq concordance: rho = 0.586 (n = 254,289 shared bins)
+  Ctrl vs Mut direction: Methods disagree on direction
+  Gene body detection: WGBS 85.8%, EM-seq 92.2%, evoC 23.0%
+
+Outputs: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/92_noncg_method_comparison
+Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/92_*.tsv
