@@ -1,0 +1,126 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-06-26 17:53:08 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 91: COMPARTMENT SHIFT STOICHIOMETRY
+================================================================================
+
+Assigning CALDER2 subcompartments to gene bodies...
+  5mC: 19898 genes, 5hmC: 19898 genes
+Loading Section 29 compartment gene assignment (Homer A/B shifts)...
+  16094 genes with shift assignments
+    B to A: 427 | Stable: 15465 | A to B: 202
+
+Joining with absolute methylation levels...
+  Matched: 16094 genes with absolute levels + shift data
+
+================================================================================
+Panel 91a: Co-Significance Overlap by Subcompartment
+================================================================================
+
+  Co-significance by subcompartment:
+    A.1: 5644 / 10783 both sig (52.3%)
+    A.2: 1331 / 3046 both sig (43.7%)
+    B.1: 598 / 1897 both sig (31.5%)
+    B.2: 559 / 4172 both sig (13.4%)
+  Saved: 91a_cosignificance_by_subcompartment/{pdf,svg,jpg}
+
+================================================================================
+Panel 91b: Compartment Transition Methylation
+================================================================================
+
+  Shift summary:
+    B to A      : n=427, mean Δ5mC=-1.036%, mean Δ5hmC=+1.290%, total=+0.253%, 256 sig (17 hyper / 239 hypo = 6.6%)
+    Stable      : n=15465, mean Δ5mC=+0.942%, mean Δ5hmC=-1.070%, total=-0.128%, 8709 sig (6132 hyper / 2577 hypo = 70.4%)
+    A to B      : n=202, mean Δ5mC=+2.444%, mean Δ5hmC=-2.249%, total=+0.195%, 135 sig (117 hyper / 18 hypo = 86.7%)
+  Saved: 91b_compartment_transition_methylation/{pdf,svg,jpg}
+
+================================================================================
+Panel 91c: Stoichiometric Ratio by Shift
+================================================================================
+
+  Stoichiometric ratios (|Δ5mC|/|Δ5hmC| × 100):
+    B to A      : ratio=80.4%, total change=+0.253%
+    Stable      : ratio=88.1%, total change=-0.128%
+    A to B      : ratio=108.7%, total change=+0.195%
+    100% = perfectly stoichiometric (total modC conserved)
+  Saved: 91c_stoichiometric_ratio_by_shift/{pdf,svg,jpg}
+
+================================================================================
+Panel 91d: Total modC Balance Per Gene
+================================================================================
+
+  B to A: median total_diff=+0.00150, p = 2.37e-04 (n=427)
+  Stable: median total_diff=-0.00268, p < 2.2e-16 (n=15465)
+  A to B: median total_diff=-0.00179, p = 9.87e-01 (n=202)
+  Saved: 91d_total_modc_balance_by_shift/{pdf,svg,jpg}
+
+================================================================================
+Panel 91e: 5hmC Depletion vs Baseline Level
+================================================================================
+
+  Spearman(baseline hmC, Δ5hmC): rho=-0.5889, p < 2.2e-16
+  Median 5hmC retention (mut/ctrl): 91.5%
+  Genes with >50% hmC retained: 15919 / 16035 (99.3%)
+  Genes with <10% hmC retained (near-complete depletion): 23 (0.1%)
+  Saved: 91e_hmc_depletion_vs_baseline/{pdf,svg,jpg}
+
+================================================================================
+Panel 91f: Residual 5hmC in Mutant by Subcompartment
+================================================================================
+
+  5hmC levels by subcompartment (median %):
+    A.1: ctrl=14.14%, mut=12.52%, Δ=-1.57%, retained=88%, p < 2.2e-16 (n=10783)
+    A.2: ctrl=9.96%, mut=9.35%, Δ=-0.60%, retained=94%, p < 2.2e-16 (n=3046)
+    B.1: ctrl=7.33%, mut=7.40%, Δ=-0.07%, retained=101%, p = 6.24e-05 (n=1897)
+    B.2: ctrl=2.82%, mut=2.66%, Δ=-0.06%, retained=94%, p = 1.21e-06 (n=4172)
+  Saved: 91f_residual_hmc_by_subcompartment/{pdf,svg,jpg}
+
+Creating combined Figure 91g...
+  Saved: 91g_combined_shift_stoichiometry/{pdf,svg,jpg}
+
+Saving tables...
+  Saved: 91_cosignificance_by_subcompartment.tsv
+  Saved: 91_shift_methylation_summary.tsv
+  Saved: 91_stoichiometric_ratios.tsv
+  Saved: 91_residual_hmc_levels.tsv
+  Saved: 91_per_gene_shift_stoichiometry.tsv (16094 genes)
+
+================================================================================
+SECTION 91 COMPLETE
+================================================================================
