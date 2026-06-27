@@ -2,7 +2,7 @@
 ================================================================================
 BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
 ================================================================================
-Date: 2026-06-26 16:22:48 
+Date: 2026-06-26 17:18:54 
 Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
 Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
 
@@ -74,6 +74,8 @@ Creating Figure 90c: gradient comparison (net direction)...
   Saved: 90c_gradient_comparison_net_direction/{pdf,svg,jpg}
 Creating Figure 90d: median effect size by subcompartment...
   Saved: 90d_median_effect_by_subcompartment/{pdf,svg,jpg}
+Creating Figure 90e: combined 5mC/5hmC direction by subcompartment...
+  Saved: 90e_combined_direction_by_subcompartment/{pdf,svg,jpg}
 
 ================================================================================
 PART 3: Continuous PC1 Regression
@@ -82,11 +84,11 @@ PART 3: Continuous PC1 Regression
 Loading Homer PC1 eigenvalues for gene-level join...
   22143 unique genes with PC1 values
   Matched: 16094 genes (76.8% of DMR genes)
-Creating Figure 90e: PC1 regression scatters...
+Creating Figure 90f: PC1 regression scatters...
   5mC ~ PC1: beta=0.00863, R²=0.0784, p < 2.2e-16, Spearman rho=0.3374
   5hmC ~ PC1: beta=-0.00658, R²=0.1240, p < 2.2e-16, Spearman rho=-0.4033
-  Saved: 90e_pc1_regression_scatter/{pdf,svg,jpg}
-Creating Figure 90f: gradient steepness comparison...
+  Saved: 90f_pc1_regression_scatter/{pdf,svg,jpg}
+Creating Figure 90g: gradient steepness comparison...
   Standardized betas:
     5mC:  std_beta = +0.2800
     5hmC: std_beta = -0.3522
@@ -99,7 +101,7 @@ Creating Figure 90f: gradient steepness comparison...
 
   Interaction test (delta ~ pc1 * modality):
     pc1:modality5hmC coefficient: -0.01521, p < 2.2e-16
-  Saved: 90f_gradient_steepness_comparison/{pdf,svg,jpg}
+  Saved: 90g_gradient_steepness_comparison/{pdf,svg,jpg}
 
 ================================================================================
 PART 4: Mechanism Differentiation (Mediation + Variance Partition)
@@ -133,7 +135,7 @@ Running mediation analysis (following Section 61 bootstrap pattern)...
     TET-first proportion mediated:   71.5%
     DNMT3A-first proportion mediated: 42.9%
   --> TET-first path shows STRONGER mediation
-  Saved: 90g_mediation_comparison/{pdf,svg,jpg}
+  Saved: 90h_mediation_comparison/{pdf,svg,jpg}
 
 Computing variance partition...
   Variance partition:
@@ -145,13 +147,13 @@ Computing variance partition...
     [Predicting Δ5hmC] Other modality unique  0.2687 (26.9%)
     [Predicting Δ5hmC] Shared                 0.0868 (8.7%)
     [Predicting Δ5hmC] Unexplained            0.6073 (60.7%)
-  Saved: 90h_variance_partition/{pdf,svg,jpg}
+  Saved: 90i_variance_partition/{pdf,svg,jpg}
 
 ================================================================================
 PART 5: B-Compartment Behavior
 ================================================================================
 
-Creating Figure 90i: B-compartment behavior...
+Creating Figure 90j: B-compartment behavior...
   B-compartment genes: 4226
     mC sig: 1547 (36.6%)
     hmC sig: 1721 (40.7%)
@@ -164,11 +166,11 @@ mC_sig  FALSE TRUE
   B-compartment Wilcoxon (vs 0):
     Δ5mC: median=-0.00366, p < 2.2e-16
     Δ5hmC: median=-0.00034, p = 7.68e-02
-  Saved: 90i_b_compartment_behavior/{pdf,svg,jpg}
+  Saved: 90j_b_compartment_behavior/{pdf,svg,jpg}
 
 Creating combined figures...
-  Saved: 90j_descriptive_composite/{pdf,svg,jpg}
-  Saved: 90j_mechanism_composite/{pdf,svg,jpg}
+  Saved: 90k_descriptive_composite/{pdf,svg,jpg}
+  Saved: 90k_mechanism_composite/{pdf,svg,jpg}
 
 Saving tables...
   Saved: 90_5hmc_subcompartment_dmr_summary.tsv

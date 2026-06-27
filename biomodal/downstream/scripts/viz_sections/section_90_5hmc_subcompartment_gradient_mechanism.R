@@ -320,6 +320,50 @@ save_multiformat_ggplot(p_90d,
                         file.path(OUTPUT_DIR, "90d_median_effect_by_subcompartment"),
                         width = 12, height = 7)
 
+# ---- Panel 90e: Combined 5mC + 5hmC direction bar (single panel) -----------
+
+cat("Creating Figure 90e: combined 5mC/5hmC direction by subcompartment...\n")
+
+combined_bar_df <- rbind(
+  mc_summary %>%
+    dplyr::mutate(modality = "5mC") %>%
+    tidyr::pivot_longer(cols = c(hyper, hypo), names_to = "dir", values_to = "count") %>%
+    dplyr::mutate(pct_of_sig = 100 * count / sig),
+  hmc_summary %>%
+    dplyr::mutate(modality = "5hmC") %>%
+    tidyr::pivot_longer(cols = c(hyper, hypo), names_to = "dir", values_to = "count") %>%
+    dplyr::mutate(pct_of_sig = 100 * count / sig)
+) %>%
+  dplyr::mutate(
+    direction = factor(ifelse(dir == "hyper", "Hyper", "Hypo"),
+                       levels = c("Hyper", "Hypo")),
+    modality = factor(modality, levels = c("5mC", "5hmC")),
+    ctrl_label = factor(ctrl_label, levels = SUBCMPT_ORDER)
+  )
+
+p_90e <- ggplot(combined_bar_df, aes(x = ctrl_label, y = pct_of_sig, fill = direction)) +
+  geom_bar(stat = "identity", width = 0.7, color = "white", linewidth = 0.3) +
+  geom_text(aes(label = sprintf("%.0f%%\n(%d)", pct_of_sig, count)),
+            position = position_stack(vjust = 0.5), size = 2.8,
+            color = "white", fontface = "bold") +
+  facet_wrap(~ modality, nrow = 1) +
+  scale_fill_manual(values = COLORS$direction, name = "Direction") +
+  scale_x_discrete(labels = SUBCMPT_LABELS) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(
+    title = "5mC vs 5hmC Direction Split by Subcompartment (Side-by-Side)",
+    subtitle = "Active chromatin (A.1): 5mC gains methylation, 5hmC loses it — mirror-image gradients",
+    x = "CALDER2 Subcompartment (Control)",
+    y = "% of Significant DMRs"
+  ) +
+  theme_biomodal() +
+  theme(legend.position = "top",
+        strip.text = element_text(size = 12, face = "bold"))
+
+save_multiformat_ggplot(p_90e,
+                        file.path(OUTPUT_DIR, "90e_combined_direction_by_subcompartment"),
+                        width = 14, height = 7)
+
 # =============================================================================
 # PART 3: CONTINUOUS PC1 REGRESSION
 # =============================================================================
@@ -381,7 +425,7 @@ gene_df <- gene_df %>%
 
 # ---- Panel 90e: PC1 vs methylation change scatters -------------------------
 
-cat("Creating Figure 90e: PC1 regression scatters...\n")
+cat("Creating Figure 90f: PC1 regression scatters...\n")
 
 # 5mC regression
 mod_mc <- lm(mc_diff ~ mean_ctrl_pc1, data = gene_df)
@@ -405,7 +449,7 @@ hmc_spearman <- cor.test(gene_df$mean_ctrl_pc1, gene_df$hmc_diff,
 cat(sprintf("  5hmC ~ PC1: beta=%.5f, R²=%.4f, %s, Spearman rho=%.4f\n",
             hmc_beta, hmc_r2, fmt_p(hmc_pval), hmc_spearman$estimate))
 
-p_90e_mc <- ggplot(gene_df, aes(x = mean_ctrl_pc1, y = mc_diff)) +
+p_90f_mc <- ggplot(gene_df, aes(x = mean_ctrl_pc1, y = mc_diff)) +
   geom_point(alpha = 0.1, size = 0.3, color = COLORS$methylation["5mC"]) +
   geom_smooth(method = "loess", se = TRUE, color = "black", linewidth = 0.8) +
   geom_smooth(method = "lm", se = FALSE, color = "grey30",
@@ -421,7 +465,7 @@ p_90e_mc <- ggplot(gene_df, aes(x = mean_ctrl_pc1, y = mc_diff)) +
        x = "Control PC1 Eigenvalue", y = "Δ5mC (mut − ctrl)") +
   theme_biomodal()
 
-p_90e_hmc <- ggplot(gene_df, aes(x = mean_ctrl_pc1, y = hmc_diff)) +
+p_90f_hmc <- ggplot(gene_df, aes(x = mean_ctrl_pc1, y = hmc_diff)) +
   geom_point(alpha = 0.1, size = 0.3, color = COLORS$methylation["5hmC"]) +
   geom_smooth(method = "loess", se = TRUE, color = "black", linewidth = 0.8) +
   geom_smooth(method = "lm", se = FALSE, color = "grey30",
@@ -437,19 +481,19 @@ p_90e_hmc <- ggplot(gene_df, aes(x = mean_ctrl_pc1, y = hmc_diff)) +
        x = "Control PC1 Eigenvalue", y = "Δ5hmC (mut − ctrl)") +
   theme_biomodal()
 
-p_90e <- p_90e_mc | p_90e_hmc
-p_90e <- p_90e + plot_annotation(
+p_90f <- p_90f_mc | p_90f_hmc
+p_90f <- p_90f + plot_annotation(
   title = "Continuous PC1 vs Methylation Change: Gene-Level Regression",
   theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 )
 
-save_multiformat_ggplot(p_90e,
-                        file.path(OUTPUT_DIR, "90e_pc1_regression_scatter"),
+save_multiformat_ggplot(p_90f,
+                        file.path(OUTPUT_DIR, "90f_pc1_regression_scatter"),
                         width = 16, height = 7)
 
 # ---- Panel 90f: Standardized slope comparison with bootstrap ----------------
 
-cat("Creating Figure 90f: gradient steepness comparison...\n")
+cat("Creating Figure 90g: gradient steepness comparison...\n")
 
 gene_df$z_pc1 <- as.numeric(scale(gene_df$mean_ctrl_pc1))
 gene_df$z_mc  <- as.numeric(scale(gene_df$mc_diff))
@@ -518,7 +562,7 @@ slope_df <- data.frame(
   stringsAsFactors = FALSE
 )
 
-p_90f <- ggplot(slope_df, aes(x = modality, y = std_beta,
+p_90g <- ggplot(slope_df, aes(x = modality, y = std_beta,
                                fill = modality)) +
   geom_col(width = 0.5, color = "black", linewidth = 0.3) +
   geom_errorbar(aes(ymin = ci_lo, ymax = ci_hi), width = 0.15, linewidth = 0.5) +
@@ -538,8 +582,8 @@ p_90f <- ggplot(slope_df, aes(x = modality, y = std_beta,
   ) +
   theme_biomodal()
 
-save_multiformat_ggplot(p_90f,
-                        file.path(OUTPUT_DIR, "90f_gradient_steepness_comparison"),
+save_multiformat_ggplot(p_90g,
+                        file.path(OUTPUT_DIR, "90g_gradient_steepness_comparison"),
                         width = 8, height = 7)
 
 # =============================================================================
@@ -660,7 +704,7 @@ med_compare <- data.frame(
   stringsAsFactors = FALSE
 )
 
-p_90g <- ggplot(med_compare, aes(x = model, y = 100 * proportion_mediated,
+p_90h <- ggplot(med_compare, aes(x = model, y = 100 * proportion_mediated,
                                   fill = model)) +
   geom_col(width = 0.5, color = "black", linewidth = 0.3) +
   geom_errorbar(aes(ymin = 100 * indirect_ci_lo / indirect_effect * proportion_mediated,
@@ -680,8 +724,8 @@ p_90g <- ggplot(med_compare, aes(x = model, y = 100 * proportion_mediated,
   theme_biomodal() +
   theme(axis.text.x = element_text(size = 9))
 
-save_multiformat_ggplot(p_90g,
-                        file.path(OUTPUT_DIR, "90g_mediation_comparison"),
+save_multiformat_ggplot(p_90h,
+                        file.path(OUTPUT_DIR, "90h_mediation_comparison"),
                         width = 10, height = 7)
 
 # ---- Panel 90h: Variance partition -----------------------------------------
@@ -729,7 +773,7 @@ vp_colors <- c("PC1 unique" = "#4393C3",
                "Other modality unique" = "#D6604D",
                "Unexplained" = "grey85")
 
-p_90h <- ggplot(vp, aes(x = outcome, y = fraction, fill = component)) +
+p_90i <- ggplot(vp, aes(x = outcome, y = fraction, fill = component)) +
   geom_col(position = "stack", width = 0.6) +
   geom_text(aes(label = ifelse(fraction > 0.02,
                 sprintf("%.1f%%", 100 * fraction), "")),
@@ -745,8 +789,8 @@ p_90h <- ggplot(vp, aes(x = outcome, y = fraction, fill = component)) +
   theme_biomodal() +
   theme(legend.position = "right")
 
-save_multiformat_ggplot(p_90h,
-                        file.path(OUTPUT_DIR, "90h_variance_partition"),
+save_multiformat_ggplot(p_90i,
+                        file.path(OUTPUT_DIR, "90i_variance_partition"),
                         width = 10, height = 7)
 
 # =============================================================================
@@ -760,7 +804,7 @@ cat("===========================================================================
 
 # ---- Panel 90i: B-compartment methylation changes ---------------------------
 
-cat("Creating Figure 90i: B-compartment behavior...\n")
+cat("Creating Figure 90j: B-compartment behavior...\n")
 
 b_genes <- gene_df %>%
   dplyr::filter(ctrl_label %in% c("B.1", "B.2"))
@@ -796,7 +840,7 @@ cat(sprintf("    Δ5mC: median=%.5f, %s\n",
 cat(sprintf("    Δ5hmC: median=%.5f, %s\n",
             median(b_genes$hmc_diff), fmt_p(hmc_b_wilcox$p.value)))
 
-p_90i <- ggplot(b_violin_df, aes(x = modality, y = delta * 100, fill = modality)) +
+p_90j <- ggplot(b_violin_df, aes(x = modality, y = delta * 100, fill = modality)) +
   geom_violin(alpha = 0.7, scale = "width", trim = TRUE) +
   geom_boxplot(width = 0.15, outlier.size = 0.3, alpha = 0.8) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
@@ -814,8 +858,8 @@ p_90i <- ggplot(b_violin_df, aes(x = modality, y = delta * 100, fill = modality)
   theme_biomodal() +
   theme(strip.text = element_text(size = 10, face = "bold"))
 
-save_multiformat_ggplot(p_90i,
-                        file.path(OUTPUT_DIR, "90i_b_compartment_behavior"),
+save_multiformat_ggplot(p_90j,
+                        file.path(OUTPUT_DIR, "90j_b_compartment_behavior"),
                         width = 10, height = 7)
 
 # ---- Combined figures -------------------------------------------------------
@@ -823,18 +867,20 @@ save_multiformat_ggplot(p_90i,
 cat("\nCreating combined figures...\n")
 
 p_90_descriptive <- (p_90a | p_90b) /
+  p_90e /
   (p_90c | p_90d) +
+  plot_layout(heights = c(1, 1, 1)) +
   plot_annotation(
     title = "5hmC Subcompartment Analysis + Gradient Comparison",
     theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
   )
 save_multiformat_ggplot(p_90_descriptive,
-                        file.path(OUTPUT_DIR, "90j_descriptive_composite"),
-                        width = 16, height = 14)
+                        file.path(OUTPUT_DIR, "90k_descriptive_composite"),
+                        width = 16, height = 18)
 
-p_90_mechanism <- (p_90e) /
-  (p_90f | p_90g | p_90h) /
-  p_90i +
+p_90_mechanism <- (p_90f) /
+  (p_90g | p_90h | p_90i) /
+  p_90j +
   plot_layout(heights = c(1, 1, 0.8)) +
   plot_annotation(
     title = "Mechanism Differentiation: TET Impediment vs DNMT3A Recruitment",
@@ -845,7 +891,7 @@ p_90_mechanism <- (p_90e) /
     )
   )
 save_multiformat_ggplot(p_90_mechanism,
-                        file.path(OUTPUT_DIR, "90j_mechanism_composite"),
+                        file.path(OUTPUT_DIR, "90k_mechanism_composite"),
                         width = 18, height = 18)
 
 # ---- Save tables ------------------------------------------------------------

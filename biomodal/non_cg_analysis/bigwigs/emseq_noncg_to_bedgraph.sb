@@ -1,0 +1,129 @@
+#!/bin/bash
+#SBATCH --job-name=emseq_noncg_bdg
+#SBATCH --output=logs/emseq_noncg_to_bedgraph_%A_%a.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+#SBATCH --array=0-3
+
+# Convert MethylDackel methylKit CHG + CHH extracts into combined non-CG
+# bedGraph files for BigWig conversion.
+#
+# methylKit files are already per-site (one row per cytosine per strand),
+# so no heavy aggregation is needed. We combine CHG + CHH, convert
+# coordinates (1-based -> 0-based) and values (0-100% -> 0-1 fraction),
+# sort by position, and merge any strand-duplicate positions.
+#
+# Input:  *_CHG.methylKit.gz + *_CHH.methylKit.gz (MethylDackel per-site)
+# Output: <sample>.nonCG.bdg (bedGraph: chr, start[0-based], end, fraction[0-1])
+#
+# Usage: sbatch emseq_noncg_to_bedgraph.sb
+#        (runs as array job, one task per sample)
+
+echo "========================================="
+echo "EM-seq Non-CG: methylKit -> bedGraph"
+echo "========================================="
+echo "Job ID: ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+SAMPLES=(ctrl_3139 ctrl_3200 mut_3201 mut_3391)
+SAMPLE="${SAMPLES[$SLURM_ARRAY_TASK_ID]}"
+
+EMSEQ_DIR="/expanse/lustre/projects/csd940/zalibhai/emseq/em-seq_output/methylDackelExtracts"
+OUTDIR="/expanse/lustre/projects/csd940/zalibhai/noncg_bigwigs/bedgraphs/emseq"
+
+mkdir -p "$OUTDIR"
+
+declare -A EMSEQ_PREFIX
+EMSEQ_PREFIX=(
+    [ctrl_3139]="260516_EMseq_LV_index_A1_Bap1_Math1_adult_ctrl_3139_S63_L001"
+    [ctrl_3200]="260516_EMseq_LV_index_C1_Bap1_Math1_adult_ctrl_3200_S65_L001"
+    [mut_3201]="260516_EMseq_LV_index_D1_Bap1_Math1_adult_mut_3201_S66_L001"
+    [mut_3391]="260516_EMseq_LV_index_B1_Bap1_Math1_adult_mut_3391_S64_L001"
+)
+
+PREFIX="${EMSEQ_PREFIX[$SAMPLE]}"
+CHG_FILE="${EMSEQ_DIR}/${PREFIX}_CHG.methylKit.gz"
+CHH_FILE="${EMSEQ_DIR}/${PREFIX}_CHH.methylKit.gz"
+OUTFILE="${OUTDIR}/${SAMPLE}.nonCG.bdg"
+
+echo "Sample: $SAMPLE"
+echo "CHG: $CHG_FILE"
+echo "CHH: $CHH_FILE"
+echo "Output: $OUTFILE"
+echo ""
+
+for F in "$CHG_FILE" "$CHH_FILE"; do
+    if [[ ! -f "$F" ]]; then
+        echo "ERROR: input file not found: $F"
+        exit 1
+    fi
+done
+
+echo "Processing..."
+START=$(date +%s)
+
+# Combine CHG + CHH methylKit files into a single sorted bedGraph.
+#
+# First awk: parse methylKit format (7 columns), extract chr + pos + coverage +
+# methylated count. Skip header lines. Filter to standard chromosomes.
+# Convert freqC percentage to absolute methylated read count for proper
+# weighted merging of any strand duplicates at the same position.
+#
+# Sort: by chr (lexicographic) then pos (numeric).
+#
+# Second awk: stream-merge entries at the same (chr, pos). For non-CG contexts,
+# F and R strand at the same position is near-impossible (would require CG),
+# but we handle it defensively. Emit fraction = total_meth / total_cov.
+# Convert 1-based methylKit position to 0-based bedGraph coordinates.
+
+zcat "$CHG_FILE" "$CHH_FILE" \
+  | awk -F'\t' 'BEGIN{OFS="\t"}
+    /^chrBase/ { next }
+    $2 ~ /^chr([0-9]+|[XYM])$/ {
+        cov = int($5)
+        if (cov > 0) {
+            meth = int(cov * $6 / 100 + 0.5)
+            print $2, $3, cov, meth
+        }
+    }' \
+  | LC_ALL=C sort -k1,1 -k2,2n -S 12G --parallel=4 \
+  | awk -F'\t' 'BEGIN{OFS="\t"}
+    function emit() {
+        if (tc > 0) print pc, pp - 1, pp, tm / tc
+    }
+    {
+        if ($1 != pc || $2 != pp) {
+            if (NR > 1) emit()
+            pc = $1; pp = $2; tc = 0; tm = 0
+        }
+        tc += $3; tm += $4
+    }
+    END { emit() }' > "$OUTFILE"
+
+END=$(date +%s)
+
+if [[ ! -s "$OUTFILE" ]]; then
+    echo "ERROR: output bedGraph is empty"
+    exit 1
+fi
+
+OUT_LINES=$(wc -l < "$OUTFILE")
+OUT_SIZE=$(du -h "$OUTFILE" | cut -f1)
+
+echo ""
+echo "========================================="
+echo "Complete: $SAMPLE"
+echo "Output: $OUTFILE"
+echo "Sites: $(printf "%'d" "$OUT_LINES")"
+echo "Size: $OUT_SIZE"
+echo "Time: $((END - START))s"
+echo "End time: $(date)"
+echo "========================================="

@@ -1,0 +1,143 @@
+#!/bin/bash
+#SBATCH --job-name=wgbs_noncg_bdg
+#SBATCH --output=logs/wgbs_noncg_to_bedgraph_%A_%a.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=48G
+#SBATCH --time=24:00:00
+#SBATCH --account=csd940
+#SBATCH --array=0-3
+
+# Aggregate Bismark per-read CHG + CHH methylation calls into per-site
+# non-CG bedGraph files for BigWig conversion.
+#
+# Strategy: per-chromosome split + sort + aggregate to keep memory bounded.
+# Bismark per-read files can have billions of lines (one per read per cytosine).
+# Sorting the full file is impractical, so we split by chromosome first,
+# sort each independently, aggregate, then concatenate in genome order.
+#
+# Input:  CHG_context_*.txt.gz + CHH_context_*.txt.gz (Bismark per-read calls)
+# Output: <sample>.nonCG.bdg (bedGraph: chr, start[0-based], end, fraction[0-1])
+#
+# Usage: sbatch wgbs_noncg_to_bedgraph.sb
+#        (runs as array job, one task per sample)
+
+echo "========================================="
+echo "WGBS Non-CG: Bismark per-read -> bedGraph"
+echo "========================================="
+echo "Job ID: ${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+SAMPLES=(ctrl_3139 ctrl_3200 mut_3201 mut_3391)
+SAMPLE="${SAMPLES[$SLURM_ARRAY_TASK_ID]}"
+
+WGBS_DIR="/expanse/lustre/projects/csd940/zalibhai/methylseq/results/bismark/methylation_calls/methylation_calls"
+OUTDIR="/expanse/lustre/projects/csd940/zalibhai/noncg_bigwigs/bedgraphs/wgbs"
+TMPDIR_BASE="/expanse/lustre/projects/csd940/zalibhai/noncg_bigwigs/tmp"
+SAMPLE_TMP="${TMPDIR_BASE}/wgbs_${SAMPLE}_${SLURM_ARRAY_JOB_ID}"
+
+mkdir -p "$OUTDIR" "$SAMPLE_TMP"
+
+CHG_FILE="${WGBS_DIR}/CHG_context_Bap1_Math1_${SAMPLE}_1_val_1_bismark_bt2_pe.deduplicated.txt.gz"
+CHH_FILE="${WGBS_DIR}/CHH_context_Bap1_Math1_${SAMPLE}_1_val_1_bismark_bt2_pe.deduplicated.txt.gz"
+OUTFILE="${OUTDIR}/${SAMPLE}.nonCG.bdg"
+
+echo "Sample: $SAMPLE"
+echo "CHG: $CHG_FILE"
+echo "CHH: $CHH_FILE"
+echo "Output: $OUTFILE"
+echo "Temp dir: $SAMPLE_TMP"
+echo ""
+
+for F in "$CHG_FILE" "$CHH_FILE"; do
+    if [[ ! -f "$F" ]]; then
+        echo "ERROR: input file not found: $F"
+        rm -rf "$SAMPLE_TMP"
+        exit 1
+    fi
+done
+
+# Phase 1: Decompress CHG + CHH, extract (pos, call), split by chromosome.
+# Only keeps standard chromosomes. Writes 2 columns (pos + call) per chr file.
+echo "[Phase 1] Decompressing and splitting by chromosome..."
+PHASE1_START=$(date +%s)
+
+zcat "$CHG_FILE" "$CHH_FILE" \
+  | awk -F'\t' -v tmpdir="$SAMPLE_TMP" '
+    /^Bismark/ { next }
+    $3 ~ /^chr([0-9]+|[XYM])$/ { print $4, $5 >> (tmpdir "/" $3) }
+  '
+
+PHASE1_END=$(date +%s)
+echo "  Split complete in $((PHASE1_END - PHASE1_START))s"
+
+TOTAL_LINES=0
+for F in "$SAMPLE_TMP"/chr*; do
+    [[ -f "$F" ]] || continue
+    N=$(wc -l < "$F")
+    TOTAL_LINES=$((TOTAL_LINES + N))
+    echo "  $(basename "$F"): $(printf "%'d" "$N") lines ($(du -h "$F" | cut -f1))"
+done
+echo "  Total lines across all chromosomes: $(printf "%'d" "$TOTAL_LINES")"
+echo ""
+
+# Phase 2: For each chromosome, sort by position and stream-aggregate.
+# At each genomic position, count methylated (uppercase X or H) vs total calls,
+# emit the fraction as a bedGraph entry. Delete chr temp file after processing.
+echo "[Phase 2] Per-chromosome sort + aggregate..."
+PHASE2_START=$(date +%s)
+
+rm -f "$OUTFILE"
+
+for CHR in chr{1..19} chrX chrY chrM; do
+    CHRFILE="$SAMPLE_TMP/$CHR"
+    [[ -f "$CHRFILE" ]] || continue
+
+    echo -n "  $CHR... "
+    BEFORE=$(wc -l < "$OUTFILE" 2>/dev/null || echo 0)
+
+    LC_ALL=C sort -k1,1n -S 16G --parallel=4 "$CHRFILE" \
+      | awk -v c="$CHR" 'BEGIN{OFS="\t"}
+        function emit() { if (t > 0) print c, p-1, p, m/t }
+        {
+            if ($1 != p) { emit(); p = $1; m = 0; t = 0 }
+            t++
+            if ($2 ~ /^[XH]$/) m++
+        }
+        END { emit() }' >> "$OUTFILE"
+
+    AFTER=$(wc -l < "$OUTFILE")
+    echo "$(( AFTER - BEFORE )) sites"
+
+    rm -f "$CHRFILE"
+done
+
+PHASE2_END=$(date +%s)
+echo "  Aggregate complete in $((PHASE2_END - PHASE2_START))s"
+echo ""
+
+# Verify output
+if [[ ! -s "$OUTFILE" ]]; then
+    echo "ERROR: output bedGraph is empty"
+    rm -rf "$SAMPLE_TMP"
+    exit 1
+fi
+
+OUT_LINES=$(wc -l < "$OUTFILE")
+OUT_SIZE=$(du -h "$OUTFILE" | cut -f1)
+
+echo "========================================="
+echo "Complete: $SAMPLE"
+echo "Output: $OUTFILE"
+echo "Sites: $(printf "%'d" "$OUT_LINES")"
+echo "Size: $OUT_SIZE"
+echo "Total time: $((PHASE2_END - PHASE1_START))s"
+echo "End time: $(date)"
+echo "========================================="
+
+rm -rf "$SAMPLE_TMP"

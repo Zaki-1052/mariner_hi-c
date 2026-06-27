@@ -1,0 +1,91 @@
+#!/bin/bash
+#SBATCH --job-name=noncg_bdg2bw
+#SBATCH --output=logs/noncg_bedgraph_to_bigwig_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+
+# Convert per-sample non-CG bedGraph files to BigWig format.
+# Works for both WGBS and EM-seq bedGraphs (same format).
+#
+# The bedGraphs from wgbs_noncg_to_bedgraph.sb / emseq_noncg_to_bedgraph.sb
+# are already 0-based, chr-prefixed, sorted, and filtered to standard
+# chromosomes — so we call bedGraphToBigWig directly.
+#
+# Input:  bedgraphs/{method}/*.nonCG.bdg
+# Output: bigwigs/{method}/*.nonCG.bw
+#
+# Usage: sbatch noncg_bedgraph_to_bigwig.sb <wgbs|emseq>
+
+METHOD="$1"
+
+if [[ -z "$METHOD" || ( "$METHOD" != "wgbs" && "$METHOD" != "emseq" ) ]]; then
+    echo "Usage: sbatch noncg_bedgraph_to_bigwig.sb <wgbs|emseq>"
+    exit 1
+fi
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "========================================="
+echo "Non-CG bedGraph -> BigWig ($METHOD)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+BASEDIR="/expanse/lustre/projects/csd940/zalibhai/noncg_bigwigs"
+INDIR="${BASEDIR}/bedgraphs/${METHOD}"
+OUTDIR="${BASEDIR}/bigwigs/${METHOD}"
+CHROM_SIZES="${BASEDIR}/mm10.chrom.sizes"
+
+mkdir -p "$OUTDIR"
+
+if [[ ! -f "$CHROM_SIZES" ]]; then
+    echo "Downloading mm10.chrom.sizes..."
+    wget -q -O "$CHROM_SIZES" \
+      "https://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.chrom.sizes"
+fi
+
+TOTAL=0
+CONVERTED=0
+
+for BDG in "${INDIR}"/*.nonCG.bdg; do
+    [[ -f "$BDG" ]] || continue
+    TOTAL=$((TOTAL + 1))
+
+    SAMPLE=$(basename "$BDG" .nonCG.bdg)
+    BW="${OUTDIR}/${SAMPLE}.nonCG.bw"
+
+    echo "[$TOTAL] $SAMPLE"
+    echo "  Input:  $BDG ($(du -h "$BDG" | cut -f1))"
+
+    bedGraphToBigWig "$BDG" "$CHROM_SIZES" "$BW" 2>&1
+
+    if [[ -f "$BW" ]]; then
+        echo "  Output: $BW ($(du -h "$BW" | cut -f1))"
+        CONVERTED=$((CONVERTED + 1))
+    else
+        echo "  ERROR: bedGraphToBigWig failed for $SAMPLE"
+    fi
+    echo ""
+done
+
+if [[ $TOTAL -eq 0 ]]; then
+    echo "ERROR: no bedGraph files found in $INDIR"
+    exit 1
+fi
+
+echo "========================================="
+echo "Conversion complete ($METHOD)"
+echo "Converted: ${CONVERTED}/${TOTAL} files"
+echo "Output dir: $OUTDIR"
+ls -lh "$OUTDIR"/
+echo "End time: $(date)"
+echo "========================================="

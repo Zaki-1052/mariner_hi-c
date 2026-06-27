@@ -1,0 +1,98 @@
+#!/bin/bash
+#SBATCH --job-name=noncg_merge_bw
+#SBATCH --output=logs/noncg_merge_bigwigs_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+
+# Merge per-sample non-CG BigWigs into group averages:
+#   1. nonCG_all.bw   — all 4 samples
+#   2. nonCG_ctrl.bw  — ctrl_3139 + ctrl_3200
+#   3. nonCG_mut.bw   — mut_3201 + mut_3391
+#
+# Uses deepTools bigwigAverage at 10bp bins (matching evoC merge convention).
+#
+# Input:  bigwigs/{method}/<sample>.nonCG.bw (4 per-sample files)
+# Output: bigwigs/{method}/nonCG_{all,ctrl,mut}.bw
+#
+# Usage: sbatch noncg_merge_bigwigs.sb <wgbs|emseq>
+
+METHOD="$1"
+
+if [[ -z "$METHOD" || ( "$METHOD" != "wgbs" && "$METHOD" != "emseq" ) ]]; then
+    echo "Usage: sbatch noncg_merge_bigwigs.sb <wgbs|emseq>"
+    exit 1
+fi
+
+source ~/.bashrc
+conda activate calder2_env
+
+echo "========================================="
+echo "Merge Non-CG BigWigs ($METHOD)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+BWDIR="/expanse/lustre/projects/csd940/zalibhai/noncg_bigwigs/bigwigs/${METHOD}"
+
+CTRL_BW=("${BWDIR}/ctrl_3139.nonCG.bw" "${BWDIR}/ctrl_3200.nonCG.bw")
+MUT_BW=("${BWDIR}/mut_3201.nonCG.bw" "${BWDIR}/mut_3391.nonCG.bw")
+ALL_BW=("${CTRL_BW[@]}" "${MUT_BW[@]}")
+
+MISSING=0
+for BW in "${ALL_BW[@]}"; do
+    if [[ ! -f "$BW" ]]; then
+        echo "ERROR: missing input: $BW"
+        MISSING=$((MISSING + 1))
+    fi
+done
+if [[ $MISSING -gt 0 ]]; then
+    echo "ERROR: $MISSING input files missing, aborting"
+    exit 1
+fi
+
+SUCCESS=0
+TOTAL=3
+
+merge_bigwigs() {
+    local LABEL="$1"
+    shift
+    local OUTFILE="${BWDIR}/nonCG_${LABEL}.bw"
+    local -a FILES=("$@")
+
+    echo "--- $LABEL (${#FILES[@]} files) ---"
+    echo "  Output: $OUTFILE"
+
+    bigwigAverage \
+        --bigwigs "${FILES[@]}" \
+        --binSize 10 \
+        --numberOfProcessors 4 \
+        --outFileName "$OUTFILE" 2>&1
+
+    if [[ -f "$OUTFILE" ]]; then
+        echo "  Done: $(du -h "$OUTFILE" | cut -f1)"
+        SUCCESS=$((SUCCESS + 1))
+    else
+        echo "  ERROR: bigwigAverage failed"
+    fi
+    echo ""
+}
+
+merge_bigwigs "all" "${ALL_BW[@]}"
+merge_bigwigs "ctrl" "${CTRL_BW[@]}"
+merge_bigwigs "mut" "${MUT_BW[@]}"
+
+echo "========================================="
+echo "Merge complete ($METHOD)"
+echo "Merged: ${SUCCESS}/${TOTAL}"
+echo "Output dir: $BWDIR"
+ls -lh "$BWDIR"/
+echo "End time: $(date)"
+echo "========================================="
