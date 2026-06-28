@@ -72,8 +72,9 @@ merge_bigwigs() {
 
     bigwigAverage \
         --bigwigs "${FILES[@]}" \
-        --binSize 10 \
+        --binSize 1 \
         --numberOfProcessors 4 \
+        --skipNonCoveredRegions \
         --outFileName "$OUTFILE" 2>&1
 
     if [[ -f "$OUTFILE" ]]; then
