@@ -1,25 +1,33 @@
 #!/bin/bash
 #SBATCH --job-name=noncg_remerge
-#SBATCH --output=logs/noncg_remerge_%j.out
+#SBATCH --output=logs/rerun/noncg_remerge_%j.out
 #SBATCH --partition=shared
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=128G
 #SBATCH --time=48:00:00
 #SBATCH --account=csd940
 
-# Rerun non-CG BigWig merging at 1bp resolution for both wgbs and emseq.
-# Replaces existing nonCG_{all,ctrl,mut}.bw with single-base-resolution versions
-# using --skipNonCoveredRegions to avoid dilution by non-cytosine positions.
+# Merge non-CG BigWigs at 1bp resolution with --skipNonCoveredRegions.
+# Accepts METHOD (wgbs|emseq) and GROUP (all|ctrl|mut) as arguments.
 #
-# Usage: sbatch rerun_merge_bigwigs.sb
+# Usage: sbatch rerun_merge_bigwigs.sb <wgbs|emseq> <all|ctrl|mut>
+#   or use submit_remerge.sh to launch all 6 jobs in parallel.
+
+METHOD="$1"
+GROUP="$2"
+
+if [[ -z "$METHOD" || -z "$GROUP" ]]; then
+    echo "Usage: sbatch rerun_merge_bigwigs.sb <wgbs|emseq> <all|ctrl|mut>"
+    exit 1
+fi
 
 source ~/.bashrc
 conda activate calder2_env
 
 echo "========================================="
-echo "Rerun Non-CG BigWig Merge (1bp resolution)"
+echo "Non-CG BigWig Merge (1bp): ${METHOD} / ${GROUP}"
 echo "========================================="
 echo "Job ID: $SLURM_JOB_ID"
 echo "Node: $HOSTNAME"
@@ -27,77 +35,56 @@ echo "Start time: $(date)"
 echo "========================================="
 echo ""
 
-BASEDIR="/expanse/lustre/projects/csd940/zalibhai/noncg_bigwigs/bigwigs"
+BWDIR="/expanse/lustre/projects/csd940/zalibhai/noncg_bigwigs/bigwigs/${METHOD}"
 
-SUCCESS=0
-TOTAL=6
+CTRL_BW=("${BWDIR}/ctrl_3139.nonCG.bw" "${BWDIR}/ctrl_3200.nonCG.bw")
+MUT_BW=("${BWDIR}/mut_3201.nonCG.bw" "${BWDIR}/mut_3391.nonCG.bw")
 
-merge_bigwigs() {
-    local LABEL="$1"
-    shift
-    local OUTFILE="$1"
-    shift
-    local -a FILES=("$@")
+case "$GROUP" in
+    all)  FILES=("${CTRL_BW[@]}" "${MUT_BW[@]}") ;;
+    ctrl) FILES=("${CTRL_BW[@]}") ;;
+    mut)  FILES=("${MUT_BW[@]}") ;;
+    *)    echo "ERROR: GROUP must be all|ctrl|mut"; exit 1 ;;
+esac
 
-    echo "--- $LABEL (${#FILES[@]} files) ---"
-    echo "  Output: $OUTFILE"
+OUTFILE="${BWDIR}/nonCG_${GROUP}.bw"
 
-    if [[ -f "$OUTFILE" ]]; then
-        echo "  Removing old: $(du -h "$OUTFILE" | cut -f1)"
-        rm "$OUTFILE"
+MISSING=0
+for BW in "${FILES[@]}"; do
+    if [[ ! -f "$BW" ]]; then
+        echo "ERROR: missing input: $BW"
+        MISSING=$((MISSING + 1))
     fi
-
-    bigwigAverage \
-        --bigwigs "${FILES[@]}" \
-        --binSize 1 \
-        --numberOfProcessors 4 \
-        --skipNonCoveredRegions \
-        --outFileName "$OUTFILE" 2>&1
-
-    if [[ -f "$OUTFILE" ]]; then
-        echo "  Done: $(du -h "$OUTFILE" | cut -f1)"
-        SUCCESS=$((SUCCESS + 1))
-    else
-        echo "  ERROR: bigwigAverage failed"
-    fi
-    echo ""
-}
-
-for METHOD in wgbs emseq; do
-    BWDIR="${BASEDIR}/${METHOD}"
-
-    echo "========================================="
-    echo "Processing: $METHOD"
-    echo "========================================="
-
-    CTRL_BW=("${BWDIR}/ctrl_3139.nonCG.bw" "${BWDIR}/ctrl_3200.nonCG.bw")
-    MUT_BW=("${BWDIR}/mut_3201.nonCG.bw" "${BWDIR}/mut_3391.nonCG.bw")
-    ALL_BW=("${CTRL_BW[@]}" "${MUT_BW[@]}")
-
-    MISSING=0
-    for BW in "${ALL_BW[@]}"; do
-        if [[ ! -f "$BW" ]]; then
-            echo "ERROR: missing input: $BW"
-            MISSING=$((MISSING + 1))
-        fi
-    done
-    if [[ $MISSING -gt 0 ]]; then
-        echo "ERROR: $MISSING input files missing for $METHOD, skipping"
-        echo ""
-        continue
-    fi
-
-    merge_bigwigs "${METHOD}/all"  "${BWDIR}/nonCG_all.bw"  "${ALL_BW[@]}"
-    merge_bigwigs "${METHOD}/ctrl" "${BWDIR}/nonCG_ctrl.bw"  "${CTRL_BW[@]}"
-    merge_bigwigs "${METHOD}/mut"  "${BWDIR}/nonCG_mut.bw"   "${MUT_BW[@]}"
-
-    echo "--- $METHOD output ---"
-    ls -lh "$BWDIR"/nonCG_*.bw
-    echo ""
 done
+if [[ $MISSING -gt 0 ]]; then
+    echo "ERROR: $MISSING input files missing, aborting"
+    exit 1
+fi
 
-echo "========================================="
-echo "Remerge complete"
-echo "Succeeded: ${SUCCESS}/${TOTAL}"
+echo "Input: ${#FILES[@]} files"
+echo "Output: $OUTFILE"
+
+if [[ -f "$OUTFILE" ]]; then
+    echo "Removing old: $(du -h "$OUTFILE" | cut -f1)"
+    rm "$OUTFILE"
+fi
+
+bigwigAverage \
+    --bigwigs "${FILES[@]}" \
+    --binSize 1 \
+    --numberOfProcessors 64 \
+    --skipNonCoveredRegions \
+    --outFileName "$OUTFILE" 2>&1
+
+if [[ -f "$OUTFILE" ]]; then
+    echo "Done: $(du -h "$OUTFILE" | cut -f1)"
+else
+    echo "ERROR: bigwigAverage failed"
+    exit 1
+fi
+
+echo ""
+ls -lh "$BWDIR"/nonCG_*.bw
+echo ""
 echo "End time: $(date)"
 echo "========================================="
