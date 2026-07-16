@@ -1,0 +1,153 @@
+# EM-seq Analysis Pipeline
+
+[![Test Status](https://github.com/nebiolabs/EM-seq/actions/workflows/test.yml/badge.svg)](https://github.com/nebiolabs/EM-seq/actions)
+
+This repository contains Nextflow-based analysis tools for [Enzymatic Methylation Sequencing (EM-seq)](https://www.neb.com/products/e7120-nebnext-enzymatic-methyl-seq-kit) and [Enzymatic 5hmC-seq (E5hmC-seq)](https://www.neb.com/en-us/products/e3350nebnext-enzymatic-methyl-seq-5hmc-kit) data processing.
+
+### Main Analysis Pipeline (`main.nf`)
+Complete EM-seq processing pipeline that accepts UBAM inputs:
+- Adapter trimming and read alignment with (fastp, bwa-meth)
+- Duplicate marking (Picard)
+- Methylation calling (MethylDackel)
+- Quality control metrics and statistics (Picard, Samtools, FastQC, MultiQC)
+- Optional BED file intersection for targeted analysis (bedtools)
+
+### Fastq to uBam pipeline (`fastq_to_ubam.nf`)
+If your files are in fastq format, you will need to convert them to uBams prior to running the main pipeline, e.g.:
+```bash
+nextflow run fastq_to_ubam.nf \
+  --input_glob "tests/fixtures/fastq/emseq-test*{.ds.1,.ds.2}.fastq.gz" \
+  --read_format 'paired-end'
+```
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `--input_glob` | glob for your gzipped fastq files | `['*.{1,2}.fastq.gz']` |
+| `--read_format` | 'paired-end' or 'single-end' | `'paired-end'` |
+
+### Feature Coverage & Methylation Analysis (`feature_cov_meth.nf`)
+Quantifies read depth and CpG methylation across major genomic feature categories — exons, CDS, genes, mRNA, CpG islands, and EPD promoters — for a set of aligned BAM files.
+
+**Outputs**
+- `feature_depth_bokeh.html` — interactive per-feature depth plot (switchable in-browser between hex-density and violin display, log/linear y-axis, per-feature or shared y-range, and a depth-threshold counter)
+
+![Feature depth per library — hex-density view showing read depth across genomic feature categories](example_feature_cov.png)
+
+- `combined_feature_counts.tsv` — merged featureCounts table across all feature types
+- Per-sample methylation TSVs under `<output_dir>/features/<sample>/<context>/`
+
+**Usage**
+```bash
+nextflow run feature_cov_meth.nf \
+  --bam_files_glob '*.md.{bam,bam.bai}' \
+  --mk_files '*.methylKit.gz' \
+  --human_t2t2
+```
+Use `--mouse` for GRCm39, `--human_t2t2` for T2T CHM13v2.0, or supply all genome params manually for a custom assembly.
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `--mouse` | GRCm39 reference shortcuts | `false` |
+| `--human_t2t2` | T2T CHM13v2.0 reference shortcuts | `false` |
+| `--local_ref_files_path` | Root path to locally cached reference files | *(set in config)* |
+| `--context` | Methylation context(s), comma-separated (`CpG`, `CHG`, `CHH`) | `CpG` |
+| `--count_dup_reads` | Include duplicate reads in feature counts | `false` |
+| `--output_dir` | Output directory | `cov_vs_meth.output` |
+
+For custom assemblies set `--genome`, `--ucsc_cpg_islands_gtf`, `--refseq_gff_url`, `--ncbi_assembly_report_url`, `--epd_promoter_bed_url`, `--old_new_chain_url`, `--cpg_chr_lookup`, and `--refseq_chr_lookup` directly.
+
+## Quick Start
+1. Install [miniforge](https://conda-forge.org/download/) and [bioconda](https://bioconda.github.io/) (see [Requirements](#requirements))
+2. Install [Nextflow](https://www.nextflow.io/) (e.g. conda install nextflow, or see [Nextflow installation guide](https://www.nextflow.io/docs/latest/getstarted.html#installation))
+3. Clone this repository (`git clone https://github.com/nebiolabs/EM-seq.git`). Modify `nextflow.config` as needed for your environment, e.g. if running locally, change executor block to 'local' and set, e.g. `--max_cpus 10 --max_memory 30.GB`. 
+4. Download or prepare a genome reference FASTA file (see [Reference Genomes](#reference-genomes))
+5. Create a bwameth index for the fasta and add it to your references in conf/references.config
+6. Run the pipeline with appropriate parameters (see [Basic Usage](#basic-usage))
+7. Examine results in the EM-seq_output directory
+   - `EM-seq-Alignment-Summary-<FLOWCELL_ID>_multiqc_report.html` in em-seq_output for overall QC summary
+   - Mbias files `em-seq_output/methylDackelExtracts/mbias` (to identify sample-dependent positional biases)
+   - Methylation output files in `em-seq_output/methylDackelExtracts` (suitable for analysis with [methylKit](https://bioconductor.org/packages/release/bioc/html/methylKit.html))
+   - Aligned reads in `em-seq_output/markduped_bams` (methylation coloring is recommended for visualization in [IGV](https://igv.org/doc/desktop/#UserGuide/tracks/alignments/bisulfite_sequencing/))
+
+### Basic Usage
+```bash
+nextflow run main.nf \
+  --genome 'test' \
+  --ubam_dir './' \
+  --email your.email@example.com \
+  --flowcell FLOWCELL_ID
+```
+`ubam_dir` should be the folder where your ubam files are.
+
+### Key Parameters
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `--genome` | reference genome found in conf/references.config | Required |
+| `--email` | Email for notifications | Required |
+| `--flowcell` | Flowcell identifier | Optional |
+| `--outputDir` | Output directory | `em-seq_output` |
+| `--enable_neb_agg` | Enable NEB aggregation reporting | `False` |
+
+### References Config
+
+Modify the conf/references.config file to specify your genome files
+- `genome_fa` path to your genome fasta file 
+- `genome_fai` path to your genome fasta fai file 
+- `bwameth_index` path to your genome fasta file where bwameth indices exist 
+- `target_bed` BED file for targeted analysis, Optional 
+
+### Advanced Options
+- `--tmp_dir` - Temporary directory (default: `/tmp`)
+- `--workflow` - Workflow identifier (default: `EM-seq`)
+- `--enable_neb_agg` - Enable NEB aggregation reporting (default: `False`)
+
+
+## Reference Genomes
+Pre-built reference genomes with methylation spike-in controls:
+- **T2T CHM13**: https://neb-em-seq-sra.s3.amazonaws.com/T2T_chm13v2.0%2Bbs_controls.fa
+- **GRCh38**: https://neb-em-seq-sra.s3.amazonaws.com/grch38_core%2Bbs_controls.fa
+- Create your own reference by appending the [control sequences](assets/methylation_controls.fa) to your preferred genome fasta (e.g. `cat genome.fa methylation_controls.fa > genome+methylation_controls.fa`)
+   | Sequence | Methylation State                                | Purpose |
+   |----------|--------------------------------------------------|---------|
+   | lambda   | All Cs are unmodified (included in kits)         | confirmation that APOBEC enzyme is working optimially (unprotected C->T)  |
+   | pUC19c   | All CpG sites contain 5mC (included EM-seq kits) | confirmation that TET2 + T4-BGT step is protecting 5mC (5mC -> 5ghmC/5caC |
+   | T4       | All Cs are 5hmC (included in the 5-hmC Seq kits) | confirmation that T4-BGT is protecting 5hmC optimally (5hmC -> 5ghmC)     |
+
+## Requirements
+- [Nextflow](https://www.nextflow.io/)
+- [Miniforge](https://conda-forge.org/download/), [Micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html), or [Conda](https://docs.conda.io/projects/conda/en/stable/) for dependency management
+- [Bioconda](https://bioconda.github.io/) channel configured
+- Sufficient computational resources (memory scales with input size)
+
+### Historical Workflows
+These in the "legacy" folder are retained for reference and reproducibility but are not actively maintained and are not compatible with the latest Nextflow versions. Use `NXF_VER=22.10.4 nextflow run ...` to reproduce the results in the [EM-seq paper](README#Citation).
+- `em-seq.nf` - Original alignment and methylation calling workflow
+- `bins.nf` - TSS-centered binned coverage analysis
+- `cov_vs_meth.nf` - Coverage vs methylation analysis for genomic features
+
+## Citation
+Analysis methods in this repository were used in the following publication:
+
+Vaisvila R, Ponnaluri VKC, Sun Z, et al. **Enzymatic methyl sequencing detects DNA methylation at single-base resolution from picograms of DNA.** *Genome Res.* 2021;31(7):1280-1289. doi:[10.1101/gr.266551.120](https://doi.org/10.1101/gr.266551.120)
+
+## Related Projects
+You may also be interested in the [nf-core methylseq project](https://nf-co.re/methylseq/2.5.0)
+
+## Developer documentation
+### Production:
+ - git tag -f current_production
+ - git push -f origin current_production
+
+ ### Development:
+ - development workflow will run from master branch
+
+ ### Testing:
+ - Tests are run using nf-test and are integrated into github actions
+ - install nf-test from bioconda using conda/mamba
+ - To run all tests:
+ ```bash
+nf-test test
+```
+- When new tests are added or results change, to update the results snapshot:
+```bash
+nf-test test --updateSnapshot
+```
