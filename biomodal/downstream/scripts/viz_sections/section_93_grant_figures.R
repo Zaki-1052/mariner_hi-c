@@ -104,34 +104,39 @@ coord <- read_tsv(file.path(TABLES_DIR, "coordinated_changes.tsv"),
 
 coord <- coord %>%
   mutate(quadrant = case_when(
-    mc_diff > 0 & hmc_diff < 0 ~ "Q4: mC up / hmC down",
-    mc_diff < 0 & hmc_diff > 0 ~ "Q2: mC down / hmC up",
-    mc_diff > 0 & hmc_diff > 0 ~ "Q3: same direction",
-    mc_diff < 0 & hmc_diff < 0 ~ "Q1: same direction"
+    mc_diff > 0 & hmc_diff < 0 ~ "Q4",
+    mc_diff < 0 & hmc_diff > 0 ~ "Q2",
+    mc_diff > 0 & hmc_diff > 0 ~ "Q3",
+    mc_diff < 0 & hmc_diff < 0 ~ "Q1"
   ))
 
-n_q4 <- sum(coord$quadrant == "Q4: mC up / hmC down", na.rm = TRUE)
-n_total <- nrow(coord)
-pct_coord <- round(100 * n_q4 / n_total, 1)
+quad_counts <- coord %>%
+  count(quadrant) %>%
+  mutate(pct = round(100 * n / sum(n), 1),
+         label = sprintf("%s\nn=%s (%s%%)", quadrant, format(n, big.mark = ","), pct))
 
-quad_colors <- c("Q4: mC up / hmC down" = "#D7191C",
-                 "Q2: mC down / hmC up" = "#2C7BB6",
-                 "Q1: same direction" = "grey60",
-                 "Q3: same direction" = "grey60")
+quad_positions <- data.frame(
+  quadrant = c("Q1", "Q2", "Q3", "Q4"),
+  x = c(-1, -1, 1, 1) * max(abs(coord$mc_diff)) * 0.55,
+  y = c(-1, 1, 1, -1) * max(abs(coord$hmc_diff)) * 0.55,
+  stringsAsFactors = FALSE
+) %>%
+  left_join(quad_counts, by = "quadrant")
+
+quad_colors <- c("Q4" = "#D7191C", "Q2" = "#2C7BB6", "Q1" = "grey50", "Q3" = "grey50")
 
 p1b <- ggplot(coord, aes(x = mc_diff, y = hmc_diff, color = quadrant)) +
   geom_hline(yintercept = 0, color = "grey40", linewidth = 0.3) +
   geom_vline(xintercept = 0, color = "grey40", linewidth = 0.3) +
   geom_point(size = 0.3, alpha = 0.4) +
   scale_color_manual(values = quad_colors) +
-  annotate("text", x = max(coord$mc_diff) * 0.6, y = min(coord$hmc_diff) * 0.6,
-           label = sprintf("Q4: %s genes\n(%s%%)", format(n_q4, big.mark = ","), pct_coord),
-           size = 3.5, fontface = "bold", color = "#D7191C") +
+  geom_text(data = quad_positions,
+            aes(x = x, y = y, label = label, color = quadrant),
+            size = 3, fontface = "bold", inherit.aes = FALSE) +
   labs(x = "5mC difference", y = "5hmC difference",
-       subtitle = "Co-significant genes: coordinated quadrant") +
+       subtitle = "Co-significant genes: 4-quadrant breakdown") +
   theme_biomodal() +
-  theme(legend.position = "bottom",
-        legend.title = element_blank(),
+  theme(legend.position = "none",
         plot.subtitle = element_text(size = 9))
 
 save_multiformat_ggplot(p1b,
@@ -199,14 +204,15 @@ cat("  Done.\n\n")
 
 cat("── GRANT FIGURE 2: Euchromatin Silencing ───────────────────────────────────\n\n")
 
-# ---- Panel A: Chromatin State Direction Bar ----------------------------------
+# ---- Panel A: Chromatin State Direction Bar (5mC + 5hmC) ----------------------
 
-cat("  Panel A: Chromatin-state direction bar...\n")
+cat("  Panel A: Chromatin-state direction bars (5mC and 5hmC)...\n")
 
 chrom_summary <- read_tsv(file.path(TABLES_DIR, "chromatin_state_summary.tsv"),
                           show_col_types = FALSE)
 
-chrom_long <- chrom_summary %>%
+# --- 5mC direction bar ---
+chrom_long_mc <- chrom_summary %>%
   dplyr::select(chromatin_state, Hypermethylated = count_Hypermethylated,
          Hypomethylated = count_Hypomethylated) %>%
   pivot_longer(c(Hypermethylated, Hypomethylated),
@@ -216,23 +222,65 @@ chrom_long <- chrom_summary %>%
   ungroup() %>%
   mutate(chromatin_state = factor(chromatin_state, levels = rev(CHROMATIN_STATE_ORDER)))
 
-p2a <- ggplot(chrom_long, aes(x = chromatin_state, y = frac, fill = direction)) +
-  geom_col(position = "fill", width = 0.7) +
-  geom_text(aes(label = ifelse(frac > 0.15, sprintf("%d%%", round(100 * frac)), "")),
-            position = position_fill(vjust = 0.5), size = 2.8, color = "white") +
-  coord_flip() +
-  scale_fill_manual(values = c("Hypermethylated" = "#D7191C", "Hypomethylated" = "#2C7BB6")) +
-  scale_y_continuous(labels = percent_format()) +
-  labs(x = NULL, y = "Fraction of significant DMRs",
-       subtitle = "Active_Promoter: 93% hyper; Repressed: 94% hypo") +
-  theme_biomodal() +
-  theme(legend.position = "bottom",
-        legend.title = element_blank(),
-        plot.subtitle = element_text(size = 9))
+make_chrom_direction_plot <- function(data, title_mod) {
+  ggplot(data, aes(x = chromatin_state, y = frac, fill = direction)) +
+    geom_col(position = "fill", width = 0.7) +
+    geom_text(aes(label = ifelse(frac > 0.15, sprintf("%d%%", round(100 * frac)), "")),
+              position = position_fill(vjust = 0.5), size = 2.8, color = "white") +
+    coord_flip() +
+    scale_fill_manual(values = c("Hypermethylated" = "#D7191C", "Hypomethylated" = "#2C7BB6",
+                                 "Increased" = "#D7191C", "Decreased" = "#2C7BB6")) +
+    scale_y_continuous(labels = percent_format()) +
+    labs(x = NULL, y = "Fraction of significant DMRs",
+         subtitle = title_mod) +
+    theme_biomodal() +
+    theme(legend.position = "bottom",
+          legend.title = element_blank(),
+          plot.subtitle = element_text(size = 9))
+}
+
+p2a_mc <- make_chrom_direction_plot(chrom_long_mc,
+  "5mC: Active_Promoter 93% hyper; Repressed 94% hypo")
+
+save_multiformat_ggplot(p2a_mc,
+                        file.path(GRANT_DIR, "93d_chromatin_direction_bar_mc"),
+                        width = 7, height = 5)
+
+# --- 5hmC direction bar (derive from hmc_dmr + gene-level chromatin state) ---
+chrom_state_lookup <- read_tsv(file.path(TABLES_DIR, "dmr_chromatin_state_annotation.tsv"),
+                               show_col_types = FALSE) %>%
+  dplyr::select(gene, chromatin_state) %>%
+  distinct(gene, .keep_all = TRUE)
+
+hmc_with_state <- hmc_dmr %>%
+  filter(significant) %>%
+  mutate(hmc_direction = ifelse(mod_difference > 0, "Increased", "Decreased")) %>%
+  left_join(chrom_state_lookup, by = "gene") %>%
+  filter(!is.na(chromatin_state))
+
+chrom_long_hmc <- hmc_with_state %>%
+  dplyr::count(chromatin_state, hmc_direction) %>%
+  dplyr::group_by(chromatin_state) %>%
+  dplyr::mutate(frac = n / sum(n)) %>%
+  dplyr::ungroup() %>%
+  dplyr::rename(direction = hmc_direction, count = n) %>%
+  dplyr::mutate(chromatin_state = factor(chromatin_state, levels = rev(CHROMATIN_STATE_ORDER)))
+
+p2a_hmc <- make_chrom_direction_plot(chrom_long_hmc,
+  "5hmC: direction by chromatin state")
+
+save_multiformat_ggplot(p2a_hmc,
+                        file.path(GRANT_DIR, "93d_chromatin_direction_bar_hmc"),
+                        width = 7, height = 5)
+
+# --- Combined 5mC + 5hmC side by side ---
+p2a <- (p2a_mc + ggtitle("5mC")) | (p2a_hmc + ggtitle("5hmC"))
+p2a <- p2a + plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
 
 save_multiformat_ggplot(p2a,
-                        file.path(GRANT_DIR, "93d_chromatin_direction_bar"),
-                        width = 7, height = 5)
+                        file.path(GRANT_DIR, "93d_chromatin_direction_bar_combined"),
+                        width = 14, height = 5)
 
 # ---- Panel B: K119ub Logistic Forest Plot ------------------------------------
 
@@ -242,7 +290,8 @@ coefs <- read_tsv(file.path(TABLES_DIR, "diffbind_logistic_model_coefficients.ts
                   show_col_types = FALSE)
 
 coefs <- coefs %>%
-  mutate(display_name = factor(display_name, levels = rev(display_name)))
+  arrange(or) %>%
+  mutate(display_name = factor(display_name, levels = display_name))
 
 p2b <- ggplot(coefs, aes(x = or, y = display_name)) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
@@ -292,12 +341,13 @@ save_multiformat_ggplot(p2c,
 
 cat("  Compositing Grant Figure 2...\n")
 
-fig2 <- p2a | p2b | p2c
-fig2 <- fig2 + plot_annotation(tag_levels = "A")
+fig2 <- p2a / (p2b | p2c) +
+  plot_annotation(tag_levels = "A") +
+  plot_layout(heights = c(1, 0.8))
 
 save_multiformat_ggplot(fig2,
                         file.path(GRANT_DIR, "grant_fig2_euchromatin"),
-                        width = 20, height = 5)
+                        width = 14, height = 10)
 
 cat("  Done.\n\n")
 

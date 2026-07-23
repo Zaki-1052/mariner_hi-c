@@ -35,6 +35,22 @@ Rscript scripts/viz_sections/section_93_grant_figures.R 2>&1 | tee logs/section_
 
 **Story:** H2AK119ub gain is the dominant predictor of hypermethylation (OR=4.71), and that hypermethylation is restricted to active, A-compartment chromatin.
 
+### Chromatin State Classification System (7 categories)
+
+Used throughout all figures referencing chromatin context. Shared with the Hi-C loop pipeline.
+
+| State | Definition | Color |
+|-------|-----------|-------|
+| Active_Promoter | H3K4me3+ AND NOT H3K27me3, within 2kb of TSS | Red |
+| Repressed_Promoter | H3K27me3+ AND NOT H3K27ac, within 2kb of TSS | Purple |
+| Bivalent_Promoter | H3K4me3 + H3K27me3 overlap (pre-computed), within 2kb of TSS | Magenta |
+| Polycomb | H3K27me3+ AND >2kb from TSS | Green |
+| Active_Enhancer | H3K27ac+ AND >2kb from TSS | Blue |
+| Poised_Enhancer | H3K4me1+ AND NOT H3K27ac AND NOT H3K27me3, >2kb from TSS | Orange |
+| Unmarked | No histone mark overlap | Gray |
+
+Priority order: Active_Promoter > Repressed_Promoter > Bivalent_Promoter > Polycomb > Active_Enhancer > Poised_Enhancer > Unmarked (first match wins when a gene overlaps multiple marks).
+
 | Panel | Section | Key stat | SVG path |
 |-------|---------|----------|----------|
 | Chromatin-state direction bar | 10b/10f | Active_Promoter 93% hyper, Repressed 94% hypo | `10f_chromatin_stacked_presentation/10f_chromatin_stacked_presentation.svg` |
