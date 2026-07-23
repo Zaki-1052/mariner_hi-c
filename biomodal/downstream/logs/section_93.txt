@@ -1,0 +1,129 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-07-23 09:38:39 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+================================================================================
+SECTION 93: GRANT FIGURE COMPOSITES
+================================================================================
+
+── GRANT FIGURE 1: Bidirectional mC-up/hmC-down ──────────────────────────────────
+
+  Panel A: Dual volcano plots...
+  Saved: 93a_dual_volcano/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '5mC difference (mutant − control)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '5hmC difference (mutant − control)' in 'mbcsToSbcs': - substituted for − (U+2212)
+  Panel B: Quadrant scatter (coordinated mC-up/hmC-down)...
+  Saved: 93b_quadrant_scatter/{pdf,svg,jpg}
+  Panel C: Effect-size mirror density...
+  Saved: 93c_effect_size_density/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Methylation difference (mutant − control, %)' in 'mbcsToSbcs': - substituted for − (U+2212)
+  Compositing Grant Figure 1...
+  Saved: grant_fig1_bidirectional/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '5mC difference (mutant − control)' in 'mbcsToSbcs': - substituted for − (U+2212)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for '5hmC difference (mutant − control)' in 'mbcsToSbcs': - substituted for − (U+2212)
+3: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Methylation difference (mutant − control, %)' in 'mbcsToSbcs': - substituted for − (U+2212)
+  Done.
+
+── GRANT FIGURE 2: Euchromatin Silencing ───────────────────────────────────
+
+  Panel A: Chromatin-state direction bar...
+  Saved: 93d_chromatin_direction_bar/{pdf,svg,jpg}
+  Panel B: K119ub logistic forest plot...
+  Saved: 93e_k119ub_forest/{pdf,svg,jpg}
+  Panel C: A-compartment enrichment bars...
+  Saved: 93f_a_compartment_enrichment/{pdf,svg,jpg}
+  Compositing Grant Figure 2...
+  Saved: grant_fig2_euchromatin/{pdf,svg,jpg}
+  Done.
+
+── GRANT FIGURE 3: Heterochromatin Protection ──────────────────────────────
+
+  Panel A: Per-state hypermethylation rate lollipop...
+  Saved: 93g_per_state_hyper_rate/{pdf,svg,jpg}
+  Panel B: Polycomb exclusion forest plot...
+  Saved: 93h_polycomb_exclusion_forest/{pdf,svg,jpg}
+  Panel C: B-compartment enrichment bars...
+  Saved: 93i_b_compartment_enrichment/{pdf,svg,jpg}
+  Compositing Grant Figure 3...
+  Saved: grant_fig3_heterochromatin/{pdf,svg,jpg}
+  Done.
+
+── GRANT FIGURE 4: MeCP2 Reads Chromatin ──────────────────────────────────
+
+  Panel A: R² comparison (CG vs Chromatin)...
+Warning message:
+One or more parsing issues, call `problems()` on your data frame for details,
+e.g.:
+  dat <- vroom(...)
+  problems(dat) 
+  Saved: 93j_mecp2_r2_comparison/{pdf,svg,jpg}
+  Panel B: K119ub gained at MeCP2-no-meth genes (linchpin)...
+  Saved: 93k_k119ub_mecp2_no_meth/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'no methylation Δ' in 'mbcsToSbcs': for Δ (U+0394)
+  Panel C: Mirror-image mark profiles by MeCP2 status...
+  Saved: 93l_mirror_profiles/{pdf,svg,jpg}
+Warning message:
+In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Mean signal change (mutant − control)' in 'mbcsToSbcs': - substituted for − (U+2212)
+  Compositing Grant Figure 4...
+  Saved: grant_fig4_mecp2_chromatin/{pdf,svg,jpg}
+Warning messages:
+1: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  conversion failure on 'no methylation Δ' in 'mbcsToSbcs': for Δ (U+0394)
+2: In grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y,  :
+  for 'Mean signal change (mutant − control)' in 'mbcsToSbcs': - substituted for − (U+2212)
+  Done.
+
+================================================================================
+SECTION 93 COMPLETE
+================================================================================
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/93_grant_figures
+Generated:
+  4 composite figures (grant_fig1–4)
+  12 individual panels (93a–93l)
+All in PDF + SVG + JPG via multi_format_output.R
