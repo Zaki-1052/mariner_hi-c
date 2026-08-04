@@ -16,7 +16,8 @@
 #   33b: Cross-mark Spearman correlation heatmap (7x7: 4 marks + mC + hmC + ratio)
 #   33c: Quantitative O/E dot plot (upgrade from 19h binary)
 #   33d: Methylation vs mark fold-change scatters (4x2 grid)
-#   33e: Multivariate logistic regression forest plot (4-mark model)
+#   33e: Multivariate logistic regression forest plot — mC hypermethylation (4-mark model)
+#   33g: Multivariate logistic regression forest plot — hmC hypo-hydroxymethylation (4-mark model)
 #   33f: Convergence analysis (concordance count distribution + intersection bars)
 #
 # Run from downstream/ directory:
@@ -787,6 +788,77 @@ save_multiformat_ggplot(p_33e, file.path(OUTPUT_DIR, SECTION_DIR, "33e_logistic_
 cat("\n  Saved: 33e_logistic_regression_forest\n\n")
 
 # =============================================================================
+# FIGURE 33g: MULTIVARIATE LOGISTIC REGRESSION — hmC HYPO-HYDROXYMETHYLATION
+# =============================================================================
+
+cat("--- FIGURE 33g: Multivariate Logistic Regression (hmC hypo) ---\n\n")
+
+model_data_hmc <- multi_mark %>%
+  mutate(hypo_hmc = as.integer(hmc_sig & hmc_diff < 0)) %>%
+  dplyr::filter(complete.cases(hypo_hmc, atac_fold, k27ac_fold, k27me3_fold, k119ub_fold))
+
+cat(sprintf("  Model data: %d genes (complete cases for 4-mark model)\n", nrow(model_data_hmc)))
+cat(sprintf("  Outcome: %d hypo-hmC (%.1f%%), %d non-hypo\n",
+            sum(model_data_hmc$hypo_hmc), 100 * mean(model_data_hmc$hypo_hmc),
+            sum(!model_data_hmc$hypo_hmc)))
+
+null_hmc <- glm(hypo_hmc ~ 1, data = model_data_hmc, family = binomial)
+null_ll_hmc <- as.numeric(logLik(null_hmc))
+
+model_4mark_hmc <- glm(
+  hypo_hmc ~ atac_fold + k27ac_fold + k27me3_fold + k119ub_fold,
+  data = model_data_hmc, family = binomial
+)
+
+roc_4mark_hmc <- roc(model_data_hmc$hypo_hmc, predict(model_4mark_hmc, type = "response"), quiet = TRUE)
+ci_4mark_hmc  <- ci.auc(roc_4mark_hmc, quiet = TRUE)
+cat(sprintf("    AUC = %.3f [%.3f, %.3f], McFadden R2 = %.4f\n",
+            auc(roc_4mark_hmc), ci_4mark_hmc[1], ci_4mark_hmc[3],
+            1 - as.numeric(logLik(model_4mark_hmc)) / null_ll_hmc))
+
+or_df_hmc <- extract_or(model_4mark_hmc) %>%
+  dplyr::filter(term != "(Intercept)") %>%
+  mutate(
+    display_name = case_when(
+      term == "atac_fold"   ~ "ATAC-seq",
+      term == "k27ac_fold"  ~ "H3K27ac",
+      term == "k27me3_fold" ~ "H3K27me3",
+      term == "k119ub_fold" ~ "H2AK119ub",
+      TRUE ~ term
+    ),
+    sig_label = ifelse(p_value < 0.001, "***",
+                ifelse(p_value < 0.01, "**",
+                ifelse(p_value < 0.05, "*", "ns"))),
+    display_name = factor(display_name,
+                          levels = c("ATAC-seq", "H3K27ac", "H3K27me3", "H2AK119ub"))
+  )
+
+p_33g <- ggplot(or_df_hmc, aes(x = or, y = display_name)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
+  geom_errorbarh(aes(xmin = or_lower, xmax = or_upper), height = 0.2, linewidth = 0.8) +
+  geom_point(size = 3.5, color = "#377EB8") +
+  geom_text(aes(label = sprintf("OR=%.2f %s", or, sig_label)),
+            hjust = -0.2, size = 3.5) +
+  scale_x_log10() +
+  labs(
+    title = "4-Mark DiffBind Logistic Regression: Predicting hmC Hypo-hydroxymethylation",
+    subtitle = sprintf("N=%s genes | AUC=%.3f [%.3f, %.3f] | OR per unit log2FC increase",
+                        format(nrow(model_data_hmc), big.mark = ","),
+                        auc(roc_4mark_hmc), ci_4mark_hmc[1], ci_4mark_hmc[3]),
+    x = "Odds Ratio (log scale)",
+    y = ""
+  ) +
+  theme_biomodal() +
+  theme(
+    axis.text.y = element_text(size = 12, face = "bold"),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
+
+save_multiformat_ggplot(p_33g, file.path(OUTPUT_DIR, SECTION_DIR, "33g_logistic_regression_forest_hmc"),
+                        width = 10, height = 6)
+cat("\n  Saved: 33g_logistic_regression_forest_hmc\n\n")
+
+# =============================================================================
 # FIGURE 33f: CONVERGENCE ANALYSIS
 # =============================================================================
 
@@ -922,11 +994,17 @@ if (!is.null(comparison_df) && nrow(comparison_df) > 0) {
   cat("  Saved: diffbind_quantitative_oe_comparison.tsv\n")
 }
 
-# Table 4: Logistic model coefficients
+# Table 4: Logistic model coefficients (mC hyper)
 write.table(or_df,
             file.path(TABLES_DIR, "diffbind_logistic_model_coefficients.tsv"),
             sep = "\t", quote = FALSE, row.names = FALSE)
 cat("  Saved: diffbind_logistic_model_coefficients.tsv\n")
+
+# Table 4b: Logistic model coefficients (hmC hypo)
+write.table(or_df_hmc,
+            file.path(TABLES_DIR, "diffbind_logistic_model_coefficients_hmc.tsv"),
+            sep = "\t", quote = FALSE, row.names = FALSE)
+cat("  Saved: diffbind_logistic_model_coefficients_hmc.tsv\n")
 
 # Table 5: Per-gene convergence scores
 convergence_export <- convergence_df %>%
@@ -975,12 +1053,20 @@ for (mark in MARK_ORDER) {
 cat(sprintf("\n--- Multi-Mark Profile: %d genes, %d complete cases ---\n",
             nrow(multi_mark), n_complete))
 
-cat(sprintf("\n--- Logistic Model: AUC=%.3f [%.3f, %.3f], N=%d ---\n",
+cat(sprintf("\n--- Logistic Model (mC hyper): AUC=%.3f [%.3f, %.3f], N=%d ---\n",
             auc(roc_4mark), ci_4mark[1], ci_4mark[3], nrow(model_data_cc)))
 for (i in 1:nrow(or_df)) {
   cat(sprintf("  %-12s OR=%.3f [%.3f, %.3f] p=%.2e\n",
               or_df$display_name[i], or_df$or[i], or_df$or_lower[i],
               or_df$or_upper[i], or_df$p_value[i]))
+}
+
+cat(sprintf("\n--- Logistic Model (hmC hypo): AUC=%.3f [%.3f, %.3f], N=%d ---\n",
+            auc(roc_4mark_hmc), ci_4mark_hmc[1], ci_4mark_hmc[3], nrow(model_data_hmc)))
+for (i in 1:nrow(or_df_hmc)) {
+  cat(sprintf("  %-12s OR=%.3f [%.3f, %.3f] p=%.2e\n",
+              or_df_hmc$display_name[i], or_df_hmc$or[i], or_df_hmc$or_lower[i],
+              or_df_hmc$or_upper[i], or_df_hmc$p_value[i]))
 }
 
 cat(sprintf("\n--- Convergence: %d genes with 3+ concordant marks ---\n",

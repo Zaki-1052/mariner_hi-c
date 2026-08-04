@@ -1,0 +1,258 @@
+
+================================================================================
+BIOMODAL DUET evoC DIFFERENTIAL METHYLATION VISUALIZATION
+================================================================================
+Date: 2026-07-29 19:44:26 
+Base directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream 
+Output directory: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations 
+
+Loading required packages...
+Loaded multi_format_output.R - Functions available:
+  - save_multiformat_ggplot(plot, base_path, width, height, dpi)
+  - save_multiformat_base(plot_expr, base_path, width, height, dpi)
+  - save_multiformat_pheatmap(pheatmap_call, base_path, width, height, dpi)
+Packages loaded successfully.
+
+================================================================================
+LOADING DATA
+================================================================================
+
+Loading gene body mC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading gene body hmC DMRs...
+  Loaded 20991 rows, deduplicated to 20969 unique genes
+Loading Biological QC data...
+  Loaded QC data successfully
+Loading upstream sequencing metrics...
+  Loaded 8 samples
+
+Loading regional DMR data for comparison...
+  Gene bodies: 10775 significant / 20969 total (51.4%)
+  CpG islands: 442 significant / 8910 total (5.0%)
+  CpG shores: 9842 significant / 32581 total (30.2%)
+  CpG shelves: 6924 significant / 29094 total (23.8%)
+  Promoters: 1692 significant / 20417 total (8.3%)
+  TSS regions: 192 significant / 14165 total (1.4%)
+
+Data loading complete.
+
+
+===========================================================================
+  SECTION 33: MULTI-MARK DIFFBIND QUANTITATIVE INTEGRATION
+===========================================================================
+
+--- Input Validation ---
+
+  [OK] ATAC-seq: ATAC_allATAC_diffbind_results_summit_appended_ap.txt
+  [OK] H3K27ac: K27ac_diffbind_results_summit_appended_ap.txt
+  [OK] H3K27me3: K27me3_diffbind_results_summit_appended_ap.txt
+  [OK] H2AK119ub: K119ub_diffbind_results_summit_appended_ap.txt
+  [OK] Ratio table: demethylation_ratio_all_genes.tsv
+  [OK] mc_dmr and hmc_dmr loaded from shared config
+  [OK] Feature matrix: dnmt3a_feature_matrix.tsv
+
+--- Step 1: Loading & annotating DiffBind data ---
+
+Loading ATAC-seq...
+  ATAC-seq: 75867 peaks (9263 sig up, 4159 sig down at FDR<0.05)
+    Filtered 209 peaks with NA summit coordinates
+>> preparing features information...		 2026-07-29 19:44:33 
+>> identifying nearest features...		 2026-07-29 19:44:34 
+>> calculating distance from peak to TSS...	 2026-07-29 19:44:35 
+>> assigning genomic annotation...		 2026-07-29 19:44:35 
+>> adding gene annotation...			 2026-07-29 19:44:40 
+>> assigning chromosome lengths			 2026-07-29 19:44:40 
+>> done...					 2026-07-29 19:44:41 
+    -> 17853 unique genes annotated
+
+Loading H3K27ac...
+  H3K27ac: 25669 peaks (5077 sig up, 6706 sig down at FDR<0.05)
+    Filtered 3 peaks with NA summit coordinates
+>> preparing features information...		 2026-07-29 19:44:41 
+>> identifying nearest features...		 2026-07-29 19:44:41 
+>> calculating distance from peak to TSS...	 2026-07-29 19:44:41 
+>> assigning genomic annotation...		 2026-07-29 19:44:41 
+>> adding gene annotation...			 2026-07-29 19:44:42 
+>> assigning chromosome lengths			 2026-07-29 19:44:42 
+>> done...					 2026-07-29 19:44:42 
+    -> 10065 unique genes annotated
+
+Loading H3K27me3...
+  H3K27me3: 18324 peaks (2293 sig up, 4811 sig down at FDR<0.05)
+    Filtered 3 peaks with NA summit coordinates
+>> preparing features information...		 2026-07-29 19:44:42 
+>> identifying nearest features...		 2026-07-29 19:44:42 
+>> calculating distance from peak to TSS...	 2026-07-29 19:44:42 
+>> assigning genomic annotation...		 2026-07-29 19:44:42 
+>> adding gene annotation...			 2026-07-29 19:44:43 
+>> assigning chromosome lengths			 2026-07-29 19:44:43 
+>> done...					 2026-07-29 19:44:43 
+    -> 5340 unique genes annotated
+
+Loading H2AK119ub...
+  H2AK119ub: 41392 peaks (16715 sig up, 5097 sig down at FDR<0.05)
+    Filtered 21 peaks with NA summit coordinates
+>> preparing features information...		 2026-07-29 19:44:44 
+>> identifying nearest features...		 2026-07-29 19:44:44 
+>> calculating distance from peak to TSS...	 2026-07-29 19:44:44 
+>> assigning genomic annotation...		 2026-07-29 19:44:44 
+>> adding gene annotation...			 2026-07-29 19:44:45 
+>> assigning chromosome lengths			 2026-07-29 19:44:45 
+>> done...					 2026-07-29 19:44:45 
+    -> 10907 unique genes annotated
+
+--- Step 2: Building multi-mark gene profile ---
+
+  Ratio table: 20915 genes loaded
+  Multi-mark profile: 20915 genes total
+    ATAC-seq coverage: 14496 genes (69.3%)
+    H3K27ac coverage: 8492 genes (40.6%)
+    H3K27me3 coverage: 4180 genes (20.0%)
+    H2AK119ub coverage: 8714 genes (41.7%)
+  Complete cases (all 4 marks): 1379 genes (6.6%)
+
+--- FIGURE 33a: Per-Mark Volcano Plots ---
+
+  Saved: 33a_diffbind_volcano_plots/{pdf,svg,jpg}
+  Saved: 33a_diffbind_volcano_plots
+
+--- FIGURE 33b: Cross-Mark Correlation Heatmap ---
+
+  Saved: 33b_cross_mark_correlation_heatmap/{pdf,svg,jpg}
+  Saved: 33b_cross_mark_correlation_heatmap
+
+  Key cross-mark correlations:
+    K119ub <-> K27me3 (cascade step 1): rho=0.310, p=2.24e-82
+    K27me3 <-> K27ac (opposition): rho=-0.497, p=2.60e-92
+    ATAC <-> K27ac (concordant openness): rho=0.432, p=0.00e+00
+    K119ub <-> mC (mechanistic link): rho=0.410, p=0.00e+00
+    K119ub <-> hmC (TET impediment): rho=-0.300, p=5.22e-181
+
+--- FIGURE 33c: Quantitative O/E Dot Plot ---
+
+  mC x ATAC-seq: Fisher OR=0.06, p=3.44e-52 (N=1000)
+  hmC x ATAC-seq: Fisher OR=0.06, p=1.06e-41 (N=977)
+  mC x H3K27ac: Fisher OR=0.06, p=4.15e-112 (N=1634)
+  hmC x H3K27ac: Fisher OR=0.11, p=8.94e-59 (N=1588)
+  mC x H3K27me3: Fisher OR=14.12, p=8.62e-69 (N=913)
+  hmC x H3K27me3: Fisher OR=22.93, p=1.06e-95 (N=940)
+  mC x H2AK119ub: Fisher OR=14.75, p=7.55e-175 (N=2857)
+  hmC x H2AK119ub: Fisher OR=6.44, p=1.85e-73 (N=2797)
+  Saved: 33c_quantitative_oe_dotplot/{pdf,svg,jpg}
+
+  Saved: 33c_quantitative_oe_dotplot
+
+--- FIGURE 33d: Methylation vs Mark Fold Scatters ---
+
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+`geom_smooth()` using formula = 'y ~ x'
+  Saved: 33d_methylation_vs_mark_scatters/{pdf,svg,jpg}
+  Saved: 33d_methylation_vs_mark_scatters
+
+--- FIGURE 33e: Multivariate Logistic Regression ---
+
+  Model data: 1217 genes (complete cases for 4-mark model)
+  Outcome: 535 hyper-DMR (44.0%), 682 non-hyper
+  Fitting Model 1: 4-mark DiffBind...
+    AUC = 0.818 [0.794, 0.841], McFadden R2 = 0.2354
+  Fitting Model 2: Extended (4 marks + baseline mC/hmC)...
+    AUC = 0.869 [0.850, 0.889], McFadden R2 = 0.3478 (N=1217)
+Warning message:
+`geom_errorbarh()` was deprecated in ggplot2 4.0.0.
+ℹ Please use the `orientation` argument of `geom_errorbar()` instead. 
+`height` was translated to `width`.
+`height` was translated to `width`.
+`height` was translated to `width`.
+  Saved: 33e_logistic_regression_forest/{pdf,svg,jpg}
+
+  Saved: 33e_logistic_regression_forest
+
+--- FIGURE 33g: Multivariate Logistic Regression (hmC hypo) ---
+
+  Model data: 1379 genes (complete cases for 4-mark model)
+  Outcome: 713 hypo-hmC (51.7%), 666 non-hypo
+    AUC = 0.777 [0.752, 0.802], McFadden R2 = 0.1739
+`height` was translated to `width`.
+`height` was translated to `width`.
+`height` was translated to `width`.
+  Saved: 33g_logistic_regression_forest_hmc/{pdf,svg,jpg}
+
+  Saved: 33g_logistic_regression_forest_hmc
+
+--- FIGURE 33f: Convergence Analysis ---
+
+  Concordance distribution (all genes):
+    0 concordant marks: 16828 genes
+    1 concordant marks: 3094 genes
+    2 concordant marks: 815 genes
+    3 concordant marks: 158 genes
+    4 concordant marks: 20 genes
+  Saved: 33f_convergence_analysis/{pdf,svg,jpg}
+
+  Saved: 33f_convergence_analysis
+
+--- Exporting Tables ---
+
+  Saved: diffbind_gene_level_all_marks.tsv (20915 genes)
+  Saved: diffbind_cross_mark_correlations.tsv
+  Saved: diffbind_quantitative_oe_comparison.tsv
+  Saved: diffbind_logistic_model_coefficients.tsv
+  Saved: diffbind_logistic_model_coefficients_hmc.tsv
+  Saved: diffbind_convergence_per_gene.tsv (20915 genes)
+  Saved: diffbind_convergent_genes_3plus.tsv (178 genes)
+
+===========================================================================
+  SECTION 33 SUMMARY
+===========================================================================
+
+--- Per-Mark Statistics ---
+  ATAC-seq:     75867 peaks |  9263 up,  4159 down (FDR<0.05) | 17853 genes
+  H3K27ac:      25669 peaks |  5077 up,  6706 down (FDR<0.05) | 10065 genes
+  H3K27me3:     18324 peaks |  2293 up,  4811 down (FDR<0.05) |  5340 genes
+  H2AK119ub:    41392 peaks | 16715 up,  5097 down (FDR<0.05) | 10907 genes
+
+--- Multi-Mark Profile: 20915 genes, 1379 complete cases ---
+
+--- Logistic Model (mC hyper): AUC=0.818 [0.794, 0.841], N=1217 ---
+  ATAC-seq     OR=0.221 [0.125, 0.391] p=2.24e-07
+  H3K27ac      OR=0.480 [0.363, 0.636] p=2.82e-07
+  H3K27me3     OR=1.443 [1.188, 1.754] p=2.20e-04
+  H2AK119ub    OR=4.707 [3.326, 6.663] p=2.38e-18
+
+--- Logistic Model (hmC hypo): AUC=0.777 [0.752, 0.802], N=1379 ---
+  ATAC-seq     OR=0.239 [0.150, 0.381] p=1.74e-09
+  H3K27ac      OR=0.553 [0.436, 0.700] p=9.46e-07
+  H3K27me3     OR=1.244 [1.040, 1.487] p=1.69e-02
+  H2AK119ub    OR=3.102 [2.283, 4.216] p=4.72e-13
+
+--- Convergence: 178 genes with 3+ concordant marks ---
+  Hyper-DMR: 128 | Hypo-DMR: 14 | Non-DMR: 36
+
+--- Output Locations ---
+  Figures: /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/33_*/
+  Tables:  /Users/zakiralibhai/Documents/GitHub/mariner_hi-c/biomodal/downstream/plots/visualizations/tables/diffbind_*.tsv
+
+=== Section 33 Complete ===
+
