@@ -525,11 +525,11 @@ bigwig_to_df <- function(gr) {
 
 compute_track_layout <- function(mark_data_list, has_hic, has_highlight_labels) {
   signal_w    <- 1.0
-  diff_w      <- 0.75
-  pair_gap_w  <- 0.07
-  mark_gap_w  <- 0.22
+  diff_w      <- 0.80
+  pair_gap_w  <- 0.12
+  mark_gap_w  <- 0.45
   gene_w      <- 0.80
-  gene_gap_w  <- 0.18
+  gene_gap_w  <- 0.30
   scalebar_w  <- 0.30
   hic_w       <- 0.80
   hic_gap_w   <- 0.10
@@ -1229,9 +1229,9 @@ main <- function() {
                   n_diff_tracks * cfg$track_height * 0.60 +
                   0.40 +                                  # gene model
                   0.35 +                                  # scale bar
-                  max(0, n_marks - 1) * 0.15 +            # inter-mark gaps
-                  n_marks * 0.05 +                        # intra-mark gaps
-                  0.14 +                                  # gene-track gap
+                  max(0, n_marks - 1) * 0.25 +            # inter-mark gaps
+                  n_marks * 0.08 +                        # intra-mark gaps
+                  0.20 +                                  # gene-track gap
                   (if (has_hic) 1.0 else 0) +             # Hi-C panel
                   (if (has_highlight_labels) 0.18 else 0) +
                   0.4                                     # margins
