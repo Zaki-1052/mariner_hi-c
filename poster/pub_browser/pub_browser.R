@@ -525,11 +525,11 @@ bigwig_to_df <- function(gr) {
 
 compute_track_layout <- function(mark_data_list, has_hic, has_highlight_labels) {
   signal_w    <- 1.0
-  diff_w      <- 0.60
-  pair_gap_w  <- 0.05
-  mark_gap_w  <- 0.15
+  diff_w      <- 0.75
+  pair_gap_w  <- 0.07
+  mark_gap_w  <- 0.22
   gene_w      <- 0.80
-  gene_gap_w  <- 0.15
+  gene_gap_w  <- 0.18
   scalebar_w  <- 0.30
   hic_w       <- 0.80
   hic_gap_w   <- 0.10
@@ -845,10 +845,10 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
 
     # Condition label on ctrl track
     kpText(kp,
-           chr = chr, x = label_x, y = ylim * 0.72,
+           chr = chr, x = label_x, y = ylim * 0.50,
            r0 = pos$ctrl[1], r1 = pos$ctrl[2],
            ymin = 0, ymax = ylim,
-           labels = ctrl_label, cex = 0.65, col = "black",
+           labels = ctrl_label, cex = 0.60, col = "black",
            pos = 4, offset = 0)
 
     # Mut track
@@ -865,10 +865,10 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
 
     # Condition label on mut track
     kpText(kp,
-           chr = chr, x = label_x, y = ylim * 0.85,
+           chr = chr, x = label_x, y = ylim * 0.70,
            r0 = pos$mut[1], r1 = pos$mut[2],
            ymin = 0, ymax = ylim,
-           labels = mut_label, cex = 0.65, col = "black",
+           labels = mut_label, cex = 0.60, col = "black",
            pos = 4, offset = 0,
            font = if (cfg$genotype_italic) 3 else 1)
 
@@ -915,17 +915,17 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
       unit_label <- if (isTRUE(md$sparse)) "%" else "Δ"
       diff_scale_text <- sprintf("±%g%s", diff_ylim, unit_label)
       kpText(kp,
-             chr = chr, x = label_x, y = diff_ylim * 0.85,
+             chr = chr, x = label_x, y = diff_ylim * 0.90,
              r0 = pos$diff[1], r1 = pos$diff[2],
              ymin = -diff_ylim, ymax = diff_ylim,
-             labels = diff_scale_text, cex = 0.60, col = color,
+             labels = diff_scale_text, cex = 0.55, col = color,
              pos = 4, offset = 0)
 
       kpText(kp,
-             chr = chr, x = label_x, y = diff_ylim * 0.55,
+             chr = chr, x = label_x, y = diff_ylim * 0.20,
              r0 = pos$diff[1], r1 = pos$diff[2],
              ymin = -diff_ylim, ymax = diff_ylim,
-             labels = "difference", cex = 0.55, col = "grey40",
+             labels = "difference", cex = 0.50, col = "grey40",
              pos = 4, offset = 0)
     }
 
@@ -1229,9 +1229,9 @@ main <- function() {
                   n_diff_tracks * cfg$track_height * 0.60 +
                   0.40 +                                  # gene model
                   0.35 +                                  # scale bar
-                  max(0, n_marks - 1) * 0.12 +            # inter-mark gaps
-                  n_marks * 0.04 +                        # intra-mark gaps
-                  0.12 +                                  # gene-track gap
+                  max(0, n_marks - 1) * 0.15 +            # inter-mark gaps
+                  n_marks * 0.05 +                        # intra-mark gaps
+                  0.14 +                                  # gene-track gap
                   (if (has_hic) 1.0 else 0) +             # Hi-C panel
                   (if (has_highlight_labels) 0.18 else 0) +
                   0.4                                     # margins
