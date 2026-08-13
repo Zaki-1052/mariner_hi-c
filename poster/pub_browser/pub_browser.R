@@ -525,10 +525,11 @@ bigwig_to_df <- function(gr) {
 
 compute_track_layout <- function(mark_data_list, has_hic, has_highlight_labels) {
   signal_w    <- 1.0
-  pair_gap_w  <- 0.10
-  mark_gap_w  <- 0.30
+  diff_w      <- 0.60
+  pair_gap_w  <- 0.05
+  mark_gap_w  <- 0.15
   gene_w      <- 0.80
-  gene_gap_w  <- 0.25
+  gene_gap_w  <- 0.15
   scalebar_w  <- 0.30
   hic_w       <- 0.80
   hic_gap_w   <- 0.10
@@ -539,7 +540,7 @@ compute_track_layout <- function(mark_data_list, has_hic, has_highlight_labels) 
 
   total <- scalebar_w + header_w +
            n_marks * (2 * signal_w + pair_gap_w) +
-           n_diff * (signal_w + pair_gap_w) +
+           n_diff * (diff_w + pair_gap_w) +
            max(0, n_marks - 1) * mark_gap_w +
            gene_gap_w + gene_w +
            if (has_hic) (hic_gap_w + hic_w) else 0
@@ -580,7 +581,7 @@ compute_track_layout <- function(mark_data_list, has_hic, has_highlight_labels) 
     if (isTRUE(md$diff)) {
       cursor <- cursor - pair_gap_w
       r1_diff <- cursor / total
-      cursor <- cursor - signal_w
+      cursor <- cursor - diff_w
       r0_diff <- cursor / total
       diff_pos <- c(r0_diff, r1_diff)
     }
@@ -738,7 +739,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
   mut_label  <- cfg$label_vec[2]
 
   # Margins: left=label space, top=room for scale bar, right+bottom=small
-  old_par <- par(mar = c(1.5, 5.5, 1.5, 1.0))
+  old_par <- par(mar = c(1.5, 5.5, 2.5, 1.5))
   on.exit(par(old_par))
 
   kp <- plotKaryotype(
@@ -796,13 +797,13 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
   sb <- layout$scalebar
   kpSegments(kp,
              chr = chr, x0 = bar_start, x1 = bar_end,
-             y0 = 0.35, y1 = 0.35,
+             y0 = 0.70, y1 = 0.70,
              r0 = sb[1], r1 = sb[2],
-             lwd = 3.0, col = "black")
+             lwd = 2.0, col = "black")
   kpText(kp,
-         chr = chr, x = (bar_start + bar_end) / 2, y = 0.78,
+         chr = chr, x = (bar_start + bar_end) / 2, y = 0.30,
          r0 = sb[1], r1 = sb[2],
-         labels = bar_label, cex = 0.7, col = "black")
+         labels = bar_label, cex = 0.75, col = "black")
 
   # -- Signal tracks (per mark: ctrl + mut + optional diff) --
   for (i in seq_along(mark_data_list)) {
@@ -825,7 +826,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
            chr = chr_vec, x = ctrl_df$pos, y = ctrl_df$score,
            ymin = 0, ymax = ylim, base.y = 0,
            r0 = pos$ctrl[1], r1 = pos$ctrl[2],
-           col = adjustcolor(color, alpha.f = 0.90),
+           col = color,
            border = color, lwd = 0.3)
     # Baseline
     kpAbline(kp, h = 0,
@@ -839,7 +840,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
            chr = chr, x = label_x, y = ylim * 0.94,
            r0 = pos$ctrl[1], r1 = pos$ctrl[2],
            ymin = 0, ymax = ylim,
-           labels = scale_text, cex = 0.55, col = color,
+           labels = scale_text, cex = 0.70, col = color,
            pos = 4, offset = 0)
 
     # Condition label on ctrl track
@@ -847,7 +848,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
            chr = chr, x = label_x, y = ylim * 0.72,
            r0 = pos$ctrl[1], r1 = pos$ctrl[2],
            ymin = 0, ymax = ylim,
-           labels = ctrl_label, cex = 0.55, col = "black",
+           labels = ctrl_label, cex = 0.65, col = "black",
            pos = 4, offset = 0)
 
     # Mut track
@@ -855,7 +856,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
            chr = chr_vec, x = mut_df$pos, y = mut_df$score,
            ymin = 0, ymax = ylim, base.y = 0,
            r0 = pos$mut[1], r1 = pos$mut[2],
-           col = adjustcolor(color, alpha.f = 0.90),
+           col = color,
            border = color, lwd = 0.3)
     kpAbline(kp, h = 0,
              r0 = pos$mut[1], r1 = pos$mut[2],
@@ -867,7 +868,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
            chr = chr, x = label_x, y = ylim * 0.85,
            r0 = pos$mut[1], r1 = pos$mut[2],
            ymin = 0, ymax = ylim,
-           labels = mut_label, cex = 0.55, col = "black",
+           labels = mut_label, cex = 0.65, col = "black",
            pos = 4, offset = 0,
            font = if (cfg$genotype_italic) 3 else 1)
 
@@ -917,14 +918,14 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
              chr = chr, x = label_x, y = diff_ylim * 0.85,
              r0 = pos$diff[1], r1 = pos$diff[2],
              ymin = -diff_ylim, ymax = diff_ylim,
-             labels = diff_scale_text, cex = 0.50, col = color,
+             labels = diff_scale_text, cex = 0.60, col = color,
              pos = 4, offset = 0)
 
       kpText(kp,
              chr = chr, x = label_x, y = diff_ylim * 0.55,
              r0 = pos$diff[1], r1 = pos$diff[2],
              ymin = -diff_ylim, ymax = diff_ylim,
-             labels = "mut-ctrl", cex = 0.45, col = "grey40",
+             labels = "difference", cex = 0.55, col = "grey40",
              pos = 4, offset = 0)
     }
 
@@ -1020,7 +1021,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
     kpText(kp,
            chr = chr, x = sym_x, y = min(sym_y, 0.85),
            r0 = gene_r0, r1 = gene_r1,
-           labels = g$symbol, cex = 0.7, col = "black",
+           labels = g$symbol, cex = 0.9, col = "black",
            font = 3)
   }
 
@@ -1220,17 +1221,17 @@ main <- function() {
   layout <- compute_track_layout(mark_data, has_hic, has_highlight_labels)
 
   # ---- 6. Compute figure dimensions ----
-  n_signal_tracks <- sum(sapply(mark_data, function(m) {
-    if (isTRUE(m$diff)) 3L else 2L
-  }))
+  n_signal_pairs <- length(mark_data) * 2L
+  n_diff_tracks  <- sum(sapply(mark_data, function(m) isTRUE(m$diff)))
   n_marks <- length(mark_data)
 
-  total_height <- n_signal_tracks * cfg$track_height +
+  total_height <- n_signal_pairs * cfg$track_height +
+                  n_diff_tracks * cfg$track_height * 0.60 +
                   0.40 +                                  # gene model
                   0.35 +                                  # scale bar
-                  max(0, n_marks - 1) * 0.18 +            # inter-mark gaps
-                  n_marks * 0.06 +                        # intra-mark gaps
-                  0.15 +                                  # gene-track gap
+                  max(0, n_marks - 1) * 0.12 +            # inter-mark gaps
+                  n_marks * 0.04 +                        # intra-mark gaps
+                  0.12 +                                  # gene-track gap
                   (if (has_hic) 1.0 else 0) +             # Hi-C panel
                   (if (has_highlight_labels) 0.18 else 0) +
                   0.4                                     # margins
