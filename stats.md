@@ -14,15 +14,15 @@ This document records the statistical analysis frameworks for the two methylatio
 
 ### DMR calling: modality XPLR
 
-The Biomodal modality XPLR CLI (v1.3, core-workflow-v1.3.sh) calls differentially methylated regions from the Zarr store produced by the upstream DUET evoC pipeline (v1.5.0). The tool runs a GLM-based test separately for each genomic region file and each methylation context.
+The Biomodal modality XPLR CLI (v1.3, core-workflow-v1.3.sh) calls differentially methylated regions from the Zarr store produced by the upstream DUET evoC pipeline (v1.5.0). For each region file and methylation context, the tool sums methylated and total cytosine counts per region per sample. A binomial logistic regression then tests for differential methylation between groups.
 
 Configuration for the primary CG run (config_CG.txt):
 - `Condition_Order=control mutant` (control is the reference level)
 - `Covariates=sex`
-- `Depth_Filter=10` (minimum per-CpG read coverage)
-- `Overdispersion=False`
+- `Depth_Filter=10` (CpG positions with mean coverage below 10 across all samples are removed before region-level count aggregation)
+- `Overdispersion=False` (standard binomial variance, no dispersion adjustment)
 
-The GLM error family (binomial, quasi-binomial, or other) is not documented. The vendor materials, the platform paper (Fullgrabe et al., 2023, Nat Biotechnol 41:1457-1464), and the modality XPLR workflow documentation do not specify it. The tool is proprietary. Biomodal confirmed that the internals are not publicly available.
+The modality XPLR documentation specifies a binomial logistic regression. The model treats the count of methylated cytosines per region as binomial, with variance determined by the mean. A Wald test on the group coefficient produces the test statistic and p-value for each region. When `Overdispersion` is set to True, the tool estimates a per-region dispersion factor (φ) per McCullagh and Nelder (1989, Chapter 4.5) and adjusts the Wald test standard errors. Our p-value histogram shows no sharp peak near zero, so overdispersion correction is not needed.
 
 ### Region files
 
@@ -36,7 +36,7 @@ Six GENCODE vM25 annotation sets define the genomic regions tested:
 
 ### Independent 5mC and 5hmC testing
 
-The modality XPLR tests 5mC and 5hmC as separate GLM fits per region. Each produces a BED file with 13-14 columns. The columns are: chr, start, end, num_contexts, mean_coverage, mean_mod_group1, mean_mod_group2, mod_fold_change, mod_difference, test_statistic, dmr_pvalue, dmr_qvalue, annotation. Gene-body regions include a 14th column for gene name.
+The modality XPLR tests 5mC and 5hmC as separate logistic regression fits per region. Each produces a BED file with 13-14 columns. The columns are: chr, start, end, num_contexts, mean_coverage, mean_mod_group1, mean_mod_group2, mod_fold_change, mod_difference, test_statistic, dmr_pvalue, dmr_qvalue, annotation. Gene-body regions include a 14th column for gene name.
 
 ### Significance threshold
 
@@ -72,7 +72,7 @@ The large Cohen d values and flat total modC are consistent with a TET-mediated 
 
 ### Gene-body aggregation
 
-Site-level differential mCH testing is underpowered. The signal (about 0.6-1.3% mCH at gene bodies) is close to the conversion noise floor (about 0.5-0.9% at lambda phage). Gene-body aggregation pools all CH sites within each protein-coding gene body (GENCODE vM25) per sample. This produces a total methylated count and a total coverage count per gene. The aggregation uses GenomicRanges `findOverlaps` in R (script: 02_mch_aggregate_sample.R).
+Site-level differential mCH testing is underpowered. Gene-body mCH rates (about 0.6-1.3%) are close to the per-sample false-positive rate from incomplete conversion, measured at lambda phage CH sites (about 0.5-0.9%). Gene-body aggregation pools all CH sites within each protein-coding gene body (GENCODE vM25) per sample. This produces a total methylated count and a total coverage count per gene. The aggregation uses GenomicRanges `findOverlaps` in R (script: 02_mch_aggregate_sample.R).
 
 ### edgeR quasi-likelihood F-test
 
@@ -169,9 +169,9 @@ evoC non-CG methylation (CHG/CHH contexts) is not used. The Biomodal DUET upstre
 
 **Temporal lag analysis.** The grant proposes cross-correlation and lag analysis across the P7/P12/P21/adult time course (Aim 1.1, line 54). This analysis design is not yet specified. The existing pipelines run two-condition comparisons at a single timepoint. The PI will determine the temporal modeling strategy.
 
-**Modality XPLR GLM internals.** The error family and dispersion model are proprietary. The grant can describe the inputs (Zarr store, metadata with covariates, region files) and outputs (per-region BED files with test statistic, p-value, and BH-corrected q-value).
+**Modality XPLR GLM internals (resolved).** The modality documentation specifies binomial logistic regression with a Wald test. The `Overdispersion` parameter is documented. Our config uses standard binomial (False). The grant can name the model directly.
 
-**Sample size.** The grant states n >= 6 per genotype per timepoint. Current methylation data has n = 4 per genotype. Whether the time-course experiments will scale to n = 6 needs confirmation.
+**Sample size.** The grant states n >= 6 per genotype per timepoint. Current methylation data has n = 4 per genotype. We will clarify the difference in sample size for methylation data.
 
 ## Key citations
 
