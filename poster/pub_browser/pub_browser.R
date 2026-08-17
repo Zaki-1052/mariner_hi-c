@@ -525,12 +525,12 @@ bigwig_to_df <- function(gr) {
 
 compute_track_layout <- function(mark_data_list, has_hic, has_highlight_labels) {
   signal_w    <- 1.0
-  diff_w      <- 0.80
-  pair_gap_w  <- 0.12
-  mark_gap_w  <- 0.45
+  diff_w      <- 0.60
+  pair_gap_w  <- 0.05
+  mark_gap_w  <- 0.15
   gene_w      <- 0.80
-  gene_gap_w  <- 0.30
-  scalebar_w  <- 0.10
+  gene_gap_w  <- 0.15
+  scalebar_w  <- 0.30
   hic_w       <- 0.80
   hic_gap_w   <- 0.10
   header_w    <- if (has_highlight_labels) 0.14 else 0
@@ -739,7 +739,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
   mut_label  <- cfg$label_vec[2]
 
   # Margins: left=label space, top=room for scale bar, right+bottom=small
-  old_par <- par(mar = c(1.5, 6.5, 1.5, 1.5))
+  old_par <- par(mar = c(1.5, 5.5, 2.5, 1.5))
   on.exit(par(old_par))
 
   kp <- plotKaryotype(
@@ -797,14 +797,13 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
   sb <- layout$scalebar
   kpSegments(kp,
              chr = chr, x0 = bar_start, x1 = bar_end,
-             y0 = 0.50, y1 = 0.50,
+             y0 = 0.70, y1 = 0.70,
              r0 = sb[1], r1 = sb[2],
-             lwd = 1.2, col = "grey30")
+             lwd = 2.0, col = "black")
   kpText(kp,
-         chr = chr, x = bar_end, y = 0.50,
+         chr = chr, x = (bar_start + bar_end) / 2, y = 0.30,
          r0 = sb[1], r1 = sb[2],
-         labels = paste0("  ", bar_label), cex = 0.65, col = "grey30",
-         pos = 4, offset = 0)
+         labels = bar_label, cex = 0.75, col = "black")
 
   # -- Signal tracks (per mark: ctrl + mut + optional diff) --
   for (i in seq_along(mark_data_list)) {
@@ -835,23 +834,22 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
              ymin = 0, ymax = ylim,
              col = color, lwd = 0.6)
 
-    # Scale annotation (only text inside the track — floats at top)
+    # Scale annotation on ctrl track
     scale_text <- sprintf("0-%g", ylim)
     kpText(kp,
-           chr = chr, x = label_x, y = ylim * 0.95,
+           chr = chr, x = label_x, y = ylim * 0.94,
            r0 = pos$ctrl[1], r1 = pos$ctrl[2],
            ymin = 0, ymax = ylim,
            labels = scale_text, cex = 0.70, col = color,
            pos = 4, offset = 0)
 
-    # Condition labels in left margin (not inside tracks)
-    kpAddLabels(kp,
-                labels       = ctrl_label,
-                r0           = pos$ctrl[1],
-                r1           = pos$ctrl[2],
-                cex          = 0.55,
-                col          = "black",
-                label.margin = 0.012)
+    # Condition label on ctrl track
+    kpText(kp,
+           chr = chr, x = label_x, y = ylim * 0.72,
+           r0 = pos$ctrl[1], r1 = pos$ctrl[2],
+           ymin = 0, ymax = ylim,
+           labels = ctrl_label, cex = 0.65, col = "black",
+           pos = 4, offset = 0)
 
     # Mut track
     kpArea(kp,
@@ -865,15 +863,14 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
              ymin = 0, ymax = ylim,
              col = color, lwd = 0.6)
 
-    # Mut condition label in left margin
-    kpAddLabels(kp,
-                labels       = mut_label,
-                r0           = pos$mut[1],
-                r1           = pos$mut[2],
-                cex          = 0.55,
-                col          = "black",
-                label.margin = 0.012,
-                font         = if (cfg$genotype_italic) 3 else 1)
+    # Condition label on mut track
+    kpText(kp,
+           chr = chr, x = label_x, y = ylim * 0.85,
+           r0 = pos$mut[1], r1 = pos$mut[2],
+           ymin = 0, ymax = ylim,
+           labels = mut_label, cex = 0.65, col = "black",
+           pos = 4, offset = 0,
+           font = if (cfg$genotype_italic) 3 else 1)
 
     # Optional diff track
     if (isTRUE(md$diff) && !is.null(pos$diff)) {
@@ -914,17 +911,25 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
                ymin = -diff_ylim, ymax = diff_ylim,
                col = "black", lwd = 0.5)
 
-      # "difference" label in left margin
-      kpAddLabels(kp,
-                  labels       = "difference",
-                  r0           = pos$diff[1],
-                  r1           = pos$diff[2],
-                  cex          = 0.50,
-                  col          = "grey40",
-                  label.margin = 0.012)
+      # Diff scale label
+      unit_label <- if (isTRUE(md$sparse)) "%" else "Δ"
+      diff_scale_text <- sprintf("±%g%s", diff_ylim, unit_label)
+      kpText(kp,
+             chr = chr, x = label_x, y = diff_ylim * 0.85,
+             r0 = pos$diff[1], r1 = pos$diff[2],
+             ymin = -diff_ylim, ymax = diff_ylim,
+             labels = diff_scale_text, cex = 0.60, col = color,
+             pos = 4, offset = 0)
+
+      kpText(kp,
+             chr = chr, x = label_x, y = diff_ylim * 0.55,
+             r0 = pos$diff[1], r1 = pos$diff[2],
+             ymin = -diff_ylim, ymax = diff_ylim,
+             labels = "difference", cex = 0.55, col = "grey40",
+             pos = 4, offset = 0)
     }
 
-    # Rotated mark label (far left)
+    # Rotated mark label (left side)
     kpAddLabels(kp,
                 labels       = md$name,
                 r0           = pos$mark_r0,
@@ -933,7 +938,7 @@ render_locus <- function(region_gr, mark_data_list, layout, gene_data,
                 cex          = 0.85,
                 srt          = 90,
                 pos          = 2,
-                label.margin = 0.055,
+                label.margin = 0.04,
                 font         = 2)
   }
 
@@ -1223,10 +1228,10 @@ main <- function() {
   total_height <- n_signal_pairs * cfg$track_height +
                   n_diff_tracks * cfg$track_height * 0.60 +
                   0.40 +                                  # gene model
-                  0.15 +                                  # scale bar
-                  max(0, n_marks - 1) * 0.25 +            # inter-mark gaps
-                  n_marks * 0.08 +                        # intra-mark gaps
-                  0.20 +                                  # gene-track gap
+                  0.35 +                                  # scale bar
+                  max(0, n_marks - 1) * 0.12 +            # inter-mark gaps
+                  n_marks * 0.04 +                        # intra-mark gaps
+                  0.12 +                                  # gene-track gap
                   (if (has_hic) 1.0 else 0) +             # Hi-C panel
                   (if (has_highlight_labels) 0.18 else 0) +
                   0.4                                     # margins
