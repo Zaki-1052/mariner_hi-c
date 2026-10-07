@@ -1,0 +1,176 @@
+#!/bin/bash
+#SBATCH --job-name=rerun_raw_counts
+#SBATCH --output=logs/rerun_raw_counts_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=150G
+#SBATCH --time=40:00:00
+#SBATCH --account=csd940
+
+# loops/scripts/rerun_raw_counts.sb
+#
+# Re-extract Hi-C contacts with norm=NONE (was VC), then regenerate
+# the master annotated loop list through edgeR + multi-resolution merge.
+#
+# Runs only the steps in the dependency chain to the master table:
+#   Per resolution (5kb, 10kb, 25kb):
+#     1. extract_counts.R   — re-extract with NONE normalization
+#     2. aggregate.R        — sum 5×5 raw matrices → count matrix
+#     3. edgeR.R            — differential analysis on raw counts
+#   Then once:
+#     4. generate_final_results.py  — filter to |logFC|>0.3, FDR<0.03
+#     5. downstream_analysis.R      — merge across 3 resolutions
+#     6. build_master_loop_table.R  — FDR<0.05 spine + annotations
+#     7. run_cre_blacklist_filter.R — Math1-cre blacklist
+#
+# Skips: prep_loops.R (positions unchanged), qc-val.R (diagnostics only),
+#        compare_resolutions.R, visualizations.R, apa_analysis.R, clustering.
+#
+# Usage:
+#   sbatch loops/scripts/rerun_raw_counts.sb
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/logs
+
+echo "========================================="
+echo "Rerun: Raw Counts (norm=NONE)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Memory: 128GB"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment:"
+which R
+R --version | head -n 1
+which python3
+echo ""
+
+REPO_ROOT="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+cd "$REPO_ROOT"
+echo "Working directory: $(pwd)"
+echo ""
+
+RESOLUTIONS=(5000 10000 25000)
+
+for RES in "${RESOLUTIONS[@]}"; do
+  RES_KB=$((RES / 1000))
+
+  echo ""
+  echo "========================================="
+  echo "RESOLUTION: ${RES} bp (${RES_KB} kb)"
+  echo "========================================="
+  echo "Start: $(date)"
+  echo ""
+
+  # --- Step 1: Extract contacts (norm=NONE) ---
+  echo "[1/3] extract_counts.R (norm=NONE)"
+  Rscript scripts/extract_counts.R ${RES}
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: extract_counts.R failed for ${RES_KB}kb (exit $STATUS)"
+    exit 1
+  fi
+  echo "extract_counts.R ${RES_KB}kb done"
+  echo ""
+
+  # --- Step 2: Aggregate 5×5 → count matrix ---
+  echo "[2/3] aggregate.R"
+  Rscript scripts/aggregate.R ${RES}
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: aggregate.R failed for ${RES_KB}kb (exit $STATUS)"
+    exit 1
+  fi
+  echo "aggregate.R ${RES_KB}kb done"
+  echo ""
+
+  # --- Step 3: edgeR differential analysis ---
+  echo "[3/3] edgeR.R"
+  Rscript scripts/edgeR.R ${RES}
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: edgeR.R failed for ${RES_KB}kb (exit $STATUS)"
+    exit 1
+  fi
+  echo "edgeR.R ${RES_KB}kb done"
+  echo ""
+
+  echo "Completed ${RES_KB}kb at $(date)"
+done
+
+echo ""
+echo "========================================="
+echo "POST-RESOLUTION STEPS"
+echo "========================================="
+echo ""
+
+# --- Step 4: Generate final_results.tsv per resolution ---
+echo "[4/7] generate_final_results.py"
+python3 scripts/generate_final_results.py
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: generate_final_results.py failed (exit $STATUS)"
+  exit 1
+fi
+echo "generate_final_results.py done"
+echo ""
+
+# --- Step 5: Multi-resolution merge ---
+echo "[5/7] downstream_analysis.R"
+Rscript scripts/downstream_analysis.R
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: downstream_analysis.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "downstream_analysis.R done"
+echo ""
+
+# --- Step 6: Build master annotated loop table ---
+echo "[6/7] build_master_loop_table.R"
+Rscript loops/scripts/build_master_loop_table.R \
+  --spine outputs/merged_loops/merged_all_results.tsv
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: build_master_loop_table.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "build_master_loop_table.R done"
+echo ""
+
+# --- Step 7: Cre blacklist filter ---
+echo "[7/7] run_cre_blacklist_filter.R filter loops"
+Rscript tads/scripts/run_cre_blacklist_filter.R filter loops
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: run_cre_blacklist_filter.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "run_cre_blacklist_filter.R done"
+echo ""
+
+echo "========================================="
+echo "COMPLETE"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Outputs:"
+echo "  loops/output/master_loop_table/late/master_annotated_loops.tsv"
+echo "  loops/output/master_loop_table/late/master_annotated_loops_crefiltered.tsv"
+echo "  loops/output/master_loop_table/late/master_annotated_loops_cre_removed.tsv"
+echo "  loops/output/master_loop_table/late/significant_loops.tsv"
+echo ""
+echo "Verification:"
+echo "  grep normalization outputs/res_5kb/05_metadata.rds   # should say NONE"
+echo "  head outputs/res_5kb/06_counts_matrix.tsv            # values should be integers"
+echo "  wc -l loops/output/master_loop_table/late/master_annotated_loops.tsv"
+echo ""
+echo "Next: rsync master table to local and deliver to Challana"

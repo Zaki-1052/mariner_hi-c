@@ -77,8 +77,8 @@ for (name in names(hicFiles)) {
   cat("  Normalizations:", paste(norms, collapse=", "), "\n")
 }
 
-# Use VC normalization (KR not available)
-norm_to_use <- "VC"
+# Use raw observed counts (no normalization) — edgeR handles normalization via TMM
+norm_to_use <- "NONE"
 cat(sprintf("\nUsing normalization: %s\n", norm_to_use))
 
 # Set up HDF5 file path (resolution-specific)
