@@ -66,43 +66,43 @@ source("scripts/utils/multi_format_output.R")
 # CTCF: ChIP-seq peaks (Bing Ren lab, adult mouse cerebellum) + DNA motifs (mm10)
 PEAK_FILES <- list(
   early = list(
-    h3k27ac    = "peaks/beds/H3K27acCerebellumEarly2.bed",
-    h3k27me3   = "peaks/beds/H3K27me3CerebellumEarly1.bed",
-    h3k4me1    = "peaks/beds/H3K4me1CerebellumEarly1.bed",
-    h3k4me3    = "peaks/beds/H3K4me3CerebellumEarly2.bed",
-    bivalent   = "peaks/beds/Bivalent_Cerebellum_Early.bed",
-    ctcf       = "peaks/CTCF.bed",
-    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
+    h3k27ac    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K27acCerebellumEarly2.bed",
+    h3k27me3   = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K27me3CerebellumEarly1.bed",
+    h3k4me1    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K4me1CerebellumEarly1.bed",
+    h3k4me3    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K4me3CerebellumEarly2.bed",
+    bivalent   = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/Bivalent_Cerebellum_Early.bed",
+    ctcf       = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/CTCF.bed",
+    ctcf_motif = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/ctcf_motifs_mm10.bed"
   ),
   late = list(
-    h3k27ac    = "peaks/beds/H3K27acCerebellumLate2.bed",
-    h3k27me3   = "peaks/beds/H3K27me3CerebellumLate1.bed",
-    h3k4me1    = "peaks/beds/H3K4me1CerebellumLate1.bed",
-    h3k4me3    = "peaks/beds/H3K4me3CerebellumLate2.bed",
-    bivalent   = "peaks/beds/Bivalent_Cerebellum_Late.bed",
-    ctcf       = "peaks/CTCF.bed",
-    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
+    h3k27ac    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K27acCerebellumLate2.bed",
+    h3k27me3   = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K27me3CerebellumLate1.bed",
+    h3k4me1    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K4me1CerebellumLate1.bed",
+    h3k4me3    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K4me3CerebellumLate2.bed",
+    bivalent   = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/Bivalent_Cerebellum_Late.bed",
+    ctcf       = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/CTCF.bed",
+    ctcf_motif = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/ctcf_motifs_mm10.bed"
   ),
   # Consensus-based for comparison (uses 4-replicate H3K4me3 for both bivalent AND Active_Promoter)
   late_consensus = list(
-    h3k27ac    = "peaks/beds/H3K27acCerebellumLate2.bed",
-    h3k27me3   = "peaks/beds/H3K27me3CerebellumLate1.bed",
-    h3k4me1    = "peaks/beds/H3K4me1CerebellumLate1.bed",
-    h3k4me3    = "peaks/peaks-v1/consensus_H3K4me3_late_peaks.bed",  # 9,651 peaks (4-replicate consensus)
-    bivalent   = "peaks/beds/Bivalent_Consensus_Late.bed",           # 688 peaks (from consensus H3K4me3)
-    ctcf       = "peaks/CTCF.bed",
-    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
+    h3k27ac    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K27acCerebellumLate2.bed",
+    h3k27me3   = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K27me3CerebellumLate1.bed",
+    h3k4me1    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K4me1CerebellumLate1.bed",
+    h3k4me3    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/peaks-v1/consensus_H3K4me3_late_peaks.bed",  # 9,651 peaks (4-replicate consensus)
+    bivalent   = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/Bivalent_Consensus_Late.bed",           # 688 peaks (from consensus H3K4me3)
+    ctcf       = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/CTCF.bed",
+    ctcf_motif = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/ctcf_motifs_mm10.bed"
   ),
   # P12_ctrl peaks for early comparison (more lenient peak calling than Cerebellum)
   # Demonstrates lack of single source of truth for ChIP-seq annotations
   early_p12ctrl = list(
-    h3k27ac    = "peaks/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # 28,042 peaks (vs 18,178 Cerebellum)
-    h3k27me3   = "peaks/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # 23,491 peaks (vs 12,473 Cerebellum)
-    h3k4me1    = "peaks/beds/H3K4me1CerebellumEarly1.bed",               # same (no P12_ctrl version)
-    h3k4me3    = "peaks/beds/H3K4me3CerebellumEarly2.bed",               # same (no P12_ctrl version)
-    bivalent   = "peaks/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed", # 933 peaks (Addison)
-    ctcf       = "peaks/CTCF.bed",
-    ctcf_motif = "peaks/ctcf_motifs_mm10.bed"
+    h3k27ac    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/peaks-v1/P12_ctrl_H3K27ac_early_peaks.bed",      # 28,042 peaks (vs 18,178 Cerebellum)
+    h3k27me3   = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/peaks-v1/P12_ctrl_H3K27me3_early_peaks.bed",     # 23,491 peaks (vs 12,473 Cerebellum)
+    h3k4me1    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K4me1CerebellumEarly1.bed",               # same (no P12_ctrl version)
+    h3k4me3    = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/beds/H3K4me3CerebellumEarly2.bed",               # same (no P12_ctrl version)
+    bivalent   = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/peaks-v1/250224AddisonH3K4me3H3K27me3Early.bed", # 933 peaks (Addison)
+    ctcf       = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/CTCF.bed",
+    ctcf_motif = "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/peaks/ctcf_motifs_mm10.bed"
   )
 )
 

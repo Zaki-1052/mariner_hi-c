@@ -1,29 +1,34 @@
 #!/usr/bin/env Rscript
-# /expanse/lustre/projects/csd940/zalibhai/mariner/scripts/06_aggregate.R
-# Purpose: Aggregate 5x5 Hi-C matrices to single counts per loop, handling bin-shifts
-# Multi-resolution support: accepts resolution as command-line argument
-# Input: 05_extracted HDF5 InteractionArray (5x5xN_loopsx6)
+# scripts/aggregate.R
+# Aggregate Hi-C contact matrices to single counts per loop
+# Input: 05_extracted HDF5 InteractionArray
 # Output: Count matrix (N_loops x 6 samples) ready for edgeR
 
-# Parse command-line arguments for resolution
-args <- commandArgs(trailingOnly = TRUE)
-RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
-
-cat("\n========================================\n")
-cat("Step 6: Matrix Aggregation\n")
-cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
-cat("========================================\n\n")
-
-# Load required libraries
 suppressPackageStartupMessages({
+  library(optparse)
   library(mariner)
   library(InteractionSet)
   library(HDF5Array)
   library(DelayedArray)
   library(Matrix)
-  library(edgeR)  # Load here since we'll use it at the end
+  library(edgeR)
   library(yaml)
 })
+
+option_list <- list(
+  make_option("--variation", type = "character", default = NULL,
+              help = "Variation name for path routing")
+)
+parser <- OptionParser(usage = "%prog RESOLUTION [options]", option_list = option_list)
+parsed <- parse_args(parser, positional_arguments = 1)
+RESOLUTION <- as.numeric(parsed$args[1])
+VARIATION <- parsed$options[["variation"]]
+
+cat("\n========================================\n")
+cat("Step 6: Matrix Aggregation\n")
+cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
+if (!is.null(VARIATION)) cat(sprintf("VARIATION: %s\n", VARIATION))
+cat("========================================\n\n")
 
 # Load paths configuration and set working directory
 config <- yaml::read_yaml("config/paths_config.yaml")
@@ -31,7 +36,12 @@ base_dir <- config$project$base_dir
 setwd(base_dir)
 
 # Resolution-specific directories
-input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+if (!is.null(VARIATION)) {
+  input_dir <- file.path("outputs/250402-late_outputs/variations", VARIATION,
+                         sprintf("res_%dkb", RESOLUTION/1000))
+} else {
+  input_dir <- sprintf("outputs/250402-late_outputs/res_%dkb", RESOLUTION/1000)
+}
 output_dir <- input_dir
 
 # Load extracted matrices
@@ -44,7 +54,7 @@ pixels <- loadHDF5SummarizedExperiment(
 # Load metadata
 metadata <- readRDS(file.path(input_dir, "05_metadata.rds"))
 cat(sprintf("  Loaded: %d loops x %d samples\n", metadata$n_loops, metadata$n_replicates))
-cat(sprintf("  Matrix dimensions per loop: 5x5 pixels\n"))
+cat(sprintf("  Matrix dimensions per loop: %dx%d pixels\n", dims[1], dims[2]))
 cat(sprintf("  Files: %s\n", paste(names(metadata$files), collapse=", ")))
 
 # Extract the count array
@@ -92,24 +102,33 @@ cat("\n=== Strategy 2: Center-Weighted Aggregation ===\n")
 cat("Rationale: Higher weight to center pixels, lower to edges\n")
 cat("Weight matrix (normalized to sum=1):\n")
 
-# Define weight matrix - Gaussian-like weights centered on middle pixel
-weight_matrix <- matrix(c(
-  0.04, 0.06, 0.08, 0.06, 0.04,  # Edge pixels: lowest weight
-  0.06, 0.08, 0.10, 0.08, 0.06,  # Inner ring: medium weight
-  0.08, 0.10, 0.16, 0.10, 0.08,  # Center row: highest in middle
-  0.06, 0.08, 0.10, 0.08, 0.06,  # Inner ring: medium weight
-  0.04, 0.06, 0.08, 0.06, 0.04   # Edge pixels: lowest weight
-), nrow = 5, byrow = TRUE)
-
-# Verify weights sum to 1
+# Build weight matrix based on actual matrix dimensions
+mat_side <- dims[1]
+if (mat_side == 1) {
+  weight_matrix <- matrix(1, 1, 1)
+} else if (mat_side == 3) {
+  weight_matrix <- matrix(c(
+    0.08, 0.12, 0.08,
+    0.12, 0.20, 0.12,
+    0.08, 0.12, 0.08
+  ), nrow = 3, byrow = TRUE)
+} else if (mat_side == 5) {
+  weight_matrix <- matrix(c(
+    0.04, 0.06, 0.08, 0.06, 0.04,
+    0.06, 0.08, 0.10, 0.08, 0.06,
+    0.08, 0.10, 0.16, 0.10, 0.08,
+    0.06, 0.08, 0.10, 0.08, 0.06,
+    0.04, 0.06, 0.08, 0.06, 0.04
+  ), nrow = 5, byrow = TRUE)
+} else {
+  weight_matrix <- matrix(1 / (mat_side^2), nrow = mat_side, ncol = mat_side)
+}
 weight_matrix <- weight_matrix / sum(weight_matrix)
 
 # Display weight matrix
-for (row in 1:5) {
-  cat(sprintf("  %.3f %.3f %.3f %.3f %.3f\n",
-              weight_matrix[row,1], weight_matrix[row,2],
-              weight_matrix[row,3], weight_matrix[row,4],
-              weight_matrix[row,5]))
+for (row in 1:mat_side) {
+  row_vals <- paste(sprintf("%.3f", weight_matrix[row, ]), collapse = " ")
+  cat(sprintf("  %s\n", row_vals))
 }
 
 # Apply weighted aggregation
@@ -308,7 +327,7 @@ all_strategies <- list(
     aggregation_method = "sum",
     extraction_norm = metadata$normalization,
     binSize = RESOLUTION,
-    buffer = 2,
+    buffer = (dims[1] - 1) / 2,
     date = Sys.Date(),
     within_ctrl_correlation = ctrl_within_mean,
     within_mut_correlation = mut_within_mean,

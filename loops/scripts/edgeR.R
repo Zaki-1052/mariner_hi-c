@@ -9,13 +9,30 @@
 # SETUP AND CONFIGURATION
 # =============================================================================
 
-# Parse command-line arguments for resolution
-args <- commandArgs(trailingOnly = TRUE)
-RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
+# Parse command-line arguments
+suppressPackageStartupMessages(library(optparse))
+
+option_list <- list(
+  make_option("--variation", type = "character", default = NULL,
+              help = "Variation name for output path routing"),
+  make_option("--norm-method", type = "character", default = NULL,
+              help = "Override normalization method (e.g. 'none' for cis-contact norm)"),
+  make_option("--cis-contacts", type = "character", default = NULL,
+              help = "Path to cis_contacts.yaml for custom library sizes")
+)
+parser <- OptionParser(usage = "%prog RESOLUTION [options]", option_list = option_list)
+parsed <- parse_args(parser, positional_arguments = 1)
+RESOLUTION <- as.numeric(parsed$args[1])
+VARIATION <- parsed$options[["variation"]]
+NORM_METHOD_OVERRIDE <- parsed$options[["norm-method"]]
+CIS_CONTACTS_FILE <- parsed$options[["cis-contacts"]]
 
 cat("\n========================================\n")
 cat("edgeR Differential Loop Analysis\n")
 cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
+if (!is.null(VARIATION)) cat(sprintf("VARIATION: %s\n", VARIATION))
+if (!is.null(NORM_METHOD_OVERRIDE)) cat(sprintf("NORM METHOD: %s\n", NORM_METHOD_OVERRIDE))
+if (!is.null(CIS_CONTACTS_FILE)) cat(sprintf("CIS CONTACTS: %s\n", CIS_CONTACTS_FILE))
 cat("========================================\n\n")
 
 # Load required libraries
@@ -28,7 +45,7 @@ suppressPackageStartupMessages({
   library(ggplot2)
   library(dplyr)
   library(tibble)
-  library(svglite)  # For SVG output
+  library(svglite)
 })
 
 # Helper function to save plots in multiple formats (PDF, SVG, JPEG)
@@ -50,14 +67,27 @@ cat("Loading configuration...\n")
 config <- yaml::read_yaml("config/edgeR_config.yaml")
 
 # Override config paths to use resolution-specific directories
-input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+# For cis-norm (--cis-contacts set): read from standard dir (same count matrices)
+# For buffer variations (--variation set, no --cis-contacts): read from variation dir
+if (!is.null(VARIATION) && is.null(CIS_CONTACTS_FILE)) {
+  input_dir <- file.path("outputs/250402-late_outputs/variations", VARIATION,
+                         sprintf("res_%dkb", RESOLUTION/1000))
+} else {
+  input_dir <- sprintf("outputs/250402-late_outputs/res_%dkb", RESOLUTION/1000)
+}
 config$paths$input$counts_matrix <- file.path(input_dir, "06_counts_matrix.rds")
 config$paths$input$coordinates <- file.path(input_dir, "03_binned.rds")
 config$paths$input$merged_loops <- file.path(input_dir, "02_merged.rds")
 config$paths$input$qc_summary <- file.path(input_dir, "qc_report/qc_report_summary.rds")
 
 # Update output paths to be resolution-specific
-config$paths$output$base <- file.path("outputs", sprintf("edgeR_results_res_%dkb", RESOLUTION/1000))
+if (!is.null(VARIATION)) {
+  config$paths$output$base <- file.path("outputs/250402-late_outputs/variations", VARIATION,
+                                        sprintf("edgeR_results_res_%dkb", RESOLUTION/1000))
+} else {
+  config$paths$output$base <- file.path("outputs/250402-late_outputs",
+                                        sprintf("edgeR_results_res_%dkb", RESOLUTION/1000))
+}
 config$paths$output$primary <- file.path(config$paths$output$base, "primary_analysis")
 config$paths$output$comparison <- file.path(config$paths$output$base, "hiccups_comparison")
 config$paths$output$plots <- file.path(config$paths$output$base, "plots")
@@ -264,29 +294,52 @@ cat("   - Loops passing filter:", sum(keep), "\n")
 cat("   - Loops filtered out:", sum(!keep), 
     "(", round(100 * mean(!keep), 1), "%)\n", sep = "")
 
-# Apply filter and recalculate library sizes
-y <- y[keep, , keep.lib.sizes = FALSE]
+# Apply filter
+if (!is.null(CIS_CONTACTS_FILE)) {
+  y <- y[keep, , keep.lib.sizes = TRUE]
+} else {
+  y <- y[keep, , keep.lib.sizes = FALSE]
+}
 
 cat("   After filtering:", nrow(y), "loops retained\n")
-cat("   - New library sizes: ctrl =", y$samples$lib.size[1], 
-    ", mut =", y$samples$lib.size[2], "\n")
 
 # =============================================================================
 # NORMALIZATION
 # =============================================================================
 
-cat("\nPerforming TMM normalization...\n")
+# Inject cis-contact library sizes if provided
+if (!is.null(CIS_CONTACTS_FILE)) {
+  cat("\nInjecting cis-contact library sizes...\n")
+  cis_config <- yaml::read_yaml(CIS_CONTACTS_FILE)
+  cis_sizes <- unlist(cis_config$cis_contacts)
+  sample_order <- colnames(y)
+  missing <- setdiff(sample_order, names(cis_sizes))
+  if (length(missing) > 0) {
+    stop(sprintf("Cis contacts file missing samples: %s", paste(missing, collapse = ", ")))
+  }
+  y$samples$lib.size <- as.numeric(cis_sizes[sample_order])
+  cat("   Cis-contact library sizes:\n")
+  for (s in sample_order) {
+    cat(sprintf("     %s: %.0f\n", s, cis_sizes[s]))
+  }
+}
 
-# Calculate normalization factors
-y <- normLibSizes(y, method = config$statistics$normalization_method)
+cat("   - Library sizes: ctrl =", y$samples$lib.size[1],
+    ", mut =", y$samples$lib.size[2], "\n")
+
+norm_method <- if (!is.null(NORM_METHOD_OVERRIDE)) NORM_METHOD_OVERRIDE else config$statistics$normalization_method
+cat(sprintf("\nPerforming normalization (method: %s)...\n", norm_method))
+
+y <- normLibSizes(y, method = norm_method)
 
 cat("   ✓ Normalization complete\n")
-cat("   - Method:", config$statistics$normalization_method, "\n")
-cat("   - Normalization factors: ctrl =", round(y$samples$norm.factors[1], 4), 
-    ", mut =", round(y$samples$norm.factors[2], 4), "\n")
-cat("   - Effective library sizes: ctrl =", 
-    round(y$samples$lib.size[1] * y$samples$norm.factors[1]), 
-    ", mut =", round(y$samples$lib.size[2] * y$samples$norm.factors[2]), "\n")
+cat("   - Method:", norm_method, "\n")
+cat("   - Normalization factors:", paste(round(y$samples$norm.factors, 4), collapse = ", "), "\n")
+cat("   - Effective library sizes:\n")
+for (i in 1:ncol(y)) {
+  cat(sprintf("     %s: %.0f\n", colnames(y)[i],
+              y$samples$lib.size[i] * y$samples$norm.factors[i]))
+}
 
 # =============================================================================
 # SAMPLE QUALITY CONTROL - MDS PLOT

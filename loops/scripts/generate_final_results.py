@@ -13,6 +13,7 @@ Usage:
 Processes all resolutions: 5kb, 10kb, 25kb
 """
 
+import argparse
 import pandas as pd
 import sys
 from pathlib import Path
@@ -39,7 +40,7 @@ def filter_final_results(all_results_df, logfc_threshold=0.3, fdr_threshold=0.03
     return final_df
 
 
-def process_resolution(resolution_kb, logfc_threshold=0.3, fdr_threshold=0.03):
+def process_resolution(resolution_kb, logfc_threshold=0.3, fdr_threshold=0.03, variation=None):
     """
     Process a single resolution: load, filter, save.
 
@@ -47,12 +48,16 @@ def process_resolution(resolution_kb, logfc_threshold=0.3, fdr_threshold=0.03):
         resolution_kb: Resolution in kb (5, 10, or 25)
         logfc_threshold: Minimum absolute logFC
         fdr_threshold: Maximum FDR
+        variation: Variation name for path routing (None = default)
 
     Returns:
         True if successful, False if file not found
     """
     # Define paths
-    results_dir = f"outputs/edgeR_results_res_{resolution_kb}kb/primary_analysis"
+    if variation:
+        results_dir = f"outputs/250402-late_outputs/variations/{variation}/edgeR_results_res_{resolution_kb}kb/primary_analysis"
+    else:
+        results_dir = f"outputs/250402-late_outputs/edgeR_results_res_{resolution_kb}kb/primary_analysis"
     input_file = Path(results_dir) / "all_results_primary.tsv"
     output_file = Path(results_dir) / "final_results.tsv"
 
@@ -104,58 +109,61 @@ def process_resolution(resolution_kb, logfc_threshold=0.3, fdr_threshold=0.03):
 
 def main():
     """Main execution function."""
+    parser = argparse.ArgumentParser(description="Generate final_results.tsv from edgeR output")
+    parser.add_argument("--variation", type=str, default=None,
+                        help="Variation name for output path routing")
+    parser.add_argument("--resolutions", type=int, nargs="+", default=[5, 10, 25],
+                        help="Resolutions in kb (default: 5 10 25)")
+    args = parser.parse_args()
+
     print("="*70)
     print("Generate Final Results from edgeR Output")
+    if args.variation:
+        print(f"Variation: {args.variation}")
     print("="*70)
     print("\nFilters: |logFC| > 0.3 AND FDR < 0.03")
-    print("Input:   all_results_primary.tsv (per resolution)")
-    print("Output:  final_results.tsv (per resolution)")
+    print(f"Resolutions: {args.resolutions}")
     print()
 
-    # Configuration
-    resolutions = [5, 10, 25]  # kb
     logfc_threshold = 0.3
     fdr_threshold = 0.03
 
-    # Process each resolution
     success_count = 0
-    for res_kb in resolutions:
+    for res_kb in args.resolutions:
         print("="*70)
         print(f"Resolution: {res_kb}kb")
         print("="*70)
 
-        success = process_resolution(res_kb, logfc_threshold, fdr_threshold)
+        success = process_resolution(res_kb, logfc_threshold, fdr_threshold,
+                                     variation=args.variation)
         if success:
             success_count += 1
 
         print()
 
-    # Summary
     print("="*70)
     print("Summary")
     print("="*70)
-    print(f"Resolutions processed successfully: {success_count}/{len(resolutions)}")
+    print(f"Resolutions processed successfully: {success_count}/{len(args.resolutions)}")
 
     if success_count == 0:
         print("\nERROR: No final_results.tsv files were generated!")
         print("Make sure you've run the edgeR analysis first.")
         sys.exit(1)
-    elif success_count < len(resolutions):
-        print(f"\nWARNING: Only {success_count} out of {len(resolutions)} resolutions processed.")
-        print("Check that edgeR analysis completed for all resolutions.")
+    elif success_count < len(args.resolutions):
+        print(f"\nWARNING: Only {success_count} out of {len(args.resolutions)} resolutions processed.")
     else:
         print("\n✓ All resolutions processed successfully!")
 
     print("\nGenerated files:")
-    for res_kb in resolutions:
-        output_file = Path(f"outputs/edgeR_results_res_{res_kb}kb/primary_analysis/final_results.tsv")
+    for res_kb in args.resolutions:
+        if args.variation:
+            output_file = Path(f"outputs/250402-late_outputs/variations/{args.variation}/edgeR_results_res_{res_kb}kb/primary_analysis/final_results.tsv")
+        else:
+            output_file = Path(f"outputs/250402-late_outputs/edgeR_results_res_{res_kb}kb/primary_analysis/final_results.tsv")
         if output_file.exists():
             size_kb = output_file.stat().st_size / 1024
             print(f"  - {output_file} ({size_kb:.1f} KB)")
-
-    print("\nNext steps:")
-    print("  1. Convert to BEDPE: bash scripts/convert_final_bedpe.sh")
-    print("  2. Visualize in Juicebox\n")
 
 
 if __name__ == '__main__':

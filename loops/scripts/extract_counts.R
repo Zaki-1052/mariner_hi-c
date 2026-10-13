@@ -5,17 +5,9 @@
 # Input: 04_buffered.rds (GInteractions with 5x5 pixel regions)
 # Output: 05_extracted.h5 (HDF5-backed InteractionArray)
 
-# Parse command-line arguments for resolution
-args <- commandArgs(trailingOnly = TRUE)
-RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
-
-cat("\n========================================\n")
-cat("Step 5: Hi-C Contact Extraction\n")
-cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
-cat("========================================\n\n")
-
 # Load required libraries
 suppressPackageStartupMessages({
+  library(optparse)
   library(mariner)
   library(InteractionSet)
   library(strawr)
@@ -23,6 +15,21 @@ suppressPackageStartupMessages({
   library(HDF5Array)
   library(yaml)
 })
+
+option_list <- list(
+  make_option("--variation", type = "character", default = NULL,
+              help = "Variation name for path routing")
+)
+parser <- OptionParser(usage = "%prog RESOLUTION [options]", option_list = option_list)
+parsed <- parse_args(parser, positional_arguments = 1)
+RESOLUTION <- as.numeric(parsed$args[1])
+VARIATION <- parsed$options[["variation"]]
+
+cat("\n========================================\n")
+cat("Step 5: Hi-C Contact Extraction\n")
+cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
+if (!is.null(VARIATION)) cat(sprintf("VARIATION: %s\n", VARIATION))
+cat("========================================\n\n")
 
 # Load paths configuration
 cat("\nLoading paths configuration...\n")
@@ -34,10 +41,18 @@ setwd(base_dir)
 cat(sprintf("  Working directory: %s\n", base_dir))
 
 # Load buffered loops from resolution-specific directory
-input_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+if (!is.null(VARIATION)) {
+  input_dir <- file.path("outputs/250402-late_outputs/variations", VARIATION,
+                         sprintf("res_%dkb", RESOLUTION/1000))
+} else {
+  input_dir <- sprintf("outputs/250402-late_outputs/res_%dkb", RESOLUTION/1000)
+}
 cat(sprintf("  Loading buffered loops from %s...\n", input_dir))
 buffered <- readRDS(file.path(input_dir, "04_buffered.rds"))
-cat(sprintf("  Loaded %d loops with 5x5 pixel regions\n\n", length(buffered)))
+anchor_w <- unique(width(anchors(buffered, type = "first")))
+mat_side <- (anchor_w[1] - 1) / RESOLUTION
+cat(sprintf("  Loaded %d loops with %dx%d pixel regions\n\n", length(buffered),
+            mat_side, mat_side))
 
 # Define .hic files for all 6 replicates from config
 cat("Loading .hic file paths from config...\n")
@@ -111,8 +126,8 @@ cat(sprintf("  Minimum required blockSize: %d bp\n", min_blockSize))
 
 # Main extraction
 cat("\n=== Starting extraction ===\n")
-cat(sprintf("Processing %d loops × %d replicates × 25 pixels\n",
-            length(buffered), length(hicFiles)))
+cat(sprintf("Processing %d loops × %d replicates × %d pixels\n",
+            length(buffered), length(hicFiles), as.integer(mat_side)^2))
 cat(sprintf("  = %d total extractions\n\n",
             length(buffered) * length(hicFiles) * 25))
 
@@ -288,18 +303,19 @@ for (i in 1:min(3, dims[3])) {
   example_matrix <- as.matrix(example_matrix)  # Convert DelayedMatrix to regular matrix
   
   # Display matrix
-  for (row in 1:5) {
+  for (row in 1:nrow(example_matrix)) {
     row_values <- round(example_matrix[row, ], 2)
     formatted_row <- format(row_values, width = 8, justify = "right")
     cat("  ", paste(formatted_row, collapse = " "), "\n")
   }
-  
+
   # Summary stats
+  n_pixels <- prod(dim(example_matrix))
   matrix_vals <- as.vector(example_matrix)
   matrix_vals <- matrix_vals[!is.na(matrix_vals)]
   if (length(matrix_vals) > 0) {
-    cat(sprintf("  Sum: %.0f, Max: %.0f, Non-zero: %d/25\n\n", 
-                sum(matrix_vals), max(matrix_vals), sum(matrix_vals > 0)))
+    cat(sprintf("  Sum: %.0f, Max: %.0f, Non-zero: %d/%d\n\n",
+                sum(matrix_vals), max(matrix_vals), sum(matrix_vals > 0), n_pixels))
   }
 }
 

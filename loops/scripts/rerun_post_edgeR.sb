@@ -1,0 +1,113 @@
+#!/bin/bash
+#SBATCH --job-name=rerun_post_edgeR
+#SBATCH --output=logs/rerun_post_edgeR_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=4:00:00
+#SBATCH --account=csd940
+
+# loops/scripts/rerun_post_edgeR.sb
+#
+# Runs steps 4-7 only (post-edgeR), assuming per-resolution
+# extract_counts → aggregate → edgeR already completed.
+#
+#   4. generate_final_results.py  — filter to |logFC|>0.3, FDR<0.03
+#   5. downstream_analysis.R      — merge across 3 resolutions + annotate
+#   6. build_master_loop_table.R  — FDR<0.05 spine + annotations
+#   7. run_cre_blacklist_filter.R — Math1-cre blacklist
+#
+# Usage:
+#   sbatch loops/scripts/rerun_post_edgeR.sb
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/logs
+
+echo "========================================="
+echo "Rerun: Post-edgeR Steps (4-7)"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment:"
+which R
+R --version | head -n 1
+which python3
+echo ""
+
+REPO_ROOT="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+export MARINER_REPO_ROOT="$REPO_ROOT"
+
+# Steps 4-5 run from loops/ (scripts use config/paths_config.yaml relative paths)
+cd "$REPO_ROOT/loops"
+echo "Working directory: $(pwd)"
+echo ""
+
+# --- Step 4: Generate final_results.tsv per resolution ---
+echo "[4/7] generate_final_results.py"
+python3 scripts/generate_final_results.py
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: generate_final_results.py failed (exit $STATUS)"
+  exit 1
+fi
+echo "generate_final_results.py done"
+echo ""
+
+# --- Step 5: Multi-resolution merge ---
+echo "[5/7] downstream_analysis.R"
+Rscript scripts/downstream_analysis.R
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: downstream_analysis.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "downstream_analysis.R done"
+echo ""
+
+# Steps 6-7 run from repo root (scripts use loops/ and tads/ prefixed paths)
+cd "$REPO_ROOT"
+echo "Back to repo root: $(pwd)"
+echo ""
+
+# --- Step 6: Build master annotated loop table ---
+echo "[6/7] build_master_loop_table.R"
+Rscript loops/scripts/build_master_loop_table.R \
+  --spine loops/outputs/250402-late_outputs/merged_loops/merged_all_results.tsv
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: build_master_loop_table.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "build_master_loop_table.R done"
+echo ""
+
+# --- Step 7: Cre blacklist filter ---
+echo "[7/7] run_cre_blacklist_filter.R filter loops"
+Rscript tads/scripts/run_cre_blacklist_filter.R filter loops
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: run_cre_blacklist_filter.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "run_cre_blacklist_filter.R done"
+echo ""
+
+echo "========================================="
+echo "COMPLETE"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Outputs:"
+echo "  loops/output/master_loop_table/late/master_annotated_loops.tsv"
+echo "  loops/output/master_loop_table/late/master_annotated_loops_crefiltered.tsv"
+echo "  loops/output/master_loop_table/late/master_annotated_loops_cre_removed.tsv"
+echo "  loops/output/master_loop_table/late/significant_loops.tsv"

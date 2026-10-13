@@ -3,17 +3,31 @@
 # Modified for biological replicates (n=3 per condition)
 # Multi-resolution support: accepts resolution as command-line argument
 
-library(mariner)
-library(InteractionSet)
-library(GenomicRanges)
-library(yaml)
+suppressPackageStartupMessages({
+  library(optparse)
+  library(mariner)
+  library(InteractionSet)
+  library(GenomicRanges)
+  library(yaml)
+})
 
-# Parse command-line arguments for resolution
-args <- commandArgs(trailingOnly = TRUE)
-RESOLUTION <- if (length(args) > 0) as.numeric(args[1]) else 5000
+option_list <- list(
+  make_option("--buffer", type = "integer", default = 2,
+              help = "Buffer size for pixelsToMatrices (0=1x1, 1=3x3, 2=5x5) [default: %default]"),
+  make_option("--output-dir", type = "character", default = NULL,
+              help = "Override output directory (enables skip-to-buffer mode)")
+)
+parser <- OptionParser(usage = "%prog RESOLUTION [options]", option_list = option_list)
+parsed <- parse_args(parser, positional_arguments = 1)
+RESOLUTION <- as.numeric(parsed$args[1])
+BUFFER <- parsed$options[["buffer"]]
+OUTPUT_DIR_OVERRIDE <- parsed$options[["output-dir"]]
+MAT_SIDE <- 2 * BUFFER + 1
 
 cat("\n========================================\n")
 cat(sprintf("RESOLUTION: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
+cat(sprintf("BUFFER: %d (%dx%d matrix)\n", BUFFER, MAT_SIDE, MAT_SIDE))
+if (!is.null(OUTPUT_DIR_OVERRIDE)) cat(sprintf("OUTPUT DIR: %s\n", OUTPUT_DIR_OVERRIDE))
 cat("========================================\n\n")
 
 # Load paths configuration
@@ -115,11 +129,32 @@ gi_list <- lapply(names(bedpe_list), function(name) {
 names(gi_list) <- names(bedpe_list)
 
 # Create resolution-specific output directory
-output_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+if (!is.null(OUTPUT_DIR_OVERRIDE)) {
+  output_dir <- OUTPUT_DIR_OVERRIDE
+} else {
+  output_dir <- sprintf("outputs/res_%dkb", RESOLUTION/1000)
+}
 if (!dir.exists(output_dir)) {
   dir.create(output_dir, recursive = TRUE)
   cat(sprintf("Created output directory: %s\n", output_dir))
 }
+
+# Skip-to-buffer: when output-dir is overridden and 03_binned.rds exists
+# in the standard resolution directory, load it directly and skip merge/bin
+standard_binned_path <- sprintf("outputs/250402-late_outputs/res_%dkb/03_binned.rds", RESOLUTION/1000)
+if (!is.null(OUTPUT_DIR_OVERRIDE) && file.exists(standard_binned_path)) {
+  cat(sprintf("Skip-to-buffer: loading existing binned loops from %s\n", standard_binned_path))
+  binned <- readRDS(standard_binned_path)
+  cat(sprintf("  Loaded %d binned loops\n", length(binned)))
+  total_input <- length(binned)
+
+  # Jump to buffering section (skip steps 01-03)
+  goto_buffer <- TRUE
+} else {
+  goto_buffer <- FALSE
+}
+
+if (!goto_buffer) {
 
 # Save individual GInteractions
 saveRDS(gi_list, file.path(output_dir, "01_ginteractions.rds"))
@@ -189,15 +224,17 @@ cat(sprintf("✓ Binned %d loops to %dkb resolution\n", length(binned), RESOLUTI
 saveRDS(binned, file.path(output_dir, "03_binned.rds"))
 cat(sprintf("✓ Saved to: %s/03_binned.rds\n", output_dir))
 
-# Create buffered regions (5x5 pixels)
+} # end if (!goto_buffer)
+
+# Create buffered regions
 cat("\n=== Creating buffered regions ===\n")
-buffer_kb <- 2 * RESOLUTION / 1000
-cat(sprintf("Buffer: ±2 bins (±%dkb) around center\n", buffer_kb))
-cat("Purpose: Handle positional shifts between replicates\n\n")
+buffer_kb <- BUFFER * RESOLUTION / 1000
+cat(sprintf("Buffer: ±%d bins (±%dkb) around center → %dx%d matrix\n",
+            BUFFER, buffer_kb, MAT_SIDE, MAT_SIDE))
 
 buffered <- pixelsToMatrices(
   x = binned,
-  buffer = 2
+  buffer = BUFFER
 )
 
 anchor1_width <- unique(width(anchors(buffered, type = "first")))
@@ -220,9 +257,10 @@ cat("=================================\n")
 cat(sprintf("Resolution: %d bp (%d kb)\n", RESOLUTION, RESOLUTION/1000))
 cat(sprintf("Input: %d loops across 6 replicates\n", total_input))
 cat(sprintf("Output: %d consensus loop positions\n", length(buffered)))
-cat(sprintf("Ready for extraction: %d loops × 6 replicates × 25 pixels\n",
-            length(buffered)))
+n_pixels <- MAT_SIDE^2
+cat(sprintf("Ready for extraction: %d loops × 6 replicates × %d pixels\n",
+            length(buffered), n_pixels))
 cat(sprintf("                    = %d total extractions\n\n",
-            length(buffered) * 6 * 25))
+            length(buffered) * 6 * n_pixels))
 cat(sprintf("Output directory: %s\n", output_dir))
 cat(sprintf("Next step: Rscript scripts/extract_counts.R %d\n", RESOLUTION))

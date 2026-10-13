@@ -54,8 +54,13 @@ which python3
 echo ""
 
 REPO_ROOT="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+export MARINER_REPO_ROOT="$REPO_ROOT"
 cd "$REPO_ROOT"
 echo "Working directory: $(pwd)"
+echo ""
+
+cd "$REPO_ROOT/loops"
+echo "Loops directory: $(pwd)"
 echo ""
 
 RESOLUTIONS=(5000 10000 25000)
@@ -112,6 +117,8 @@ echo "POST-RESOLUTION STEPS"
 echo "========================================="
 echo ""
 
+# Steps 4-5 still run from loops/; steps 6-7 need the repo root.
+
 # --- Step 4: Generate final_results.tsv per resolution ---
 echo "[4/7] generate_final_results.py"
 python3 scripts/generate_final_results.py
@@ -134,10 +141,14 @@ fi
 echo "downstream_analysis.R done"
 echo ""
 
+cd "$REPO_ROOT"
+echo "Back to repo root: $(pwd)"
+echo ""
+
 # --- Step 6: Build master annotated loop table ---
 echo "[6/7] build_master_loop_table.R"
 Rscript loops/scripts/build_master_loop_table.R \
-  --spine outputs/merged_loops/merged_all_results.tsv
+  --spine loops/outputs/250402-late_outputs/merged_loops/merged_all_results.tsv
 STATUS=$?
 if [ $STATUS -ne 0 ]; then
   echo "FATAL: build_master_loop_table.R failed (exit $STATUS)"

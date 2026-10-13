@@ -1,0 +1,142 @@
+#!/bin/bash
+#SBATCH --job-name=buffer_variation
+#SBATCH --output=logs/buffer_variation_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=150G
+#SBATCH --time=24:00:00
+#SBATCH --account=csd940
+
+# loops/scripts/run_buffer_variation.sb
+#
+# Sensitivity test: buffer size variation (1x1 and 3x3 vs current 5x5)
+# Runs the full per-resolution pipeline (prep → extract → aggregate → edgeR)
+# for buffer=0 (1x1) and buffer=1 (3x3) at 25kb resolution only.
+#
+# Usage:
+#   sbatch loops/scripts/run_buffer_variation.sb
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/logs
+
+echo "========================================="
+echo "Sensitivity Test: Buffer Size Variation"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Memory: ${SLURM_MEM_PER_NODE}MB"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment:"
+which R
+R --version | head -n 1
+which python3
+echo ""
+
+REPO_ROOT="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+export MARINER_REPO_ROOT="$REPO_ROOT"
+
+cd "$REPO_ROOT/loops"
+echo "Working directory: $(pwd)"
+echo ""
+
+RES=25000
+RES_KB=25
+
+for BUFFER in 0 1; do
+  MAT_SIDE=$((2 * BUFFER + 1))
+  VARIATION="buffer_${MAT_SIDE}x${MAT_SIDE}"
+  VAR_DIR="outputs/250402-late_outputs/variations/${VARIATION}/res_${RES_KB}kb"
+
+  echo "========================================="
+  echo "Buffer variation: ${MAT_SIDE}x${MAT_SIDE} (buffer=${BUFFER})"
+  echo "Output: ${VAR_DIR}"
+  echo "Start: $(date)"
+  echo "========================================="
+  echo ""
+
+  mkdir -p "${VAR_DIR}"
+
+  # --- Step 1: Prep loops (skip-to-buffer: loads existing 03_binned.rds) ---
+  echo "[1/5] prep_loops.R --buffer ${BUFFER}"
+  Rscript scripts/prep_loops.R ${RES} \
+    --buffer ${BUFFER} \
+    --output-dir "${VAR_DIR}"
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: prep_loops.R failed for buffer=${BUFFER} (exit $STATUS)"
+    exit 1
+  fi
+  echo "prep_loops.R done"
+  echo ""
+
+  # --- Step 2: Extract contacts ---
+  echo "[2/5] extract_counts.R --variation ${VARIATION}"
+  Rscript scripts/extract_counts.R ${RES} \
+    --variation "${VARIATION}"
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: extract_counts.R failed for ${VARIATION} (exit $STATUS)"
+    exit 1
+  fi
+  echo "extract_counts.R done"
+  echo ""
+
+  # --- Step 3: Aggregate ---
+  echo "[3/5] aggregate.R --variation ${VARIATION}"
+  Rscript scripts/aggregate.R ${RES} \
+    --variation "${VARIATION}"
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: aggregate.R failed for ${VARIATION} (exit $STATUS)"
+    exit 1
+  fi
+  echo "aggregate.R done"
+  echo ""
+
+  # --- Step 4: edgeR (TMM normalization, same as baseline) ---
+  echo "[4/5] edgeR.R --variation ${VARIATION}"
+  Rscript scripts/edgeR.R ${RES} \
+    --variation "${VARIATION}"
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: edgeR.R failed for ${VARIATION} (exit $STATUS)"
+    exit 1
+  fi
+  echo "edgeR.R done"
+  echo ""
+
+  # --- Step 5: Generate final results ---
+  echo "[5/5] generate_final_results.py --variation ${VARIATION} --resolutions ${RES_KB}"
+  python3 scripts/generate_final_results.py \
+    --variation "${VARIATION}" \
+    --resolutions ${RES_KB}
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: generate_final_results.py failed for ${VARIATION} (exit $STATUS)"
+    exit 1
+  fi
+  echo "generate_final_results.py done"
+  echo ""
+
+  echo "Completed ${VARIATION} at $(date)"
+  echo ""
+done
+
+echo "========================================="
+echo "COMPLETE: All buffer variations"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Outputs:"
+echo "  outputs/250402-late_outputs/variations/buffer_1x1/res_25kb/"
+echo "  outputs/250402-late_outputs/variations/buffer_1x1/edgeR_results_res_25kb/"
+echo "  outputs/250402-late_outputs/variations/buffer_3x3/res_25kb/"
+echo "  outputs/250402-late_outputs/variations/buffer_3x3/edgeR_results_res_25kb/"

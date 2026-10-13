@@ -1,0 +1,152 @@
+#!/bin/bash
+#SBATCH --job-name=cisnorm_variation
+#SBATCH --output=logs/cisnorm_%j.out
+#SBATCH --partition=shared
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128G
+#SBATCH --time=12:00:00
+#SBATCH --account=csd940
+
+# loops/scripts/run_cisnorm_variation.sb
+#
+# Sensitivity test: cis-contact normalization instead of TMM
+# Re-runs edgeR on existing count matrices with valid-cis-contacts as lib.size,
+# then runs the full downstream pipeline (generate_final_results, downstream_analysis,
+# build_master_loop_table, cre_blacklist_filter).
+#
+# Usage:
+#   sbatch loops/scripts/run_cisnorm_variation.sb
+
+VARIATION="cisnorm"
+
+mkdir -p /expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/logs
+
+echo "========================================="
+echo "Sensitivity Test: Cis-Contact Normalization"
+echo "Variation: ${VARIATION}"
+echo "========================================="
+echo "Job ID: $SLURM_JOB_ID"
+echo "Node: $HOSTNAME"
+echo "CPUs: $SLURM_CPUS_PER_TASK"
+echo "Memory: ${SLURM_MEM_PER_NODE}MB"
+echo "Start time: $(date)"
+echo "========================================="
+echo ""
+
+source ~/.bashrc
+conda activate mariner_env
+
+echo "Environment:"
+which R
+R --version | head -n 1
+which python3
+echo ""
+
+REPO_ROOT="/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c"
+export MARINER_REPO_ROOT="$REPO_ROOT"
+
+# Steps 0-5 run from loops/
+cd "$REPO_ROOT/loops"
+echo "Working directory: $(pwd)"
+echo ""
+
+# --- Step 0: Extract valid cis contacts from .hic files ---
+echo "[0/7] get_cis_contacts.R"
+Rscript scripts/get_cis_contacts.R
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: get_cis_contacts.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "get_cis_contacts.R done"
+echo ""
+
+# --- Steps 1-3: Per-resolution edgeR with cis-contact normalization ---
+RESOLUTIONS=(5000 10000 25000)
+
+for RES in "${RESOLUTIONS[@]}"; do
+  RES_KB=$((RES / 1000))
+  echo "========================================="
+  echo "edgeR ${RES_KB}kb with cis-contact normalization"
+  echo "========================================="
+
+  Rscript scripts/edgeR.R ${RES} \
+    --variation ${VARIATION} \
+    --norm-method none \
+    --cis-contacts config/cis_contacts.yaml
+  STATUS=$?
+  if [ $STATUS -ne 0 ]; then
+    echo "FATAL: edgeR.R failed for ${RES_KB}kb (exit $STATUS)"
+    exit 1
+  fi
+  echo "edgeR.R ${RES_KB}kb done"
+  echo ""
+done
+
+echo "========================================="
+echo "Post-resolution steps"
+echo "========================================="
+echo ""
+
+# --- Step 4: Generate final_results.tsv per resolution ---
+echo "[4/7] generate_final_results.py --variation ${VARIATION}"
+python3 scripts/generate_final_results.py --variation ${VARIATION}
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: generate_final_results.py failed (exit $STATUS)"
+  exit 1
+fi
+echo "generate_final_results.py done"
+echo ""
+
+# --- Step 5: Multi-resolution merge ---
+echo "[5/7] downstream_analysis.R --variation ${VARIATION}"
+Rscript scripts/downstream_analysis.R --variation ${VARIATION}
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: downstream_analysis.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "downstream_analysis.R done"
+echo ""
+
+# Steps 6-7 run from repo root
+cd "$REPO_ROOT"
+echo "Back to repo root: $(pwd)"
+echo ""
+
+# --- Step 6: Build master annotated loop table ---
+echo "[6/7] build_master_loop_table.R"
+Rscript loops/scripts/build_master_loop_table.R \
+  --spine loops/outputs/250402-late_outputs/variations/${VARIATION}/merged_loops/merged_all_results.tsv \
+  --out-dir loops/output/master_loop_table/late_${VARIATION}
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: build_master_loop_table.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "build_master_loop_table.R done"
+echo ""
+
+# --- Step 7: Cre blacklist filter ---
+echo "[7/7] run_cre_blacklist_filter.R filter loops"
+Rscript tads/scripts/run_cre_blacklist_filter.R filter loops
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo "FATAL: run_cre_blacklist_filter.R failed (exit $STATUS)"
+  exit 1
+fi
+echo "run_cre_blacklist_filter.R done"
+echo ""
+
+echo "========================================="
+echo "COMPLETE: ${VARIATION}"
+echo "========================================="
+echo "End time: $(date)"
+echo ""
+echo "Outputs:"
+echo "  loops/outputs/250402-late_outputs/variations/${VARIATION}/edgeR_results_res_{5,10,25}kb/"
+echo "  loops/outputs/250402-late_outputs/variations/${VARIATION}/merged_loops/"
+echo "  loops/output/master_loop_table/late_${VARIATION}/"

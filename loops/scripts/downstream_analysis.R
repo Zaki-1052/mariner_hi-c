@@ -27,10 +27,11 @@ cat("Downstream Analysis: Merged Loops\n")
 cat("========================================\n\n")
 
 suppressPackageStartupMessages({
+  library(optparse)
   library(mariner)
   library(InteractionSet)
   library(GenomicRanges)
-  library(rtracklayer)  # For ChIP-seq bed file import
+  library(rtracklayer)
   library(tidyverse)
   library(ggplot2)
   library(patchwork)
@@ -48,30 +49,31 @@ config <- yaml::read_yaml("config/paths_config.yaml")
 source("scripts/annotate_loops_extended.R")
 
 # Parse command-line arguments
-args <- commandArgs(trailingOnly = TRUE)
-gtf_file <- NULL
-tolerance_kb <- 10
-chip_timepoint <- "late"  # Default: late timepoint peaks from peaks/beds/
+option_list <- list(
+  make_option("--gtf", type = "character", default = NULL,
+              help = "Path to GTF file for gene annotations"),
+  make_option("--tolerance", type = "integer", default = 10,
+              help = "Overlap tolerance in kb [default: %default]"),
+  make_option("--timepoint", type = "character", default = "late",
+              help = "ChIP-seq timepoint [default: %default]"),
+  make_option("--variation", type = "character", default = NULL,
+              help = "Variation name for output path routing")
+)
+parsed <- parse_args(OptionParser(option_list = option_list))
+gtf_file <- parsed$gtf
+tolerance_kb <- parsed$tolerance
+chip_timepoint <- parsed$timepoint
+VARIATION <- parsed$variation
 
-if (length(args) > 0) {
-  for (i in seq_along(args)) {
-    if (args[i] == "--gtf" && i < length(args)) {
-      gtf_file <- args[i + 1]
-    } else if (args[i] == "--tolerance" && i < length(args)) {
-      tolerance_kb <- as.numeric(args[i + 1])
-    } else if (args[i] == "--timepoint" && i < length(args)) {
-      chip_timepoint <- args[i + 1]
-      if (!chip_timepoint %in% names(PEAK_FILES)) {
-        stop(sprintf("Unknown timepoint: %s. Available: %s",
-                     chip_timepoint, paste(names(PEAK_FILES), collapse = ", ")))
-      }
-    }
-  }
+if (!is.null(chip_timepoint) && !chip_timepoint %in% names(PEAK_FILES)) {
+  stop(sprintf("Unknown timepoint: %s. Available: %s",
+               chip_timepoint, paste(names(PEAK_FILES), collapse = ", ")))
 }
 
 cat(sprintf("Configuration:\n"))
 cat(sprintf("  Overlap tolerance: %d kb\n", tolerance_kb))
 cat(sprintf("  ChIP-seq timepoint: %s\n", chip_timepoint))
+if (!is.null(VARIATION)) cat(sprintf("  Variation: %s\n", VARIATION))
 if (!is.null(gtf_file)) {
   cat(sprintf("  GTF file: %s\n", gtf_file))
 } else {
@@ -90,7 +92,11 @@ if (dir.exists(base_dir)) {
 }
 
 # Create output directory
-output_dir <- "outputs/merged_loops"
+if (!is.null(VARIATION)) {
+  output_dir <- file.path("outputs/250402-late_outputs/variations", VARIATION, "merged_loops")
+} else {
+  output_dir <- "outputs/250402-late_outputs/merged_loops"
+}
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(output_dir, "plots"), recursive = TRUE, showWarnings = FALSE)
 
@@ -173,8 +179,13 @@ for (res in resolutions) {
   cat(sprintf("Loading %dkb results...\n", res_kb))
 
   # Load final results TSV
-  final_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/final_results.tsv", res_kb)
-  coords_file <- sprintf("outputs/res_%dkb/03_binned.rds", res_kb)
+  if (!is.null(VARIATION)) {
+    final_file <- sprintf("outputs/250402-late_outputs/variations/%s/edgeR_results_res_%dkb/primary_analysis/final_results.tsv",
+                          VARIATION, res_kb)
+  } else {
+    final_file <- sprintf("outputs/250402-late_outputs/edgeR_results_res_%dkb/primary_analysis/final_results.tsv", res_kb)
+  }
+  coords_file <- sprintf("outputs/250402-late_outputs/res_%dkb/03_binned.rds", res_kb)
 
   if (!file.exists(final_file)) {
     warning(sprintf("  Final results file not found: %s", final_file))
@@ -276,8 +287,13 @@ for (res in resolutions) {
   cat(sprintf("Loading %dkb all_results...\n", res_kb))
 
   # Load all results TSV
-  all_results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv", res_kb)
-  coords_file <- sprintf("outputs/res_%dkb/03_binned.rds", res_kb)
+  if (!is.null(VARIATION)) {
+    all_results_file <- sprintf("outputs/250402-late_outputs/variations/%s/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv",
+                                VARIATION, res_kb)
+  } else {
+    all_results_file <- sprintf("outputs/250402-late_outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv", res_kb)
+  }
+  coords_file <- sprintf("outputs/250402-late_outputs/res_%dkb/03_binned.rds", res_kb)
 
   if (!file.exists(all_results_file)) {
     warning(sprintf("  All results file not found: %s", all_results_file))
@@ -841,7 +857,12 @@ volcano_status <- data.frame(
 )
 
 for (res_kb in c(5, 10, 25)) {
-  all_results_file <- sprintf("outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv", res_kb)
+  if (!is.null(VARIATION)) {
+    all_results_file <- sprintf("outputs/250402-late_outputs/variations/%s/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv",
+                                VARIATION, res_kb)
+  } else {
+    all_results_file <- sprintf("outputs/250402-late_outputs/edgeR_results_res_%dkb/primary_analysis/all_results_primary.tsv", res_kb)
+  }
 
   file_exists <- file.exists(all_results_file)
 
@@ -1017,30 +1038,38 @@ cat(sprintf("    H3K27me3: %s\n", peak_files$h3k27me3))
 cat(sprintf("    H3K4me1:  %s\n", peak_files$h3k4me1))
 cat(sprintf("    H3K4me3:  %s\n", peak_files$h3k4me3))
 cat(sprintf("    Bivalent: %s\n", peak_files$bivalent))
+cat(sprintf("    CTCF:     %s\n", peak_files$ctcf))
+cat(sprintf("    CTCF motif: %s\n", peak_files$ctcf_motif))
 
 k27ac_gr  <- load_chip_peaks(peak_files$h3k27ac,  "H3K27ac")
 k27me3_gr <- load_chip_peaks(peak_files$h3k27me3, "H3K27me3")
 k4me1_gr  <- load_chip_peaks(peak_files$h3k4me1,  "H3K4me1")
 k4me3_gr  <- load_chip_peaks(peak_files$h3k4me3,  "H3K4me3")
 bivalent_gr <- load_chip_peaks(peak_files$bivalent, "Bivalent")
+ctcf_gr     <- load_chip_peaks(peak_files$ctcf, "CTCF")
+ctcf_motif_gr <- load_chip_peaks(peak_files$ctcf_motif, "CTCF_motif")
 
 # Compute overlaps for both anchors
 anchor1_chip <- annotate_chip_overlaps_extended(anchor1_gr, k27ac_gr, k27me3_gr,
-                                                 k4me1_gr, k4me3_gr, bivalent_gr)
+                                                 k4me1_gr, k4me3_gr, bivalent_gr,
+                                                 ctcf_gr, ctcf_motif_gr)
 anchor2_chip <- annotate_chip_overlaps_extended(anchor2_gr, k27ac_gr, k27me3_gr,
-                                                 k4me1_gr, k4me3_gr, bivalent_gr)
+                                                 k4me1_gr, k4me3_gr, bivalent_gr,
+                                                 ctcf_gr, ctcf_motif_gr)
 
-# Classify anchor types (7 categories)
+# Classify anchor types (8 categories incl CTCF_Site)
 anchor1_type <- classify_anchor_type_extended(
   anchor1_chip$H3K27ac_overlap, anchor1_chip$H3K27me3_overlap,
   anchor1_chip$H3K4me1_overlap, anchor1_chip$H3K4me3_overlap,
   anchor1_chip$Bivalent_Promoter_overlap,
+  anchor1_chip$CTCF_overlap, anchor1_chip$CTCF_motif_overlap,
   merged_loops_df$anchor1_distance_to_tss, tss_threshold = 2000
 )
 anchor2_type <- classify_anchor_type_extended(
   anchor2_chip$H3K27ac_overlap, anchor2_chip$H3K27me3_overlap,
   anchor2_chip$H3K4me1_overlap, anchor2_chip$H3K4me3_overlap,
   anchor2_chip$Bivalent_Promoter_overlap,
+  anchor2_chip$CTCF_overlap, anchor2_chip$CTCF_motif_overlap,
   merged_loops_df$anchor2_distance_to_tss, tss_threshold = 2000
 )
 
