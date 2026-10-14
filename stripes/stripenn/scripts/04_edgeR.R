@@ -9,6 +9,7 @@
 #   <resolution_bp> : 5000 | 10000
 
 suppressPackageStartupMessages({
+  library(optparse)
   library(edgeR)
   library(yaml)
   library(ggplot2)
@@ -27,13 +28,22 @@ save_multiformat <- function(plot_code, base_path, width, height, dpi = 300) {
   cat(sprintf("  Saved: %s.{pdf,svg,jpg}\n", basename(base_path)))
 }
 
-args <- commandArgs(trailingOnly = TRUE)
-if (length(args) < 2) {
-  stop("Usage: Rscript 04_edgeR.R <timepoint> <resolution_bp>")
-}
-TIMEPOINT <- args[1]
-RES <- as.numeric(args[2])
+option_list <- list(
+  make_option("--variation", type = "character", default = NULL,
+              help = "Variation name for output path routing"),
+  make_option("--norm-method", type = "character", default = NULL,
+              help = "Override normalization method (e.g. 'none' for cis-contact norm)"),
+  make_option("--cis-contacts", type = "character", default = NULL,
+              help = "Path to cis_contacts.yaml for custom library sizes")
+)
+parser <- OptionParser(usage = "%prog TIMEPOINT RESOLUTION_BP [options]", option_list = option_list)
+parsed <- parse_args(parser, positional_arguments = 2)
+TIMEPOINT <- parsed$args[1]
+RES <- as.numeric(parsed$args[2])
 RES_KB <- RES / 1000
+VARIATION <- parsed$options[["variation"]]
+NORM_METHOD_OVERRIDE <- parsed$options[["norm-method"]]
+CIS_CONTACTS_FILE <- parsed$options[["cis-contacts"]]
 
 CODE_DIR <- "/expanse/lustre/projects/csd940/zalibhai/mariner_hi-c/stripes/stripenn"
 DATA_DIR <- "/expanse/lustre/projects/csd940/zalibhai/stripes/stripenn"
@@ -42,6 +52,9 @@ cat("\n========================================\n")
 cat("Stage 4: edgeR Differential Analysis\n")
 cat(sprintf("Timepoint:  %s\n", TIMEPOINT))
 cat(sprintf("Resolution: %d bp (%g kb)\n", RES, RES_KB))
+if (!is.null(VARIATION)) cat(sprintf("Variation:  %s\n", VARIATION))
+if (!is.null(NORM_METHOD_OVERRIDE)) cat(sprintf("Norm method: %s\n", NORM_METHOD_OVERRIDE))
+if (!is.null(CIS_CONTACTS_FILE)) cat(sprintf("Cis contacts: %s\n", CIS_CONTACTS_FILE))
 cat("========================================\n\n")
 
 config_file <- file.path(CODE_DIR, "config", "stripenn_config.yaml")
@@ -52,7 +65,12 @@ set.seed(config$stripenn_compute$seed)
 
 base_dir <- file.path(DATA_DIR, "outputs", TIMEPOINT, paste0("res_", RES_KB, "kb"))
 scores_dir <- file.path(base_dir, "scores")
-output_dir <- file.path(base_dir, "04_edgeR")
+if (!is.null(VARIATION)) {
+  output_dir <- file.path(DATA_DIR, "outputs", TIMEPOINT,
+                          paste0("res_", RES_KB, "kb"), "variations", VARIATION, "04_edgeR")
+} else {
+  output_dir <- file.path(base_dir, "04_edgeR")
+}
 plots_dir <- file.path(output_dir, "plots")
 
 for (dir in c(output_dir, plots_dir)) {
@@ -189,7 +207,11 @@ if (config$edger$skip_filtering) {
 } else {
   keep <- filterByExpr(dge, group = group)
   cat(sprintf("  Stripes passing filter: %d / %d\n", sum(keep), length(keep)))
-  dge <- dge[keep, , keep.lib.sizes = FALSE]
+  if (!is.null(CIS_CONTACTS_FILE)) {
+    dge <- dge[keep, , keep.lib.sizes = TRUE]
+  } else {
+    dge <- dge[keep, , keep.lib.sizes = FALSE]
+  }
 }
 
 # ==============================================================================
@@ -197,9 +219,25 @@ if (config$edger$skip_filtering) {
 # ==============================================================================
 cat("\n=== Normalization ===\n")
 
-dge <- calcNormFactors(dge, method = config$edger$normalization_method)
+if (!is.null(CIS_CONTACTS_FILE)) {
+  cat(sprintf("  Injecting cis-contact library sizes from: %s\n", CIS_CONTACTS_FILE))
+  cis_config <- yaml::read_yaml(CIS_CONTACTS_FILE)
+  cis_sizes <- unlist(cis_config$cis_contacts)
+  sample_order <- colnames(dge)
+  missing <- setdiff(sample_order, names(cis_sizes))
+  if (length(missing) > 0) {
+    stop(sprintf("Cis contacts file missing samples: %s", paste(missing, collapse = ", ")))
+  }
+  dge$samples$lib.size <- as.numeric(cis_sizes[sample_order])
+  for (s in sample_order) {
+    cat(sprintf("    %s: %.0f\n", s, cis_sizes[s]))
+  }
+}
 
-cat(sprintf("  Method: %s\n", config$edger$normalization_method))
+norm_method <- if (!is.null(NORM_METHOD_OVERRIDE)) NORM_METHOD_OVERRIDE else config$edger$normalization_method
+dge <- calcNormFactors(dge, method = norm_method)
+
+cat(sprintf("  Method: %s\n", norm_method))
 cat("  Normalization factors:\n")
 for (i in seq_len(ncol(dge))) {
   cat(sprintf("    %s: %.4f\n",
