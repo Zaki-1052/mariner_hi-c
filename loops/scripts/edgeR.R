@@ -114,10 +114,9 @@ for (dir in output_dirs) {
   }
 }
 
-# Start logging
+# Start logging (stdout via cat; stderr stays on stderr for SLURM visibility)
 log_file <- file.path(config$paths$output$logs, "analysis_log.txt")
 log_con <- file(log_file, open = "wt")
-sink(log_con, type = "message", append = TRUE)
 
 cat("\nSetup complete\n")
 cat("   - Config loaded from: config/edgeR_config.yaml\n")
@@ -960,7 +959,6 @@ cat("   3. Examine MA and volcano plots for biological patterns\n")
 cat("   4. Compare with Hiccups differential results (38,593 loops)\n\n")
 
 # Close log
-sink(type = "message")
 close(log_con)
 
 cat("Analysis log saved to:", log_file, "\n")
